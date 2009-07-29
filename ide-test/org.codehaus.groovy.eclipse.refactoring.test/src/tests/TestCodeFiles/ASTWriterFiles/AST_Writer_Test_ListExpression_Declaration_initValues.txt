@@ -1,0 +1,5 @@
+###src
+def newList = [File, 4, "test"]
+###exp
+def newList = [File, 4, "test"]
+###end

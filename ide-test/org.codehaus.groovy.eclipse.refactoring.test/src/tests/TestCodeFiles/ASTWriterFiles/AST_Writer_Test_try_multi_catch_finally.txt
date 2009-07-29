@@ -1,0 +1,33 @@
+###src
+class HalloWelt {
+    def attribute = 1
+
+    def method() {
+        try {
+            attribute = 2
+        } catch (Exception e) {
+            attribute = 4
+        } catch (IndexOutOfBoundsException e) {
+            attribute = 5
+        } finally {
+            attribute = 1
+        }
+    }
+}
+###exp
+class HalloWelt {
+    def attribute = 1
+
+    def method() {
+        try {
+            attribute = 2
+        } catch (Exception e) {
+            attribute = 4
+        } catch (IndexOutOfBoundsException e) {
+            attribute = 5
+        } finally {
+            attribute = 1
+        }
+    }
+}
+###end

@@ -1,0 +1,25 @@
+###src
+class HalloWelt {
+    def attribute = 1
+    def log
+
+    def method() {
+        switch (attribute) {
+            case 1 : log = 1
+            case 2 : log = 2
+        }
+    }    
+}
+###exp
+class HalloWelt {
+    def attribute = 1
+    def log
+
+    def method() {
+        switch (attribute) {
+            case 1 : log = 1
+            case 2 : log = 2
+        }
+    }
+}
+###end

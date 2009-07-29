@@ -1,0 +1,23 @@
+###prop
+selectionType=offset
+selectionOffset=0
+selectionLength=0
+newMethodName=myNewMethod
+modifier=static
+shouldFail=true
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class HalloWelt {
+    static void main() {
+        println("HelloWorld")
+    }
+}
+###exp
+class HalloWelt {
+    static void main() {
+        println("HelloWorld")
+    }
+}
+###end

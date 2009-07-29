@@ -1,0 +1,38 @@
+###prop
+selectionType=points
+startLine=5
+startColumn=1
+endLine=7
+endColumn=1
+newMethodName=myExtract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class StaticField {
+    static int staticField = 5;
+    public start() {
+        int a = 8
+        staticField = 10 + a
+        a++
+        staticField = 3
+        println(a)
+    }
+}
+###exp
+class StaticField {
+    static int staticField = 5;
+    public start() {
+        int a = 8
+        a = myExtract(a)
+        staticField = 3
+        println(a)
+    }
+    private int myExtract(int a) {
+        staticField = 10 + a
+        a++
+        return a
+    }
+}
+###end

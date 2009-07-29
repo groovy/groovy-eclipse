@@ -1,0 +1,26 @@
+###prop
+setPreferences=true
+indentation=space
+tabsize=4
+indentendOnly=true
+###src
+if(true)
+println "true"
+if(true) {
+println "true"
+}
+if (true)
+{
+print "true"
+}
+###exp
+if(true)
+    println "true"
+if(true) {
+    println "true"
+}
+if (true)
+{
+    print "true"
+}
+###end

@@ -1,0 +1,16 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=17
+endLine=1
+endColumn=18
+newVarName=aX
+###src
+def meth(String a = 5){
+    println a
+}
+###exp
+def meth(String aX = 5){
+    println aX
+}
+###end

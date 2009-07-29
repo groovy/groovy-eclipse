@@ -1,0 +1,34 @@
+###prop
+selectionType=points
+startLine=7
+startColumn=32
+endLine=7
+endColumn=32
+deleteMethod=true
+allInvocations=true
+onlySelectedInvocation=false
+###src
+/*
+ * Test12
+ * Remove Return
+ */
+class InlineSamples12 {
+    void run() {
+        println("a: " + extract())
+    }
+    def extract() {
+        return "Ret"
+    }
+}
+###exp
+/*
+ * Test12
+ * Remove Return
+ */
+class InlineSamples12 {
+    void run() {
+        println("a: " + ("Ret"))
+    }
+
+}
+###end

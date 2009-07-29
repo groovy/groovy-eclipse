@@ -1,0 +1,25 @@
+###prop
+modifier=public
+###src
+class HalloWelt {
+
+    public sum(a, b, c){
+        return a + b + c
+    }
+
+    public meth(){
+        sum(*[1, 2, 3])
+    }
+}
+###exp
+class HalloWelt {
+
+    public sum(a, b, c) {
+        return a + b + c
+    }
+
+    public meth() {
+        sum(*[1, 2, 3])
+    }
+}
+###end

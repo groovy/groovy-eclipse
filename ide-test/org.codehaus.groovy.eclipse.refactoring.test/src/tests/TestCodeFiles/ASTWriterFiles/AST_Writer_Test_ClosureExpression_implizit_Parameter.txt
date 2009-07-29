@@ -1,0 +1,9 @@
+###src
+import groovy.lang.Closure
+
+Closure testClosure = {attribute *= it}
+###exp
+import groovy.lang.Closure
+
+Closure testClosure =  {attribute *= it}
+###end

@@ -1,0 +1,15 @@
+###src
+class HalloWelt {
+
+    def halloWelt() {
+        return "dynamic"
+    }
+}
+###exp
+class HalloWelt {
+
+    def halloWelt() {
+        return "dynamic"
+    }
+}
+###end

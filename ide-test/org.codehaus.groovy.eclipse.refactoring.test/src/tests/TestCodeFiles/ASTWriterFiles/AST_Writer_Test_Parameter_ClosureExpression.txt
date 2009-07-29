@@ -1,0 +1,9 @@
+###src
+2.downto(-2) {number -> 
+    store += number + ' '
+}
+###exp
+2.downto(-2) {number -> 
+    store += number + ' '
+}
+###end

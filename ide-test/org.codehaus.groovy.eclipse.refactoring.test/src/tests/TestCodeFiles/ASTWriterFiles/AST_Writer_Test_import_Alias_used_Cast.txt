@@ -1,0 +1,9 @@
+###src
+import groovy.lang.Closure as MyClosure
+
+MyClosure closure = (MyClosure) {test -> test++}
+###exp
+import groovy.lang.Closure as MyClosure
+
+MyClosure closure = (MyClosure) {test -> test++}
+###end

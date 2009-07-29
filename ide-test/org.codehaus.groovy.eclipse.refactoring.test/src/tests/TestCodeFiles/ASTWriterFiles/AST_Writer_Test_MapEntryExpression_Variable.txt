@@ -1,0 +1,7 @@
+###src
+String b = "key"
+Map myMap = [a:1, (b):2, c:3]
+###exp
+String b = "key"
+Map myMap = [a:1, (b):2, c:3]
+###end

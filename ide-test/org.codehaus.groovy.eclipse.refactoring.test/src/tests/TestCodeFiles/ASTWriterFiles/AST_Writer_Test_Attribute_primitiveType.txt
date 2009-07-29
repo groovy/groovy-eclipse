@@ -1,0 +1,9 @@
+###src
+class HalloWelt {
+    private int attribute
+}
+###exp
+class HalloWelt {
+    private int attribute
+}
+###end

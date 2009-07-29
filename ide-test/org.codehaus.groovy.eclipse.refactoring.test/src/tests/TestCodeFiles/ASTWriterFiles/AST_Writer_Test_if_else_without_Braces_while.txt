@@ -1,0 +1,19 @@
+###src
+if (test)
+    while (test) {
+
+    }
+else
+    while (test) {
+
+    }
+###exp
+if (test)
+    while (test) {
+
+    }
+else
+    while (test) {
+
+    }
+###end

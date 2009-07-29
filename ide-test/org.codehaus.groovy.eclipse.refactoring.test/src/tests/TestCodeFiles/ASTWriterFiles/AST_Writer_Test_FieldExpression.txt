@@ -1,0 +1,17 @@
+###src
+class Field {
+	def static field
+
+	def static method() {
+		Field.field = 42
+	}
+}
+###exp
+class Field {
+    def static field
+
+    def static method() {
+        Field.field = 42
+    }
+}
+###end

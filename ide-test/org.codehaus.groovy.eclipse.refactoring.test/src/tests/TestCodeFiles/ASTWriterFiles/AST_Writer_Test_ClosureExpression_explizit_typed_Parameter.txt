@@ -1,0 +1,9 @@
+###src
+import groovy.lang.Closure
+
+Closure testClosure = {int test -> attribute *= test}
+###exp
+import groovy.lang.Closure
+
+Closure testClosure =  {int test -> attribute *= test}
+###end

@@ -1,0 +1,38 @@
+###prop
+selectionType=points
+startLine=8
+startColumn=20
+endLine=8
+endColumn=20
+deleteMethod=true
+allInvocations=true
+onlySelectedInvocation=false
+###src
+/*
+ * Test05
+ * Inline in an assignement
+ */
+class InlineSamples05 {
+    static void main(args) {
+        def a = 5
+        a = extract(a)
+        println("a: " + a)
+    }
+    static def extract(def b) {
+        return ++b
+    }
+}
+###exp
+/*
+ * Test05
+ * Inline in an assignement
+ */
+class InlineSamples05 {
+    static void main(args) {
+        def a = 5
+        a = (++a)
+        println("a: " + a)
+    }
+
+}
+###end

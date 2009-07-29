@@ -1,0 +1,20 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=24
+endLine=2
+endColumn=24
+newVarName=NEWPARAM
+###src
+class SampleClass{
+    def SampleClass(myParam){
+        println "ctor call: $myParam"
+    }
+}
+###exp
+class SampleClass{
+    def SampleClass(NEWPARAM){
+        println "ctor call: $NEWPARAM"
+    }
+}
+###end

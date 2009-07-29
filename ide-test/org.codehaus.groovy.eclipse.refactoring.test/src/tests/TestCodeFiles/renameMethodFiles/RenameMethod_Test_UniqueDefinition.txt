@@ -1,0 +1,26 @@
+###prop
+selectionType=points
+startLine=6
+startColumn=12
+endLine=6
+endColumn=13
+newMethodName=NEWMETHNAME
+###src
+public class simple{
+	def YYY(){
+	}
+	def call(){
+		simple a = new simple()
+        a.YYY()
+	}
+}
+###exp
+public class simple{
+	def NEWMETHNAME(){
+	}
+	def call(){
+		simple a = new simple()
+        a.NEWMETHNAME()
+	}
+}
+###end

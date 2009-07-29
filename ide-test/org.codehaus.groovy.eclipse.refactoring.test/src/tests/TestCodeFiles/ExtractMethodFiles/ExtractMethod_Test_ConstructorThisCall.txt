@@ -1,0 +1,29 @@
+###prop
+selectionType=points
+startLine=3
+startColumn=1
+endLine=4
+endColumn=1
+newMethodName=methodCall
+shouldFail=true
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class SuperClass {
+    public SuperClass() {
+        this("var")
+    }
+    private SuperClass(def var) {
+    }
+}
+###exp
+class SuperClass {
+    public SuperClass() {
+        this("var")
+    }
+    private SuperClass(def var) {
+    }
+}
+###end

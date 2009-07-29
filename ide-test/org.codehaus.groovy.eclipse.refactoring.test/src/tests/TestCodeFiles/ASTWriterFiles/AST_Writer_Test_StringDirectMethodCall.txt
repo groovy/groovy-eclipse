@@ -1,0 +1,5 @@
+###src
+"Zorro".getAt(0)
+###exp
+"Zorro".getAt(0)
+###end

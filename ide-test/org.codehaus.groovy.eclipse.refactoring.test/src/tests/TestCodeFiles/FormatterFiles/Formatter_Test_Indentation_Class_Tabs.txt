@@ -1,0 +1,12 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+public class Formatter {
+def a
+}
+###exp
+public class Formatter {
+	def a
+}
+###end

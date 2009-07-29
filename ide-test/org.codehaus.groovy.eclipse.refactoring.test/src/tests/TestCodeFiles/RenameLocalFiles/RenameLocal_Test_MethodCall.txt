@@ -1,0 +1,14 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=5
+endLine=1
+endColumn=7
+newVarName=cc
+###src
+def xy
+println(xy)
+###exp
+def cc
+println(cc)
+###end

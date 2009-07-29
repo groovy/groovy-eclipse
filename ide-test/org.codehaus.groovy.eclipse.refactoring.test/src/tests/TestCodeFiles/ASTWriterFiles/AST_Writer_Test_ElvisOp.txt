@@ -1,0 +1,11 @@
+###src
+def boolVal = false
+Float f = 5.6
+def displayName = boolVal ?: "Anonymous"
+displayName = boolVal ?: f
+###exp
+def boolVal = false
+Float f = 5.6
+def displayName = boolVal ?: "Anonymous"
+displayName = boolVal ?: f
+###end

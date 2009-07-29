@@ -1,0 +1,7 @@
+###src
+class Test implements Comparable, Serializable {
+}
+###exp
+class Test implements Comparable, Serializable {
+}
+###end

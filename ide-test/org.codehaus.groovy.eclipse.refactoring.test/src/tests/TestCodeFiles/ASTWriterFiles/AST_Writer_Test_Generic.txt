@@ -1,0 +1,5 @@
+###src
+void printCollection(Collection<?> c) {}
+###exp
+void printCollection(Collection<?> c) {}
+###end

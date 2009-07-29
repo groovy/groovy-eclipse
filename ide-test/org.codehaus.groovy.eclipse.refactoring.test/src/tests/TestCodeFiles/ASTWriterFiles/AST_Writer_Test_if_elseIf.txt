@@ -1,0 +1,15 @@
+###src
+if (attribute == 1) {
+}
+else if (attribute == 2) {
+}
+else {
+}
+###exp
+if (attribute == 1) {
+}
+else if (attribute == 2) {
+}
+else {
+}
+###end

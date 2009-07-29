@@ -1,0 +1,13 @@
+###src
+def list = [:]
+list.each {pos -> 
+    println(pos)
+    print(pos + ",")
+}
+###exp
+def list = [:]
+list.each {pos -> 
+    println(pos)
+    print(pos + ",")
+}
+###end

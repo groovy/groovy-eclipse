@@ -1,0 +1,33 @@
+###prop
+selectionType=points
+startLine=4
+startColumn=1
+endLine=7
+endColumn=1
+newMethodName=myExtract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class ClosureParameters {
+    public start() {
+        def myIterList = [:]
+        myIterList.each {pos -> 
+            println(pos)
+        }
+    }
+}
+###exp
+class ClosureParameters {
+    public start() {
+        def myIterList = [:]
+        myExtract(myIterList)
+    }
+    private myExtract(myIterList) {
+        myIterList.each {pos -> 
+            println(pos)
+        }
+    }
+}
+###end

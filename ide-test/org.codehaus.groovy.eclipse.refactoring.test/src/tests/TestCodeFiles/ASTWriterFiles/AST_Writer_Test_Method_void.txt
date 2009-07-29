@@ -1,0 +1,13 @@
+###src
+class HalloWelt {
+
+    void halloWelt() {
+    }
+}
+###exp
+class HalloWelt {
+
+    void halloWelt() {
+    }
+}
+###end

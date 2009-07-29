@@ -1,0 +1,25 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=1
+endLine=1
+endColumn=1
+newMethodName=mynewName
+shouldFail=true
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class HalloWelt {
+    static void main() {
+        println("HelloWorld")
+    }
+}
+###exp
+class HalloWelt {
+    static void main() {
+        println("HelloWorld")
+    }
+}
+###end

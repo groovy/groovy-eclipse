@@ -1,0 +1,6 @@
+###src
+def escape = """donot escape"""
+###exp
+def escape = """do
+not escape"""
+###end

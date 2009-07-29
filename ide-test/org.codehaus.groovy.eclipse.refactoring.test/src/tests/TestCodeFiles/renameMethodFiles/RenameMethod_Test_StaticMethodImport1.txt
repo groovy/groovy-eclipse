@@ -1,0 +1,39 @@
+###prop
+selectionInFile=fileA.groovy
+selectionType=points
+startLine=3
+startColumn=13
+endLine=3
+endColumn=14
+newMethodName=NEWMETHNAME
+###src
+fileA.groovy
+:::
+package Apack
+class A{
+    static method(){
+	}
+}
+--->
+fileB.groovy
+:::
+package Bpack
+import static Apack.A.method
+
+method()
+###exp
+fileA.groovy
+:::
+package Apack
+class A{
+    static NEWMETHNAME(){
+	}
+}
+--->
+fileB.groovy
+:::
+package Bpack
+import static Apack.A.NEWMETHNAME
+
+NEWMETHNAME()
+###end

@@ -1,0 +1,7 @@
+###src
+def class HalloWelt {
+}
+###exp
+class HalloWelt {
+}
+###end

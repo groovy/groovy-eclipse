@@ -1,0 +1,40 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=9
+endLine=2
+endColumn=10
+newMethodName=NEWMETHNAME
+###src
+interface I{
+    def m1()
+}
+
+interface IX extends I{
+    def m1()
+}
+
+class impl implements IX{
+    def m1(){}
+}
+
+class impl2 implements IX{
+    def m1(){}
+}
+###exp
+interface I{
+    def NEWMETHNAME()
+}
+
+interface IX extends I{
+    def NEWMETHNAME()
+}
+
+class impl implements IX{
+    def NEWMETHNAME(){}
+}
+
+class impl2 implements IX{
+    def NEWMETHNAME(){}
+}
+###end

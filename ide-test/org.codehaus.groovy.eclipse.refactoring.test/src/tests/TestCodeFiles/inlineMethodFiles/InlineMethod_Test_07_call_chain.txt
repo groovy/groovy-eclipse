@@ -1,0 +1,38 @@
+###prop
+selectionType=points
+startLine=8
+startColumn=20
+endLine=8
+endColumn=20
+deleteMethod=true
+allInvocations=true
+onlySelectedInvocation=false
+###src
+/*
+ * Test07
+ * Inline in a call chain
+ */
+class InlineSamples07 {
+    static void main(args) {
+        def a, b
+        b = extract(a).class
+        println(b)
+    }
+    static def extract(def a) {
+        a = "test"
+    }
+}
+###exp
+/*
+ * Test07
+ * Inline in a call chain
+ */
+class InlineSamples07 {
+    static void main(args) {
+        def a, b
+        b = (a = "test").class
+        println(b)
+    }
+
+}
+###end

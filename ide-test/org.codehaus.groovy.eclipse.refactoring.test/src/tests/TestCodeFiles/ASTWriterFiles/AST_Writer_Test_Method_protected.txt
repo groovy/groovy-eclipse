@@ -1,0 +1,5 @@
+###src
+protected method() {}
+###exp
+protected method() {}
+###end

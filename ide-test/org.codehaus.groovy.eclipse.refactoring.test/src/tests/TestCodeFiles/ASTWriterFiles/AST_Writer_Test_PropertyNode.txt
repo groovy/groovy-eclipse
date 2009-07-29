@@ -1,0 +1,9 @@
+###src
+class Test {
+    String property
+}
+###exp
+class Test {
+    String property
+}
+###end

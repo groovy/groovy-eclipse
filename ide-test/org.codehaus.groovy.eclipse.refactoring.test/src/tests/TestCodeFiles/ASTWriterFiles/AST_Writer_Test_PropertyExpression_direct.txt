@@ -1,0 +1,5 @@
+###src
+"test".length
+###exp
+"test".length
+###end

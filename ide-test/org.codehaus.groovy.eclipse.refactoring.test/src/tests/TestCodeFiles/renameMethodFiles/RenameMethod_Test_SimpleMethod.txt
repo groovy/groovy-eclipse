@@ -1,0 +1,14 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=7
+endLine=1
+endColumn=8
+newMethodName=NEWMETHNAME
+###src
+def meth(){
+}
+###exp
+def NEWMETHNAME(){
+}
+###end

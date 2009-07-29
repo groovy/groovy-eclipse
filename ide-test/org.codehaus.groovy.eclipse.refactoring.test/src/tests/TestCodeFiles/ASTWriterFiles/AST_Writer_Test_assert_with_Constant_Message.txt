@@ -1,0 +1,5 @@
+###src
+assert attribute == 1 , "attribute != 1"
+###exp
+assert attribute == 1 , "attribute != 1"
+###end

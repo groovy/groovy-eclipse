@@ -1,0 +1,24 @@
+###prop
+selectionType=points
+startLine=6
+startColumn=15
+endLine=6
+endColumn=16
+newVarName=methNameXX
+###src
+def m(){
+    def methName = 'm1'
+    (1..5).each{
+        methName += it.toString()
+    }
+    println methName
+}
+###exp
+def m(){
+    def methNameXX = 'm1'
+    (1..5).each{
+        methNameXX += it.toString()
+    }
+    println methNameXX
+}
+###end

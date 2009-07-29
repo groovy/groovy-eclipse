@@ -1,0 +1,26 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=15
+endLine=1
+endColumn=16
+newVarName=characterNEW
+###src
+"Foo".each{ character ->
+    println character
+}
+"Bar".each{ character ->
+    println character
+}
+def character = "booo"
+println character
+###exp
+"Foo".each{ characterNEW ->
+    println characterNEW
+}
+"Bar".each{ character ->
+    println character
+}
+def character = "booo"
+println character
+###end

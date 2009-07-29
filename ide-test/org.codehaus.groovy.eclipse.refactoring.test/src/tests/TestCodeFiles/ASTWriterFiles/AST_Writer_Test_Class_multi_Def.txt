@@ -1,0 +1,17 @@
+###src
+class HalloWelt {
+
+}
+
+class Test {
+
+}
+###exp
+class HalloWelt {
+
+}
+
+class Test {
+
+}
+###end

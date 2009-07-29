@@ -1,0 +1,54 @@
+###prop
+selectionInFile=A.groovy
+selectionType=points
+startLine=1
+startColumn=11
+endLine=1
+endColumn=12
+###src
+A.groovy
+:::
+public class A implements IR {}
+--->
+AA.groovy
+:::
+public class AA extends A {}
+--->
+AB.groovy
+:::
+public class AB extends A {}
+--->
+ABB.groovy
+:::
+public class ABB extends AB implements IRN {}
+--->
+C.groovy
+:::
+public class C {}
+--->
+D.groovy
+:::
+public class D {}
+--->
+DD.groovy
+:::
+public class DD extends D implements IRR {}
+--->
+DE.groovy
+:::
+public class DE extends D implements IRN {}
+--->
+IR.groovy
+:::
+public interface IR {}
+--->
+IRN.groovy
+:::
+public interface IRN extends IR {}
+--->
+IRR.groovy
+:::
+public interface IRR extends IR {}
+###exp
+
+###end

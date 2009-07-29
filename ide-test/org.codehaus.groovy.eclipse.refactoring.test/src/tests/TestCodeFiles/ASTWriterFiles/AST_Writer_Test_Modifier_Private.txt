@@ -1,0 +1,11 @@
+###src
+class testClass {
+    private myMethod() {
+    }
+}
+###exp
+class testClass {
+    private myMethod() {
+    }
+}
+###end

@@ -1,0 +1,18 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+if(true) {
+""" Test
+Test2
+Test3
+Test4 """
+}
+###exp
+if(true) {
+	""" Test
+Test2
+Test3
+Test4 """
+}
+###end

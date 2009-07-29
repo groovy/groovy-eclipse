@@ -1,0 +1,16 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+
+"hello".
+each {
+print it
+}
+###exp
+
+"hello".
+		each {
+			print it
+		}
+###end

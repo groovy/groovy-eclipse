@@ -1,0 +1,43 @@
+###prop
+selectionInFile=TestClass.groovy
+selectionType=points
+startLine=4
+startColumn=14
+endLine=4
+endColumn=15
+newMethodName=NEWMETHNAME
+###src
+TestClass.groovy
+:::
+package src
+
+class TestClass {
+    static myMethod(){
+    }
+}
+--->
+classUsage.groovy
+:::
+package main
+
+import src.TestClass
+
+TestClass.myMethod()
+###exp
+TestClass.groovy
+:::
+package src
+
+class TestClass {
+    static NEWMETHNAME(){
+    }
+}
+--->
+classUsage.groovy
+:::
+package main
+
+import src.TestClass
+
+TestClass.NEWMETHNAME()
+###end

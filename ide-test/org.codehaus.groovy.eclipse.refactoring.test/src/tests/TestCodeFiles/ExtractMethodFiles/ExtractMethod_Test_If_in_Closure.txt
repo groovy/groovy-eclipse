@@ -1,0 +1,38 @@
+###prop
+selectionType=points
+startLine=5
+startColumn=13
+endLine=7
+endColumn=14
+newMethodName=myExtract
+modifier=def
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class FieldReports {
+    
+    static void main(args) {
+        new File("src/arbeitszeit.csv").eachLine{line ->
+            if (line.startsWith("||")) {
+                line = line.replaceAll(/\|\|/, ";").replaceAll(/\'/, "")
+            }
+        }
+    }
+}
+###exp
+class FieldReports {
+    
+    static void main(args) {
+        new File("src/arbeitszeit.csv").eachLine{line ->
+            line = myExtract(line)
+        }
+    }
+    def static myExtract(line) {
+        if (line.startsWith("||")) {
+            line = line.replaceAll(/\|\|/, ";").replaceAll(/\'/, "")
+        }
+        return line
+    }
+}
+###end

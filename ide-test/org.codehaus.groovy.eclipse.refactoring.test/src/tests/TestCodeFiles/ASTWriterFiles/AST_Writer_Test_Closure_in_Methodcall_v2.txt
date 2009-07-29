@@ -1,0 +1,7 @@
+###src
+def list = [:]
+list.each {pos -> println(pos)}
+###exp
+def list = [:]
+list.each {pos -> println(pos)}
+###end

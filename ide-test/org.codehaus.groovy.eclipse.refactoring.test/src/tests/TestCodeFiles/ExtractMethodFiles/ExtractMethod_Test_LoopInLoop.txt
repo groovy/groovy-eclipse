@@ -1,0 +1,42 @@
+###prop
+selectionType=points
+startLine=6
+startColumn=1
+endLine=7
+endColumn=1
+newMethodName=myExtract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class ExtractOutOfClosure {
+    public start() {
+        int count = 0;
+        for(int i = 0; i < 5; i++) {
+            for(int r = 0; r < 5; r++) {
+                count = count + i + r
+                println("Hello")
+            }
+        }
+        println(count)
+    }
+}
+###exp
+class ExtractOutOfClosure {
+    public start() {
+        int count = 0;
+        for(int i = 0; i < 5; i++) {
+            for(int r = 0; r < 5; r++) {
+                count = myExtract(count, i, r)
+                println("Hello")
+            }
+        }
+        println(count)
+    }
+    private int myExtract(int count, int i, int r) {
+        count = count + i + r
+        return count
+    }
+}
+###end

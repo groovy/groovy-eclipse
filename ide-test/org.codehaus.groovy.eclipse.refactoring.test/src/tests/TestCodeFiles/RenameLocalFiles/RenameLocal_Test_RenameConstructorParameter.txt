@@ -1,0 +1,20 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=22
+endLine=2
+endColumn=23
+newVarName=newName
+###src
+class TestClass{
+    def TestClass(ctorparam){
+        println(ctorparam)
+    }
+}
+###exp
+class TestClass{
+    def TestClass(newName){
+        println(newName)
+    }
+}
+###end
