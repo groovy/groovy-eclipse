@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Eclipse-Groovy Integration Plug-in
+Bundle-SymbolicName: org.eclipse.jdt.groovy.core;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.eclipse.jdt.groovy.core.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.jdt.core;bundle-version="3.4.5",
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.jface.text,
+ org.codehaus.groovy;bundle-version="1.7.0"
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Eclipse-RegisterBuddy: org.eclipse.jdt.core
+Export-Package: org.codehaus.jdt.groovy.internal.compiler.ast,
+ org.codehaus.jdt.groovy.model,
+ org.eclipse.jdt.groovy.core.util

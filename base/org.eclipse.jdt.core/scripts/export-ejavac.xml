@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="export-executable" default="build" basedir="..">
+
+	<property name="version" value="32M4SM" />
+	<property name="gcc-path" value="/oliviert/gcj4.0.3/xgcc" />
+	<property name="binaryname" value="ejavac${version}.exe" />
+	<property name="dest" value="../../bingcj" />
+	<property name="work" value="${dest}/tmp/" />
+	<property name="source" value="/oliviert/workspaces/head/org.eclipse.jdt.core" />
+	<property name="gcj_script_name" value="export-executable.xml"/>
+
+    <target name="build">
+		<echo message="target: ${dest}" />
+		<delete dir="${dest}" failonerror="no"/>
+		<mkdir dir="${dest}" />
+	
+		<copy todir="${work}">
+		    <fileset dir="${source}/batch/" excludes='**/*.html' />
+		</copy>
+		<copy todir="${work}">
+		    <fileset dir="${source}/compiler/" excludes='**/*.html' />
+		</copy>
+	
+		<echo message="generate build script" />
+		<java classname="GenerateBuildScript">
+			<arg value="${basedir}/scripts/${gcj_script_name}"/>
+			<arg value="${basedir}/${work}"/>
+			<arg value="i686-pc-mingw32-gcj"/>
+			<arg value="${basedir}/${work}"/>
+			<arg value="source"/>			
+			<classpath>
+				<pathelement path="${basedir}/scripts"/>
+			</classpath>
+		</java>
+		
+		<echo message="run the new build script" />
+		<ant antfile="${basedir}/scripts/export-executable.xml"/>
+		<delete file="${basedir}/scripts/export-executable.xml"/>
+	</target>
+</project>

@@ -1,0 +1,704 @@
+/*******************************************************************************
+ * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.jdt.internal.core;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+import org.eclipse.core.runtime.Assert;
+import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
+import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
+import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
+import org.eclipse.jdt.internal.compiler.ast.Expression;
+import org.eclipse.jdt.internal.compiler.ast.ImportReference;
+import org.eclipse.jdt.internal.compiler.ast.Literal;
+import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
+import org.eclipse.jdt.internal.compiler.ast.NullLiteral;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
+import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
+import org.eclipse.jdt.internal.compiler.parser.Parser;
+import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
+import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
+import org.eclipse.jdt.internal.core.util.ReferenceInfoAdapter;
+import org.eclipse.jdt.internal.core.util.Util;
+
+/**
+ * A requestor for the fuzzy parser, used to compute the children of an ICompilationUnit.
+ */
+public class CompilationUnitStructureRequestor extends ReferenceInfoAdapter implements ISourceElementRequestor {
+
+	/**
+	 * The handle to the compilation unit being parsed
+	 */
+	protected ICompilationUnit unit;
+
+	/**
+	 * The info object for the compilation unit being parsed
+	 */
+	protected CompilationUnitElementInfo unitInfo;
+
+	/**
+	 * The import container info - null until created
+	 */
+	protected JavaElementInfo importContainerInfo = null;
+
+	/**
+	 * Hashtable of children elements of the compilation unit.
+	 * Children are added to the table as they are found by
+	 * the parser. Keys are handles, values are corresponding
+	 * info objects.
+	 */
+	protected Map newElements;
+
+	/**
+	 * Stack of parent scope info objects. The info on the
+	 * top of the stack is the parent of the next element found.
+	 * For example, when we locate a method, the parent info object
+	 * will be the type the method is contained in.
+	 */
+	protected Stack infoStack;
+	
+	/*
+	 * Map from JavaElementInfo to of ArrayList of IJavaElement representing the children 
+	 * of the given info.
+	 */
+	protected HashMap children;
+
+	/**
+	 * Stack of parent handles, corresponding to the info stack. We
+	 * keep both, since info objects do not have back pointers to
+	 * handles.
+	 */
+	protected Stack handleStack;
+
+	/**
+	 * The number of references reported thus far. Used to
+	 * expand the arrays of reference kinds and names.
+	 */
+	protected int referenceCount= 0;
+
+	/**
+	 * Problem requestor which will get notified of discovered problems
+	 */
+	protected boolean hasSyntaxErrors = false;
+	
+	/*
+	 * The parser this requestor is using.
+	 */
+	protected Parser parser;
+	
+	/**
+	 * Empty collections used for efficient initialization
+	 */
+	protected static byte[] NO_BYTES= new byte[]{};
+
+	protected HashtableOfObject fieldRefCache;
+	protected HashtableOfObject messageRefCache;
+	protected HashtableOfObject typeRefCache;
+	protected HashtableOfObject unknownRefCache;
+
+protected CompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUnitElementInfo unitInfo, Map newElements) {
+	this.unit = unit;
+	this.unitInfo = unitInfo;
+	this.newElements = newElements;
+} 
+/**
+ * @see ISourceElementRequestor
+ */
+public void acceptImport(int declarationStart, int declarationEnd, char[][] tokens, boolean onDemand, int modifiers) {
+	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
+	if (!(parentHandle.getElementType() == IJavaElement.COMPILATION_UNIT)) {
+		Assert.isTrue(false); // Should not happen
+	}
+
+	ICompilationUnit parentCU= (ICompilationUnit)parentHandle;
+	//create the import container and its info
+	ImportContainer importContainer= createImportContainer(parentCU);
+	if (this.importContainerInfo == null) {
+		this.importContainerInfo = new JavaElementInfo();
+		JavaElementInfo parentInfo = (JavaElementInfo) this.infoStack.peek();
+		addToChildren(parentInfo, importContainer);
+		this.newElements.put(importContainer, this.importContainerInfo);
+	}
+	
+	String elementName = JavaModelManager.getJavaModelManager().intern(new String(CharOperation.concatWith(tokens, '.')));
+	ImportDeclaration handle = createImportDeclaration(importContainer, elementName, onDemand);
+	resolveDuplicates(handle);
+	
+	ImportDeclarationElementInfo info = new ImportDeclarationElementInfo();
+	info.setSourceRangeStart(declarationStart);
+	info.setSourceRangeEnd(declarationEnd);
+	info.setFlags(modifiers);
+
+	addToChildren(this.importContainerInfo, handle);
+	this.newElements.put(handle, info);
+}
+/*
+ * Table of line separator position. This table is passed once at the end
+ * of the parse action, so as to allow computation of normalized ranges.
+ *
+ * A line separator might corresponds to several characters in the source,
+ * 
+ */
+public void acceptLineSeparatorPositions(int[] positions) {
+	// ignore line separator positions
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void acceptPackage(ImportReference importReference) {
+
+		JavaElementInfo parentInfo = (JavaElementInfo) this.infoStack.peek();
+		JavaElement parentHandle= (JavaElement) this.handleStack.peek();
+		PackageDeclaration handle = null;
+		
+		if (parentHandle.getElementType() == IJavaElement.COMPILATION_UNIT) {
+			char[] name = CharOperation.concatWith(importReference.getImportName(), '.');
+			handle = createPackageDeclaration(parentHandle, new String(name));
+		}
+		else {
+			Assert.isTrue(false); // Should not happen
+		}
+		resolveDuplicates(handle);
+		
+		AnnotatableInfo info = new AnnotatableInfo();
+		info.setSourceRangeStart(importReference.declarationSourceStart);
+		info.setSourceRangeEnd(importReference.declarationSourceEnd);
+
+		addToChildren(parentInfo, handle);
+		this.newElements.put(handle, info);
+
+		if (importReference.annotations != null) {
+			for (int i = 0, length = importReference.annotations.length; i < length; i++) {
+				org.eclipse.jdt.internal.compiler.ast.Annotation annotation = importReference.annotations[i];
+				enterAnnotation(annotation, info, handle);
+				exitMember(annotation.declarationSourceEnd);
+			}
+		}	
+}
+public void acceptProblem(CategorizedProblem problem) {
+	if ((problem.getID() & IProblem.Syntax) != 0){
+		this.hasSyntaxErrors = true;
+	}
+}
+private void addToChildren(JavaElementInfo parentInfo, JavaElement handle) {
+	ArrayList childrenList = (ArrayList) this.children.get(parentInfo);
+	if (childrenList == null)
+		this.children.put(parentInfo, childrenList = new ArrayList());
+	childrenList.add(handle);
+}
+protected Annotation createAnnotation(JavaElement parent, String name) {
+	return new Annotation(parent, name);
+}
+protected SourceField createField(JavaElement parent, FieldInfo fieldInfo) {
+	String fieldName = JavaModelManager.getJavaModelManager().intern(new String(fieldInfo.name));
+	return new SourceField(parent, fieldName);
+}
+protected ImportContainer createImportContainer(ICompilationUnit parent) {
+	return (ImportContainer)parent.getImportContainer();
+}
+protected ImportDeclaration createImportDeclaration(ImportContainer parent, String name, boolean onDemand) {
+	return new ImportDeclaration(parent, name, onDemand);
+}
+protected Initializer createInitializer(JavaElement parent) {
+	return new Initializer(parent, 1);
+}
+protected SourceMethod createMethod(JavaElement parent, MethodInfo methodInfo) {
+	String selector = JavaModelManager.getJavaModelManager().intern(new String(methodInfo.name));
+	String[] parameterTypeSigs = convertTypeNamesToSigs(methodInfo.parameterTypes);
+	return new SourceMethod(parent, selector, parameterTypeSigs);
+}
+protected PackageDeclaration createPackageDeclaration(JavaElement parent, String name) {
+	return new PackageDeclaration((CompilationUnit) parent, name);
+}
+protected SourceType createType(JavaElement parent, TypeInfo typeInfo) {
+	String nameString= new String(typeInfo.name);
+	return new SourceType(parent, nameString);
+}
+protected TypeParameter createTypeParameter(JavaElement parent, String name) {
+	return new TypeParameter(parent, name);
+}
+/**
+ * Convert these type names to signatures.
+ * @see Signature
+ */
+protected static String[] convertTypeNamesToSigs(char[][] typeNames) {
+	if (typeNames == null)
+		return CharOperation.NO_STRINGS;
+	int n = typeNames.length;
+	if (n == 0)
+		return CharOperation.NO_STRINGS;
+	JavaModelManager manager = JavaModelManager.getJavaModelManager();
+	String[] typeSigs = new String[n];
+	for (int i = 0; i < n; ++i) {
+		typeSigs[i] = manager.intern(Signature.createTypeSignature(typeNames[i], false));
+	}
+	return typeSigs;
+}
+protected IAnnotation enterAnnotation(org.eclipse.jdt.internal.compiler.ast.Annotation annotation, AnnotatableInfo parentInfo, JavaElement parentHandle) {
+	String nameString = new String(CharOperation.concatWith(annotation.type.getTypeName(), '.'));
+	Annotation handle = createAnnotation(parentHandle, nameString); //NB: occurenceCount is computed in resolveDuplicates
+	resolveDuplicates(handle);
+	
+	AnnotationInfo info = new AnnotationInfo();
+	
+	// populate the maps here as getValue(...) below may need them
+	this.newElements.put(handle, info);
+	this.infoStack.push(info);
+	this.handleStack.push(handle);
+	
+	info.setSourceRangeStart(annotation.sourceStart());
+	info.nameStart = annotation.type.sourceStart();
+	info.nameEnd = annotation.type.sourceEnd();
+	MemberValuePair[] memberValuePairs = annotation.memberValuePairs();
+	int membersLength = memberValuePairs.length;
+	if (membersLength == 0) {
+		info.members = Annotation.NO_MEMBER_VALUE_PAIRS;
+	} else {
+		info.members = getMemberValuePairs(memberValuePairs);
+	}
+	
+	if (parentInfo != null) {
+		IAnnotation[] annotations = parentInfo.annotations;
+		int length = annotations.length;
+		System.arraycopy(annotations, 0, annotations = new IAnnotation[length+1], 0, length);
+		annotations[length] = handle;
+		parentInfo.annotations = annotations;
+	}
+	return handle;
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void enterCompilationUnit() {
+	this.infoStack = new Stack();
+	this.children = new HashMap();
+	this.handleStack= new Stack();
+	this.infoStack.push(this.unitInfo);
+	this.handleStack.push(this.unit);
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void enterConstructor(MethodInfo methodInfo) {
+	enterMethod(methodInfo);
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void enterField(FieldInfo fieldInfo) {
+
+	SourceTypeElementInfo parentInfo = (SourceTypeElementInfo) this.infoStack.peek();
+	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
+	SourceField handle = null;
+	if (parentHandle.getElementType() == IJavaElement.TYPE) {
+		handle = createField(parentHandle, fieldInfo);
+	}
+	else {
+		Assert.isTrue(false); // Should not happen
+	}
+	resolveDuplicates(handle);
+	
+	SourceFieldElementInfo info = new SourceFieldElementInfo();
+	info.setNameSourceStart(fieldInfo.nameSourceStart);
+	info.setNameSourceEnd(fieldInfo.nameSourceEnd);
+	info.setSourceRangeStart(fieldInfo.declarationStart);
+	info.setFlags(fieldInfo.modifiers);
+	char[] typeName = JavaModelManager.getJavaModelManager().intern(fieldInfo.type);
+	info.setTypeName(typeName);
+	
+	addToChildren(parentInfo, handle);
+	parentInfo.addCategories(handle, fieldInfo.categories);
+	this.newElements.put(handle, info);
+
+	this.infoStack.push(info);
+	this.handleStack.push(handle);
+	
+	if (fieldInfo.annotations != null) {
+		int length = fieldInfo.annotations.length;
+		this.unitInfo.annotationNumber += length;
+		for (int i = 0; i < length; i++) {
+			org.eclipse.jdt.internal.compiler.ast.Annotation annotation = fieldInfo.annotations[i];
+			enterAnnotation(annotation, info, handle);
+			exitMember(annotation.declarationSourceEnd);
+		}
+	}	
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void enterInitializer(
+	int declarationSourceStart,
+	int modifiers) {
+		JavaElementInfo parentInfo = (JavaElementInfo) this.infoStack.peek();
+		JavaElement parentHandle= (JavaElement) this.handleStack.peek();
+		Initializer handle = null;
+		
+		if (parentHandle.getElementType() == IJavaElement.TYPE) {
+			handle = createInitializer(parentHandle);
+		}
+		else {
+			Assert.isTrue(false); // Should not happen
+		}
+		resolveDuplicates(handle);
+		
+		InitializerElementInfo info = new InitializerElementInfo();
+		info.setSourceRangeStart(declarationSourceStart);
+		info.setFlags(modifiers);
+
+		addToChildren(parentInfo, handle);
+		this.newElements.put(handle, info);
+
+		this.infoStack.push(info);
+		this.handleStack.push(handle);
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void enterMethod(MethodInfo methodInfo) {
+
+	SourceTypeElementInfo parentInfo = (SourceTypeElementInfo) this.infoStack.peek();
+	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
+	SourceMethod handle = null;
+
+	// translate nulls to empty arrays
+	if (methodInfo.parameterTypes == null) {
+		methodInfo.parameterTypes= CharOperation.NO_CHAR_CHAR;
+	}
+	if (methodInfo.parameterNames == null) {
+		methodInfo.parameterNames= CharOperation.NO_CHAR_CHAR;
+	}
+	if (methodInfo.exceptionTypes == null) {
+		methodInfo.exceptionTypes= CharOperation.NO_CHAR_CHAR;
+	}
+	
+	if (parentHandle.getElementType() == IJavaElement.TYPE) {
+		handle = createMethod(parentHandle, methodInfo);
+	}
+	else {
+		Assert.isTrue(false); // Should not happen
+	}
+	resolveDuplicates(handle);
+	
+	SourceMethodElementInfo info;
+	if (methodInfo.isConstructor)
+		info = new SourceConstructorInfo();
+	else if (methodInfo.isAnnotation)
+		info = new SourceAnnotationMethodInfo();
+	else
+		info = new SourceMethodInfo();
+	info.setSourceRangeStart(methodInfo.declarationStart);
+	int flags = methodInfo.modifiers;
+	info.setNameSourceStart(methodInfo.nameSourceStart);
+	info.setNameSourceEnd(methodInfo.nameSourceEnd);
+	info.setFlags(flags);
+	JavaModelManager manager = JavaModelManager.getJavaModelManager();
+	char[][] parameterNames = methodInfo.parameterNames;
+	for (int i = 0, length = parameterNames.length; i < length; i++)
+		parameterNames[i] = manager.intern(parameterNames[i]);
+	info.setArgumentNames(parameterNames);
+	char[] returnType = methodInfo.returnType == null ? new char[]{'v', 'o','i', 'd'} : methodInfo.returnType;
+	info.setReturnType(manager.intern(returnType));
+	char[][] exceptionTypes = methodInfo.exceptionTypes;
+	info.setExceptionTypeNames(exceptionTypes);
+	for (int i = 0, length = exceptionTypes.length; i < length; i++)
+		exceptionTypes[i] = manager.intern(exceptionTypes[i]);
+	addToChildren(parentInfo, handle);
+	parentInfo.addCategories(handle, methodInfo.categories);
+	this.newElements.put(handle, info);
+	this.infoStack.push(info);
+	this.handleStack.push(handle);
+
+	if (methodInfo.typeParameters != null) {
+		for (int i = 0, length = methodInfo.typeParameters.length; i < length; i++) {
+			TypeParameterInfo typeParameterInfo = methodInfo.typeParameters[i];
+			enterTypeParameter(typeParameterInfo);
+			exitMember(typeParameterInfo.declarationEnd);
+		}
+	}
+	if (methodInfo.annotations != null) {
+		int length = methodInfo.annotations.length;
+		this.unitInfo.annotationNumber += length;
+		for (int i = 0; i < length; i++) {
+			org.eclipse.jdt.internal.compiler.ast.Annotation annotation = methodInfo.annotations[i];
+			enterAnnotation(annotation, info, handle);
+			exitMember(annotation.declarationSourceEnd);
+		}
+	}
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void enterType(TypeInfo typeInfo) {
+
+	JavaElementInfo parentInfo = (JavaElementInfo) this.infoStack.peek();
+	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
+	SourceType handle = this.createType(parentHandle, typeInfo); //NB: occurenceCount is computed in resolveDuplicates
+	resolveDuplicates(handle);
+	
+	SourceTypeElementInfo info = 
+		typeInfo.anonymousMember ? 
+			new SourceTypeElementInfo() {
+				public boolean isAnonymousMember() {
+					return true;
+				}
+			} : 
+		new SourceTypeElementInfo();
+	info.setHandle(handle);
+	info.setSourceRangeStart(typeInfo.declarationStart);
+	info.setFlags(typeInfo.modifiers);
+	info.setNameSourceStart(typeInfo.nameSourceStart);
+	info.setNameSourceEnd(typeInfo.nameSourceEnd);
+	JavaModelManager manager = JavaModelManager.getJavaModelManager();
+	char[] superclass = typeInfo.superclass;
+	info.setSuperclassName(superclass == null ? null : manager.intern(superclass));
+	char[][] superinterfaces = typeInfo.superinterfaces;
+	for (int i = 0, length = superinterfaces == null ? 0 : superinterfaces.length; i < length; i++)
+		superinterfaces[i] = manager.intern(superinterfaces[i]);
+	info.setSuperInterfaceNames(superinterfaces);
+	info.addCategories(handle, typeInfo.categories);
+	if (parentHandle.getElementType() == IJavaElement.TYPE)
+		((SourceTypeElementInfo) parentInfo).addCategories(handle, typeInfo.categories);
+	addToChildren(parentInfo, handle);
+	this.newElements.put(handle, info);
+	this.infoStack.push(info);
+	this.handleStack.push(handle);
+	
+	if (typeInfo.typeParameters != null) {
+		for (int i = 0, length = typeInfo.typeParameters.length; i < length; i++) {
+			TypeParameterInfo typeParameterInfo = typeInfo.typeParameters[i];
+			enterTypeParameter(typeParameterInfo);
+			exitMember(typeParameterInfo.declarationEnd);
+		}
+	}
+	if (typeInfo.annotations != null) {
+		int length = typeInfo.annotations.length;
+		this.unitInfo.annotationNumber += length;
+		for (int i = 0; i < length; i++) {
+			org.eclipse.jdt.internal.compiler.ast.Annotation annotation = typeInfo.annotations[i];
+			enterAnnotation(annotation, info, handle);
+			exitMember(annotation.declarationSourceEnd);
+		}
+	}
+}
+protected void enterTypeParameter(TypeParameterInfo typeParameterInfo) {
+	JavaElementInfo parentInfo = (JavaElementInfo) this.infoStack.peek();
+	JavaElement parentHandle = (JavaElement) this.handleStack.peek();
+	String nameString = new String(typeParameterInfo.name);
+	TypeParameter handle = createTypeParameter(parentHandle, nameString); //NB: occurenceCount is computed in resolveDuplicates
+	resolveDuplicates(handle);
+	
+	TypeParameterElementInfo info = new TypeParameterElementInfo();
+	info.setSourceRangeStart(typeParameterInfo.declarationStart);
+	info.nameStart = typeParameterInfo.nameSourceStart;
+	info.nameEnd = typeParameterInfo.nameSourceEnd;
+	info.bounds = typeParameterInfo.bounds;
+	if (parentInfo instanceof SourceTypeElementInfo) {
+		SourceTypeElementInfo elementInfo = (SourceTypeElementInfo) parentInfo;
+		ITypeParameter[] typeParameters = elementInfo.typeParameters;
+		int length = typeParameters.length;
+		System.arraycopy(typeParameters, 0, typeParameters = new ITypeParameter[length+1], 0, length);
+		typeParameters[length] = handle;
+		elementInfo.typeParameters = typeParameters;
+	} else {
+		SourceMethodElementInfo elementInfo = (SourceMethodElementInfo) parentInfo;
+		ITypeParameter[] typeParameters = elementInfo.typeParameters;
+		int length = typeParameters.length;
+		System.arraycopy(typeParameters, 0, typeParameters = new ITypeParameter[length+1], 0, length);
+		typeParameters[length] = handle;
+		elementInfo.typeParameters = typeParameters;
+	}
+	this.newElements.put(handle, info);
+	this.infoStack.push(info);
+	this.handleStack.push(handle);
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void exitCompilationUnit(int declarationEnd) {
+	// set import container children
+	if (this.importContainerInfo != null) {
+		setChildren(this.importContainerInfo);
+	}
+	
+	// set children
+	setChildren(this.unitInfo);
+	
+	this.unitInfo.setSourceLength(declarationEnd + 1);
+
+	// determine if there were any parsing errors
+	this.unitInfo.setIsStructureKnown(!this.hasSyntaxErrors);
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void exitConstructor(int declarationEnd) {
+	exitMember(declarationEnd);
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd) {
+	SourceFieldElementInfo info = (SourceFieldElementInfo) this.infoStack.pop();
+	info.setSourceRangeEnd(declarationSourceEnd);
+	setChildren(info);
+	
+	// remember initializer source if field is a constant
+	if (initializationStart != -1) {
+		int flags = info.flags;
+		Object typeInfo;
+		if (Flags.isStatic(flags) && Flags.isFinal(flags)
+				|| ((typeInfo = this.infoStack.peek()) instanceof SourceTypeElementInfo
+					 && (Flags.isInterface(((SourceTypeElementInfo)typeInfo).flags)))) {
+			int length = declarationEnd - initializationStart;
+			if (length > 0) {
+				char[] initializer = new char[length];
+				System.arraycopy(this.parser.scanner.source, initializationStart, initializer, 0, length);
+				info.initializationSource = initializer;
+			}
+		}
+	}
+	this.handleStack.pop();
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void exitInitializer(int declarationEnd) {
+	exitMember(declarationEnd);
+}
+/**
+ * common processing for classes and interfaces
+ */
+protected void exitMember(int declarationEnd) {
+	SourceRefElementInfo info = (SourceRefElementInfo) this.infoStack.pop();
+	info.setSourceRangeEnd(declarationEnd);
+	setChildren(info);
+	this.handleStack.pop();
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void exitMethod(int declarationEnd, Expression defaultValue) {
+	SourceMethodElementInfo info = (SourceMethodElementInfo) this.infoStack.pop();
+	info.setSourceRangeEnd(declarationEnd);
+	setChildren(info);
+	
+	// remember default value of annotation method
+	if (info.isAnnotationMethod() && defaultValue != null) {
+		SourceAnnotationMethodInfo annotationMethodInfo = (SourceAnnotationMethodInfo) info;
+		annotationMethodInfo.defaultValueStart = defaultValue.sourceStart;
+		annotationMethodInfo.defaultValueEnd = defaultValue.sourceEnd;
+		JavaElement element = (JavaElement) this.handleStack.peek();
+		org.eclipse.jdt.internal.core.MemberValuePair defaultMemberValuePair = new org.eclipse.jdt.internal.core.MemberValuePair(element.getElementName());
+		defaultMemberValuePair.value = getMemberValue(defaultMemberValuePair, defaultValue);
+		annotationMethodInfo.defaultValue = defaultMemberValuePair;
+	}
+	this.handleStack.pop();
+}
+/**
+ * @see ISourceElementRequestor
+ */
+public void exitType(int declarationEnd) {
+
+	exitMember(declarationEnd);
+}
+/**
+ * Resolves duplicate handles by incrementing the occurrence count
+ * of the handle being created until there is no conflict.
+ */
+protected void resolveDuplicates(SourceRefElement handle) {
+	while (this.newElements.containsKey(handle)) {
+		handle.occurrenceCount++;
+	}
+}
+protected IMemberValuePair getMemberValuePair(MemberValuePair memberValuePair) {
+	String memberName = new String(memberValuePair.name);
+	org.eclipse.jdt.internal.core.MemberValuePair result = new org.eclipse.jdt.internal.core.MemberValuePair(memberName);
+	result.value = getMemberValue(result, memberValuePair.value);
+	return result;
+}
+protected IMemberValuePair[] getMemberValuePairs(MemberValuePair[] memberValuePairs) {
+	int membersLength = memberValuePairs.length;
+	IMemberValuePair[] members = new IMemberValuePair[membersLength];
+	for (int j = 0; j < membersLength; j++) {
+		members[j] = getMemberValuePair(memberValuePairs[j]);
+	}
+	return members;
+}
+/*
+ * Creates the value from the given expression, and sets the valueKind on the given memberValuePair
+ */
+protected Object getMemberValue(org.eclipse.jdt.internal.core.MemberValuePair memberValuePair, Expression expression) {
+	if (expression instanceof NullLiteral) {
+		return null;
+	} else if (expression instanceof Literal) {
+		((Literal) expression).computeConstant();
+		return Util.getAnnotationMemberValue(memberValuePair, expression.constant);
+	} else if (expression instanceof org.eclipse.jdt.internal.compiler.ast.Annotation) {
+		org.eclipse.jdt.internal.compiler.ast.Annotation annotation = (org.eclipse.jdt.internal.compiler.ast.Annotation) expression;
+		Object handle = enterAnnotation(annotation, null, (JavaElement) this.handleStack.peek());
+		exitMember(annotation.declarationSourceEnd);
+		memberValuePair.valueKind = IMemberValuePair.K_ANNOTATION;
+		return handle;
+	} else if (expression instanceof ClassLiteralAccess) {
+		ClassLiteralAccess classLiteral = (ClassLiteralAccess) expression;
+		char[] name = CharOperation.concatWith(classLiteral.type.getTypeName(), '.');
+		memberValuePair.valueKind = IMemberValuePair.K_CLASS;
+		return new String(name);
+	} else if (expression instanceof QualifiedNameReference) {
+		char[] qualifiedName = CharOperation.concatWith(((QualifiedNameReference) expression).tokens, '.');
+		memberValuePair.valueKind = IMemberValuePair.K_QUALIFIED_NAME;
+		return new String(qualifiedName);		
+	} else if (expression instanceof SingleNameReference) {
+		char[] simpleName = ((SingleNameReference) expression).token;
+		if (simpleName == RecoveryScanner.FAKE_IDENTIFIER) {
+			memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
+			return null;
+		}
+		memberValuePair.valueKind = IMemberValuePair.K_SIMPLE_NAME;
+		return new String(simpleName);		
+	} else if (expression instanceof ArrayInitializer) {
+		memberValuePair.valueKind = -1; // modified below by the first call to getMemberValue(...)
+		Expression[] expressions = ((ArrayInitializer) expression).expressions;
+		int length = expressions == null ? 0 : expressions.length;
+		Object[] values = new Object[length];
+		for (int i = 0; i < length; i++) {
+			int previousValueKind = memberValuePair.valueKind;
+			Object value = getMemberValue(memberValuePair, expressions[i]);
+			if (previousValueKind != -1 && memberValuePair.valueKind != previousValueKind) {
+				// values are heterogeneous, value kind is thus unknown
+				memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
+			}
+			values[i] = value;
+		}
+		if (memberValuePair.valueKind == -1)
+			memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
+		return values;
+	} else {
+		return null;
+	}
+}
+private void setChildren(JavaElementInfo info) {
+	ArrayList childrenList = (ArrayList) this.children.get(info);
+	if (childrenList != null) {
+		int length = childrenList.size();
+		IJavaElement[] elements = new IJavaElement[length];
+		childrenList.toArray(elements);
+		info.children = elements;
+	}
+}
+}
