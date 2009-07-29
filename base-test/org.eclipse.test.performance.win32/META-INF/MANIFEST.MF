@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Plugin.name
+Bundle-SymbolicName: org.eclipse.test.performance.win32
+Bundle-Version: 3.1.100
+Bundle-Vendor: %Plugin.providerName
+Fragment-Host: org.eclipse.test.performance;bundle-version="[3.1.0,4.0.0)"
+Bundle-Localization: plugin

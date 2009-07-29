@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+     <extension point="org.eclipse.jdt.core.compilationParticipant">
+      <compilationParticipant
+            class="org.eclipse.jdt.core.tests.builder.TestBuilderParticipant"
+            createsProblems="true"
+            id="org.eclipse.jdt.core.tests.builder.compilationparticipant"
+            modifiesEnvironment="true">
+          <managedMarker markerType="org.eclipse.jdt.core.tests.compile.problem"/>
+       </compilationParticipant>
+   </extension>
+    <extension
+           point="org.eclipse.core.contenttype.contentTypes">
+        <content-type
+              base-type="org.eclipse.jdt.groovy.core.groovySource"
+              file-extensions="groovytest"
+              id="org.eclipse.jdt.groovy.core.tests.builder.groovyTestContent"
+              name="Groovy content type for testing"
+              priority="normal">
+        </content-type>
+        <content-type
+              base-type="org.eclipse.jdt.core.javaSource"
+              file-extensions="javatest"
+              id="org.eclipse.jdt.groovy.core.tests.builder.javaTestContent"
+              name="Java content type for testing"
+              priority="normal">
+        </content-type>
+     </extension>
+</plugin>
