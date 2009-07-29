@@ -1,0 +1,132 @@
+<!--
+    Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+   
+    Contributors:
+        Unattributed        - Initial API and implementation
+        Andrew Eisenberg - modified for Groovy Eclipse 2.0
+ -->
+<project name="Build Facade" default="groovy-main">
+	<taskdef resource="org/pluginbuilder/anttasks/pluginbuildertasks.properties" classpath="build-files/pluginbuilder-anttasks.jar" />
+	
+	<property file="build_local.properties" />
+	<import file="build-files/build_shared.xml"/>
+    <target name="-build.internal">
+  		<property name="buildResultsDirectory" value="${buildDirectory}/results" />
+
+  		<java classname="org.eclipse.equinox.launcher.Main" fork="true"
+  			failonerror="true">
+  			<arg value="-application"/>
+  			<arg value="org.eclipse.ant.core.antRunner"/>
+  			<arg value="-f"/>
+  			<arg value="${eclipseDir}/plugins/org.eclipse.pde.build_3.4.1.R34x_v20081217/scripts/build.xml"/>
+  			<arg value="-verbose"/>
+  			<jvmarg value="-DbuildHome=${buildHome}"/>
+  			<jvmarg value="-Dbuilder=${buildHome}/build-files"/>
+  			<jvmarg value="-DbuildDirectory=/tmp/groovybuild"/>
+  			<jvmarg value="-DbuildResultsDirectory=/tmp/groovybuild/results"/>
+  			<jvmarg value="-DpluginPath=${eclipse.installation.dir}/eclipse/plugins"/>
+  			<jvmarg value="-DbaseLocation=${buildDirectory}"/>
+  			<jvmarg value="-DbuildType=N"/>
+  			<jvmarg value="-DbuildProperties=${buildHome}/build-files/build.properties"/>
+  			<jvmarg value="-DworkspaceDir=${workspaceDir}"/>
+  			<jvmarg value="-DskipFetch=true"/>
+  			<jvmarg value="-Dversion.full=${version.full}"/>
+  			<jvmarg value="-Dversion.qualifier=${forceContextQualifier}"/>
+  			<jvmarg value="-DforceContextQualifier=${forceContextQualifier}"/>
+    	
+  		 	<classpath>
+	    		<fileset dir="${eclipseDir}/plugins">
+    	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
+    	    </fileset>
+    	  </classpath>
+			</java>
+    	<fail message="PDE Build failed" if="is.build.error" status="1"/>
+    
+    </target>
+
+  				
+  	<target name="-properties" description="Creates required properties">		
+		
+		<!-- versioning -->
+		<property name="build.version" value="HEAD"/>
+		<tstamp>
+			<format property="tstampQual" pattern="yyyyMMdd-HH00" locale="en,US" timezone="America/Vancouver"/>
+		</tstamp>
+		
+		<property name="buildTypePresentation" value=""/>
+		<echo message="tstampQual=${tstampQual}"/>
+    <property name="forceContextQualifier" value="${tstampQual}-${buildTypePresentation}"/>
+		<echo message="=============================================="/>
+		<echo message="forceContextQualifier=${forceContextQualifier}"/>
+		<echo message="=============================================="/>
+
+		<property name="version.full" value="${forceContextQualifier}"/>
+
+		        
+
+		<!-- includes -->
+		<property file="build_local.properties" />
+		<property file="pluginbuilder.config" />
+		
+		<!-- set defaults -->
+		<property name="buildTarget" value="main"/>
+		
+		<!-- check if clean should be called -->
+		<condition property="is.clean">
+			<and>
+			<not>
+				<isset property="do.not.clean"/>
+			</not>			
+			<or>
+				<equals arg1="main" arg2="${buildTarget}" trim="true"/>
+		   	<equals arg1="fetch" arg2="${buildTarget}" trim="true"/>
+			</or>
+			</and>
+		</condition>
+		<property name="no.rcp.build" value="true"/>
+	</target>
+		
+	<target name="-clean" if="is.clean">
+		<echo level="info" message="Cleaning directory ${buildDirectory}"/>
+		<delete dir="${buildDirectory}" verbose="false"/>
+		<mkdir dir="${buildDirectory}"/>
+	</target>
+	
+	<target name="-build" depends="-properties,-clean">
+		<property name="no.rcp.build" value="true"/>
+		<antcall target="unpack.eclipse"/>
+		<antcall target="-build.internal">
+			<param name="buildfile" value="${regularbuildfile}"/>
+    </antcall>
+	</target>
+	
+	
+	<target name="groovy-main" description="Run the main target of customTargets.xml. Return status 0,1,2 for Success, Build Failure and Test Failure">
+		<property name="buildTarget" value="main"/>
+		<antcall target="-build"/>
+
+		<!-- this must be done in a top level target because otherwise the 
+		     status would not get through. If fail is called somewhere within
+		     an antcall the created exception will be caught which would result
+		     in a return status of 1 -->
+		<loadfile srcFile="${buildDirectory}/stderr.txt" property="build.stderr"/>
+		<condition property="is.tests.failed" value="true">
+			<contains string="${build.stderr}" substring="TESTS FAILED"/>
+		</condition>
+		<fail message="Tests failed" if="is.tests.failed" status="2"/>		
+	</target>
+
+	<target name="buildProperties" description="Print out derived properties for the current build." depends="-properties">
+		<fail message="You have to set the property 'buildPropertiesFile' if calling buildProperties" unless="buildPropertiesFile"/>
+		<condition property="subdir" value="nightly" else="releases">
+			<equals arg1="${buildType}" arg2="N"/>
+		</condition>
+		<echo file="${buildPropertiesFile}">relativeServerResultsDir: ${subdir}
+version.full: ${version.full}
+version.qualifier: ${version.qualifier}</echo>
+	</target>
+</project>

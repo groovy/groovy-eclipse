@@ -1,0 +1,15 @@
+<%= caller.fileComment %>
+package ${packageName}
+
+${requiredImports}
+
+<%= caller.typeComment %>
+public class ${typeName}<%if (superClass) {%> 
+	 extends ${superClass}<%}%><%if (interfaceList) {%>
+	 implements ${caller.superInterfaceListAsString}<%}%>{
+
+	<%= caller.getMethodComment("void", "main", ["args"] as String[]) %>
+	public static void main(String[] args){
+		<%= caller.getMethodBodyComment("main", false) %>
+	}
+}

@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension point="org.eclipse.ui.popupMenus">
+      <viewerContribution
+            targetID="#GroovyEditorContext"
+            id="org.codehaus.groovy.eclipse.refactoring.RefactoringContext">
+         <menu
+               id="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu"
+               label="Refac&amp;tor"
+               path="edit">
+            <separator
+                  name="additions">
+            </separator>
+            <groupMarker
+                  name="content">
+            </groupMarker>
+         </menu>
+         <action
+               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.InlineMethodAction"
+               definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+               id="org.codehaus.groovy.eclipse.refactoring.inlineMethod.action"
+               label="Inline Method..."
+               menubarPath="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu/content">
+         </action>
+         <action
+               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.ExtractMethodAction"
+               definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+               id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
+               label="Extract Method..."
+               menubarPath="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu/content">
+         </action>
+         <action
+               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.RenameDispatcherAction"
+               definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+               id="org.codehaus.groovy.eclipse.refactoring.Rename.action"
+               label="Rename..."
+               menubarPath="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu/content">
+         </action>
+<!--
+         <action
+               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.TypeHierarchyAction"
+               definitionId="org.codehaus.groovy.eclipse.refactoring.typehierarchy"
+               id="org.codehaus.groovy.eclipse.refactoring.action.typeHierarchy"
+               label="Open Type Hierarchy"
+               menubarPath="additions">
+         </action>
+-->
+      </viewerContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            description="Refactorings"
+            id="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            name="Refactor Groovy Commands">
+      </category>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            id="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+            name="Extract Method...">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            id="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+            name="Inline Method...">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            id="org.codehaus.groovy.eclipse.refactoring.command.rename"
+            name="Rename Variable...">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.editor.category.source"
+            description="Format the current Groovy File or the Source in the current selection"
+            id="org.codehaus.groovy.eclipse.editor.commands.Format"
+            name="Format">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.editor.category.source"
+            description="Correct the indentation of code"
+            id="org.codehaus.groovy.eclipse.editor.commands.Indentation"
+            name="Correct Indentation">
+      </command>
+<!--
+      <category
+            id="org.codehaus.groovy.eclipse.refactoring.Navigate"
+            name="Navigate Category">
+      </category>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.Navigate"
+            description="Type Hierarchy"
+            id="org.codehaus.groovy.eclipse.refactoring.typehierarchy"
+            name="Type Hierarchy">
+      </command>
+-->
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+M3+I">
+      </key>
+      <key
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+M3+R">
+      </key>
+      <key
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+M3+M">
+      </key>
+      <key
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            platform="carbon"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+M3+I">
+      </key>
+      <key
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            platform="carbon"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+M3+R">
+      </key>
+      <key
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            platform="carbon"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+M3+M">
+      </key>
+       <key
+            commandId="org.codehaus.groovy.eclipse.editor.commands.Format"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+F">
+      </key>
+      <key
+            commandId="org.codehaus.groovy.eclipse.editor.commands.Indentation"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+I">
+      </key>
+<!--
+      <key
+            commandId="org.codehaus.groovy.eclipse.refactoring.typehierarchy"
+            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F4">
+      </key>
+-->
+   </extension>
+      <extension
+         point="org.eclipse.ltk.core.refactoring.renameParticipants">
+      <renameParticipant
+            class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.GroovyRenameParticipant"
+            id="org.codehaus.groovy.eclipse.refactoring.ui.GroovyRenameParticipant"
+            name="GroovyRename">
+         <enablement>
+            <with
+                  variable="element">
+               <instanceof
+                     value="org.eclipse.jdt.core.IMethod">
+               </instanceof>
+            </with>
+         </enablement>        
+      </renameParticipant>
+   </extension>
+      <extension
+            point="org.eclipse.ui.editorActions">
+         <editorContribution
+               id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring"
+               targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+            <menu
+                  id="org.codehaus.groovy.eclipse.refactoring.refactoringMenue"
+                  label="Refac&amp;tor"
+                  path="edit">
+               <groupMarker
+                     name="content">
+               </groupMarker>
+               <separator
+                     name="additions">
+               </separator>
+            </menu>
+            <menu
+                  id="org.codehaus.groovy.eclipse.refactoring.format"
+                  label="Format"
+                  path="edit">
+               <groupMarker
+                     name="content">
+               </groupMarker>
+               <separator
+                     name="additions">
+               </separator>
+            </menu>
+            <action
+                  class="org.codehaus.groovy.eclipse.refactoring.popup.actions.InlineMethodAction"
+                  definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+                  id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
+                  label="Inline Method..."
+                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenue/content">
+            </action>
+            <action
+                  class="org.codehaus.groovy.eclipse.refactoring.popup.actions.ExtractMethodAction"
+                  definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+                  id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
+                  label="Extract Method..."
+                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenue/content">
+            </action>
+            <action
+                  class="org.codehaus.groovy.eclipse.refactoring.popup.actions.RenameDispatcherAction"
+                  definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+                  id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
+                  label="Rename..."
+                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenue/content">
+            </action>
+            <action
+               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.FormatAction"
+               definitionId="org.codehaus.groovy.eclipse.editor.commands.Format"
+               id="org.codehaus.groovy.eclipse.editor.action.Format"
+               label="Format"
+               menubarPath="org.codehaus.groovy.eclipse.refactoring.format/content">
+         </action>
+            <action
+                  class="org.codehaus.groovy.eclipse.refactoring.popup.actions.IndentationAction"
+                  definitionId="org.codehaus.groovy.eclipse.editor.commands.Indentation"
+                  id="org.codehaus.groovy.eclipse.editor.action.Indentation"
+                  label="Correct Indentation"
+                  menubarPath="org.codehaus.groovy.eclipse.refactoring.format/content">
+            </action>
+         </editorContribution>
+      </extension>
+      <extension
+            point="org.eclipse.ui.preferencePages">
+         <page
+               category="org.codehaus.groovy.eclipse.preferences"
+               class="org.codehaus.groovy.eclipse.refactoring.preferences.FormatterPreferencesPage"
+               id="org.codehaus.groovy.eclipse.preferences.formatter"
+               name="Formatter">
+         </page>
+      </extension>
+      <extension
+            point="org.eclipse.core.runtime.preferences">
+         <initializer
+               class="org.codehaus.groovy.eclipse.refactoring.preferences.PreferenceInitializer">
+         </initializer>
+      </extension>
+<!--
+      <extension
+            point="org.eclipse.ui.editorActions">
+         <editorContribution
+               id="org.codehaus.groovy.eclipse.codebrowsing.editorContribution"
+               targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+         <action
+               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.TypeHierarchyAction"
+               definitionId="org.codehaus.groovy.eclipse.refactoring.typehierarchy"
+               id="org.codehaus.groovy.eclipse.codebrowsing.OpenTypeHierarchy"
+               label="Open Type Hierarchy"
+               menubarPath="navigate/open.ext"/>
+         </editorContribution>
+      </extension>
+-->
+      <extension
+            point="org.eclipse.ui.views">
+         <view
+               category="org.codehaus.groovy.eclipse.Groovy"
+               class="org.codehaus.groovy.eclipse.refactoring.core.hierarchy.view.HierarchyView"
+               icon="icons/class_hi.gif"
+               id="org.codehaus.groovy.eclipse.refactoring.core.hierarchy.view.HierarchyView"
+               name="Groovy Hierarchy">
+         </view>
+      </extension>
+      <extension
+            point="org.eclipse.ui.perspectiveExtensions">
+         <perspectiveExtension
+               targetID="org.eclipse.ui.resourcePerspective">
+            <view
+                  id="org.codehaus.groovy.eclipse.refactoring.core.hierarchy.view.HierarchyView"
+                  ratio="0.5"
+                  relationship="left"
+                  relative="org.eclipse.ui.views.TaskList">
+            </view>
+         </perspectiveExtension>
+      </extension>
+</plugin>

@@ -1,0 +1,266 @@
+<!--
+    Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+   
+    Contributors:
+        Unattributed        - Initial API and implementation
+        Andrew Eisenberg - modified for Groovy Eclipse 2.0
+ -->
+<project name="Build specific targets and properties" default="noDefault">
+	<condition property="isNightlyBuild">
+		<equals arg1="${buildType}" arg2="N" />
+	</condition>
+	<condition property="isNightlyOrIntegrationBuild">
+		<or>
+			<equals arg1="${buildType}" arg2="N" />
+			<equals arg1="${buildType}" arg2="I" />
+		</or>
+	</condition>
+	
+	<property file="${buildHome}/pluginbuilder.config" />
+	
+	<property file="${buildDirectory}/version.properties" />
+	<property name="buildLabel" value="${buildType}-${version.full}" />
+	<property name="buildId" value="${version.full}" />
+	
+	<condition property="isCVSOrCopy" value="true">
+		<or>
+			<equals arg1="${pluginbuilder.is.cvs}" arg2="true"/>
+			<equals arg1="${pluginbuilder.is.copy}" arg2="true"/>
+		</or>
+	</condition>
+	<condition property="isSVN" value="true">
+		<equals arg1="${pluginbuilder.is.svn}" arg2="true"/>
+	</condition>
+	<condition property="isRunTests" value="true">
+		<equals arg1="${pluginbuilder.is.runtests}" arg2="true"/>
+	</condition>
+	
+	<import file="allElements.xml"/>
+	<import file="subversionSupport.xml"/>
+	<import file="copyAllProjects.xml"/>
+	
+	<import file="allElements.xml" />
+	<target name="allElements">
+		<antcall target="allElementsDelegator" />
+	</target>
+
+	
+	<!-- ===================================================================== -->
+	<!-- Check out map files from correct repository -->
+	<!-- Replace values for cvsRoot, package and mapVersionTag as desired. -->
+	<!-- ===================================================================== -->
+	<target name="getMapFiles" if="isCVSOrCopy">
+	</target>
+
+	
+	<!-- ===================================================================== -->
+	<!-- Steps to do before setup -->
+	<!-- ===================================================================== -->
+	<target name="preSetup">	
+		<condition property="isFetch" value="true">
+			<equals arg1="${target}" arg2="fetchElement"/>
+		</condition>
+	  <condition property="is.svn.fetch" value="true">
+	 		<and>
+		 		<equals arg1="${target}" arg2="fetchElement"/>
+				<equals arg1="${pluginbuilder.is.svn}" arg2="true"/>
+			</and>
+	  </condition>
+	
+		<!-- based on properties only one of the below will do work, the other will be no-op -->
+		<antcall target="copyToBuildDirectory"/>
+		<antcall target="fetchSubversion"/>
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do after setup but before starting the build proper -->
+	<!-- ===================================================================== -->
+	<target name="postSetup">
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do before fetching the build elements -->
+	<!-- ===================================================================== -->
+	<target name="preFetch">
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do after fetching the build elements -->
+	<!-- ===================================================================== -->
+	<target name="postFetch">
+	</target>
+	
+	<!-- ===================================================================== -->
+	<!-- Steps to do before generating the build scripts. -->
+	<!-- ===================================================================== -->
+	<target name="preGenerate">
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do after generating the build scripts. -->
+	<!-- ===================================================================== -->
+	<target name="postGenerate">
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do before running the build.xmls for the elements being built. -->
+	<!-- ===================================================================== -->
+	<target name="preProcess">
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do after running the build.xmls for the elements being built. -->
+	<!-- ===================================================================== -->
+	<target name="postProcess">
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do before running assemble. -->
+	<!-- ===================================================================== -->
+	<target name="preAssemble">
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do after  running assemble. -->
+	<!-- ===================================================================== -->
+	<target name="postAssemble">
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Steps to do before/after packaging RCP. -->
+	<!-- ===================================================================== -->
+	<target name="prePackage">
+	</target>
+	
+	<target name="postPackage">
+		<copy todir="${buildResultsDirectory}" flatten="true">
+			<fileset dir="${buildDirectory}" includes="${buildType}-**/*.zip" />
+		</copy>
+	</target>
+
+	<!-- ===================================================================== -->
+	<!-- Steps to do after the build is done. -->
+	<!-- ===================================================================== -->
+	<property name="buildResultsDirectory" value="${buildDirectory}/results" />
+	<target name="postBuild" depends="-prepareBuildResultsDirectory" unless="no.postBuild">
+		<condition property="is.External.Postbuild">
+			<available file="${buildHome}/build-files/postBuild.xml"/>
+		</condition>
+		<antcall target="createUpdateSite"/>
+		<antcall target="runTests"/>
+		<copy todir="${buildResultsDirectory}" flatten="true">
+			<fileset dir="${buildDirectory}" includes="${buildType}-**/*.zip" />
+		</copy>
+	</target>
+	<!-- ===================================================================== -->
+	<!-- Run tests. -->
+	<!-- ===================================================================== -->
+	<target name="runTests" if="isRunTests">
+		<property name="automatedTestsHome" location="${buildHome}/build-files/automatedTests"/>
+
+		<ant antfile="${automatedTestsHome}/run-tests.xml" target="run" dir="${automatedTestsHome}">
+			<property name="test.result.dir" value="${buildResultsDirectory}/testresults"/>
+		</ant>
+	</target>	
+	
+	
+	<!--======================================================-->
+	<!-- Gather build results  -->
+	<!-- ==================================================== -->
+	<target name="-prepareBuildResultsDirectory">
+		<echo message="Creating ${buildResultsDirectory}" />
+		<mkdir dir="${buildResultsDirectory}" />	
+	</target>
+
+	
+	
+	
+	
+	<!--======================================================-->
+	<!-- Create update site  -->
+	<!-- ==================================================== -->
+  <property name="updateSiteDir" value="${buildDirectory}/updateSite"/>
+	<property file="${buildHome}/build_local.properties"/>
+  <target name="createUpdateSite">
+
+	  <!-- Create the directory structure -->
+	  <mkdir dir="${updateSiteDir}/features"/>
+	  <mkdir dir="${updateSiteDir}/plugins"/>
+	  
+  	<!-- Build the jar files -->
+	  <antcall target="allElements">
+	    <param name="genericTargets" value="${buildHome}/build-files/customTargets.xml"/>
+	    <param name="target" value="updateSiteExport"/>
+	  </antcall>
+
+  	<!-- Remove test plugins and feature -->
+  	<delete>
+			<fileset dir="${updateSiteDir}/features">
+			    <include name="*alltests*"/>
+			</fileset>
+		</delete>
+  	<delete>
+			<fileset dir="${updateSiteDir}/plugins">
+			    <include name="*tests_*"/>
+			    <include name="*test_*"/>
+			    <include name="*performance_*"/>
+			</fileset>
+		</delete>
+
+  	
+  	<!-- need the site.xml file before we can generate -->
+		<copy todir="${updateSiteDir}">
+			<fileset dir="${buildDirectory}/features/Site Groovy">
+				 <filename name="site.xml"/>
+			</fileset>
+		</copy>
+  	
+  	<!-- replace version numbers.  all features use same versions and qualifiers, so just replace all with same version # -->
+  	<property file="${buildDirectory}/finalFeaturesVersions.ANY_ANY_ANY.properties"/>
+  	<replace file="${updateSiteDir}/site.xml" summary="yes"
+	    token="0.0.0.qualifier" value="${org.codehaus.groovy.eclipse.feature}"/>
+    	
+  	<!-- Generate metadata -->
+    <java fork="true" dir="${updateSiteDir}" classname="org.eclipse.equinox.launcher.Main" maxmemory="256m">
+        <arg value="-application"/>
+        <arg value="org.eclipse.equinox.p2.metadata.generator.EclipseGenerator"/>
+        <arg value="-updateSite"/>
+        <arg value="${updateSiteDir}"/>
+        <arg value="-base"/>
+        <arg value="${updateSiteDir}"/>
+        <arg value="-site"/>
+        <arg value="file:${updateSiteDir}/site.xml"/>
+        <arg value="-metadataRepository"/>
+        <arg value="file:${updateSiteDir}"/>
+        <arg value="-metadataRepositoryName"/>
+        <arg value="Groovy Update Site"/>
+        <arg value="-artifactRepository"/>
+        <arg value="file:${updateSiteDir}"/>
+        <arg value="-artifactRepositoryName"/>
+        <arg value="Groovy Artifacts"/>
+        <!--<arg value="-compress"/> -->
+        <arg value="-reusePack200Files"/>
+        <arg value="-append"/>
+        <arg value="-noDefaultIUs"/>
+        <jvmarg value="-Xmx128M"/>
+  		 	<classpath>
+	    		<fileset dir="${eclipseDir}/plugins">
+    	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
+    	    </fileset>
+    	  </classpath>
+    </java>
+  	
+  	<!-- Zip up the update site -->
+		<zip destfile="${updateSiteDir}/../groovy-update-site-${org.codehaus.groovy.eclipse.feature}.zip">
+			<fileset dir="${updateSiteDir}">
+			</fileset>
+		</zip>
+  </target>
+    
+	<target name="updateSiteExport">
+	  <ant antfile="build.xml" dir="${buildDirectory}/features/${id}/" target="build.update.jar">
+	    <property name="feature.destination" value="${updateSiteDir}/features"/>
+	    <property name="plugin.destination" value="${updateSiteDir}/plugins"/>
+	  </ant>
+	</target>
+
+	
+	<target name="noDefault">
+		<echo message="You must specify a target when invoking this file" />
+	</target>
+</project>

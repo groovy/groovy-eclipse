@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type" />
+  <title>Type Evaluation</title>
+  <link rel="stylesheet" type='text/css' href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"/>
+
+
+</head>
+
+
+
+<body>
+
+<h1>Type Evaluation</h1>
+
+GroovyEclipse contains a type evaluator class that can be customized for
+different purposes. It is currently used for code completion in the
+source editor and in the type inference engine. Customizing the state
+of the type evaluator allows
+for code completion in other areas:<br />
+
+<ul>
+
+  <li>A Groovy Console embedded into Eclipse, with code
+completion for variables in the binding.</li>
+
+  <li>A Groovy Script evaluator, with completion for variables at
+a debugger break point.</li>
+
+</ul>
+
+The type evaluator can be found at&nbsp;<em>org.codehaus.eclipse.core.types.TypeEvaluator.
+</em><br />
+
+</body>
+</html>

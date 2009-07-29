@@ -1,0 +1,2 @@
+#enable tracing for the groovy plugin
+org.codehaus.groovy.eclipse/trace=true

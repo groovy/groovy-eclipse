@@ -1,0 +1,348 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+<title>Tutorial: Adding find* Methods to Grails Domain Objects</title>
+<link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css">
+</head>
+
+<body>
+<h1>Tutorial: Adding support for Grails Dynamic Types</h1>
+This tutorial demonstrates how to add lookups for Grails dynamic types. Basic lookup on domain class 'find' members is
+implemented.
+<br>
+Note that it is a demo and might be useful as a starting point for a full implementation. The source code for this
+sample is available in the Codehaus Subversion repository - you can browse right away at
+<a href="http://svn.groovy.codehaus.org/browse/groovy/trunk/groovy/ide/grails-eclipse">http://svn.groovy.codehaus.org/browse/groovy/trunk/groovy/ide/grails-eclipse</a>
+.
+<br>
+<br>
+The first step is to&nbsp;create a new plug-in project using the New wizard:
+<br>
+<br>
+<img src="images/newProject1.png">
+<br>
+<br>
+<br>
+Enter
+<em>org.codehaus.grails.eclipse.samples.types</em>
+for the project name:
+<br>
+<br>
+<img src="images/newProject2.png">
+<br>
+<br>
+<br>
+Next we configure the&nbsp;project. An activator is not needed nor does this plug-in contribute to the UI, so uncheck
+the two options.
+<br>
+Click on finish and we are ready to set up the project environment.
+<br>
+<br>
+<img src="images/newProject3.png">
+<br>
+<br>
+<br>
+The first step is to add&nbsp;the Groovy Nature. Normally this would happen automatically when the first&nbsp;Groovy
+source file is created. However, since we are adding to GroovyEclipse itself, some additional steps are required.
+<br>
+<br>
+First add the nature:
+<br>
+<br>
+<img src="images/groovyNature1.png">
+<br>
+<br>
+<br>
+Next open the .classpath file and remove Groovy related libaries. This is required&nbsp;as this plug-in will&nbsp;import
+the libraries from the core Groovy plugin. If these libraries are not removed there will be problems at runtime as
+Groovy classes created with different class loaders attempt to interact.
+<br>
+<br>
+The libraries to remove are highlighted:
+<br>
+<br>
+<img src="images/groovyNature2.png">
+<br>
+<br>
+<br>
+Remove them and save and close the .classpath file:
+<br>
+<br>
+<img src="images/groovyNature3.png">
+<br>
+<br>
+<br>
+By default, the Groovy plugin has set the output folder for compiled Groovy classes to bin-groovy. This folder must be
+added as a library to the plugin configuration. Press the 'Add' button:
+<br>
+<br>
+<img src="images/runtime1.png">
+<br>
+<br>
+<br>
+And add bin-groovy:
+<br>
+<br>
+<img src="images/runtime2.png">
+<br>
+<br>
+<br>
+
+Finally, the dependency to the core GroovyEclipse plugin is added.
+<br>
+Press the 'Add' button:
+<br>
+<br>
+<img src="images/dependencies1.png">
+<br>
+<br>
+<br>
+And select the core GroovyEclipse plugin. This is the plugin which exports the Groovy runtime libraries and defines the
+extension points for the member lookup.
+<br>
+<br>
+<img src="images/dependencies2.png">
+<br>
+<br>
+<br>
+<img src="images/dependencies3.png">
+<br>
+<br>
+<br>
+Finally we are ready to implement the extension. In the plugin editor, select the 'Extensions' tab and configure
+the&nbsp;extention.
+<br>
+Press the 'Add' button and select the extension point. There should be only one visible. Afterwards it appears in the
+extensions list:
+<br>
+<br>
+<img src="images/extensions1.png">
+<br>
+<br>
+<br>
+Add a new 'memberLookup':
+<br>
+<br>
+<img src="images/extensions2.png">
+<br>
+<br>
+<br>
+In the next step the class name implementing the lookup is added, as well as the source code contexts in which this lookup
+is valid. Note that it is not necessary to use the qualified names for the contexts. We add both methodScope and
+closureScope. If closureScope is not added, then this lookup will not work inside of closures which are nested within
+methods.
+<br>
+<br>
+<img src="images/extensions3.png">
+<br>
+<br>
+<br>
+Finally we are ready to code!
+<br>
+In the next two steps, a new package for our Groovy implementation is created:
+<br>
+<br>
+<img src="images/newPackage1.png">
+<br>
+<br>
+<br>
+<img src="images/newPackage2.png">
+<br>
+<br>
+<br>
+And finally the&nbsp;Groovy source file to implement the Grails find methods lookup is created:
+<br>
+<br>
+<img src="images/newGroovy1.png">
+<br>
+<br>
+<br>
+<img src="images/newGroovy2.png">
+<br>
+<br>
+<h2>The Code</h2>
+Lets start with the following code:
+<br>
+<p class="Code">package org.codehaus.grails.eclipse.samples.types <br>
+<br>
+import org.codehaus.groovy.eclipse.core.IGroovyProjectAware <br>
+import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext <br>
+import org.codehaus.groovy.eclipse.core.context.ISourceCodeContextAware <br>
+import org.codehaus.groovy.eclipse.core.model.GroovyProject <br>
+import org.codehaus.groovy.eclipse.core.types.IMemberLookup <br>
+<br>
+class DomainFindMethodsLookup implements IMemberLookup, ISourceCodeContextAware, IGroovyProjectAware { <br>
+&nbsp;&nbsp;&nbsp; ISourceCodeContext context <br>
+&nbsp;&nbsp;&nbsp; GroovyProject project <br>
+<br>
+&nbsp;&nbsp;&nbsp; void setSourceCodeContext(ISourceCodeContext context) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this.context = context <br>
+&nbsp;&nbsp;&nbsp; } <br>
+&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; void setGroovyProject(GroovyProject project) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; this.project = project <br>
+&nbsp;&nbsp;&nbsp; } <br>
+}</p>
+<br>
+<br>
+The two interfaces, ISourceCodeContextAware and IGroovyProjectAware indicate that this lookup wants to know about the
+current project and context. This does not guarantee that a project and context will be set on this lookup, so care must
+be taken to check that they have actually been set.
+<br>
+<br>
+Next implement the IMemberLookup methods:
+<br>
+<p class="Code">import org.codehaus.groovy.eclipse.core.types.Field <br>
+import org.codehaus.groovy.eclipse.core.types.Method <br>
+import org.codehaus.groovy.eclipse.core.types.Modifiers <br>
+import org.codehaus.groovy.eclipse.core.types.Parameter <br>
+import org.codehaus.groovy.eclipse.core.types.Property <br>
+import org.codehaus.groovy.eclipse.core.types.TypeUtil <br>
+<br>
+class DomainFindMethodsLookup implements IMemberLookup, ISourceCodeContextAware, IGroovyProjectAware { <br>
+&nbsp;&nbsp;&nbsp; ... <br>
+&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; Field[] lookupFields(String type, String name, boolean accessible, boolean staticAccess, boolean
+exact) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return TypeUtil.NO_FIELDS <br>
+&nbsp;&nbsp;&nbsp; } <br>
+<br>
+&nbsp;&nbsp;&nbsp; Property[] lookupProperties(String type, String name, boolean accessible, boolean staticAccess,
+boolean exact) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return TypeUtil.NO_PROPERTIES <br>
+&nbsp;&nbsp;&nbsp; } <br>
+<br>
+&nbsp;&nbsp;&nbsp; Method[] lookupMethods(String type, String name, boolean accessible, boolean staticAccess, boolean
+exact) { <br>
+&nbsp;&nbsp;&nbsp; } <br>
+&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; Method[] lookupMethods(String type, String name, String[] paramTypes, boolean accessible, <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; boolean staticAccess, boolean exact) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return lookupMethods(type, name, accessible, staticAccess, exact) <br>
+&nbsp;&nbsp;&nbsp; } <br>
+<br>
+&nbsp;&nbsp;&nbsp; ... <br>
+}</p>
+<br>
+<br>
+TypeUtil is a class with many handly static helper methods, and is used above to return empty arrays.
+<br>
+<br>
+In the next step we add some sanity checks, one of which checks that the object we are looking up methods for is in fact
+a domain class:
+<br>
+<p class="Code">&nbsp;&nbsp;&nbsp; Method[] lookupMethods(String type, String name, boolean accessible, boolean
+staticAccess, boolean exact) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!staticAccess || !context || !project || !isDomainClass(type)) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return TypeUtil.NO_METHODS <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; } <br>
+&nbsp;&nbsp;&nbsp; } <br>
+<br>
+&nbsp;&nbsp;&nbsp; private isDomainClass(type) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; def classNode = project.model.getClassNodeForName(type) <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!classNode) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return false <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; } <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; def domainDirectory = classNode.module.description.replaceAll(/\\/,
+'/').tokenize('/') <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return domainDirectory.size() &gt; 2 ? (domainDirectory[-3] == 'grails-app'
+&amp;&amp; domainDirectory[-2] == 'domain') : null <br>
+&nbsp;&nbsp;&nbsp; }</p>
+<br>
+<br>
+Now the high level implementation is added:
+<br>
+<p class="Code">&nbsp;&nbsp;&nbsp; Method[] lookupMethods(String type, String name, boolean accessible, boolean
+staticAccess, boolean exact) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (!staticAccess || !context || !project || !isDomainClass(type)) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return TypeUtil.NO_METHODS <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; } <br>
+<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; def classNode = project.model.getClassNodeForName(type) <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; def methods = makeDomainMethods(classNode) <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; methods = methods.findAll { method -&gt; method.name.startsWith(name) } <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return methods as Method[] <br>
+&nbsp;&nbsp;&nbsp; }</p>
+<br>
+<br>
+And finally, the 'hard work' is implemented. This method is very simplified, but it is where a full implementation would
+be inserted. In this case, only 'find' and 'findAll' methods with one domain property are implemented:
+<br>
+<p class="Code">&nbsp;&nbsp;&nbsp; private makeDomainMethods(classNode) { <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; def returnType = classNode.name <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; def declaringClass = TypeUtil.newClassType(classNode) <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; def prefix = 'findBy' <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; def methods = [] <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; classNode.fields.each { field -&gt; <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; methods &lt;&lt; new Method(Modifiers.ACC_PUBLIC, <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; prefix + Character.toUpperCase((char)field.name[0]) + field.name[1..-1], <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; new Parameter(field.type.name, field.name) as Parameter[], returnType, declaringClass, <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; true) <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; } <br>
+<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; prefix = 'findAllBy' <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; returnType = "[L${returnType};" <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; classNode.fields.each { field -&gt; <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; methods &lt;&lt; new Method(Modifiers.ACC_PUBLIC, <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; prefix + Character.toUpperCase((char)field.name[0]) + field.name[1..-1], <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; new Parameter(field.type.name, field.name) as Parameter[], returnType, declaringClass, <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; true) <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; } <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return methods <br>
+&nbsp;&nbsp;&nbsp; }</p>
+Do you see the&nbsp;little trick? By setting the return type of the findAllBy methods to an array of domain objects, we
+will get better completions and type inference. If we returned a List, the type of domain objects returned is unknown.
+<br>
+<br>
+<br>
+Finally, it is time to test the plug-in, open the plug-in editor and click the launch link:
+<br>
+<br>
+<img src="images/launch.png">
+<br>
+<br>
+<br>
+In the new instance of Eclipse, import some Grails project. In this case, a simple project with books and authors is
+imported:
+<br>
+<br>
+<img src="images/grailsDomainClasses.png">
+<br>
+<br>
+<br>
+Now in a controller class, lets see what completions we get on Book:
+<br>
+<br>
+<img src="images/find1.png">
+<br>
+<br>
+<br>
+The Book now participates in type inference:
+<br>
+<br>
+<img src="images/find2.png">
+<br>
+<br>
+<br>
+The little trick of returning an array of Books also leads to completions on the elements of the array:
+<br>
+<br>
+<img src="images/findAll.png">
+<br>
+<br>
+<br>
+That's all there is to it.
+</body>
+</html>

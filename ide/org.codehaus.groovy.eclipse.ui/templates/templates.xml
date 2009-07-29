@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+/*******************************************************************************
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+-->
+
+<templates>
+
+<template name="for" description="%Templates.for_array" id="org.codehaus.groovy.eclipse.templates.for_array" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">for (int ${index} = 0; ${index} &lt; ${array}.length; ${index}++) {
+	${line_selection}${cursor}
+}</template>
+
+<template name="for" description="%Templates.for_temp" id="org.codehaus.groovy.eclipse.templates.for_temp" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">for (int ${index} = 0; ${index} &lt; ${array}.length; ${index}++) {
+	${array_type} ${array_element} = ${array}[${index}];
+	${cursor}
+}</template>
+
+<template name="for" description="%Templates.for_collection" id="org.codehaus.groovy.eclipse.templates.for_collection" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">for (Iterator ${iterator} = ${collection}.iterator(); ${iterator}.hasNext(); ) {
+	${type} ${element} = (${type}) ${iterator}.next();
+	${cursor}
+}</template>
+
+<template name="foreach" description="%Templates.for_iterable" id="org.codehaus.groovy.eclipse.templates.for_iterable" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">for (${iterable_type} ${iterable_element} : ${iterable}) {
+	${cursor}
+}</template>
+
+<template name="while" description="%Templates.while_enumeration" id="org.codehaus.groovy.eclipse.templates.while_enumeration" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">while (${enumeration}.hasMoreElements()) {
+	${type} ${element} = (${type}) ${enumeration}.nextElement();
+	${cursor}
+}</template>
+
+<template name="while" description="%Templates.while_iterator" id="org.codehaus.groovy.eclipse.templates.while_iterator" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">while (${iterator}.hasNext()) {
+	${type} ${element} = (${type}) ${iterator}.next();
+	${cursor}
+}</template>
+
+<template name="do" description="%Templates.do" id="org.codehaus.groovy.eclipse.templates.do" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">do {
+	${line_selection}${cursor}
+} while (${condition});</template>
+
+<template name="switch" description="%Templates.switch" id="org.codehaus.groovy.eclipse.templates.switch" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">switch (${key}) {
+	case ${value}:
+		${cursor}
+		break;
+
+	default:
+		break;
+}</template>
+
+<template name="if" description="%Templates.if" id="org.codehaus.groovy.eclipse.templates.if" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">if (${condition}) {
+	${line_selection}${cursor}
+}</template>
+
+<template name="ifelse" description="%Templates.ifelse" id="org.codehaus.groovy.eclipse.templates.ifelse" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">if (${condition}) {
+	${cursor}
+} else {
+	
+}</template>
+
+<template name="elseif" description="%Templates.elseif" id="org.codehaus.groovy.eclipse.templates.elseif" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">else if (${condition}) {
+	${cursor}
+}</template>
+
+<template name="else" description="%Templates.else" id="org.codehaus.groovy.eclipse.templates.else" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">else {
+	${cursor}
+}</template>
+
+<template name="try" description="%Templates.try" id="org.codehaus.groovy.eclipse.templates.try" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">try {
+	${line_selection}${cursor}
+} catch (${Exception} e) {
+	// ${todo}: handle exception
+}</template>
+
+<template name="catch" description="%Templates.catch" id="org.codehaus.groovy.eclipse.templates.catch" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">catch (${Exception} e) {
+	${cursor}// ${todo}: handle exception
+}</template>
+
+<template name="main" description="%Templates.main" id="org.codehaus.groovy.eclipse.templates.main" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">public static void main(String[] args) {
+	${cursor}
+}</template>
+
+<template name="public_method" description="%Templates.public_method" id="org.codehaus.groovy.eclipse.templates.public_method" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">public ${return_type} ${name}(${}) {
+	${cursor}
+}</template>
+
+<template name="protected_method" description="%Templates.protected_method" id="org.codehaus.groovy.eclipse.templates.protected_method" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">protected ${return_type} ${name}(${}) {
+	${cursor}
+}</template>
+
+<template name="private_method" description="%Templates.private_method" id="org.codehaus.groovy.eclipse.templates.private_method" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">private ${return_type} ${name}(${}) {
+	${cursor}
+}</template>
+
+<template name="private_static_method" description="%Templates.private_static_method" id="org.codehaus.groovy.eclipse.templates.private_static_method" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">private static ${return_type} ${name}(${}) {
+	${cursor}
+}</template>
+
+<template name="instanceof" description="%Templates.instanceof" id="org.codehaus.groovy.eclipse.templates.instanceof" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">if (${name} instanceof ${type}) {
+	${type} ${new_name} = (${type})${name};
+	${cursor}
+}</template>
+
+<template name="cast" description="%Templates.cast" id="org.codehaus.groovy.eclipse.templates.cast" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">${type} ${new_name} = (${type}) ${name};</template>
+
+<template name="new" description="%Templates.new" id="org.codehaus.groovy.eclipse.templates.new" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">${type} ${name} = new ${type}(${arguments});</template>
+
+<template name="lazy" description="%Templates.lazy" id="org.codehaus.groovy.eclipse.templates.lazy" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">if (${name} == null) {
+	${name} = new ${type}(${arguments});
+	${cursor}
+}
+
+return ${name};</template>
+
+<template name="toarray" description="%Templates.toarray" id="org.codehaus.groovy.eclipse.templates.toarray" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">(${type}[]) ${collection}.toArray(new ${type}[${collection}.size()])</template>
+
+<template name="sysout" description="%Templates.sysout" id="org.codehaus.groovy.eclipse.templates.sysout" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="true">System.out.println(${word_selection}${});${cursor}</template>
+
+<template name="syserr" description="%Templates.syserr" id="org.codehaus.groovy.eclipse.templates.syserr" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="true">System.err.println(${word_selection}${});${cursor}</template>
+
+<template name="systrace" description="%Templates.systrace" id="org.codehaus.groovy.eclipse.templates.systrace" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="true">System.out.println(&quot;${enclosing_type}.${enclosing_method}()&quot;);</template>
+
+<template name="while" description="%Templates.while_condition" id="org.codehaus.groovy.eclipse.templates.while_condition" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">while (${condition}) {
+	${line_selection}${cursor}
+}</template>
+
+<template name="test" description="%Templates.test" id="org.codehaus.groovy.eclipse.templates.test" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="true">public void test${name}() throws Exception {
+	${cursor} 
+}</template>
+
+<template name="nls" description="%Templates.non-nls" id="org.codehaus.groovy.eclipse.templates.non-nls" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">//$$NON-NLS-${N}$$</template>
+
+<template name="synchronized" description="%Templates.synchronized" id="org.codehaus.groovy.eclipse.templates.synchronized" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">synchronized (${mutex}) {
+	${line_selection}
+}</template>
+
+<template name="runnable" description="%Templates.runnable" id="org.codehaus.groovy.eclipse.templates.runnable" context="org.codehaus.groovy.eclipse.templates" enabled="true" autoinsert="false">new Runnable() {
+	public void run() {
+		${line_selection}
+	}
+}</template>
+
+</templates>

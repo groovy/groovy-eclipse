@@ -1,0 +1,100 @@
+<!--
+    Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+   
+    Contributors:
+        Unattributed        - Initial API and implementation
+        Andrew Eisenberg - modified for Groovy Eclipse 2.0
+ -->
+<project name="Shared build targets">
+	<!-- the following properties must be set from the calling script 
+    eclipse.installation.dir
+    eclipse.local.tar.non.server
+    eclipse.download.cache
+    -->
+    
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${buildHome}/build-files/ant-contrib.jar" />
+	
+	<target name="unpack.eclipse">
+		<condition property="unpack.eclipse">
+			<not>
+				<available type="dir" file="${eclipse.installation.dir}"/>
+			</not>
+		</condition>
+		<antcall target="-unpack.eclipse.ifnecessary"/>
+	</target>    
+    
+	<!-- call either with or feature.url or pluginbuilder.eclipse.url
+		 sets property archive.location to the archive path in download cache.
+	 -->
+	<target name="-set.archive.location" if="pluginbuilder.is.server">
+		<!-- set default, useful for server where pluginbuilder.eclipse.url.default can be specified in build_local.properties --> 
+		<property name="pluginbuilder.eclipse.url" value="${pluginbuilder.eclipse.url.default}"/>
+		<condition property="archive.url" value="${feature.url}" else="${pluginbuilder.eclipse.url}">
+				<isset property="feature.url"/>
+		</condition>
+		<mkdir dir="${eclipse.download.cache}"/>
+		<tempfile destdir="${eclipse.download.cache}" property="tmp.file" suffix=".txt" prefix="downloadurl"/>		
+		<echo file="${tmp.file}" message="${archive.url}"/>
+		<checksum file="${tmp.file}" property="pluginbuilder.eclipse.url.checksum"/>
+		<delete file="${tmp.file}"/>
+		<property name="archive.location" value="${eclipse.download.cache}/${pluginbuilder.eclipse.url.checksum}"/>
+		<!-- <echo message="${archive.location} is archive location for ${archive.url}"/> -->
+	</target>
+	
+	<target name="-set.eclipse.local.tar.server" if="pluginbuilder.is.server" depends="-set.archive.location">
+		<property name="eclipse.local.tar" value="${archive.location}"/>
+	</target>
+	
+	<target name="-set.eclipse.local.tar.non.server" unless="pluginbuilder.is.server">
+		<property name="eclipse.local.tar" value="${eclipse.local.tar.non.server}"/>
+	</target>
+	
+	<target name="-get.archive.ifnecessary" unless="eclipse.is.downloaded">
+		<condition property="archive.url" value="${feature.url}" else="${pluginbuilder.eclipse.url}">
+				<isset property="feature.url"/>
+		</condition>
+		<get src="${archive.url}" dest="${archive.location}" />		
+	</target>
+	
+	<target name="-get.archive" depends="-set.archive.location" if="pluginbuilder.is.server">
+		<condition property="eclipse.is.downloaded">
+			<available file="${archive.location}" property="${eclipse.is.downloaded}"/>
+		</condition>		
+		<antcall target="-get.archive.ifnecessary"/> 
+	</target>
+	
+	<target name="-unpack.feature" depends="-set.archive.location">
+		<property name="tempunziplocation" value="${buildDirectory}/tmpunzip"/>
+		<delete dir="${tempunziplocation}" failonerror="false"/>
+		<mkdir dir="${tempunziplocation}"/>
+		<unzip src="${archive.location}" overwrite="true" dest="${tempunziplocation}"/>
+		<condition property="moveroot" value="${tempunziplocation}/eclipse" else="${tempunziplocation}">
+				<available file="${tempunziplocation}/eclipse" type="dir"/>
+		</condition>
+		<move todir="${dest}" includeemptydirs="true">
+			<fileset dir="${moveroot}" includes="**"/>
+		</move>
+	</target>
+			
+	<target name="-unpack.eclipse.ifnecessary" if="unpack.eclipse">
+		<antcall target="-get.archive"/>
+		<condition property="is.windows">
+	  <os family="windows"/>
+		</condition>
+		<antcall target="-unpack.eclipse.windows"/>
+		<antcall target="-unpack.eclipse.linux"/>
+	</target>
+	
+	<target name="-unpack.eclipse.windows" if="is.windows" depends="-set.eclipse.local.tar.server,-set.eclipse.local.tar.non.server">
+		<unzip src="${eclipse.local.tar}" overwrite="true" dest="${eclipse.installation.dir}/.."/>		
+	</target>
+	
+	<target name="-unpack.eclipse.linux" unless="is.windows" depends="-set.eclipse.local.tar.server,-set.eclipse.local.tar.non.server">
+		<untar src="${eclipse.local.tar}" overwrite="true" dest="${eclipse.installation.dir}" compression="gzip"/>		
+	</target>
+	
+</project>

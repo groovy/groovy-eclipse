@@ -1,0 +1,46 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Groovy UI
+Bundle-SymbolicName: org.codehaus.groovy.eclipse.ui; singleton:=true
+Bundle-Version: 2.0.0.qualifier
+Bundle-Activator: org.codehaus.groovy.eclipse.GroovyPlugin
+Bundle-Vendor: The Codehaus
+Export-Package: org.codehaus.groovy.eclipse,
+ org.codehaus.groovy.eclipse.actions,
+ org.codehaus.groovy.eclipse.adapters,
+ org.codehaus.groovy.eclipse.debug.ui,
+ org.codehaus.groovy.eclipse.editor,
+ org.codehaus.groovy.eclipse.editor.actions,
+ org.codehaus.groovy.eclipse.internal.corext,
+ org.codehaus.groovy.eclipse.launchers,
+ org.codehaus.groovy.eclipse.preferences,
+ org.codehaus.groovy.eclipse.ui,
+ org.codehaus.groovy.eclipse.ui.cpcontainer,
+ org.codehaus.groovy.eclipse.ui.util,
+ org.codehaus.groovy.eclipse.wizards
+Require-Bundle: org.eclipse.core.resources,
+ org.eclipse.ui,
+ org.eclipse.jface.text,
+ org.eclipse.ui.workbench.texteditor,
+ org.eclipse.ui.editors,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ui;visibility:=reexport,
+ org.eclipse.debug.core,
+ org.eclipse.debug.ui,
+ org.eclipse.jdt.debug,
+ org.eclipse.jdt.launching,
+ org.eclipse.jdt.debug.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.ui.views,
+ org.eclipse.core.filebuffers,
+ org.eclipse.ui.console,
+ org.eclipse.ui.ide,
+ org.eclipse.core.expressions,
+ org.eclipse.ui.navigator,
+ org.codehaus.groovy.eclipse.core;bundle-version="1.5.0",
+ org.codehaus.groovy;bundle-version="1.5.0",
+ org.eclipse.jdt.groovy.core;bundle-version="1.0.0",
+ org.eclipse.ui.workbench,
+ org.eclipse.jdt.junit;bundle-version="3.4.0"
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: J2SE-1.5

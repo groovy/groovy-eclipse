@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.codehaus.groovy.eclipse.feature.source_0.0.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature.source" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.eclipse.sdk"/>
+   </feature>
+   <feature url="features/org.codehaus.groovy.eclipse.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.eclipse"/>
+   </feature>
+   <feature url="features/org.codehaus.groovy.jdt.patch_0.0.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="0.0.0.qualifier" patch="true">
+      <category name="org.codehaus.groovy.eclipse"/>
+   </feature>
+   <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
+      <description>
+         Optional feature that provides source code for the Groovy-Eclipse plugin
+      </description>
+   </category-def>
+   <category-def name="org.codehaus.groovy.eclipse" label="Groovy-Eclipse plugin">
+      <description>
+         The features that provide Groovy support for Eclipse.
+      </description>
+   </category-def>
+</site>

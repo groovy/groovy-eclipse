@@ -1,0 +1,88 @@
+<!--
+    Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+   
+    Contributors:
+        Unattributed        - Initial API and implementation
+        Andrew Eisenberg - modified for Groovy Eclipse 2.0
+ -->
+<project name="Run automated Tests" default="run" basedir=".">
+	<taskdef resource="org/pluginbuilder/anttasks/pluginbuildertasks.properties" classpath="../pluginbuilder-anttasks.jar" />
+
+	<property file="../../build_local.properties" />
+	<property file="run-tests.properties" />
+
+	<import file="../build_shared.xml" />
+
+	<target name="-init">
+		<antcall target="-purgeTestEclipseHost" />
+		<property name="eclipse.local.tar.non.server" value="${test.eclipse.zip}" />
+		<antcall target="-installTestEclipseHost" />
+	</target>
+
+	<target name="-purgeTestEclipseHost">
+		<delete dir="${test.eclipse.base}" failOnError="true" />
+	</target>
+
+	<target name="-installTestEclipseHost" description="Install Eclipse and all required plug-ins for testing" unless="isEclipseInstallationAvailable">
+		<echo message="Installing plug-ins for testing" />
+		
+		<unzip dest="${test.eclipse.base}">
+			<fileset dir="." includes="eclipse-test-framework*.zip" />
+		</unzip>
+		<unzip dest="${test.eclipse.host}">
+			<fileset dir="." includes="org.pluginbuilder.autotestsuite*.zip" />
+		</unzip>
+		<condition property="buildResultZipDest" value="${test.eclipse.base}" else="${test.eclipse.host}">
+			<equals arg1="${archivePrefix}" arg2="eclipse" />
+		</condition>
+		<unzip dest="${buildResultZipDest}">
+			<fileset dir="${buildDirectory}" includes="${buildType}-**/*.zip" excludes="**/${archiveNamePrefix}-*"/>
+		</unzip>
+		<!-- unpack eclipse if not already done so -->
+	 	<antcall target="unpack.eclipse">
+			<param name="unpack.eclipse" value="true"/>
+		</antcall>
+	</target>
+
+	<target name="-runTestSuite" description="Should be called from allTests.xml only">
+		<ant target="ui-test" antfile="${test.library.xml}" dir="${test.eclipse.host}">
+			<property name="data-dir" value="${test.workspace} -clean" />
+			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
+    	<property name="classname" value="org.codehaus.groovy.alltests.AllGroovyTests" />
+			<property name="eclipse-home" value="${test.eclipse.host}" />
+		</ant>
+		<ant target="core-test" antfile="${test.library.xml}" dir="${test.eclipse.host}">
+			<property name="data-dir" value="${test.workspace} -clean" />
+			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
+    	<property name="classname" value="org.codehaus.groovy.alltests.GroovyJDTTests" />
+			<property name="eclipse-home" value="${test.eclipse.host}" />
+		</ant>
+		
+	</target>
+	
+	<target name="run" depends="-init,-runTestSuite" description="Run manually defined tests and create a report.">
+		<delete dir="${test.result.dir}" />
+		<mkdir dir="${test.result.dir}/xml" />
+
+		<BundleFileLocator eclipseInstallationRoot="${test.eclipse.host}" bundleId="org.pluginbuilder.autotestsuite.application" filePath="JUNIT.XSL" property="junit.xsl.file" />
+		
+		<ant target="collect" antfile="${test.library.xml}" dir="${test.eclipse.host}">
+			<property name="includes" value="*test*.xml" />
+			<property name="output-file" value="${test.aggregated.report}" />
+		</ant>
+		
+		<copy file="${test.eclipse.host}/${test.aggregated.report}" todir="${test.result.dir}/xml" />
+		<!--<style style="${basedir}/JUNIT.XSL" basedir="${test.result.dir}/xml" destdir="${test.result.dir}/html" />-->
+		<style style="${junit.xsl.file}" basedir="${test.result.dir}/xml" destdir="${test.result.dir}/html" />
+		<!--<xslt style="${junit.xsl.file}" basedir="${test.result.dir}/xml" destdir="${test.result.dir}/html"/>-->
+	</target>
+	
+	<target name="markErrorOrFailure" if="isErrorOrFailure">
+		<echo level="error" message="TESTS FAILED"/>
+	</target>
+
+</project>

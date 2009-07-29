@@ -1,0 +1,229 @@
+<!--
+    Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+   
+    Contributors:
+        Unattributed        - Initial API and implementation
+        Andrew Eisenberg - modified for Groovy Eclipse 2.0
+ -->
+<project name="Generated">
+	<property name="base.svn.url" value="https://src.springsource.com/svn/incubator/groovyjdt3"/>
+	<property name="base.svn.url.ide" value="${base.svn.url}/ide"/>
+	<property name="base.svn.url.ide-test" value="${base.svn.url}/ide-test"/>
+	<property name="base.svn.url.base" value="${base.svn.url}/base"/>
+	<property name="base.svn.url.test" value="${base.svn.url}/test"/>
+
+  <target name="fetch.svn.all">
+
+  <!--
+  </target>
+  <target name="fetch.svn.allOLD">
+	-->
+  	<!-- Features -->
+  	<antcall target="svn.co">
+      <param name="target" value="features"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.feature"/>
+      <param name="project.name" value="Feature%20org.codehaus.groovy.eclipse.feature"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="features"/>
+      <param name="element.id" value="org.codehaus.groovy.jdt.patch"/>
+      <param name="project.name" value="Feature%20org.codehaus.groovy.jdt.patch"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="features"/>
+      <param name="element.id" value="org.codehaus.groovy.alltests.feature"/>
+      <param name="project.name" value="Feature%20org.codehaus.groovy.alltests.feature"/>
+      <param name="url" value="${base.svn.url.ide-test}"/>
+    </antcall>
+  	<antcall target="svn.co">
+      <param name="target" value="features"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.sdk"/>
+      <param name="project.name" value="Feature%20org.codehaus.groovy.eclipse.sdk"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+  	<!--
+  	<antcall target="svn.co">
+      <param name="target" value="features"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.testng.feature"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.testng.feature"/>
+      <param name="url" value="http://svn.codehaus.org/groovy/trunk/groovy/ide/groovy-eclipse/"/>
+    </antcall>
+  	-->
+  	
+  	<!-- Base Plugins -->
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy"/>
+      <param name="project.name" value="org.codehaus.groovy"/>
+      <param name="url" value="${base.svn.url.base}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.eclipse.jdt.core"/>
+      <param name="project.name" value="org.eclipse.jdt.core"/>
+      <param name="url" value="${base.svn.url.base}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.eclipse.jdt.groovy.core"/>
+      <param name="project.name" value="org.eclipse.jdt.groovy.core"/>
+      <param name="url" value="${base.svn.url.base}"/>
+    </antcall>
+  	
+  	<!-- Base Test Plugins -->
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.eclipse.jdt.groovy.core.tests.builder"/>
+      <param name="project.name" value="org.eclipse.jdt.groovy.core.tests.builder"/>
+      <param name="url" value="${base.svn.url.test}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.eclipse.jdt.groovy.core.tests.compiler"/>
+      <param name="project.name" value="org.eclipse.jdt.groovy.core.tests.compiler"/>
+      <param name="url" value="${base.svn.url.test}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.eclipse.test.performance"/>
+      <param name="project.name" value="org.eclipse.test.performance"/>
+      <param name="url" value="${base.svn.url.test}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.eclipse.test.performance.win32"/>
+      <param name="project.name" value="org.eclipse.test.performance.win32"/>
+      <param name="url" value="${base.svn.url.test}"/>
+    </antcall>
+  	
+  	<!-- IDE Plugins -->
+  	<antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.core"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.core"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.codebrowsing"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.codebrowsing"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+  	<antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.codeassist.completion"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.codeassist.completion"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.ui"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.ui"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.cstviewer"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.cstviewer"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.core.help"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.core.help"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.refactoring"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.refactoring"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.astviews"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.astviews"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.apache.commons.collections"/>
+      <param name="project.name" value="org.apache.commons.collections"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.apache.commons.lang"/>
+      <param name="project.name" value="org.apache.commons.lang"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+
+<!--
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.testng"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.testng"/>
+      <param name="url" value="http://svn.codehaus.org/groovy/trunk/groovy/ide/groovy-eclipse/"/>
+    </antcall>
+-->
+
+  	<!-- IDE Test Plugins -->
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.alltests"/>
+      <param name="project.name" value="org.codehaus.groovy.alltests"/>
+      <param name="url" value="${base.svn.url.ide-test}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.codebrowsing.test"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.codebrowsing.test"/>
+      <param name="url" value="${base.svn.url.ide-test}"/>
+    </antcall>
+  	<antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.codeassist.completion.test"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.codeassist.completion.test"/>
+      <param name="url" value="${base.svn.url.ide-test}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.junit.test"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.junit.test"/>
+      <param name="url" value="${base.svn.url.ide-test}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.tests"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.tests"/>
+      <param name="url" value="${base.svn.url.ide-test}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.core.test"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.core.test"/>
+      <param name="url" value="${base.svn.url.ide-test}"/>
+    </antcall>
+    <antcall target="svn.co">
+      <param name="target" value="plugins"/>
+      <param name="element.id" value="org.codehaus.groovy.eclipse.refactoring.test"/>
+      <param name="project.name" value="org.codehaus.groovy.eclipse.refactoring.test"/>
+      <param name="url" value="${base.svn.url.ide-test}"/>
+    </antcall>
+  	
+  	<!-- Update site -->
+    <antcall target="svn.co">
+      <param name="target" value="features"/>
+      <param name="element.id" value="Site Groovy"/>
+      <param name="project.name" value="Site Groovy"/>
+      <param name="url" value="${base.svn.url.ide}"/>
+    </antcall>
+	
+  </target>
+</project>

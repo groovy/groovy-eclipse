@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+<toc label="Developers Guide" link_to="toc.xml#developersGuide">
+	<topic label="Evaluation Type Hierarchy"
+		href="html/developersGuide/types/intro.html">
+		<topic label="The Type Hiearchy"
+			href="html/developersGuide/types/hierarchy.html" />
+	</topic>
+	<topic label="Source Code and Evaluation Contexts"
+		href="html/developersGuide/contexts/intro.html">
+		<topic label="The ISyntacticContext Interface"
+			href="html/developersGuide/contexts/syntacticContext.html" />
+		<topic label="The ITypeEvaluationContext Interface"
+			href="html/developersGuide/contexts/typeEvaluationContext.html" />
+	</topic>
+	<topic label="Adding Support for Dynamic Methods and Properties"
+		href="html/developersGuide/typeExtension/intro.html">
+		<topic label="The IMemberLookup Interface"
+			href="html/developersGuide/typeExtension/memberLookupAPI.html" />
+		<topic
+			label="Tutorial: Adding find* Methods to Grails Domain Objects"
+			href="html/developersGuide/typeExtension/memberLookupTutorial.html" />
+	</topic>
+	<topic label="Type Evaluation"
+		href="html/developersGuide/typeEvaluation/intro.html">
+		<topic label="Using the Type Evaluator"
+			href="html/developersGuide/typeEvaluation/example.html" />
+	</topic>
+	<!-- Pending possible additions to API -->
+	<!-- 
+		<topic label="Adding Custom Code Completion Processors">
+		<topic label="Introduction" href="html/developersGuide/codeAssist/intro.html" />
+		<topic label="" href="html/developersGuide/codeAssist/" />
+		<topic label="" href="html/developersGuide/codeAssist/" />
+		</topic>
+	-->
+
+</toc>

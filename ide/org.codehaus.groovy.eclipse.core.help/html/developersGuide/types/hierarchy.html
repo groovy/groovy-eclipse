@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>The Type Hiearchy</title>
+<link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css">
+</head>
+<body>
+<h1>The Type Hiearchy</h1>
+The type hiearchy is described, with excerpts of the class fields and methods where appropriate. See the JavaDoc for
+details.
+<br>
+<br>
+The classes in the Type hiearchy can be found in package
+<em>org.codehaus.groovy.eclipse.core.types<br>
+</em>
+<br>
+package org.codehaus.groovy.eclipse.core.types;
+<br>
+<h2>Type</h2>
+The root of all Type classes.
+<p class="Code">public abstract class Type implements Modifiers, Comparable { <br>
+&nbsp;&nbsp;&nbsp; public static final int CLASS = 1; <br>
+&nbsp;&nbsp;&nbsp; public static final int MEMBER = 2; <br>
+&nbsp;&nbsp;&nbsp; public static final int LOCAL_VARIABLE = 3; <br>
+&nbsp;&nbsp;&nbsp; public static final int PARAMETER = 4; <br>
+&nbsp;&nbsp;&nbsp; public static final int FIELD = 5; <br>
+&nbsp;&nbsp;&nbsp; public static final int METHOD = 6; <br>
+&nbsp;&nbsp;&nbsp; protected String signature; <br>
+&nbsp;&nbsp;&nbsp; protected String name; <br>
+&nbsp;&nbsp;&nbsp; protected int modifiers; <br>
+&nbsp;&nbsp;&nbsp; private boolean inferred; <br>
+&nbsp;&nbsp;&nbsp; public boolean isGroovyType() { ... } <br>
+&nbsp;&nbsp;&nbsp; public boolean isInferred() { ... }<br>
+}</p>
+The signature is simply the same as that returned by methods in Class. e.g. 'java.lang.String' or '[Ljava.lang.String;'
+or '[Z' or 'byte' and so on.
+<br>
+Other points of interest here are the two methods
+<em>isGroovyType()</em>
+and
+<em>isInferred()</em>
+. It it very important that these be implemented in the correct way. Failure to do so can confuse the type evaluator.
+<br>
+<h3>isGroovyType()</h3>
+This method should return false if the type is a Java type. Java types are rarely used. If required they are type names
+prefixed with 'Java'.
+<h3>isInferred()</h3>
+This method should return false if the type is known. This is true for Java types. It is also true in most cases when
+extensions are implemented to handle dynamic types.
+<br>
+<h2>Derived Types</h2>
+The derived types act mainly as holders of information relating to their hierarchy. For example,
+<em>Member</em>
+types have a reference to their declaring class. For details see the JavaDoc.
+<h2>Utilities</h2>
+Class TypeUtil contains various utilities for creating types amongst other things.
+</body>
+</html>

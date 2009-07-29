@@ -1,0 +1,123 @@
+/* 
+ * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
+ *
+ * IFS Institute for Software, HSR Rapperswil, Switzerland
+ * http://ifs.hsr.ch/
+ *
+ */
+package org.codehaus.groovy.eclipse.refactoring.core.utils;
+
+import java.io.Reader;
+import java.io.StringReader;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
+
+import org.codehaus.groovy.antlr.parser.GroovyLexer;
+import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
+import org.codehaus.groovy.eclipse.refactoring.Activator;
+import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Status;
+
+import antlr.Token;
+import antlr.TokenStream;
+import antlr.TokenStreamException;
+
+/**
+ * @author Klenk Michael mklenk@hsr.ch
+ * @author Kempf Martin
+ * 
+ * Class used to verify user input (making sure that no keywords etc are being used)
+ */
+public final class GroovyConventionsBuilder {
+	
+	public static final String CLASS = "class";
+	public static final String VARIABLE = "variable";
+	public static final String METHOD = "method";
+	public static final String FIELD = "field";
+	
+	private List<String> names = new ArrayList<String>();
+	private String element;
+	private MultiStatus state = new MultiStatus(Activator.PLUGIN_ID, IStatus.OK, "", null);
+
+	public GroovyConventionsBuilder(String name, String element) {
+		this.names.add(name);
+		this.element = element;
+		validateNotNull();
+	}
+	
+	public GroovyConventionsBuilder(List<String> names, String element) {
+		this.names = names;
+		this.element = element;
+		validateNotNull();
+	}
+	
+	public GroovyConventionsBuilder validateUpperCase(int status) {
+		//warning if lower case
+		for (String name : names) {
+			if (name.length() > 0 && Character.isLowerCase(name.charAt(0))) {
+				state.add(new Status(status, Activator.PLUGIN_ID,
+						MessageFormat.format(GroovyRefactoringMessages.GroovyConventions_NameUpperChar,element)));
+			}
+		}
+		return this;
+	}
+	
+	public GroovyConventionsBuilder validateLowerCase(int status) {
+		//warning if upper case
+		for (String name : names) {
+			if (name.length() > 0 && Character.isUpperCase(name.charAt(0))) {
+				state.add(new Status(status, Activator.PLUGIN_ID,
+						MessageFormat.format(GroovyRefactoringMessages.GroovyConventions_NameLowChar,element)));
+			}
+		}
+		return this;
+	}
+	
+	public GroovyConventionsBuilder validateGroovyIdentifier() {
+		// Test if the first and only Token is an Identifier
+		for (String name : names) {
+			List<Token> tokenList = tokenizeString(name);
+			if (!(tokenList.size() == 1 && tokenList.get(0).getType() == GroovyTokenTypes.IDENT)) {
+				state.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+						MessageFormat.format(GroovyRefactoringMessages.GroovyConventions_IllegalName, name)));
+			}
+		}
+		return this;
+	}
+	
+	public IStatus done() {
+		return state;
+	}
+	
+	private void validateNotNull() {
+		for (String name : names) {
+			if(name.length() == 0) {
+				state.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+						MessageFormat.format(GroovyRefactoringMessages.GroovyConventions_ProvideName, element)));
+			}
+		}
+	}
+
+	public static List<Token> tokenizeString(String name) {
+		Reader input = new StringReader(name);
+		GroovyLexer lexer = new GroovyLexer(input);
+		TokenStream stream = (TokenStream) lexer.plumb();
+
+		List<Token> tokenList = new Vector<Token>();
+
+		Token token = null;
+		try {
+			while ((token = stream.nextToken()).getType() != Token.EOF_TYPE) {
+				tokenList.add(token);
+			}
+		} catch (TokenStreamException e) {
+			e.printStackTrace();
+		}
+
+		return tokenList;
+	}
+}

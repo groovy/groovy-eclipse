@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="GroovyEclipse" topic="html/toc.html">
+   <topic label="Developers Guide">
+      <anchor id="developersGuide"/>
+   </topic>
+</toc>

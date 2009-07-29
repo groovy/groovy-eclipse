@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>GroovyEclipse Types Extensions</title>
+<style type="text/css">@import url("file:/Users/ervin/Desktop/eclipse-3.5M3-64bit/plugins/org.eclipse.sdk_3.5.0.v200902021535/book.css");</style>
+<style type="text/css">@import url("file:/Users/ervin/Desktop/eclipse-3.5M3-64bit/configuration/org.eclipse.osgi/bundles/149/1/.cp/schema.css");</style>
+</HEAD>
+<BODY>
+<H1 style="text-align:center">GroovyEclipse Types Extensions</H1>
+<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Identifier: </h6>org.codehaus.groovy.eclipse.org.codehaus.groovy.eclipse.core.types<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Since: </h6>[Enter the first release in which this extension point appears.]
+<p></p>
+
+<h6 class="CaptionFigColumn SchemaHeader">Description: </h6>In order to adapt GroovyEclipse to specific domains, type extensions can be implemented. These extensions help describe the custom domain and also provide types for various domain specific classes.
+
+The end result is new types visible to GroovyEclipse with which to perform code completion, type inference etc.<p></p>
+<h6 class="CaptionFigColumn SchemaHeader">Configuration Markup:</h6>
+<p></p>
+<p class="code SchemaDtd">&lt;!ELEMENT <a name="e.extension">extension</a> (<a href="#e.memberLookup">memberLookup</a>)+&gt;</p>
+<p class="code SchemaDtd">&lt;!ATTLIST extension</p>
+<p class="code SchemaDtdAttlist">point&nbsp;CDATA #REQUIRED</p><p class="code SchemaDtdAttlist">id&nbsp;&nbsp;&nbsp;&nbsp;CDATA #IMPLIED</p><p class="code SchemaDtdAttlist">name&nbsp;&nbsp;CDATA #IMPLIED</p>&gt;</p>
+<p></p>
+<ul class="ConfigMarkupAttlistDesc">
+</ul>
+<br><p class="code SchemaDtd">&lt;!ELEMENT <a name="e.memberLookup">memberLookup</a> EMPTY&gt;</p>
+<p class="code SchemaDtd">&lt;!ATTLIST memberLookup</p>
+<p class="code SchemaDtdAttlist">name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #IMPLIED</p><p class="code SchemaDtdAttlist">requiredContexts&nbsp;CDATA #IMPLIED</p><p class="code SchemaDtdAttlist">class&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CDATA #REQUIRED</p>&gt;</p>
+<p></p>
+<ul class="ConfigMarkupAttlistDesc">
+<li><b>name</b> - A name suitable for display.</li>
+<li><b>requiredContexts</b> - A comma separated list of contexts that this context depends on. For this member lookup to be selected, the source location must be in one of the contexts in the list.</li>
+<li><b>class</b> - </li>
+</ul>
+<br><h6 class="CaptionFigColumn SchemaHeader">Examples: </h6>[Enter extension point usage example here.]
+<p></p>
+
+<h6 class="CaptionFigColumn SchemaHeader">Supplied Implementation: </h6>[Enter information about supplied implementation of this extension point.]
+<p></p>
+
+<br>
+<p class="note SchemaCopyright">
+</p>
+</BODY>
+</HTML>

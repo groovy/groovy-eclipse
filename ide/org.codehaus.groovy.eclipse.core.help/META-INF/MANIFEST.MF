@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: GroovyEclipse Core Help
+Bundle-SymbolicName: org.codehaus.groovy.eclipse.core.help;singleton:=true
+Bundle-Version: 2.0.0.qualifier
+Bundle-Vendor: The CodeHaus
+Bundle-Localization: plugin
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Require-Bundle: org.eclipse.help;bundle-version="3.3.102"
