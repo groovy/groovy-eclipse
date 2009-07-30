@@ -71,15 +71,15 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         try {
             newcps[newcps.length-1] = FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar")).getFile();
             newcps[newcps.length-2] = FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar")).getFile();
+            // FIXASC (M2) think more about why this is here... the tests that need it specify the option but that is just for
+            // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
+            // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
+            // classpath for just this reason, hmm.
+            newcps[newcps.length-3] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
+//      newcps[newcps.length-4] = new File("astTransformations/spock-core-0.1.jar").getAbsolutePath();
         } catch (IOException e) {
             fail("IOException thrown " + e.getMessage());
         }
-        // TODO (asc1) think more about why this is here... the tests that need it specify the option but that is just for
-        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
-        // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
-        // classpath for just this reason, hmm.
-        newcps[newcps.length-3] = new File("astTransformations/transforms.jar").getAbsolutePath();
-//      newcps[newcps.length-4] = new File("astTransformations/spock-core-0.1.jar").getAbsolutePath();
         return newcps;
     }
 	
