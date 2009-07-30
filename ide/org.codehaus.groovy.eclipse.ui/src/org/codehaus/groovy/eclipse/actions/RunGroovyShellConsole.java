@@ -20,6 +20,7 @@ import java.util.Enumeration;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.codehaus.groovy.eclipse.launchers.GroovyLaunchShortcut;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
@@ -54,9 +55,9 @@ public class RunGroovyShellConsole implements IObjectActionDelegate {
 	 */
 	public void run(IAction action) {
 	    
-        MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Not implemented", "This action is not implemented yet.");
-
-        if (true) return;
+//        MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Not implemented", "This action is not implemented yet.");
+//
+//        if (true) return;
         
 		String className ;
 		if(GROOVY_CONSOLE_ACTION_ID.equals(action.getId())) {
@@ -69,8 +70,8 @@ public class RunGroovyShellConsole implements IObjectActionDelegate {
 		
         final IStructuredSelection s = (IStructuredSelection) selection;
         final Object selected = s.getFirstElement();
-        if( selected instanceof IJavaProject ) {
-        	IJavaProject project = (IJavaProject) selected ;
+        if (selected instanceof IJavaProject) {
+        	IJavaProject project = (IJavaProject) selected;
         	
         	try {
 				String launchName = GroovyLaunchShortcut.getLaunchManager().generateUniqueLaunchConfigurationNameFrom(project.getProject().getName());
@@ -79,7 +80,7 @@ public class RunGroovyShellConsole implements IObjectActionDelegate {
 				
 				launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, className);
 				launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getElementName());
-				List<String> classpath = Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project));
+				List<String> classpath = ListUtil.newList(JavaRuntime.computeDefaultRuntimeClassPath(project));
 				classpath.add(getPathToJLine());
 				launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, classpath);
 				

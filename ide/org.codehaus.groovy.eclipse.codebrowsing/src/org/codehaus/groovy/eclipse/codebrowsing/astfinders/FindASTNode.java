@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
@@ -175,6 +176,18 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 				testForMatch(expr);
 			}
 		}
+	}
+	
+	@Override
+	public void visitConstantExpression(ConstantExpression expr) {
+	    if (validCoords(expr)) {
+            if (identifier.equals(expr.getValue())
+                    || identifier
+                            .equals(expr.getType().getNameWithoutPackage())) {
+                System.out.println("Variable: " + expr.getValue());
+                testForMatch(expr);
+            }
+        }
 	}
 	
 	@Override

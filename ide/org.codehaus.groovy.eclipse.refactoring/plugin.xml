@@ -55,6 +55,11 @@
             id="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
             name="Refactor Groovy Commands">
       </category>
+      <category
+            description="Source"
+            id="org.codehaus.groovy.eclipse.editor.category.source"
+            name="Source Groovy Commands">
+      </category>
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
             id="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"

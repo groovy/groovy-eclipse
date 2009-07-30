@@ -70,8 +70,7 @@ public abstract class AbstractASTBasedMemberLookup extends AbstractMemberLookup 
 
         List properties = classNode.getProperties();
         if (properties.size() > 0) {
-            ClassType declaringClass = TypeUtil.newClassType(classNode
-                    .getName(), classNode.getModifiers());
+            ClassType declaringClass = TypeUtil.newClassType(classNode);
             for (Iterator iter = properties.iterator(); iter.hasNext();) {
                 PropertyNode propertyNode = (PropertyNode) iter.next();
                 results.add(TypeUtil.newProperty(declaringClass, propertyNode));

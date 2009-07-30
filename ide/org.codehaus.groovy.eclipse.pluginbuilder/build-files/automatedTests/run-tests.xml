@@ -48,18 +48,24 @@
 		</antcall>
 	</target>
 
-	<target name="-runTestSuite" description="Should be called from allTests.xml only">
-		<ant target="ui-test" antfile="${test.library.xml}" dir="${test.eclipse.host}">
+	<target name="-runTestSuite">
+		<ant target="ui-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
 			<property name="data-dir" value="${test.workspace} -clean" />
 			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
     	<property name="classname" value="org.codehaus.groovy.alltests.AllGroovyTests" />
 			<property name="eclipse-home" value="${test.eclipse.host}" />
+			<property name="arch" value="${test_arch}"/>
+			<property name="os" value="${test_os}"/>
+			<property name="ws" value="${test_ws}"/>
 		</ant>
-		<ant target="core-test" antfile="${test.library.xml}" dir="${test.eclipse.host}">
+		<ant target="core-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
 			<property name="data-dir" value="${test.workspace} -clean" />
 			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
     	<property name="classname" value="org.codehaus.groovy.alltests.GroovyJDTTests" />
 			<property name="eclipse-home" value="${test.eclipse.host}" />
+			<property name="arch" value="${test_arch}"/>
+			<property name="os" value="${test_os}"/>
+			<property name="ws" value="${test_ws}"/>
 		</ant>
 		
 	</target>

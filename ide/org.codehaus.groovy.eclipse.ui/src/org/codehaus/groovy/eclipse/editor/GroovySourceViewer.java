@@ -34,6 +34,10 @@ import org.eclipse.ui.PlatformUI;
  * This is copied from CompilationUnitEditor#AdaptedSourceViewer
  * so that the GroovySourceViewer can subclass and make changes
  * 
+ * XXX This class is not used yet, but it may in the future.
+ * However, watch out for a ClassCastException at CompilationUnitEditor.handlePreferenceStoreChanged
+ * line 1535
+ * 
  * @author Andrew Eisenberg
  * @created Jul 22, 2009
  *

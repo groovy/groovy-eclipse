@@ -62,13 +62,10 @@ public class TypeUtil {
 		return new ClassType(signature, modifiers, classNode.getName());
 	}
 	
-	public static ClassType newClassType(String signature, int modifiers) {
-	    String qualifier = Signature.getSignatureQualifier(signature);
-	    String name = Signature.getSignatureSimpleName(signature);
-	    String qualName = ( qualifier.length() > 0 ? qualifier + "." : "") 
-	        + name; 
-		return new ClassType(signature, modifiers, qualName);
-	}
+    public static ClassType newClassType(ClassNode node, int modifiers) {
+        return new ClassType(Signature.createTypeSignature(node.getName(), true), node.getModifiers(), node.getName());
+    }
+	
 	
 	public static ClassType newClassType(Class cls) {
 		String signature = cls.getName();

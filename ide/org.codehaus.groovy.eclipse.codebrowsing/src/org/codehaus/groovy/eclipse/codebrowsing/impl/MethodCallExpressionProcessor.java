@@ -16,12 +16,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Variable;
@@ -37,33 +34,16 @@ import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchProcessor;
 import org.codehaus.groovy.eclipse.codebrowsing.SourceCodeFinder;
 import org.codehaus.groovy.eclipse.core.DocumentSourceBuffer;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.IGroovyProjectAware;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext;
-import org.codehaus.groovy.eclipse.core.context.ISourceCodeContextAware;
 import org.codehaus.groovy.eclipse.core.context.impl.SourceCodeContextFactory;
-import org.codehaus.groovy.eclipse.core.impl.ReverseSourceBuffer;
 import org.codehaus.groovy.eclipse.core.inference.internal.SourceContextInfo;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.types.ClassType;
 import org.codehaus.groovy.eclipse.core.types.Field;
-import org.codehaus.groovy.eclipse.core.types.IMemberLookup;
-import org.codehaus.groovy.eclipse.core.types.ISymbolTable;
-import org.codehaus.groovy.eclipse.core.types.ITypeEvaluationContext;
-import org.codehaus.groovy.eclipse.core.types.MemberLookupRegistry;
 import org.codehaus.groovy.eclipse.core.types.Method;
 import org.codehaus.groovy.eclipse.core.types.Parameter;
 import org.codehaus.groovy.eclipse.core.types.Property;
-import org.codehaus.groovy.eclipse.core.types.SymbolTableRegistry;
-import org.codehaus.groovy.eclipse.core.types.TypeEvaluationContextBuilder;
-import org.codehaus.groovy.eclipse.core.types.TypeEvaluator;
-import org.codehaus.groovy.eclipse.core.types.TypeEvaluator.EvalResult;
-import org.codehaus.groovy.eclipse.core.types.impl.CategoryLookup;
-import org.codehaus.groovy.eclipse.core.types.impl.ClassLoaderMemberLookup;
-import org.codehaus.groovy.eclipse.core.types.impl.CompositeLookup;
-import org.codehaus.groovy.eclipse.core.types.impl.GroovyProjectMemberLookup;
-import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
-import org.codehaus.groovy.eclipse.core.util.ParseException;
 import org.codehaus.groovy.eclipse.editor.actions.IDocumentFacade;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IField;
@@ -240,9 +220,14 @@ public class MethodCallExpressionProcessor implements
         
         SourceContextInfo sourceInfo = SourceContextInfo.create(info.getModuleNode(), project, offset, buffer);
         if (sourceInfo != null) {
+            // FIXADE M2 we need a way to figure out if we are looking at property on a class or not
+            // for now, assume that upper case first letter is a class.
+            boolean isClass = Character.isUpperCase(sourceInfo.expression.charAt(0));
+            String targetType = isClass ? sourceInfo.expression : sourceInfo.eval.getName();
+            
             List<IJavaElement> elts = new ArrayList<IJavaElement>();
             try {
-                Field[] fields = sourceInfo.lookup.lookupFields(sourceInfo.eval.getName(), sourceInfo.name, false, false, true);
+                Field[] fields = sourceInfo.lookup.lookupFields(targetType, sourceInfo.name, false, isClass, true);
                 for (Field field : fields) {
                     ClassType declaring = field.getDeclaringClass();
                     IType type = project.getProject().findType(declaring.getName(), new NullProgressMonitor());
@@ -258,7 +243,7 @@ public class MethodCallExpressionProcessor implements
             }
 
             try {
-                Method[] methods = sourceInfo.lookup.lookupMethods(sourceInfo.eval.getName(), sourceInfo.name, false, false, true);
+                Method[] methods = sourceInfo.lookup.lookupMethods(targetType, sourceInfo.name, false, isClass, true);
                 for (Method method : methods) {
                     ClassType declaring = method.getDeclaringClass();
                     IType type = project.getProject().findType(declaring.getName(), new NullProgressMonitor());
@@ -297,7 +282,7 @@ public class MethodCallExpressionProcessor implements
             }
             
             try {
-                Property[] properties = sourceInfo.lookup.lookupProperties(sourceInfo.eval.getName(), sourceInfo.name, false, false, true);
+                Property[] properties = sourceInfo.lookup.lookupProperties(targetType, sourceInfo.name, false, isClass, true);
                 for (Property property : properties) {
                     ClassType declaring = property.getDeclaringClass();
                     IType type = project.getProject().findType(declaring.getName(), new NullProgressMonitor());

@@ -121,8 +121,6 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello2.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         unit.becomeWorkingCopy(null);
-//        env.waitForAutoBuild();
-//        env.waitForManualRefresh();
         IJavaElement[] elt = unit.codeSelect(contents2.lastIndexOf("redirect"), "redirect".length());
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
@@ -146,10 +144,6 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
 
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello2.groovy");
         unit.becomeWorkingCopy(null);
-//        synchronized (this) {
-//        	wait(1000);
-//		}
-//        env.waitForManualRefresh();
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents2.lastIndexOf("redirect"), "redirect".length());
         assertEquals("Should have found a selection", 1, elt.length);

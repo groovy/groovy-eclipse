@@ -7,7 +7,7 @@
  *
  * Contributors:
  *     Unattributed        - Initial API and implementation
- *     Andrew Eisenberg - modified for Groovy Eclipse 2.0
+ *     Andrew Eisenberg    - modified for Groovy Eclipse 2.0
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.core.types.impl
 

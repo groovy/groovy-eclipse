@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
@@ -155,8 +156,12 @@ public class DeclarationSearchAssistant implements IDeclarationSearchAssistant {
 		registerProcessor(GROOVY_CONTEXT_ID,
 				PropertyExpression.class.getName(),
 				new PropertyExpressionProcessor());
+//		registerProcessor(GROOVY_CONTEXT_ID, VariableExpression.class
+//				.getName(), new MethodCallExpressionProcessor());
 		registerProcessor(GROOVY_CONTEXT_ID, MethodCallExpression.class
-				.getName(), new MethodCallExpressionProcessor());
+		        .getName(), new MethodCallExpressionProcessor());
+		registerProcessor(GROOVY_CONTEXT_ID, ConstantExpression.class
+		        .getName(), new MethodCallExpressionProcessor());
 		registerProcessor(GROOVY_CONTEXT_ID, MethodPointerExpression.class
 				.getName(), new MethodPointerExpressionProcessor());
 		registerProcessor(GROOVY_CONTEXT_ID, ClassExpression.class.getName(),

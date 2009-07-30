@@ -43,6 +43,7 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         IPath root = projectPath.append("src");
         String contents = "def x = 9\nx++\n";
         env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('x'), 1);
@@ -56,6 +57,7 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         String contents = "class Foo { def x = 9\n"+
         "def y() {\nx++\n } }";
         env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('x'), 1);
@@ -101,6 +103,7 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         String contents = "class Foo { static def x = 9\n"+
         "def y() {\nFoo.x++\n } }";
         env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('x'), 1);
@@ -108,21 +111,21 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         assertEquals("Should have found local variable 'x'", "x", elt[0].getElementName());
     }
     
-//    public void testCodeSelectStaticFieldInOtherClass() throws Exception {
-//        IPath projectPath = createGenericProject();
-//        IPath root = projectPath.append("src");
-//        String contents = "class Foo { static def x = 9\n }\n";
-//        env.addGroovyClass(root, "", "Hello", contents);
-//        String contents2 = "class Bar { def y() { Foo.x++\n }\n }";
-//        env.addGroovyClass(root, "", "Hello2", contents2);
-//        incrementalBuild();
-//        expectingNoProblems();
-//        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello2.groovy");
-//        assertTrue("Hello2 groovy unit should exist", unit.exists());
-//        IJavaElement[] elt = unit.codeSelect(contents2.lastIndexOf('x'), 1);
-//        assertEquals("Should have found a selection", 1, elt.length);
-//        assertEquals("Should have found local variable 'x'", "x", elt[0].getElementName());
-//    }
+    public void testCodeSelectStaticFieldInOtherClass() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class Foo { static def x = 9\n }\n";
+        env.addGroovyClass(root, "", "Hello", contents);
+        String contents2 = "class Bar { def y() { Foo.x++\n }\n }";
+        env.addGroovyClass(root, "", "Hello2", contents2);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello2.groovy");
+        assertTrue("Hello2 groovy unit should exist", unit.exists());
+        IJavaElement[] elt = unit.codeSelect(contents2.lastIndexOf('x'), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found local variable 'x'", "x", elt[0].getElementName());
+    }
 
     public void testCodeSelectInClosure() throws Exception {
         IPath projectPath = createGenericProject();
@@ -132,6 +135,7 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         "}\n"+
         "x(\"hello\")\n";
         env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('t'), 1);
@@ -146,6 +150,7 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         "}\n"+
         "x(\"hello\")\n";
         env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('t'), 1);
@@ -159,6 +164,7 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         "t -> print y\n"+
         "}\n";
         env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
@@ -166,36 +172,38 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
     }
     
-//    public void testCodeSelectFieldInClosure() throws Exception {
-//        IPath projectPath = createGenericProject();
-//        IPath root = projectPath.append("src");
-//        String contents = "class X { \n def y=9\n } \n" +
-//        		"def x = {\n"+
-//        		"t -> print new X().y\n"+
-//        		"}\n";
-//        env.addGroovyClass(root, "", "Hello", contents);
-//        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
-//        assertTrue("Hello groovy unit should exist", unit.exists());
-//        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
-//        assertEquals("Should have found a selection", 1, elt.length);
-//        assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
-//    }
+    public void testCodeSelectFieldInClosure() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class X { \n def y=9\n } \n" +
+        		"def x = {\n"+
+        		"t -> print new X().y\n"+
+        		"}\n";
+        env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
+        assertTrue("Hello groovy unit should exist", unit.exists());
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
+    }
     
-//    public void testCodeSelectFieldFromSuperInClosure() throws Exception {
-//        IPath projectPath = createGenericProject();
-//        IPath root = projectPath.append("src");
-//        String contents = "class X { \n def y=9\n } \n" +
-//                "class Y extends X { }\n" +
-//                "def x = {\n"+
-//                "t -> print new Y().y\n"+
-//                "}\n";
-//        env.addGroovyClass(root, "", "Hello", contents);
-//        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
-//        assertTrue("Hello groovy unit should exist", unit.exists());
-//        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
-//        assertEquals("Should have found a selection", 1, elt.length);
-//        assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
-//    }
+    public void testCodeSelectFieldFromSuperInClosure() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class X { \n def y=9\n } \n" +
+                "class Y extends X { }\n" +
+                "def x = {\n"+
+                "t -> print new Y().y\n"+
+                "}\n";
+        env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
+        assertTrue("Hello groovy unit should exist", unit.exists());
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
+    }
     
     public void testCodeSelectStaticFieldInClosure() throws Exception {
         IPath projectPath = createGenericProject();
@@ -208,6 +216,7 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
       		        "}\n" +
         		"}";
         env.addGroovyClass(root, "", "Hello", contents);
+        env.incrementalBuild();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
@@ -215,20 +224,20 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
     }
     
-//    public void testCodeSelectStaticFieldFromOtherInClosure() throws Exception {
-//        IPath projectPath = createGenericProject();
-//        IPath root = projectPath.append("src");
-//        String contents = "class X { \n static def y=9\n } \n" +
-//                "def x = {\n"+
-//                "t -> print X.y\n"+
-//                "}\n";
-//        env.addGroovyClass(root, "", "Hello", contents);
-//        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
-//        assertTrue("Hello groovy unit should exist", unit.exists());
-//        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
-//        assertEquals("Should have found a selection", 1, elt.length);
-//        assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
-//    }
+    public void testCodeSelectStaticFieldFromOtherInClosure() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class X { \n static def y=9\n } \n" +
+                "def x = {\n"+
+                "t -> print X.y\n"+
+                "}\n";
+        env.addGroovyClass(root, "", "Hello", contents);
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
+        assertTrue("Hello groovy unit should exist", unit.exists());
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
+    }
     
     
 

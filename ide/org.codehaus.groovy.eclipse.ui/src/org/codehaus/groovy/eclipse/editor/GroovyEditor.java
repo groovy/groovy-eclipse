@@ -110,12 +110,12 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
     
     
-    /*
-     * @see org.eclipse.jdt.internal.ui.javaeditor.JavaEditor#createJavaSourceViewer(org.eclipse.swt.widgets.Composite, org.eclipse.jface.text.source.IVerticalRuler, org.eclipse.jface.text.source.IOverviewRuler, boolean, int)
-     */
-    protected ISourceViewer createJavaSourceViewer(Composite parent, IVerticalRuler verticalRuler, IOverviewRuler overviewRuler, boolean isOverviewRulerVisible, int styles, IPreferenceStore store) {
-        return new GroovySourceViewer(this, parent, verticalRuler, overviewRuler, isOverviewRulerVisible, styles, store);
-    }
+//    /*
+//     * @see org.eclipse.jdt.internal.ui.javaeditor.JavaEditor#createJavaSourceViewer(org.eclipse.swt.widgets.Composite, org.eclipse.jface.text.source.IVerticalRuler, org.eclipse.jface.text.source.IOverviewRuler, boolean, int)
+//     */
+//    protected ISourceViewer createJavaSourceViewer(Composite parent, IVerticalRuler verticalRuler, IOverviewRuler overviewRuler, boolean isOverviewRulerVisible, int styles, IPreferenceStore store) {
+//        return new GroovySourceViewer(this, parent, verticalRuler, overviewRuler, isOverviewRulerVisible, styles, store);
+//    }
     
     /*
      * Make accessible to source viewer
