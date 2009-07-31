@@ -24,7 +24,7 @@ import org.eclipse.jdt.debug.ui.launchConfigurations.JavaJRETab;
 /**
  * @see AbstractLaunchConfigurationTabGroup
  */
-public class GroovyLaunchConfigurationTabGroup
+public class GroovyShellLaunchConfigurationTabGroup
         extends AbstractLaunchConfigurationTabGroup {
 
 
@@ -33,7 +33,7 @@ public class GroovyLaunchConfigurationTabGroup
 	 */
 	public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
 		ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] {
-				new GroovyLauncherTab(),
+				new GroovyShellLauncherTab(),
 				new JavaArgumentsTab(),
 				new JavaJRETab(),
 				new JavaClasspathTab(),

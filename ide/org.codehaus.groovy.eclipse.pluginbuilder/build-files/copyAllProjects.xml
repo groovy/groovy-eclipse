@@ -11,7 +11,7 @@
  -->
 <!-- Copies all projects from workspace to the build directory -->
 <!-- Uses two properties that are specified in build_local.properties-->
-<!-- workspaceDir : the directory to copy *from* -->
+<!-- workspaceDirXXX : the directory to copy *from* -->
 <!-- buildDirectory : the directory to copy *to* -->
 <project name="Copy">
 	
@@ -22,19 +22,19 @@
   	description="Copies from the workspace to the build directory when not fetching from svn">
   	<!-- Features -->
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.eclipse.feature">
-			<fileset dir="${workspaceDir}/Feature org.codehaus.groovy.eclipse.feature">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.eclipse.feature">
 			</fileset>
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.jdt.patch">
-			<fileset dir="${workspaceDir}/Feature org.codehaus.groovy.jdt.patch">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.jdt.patch">
 			</fileset>
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.alltests.feature">
-			<fileset dir="${workspaceDir}/Feature org.codehaus.groovy.alltests.feature">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.alltests.feature">
 			</fileset>
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.eclipse.sdk">
-			<fileset dir="${workspaceDir}/Feature org.codehaus.groovy.eclipse.sdk">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.eclipse.sdk">
 			</fileset>
 		</copy>
   	
@@ -47,103 +47,103 @@
   	
   	<!-- Base Plugins -->
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy">
+			<fileset dir="${workspaceDirBase}/org.codehaus.groovy">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.eclipse.jdt.core">
-			<fileset dir="${workspaceDir}/org.eclipse.jdt.core">
+			<fileset dir="${workspaceDirBase}/org.eclipse.jdt.core">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.eclipse.jdt.groovy.core">
-			<fileset dir="${workspaceDir}/org.eclipse.jdt.groovy.core">
+			<fileset dir="${workspaceDirBase}/org.eclipse.jdt.groovy.core">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
   	
   	<!-- Base Test Plugins -->
 		<copy todir="${pluginsDestDir}/org.eclipse.jdt.groovy.core.tests.builder">
-			<fileset dir="${workspaceDir}/org.eclipse.jdt.groovy.core.tests.builder">
+			<fileset dir="${workspaceDirBaseTest}/org.eclipse.jdt.groovy.core.tests.builder">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.eclipse.jdt.groovy.core.tests.compiler">
-			<fileset dir="${workspaceDir}/org.eclipse.jdt.groovy.core.tests.compiler">
+			<fileset dir="${workspaceDirBaseTest}/org.eclipse.jdt.groovy.core.tests.compiler">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.eclipse.test.performance">
-			<fileset dir="${workspaceDir}/org.eclipse.test.performance">
+			<fileset dir="${workspaceDirBaseTest}/org.eclipse.test.performance">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.eclipse.test.performance.win32">
-			<fileset dir="${workspaceDir}/org.eclipse.test.performance.win32">
+			<fileset dir="${workspaceDirBaseTest}/org.eclipse.test.performance.win32">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
   	
   	<!-- IDE Plugins -->
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.core">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.core">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.core">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.codebrowsing">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.codebrowsing">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.codebrowsing">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.codeassist.completion">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.codeassist.completion">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.codeassist.completion">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.ui">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.ui">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.ui">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.cstviewer">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.cstviewer">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.cstviewer">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.core.help">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.core.help">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.core.help">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.refactoring">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.refactoring">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.refactoring">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.astviews">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.astviews">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.astviews">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.ant">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.ant">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.ant">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.apache.commons.collections">
-			<fileset dir="${workspaceDir}/org.apache.commons.collections">
+			<fileset dir="${workspaceDirIde}/org.apache.commons.collections">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.apache.commons.lang">
-			<fileset dir="${workspaceDir}/org.apache.commons.lang">
+			<fileset dir="${workspaceDirIde}/org.apache.commons.lang">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 
 <!--
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.testng">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.testng">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.testng">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
@@ -151,44 +151,44 @@
 
   	<!-- IDE Test Plugins -->
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.alltests">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.alltests">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.alltests">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.codebrowsing.test">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.codebrowsing.test">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.codebrowsing.test">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.codeassist.completion.test">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.codeassist.completion.test">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.codeassist.completion.test">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.junit.test">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.junit.test">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.junit.test">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.tests">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.tests">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.tests">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.core.test">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.core.test">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.core.test">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.refactoring.test">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.refactoring.test">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.refactoring.test">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
   	
 		<!-- Update site -->
 		<copy todir="${featuresDestDir}/Site Groovy">
-			<fileset dir="${workspaceDir}/Site Groovy">
+			<fileset dir="${workspaceDirIde}/Site Groovy">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>

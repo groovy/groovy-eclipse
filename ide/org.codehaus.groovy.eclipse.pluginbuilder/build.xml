@@ -32,7 +32,10 @@
   			<jvmarg value="-DbaseLocation=${buildDirectory}"/>
   			<jvmarg value="-DbuildType=N"/>
   			<jvmarg value="-DbuildProperties=${buildHome}/build-files/build.properties"/>
-  			<jvmarg value="-DworkspaceDir=${workspaceDir}"/>
+  			<jvmarg value="-DworkspaceDirBase=${workspaceDirBase}"/>
+  			<jvmarg value="-DworkspaceDirBaseTest=${workspaceDirBaseTest}"/>
+  			<jvmarg value="-DworkspaceDirIde=${workspaceDirIde}"/>
+  			<jvmarg value="-DworkspaceDirIdeTest=${workspaceDirIdeTest}"/>
   			<jvmarg value="-DskipFetch=true"/>
   			<jvmarg value="-Dversion.full=${version.full}"/>
   			<jvmarg value="-Dversion.qualifier=${forceContextQualifier}"/>

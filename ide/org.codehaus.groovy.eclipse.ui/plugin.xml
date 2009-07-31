@@ -16,31 +16,51 @@
                extension="groovy">
          </fileExtension>
       </launchConfigurationType>
+      <launchConfigurationType
+            delegate="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchDelegate"
+            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
+            modes="run,debug"
+            name="Groovy Shell"
+            sourceLocatorId="org.codehaus.groovy.eclipse.editor.groovySourceLocator">
+      </launchConfigurationType>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
       <launchConfigurationTypeImage
             icon="icons/run_groovy_class.gif"
             configTypeID="org.codehaus.groovy.eclipse.groovyLaunchConfiguration"
-            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage1.groovyClass">
+            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyClass">
+      </launchConfigurationTypeImage>
+      <launchConfigurationTypeImage
+            configTypeID="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
+            icon="icons/run_groovy_class.gif"
+            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyShell">
       </launchConfigurationTypeImage>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
-            type="org.codehaus.groovy.eclipse.groovyLaunchConfiguration"
             class="org.codehaus.groovy.eclipse.launchers.GroovyLaunchConfigurationTabGroup"
-            id="org.codehaus.groovy.eclipse.groovyLaunchConfiguration.tabGroup">
+            description="Launch a Groovy Class or Script"
+            id="org.codehaus.groovy.eclipse.groovyLaunchConfiguration.tabGroup"
+            type="org.codehaus.groovy.eclipse.groovyLaunchConfiguration">
+      </launchConfigurationTabGroup>
+      <launchConfigurationTabGroup
+            class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchConfigurationTabGroup"
+            description="Launch an interactive Groovy Shell for a given project"
+            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.tabGroup"
+            type="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration">
       </launchConfigurationTabGroup>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
-            label="Groovy"
-            icon="icons/run_groovy_class.gif"
             class="org.codehaus.groovy.eclipse.launchers.GroovyLaunchShortcut"
-            modes="run, debug"
-            id="org.codehaus.groovy.eclipse.debug.ui.groovyShortcut">
+            description="Run a Groovy class or script"
+            icon="icons/run_groovy_class.gif"
+            id="org.codehaus.groovy.eclipse.debug.ui.groovyShortcut"
+            label="Groovy"
+            modes="run,debug">
          <contextualLaunch>
            <enablement>
               <with variable="selection">
@@ -55,6 +75,30 @@
               </with>
            </enablement>
         </contextualLaunch>
+      </shortcut>
+      <shortcut
+            class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchShortcut"
+            description="Launch an interactive Groovy Shell in the given project"
+            icon="icons/run_groovy_class.gif"
+            id="org.codehaus.groovy.eclipse.debug.ui.groovyShellShortcut"
+            label="Groovy Shell"
+            modes="run,debug">
+         <contextualLaunch>
+            <enablement>
+               <with
+                     variable="selection">
+                  <count
+                        value="1">
+                  </count>
+              <iterate>
+                  <test
+	                    property="org.eclipse.debug.ui.projectNature"
+                      value="org.eclipse.jdt.groovy.core.groovyNature">
+                  </test>
+              </iterate>
+               </with>
+            </enablement>
+         </contextualLaunch>
       </shortcut>
    </extension>
    <extension
@@ -143,19 +187,6 @@
     <extension point="org.eclipse.ui.popupMenus">
   		<objectContribution id="org.codehaus.groovy.eclipse.groovyContributions"
 			     			objectClass="org.eclipse.jdt.core.IJavaProject">
-			<action class="org.codehaus.groovy.eclipse.actions.RunGroovyShellConsole" 
-			        icon="icons/run_groovy_class.gif" 
-			        id="org.codehaus.groovy.eclipse.groovyconsole.action" 
-			        label="Run Groovy Console" 
-			        menubarPath="groovy/defaultGroup" 
-			        tooltip="Open a Groovy Console for this project"/>
-			
-			<action class="org.codehaus.groovy.eclipse.actions.RunGroovyShellConsole" 
-			        icon="icons/run_groovy_class.gif"  
-			        id="org.codehaus.groovy.eclipse.groovyshell.action" 
-			        label="Run Groovy Shell" 
-			        menubarPath="groovy/defaultGroup" 
-			        tooltip="Open a Groovy Shell for this project"/>
    <action
          class="org.codehaus.groovy.eclipse.actions.RemoveGroovyNatureAction"
          enablesFor="1"

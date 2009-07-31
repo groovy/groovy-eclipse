@@ -15,22 +15,14 @@
 package org.codehaus.groovy.eclipse.launchers;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.model.IStackFrame;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.debug.core.IJavaStackFrame;
 import org.eclipse.jdt.debug.ui.JavaUISourceLocator;
 import org.eclipse.jdt.launching.sourcelookup.IJavaSourceLocation;
 import org.eclipse.jdt.launching.sourcelookup.JavaProjectSourceLocation;
-import org.eclipse.jdt.launching.sourcelookup.PackageFragmentRootSourceLocation;
-
-import sun.security.action.GetLongAction;
 
 /**
  * @author <a href="mailto:blib@mail.com">Boris Bliznukov</a> 
