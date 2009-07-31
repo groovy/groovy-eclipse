@@ -188,10 +188,11 @@
 	    <param name="target" value="updateSiteExport"/>
 	  </antcall>
 
-  	<!-- Remove test plugins and feature -->
+  	<!-- Remove test and SDK plugins and feature -->
   	<delete>
 			<fileset dir="${updateSiteDir}/features">
 			    <include name="*alltests*"/>
+			    <include name="*sdk*"/>
 			</fileset>
 		</delete>
   	<delete>

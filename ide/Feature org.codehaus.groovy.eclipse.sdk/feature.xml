@@ -34,5 +34,8 @@
    <includes
          id="org.codehaus.groovy.eclipse.feature"
          version="0.0.0"/>
+   <includes
+         id="org.codehaus.groovy.eclipse.feature.source"
+         version="0.0.0"/>
 
 </feature>

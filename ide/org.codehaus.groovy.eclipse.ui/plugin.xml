@@ -436,10 +436,10 @@
  <extension
        point="org.eclipse.ui.editorActions">
       <editorContribution
-            targetID="org.eclipse.ajdt.internal.ui.editor.CompilationUnitEditor"
-            id="org.eclipse.ajdt.ui.AJEditor.BreakpointRulerActions">
+            targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor"
+            id="org.codehaus.groovy.BreakpointRulerActions">
          <action
-               label="%AJEditorActionsLabel"
+               label="Toggle Breakpoint"
                class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
                actionID="RulerDoubleClick"
                id="org.groovy.codehaus.eclipse.ui.actions.ManageBreakpointRulerAction">
