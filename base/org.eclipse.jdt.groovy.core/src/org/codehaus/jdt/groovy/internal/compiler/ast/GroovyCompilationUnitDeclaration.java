@@ -860,17 +860,25 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			ClassNode[] bounds = genericsType.getUpperBounds();
 			if (bounds != null) {
 				// FIXASC (M2) other bounds...
+				// FIXASC (M2) positional testing for wildcard bounds
 				TypeReference boundReference = createTypeReferenceForClassNode(bounds[0]);
 				Wildcard wildcard = new Wildcard(Wildcard.EXTENDS);
+				wildcard.sourceStart = genericsType.getStart();
+				wildcard.sourceEnd = genericsType.getEnd();
 				wildcard.bound = boundReference;
 				return wildcard;
 			} else if (genericsType.getLowerBound() != null) {
 				TypeReference boundReference = createTypeReferenceForClassNode(genericsType.getLowerBound());
 				Wildcard wildcard = new Wildcard(Wildcard.SUPER);
+				wildcard.sourceStart = genericsType.getStart();
+				wildcard.sourceEnd = genericsType.getEnd();
 				wildcard.bound = boundReference;
 				return wildcard;
 			} else {
-				return new Wildcard(Wildcard.UNBOUND);
+				Wildcard w = new Wildcard(Wildcard.UNBOUND);
+				w.sourceStart = genericsType.getStart();
+				w.sourceEnd = genericsType.getEnd();
+				return w;
 			}
 			// FIXASC (M2) what does the check on this next really line mean?
 		} else if (!genericsType.getType().isGenericsPlaceHolder()) {
@@ -936,8 +944,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			} else {
 				// FIXASC (M2) determine when array dimension used in this case,
 				// is it 'A<T[]> or some silliness?
+				long l = positionFor(start, end);
 				return new ParameterizedSingleTypeReference(name.toCharArray(), typeArguments
-						.toArray(new TypeReference[typeArguments.size()]), 0, positionFor(start, end));
+						.toArray(new TypeReference[typeArguments.size()]), 0, l);
 			}
 		} else {
 			char[][] compoundName = CharOperation.splitOn('.', name.toCharArray());
