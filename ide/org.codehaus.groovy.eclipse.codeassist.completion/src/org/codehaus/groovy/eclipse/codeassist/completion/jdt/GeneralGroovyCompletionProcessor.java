@@ -184,7 +184,7 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
                 proposal.setName(methods[i].getName().toCharArray());
                 proposal.setParameterNames(createParameterNames((Method) methods[i]));
                 ReflectionUtils.setPrivateField(InternalCompletionProposal.class, "parameterTypeNames", proposal, createParameterTypeNames(methods[i]));
-                proposal.setReplaceRange(offset, offset + replaceLength);
+                proposal.setReplaceRange(offset - replaceLength, offset);
                 proposal.setFlags(methods[i].getModifiers());
                 proposal.setKey(methods[i].getSignature().toCharArray());
                 proposal.setAdditionalFlags(CompletionFlags.Default);

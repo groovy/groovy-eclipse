@@ -223,7 +223,7 @@ public class DefaultGroovyMethodProcessor implements IJavaCompletionProposalComp
                 proposal.setName(method.getName().toCharArray());
                 proposal.setParameterNames(createParameterNames(method));
                 ReflectionUtils.setPrivateField(InternalCompletionProposal.class, "parameterTypeNames", proposal, createParameterTypeNames(method));
-                proposal.setReplaceRange(offset, offset + replaceLength);
+                proposal.setReplaceRange(offset - replaceLength, offset);
                 proposal.setFlags(method.getModifiers());
                 proposal.setKey(getMethodSignature(method));
                 proposal.setAdditionalFlags(CompletionFlags.Default);

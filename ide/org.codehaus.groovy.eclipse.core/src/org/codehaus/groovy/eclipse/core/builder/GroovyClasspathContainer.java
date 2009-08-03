@@ -93,7 +93,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
 
     /*
-     * get the asm-*.jar and asm-tree-*.jar
+     * get the asm-*.jar, asm-tree-*.jar, and antlr-*.jar
      */
     @SuppressWarnings("unchecked")
     private List<URL> getOtherJars() throws IOException {
@@ -107,7 +107,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         
         enu = groovyBundle.findEntries("", "antlr-*.jar", false);
         if (enu.hasMoreElements()) {
-            URL jar = resolve(enu.nextElement());
+            urls.add(resolve(enu.nextElement()));
         } else {
             throw new RuntimeException("Could not find antlr jar");
         }

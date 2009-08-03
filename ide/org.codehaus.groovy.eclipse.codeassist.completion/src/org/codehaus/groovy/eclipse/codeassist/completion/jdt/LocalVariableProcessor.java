@@ -92,12 +92,6 @@ public class LocalVariableProcessor extends AbstractGroovyCompletionProcessor {
             return Collections.EMPTY_LIST;
         }
                 
-        
-//        String[] parts = finder.splitForCompletion(expr);
-//        if (parts == null || parts[1] != null) {
-//            //return null
-//        }
-        
         // Now we know expr is the expression to attempt to complete into a class, doit.
         
         Map<String,ClassNode> localNameTypes = completeLocalNames(expr, contexts);
@@ -156,7 +150,7 @@ public class LocalVariableProcessor extends AbstractGroovyCompletionProcessor {
             String replaceName = nameType.getKey();
             CompletionProposal proposal = CompletionProposal.create(CompletionProposal.LOCAL_VARIABLE_REF, offset);
             proposal.setCompletion(replaceName.toCharArray());
-            proposal.setReplaceRange(offset, offset+replaceLength);
+            proposal.setReplaceRange(offset - replaceLength, offset);
             proposal.setSignature(Signature.createTypeSignature(nameType.getValue().getName(), true).toCharArray());
             
             proposals.add(new LazyJavaCompletionProposal(proposal, context));

@@ -67,7 +67,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     	// must override functionality because JavaEditor expects that there is a ';' at end of declaration
     	try {
-			if (reference instanceof IImportDeclaration) {
+			if (reference instanceof IImportDeclaration && moveCursor) {
 				int offset;
 				int length;
 				ISourceRange range = ((ISourceReference) reference).getSourceRange();
@@ -77,7 +77,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 					while (start < content.length() && content.charAt(start) == ' ')
 						start++;
 					
-					int end= content.trim().length()-1;
+					int end= content.trim().length();
 					do {
 						end--;
 					} while (end >= 0 && content.charAt(end) == ' ');
