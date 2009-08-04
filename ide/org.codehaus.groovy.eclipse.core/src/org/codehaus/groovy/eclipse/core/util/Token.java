@@ -22,7 +22,7 @@ public class Token implements Serializable {
 	private static final long serialVersionUID = 384520235046067298L;
 
 	private static final String[] names = new String[] { "EOF", "IDENT", "DOT", "SEMI", "QUOTED_STRING", "PAREN_BLOCK",
-			"BRACE_BLOCK", "BRACK_BLOCK", "LINE_COMMENT", "BLOCK_COMMENT" , "LINE_BREAK", "DOUBLE_DOT" };
+			"BRACE_BLOCK", "BRACK_BLOCK", "LINE_COMMENT", "BLOCK_COMMENT" , "LINE_BREAK", "DOUBLE_DOT", "SAFE_DEREF" };
 
 	public static final int EOF = 0;
 
@@ -58,6 +58,11 @@ public class Token implements Serializable {
 	
 	/** range definition 10..23, 10..<23 */
 	public static final int DOUBLE_DOT = 11;
+
+	/** safe navigation operator */
+	public static final int SAFE_DEREF = 12;
+	
+	
 
 	public int type;
 

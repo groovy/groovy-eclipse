@@ -26,6 +26,8 @@ public class AllCompletionTests {
         // not loading yet
         suite.addTestSuite(DefaultGroovyMethodCompletionTests.class);
         suite.addTestSuite(LocalVariableCompletionTests.class);
+        suite.addTestSuite(InferencingCompletionTests.class);
+        suite.addTestSuite(FieldCompletionTests.class);
         
         return suite;
     }

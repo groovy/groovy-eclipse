@@ -187,6 +187,9 @@ public class DefaultGroovyMethodProcessor implements IJavaCompletionProposalComp
                 eval = new TypeEvaluator(typeContext);
                 EvalResult result  = null;
                 result = eval.evaluate(parts[0]);
+                String type = box(result.getName());
+
+                
                 // Move offset to beginning of expression. This way the context is more likely to match the AST before edits.
                 Method[] methods = lookup.lookupMethods(result.getName(), parts[1], false, result.isClass(), false);
                 
@@ -330,4 +333,29 @@ public class DefaultGroovyMethodProcessor implements IJavaCompletionProposalComp
 
     public void sessionStarted() { }
 
+    /**
+     * If type is a primitive type name then boxes the type in with the object name
+     * Otherwise, just return type.
+     * @param type
+     */
+    private String box(String type) {
+        if (type.equals("int")) {
+            return "java.lang.Integer";
+        } else if (type.equals("boolean")) {
+            return "java.lang.Boolean";
+        } else if (type.equals("char")) {
+            return "java.lang.Character";
+        } else if (type.equals("long")) {
+            return "java.lang.Long";
+        } else if (type.equals("double")) {
+            return "java.lang.Double";
+        } else if (type.equals("short")) {
+            return "java.lang.Short";
+        } else if (type.equals("float")) {
+            return "java.lang.Float";
+        } else if (type.equals("byte")) {
+            return "java.lang.Byte";
+        }
+        return type;
+    }
 }

@@ -102,15 +102,17 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
 	private List<ICompletionProposal> createCompletionProposals(IMemberLookup lookup, EvalResult result, String expression, String name, int offset, JavaContentAssistInvocationContext javaContext) {
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		
-		Property[] properties = lookup.lookupProperties(result.getName(), name, false, result.isClass(), false);
+		String type = box(result.getName());
+		
+		Property[] properties = lookup.lookupProperties(type, name, false, result.isClass(), false);
 		properties = (Property[]) mergeTypes(properties);
 		proposals.addAll(createCompletionProposals(properties, offset - name.length(), name.length(), javaContext));
 		
-		Field[] fields = lookup.lookupFields(result.getName(), name, false, result.isClass(), false);
+		Field[] fields = lookup.lookupFields(type, name, false, result.isClass(), false);
 		fields = (Field[]) mergeTypes(fields);
 		proposals.addAll(createCompletionProposals(fields, offset - name.length(), name.length(), javaContext));
 		
-		Method[] methods = lookup.lookupMethods(result.getName(), name, false, result.isClass(), false);
+		Method[] methods = lookup.lookupMethods(type, name, false, result.isClass(), false);
 		methods = (Method[]) mergeTypes(methods);
 		proposals.addAll(createCompletionProposals(methods, offset - name.length(), name.length(), javaContext));
 		
@@ -154,7 +156,33 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
 		return results;
 	}
 
-	private List<ICompletionProposal> createCompletionProposals(Member[] members, int offset, int replaceLength, JavaContentAssistInvocationContext javaContext) {
+	/**
+	 * If type is a primitive type name then boxes the type in with the object name
+	 * Otherwise, just return type.
+     * @param type
+     */
+    private String box(String type) {
+        if (type.equals("int")) {
+            return "java.lang.Integer";
+        } else if (type.equals("boolean")) {
+            return "java.lang.Boolean";
+        } else if (type.equals("char")) {
+            return "java.lang.Character";
+        } else if (type.equals("long")) {
+            return "java.lang.Long";
+        } else if (type.equals("double")) {
+            return "java.lang.Double";
+        } else if (type.equals("short")) {
+            return "java.lang.Short";
+        } else if (type.equals("float")) {
+            return "java.lang.Float";
+        } else if (type.equals("byte")) {
+            return "java.lang.Byte";
+        }
+        return type;
+    }
+
+    private List<ICompletionProposal> createCompletionProposals(Member[] members, int offset, int replaceLength, JavaContentAssistInvocationContext javaContext) {
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>(members.length);
 		for (int i = 0; i < members.length; ++i) {
 			String replaceString = members[i].getName();

@@ -40,6 +40,8 @@ public abstract class EclipseTestCase extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
         testProject = new TestProject();
     }
 
