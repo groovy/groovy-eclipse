@@ -22,6 +22,8 @@ def x() {
     print "Hi"  // 5
 }
 
+def p = { g -> print g } // 13
+
 t = [ x: 1, 
       y: 2, // 6
       z:4 ] // 7

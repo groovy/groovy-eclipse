@@ -14,7 +14,7 @@ package org.codehaus.groovy.eclipse.codebrowsing;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.eclipse.editor.actions.IDocumentFacade;
+import org.codehaus.groovy.eclipse.core.model.IDocumentFacade;
 import org.eclipse.jface.text.IRegion;
 
 /**

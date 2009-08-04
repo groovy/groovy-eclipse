@@ -37,9 +37,9 @@ import org.codehaus.groovy.eclipse.codebrowsing.impl.MethodPointerExpressionProc
 import org.codehaus.groovy.eclipse.codebrowsing.impl.PropertyExpressionProcessor;
 import org.codehaus.groovy.eclipse.codebrowsing.impl.VariableExpressionProcessor;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.model.IDocumentFacade;
 import org.codehaus.groovy.eclipse.editor.actions.CompilationUnitFacade;
 import org.codehaus.groovy.eclipse.editor.actions.EditorPartFacade;
-import org.codehaus.groovy.eclipse.editor.actions.IDocumentFacade;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;

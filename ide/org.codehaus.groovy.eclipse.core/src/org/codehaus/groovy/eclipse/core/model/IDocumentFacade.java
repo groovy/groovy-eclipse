@@ -9,11 +9,10 @@
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
 
-package org.codehaus.groovy.eclipse.editor.actions;
+package org.codehaus.groovy.eclipse.core.model;
 
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;

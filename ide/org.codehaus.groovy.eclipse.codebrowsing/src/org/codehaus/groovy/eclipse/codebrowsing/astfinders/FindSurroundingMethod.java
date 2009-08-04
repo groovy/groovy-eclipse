@@ -19,7 +19,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.eclipse.codebrowsing.ASTUtils;
+import org.codehaus.groovy.eclipse.core.util.ASTUtils;
 
 /**
  * Given some lineNumber, columnNumber, find the MethodNode surrounding the

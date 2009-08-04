@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.groovy.eclipse.core.model.IDocumentFacade;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;

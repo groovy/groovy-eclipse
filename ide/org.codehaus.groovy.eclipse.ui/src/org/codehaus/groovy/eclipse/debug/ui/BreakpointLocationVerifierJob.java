@@ -12,6 +12,9 @@ package org.codehaus.groovy.eclipse.debug.ui;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -21,8 +24,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IField;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -31,9 +32,7 @@ import org.eclipse.jdt.debug.core.JDIDebugModel;
 import org.eclipse.jdt.internal.debug.ui.BreakpointUtils;
 import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
 import org.eclipse.jdt.internal.debug.ui.actions.ActionMessages;
-import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.IRegion;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.IEditorStatusLine;
@@ -102,40 +101,30 @@ public class BreakpointLocationVerifierJob extends Job {
 	public IStatus run(IProgressMonitor monitor) {
 		ICompilationUnit cu = JavaCore.createCompilationUnitFrom((IFile) fResource);
 		try {
-			IJavaElement element = cu.getElementAt(fOffset);
-			if(element == null 
-					|| element instanceof ICompilationUnit 
-					|| element instanceof IType
-					|| element instanceof IField
-					|| emptyOrComment(fDocument.get(fOffset, fDocument.getLineInformation(fLineNumber - 1).getLength()))) {
-
-				if (fBreakpoint != null) {
-					DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(fBreakpoint, true);
-				}
-				int lineNumber = fLineNumber + 1;
-				while (lineNumber < fDocument.getNumberOfLines()) {
-					IRegion line = fDocument.getLineInformation(lineNumber - 1);
-					int offset = line.getOffset();
-                    element = cu.getElementAt(offset);
-                    if (!(element == null 
-							|| element instanceof ICompilationUnit 
-							|| element instanceof IType
-							|| element instanceof IField
-							|| emptyOrComment(fDocument.get(offset, line.getLength())))) {
-						createNewBreakpoint(lineNumber, fTypeName);
-						return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null); 
-					}
-					lineNumber++;
-				}
-				// Cannot find a valid location
-				report(ActionMessages.BreakpointLocationVerifierJob_not_valid_location); 
-				return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null); 
-			}			
+		    ModuleNode node = null;
+		    if (cu instanceof GroovyCompilationUnit) {
+		        node = ((GroovyCompilationUnit) cu).getModuleNode();
+		    } 
+		    
+		    if (node == null) {
+		        return new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null);
+		    }
+		    
+            if (fBreakpoint != null) {
+                DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(fBreakpoint, true);
+            }
+		    ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(fLineNumber);
+		    ASTNode valid = finder.findValidBreakpointLocation(node);
+		    if (valid != null) {
+		        createNewBreakpoint(valid, fTypeName);
+		        return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.OK, ActionMessages.BreakpointLocationVerifierJob_breakpoint_set, null); 
+		    }		    
 		} catch (JavaModelException e) {
 		} catch (CoreException e) {
-		} catch (BadLocationException e) {
 		}
-		return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.OK, ActionMessages.BreakpointLocationVerifierJob_breakpoint_set, null); 
+		// Cannot find a valid location
+		report(ActionMessages.BreakpointLocationVerifierJob_not_valid_location); 
+		return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null); 
 		
 	}
 	
@@ -156,19 +145,14 @@ public class BreakpointLocationVerifierJob extends Job {
 	/**
 	 * Create a new breakpoint at the right position.
 	 */
-	private void createNewBreakpoint(int lineNumber, String typeName) throws CoreException {
+	private void createNewBreakpoint(ASTNode node, String typeName) throws CoreException {
 		Map newAttributes = new HashMap(10);
+		int start= node.getStart();
+		int end= node.getEnd();
 		if (fType != null) {
-			try {
-				IRegion line= fDocument.getLineInformation(lineNumber - 1);
-				int start= line.getOffset();
-				int end= start + line.getLength() - 1;
-				BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
-			} catch (BadLocationException ble) {
-				JDIDebugUIPlugin.log(ble);
-			}
+			BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
 		}
-		JDIDebugModel.createLineBreakpoint(fResource, typeName, lineNumber, -1, -1, 0, true, newAttributes);
+		JDIDebugModel.createLineBreakpoint(fResource, typeName, node.getLineNumber(), start, end, 0, true, newAttributes);
 	}
 
 	protected void report(final String message) {

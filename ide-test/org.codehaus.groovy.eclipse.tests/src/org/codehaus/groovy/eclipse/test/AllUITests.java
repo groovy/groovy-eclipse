@@ -22,6 +22,7 @@ import org.codehaus.groovy.eclipse.test.adapters.GroovyIFileEditorInputAdapterFa
 import org.codehaus.groovy.eclipse.test.adapters.IsMainTesterTests;
 import org.codehaus.groovy.eclipse.test.core.types.TypeEvaluatorTestCase;
 import org.codehaus.groovy.eclipse.test.core.util.ExpressionFinderTestCase;
+import org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests;
 import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
 import org.codehaus.groovy.eclipse.test.ui.FoldingPositionProviderTest;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
@@ -64,6 +65,7 @@ public class AllUITests {
 		suite.addTestSuite(ExpressionFinderTestCase.class);
 		suite.addTestSuite(GroovyTagScannerTests.class);
 		suite.addTestSuite(DebugBreakpointsTests.class);
+		suite.addTestSuite(BreakpointLocationTests.class);
 		
 		// $JUnit-END$
 		

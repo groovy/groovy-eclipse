@@ -16,7 +16,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchInfo;
 import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchProcessor;
-import org.codehaus.groovy.eclipse.editor.actions.IDocumentFacade;
+import org.codehaus.groovy.eclipse.core.model.IDocumentFacade;
 import org.eclipse.jdt.core.IJavaElement;
 
 /**

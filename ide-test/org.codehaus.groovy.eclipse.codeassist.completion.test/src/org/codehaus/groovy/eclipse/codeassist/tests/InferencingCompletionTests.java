@@ -28,8 +28,7 @@ public class InferencingCompletionTests extends CompletionTestCase {
         super("Inferencing Completion Test Cases");
     }
 
-    // FIXADE (M1) re-enable this test for when the problem with VariableScopeVisitor is fixed
-    private static final String CONTENTS = "class TransformerTest extends GroovyTestCase {\nvoid testTransformer() {\ndef s = \"string\"\ns.st\n}}";
+    private static final String CONTENTS = "class TransformerTest {\nvoid testTransformer() {\ndef s = \"string\"\ns.st\n}}";
     public void testInferenceOfLocalStringInMethod() throws Exception {
         IPath projectPath = createGenericProject();
         IPath pack = projectPath.append("src");
@@ -47,15 +46,15 @@ public class InferencingCompletionTests extends CompletionTestCase {
         "s.substring(0).sub\n" +
         "class AClass {\n " +
         "  def g() {\n" +
-        "    def t" +
-        "    t = \"\"" +
-        "    t.st" +
+        "    def t\n" +
+        "    t = \"\"\n" +
+        "    t.st\n" +
         "  }" +
         "}";
     public void testInferenceOfLocalString() throws Exception {
         IPath projectPath = createGenericProject();
         IPath pack = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest", CONTENTS_SCRIPT);
+        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest2", CONTENTS_SCRIPT);
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         unit.becomeWorkingCopy(null);
@@ -65,7 +64,7 @@ public class InferencingCompletionTests extends CompletionTestCase {
     public void testInferenceOfLocalString2() throws Exception {
         IPath projectPath = createGenericProject();
         IPath pack = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest", CONTENTS_SCRIPT);
+        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest2", CONTENTS_SCRIPT);
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         unit.becomeWorkingCopy(null);
@@ -76,7 +75,7 @@ public class InferencingCompletionTests extends CompletionTestCase {
     public void testInferenceOfStringInClass() throws Exception {
         IPath projectPath = createGenericProject();
         IPath pack = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest", CONTENTS_SCRIPT);
+        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest2", CONTENTS_SCRIPT);
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         unit.becomeWorkingCopy(null);

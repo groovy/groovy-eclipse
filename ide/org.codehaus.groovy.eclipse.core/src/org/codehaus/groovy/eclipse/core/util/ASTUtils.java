@@ -9,7 +9,7 @@
  *     Edward Povazan   - Initial API and implementation
  *     Andrew Eisenberg - modified for Groovy Eclipse 2.0
  *******************************************************************************/
-package org.codehaus.groovy.eclipse.codebrowsing;
+package org.codehaus.groovy.eclipse.core.util;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -17,7 +17,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.eclipse.editor.actions.IDocumentFacade;
+import org.codehaus.groovy.eclipse.core.model.IDocumentFacade;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;

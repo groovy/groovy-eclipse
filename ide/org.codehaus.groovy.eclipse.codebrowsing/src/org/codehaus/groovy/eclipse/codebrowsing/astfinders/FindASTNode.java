@@ -34,8 +34,8 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.eclipse.codebrowsing.ASTUtils;
 import org.codehaus.groovy.eclipse.codebrowsing.SourceCodeFinder;
+import org.codehaus.groovy.eclipse.core.util.ASTUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IRegion;
 
@@ -221,19 +221,12 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 	}
 
 	/**
-	 * For some reason, ClassExpression does not contain line/column
-	 * information. This method is called to patch this info from another node.
-	 * It is used in cases like StaticClass.methodCall() or
-	 * StaticClass.propertyAccess.
+	 * DELETEME 
 	 * 
 	 * @param node
 	 * @param expr
 	 */
 	private void patchClassExpressionLineColumn(ASTNode node, Expression expr) {
-//		expr.setLineNumber(node.getLineNumber());
-//		expr.setLastLineNumber(node.getLastLineNumber());
-//		expr.setColumnNumber(node.getColumnNumber());
-//		expr.setLastColumnNumber(node.getLastColumnNumber());
 	}
 
 	@Override
