@@ -18,10 +18,12 @@ public class ReferenceCollection {
 
 char[][][] qualifiedNameReferences; // contains no simple names as in just 'a' which is kept in simpleNameReferences instead
 char[][] simpleNameReferences;
+char[][] rootReferences;
 
-protected ReferenceCollection(char[][][] qualifiedNameReferences, char[][] simpleNameReferences) {
+protected ReferenceCollection(char[][][] qualifiedNameReferences, char[][] simpleNameReferences, char[][] rootReferences) {
 	this.qualifiedNameReferences = internQualifiedNames(qualifiedNameReferences);
 	this.simpleNameReferences = internSimpleNames(simpleNameReferences, true);
+	this.rootReferences = internSimpleNames(rootReferences, false);
 }
 
 public void addDependencies(String[] typeNameDependencies) {
@@ -39,7 +41,12 @@ public void addDependencies(String[] typeNameDependencies) {
 			if (!includes(qualifiedTypeName[qualifiedTypeName.length - 1])) {
 				int length = this.simpleNameReferences.length;
 				System.arraycopy(this.simpleNameReferences, 0, this.simpleNameReferences = new char[length + 1][], 0, length);
-				this.simpleNameReferences[length] = qualifiedTypeName[qualifiedTypeName.length - 1];				
+				this.simpleNameReferences[length] = qualifiedTypeName[qualifiedTypeName.length - 1];
+			}
+			if (!insideRoot(qualifiedTypeName[0])) {
+				int length = this.rootReferences.length;
+				System.arraycopy(this.rootReferences, 0, this.rootReferences = new char[length + 1][], 0, length);
+				this.rootReferences[length] = qualifiedTypeName[0];
 			}
 			int length = this.qualifiedNameReferences.length;
 			System.arraycopy(this.qualifiedNameReferences, 0, this.qualifiedNameReferences = new char[length + 1][][], 0, length);
@@ -55,19 +62,33 @@ public void addDependencies(String[] typeNameDependencies) {
 }
 
 public boolean includes(char[] simpleName) {
-	for (int i = 0, l = simpleNameReferences.length; i < l; i++)
-		if (simpleName == simpleNameReferences[i]) return true;
+	for (int i = 0, l = this.simpleNameReferences.length; i < l; i++)
+		if (simpleName == this.simpleNameReferences[i]) return true;
 	return false;
 }
 
 public boolean includes(char[][] qualifiedName) {
-	for (int i = 0, l = qualifiedNameReferences.length; i < l; i++)
-		if (qualifiedName == qualifiedNameReferences[i]) return true;
+	for (int i = 0, l = this.qualifiedNameReferences.length; i < l; i++)
+		if (qualifiedName == this.qualifiedNameReferences[i]) return true;
 	return false;
 }
 
+/**
+ * @deprecated
+ */
 public boolean includes(char[][][] qualifiedNames, char[][] simpleNames) {
+	return includes(qualifiedNames, simpleNames, null);
+}
+
+public boolean includes(char[][][] qualifiedNames, char[][] simpleNames, char[][] rootNames) {
 	// if either collection of names is null, it means it contained a well known name so we know it already has a match
+	if (rootNames != null) {
+		boolean foundRoot = false;
+		for (int i = 0, l = rootNames.length; !foundRoot && i < l; i++)
+			foundRoot = insideRoot(rootNames[i]);
+		if (!foundRoot)
+			return false;
+	}
 	if (simpleNames == null || qualifiedNames == null) {
 		if (simpleNames == null && qualifiedNames == null) {
 			if (JavaBuilder.DEBUG)
@@ -91,10 +112,15 @@ public boolean includes(char[][][] qualifiedNames, char[][] simpleNames) {
 				}
 			}
 		}
-	} else {
-		for (int i = 0, l = simpleNames.length; i < l; i++) {
+		return false;
+	}
+
+	int sLength = simpleNames.length;
+	int qLength = qualifiedNames.length;
+	if (sLength <= qLength) {
+		for (int i = 0; i < sLength; i++) {
 			if (includes(simpleNames[i])) {
-				for (int j = 0, m = qualifiedNames.length; j < m; j++) {
+				for (int j = 0; j < qLength; j++) {
 					char[][] qualifiedName = qualifiedNames[j];
 					if (qualifiedName.length == 1 ? includes(qualifiedName[0]) : includes(qualifiedName)) {
 						if (JavaBuilder.DEBUG)
@@ -106,7 +132,28 @@ public boolean includes(char[][][] qualifiedNames, char[][] simpleNames) {
 				return false;
 			}
 		}
+	} else {
+		for (int i = 0; i < qLength; i++) {
+			char[][] qualifiedName = qualifiedNames[i];
+			if (qualifiedName.length == 1 ? includes(qualifiedName[0]) : includes(qualifiedName)) {
+				for (int j = 0; j < sLength; j++) {
+					if (includes(simpleNames[j])) {
+						if (JavaBuilder.DEBUG)
+							System.out.println("Found match in " + CharOperation.toString(qualifiedName) //$NON-NLS-1$
+								+ " to " + new String(simpleNames[j])); //$NON-NLS-1$
+						return true;
+					}
+				}
+				return false;
+			}
+		}
 	}
+	return false;
+}
+
+public boolean insideRoot(char[] rootName) {
+	for (int i = 0, l = this.rootReferences.length; i < l; i++)
+		if (rootName == this.rootReferences[i]) return true;
 	return false;
 }
 
@@ -194,7 +241,14 @@ public static char[][][] internQualifiedNames(char[][][] qualifiedNames) {
 	return keepers;
 }
 
+/**
+ * @deprecated
+ */
 public static char[][] internSimpleNames(StringSet simpleStrings) {
+	return internSimpleNames(simpleStrings, true);
+}
+
+public static char[][] internSimpleNames(StringSet simpleStrings, boolean removeWellKnown) {
 	if (simpleStrings == null) return EmptySimpleNames;
 	int length = simpleStrings.elementSize;
 	if (length == 0) return EmptySimpleNames;
@@ -204,7 +258,7 @@ public static char[][] internSimpleNames(StringSet simpleStrings) {
 	for (int i = 0, l = strings.length; i < l; i++)
 		if (strings[i] != null)
 			result[--length] = strings[i].toCharArray();
-	return internSimpleNames(result, true);
+	return internSimpleNames(result, removeWellKnown);
 }
 
 public static char[][] internSimpleNames(char[][] simpleNames, boolean removeWellKnown) {

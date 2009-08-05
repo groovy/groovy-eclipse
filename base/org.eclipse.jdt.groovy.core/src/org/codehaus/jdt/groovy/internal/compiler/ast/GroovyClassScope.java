@@ -25,10 +25,12 @@ import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 
 @SuppressWarnings("restriction")
 public class GroovyClassScope extends ClassScope {
@@ -44,7 +46,7 @@ public class GroovyClassScope extends ClassScope {
 	}
 
 	char[] GROOVY = "groovy".toCharArray(); //$NON-NLS-1$
-	char[][] GROOVY_LANG_METACLASS = { GROOVY, LANG, "MetaClass".toCharArray() }; //$NON-NLS-1$
+	char[][] GROOVY_LANG_METACLASS = { GROOVY, TypeConstants.LANG, "MetaClass".toCharArray() }; //$NON-NLS-1$
 
 	public final ReferenceBinding getGroovyLangMetaClassBinding() {
 		CompilationUnitScope unitScope = compilationUnitScope();
@@ -95,15 +97,18 @@ public class GroovyClassScope extends ClassScope {
 			for (PropertyNode property : properties) {
 				String name = property.getName();
 				FieldBinding fBinding = typeDeclaration.binding.getField(name.toCharArray(), false);
-				String getterName = "get" + MetaClassHelper.capitalize(name);
-				createMethod(getterName, "", null, fBinding.type, groovyMethods, methodBindings);
-				if (!fBinding.isFinal()) {
-					String setterName = "set" + MetaClassHelper.capitalize(name);
-					createMethod(setterName, "", new TypeBinding[] { fBinding.type }, TypeBinding.VOID, groovyMethods,
-							methodBindings);
-				}
-				if (fBinding.type == TypeBinding.BOOLEAN) {
-					createMethod("is" + MetaClassHelper.capitalize(name), "", null, fBinding.type, groovyMethods, methodBindings);
+				if (!(fBinding.type instanceof MissingTypeBinding)) {
+					String getterName = "get" + MetaClassHelper.capitalize(name);
+					createMethod(getterName, "", null, fBinding.type, groovyMethods, methodBindings);
+					if (!fBinding.isFinal()) {
+						String setterName = "set" + MetaClassHelper.capitalize(name);
+						createMethod(setterName, "", new TypeBinding[] { fBinding.type }, TypeBinding.VOID, groovyMethods,
+								methodBindings);
+					}
+					if (fBinding.type == TypeBinding.BOOLEAN) {
+						createMethod("is" + MetaClassHelper.capitalize(name), "", null, fBinding.type, groovyMethods,
+								methodBindings);
+					}
 				}
 			}
 		}

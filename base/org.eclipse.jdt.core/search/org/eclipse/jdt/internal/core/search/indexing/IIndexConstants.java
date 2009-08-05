@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,10 +25,11 @@ public interface IIndexConstants {
 	char[] CONSTRUCTOR_DECL= "constructorDecl".toCharArray(); //$NON-NLS-1$
 	char[] FIELD_DECL= "fieldDecl".toCharArray(); //$NON-NLS-1$
 	char[] OBJECT = "Object".toCharArray(); //$NON-NLS-1$
-	char[][] COUNTS= 
+	char[][] COUNTS=
 		new char[][] { new char[] {'/', '0'}, new char[] {'/', '1'}, new char[] {'/', '2'}, new char[] {'/', '3'}, new char[] {'/', '4'},
 			new char[] {'/', '5'}, new char[] {'/', '6'}, new char[] {'/', '7'}, new char[] {'/', '8'}, new char[] {'/', '9'}
 	};
+	char[] DEFAULT_CONSTRUCTOR = new char[]{'/', '#'};
 	char CLASS_SUFFIX = 'C';
 	char INTERFACE_SUFFIX = 'I';
 	char ENUM_SUFFIX = 'E';
@@ -38,14 +39,15 @@ public interface IIndexConstants {
 	char CLASS_AND_INTERFACE_SUFFIX = IJavaSearchConstants.CLASS_AND_INTERFACE;
 	char INTERFACE_AND_ANNOTATION_SUFFIX = IJavaSearchConstants.INTERFACE_AND_ANNOTATION;
 	char SEPARATOR= '/';
+	char PARAMETER_SEPARATOR= ',';
 	char SECONDARY_SUFFIX = 'S';
 
 	char[] ONE_STAR = new char[] {'*'};
 	char[][] ONE_STAR_CHAR = new char[][] {ONE_STAR};
 
 	// used as special marker for enclosing type name of local and anonymous classes
-	char ZERO_CHAR = '0'; 
-	char[] ONE_ZERO = new char[] { ZERO_CHAR }; 
+	char ZERO_CHAR = '0';
+	char[] ONE_ZERO = new char[] { ZERO_CHAR };
 	char[][] ONE_ZERO_CHAR = new char[][] {ONE_ZERO};
 
 	int PKG_REF_PATTERN = 0x0001;

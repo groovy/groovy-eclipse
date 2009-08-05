@@ -12,7 +12,6 @@ package org.eclipse.jdt.core.search;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.internal.core.search.matching.InternalReferenceMatch;
 
 /**
  * A Java search match that represents a method reference.
@@ -20,17 +19,17 @@ import org.eclipse.jdt.internal.core.search.matching.InternalReferenceMatch;
  * <p>
  * This class is intended to be instantiated and subclassed by clients.
  * </p>
- * 
+ *
  * @since 3.0
  */
-public class MethodReferenceMatch extends InternalReferenceMatch {
+public class MethodReferenceMatch extends ReferenceMatch {
 	private boolean constructor;
 	private boolean synthetic;
 	private boolean superInvocation;
 
 /**
  * Creates a new method reference match.
- * 
+ *
  * @param enclosingElement the inner-most enclosing member that references this method
  * @param accuracy one of {@link #A_ACCURATE} or {@link #A_INACCURATE}
  * @param offset the offset the match starts at, or -1 if unknown
@@ -46,7 +45,7 @@ public MethodReferenceMatch(IJavaElement enclosingElement, int accuracy, int off
 
 /**
  * Creates a new method reference match.
- * 
+ *
  * @param enclosingElement the inner-most enclosing member that references this method
  * @param accuracy one of {@link #A_ACCURATE} or {@link #A_INACCURATE}
  * @param offset the offset the match starts at, or -1 if unknown
@@ -69,7 +68,7 @@ public MethodReferenceMatch(IJavaElement enclosingElement, int accuracy, int off
 
 /**
  * Creates a new method reference match.
- * 
+ *
  * @param enclosingElement the inner-most enclosing member that references this method
  * @param accuracy one of {@link #A_ACCURATE} or {@link #A_INACCURATE}
  * @param offset the offset the match starts at, or -1 if unknown
@@ -105,7 +104,7 @@ public final boolean isConstructor() {
  * Returns whether the reference is on a synthetic element.
  * Note that this field is only used for constructor reference. This happens when default constructor
  * declaration is used or implicit super constructor is called.
- * 
+ *
  * @return whether the reference is synthetic or not.
  * @since 3.1
  */
@@ -118,7 +117,7 @@ public final boolean isSynthetic() {
  * which is a super type of the searched method declaring type.
  * If <code>true</code>, the method called at run-time may or may not be
  * the search target, depending on the run-time type of the receiver object.
- * 
+ *
  * @return <code>true</code> if the reference is on a message sent from
  * a super-type of the searched method declaring class, <code>false </code> otherwise
  * @since 3.3

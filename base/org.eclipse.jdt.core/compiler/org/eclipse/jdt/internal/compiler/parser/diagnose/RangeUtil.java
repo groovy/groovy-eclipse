@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,57 +18,57 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 
 public class RangeUtil {
-	
+
 	// flags
 	public static final int NO_FLAG = 0;
 	public static final int LBRACE_MISSING = 1;
 	public static final int IGNORE = 2;
-	
+
 	static class RangeResult {
 		private static final int INITIAL_SIZE = 10;
 		int pos;
 		int[] intervalStarts;
 		int[] intervalEnds;
 		int[] intervalFlags;
-		
+
 		RangeResult() {
 			this.pos = 0;
 			this.intervalStarts = new int[INITIAL_SIZE];
 			this.intervalEnds = new int[INITIAL_SIZE];
 			this.intervalFlags = new int[INITIAL_SIZE];
 		}
-		
+
 		void addInterval(int start, int end){
 			addInterval(start, end, NO_FLAG);
 		}
-		
+
 		void addInterval(int start, int end, int flags){
-			if(pos >= intervalStarts.length) {
-				System.arraycopy(intervalStarts, 0, intervalStarts = new int[pos * 2], 0, pos);
-				System.arraycopy(intervalEnds, 0, intervalEnds = new int[pos * 2], 0, pos);
-				System.arraycopy(intervalFlags, 0, intervalFlags = new int[pos * 2], 0, pos);
+			if(this.pos >= this.intervalStarts.length) {
+				System.arraycopy(this.intervalStarts, 0, this.intervalStarts = new int[this.pos * 2], 0, this.pos);
+				System.arraycopy(this.intervalEnds, 0, this.intervalEnds = new int[this.pos * 2], 0, this.pos);
+				System.arraycopy(this.intervalFlags, 0, this.intervalFlags = new int[this.pos * 2], 0, this.pos);
 			}
-			intervalStarts[pos] = start;
-			intervalEnds[pos] = end;
-			intervalFlags[pos] = flags;
-			pos++;
+			this.intervalStarts[this.pos] = start;
+			this.intervalEnds[this.pos] = end;
+			this.intervalFlags[this.pos] = flags;
+			this.pos++;
 		}
-		
+
 		int[][] getRanges() {
-			int[] resultStarts = new int[pos];
-			int[] resultEnds = new int[pos];
-			int[] resultFlags = new int[pos];
-			
-			System.arraycopy(intervalStarts, 0, resultStarts, 0, pos);
-			System.arraycopy(intervalEnds, 0, resultEnds, 0, pos);
-			System.arraycopy(intervalFlags, 0, resultFlags, 0, pos);
+			int[] resultStarts = new int[this.pos];
+			int[] resultEnds = new int[this.pos];
+			int[] resultFlags = new int[this.pos];
+
+			System.arraycopy(this.intervalStarts, 0, resultStarts, 0, this.pos);
+			System.arraycopy(this.intervalEnds, 0, resultEnds, 0, this.pos);
+			System.arraycopy(this.intervalFlags, 0, resultFlags, 0, this.pos);
 
 			if (resultStarts.length > 1) {
 				quickSort(resultStarts, resultEnds, resultFlags, 0, resultStarts.length - 1);
 			}
 			return new int[][]{resultStarts, resultEnds, resultFlags};
 		}
-		
+
 		private void quickSort(int[] list, int[] list2, int[] list3, int left, int right) {
 			int original_left= left;
 			int original_right= right;
@@ -84,20 +84,20 @@ public class RangeUtil {
 					int tmp= list[left];
 					list[left]= list[right];
 					list[right]= tmp;
-					
+
 					tmp = list2[left];
 					list2[left]= list2[right];
 					list2[right]= tmp;
-					
+
 					tmp = list3[left];
 					list3[left]= list3[right];
 					list3[right]= tmp;
-					
+
 					left++;
 					right--;
 				}
 			} while (left <= right);
-			
+
 			if (original_left < right) {
 				quickSort(list, list2, list3, original_left, right);
 			}
@@ -105,14 +105,14 @@ public class RangeUtil {
 				quickSort(list, list2, list3, left, original_right);
 			}
 		}
-		
+
 		private int compare(int i1, int i2) {
 			return i1 - i2;
 		}
 	}
-	
-	
-	
+
+
+
 	public static boolean containsErrorInSignature(AbstractMethodDeclaration method){
 		return method.sourceEnd + 1 == method.bodyStart	|| method.bodyEnd == method.declarationSourceEnd;
 	}
@@ -126,7 +126,7 @@ public class RangeUtil {
 			return result.getRanges();
 		}
 	}
-	
+
 	private static void computeDietRange0(TypeDeclaration[] types, RangeResult result) {
 		for (int j = 0; j < types.length; j++) {
 			//members
@@ -151,7 +151,7 @@ public class RangeUtil {
 					}
 				}
 			}
-	
+
 			//initializers
 			FieldDeclaration[] fields = types[j].fields;
 			if (fields != null) {
@@ -170,7 +170,7 @@ public class RangeUtil {
 			}
 		}
 	}
-		
+
 	public static boolean containsIgnoredBody(AbstractMethodDeclaration method){
 		return !method.isDefaultConstructor()
 			&& !method.isClinit()

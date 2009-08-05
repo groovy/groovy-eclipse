@@ -40,7 +40,7 @@ public void aboutToResolve(Scope scope) {
 }
 protected TypeBinding getTypeBinding(Scope scope) {
 	// it can be a package, type or member type
-	Binding binding = scope.getTypeOrPackage(new char[][] {token});
+	Binding binding = scope.getTypeOrPackage(new char[][] {this.token});
 	if (!binding.isValidBinding()) {
 		if (binding instanceof TypeBinding) {
 			scope.problemReporter().invalidType(this, (TypeBinding) binding);
@@ -54,14 +54,14 @@ protected TypeBinding getTypeBinding(Scope scope) {
 }
 public StringBuffer printExpression(int indent, StringBuffer output) {
 
-	return output.append("<SelectOnType:").append(token).append('>');//$NON-NLS-1$
+	return output.append("<SelectOnType:").append(this.token).append('>');//$NON-NLS-1$
 }
 public TypeBinding resolveTypeEnclosing(BlockScope scope, ReferenceBinding enclosingType) {
 	super.resolveTypeEnclosing(scope, enclosingType);
 
 		// tolerate some error cases
-		if (this.resolvedType == null || 
-				!(this.resolvedType.isValidBinding() || 
+		if (this.resolvedType == null ||
+				!(this.resolvedType.isValidBinding() ||
 					this.resolvedType.problemId() == ProblemReasons.NotVisible))
 		throw new SelectionNodeFound();
 	else

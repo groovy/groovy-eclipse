@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,9 +27,9 @@ public class Initializer extends FieldDeclaration {
 	public Initializer(Block block, int modifiers) {
 		this.block = block;
 		this.modifiers = modifiers;
-		
+
 		if (block != null) {
-			declarationSourceStart = sourceStart = block.sourceStart;
+			this.declarationSourceStart = this.sourceStart = block.sourceStart;
 		}
 	}
 
@@ -38,14 +38,14 @@ public class Initializer extends FieldDeclaration {
 		FlowContext flowContext,
 		FlowInfo flowInfo) {
 
-		if (block != null) {
-			return block.analyseCode(currentScope, flowContext, flowInfo);
+		if (this.block != null) {
+			return this.block.analyseCode(currentScope, flowContext, flowInfo);
 		}
 		return flowInfo;
 	}
 
 	/**
-	 * Code generation for a non-static initializer: 
+	 * Code generation for a non-static initializer:
 	 *    standard block code gen
 	 *
 	 * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
@@ -53,11 +53,11 @@ public class Initializer extends FieldDeclaration {
 	 */
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
-		if ((bits & IsReachable) == 0) {
+		if ((this.bits & IsReachable) == 0) {
 			return;
 		}
 		int pc = codeStream.position;
-		if (block != null) block.generateCode(currentScope, codeStream);
+		if (this.block != null) this.block.generateCode(currentScope, codeStream);
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
@@ -67,12 +67,12 @@ public class Initializer extends FieldDeclaration {
 	public int getKind() {
 		return INITIALIZER;
 	}
-	
+
 	public boolean isStatic() {
 
 		return (this.modifiers & ClassFileConstants.AccStatic) != 0;
 	}
-	
+
 	public void parseStatements(
 		Parser parser,
 		TypeDeclaration typeDeclaration,
@@ -84,31 +84,31 @@ public class Initializer extends FieldDeclaration {
 
 	public StringBuffer printStatement(int indent, StringBuffer output) {
 
-		if (modifiers != 0) {
+		if (this.modifiers != 0) {
 			printIndent(indent, output);
-			printModifiers(modifiers, output);
+			printModifiers(this.modifiers, output);
 			if (this.annotations != null) printAnnotations(this.annotations, output);
 			output.append("{\n"); //$NON-NLS-1$
-			if (block != null) {
-				block.printBody(indent, output);
+			if (this.block != null) {
+				this.block.printBody(indent, output);
 			}
-			printIndent(indent, output).append('}'); 
+			printIndent(indent, output).append('}');
 			return output;
-		} else if (block != null) {
-			block.printStatement(indent, output);
+		} else if (this.block != null) {
+			this.block.printStatement(indent, output);
 		} else {
 			printIndent(indent, output).append("{}"); //$NON-NLS-1$
 		}
 		return output;
 	}
-	
+
 	public void resolve(MethodScope scope) {
 
 		FieldBinding previousField = scope.initializedField;
 		int previousFieldID = scope.lastVisibleFieldID;
 		try {
 			scope.initializedField = null;
-			scope.lastVisibleFieldID = lastVisibleFieldID;
+			scope.lastVisibleFieldID = this.lastVisibleFieldID;
 			if (isStatic()) {
 				ReferenceBinding declaringType = scope.enclosingSourceType();
 				if (declaringType.isNestedType() && !declaringType.isStatic())
@@ -116,7 +116,7 @@ public class Initializer extends FieldDeclaration {
 						declaringType,
 						this);
 			}
-			if (block != null) block.resolve(scope);
+			if (this.block != null) this.block.resolve(scope);
 		} finally {
 		    scope.initializedField = previousField;
 			scope.lastVisibleFieldID = previousFieldID;
@@ -125,7 +125,7 @@ public class Initializer extends FieldDeclaration {
 
 	public void traverse(ASTVisitor visitor, MethodScope scope) {
 		if (visitor.visit(this, scope)) {
-			if (block != null) block.traverse(visitor, scope);
+			if (this.block != null) this.block.traverse(visitor, scope);
 		}
 		visitor.endVisit(this, scope);
 	}

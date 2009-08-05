@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,9 +29,9 @@ public class MethodScope extends BlockScope {
 	public boolean isStatic; // method modifier or initializer one
 
 	//fields used during name resolution
-	public boolean isConstructorCall = false; 
+	public boolean isConstructorCall = false;
 	public FieldBinding initializedField; // the field being initialized
-	public int lastVisibleFieldID = -1; // the ID of the last field which got declared 
+	public int lastVisibleFieldID = -1; // the ID of the last field which got declared
 	// note that #initializedField can be null AND lastVisibleFieldID >= 0, when processing instance field initializers.
 
 	// flow analysis
@@ -45,13 +45,13 @@ public class MethodScope extends BlockScope {
 
 	// annotation support
 	public boolean insideTypeAnnotation = false;
-	
+
 	// inner-emulation
 	public SyntheticArgumentBinding[] extraSyntheticArguments;
-	
+
 public MethodScope(ClassScope parent, ReferenceContext context, boolean isStatic) {
 	super(METHOD_SCOPE, parent);
-	locals = new LocalVariableBinding[5];
+	this.locals = new LocalVariableBinding[5];
 	this.referenceContext = context;
 	this.isStatic = isStatic;
 	this.startIndex = 0;
@@ -65,13 +65,13 @@ String basicToString(int tab) {
 	String s = newLine + "--- Method Scope ---"; //$NON-NLS-1$
 	newLine += "\t"; //$NON-NLS-1$
 	s += newLine + "locals:"; //$NON-NLS-1$
-	for (int i = 0; i < localIndex; i++)
-		s += newLine + "\t" + locals[i].toString(); //$NON-NLS-1$
-	s += newLine + "startIndex = " + startIndex; //$NON-NLS-1$
-	s += newLine + "isConstructorCall = " + isConstructorCall; //$NON-NLS-1$
-	s += newLine + "initializedField = " + initializedField; //$NON-NLS-1$
-	s += newLine + "lastVisibleFieldID = " + lastVisibleFieldID; //$NON-NLS-1$
-	s += newLine + "referenceContext = " + referenceContext; //$NON-NLS-1$
+	for (int i = 0; i < this.localIndex; i++)
+		s += newLine + "\t" + this.locals[i].toString(); //$NON-NLS-1$
+	s += newLine + "startIndex = " + this.startIndex; //$NON-NLS-1$
+	s += newLine + "isConstructorCall = " + this.isConstructorCall; //$NON-NLS-1$
+	s += newLine + "initializedField = " + this.initializedField; //$NON-NLS-1$
+	s += newLine + "lastVisibleFieldID = " + this.lastVisibleFieldID; //$NON-NLS-1$
+	s += newLine + "referenceContext = " + this.referenceContext; //$NON-NLS-1$
 	return s;
 }
 
@@ -82,9 +82,9 @@ private void checkAndSetModifiersForConstructor(MethodBinding methodBinding) {
 	int modifiers = methodBinding.modifiers;
 	final ReferenceBinding declaringClass = methodBinding.declaringClass;
 	if ((modifiers & ExtraCompilerModifiers.AccAlternateModifierProblem) != 0)
-		problemReporter().duplicateModifierForMethod(declaringClass, (AbstractMethodDeclaration) referenceContext);
+		problemReporter().duplicateModifierForMethod(declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 
-	if ((((ConstructorDeclaration) referenceContext).bits & ASTNode.IsDefaultConstructor) != 0) {
+	if ((((ConstructorDeclaration) this.referenceContext).bits & ASTNode.IsDefaultConstructor) != 0) {
 		// certain flags are propagated from declaring class onto constructor
 		final int DECLARING_FLAGS = ClassFileConstants.AccEnum|ClassFileConstants.AccPublic|ClassFileConstants.AccProtected;
 		final int VISIBILITY_FLAGS = ClassFileConstants.AccPrivate|ClassFileConstants.AccPublic|ClassFileConstants.AccProtected;
@@ -105,28 +105,28 @@ private void checkAndSetModifiersForConstructor(MethodBinding methodBinding) {
 
 	// check for abnormal modifiers
 	final int UNEXPECTED_MODIFIERS = ~(ClassFileConstants.AccPublic | ClassFileConstants.AccPrivate | ClassFileConstants.AccProtected | ClassFileConstants.AccStrictfp);
-	if (declaringClass.isEnum() && (((ConstructorDeclaration) referenceContext).bits & ASTNode.IsDefaultConstructor) == 0) {
+	if (declaringClass.isEnum() && (((ConstructorDeclaration) this.referenceContext).bits & ASTNode.IsDefaultConstructor) == 0) {
 		final int UNEXPECTED_ENUM_CONSTR_MODIFIERS = ~(ClassFileConstants.AccPrivate | ClassFileConstants.AccStrictfp);
 		if ((realModifiers & UNEXPECTED_ENUM_CONSTR_MODIFIERS) != 0) {
-			problemReporter().illegalModifierForEnumConstructor((AbstractMethodDeclaration) referenceContext);
+			problemReporter().illegalModifierForEnumConstructor((AbstractMethodDeclaration) this.referenceContext);
 			modifiers &= ~ExtraCompilerModifiers.AccJustFlag | ~UNEXPECTED_ENUM_CONSTR_MODIFIERS;
-		} else if ((((AbstractMethodDeclaration) referenceContext).modifiers & ClassFileConstants.AccStrictfp) != 0) {
+		} else if ((((AbstractMethodDeclaration) this.referenceContext).modifiers & ClassFileConstants.AccStrictfp) != 0) {
 			// must check the parse node explicitly
-			problemReporter().illegalModifierForMethod((AbstractMethodDeclaration) referenceContext);
+			problemReporter().illegalModifierForMethod((AbstractMethodDeclaration) this.referenceContext);
 		}
 		modifiers |= ClassFileConstants.AccPrivate; // enum constructor is implicitly private
 	} else if ((realModifiers & UNEXPECTED_MODIFIERS) != 0) {
-		problemReporter().illegalModifierForMethod((AbstractMethodDeclaration) referenceContext);
+		problemReporter().illegalModifierForMethod((AbstractMethodDeclaration) this.referenceContext);
 		modifiers &= ~ExtraCompilerModifiers.AccJustFlag | ~UNEXPECTED_MODIFIERS;
-	} else if ((((AbstractMethodDeclaration) referenceContext).modifiers & ClassFileConstants.AccStrictfp) != 0) {
+	} else if ((((AbstractMethodDeclaration) this.referenceContext).modifiers & ClassFileConstants.AccStrictfp) != 0) {
 		// must check the parse node explicitly
-		problemReporter().illegalModifierForMethod((AbstractMethodDeclaration) referenceContext);
+		problemReporter().illegalModifierForMethod((AbstractMethodDeclaration) this.referenceContext);
 	}
 
 	// check for incompatible modifiers in the visibility bits, isolate the visibility bits
 	int accessorBits = realModifiers & (ClassFileConstants.AccPublic | ClassFileConstants.AccProtected | ClassFileConstants.AccPrivate);
 	if ((accessorBits & (accessorBits - 1)) != 0) {
-		problemReporter().illegalVisibilityModifierCombinationForMethod(declaringClass, (AbstractMethodDeclaration) referenceContext);
+		problemReporter().illegalVisibilityModifierCombinationForMethod(declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 
 		// need to keep the less restrictive so disable Protected/Private as necessary
 		if ((accessorBits & ClassFileConstants.AccPublic) != 0) {
@@ -153,7 +153,7 @@ private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 	int modifiers = methodBinding.modifiers;
 	final ReferenceBinding declaringClass = methodBinding.declaringClass;
 	if ((modifiers & ExtraCompilerModifiers.AccAlternateModifierProblem) != 0)
-		problemReporter().duplicateModifierForMethod(declaringClass, (AbstractMethodDeclaration) referenceContext);
+		problemReporter().duplicateModifierForMethod(declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 
 	// after this point, tests on the 16 bits reserved.
 	int realModifiers = modifiers & ExtraCompilerModifiers.AccJustFlag;
@@ -162,9 +162,9 @@ private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 	if (declaringClass.isInterface()) {
 		if ((realModifiers & ~(ClassFileConstants.AccPublic | ClassFileConstants.AccAbstract)) != 0) {
 			if ((declaringClass.modifiers & ClassFileConstants.AccAnnotation) != 0)
-				problemReporter().illegalModifierForAnnotationMember((AbstractMethodDeclaration) referenceContext);
+				problemReporter().illegalModifierForAnnotationMember((AbstractMethodDeclaration) this.referenceContext);
 			else
-				problemReporter().illegalModifierForInterfaceMethod((AbstractMethodDeclaration) referenceContext);
+				problemReporter().illegalModifierForInterfaceMethod((AbstractMethodDeclaration) this.referenceContext);
 		}
 		return;
 	}
@@ -173,14 +173,14 @@ private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 	final int UNEXPECTED_MODIFIERS = ~(ClassFileConstants.AccPublic | ClassFileConstants.AccPrivate | ClassFileConstants.AccProtected
 		| ClassFileConstants.AccAbstract | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal | ClassFileConstants.AccSynchronized | ClassFileConstants.AccNative | ClassFileConstants.AccStrictfp);
 	if ((realModifiers & UNEXPECTED_MODIFIERS) != 0) {
-		problemReporter().illegalModifierForMethod((AbstractMethodDeclaration) referenceContext);
+		problemReporter().illegalModifierForMethod((AbstractMethodDeclaration) this.referenceContext);
 		modifiers &= ~ExtraCompilerModifiers.AccJustFlag | ~UNEXPECTED_MODIFIERS;
 	}
 
 	// check for incompatible modifiers in the visibility bits, isolate the visibility bits
 	int accessorBits = realModifiers & (ClassFileConstants.AccPublic | ClassFileConstants.AccProtected | ClassFileConstants.AccPrivate);
 	if ((accessorBits & (accessorBits - 1)) != 0) {
-		problemReporter().illegalVisibilityModifierCombinationForMethod(declaringClass, (AbstractMethodDeclaration) referenceContext);
+		problemReporter().illegalVisibilityModifierCombinationForMethod(declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 
 		// need to keep the less restrictive so disable Protected/Private as necessary
 		if ((accessorBits & ClassFileConstants.AccPublic) != 0) {
@@ -197,44 +197,44 @@ private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 	if ((modifiers & ClassFileConstants.AccAbstract) != 0) {
 		int incompatibleWithAbstract = ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal | ClassFileConstants.AccSynchronized | ClassFileConstants.AccNative | ClassFileConstants.AccStrictfp;
 		if ((modifiers & incompatibleWithAbstract) != 0)
-			problemReporter().illegalAbstractModifierCombinationForMethod(declaringClass, (AbstractMethodDeclaration) referenceContext);
+			problemReporter().illegalAbstractModifierCombinationForMethod(declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 		if (!methodBinding.declaringClass.isAbstract())
-			problemReporter().abstractMethodInAbstractClass((SourceTypeBinding) declaringClass, (AbstractMethodDeclaration) referenceContext);
+			problemReporter().abstractMethodInAbstractClass((SourceTypeBinding) declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 	}
 
 	/* DISABLED for backward compatibility with javac (if enabled should also mark private methods as final)
-	// methods from a final class are final : 8.4.3.3 
+	// methods from a final class are final : 8.4.3.3
 	if (methodBinding.declaringClass.isFinal())
 		modifiers |= AccFinal;
 	*/
 	// native methods cannot also be tagged as strictfp
 	if ((modifiers & ClassFileConstants.AccNative) != 0 && (modifiers & ClassFileConstants.AccStrictfp) != 0)
-		problemReporter().nativeMethodsCannotBeStrictfp(declaringClass, (AbstractMethodDeclaration) referenceContext);
+		problemReporter().nativeMethodsCannotBeStrictfp(declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 
 	// static members are only authorized in a static member or top level type
 	if (((realModifiers & ClassFileConstants.AccStatic) != 0) && declaringClass.isNestedType() && !declaringClass.isStatic())
-		problemReporter().unexpectedStaticModifierForMethod(declaringClass, (AbstractMethodDeclaration) referenceContext);
+		problemReporter().unexpectedStaticModifierForMethod(declaringClass, (AbstractMethodDeclaration) this.referenceContext);
 
 	methodBinding.modifiers = modifiers;
 }
 
 public void checkUnusedParameters(MethodBinding method) {
 	if (method.isAbstract()
-			|| (method.isImplementing() && !compilerOptions().reportUnusedParameterWhenImplementingAbstract) 
+			|| (method.isImplementing() && !compilerOptions().reportUnusedParameterWhenImplementingAbstract)
 			|| (method.isOverriding() && !method.isImplementing() && !compilerOptions().reportUnusedParameterWhenOverridingConcrete)
 			|| method.isMain()) {
 		// do not want to check
 		return;
 	}
 	for (int i = 0, maxLocals = this.localIndex; i < maxLocals; i++) {
-		LocalVariableBinding local = locals[i];
+		LocalVariableBinding local = this.locals[i];
 		if (local == null || ((local.tagBits & TagBits.IsArgument) == 0)) {
 			break; // done with arguments
 		}
-		if (local.useFlag == LocalVariableBinding.UNUSED && 
+		if (local.useFlag == LocalVariableBinding.UNUSED &&
 				// do not report fake used variable
 				((local.declaration.bits & ASTNode.IsLocalDeclarationReachable) != 0)) { // declaration is reachable
-			this.problemReporter().unusedArgument(local.declaration);
+			problemReporter().unusedArgument(local.declaration);
 		}
 	}
 }
@@ -242,21 +242,21 @@ public void checkUnusedParameters(MethodBinding method) {
 /**
  * Compute variable positions in scopes given an initial position offset
  * ignoring unused local variables.
- * 
+ *
  * Deal with arguments here, locals and subscopes are processed in BlockScope method
  */
 public void computeLocalVariablePositions(int initOffset, CodeStream codeStream) {
 	this.offset = initOffset;
 	this.maxOffset = initOffset;
 
-	// manage arguments	
+	// manage arguments
 	int ilocal = 0, maxLocals = this.localIndex;
 	while (ilocal < maxLocals) {
-		LocalVariableBinding local = locals[ilocal];
+		LocalVariableBinding local = this.locals[ilocal];
 		if (local == null || ((local.tagBits & TagBits.IsArgument) == 0)) break; // done with arguments
 
 		// record user-defined argument for attribute generation
-		codeStream.record(local); 
+		codeStream.record(local);
 
 		// assign variable position
 		local.resolvedPosition = this.offset;
@@ -268,15 +268,15 @@ public void computeLocalVariablePositions(int initOffset, CodeStream codeStream)
 		}
 		// check for too many arguments/local variables
 		if (this.offset > 0xFF) { // no more than 255 words of arguments
-			this.problemReporter().noMoreAvailableSpaceForArgument(local, local.declaration);
+			problemReporter().noMoreAvailableSpaceForArgument(local, local.declaration);
 		}
 		ilocal++;
 	}
-	
+
 	// sneak in extra argument before other local variables
-	if (extraSyntheticArguments != null) {
-		for (int iarg = 0, maxArguments = extraSyntheticArguments.length; iarg < maxArguments; iarg++){
-			SyntheticArgumentBinding argument = extraSyntheticArguments[iarg];
+	if (this.extraSyntheticArguments != null) {
+		for (int iarg = 0, maxArguments = this.extraSyntheticArguments.length; iarg < maxArguments; iarg++){
+			SyntheticArgumentBinding argument = this.extraSyntheticArguments[iarg];
 			argument.resolvedPosition = this.offset;
 			if ((argument.type == TypeBinding.LONG) || (argument.type == TypeBinding.DOUBLE)){
 				this.offset += 2;
@@ -284,7 +284,7 @@ public void computeLocalVariablePositions(int initOffset, CodeStream codeStream)
 				this.offset++;
 			}
 			if (this.offset > 0xFF) { // no more than 255 words of arguments
-				this.problemReporter().noMoreAvailableSpaceForArgument(argument, (ASTNode)this.referenceContext); 
+				problemReporter().noMoreAvailableSpaceForArgument(argument, (ASTNode)this.referenceContext);
 			}
 		}
 	}
@@ -327,7 +327,7 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 				problemReporter().illegalVararg(argTypes[argLength], method);
 		}
 	}
-	
+
 	TypeParameter[] typeParameters = method.typeParameters();
     // do not construct type variables if source < 1.5
 	if (typeParameters == null || compilerOptions().sourceLevel < ClassFileConstants.JDK1_5) {
@@ -359,7 +359,7 @@ public FieldBinding findField(TypeBinding receiverType, char[] fieldName, Invoca
 	if (field.isStatic())
 		return field; // static fields are always accessible
 
-	if (!isConstructorCall || receiverType != enclosingSourceType())
+	if (!this.isConstructorCall || receiverType != enclosingSourceType())
 		return field;
 
 	if (invocationSite instanceof SingleNameReference)
@@ -383,16 +383,16 @@ public FieldBinding findField(TypeBinding receiverType, char[] fieldName, Invoca
 }
 
 public boolean isInsideConstructor() {
-	return (referenceContext instanceof ConstructorDeclaration);
+	return (this.referenceContext instanceof ConstructorDeclaration);
 }
 
 public boolean isInsideInitializer() {
-	return (referenceContext instanceof TypeDeclaration);
+	return (this.referenceContext instanceof TypeDeclaration);
 }
 
 public boolean isInsideInitializerOrConstructor() {
-	return (referenceContext instanceof TypeDeclaration)
-		|| (referenceContext instanceof ConstructorDeclaration);
+	return (this.referenceContext instanceof TypeDeclaration)
+		|| (this.referenceContext instanceof ConstructorDeclaration);
 }
 
 /**
@@ -406,7 +406,7 @@ public ProblemReporter problemReporter() {
 	MethodScope outerMethodScope;
 	if ((outerMethodScope = outerMostMethodScope()) == this) {
 		ProblemReporter problemReporter = referenceCompilationUnit().problemReporter;
-		problemReporter.referenceContext = referenceContext;
+		problemReporter.referenceContext = this.referenceContext;
 		return problemReporter;
 	}
 	return outerMethodScope.problemReporter();
@@ -418,9 +418,9 @@ public final int recordInitializationStates(FlowInfo flowInfo) {
 	long[] extraInits = unconditionalFlowInfo.extra == null ?
 			null : unconditionalFlowInfo.extra[0];
 	long inits = unconditionalFlowInfo.definiteInits;
-	checkNextEntry : for (int i = lastIndex; --i >= 0;) {
-		if (definiteInits[i] == inits) {
-			long[] otherInits = extraDefiniteInits[i];
+	checkNextEntry : for (int i = this.lastIndex; --i >= 0;) {
+		if (this.definiteInits[i] == inits) {
+			long[] otherInits = this.extraDefiniteInits[i];
 			if ((extraInits != null) && (otherInits != null)) {
 				if (extraInits.length == otherInits.length) {
 					int j, max;
@@ -440,39 +440,39 @@ public final int recordInitializationStates(FlowInfo flowInfo) {
 	}
 
 	// add a new entry
-	if (definiteInits.length == lastIndex) {
+	if (this.definiteInits.length == this.lastIndex) {
 		// need a resize
 		System.arraycopy(
-			definiteInits,
+			this.definiteInits,
 			0,
-			(definiteInits = new long[lastIndex + 20]),
+			(this.definiteInits = new long[this.lastIndex + 20]),
 			0,
-			lastIndex);
+			this.lastIndex);
 		System.arraycopy(
-			extraDefiniteInits,
+			this.extraDefiniteInits,
 			0,
-			(extraDefiniteInits = new long[lastIndex + 20][]),
+			(this.extraDefiniteInits = new long[this.lastIndex + 20][]),
 			0,
-			lastIndex);
+			this.lastIndex);
 	}
-	definiteInits[lastIndex] = inits;
+	this.definiteInits[this.lastIndex] = inits;
 	if (extraInits != null) {
-		extraDefiniteInits[lastIndex] = new long[extraInits.length];
+		this.extraDefiniteInits[this.lastIndex] = new long[extraInits.length];
 		System.arraycopy(
 			extraInits,
 			0,
-			extraDefiniteInits[lastIndex],
+			this.extraDefiniteInits[this.lastIndex],
 			0,
 			extraInits.length);
 	}
-	return lastIndex++;
+	return this.lastIndex++;
 }
 
 /**
  *  Answer the reference method of this scope, or null if initialization scoope.
  */
 public AbstractMethodDeclaration referenceMethod() {
-	if (referenceContext instanceof AbstractMethodDeclaration) return (AbstractMethodDeclaration) referenceContext;
+	if (this.referenceContext instanceof AbstractMethodDeclaration) return (AbstractMethodDeclaration) this.referenceContext;
 	return null;
 }
 
@@ -481,6 +481,6 @@ public AbstractMethodDeclaration referenceMethod() {
  * It is the nearest enclosing type of this scope.
  */
 public TypeDeclaration referenceType() {
-	return ((ClassScope) parent).referenceContext;
+	return ((ClassScope) this.parent).referenceContext;
 }
 }

@@ -67,6 +67,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	}
 
 	private final static char[] GROOVY = "groovy".toCharArray(); //$NON-NLS-1$
+	private final static char[] LANG = "lang".toCharArray(); //$NON-NLS-1$
 	private final static char[][] GROOVY_LANG_GROOVYOBJECT = { GROOVY, LANG, "GroovyObject".toCharArray() }; //$NON-NLS-1$
 
 	public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration,

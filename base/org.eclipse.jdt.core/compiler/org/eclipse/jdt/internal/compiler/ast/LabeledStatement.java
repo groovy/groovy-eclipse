@@ -16,7 +16,7 @@ import org.eclipse.jdt.internal.compiler.flow.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class LabeledStatement extends Statement {
-	
+
 	public Statement statement;
 	public char[] label;
 	public BranchLabel targetLabel;
@@ -24,12 +24,12 @@ public class LabeledStatement extends Statement {
 
 	// for local variables table attributes
 	int mergedInitStateIndex = -1;
-	
+
 	/**
 	 * LabeledStatement constructor comment.
 	 */
 	public LabeledStatement(char[] label, Statement statement, long labelPosition, int sourceEnd) {
-		
+
 		this.statement = statement;
 		// remember useful empty statement
 		if (statement instanceof EmptyStatement) statement.bits |= IsUsefulEmptyStatement;
@@ -38,7 +38,7 @@ public class LabeledStatement extends Statement {
 		this.labelEnd = (int) labelPosition;
 		this.sourceEnd = sourceEnd;
 	}
-	
+
 	public FlowInfo analyseCode(
 		BlockScope currentScope,
 		FlowContext flowContext,
@@ -46,19 +46,19 @@ public class LabeledStatement extends Statement {
 
 		// need to stack a context to store explicit label, answer inits in case of normal completion merged
 		// with those relative to the exit path from break statement occurring inside the labeled statement.
-		if (statement == null) {
+		if (this.statement == null) {
 			return flowInfo;
 		} else {
 			LabelFlowContext labelContext;
 			FlowInfo statementInfo, mergedInfo;
-			statementInfo = statement.analyseCode(
+			statementInfo = this.statement.analyseCode(
 				currentScope,
 				(labelContext =
 					new LabelFlowContext(
 						flowContext,
 						this,
-						label,
-						(targetLabel = new BranchLabel()),
+						this.label,
+						(this.targetLabel = new BranchLabel()),
 						currentScope)),
 				flowInfo);
 			boolean reinjectNullInfo = (statementInfo.tagBits & FlowInfo.UNREACHABLE) != 0 &&
@@ -69,7 +69,7 @@ public class LabeledStatement extends Statement {
 				((UnconditionalFlowInfo)mergedInfo).addInitializationsFrom(flowInfo.unconditionalFieldLessCopy()).
 					addInitializationsFrom(labelContext.initsOnBreak.unconditionalFieldLessCopy());
 			}
-			mergedInitStateIndex =
+			this.mergedInitStateIndex =
 				currentScope.methodScope().recordInitializationStates(mergedInfo);
 			if ((this.bits & ASTNode.LabelUsed) == 0) {
 				currentScope.problemReporter().unusedLabel(this);
@@ -77,13 +77,13 @@ public class LabeledStatement extends Statement {
 			return mergedInfo;
 		}
 	}
-	
+
 	public ASTNode concreteStatement() {
-		
+
 		// return statement.concreteStatement(); // for supporting nested labels:   a:b:c: someStatement (see 21912)
-		return statement;
+		return this.statement;
 	}
-	
+
 	/**
 	 * Code generation for labeled statement
 	 *
@@ -93,38 +93,38 @@ public class LabeledStatement extends Statement {
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 */
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
-		
-		if ((bits & IsReachable) == 0) {
+
+		if ((this.bits & IsReachable) == 0) {
 			return;
-		}		
+		}
 		int pc = codeStream.position;
-		if (targetLabel != null) {
-			targetLabel.initialize(codeStream);
-			if (statement != null) {
-				statement.generateCode(currentScope, codeStream);
+		if (this.targetLabel != null) {
+			this.targetLabel.initialize(codeStream);
+			if (this.statement != null) {
+				this.statement.generateCode(currentScope, codeStream);
 			}
-			targetLabel.place();
+			this.targetLabel.place();
 		}
 		// May loose some local variable initializations : affecting the local variable attributes
-		if (mergedInitStateIndex != -1) {
-			codeStream.removeNotDefinitelyAssignedVariables(currentScope, mergedInitStateIndex);
-			codeStream.addDefinitelyAssignedVariables(currentScope, mergedInitStateIndex);
+		if (this.mergedInitStateIndex != -1) {
+			codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.mergedInitStateIndex);
+			codeStream.addDefinitelyAssignedVariables(currentScope, this.mergedInitStateIndex);
 		}
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
-	
+
 	public StringBuffer printStatement(int tab, StringBuffer output) {
 
-		printIndent(tab, output).append(label).append(": "); //$NON-NLS-1$
-		if (this.statement == null) 
+		printIndent(tab, output).append(this.label).append(": "); //$NON-NLS-1$
+		if (this.statement == null)
 			output.append(';');
-		else 
-			this.statement.printStatement(0, output); 
+		else
+			this.statement.printStatement(0, output);
 		return output;
 	}
-	
+
 	public void resolve(BlockScope scope) {
-		
+
 		if (this.statement != null) {
 			this.statement.resolve(scope);
 		}

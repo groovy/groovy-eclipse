@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,14 +27,14 @@ import org.eclipse.jdt.core.*;
  */
 public abstract class MultiOperation extends JavaModelOperation {
 	/**
-	 * Table specifying insertion positions for elements being 
+	 * Table specifying insertion positions for elements being
 	 * copied/moved/renamed. Keyed by elements being processed, and
 	 * values are the corresponding insertion point.
 	 * @see #processElements()
 	 */
 	protected Map insertBeforeElements = new HashMap(1);
 	/**
-	 * Table specifying the new parent for elements being 
+	 * Table specifying the new parent for elements being
 	 * copied/moved/renamed.
 	 * Keyed by elements being processed, and
 	 * values are the corresponding destination parent.
@@ -70,7 +70,7 @@ public abstract class MultiOperation extends JavaModelOperation {
 				this.newParents.put(elementsToProcess[i], parentElements[0]);
 			}
 		}
-	
+
 	}
 	/**
 	 * Convenience method to create a <code>JavaModelException</code>
@@ -140,7 +140,7 @@ public abstract class MultiOperation extends JavaModelOperation {
 	protected boolean isRename() {
 		return false;
 	}
-	
+
 	/**
 	 * Subclasses must implement this method to process a given <code>IJavaElement</code>.
 	 */
@@ -223,7 +223,7 @@ public abstract class MultiOperation extends JavaModelOperation {
 	protected void verifyDestination(IJavaElement element, IJavaElement destination) throws JavaModelException {
 		if (destination == null || !destination.exists())
 			error(IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST, destination);
-		
+
 		int destType = destination.getElementType();
 		switch (element.getElementType()) {
 			case IJavaElement.PACKAGE_DECLARATION :
@@ -290,7 +290,7 @@ public abstract class MultiOperation extends JavaModelOperation {
 				isValid = JavaConventions.validateIdentifier(newName, sourceLevel, complianceLevel).getSeverity() != IStatus.ERROR;
 				break;
 		}
-	
+
 		if (!isValid) {
 			throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INVALID_NAME, element, newName));
 		}

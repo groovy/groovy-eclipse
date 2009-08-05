@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Marker annotation node (added in JLS3 API). The marker annotation 
+ * Marker annotation node (added in JLS3 API). The marker annotation
  * "@foo" is equivalent to the normal annotation "@foo()".
  * <p>
  * <pre>
@@ -22,7 +22,7 @@ import java.util.List;
  *   <b>@</b> TypeName
  * </pre>
  * </p>
- * 
+ *
  * @since 3.1
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -31,43 +31,43 @@ public final class MarkerAnnotation extends Annotation {
 	/**
 	 * The "typeName" structural property of this node type.
 	 */
-	public static final ChildPropertyDescriptor TYPE_NAME_PROPERTY = 
+	public static final ChildPropertyDescriptor TYPE_NAME_PROPERTY =
 		internalTypeNamePropertyFactory(MarkerAnnotation.class);
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(2);
 		createPropertyList(MarkerAnnotation.class, propertyList);
 		addProperty(TYPE_NAME_PROPERTY, propertyList);
 		PROPERTY_DESCRIPTORS = reapPropertyList(propertyList);
 	}
-	
+
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the AST.JLS* constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-	
+
 	/**
-	 * Creates a new unparented marker annotation node owned 
+	 * Creates a new unparented marker annotation node owned
 	 * by the given AST. By default, the annotation has an
 	 * unspecified type name .
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	MarkerAnnotation(AST ast) {
@@ -81,7 +81,7 @@ public final class MarkerAnnotation extends Annotation {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -97,7 +97,7 @@ public final class MarkerAnnotation extends Annotation {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on BodyDeclaration.
 	 */
@@ -117,11 +117,11 @@ public final class MarkerAnnotation extends Annotation {
 	 */
 	ASTNode clone0(AST target) {
 		MarkerAnnotation result = new MarkerAnnotation(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setTypeName((Name) ASTNode.copySubtree(target, getTypeName()));
 		return result;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -129,7 +129,7 @@ public final class MarkerAnnotation extends Annotation {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -141,14 +141,14 @@ public final class MarkerAnnotation extends Annotation {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize();
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

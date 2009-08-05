@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,11 +33,11 @@ public HashtableOfType(int size) {
 	this.valueTable = new ReferenceBinding[extraRoom];
 }
 public boolean containsKey(char[] key) {
-	int length = keyTable.length,
+	int length = this.keyTable.length,
 		index = CharOperation.hashCode(key) % length;
 	int keyLength = key.length;
 	char[] currentKey;
-	while ((currentKey = keyTable[index]) != null) {
+	while ((currentKey = this.keyTable[index]) != null) {
 		if (currentKey.length == keyLength && CharOperation.equals(currentKey, key))
 			return true;
 		if (++index == length) {
@@ -47,13 +47,13 @@ public boolean containsKey(char[] key) {
 	return false;
 }
 public ReferenceBinding get(char[] key) {
-	int length = keyTable.length,
+	int length = this.keyTable.length,
 		index = CharOperation.hashCode(key) % length;
 	int keyLength = key.length;
 	char[] currentKey;
-	while ((currentKey = keyTable[index]) != null) {
+	while ((currentKey = this.keyTable[index]) != null) {
 		if (currentKey.length == keyLength && CharOperation.equals(currentKey, key))
-			return valueTable[index];
+			return this.valueTable[index];
 		if (++index == length) {
 			index = 0;
 		}
@@ -61,44 +61,44 @@ public ReferenceBinding get(char[] key) {
 	return null;
 }
 public ReferenceBinding put(char[] key, ReferenceBinding value) {
-	int length = keyTable.length,
+	int length = this.keyTable.length,
 		index = CharOperation.hashCode(key) % length;
 	int keyLength = key.length;
 	char[] currentKey;
-	while ((currentKey = keyTable[index]) != null) {
+	while ((currentKey = this.keyTable[index]) != null) {
 		if (currentKey.length == keyLength && CharOperation.equals(currentKey, key))
-			return valueTable[index] = value;
+			return this.valueTable[index] = value;
 		if (++index == length) {
 			index = 0;
 		}
 	}
-	keyTable[index] = key;
-	valueTable[index] = value;
+	this.keyTable[index] = key;
+	this.valueTable[index] = value;
 
 	// assumes the threshold is never equal to the size of the table
-	if (++elementSize > threshold)
+	if (++this.elementSize > this.threshold)
 		rehash();
 	return value;
 }
 private void rehash() {
-	HashtableOfType newHashtable = new HashtableOfType(elementSize < 100 ? 100 : elementSize * 2); // double the number of expected elements
+	HashtableOfType newHashtable = new HashtableOfType(this.elementSize < 100 ? 100 : this.elementSize * 2); // double the number of expected elements
 	char[] currentKey;
-	for (int i = keyTable.length; --i >= 0;)
-		if ((currentKey = keyTable[i]) != null)
-			newHashtable.put(currentKey, valueTable[i]);
+	for (int i = this.keyTable.length; --i >= 0;)
+		if ((currentKey = this.keyTable[i]) != null)
+			newHashtable.put(currentKey, this.valueTable[i]);
 
 	this.keyTable = newHashtable.keyTable;
 	this.valueTable = newHashtable.valueTable;
 	this.threshold = newHashtable.threshold;
 }
 public int size() {
-	return elementSize;
+	return this.elementSize;
 }
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	ReferenceBinding type;
-	for (int i = 0, length = valueTable.length; i < length; i++)
-		if ((type = valueTable[i]) != null)
+	for (int i = 0, length = this.valueTable.length; i < length; i++)
+		if ((type = this.valueTable[i]) != null)
 			s += type.toString() + "\n"; //$NON-NLS-1$
 	return s;
 }

@@ -33,7 +33,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 	public IType focusType;
 	private String focusPath;
 	private WorkingCopyOwner owner;
-	
+
 	private ITypeHierarchy hierarchy;
 	private IType[] types;
 	private HashSet resourcePaths;
@@ -41,7 +41,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 
 	protected IResource[] elements;
 	protected int elementCount;
-	
+
 	public boolean needsRefresh;
 
 	/* (non-Javadoc)
@@ -56,17 +56,17 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 				0,
 				this.elementCount);
 		}
-		elements[elementCount++] = element;
+		this.elements[this.elementCount++] = element;
 	}
-	
+
 	/* (non-Javadoc)
 	 * Creates a new hiearchy scope for the given type.
 	 */
 	public HierarchyScope(IType type, WorkingCopyOwner owner) throws JavaModelException {
 		this.focusType = type;
 		this.owner = owner;
-		
-		this.enclosingProjectsAndJars = this.computeProjectsAndJars(type);
+
+		this.enclosingProjectsAndJars = computeProjectsAndJars(type);
 
 		// resource path
 		IPackageFragmentRoot root = (IPackageFragmentRoot)type.getPackageFragment().getParent();
@@ -91,9 +91,9 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 		} else {
 			this.focusPath = type.getPath().toString();
 		}
-		
+
 		this.needsRefresh = true;
-			
+
 		//disabled for now as this could be expensive
 		//JavaModelManager.getJavaModelManager().rememberScope(this);
 	}
@@ -130,7 +130,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 						+ JAR_FILE_ENTRY_SEPARATOR
 						+ type.getFullyQualifiedName().replace('.', '/')
 						+ SUFFIX_STRING_class;
-				
+
 				this.resourcePaths.add(resourcePath);
 				paths.put(jarPath, type);
 			} else {
@@ -173,7 +173,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 						}
 					}
 					// add the dependent projects
-					this.computeDependents(project, set, visited);
+					computeDependents(project, set, visited);
 				}
 			}
 		} else {
@@ -189,7 +189,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 				}
 			}
 			// add the dependent projects
-			this.computeDependents(project, set, new HashSet());
+			computeDependents(project, set, new HashSet());
 		}
 		IPath[] result = new IPath[set.size()];
 		set.toArray(result);
@@ -210,7 +210,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 						set.add(pkgFragmentRoot.getPath());
 					}
 				}
-				this.computeDependents(dependent, set, visited);
+				computeDependents(dependent, set, visited);
 			} catch (JavaModelException e) {
 				// project is not a java project
 			}
@@ -226,7 +226,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 			} else {
 				if (this.needsRefresh) {
 					try {
-						this.initialize();
+						initialize();
 					} catch (JavaModelException e) {
 						return false;
 					}
@@ -239,7 +239,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 		}
 		if (this.needsRefresh) {
 			try {
-				this.refresh();
+				refresh();
 			} catch(JavaModelException e) {
 				return false;
 			}
@@ -266,7 +266,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 			} else {
 				if (this.needsRefresh) {
 					try {
-						this.initialize();
+						initialize();
 					} catch (JavaModelException e) {
 						return false;
 					}
@@ -274,12 +274,12 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 					// the scope is used only to find enclosing projects and jars
 					// clients is responsible for filtering out elements not in the hierarchy (see SearchEngine)
 					return true;
-				}					
+				}
 			}
 		}
 		if (this.needsRefresh) {
 			try {
-				this.refresh();
+				refresh();
 			} catch(JavaModelException e) {
 				return false;
 			}
@@ -296,12 +296,12 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 			} else {
 				// be flexible: look at original element (see bug 14106 Declarations in Hierarchy does not find declarations in hierarchy)
 				IType original;
-				if (!type.isBinary() 
+				if (!type.isBinary()
 						&& (original = (IType)type.getPrimaryElement()) != null) {
 					return this.hierarchy.contains(original);
 				}
 			}
-		} 
+		}
 		return false;
 	}
 	/* (non-Javadoc)
@@ -311,7 +311,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 	public IPath[] enclosingProjectsAndJars() {
 		if (this.needsRefresh) {
 			try {
-				this.refresh();
+				refresh();
 			} catch(JavaModelException e) {
 				return new IPath[0];
 			}
@@ -328,7 +328,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 		} else {
 			this.hierarchy.refresh(null);
 		}
-		this.buildResourceVector();
+		buildResourceVector();
 	}
 	/*
 	 * @see AbstractSearchScope#processDelta(IJavaElementDelta)
@@ -339,7 +339,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 	}
 	protected void refresh() throws JavaModelException {
 		if (this.hierarchy != null) {
-			this.initialize();
+			initialize();
 		}
 	}
 	public String toString() {

@@ -32,16 +32,16 @@ public class MementoTokenizer {
 	private final char[] memento;
 	private final int length;
 	private int index = 0;
-	
+
 	public MementoTokenizer(String memento) {
 		this.memento = memento.toCharArray();
 		this.length = this.memento.length;
 	}
-	
+
 	public boolean hasMoreTokens() {
 		return this.index < this.length;
 	}
-	
+
 	public String nextToken() {
 		int start = this.index;
 		StringBuffer buffer = null;
@@ -115,5 +115,5 @@ public class MementoTokenizer {
 			return new String(this.memento, start, this.index - start);
 		}
 	}
-	
+
 }

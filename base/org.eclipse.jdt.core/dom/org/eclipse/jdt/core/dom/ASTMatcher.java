@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,8 +16,8 @@ import java.util.List;
 /**
  * Concrete superclass and default implementation of an AST subtree matcher.
  * <p>
- * For example, to compute whether two ASTs subtrees are structurally 
- * isomorphic, use <code>n1.subtreeMatch(new ASTMatcher(), n2)</code> where 
+ * For example, to compute whether two ASTs subtrees are structurally
+ * isomorphic, use <code>n1.subtreeMatch(new ASTMatcher(), n2)</code> where
  * <code>n1</code> and <code>n2</code> are the AST root nodes of the subtrees.
  * </p>
  * <p>
@@ -26,36 +26,36 @@ import java.util.List;
  * that matches the given node against another object (typically another
  * AST node, although this is not essential). The default implementations
  * provided by this class tests whether the other object is a node of the
- * same type with structurally isomorphic child subtrees. For nodes with 
+ * same type with structurally isomorphic child subtrees. For nodes with
  * list-valued properties, the child nodes within the list are compared in
  * order. For nodes with multiple properties, the child nodes are compared
  * in the order that most closely corresponds to the lexical reading order
- * of the source program. For instance, for a type declaration node, the 
- * child ordering is: name, superclass, superinterfaces, and body 
+ * of the source program. For instance, for a type declaration node, the
+ * child ordering is: name, superclass, superinterfaces, and body
  * declarations.
  * </p>
  * <p>
- * Subclasses may override (extend or reimplement) some or all of the 
+ * Subclasses may override (extend or reimplement) some or all of the
  * <code>match</code> methods in order to define more specialized subtree
  * matchers.
  * </p>
- * 
+ *
  * @see org.eclipse.jdt.core.dom.ASTNode#subtreeMatch(ASTMatcher, Object)
  * @since 2.0
  */
 public class ASTMatcher {
-	
+
 	/**
 	 * Indicates whether doc tags should be matched.
 	 * @since 3.0
 	 */
 	private boolean matchDocTags;
-	
+
 	/**
 	 * Creates a new AST matcher instance.
 	 * <p>
 	 * For backwards compatibility, the matcher ignores tag
-	 * elements below doc comments by default. Use 
+	 * elements below doc comments by default. Use
 	 * {@link #ASTMatcher(boolean) ASTMatcher(true)}
 	 * for a matcher that compares doc tags by default.
 	 * </p>
@@ -66,7 +66,7 @@ public class ASTMatcher {
 
 	/**
 	 * Creates a new AST matcher instance.
-	 * 
+	 *
 	 * @param matchDocTags <code>true</code> if doc comment tags are
 	 * to be compared by default, and <code>false</code> otherwise
 	 * @see #match(Javadoc,Object)
@@ -83,13 +83,13 @@ public class ASTMatcher {
 	 * Note that this is a convenience method, useful for writing recursive
 	 * subtree matchers.
 	 * </p>
-	 * 
+	 *
 	 * @param list1 the first list of AST nodes
 	 *    (element type: <code>ASTNode</code>)
 	 * @param list2 the second list of AST nodes
 	 *    (element type: <code>ASTNode</code>)
 	 * @return <code>true</code> if the lists have the same number of elements
-	 *    and match pair-wise according to <code>ASTNode.subtreeMatch</code> 
+	 *    and match pair-wise according to <code>ASTNode.subtreeMatch</code>
 	 * @see ASTNode#subtreeMatch(ASTMatcher matcher, Object other)
 	 */
 	public final boolean safeSubtreeListMatch(List list1, List list2) {
@@ -117,13 +117,13 @@ public class ASTMatcher {
 	 * Note that this is a convenience method, useful for writing recursive
 	 * subtree matchers.
 	 * </p>
-	 * 
+	 *
 	 * @param node1 the first AST node, or <code>null</code>; must be an
 	 *    instance of <code>ASTNode</code>
 	 * @param node2 the second AST node, or <code>null</code>; must be an
 	 *    instance of <code>ASTNode</code>
 	 * @return <code>true</code> if the nodes match according
-	 *    to <code>AST.subtreeMatch</code> or both are <code>null</code>, and 
+	 *    to <code>AST.subtreeMatch</code> or both are <code>null</code>, and
 	 *    <code>false</code> otherwise
 	 * @see ASTNode#subtreeMatch(ASTMatcher, Object)
 	 */
@@ -142,11 +142,11 @@ public class ASTMatcher {
 	 * Returns whether the given objects are equal according to
 	 * <code>equals</code>. Returns <code>false</code> if either
 	 * node is <code>null</code>.
-	 * 
+	 *
 	 * @param o1 the first object, or <code>null</code>
 	 * @param o2 the second object, or <code>null</code>
 	 * @return <code>true</code> if the nodes are equal according to
-	 *    <code>equals</code> or both <code>null</code>, and 
+	 *    <code>equals</code> or both <code>null</code>, and
 	 *    <code>false</code> otherwise
 	 */
 	public static boolean safeEquals(Object o1, Object o2) {
@@ -166,10 +166,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -193,10 +193,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -221,10 +221,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -243,10 +243,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -267,10 +267,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -292,10 +292,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -314,10 +314,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -336,10 +336,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -360,10 +360,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -385,10 +385,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -412,10 +412,10 @@ public class ASTMatcher {
 	 * only be called if a client goes out of their way to visit this
 	 * kind of node explicitly.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.0
@@ -434,10 +434,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -456,10 +456,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -478,10 +478,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -502,10 +502,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -526,10 +526,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -548,10 +548,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -574,7 +574,7 @@ public class ASTMatcher {
 				return false;
 			}
 		}
-		return 
+		return
 			safeSubtreeMatch(node.getExpression(), o.getExpression())
 				&& safeSubtreeListMatch(node.arguments(), o.arguments())
 				&& safeSubtreeMatch(
@@ -589,10 +589,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -614,10 +614,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -639,10 +639,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -666,10 +666,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -688,10 +688,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -704,7 +704,7 @@ public class ASTMatcher {
 			safeSubtreeMatch(node.getExpression(), o.getExpression())
 				&& safeSubtreeMatch(node.getBody(), o.getBody()));
 	}
-	
+
 	/**
 	 * Returns whether the given node and the other object match.
 	 * <p>
@@ -712,10 +712,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -733,10 +733,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -759,10 +759,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -781,7 +781,7 @@ public class ASTMatcher {
 					node.getAnonymousClassDeclaration(),
 					o.getAnonymousClassDeclaration()));
 	}
-	
+
 	/**
 	 * Returns whether the given node and the other object match.
 	 * <p>
@@ -789,10 +789,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -812,7 +812,7 @@ public class ASTMatcher {
 					node.bodyDeclarations(),
 					o.bodyDeclarations()));
 	}
-	
+
 	/**
 	 * Returns whether the given node and the other object match.
 	 * <p>
@@ -820,10 +820,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -842,10 +842,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -866,10 +866,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -889,7 +889,7 @@ public class ASTMatcher {
 				return false;
 			}
 		}
-		return 
+		return
 			safeSubtreeMatch(node.getJavadoc(), o.getJavadoc())
 			&& safeSubtreeMatch(node.getType(), o.getType())
 			&& safeSubtreeListMatch(node.fragments(), o.fragments());
@@ -902,10 +902,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -928,10 +928,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -953,10 +953,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -982,10 +982,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1016,10 +1016,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1040,10 +1040,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1073,22 +1073,22 @@ public class ASTMatcher {
 	 * <p>
 	 * Unlike other node types, the behavior of the default
 	 * implementation is controlled by a constructor-supplied
-	 * parameter  {@link #ASTMatcher(boolean) ASTMatcher(boolean)} 
-	 * which is <code>false</code> if not specified. 
+	 * parameter  {@link #ASTMatcher(boolean) ASTMatcher(boolean)}
+	 * which is <code>false</code> if not specified.
 	 * When this parameter is <code>true</code>, the implementation
 	 * tests whether the other object is also a <code>Javadoc</code>
-	 * with structurally isomorphic child subtrees; the comment string 
+	 * with structurally isomorphic child subtrees; the comment string
 	 * (<code>Javadoc.getComment()</code>) is ignored.
 	 * Conversely, when the parameter is <code>false</code>, the
 	 * implementation tests whether the other object is also a
-	 * <code>Javadoc</code> with exactly the same comment string; 
+	 * <code>Javadoc</code> with exactly the same comment string;
 	 * the tag elements ({@link Javadoc#tags() Javadoc.tags} are
 	 * ignored. Subclasses may reimplement.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @see #ASTMatcher()
@@ -1127,10 +1127,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1156,10 +1156,10 @@ public class ASTMatcher {
 	 * only be called if a client goes out of their way to visit this
 	 * kind of node explicitly.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.0
@@ -1170,7 +1170,7 @@ public class ASTMatcher {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Returns whether the given node and the other object match.
 	 * <p>
@@ -1178,10 +1178,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -1201,10 +1201,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.0
@@ -1218,7 +1218,7 @@ public class ASTMatcher {
 				safeSubtreeMatch(node.getQualifier(), o.getQualifier())
 				&& safeSubtreeMatch(node.getName(), o.getName()));
 	}
-	
+
 	/**
 	 * Returns whether the given node and the other object match.
 	 * <p>
@@ -1226,10 +1226,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -1250,10 +1250,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.0
@@ -1276,10 +1276,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.0
@@ -1299,7 +1299,7 @@ public class ASTMatcher {
 				safeSubtreeMatch(node.getType(), o.getType())
 				&& safeSubtreeMatch(node.getName(), o.getName()));
 	}
-	
+
 	/**
 	 * Returns whether the given node and the other object match.
 	 * <p>
@@ -1315,10 +1315,10 @@ public class ASTMatcher {
 	 * Note that the method return types are compared even for constructor
 	 * declarations.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1365,10 +1365,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1395,10 +1395,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -1418,10 +1418,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -1442,10 +1442,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1463,10 +1463,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1485,10 +1485,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1515,10 +1515,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -1539,10 +1539,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1561,10 +1561,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1585,10 +1585,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1609,10 +1609,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1631,10 +1631,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1655,10 +1655,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -1680,10 +1680,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1702,10 +1702,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1724,10 +1724,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1746,10 +1746,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -1771,13 +1771,13 @@ public class ASTMatcher {
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
 	 * <p>
-	 * Note that extra array dimensions and the variable arity flag 
+	 * Note that extra array dimensions and the variable arity flag
 	 * are compared since they are both important parts of the declaration.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1800,7 +1800,7 @@ public class ASTMatcher {
 				return false;
 			}
 		}
-		return 
+		return
 		    safeSubtreeMatch(node.getType(), o.getType())
 				&& safeSubtreeMatch(node.getName(), o.getName())
 	 			&& node.getExtraDimensions() == o.getExtraDimensions()
@@ -1814,10 +1814,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1836,10 +1836,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1865,10 +1865,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1889,10 +1889,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1919,10 +1919,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1941,10 +1941,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1965,10 +1965,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -1989,10 +1989,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.0
@@ -2014,10 +2014,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.0
@@ -2037,10 +2037,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2059,10 +2059,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2081,10 +2081,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2106,10 +2106,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2158,10 +2158,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2180,10 +2180,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2202,10 +2202,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -2226,10 +2226,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2264,10 +2264,10 @@ public class ASTMatcher {
 	 * Note that extra array dimensions are compared since they are an
 	 * important part of the type of the variable.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2288,10 +2288,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2322,10 +2322,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 */
@@ -2346,10 +2346,10 @@ public class ASTMatcher {
 	 * other object is a node of the same type with structurally isomorphic
 	 * child subtrees. Subclasses may override this method as needed.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node
 	 * @param other the other object, or <code>null</code>
-	 * @return <code>true</code> if the subtree matches, or 
+	 * @return <code>true</code> if the subtree matches, or
 	 *   <code>false</code> if they do not match or the other object has a
 	 *   different node type or is <code>null</code>
 	 * @since 3.1
@@ -2362,5 +2362,5 @@ public class ASTMatcher {
 		return node.isUpperBound() == o.isUpperBound()
 		&& safeSubtreeMatch(node.getBound(), o.getBound());
 	}
-	
+
 }

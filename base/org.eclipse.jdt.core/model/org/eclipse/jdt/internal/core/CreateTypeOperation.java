@@ -56,7 +56,7 @@ protected IJavaElement generateResultHandle() {
 			return ((ICompilationUnit)parent).getType(getASTNodeName());
 		case IJavaElement.TYPE:
 			return ((IType)parent).getType(getASTNodeName());
-		// Note: creating local/anonymous type is not supported 
+		// Note: creating local/anonymous type is not supported
 	}
 	return null;
 }
@@ -64,7 +64,7 @@ protected IJavaElement generateResultHandle() {
  * @see CreateElementInCUOperation#getMainTaskName()
  */
 public String getMainTaskName(){
-	return Messages.operation_createTypeProgress; 
+	return Messages.operation_createTypeProgress;
 }
 /**
  * Returns the <code>IType</code> the member is to be created in.
@@ -86,19 +86,33 @@ protected IJavaModelStatus verifyNameCollision() {
 			String typeName = getASTNodeName();
 			if (((ICompilationUnit) parent).getType(typeName).exists()) {
 				return new JavaModelStatus(
-					IJavaModelStatusConstants.NAME_COLLISION, 
-					Messages.bind(Messages.status_nameCollision, typeName)); 
+					IJavaModelStatusConstants.NAME_COLLISION,
+					Messages.bind(Messages.status_nameCollision, typeName));
 			}
 			break;
 		case IJavaElement.TYPE:
 			typeName = getASTNodeName();
 			if (((IType) parent).getType(typeName).exists()) {
 				return new JavaModelStatus(
-					IJavaModelStatusConstants.NAME_COLLISION, 
-					Messages.bind(Messages.status_nameCollision, typeName)); 
+					IJavaModelStatusConstants.NAME_COLLISION,
+					Messages.bind(Messages.status_nameCollision, typeName));
 			}
 			break;
-		// Note: creating local/anonymous type is not supported 
+		// Note: creating local/anonymous type is not supported
+	}
+	return JavaModelStatus.VERIFIED_OK;
+}
+public IJavaModelStatus verify() {
+	IJavaModelStatus status = super.verify();
+	if (!status.isOK())
+		return status;
+	try {
+		IJavaElement parent = getParentElement();
+		if (this.anchorElement != null && this.anchorElement.getElementType() == IJavaElement.FIELD
+				&& parent.getElementType() == IJavaElement.TYPE && ((IType)parent).isEnum())
+			return new JavaModelStatus(IJavaModelStatusConstants.INVALID_SIBLING, this.anchorElement);
+	} catch (JavaModelException e) {
+		return e.getJavaModelStatus();
 	}
 	return JavaModelStatus.VERIFIED_OK;
 }

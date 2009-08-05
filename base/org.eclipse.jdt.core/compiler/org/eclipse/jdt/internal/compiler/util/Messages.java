@@ -33,9 +33,9 @@ public final class Messages {
 		public MessagesProperties(Field[] fieldArray, String bundleName) {
 			super();
 			final int len = fieldArray.length;
-			fields = new HashMap(len * 2);
+			this.fields = new HashMap(len * 2);
 			for (int i = 0; i < len; i++) {
-				fields.put(fieldArray[i].getName(), fieldArray[i]);
+				this.fields.put(fieldArray[i].getName(), fieldArray[i]);
 			}
 		}
 
@@ -44,7 +44,7 @@ public final class Messages {
 		 */
 		public synchronized Object put(Object key, Object value) {
 			try {
-				Field field = (Field) fields.get(key);
+				Field field = (Field) this.fields.get(key);
 				if (field == null) {
 					return null;
 				}
@@ -67,7 +67,7 @@ public final class Messages {
 		}
 	}
 
-	
+
 	private static String[] nlSuffixes;
 	private static final String EXTENSION = ".properties"; //$NON-NLS-1$
 
@@ -117,20 +117,20 @@ public final class Messages {
 	static {
 		initializeMessages(BUNDLE_NAME, Messages.class);
 	}
-	
+
 	/**
 	 * Bind the given message's substitution locations with the given string values.
-	 * 
+	 *
 	 * @param message the message to be manipulated
 	 * @return the manipulated String
 	 */
 	public static String bind(String message) {
 		return bind(message, null);
 	}
-	
+
 	/**
 	 * Bind the given message's substitution locations with the given string values.
-	 * 
+	 *
 	 * @param message the message to be manipulated
 	 * @param binding the object to be inserted into the message
 	 * @return the manipulated String
@@ -141,7 +141,7 @@ public final class Messages {
 
 	/**
 	 * Bind the given message's substitution locations with the given string values.
-	 * 
+	 *
 	 * @param message the message to be manipulated
 	 * @param binding1 An object to be inserted into the message
 	 * @param binding2 A second object to be inserted into the message
@@ -153,7 +153,7 @@ public final class Messages {
 
 	/**
 	 * Bind the given message's substitution locations with the given string values.
-	 * 
+	 *
 	 * @param message the message to be manipulated
 	 * @param bindings An array of objects to be inserted into the message
 	 * @return the manipulated String
@@ -161,7 +161,7 @@ public final class Messages {
 	public static String bind(String message, Object[] bindings) {
 		return MessageFormat.format(message, bindings);
 	}
-	
+
 	/*
 	 * Build an array of directories to search
 	 */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,7 @@ import org.eclipse.jface.text.Position;
 
 /**
  * Multi-comment region in a source code document.
- * 
+ *
  * @since 3.0
  */
 public class MultiCommentRegion extends CommentRegion implements IJavaDocTagConstants {
@@ -40,7 +40,7 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 
  	/**
 	 * Creates a new multi-comment region.
-	 * 
+	 *
 	 * @param document the document which contains the comment region
 	 * @param position the position of this comment region in the document
 	 * @param formatter the given formatter
@@ -48,11 +48,11 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 	public MultiCommentRegion(final IDocument document, final Position position, final CodeFormatterVisitor formatter) {
 		super(document, position, formatter);
 
-		fIndentRoots= this.preferences.comment_indent_root_tags;
-		fIndentDescriptions= this.preferences.comment_indent_parameter_description;
-		fSeparateRoots= this.preferences.comment_insert_empty_line_before_root_tags;
-		fParameterNewLine= this.preferences.comment_insert_new_line_for_parameter;
-		fClear = this.preferences.comment_clear_blank_lines_in_block_comment;
+		this.fIndentRoots= this.preferences.comment_indent_root_tags;
+		this.fIndentDescriptions= this.preferences.comment_indent_parameter_description;
+		this.fSeparateRoots= this.preferences.comment_insert_empty_line_before_root_tags;
+		this.fParameterNewLine= this.preferences.comment_insert_new_line_for_parameter;
+		this.fClear = this.preferences.comment_clear_blank_lines_in_block_comment;
 	}
 
 	/*
@@ -66,14 +66,14 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 		if (next.getLength() <= 2 && !blank && isNonAlphaNumeric(next))
 			return true;
 
-		if (fParameterNewLine && line.hasAttribute(COMMENT_PARAMETER) && line.getSize() > 1)
+		if (this.fParameterNewLine && line.hasAttribute(COMMENT_PARAMETER) && line.getSize() > 1)
 			return false;
 
 		if (previous != null) {
-			
+
 			if (index != 0 && (blank || previous.hasAttribute(COMMENT_BLANKLINE) || next.hasAttribute(COMMENT_PARAMETER) || next.hasAttribute(COMMENT_ROOT) || next.hasAttribute(COMMENT_SEPARATOR) || next.hasAttribute(COMMENT_NEWLINE) || previous.hasAttribute(COMMENT_BREAK) || previous.hasAttribute(COMMENT_SEPARATOR)))
 				return false;
-			
+
 			if (previous.hasAttribute(COMMENT_ROOT))
 				return true;
 
@@ -86,7 +86,7 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 			return true;
 		}
 
-		if (fIndentRoots && !line.hasAttribute(COMMENT_ROOT) && !line.hasAttribute(COMMENT_PARAMETER))
+		if (this.fIndentRoots && !line.hasAttribute(COMMENT_ROOT) && !line.hasAttribute(COMMENT_PARAMETER))
 			count -= stringToLength(line.getIndentationReference());
 
 		// Avoid appending consecutive immutable ranges, which together exceed the line width
@@ -96,7 +96,7 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 			CommentRange current= null;
 			while (iter.hasNext() && current != next)
 				current= (CommentRange) iter.next();
-			
+
 			if (current != null && iter.hasNext()) {
 				try {
 					int lineNumber= getDocument().getLineOfOffset(getOffset() + current.getOffset());
@@ -136,10 +136,10 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 				return delimiter + delimiter;
 
 			// Add blank line before first root/parameter tag, if "Blank line before Javadoc tags"
-			else if (fSeparateRoots && previous.hasAttribute(COMMENT_PARAGRAPH) && !successor.hasAttribute(COMMENT_BLANKLINE) && !predecessor.hasAttribute(COMMENT_BLANKLINE))
+			else if (this.fSeparateRoots && previous.hasAttribute(COMMENT_PARAGRAPH) && !successor.hasAttribute(COMMENT_BLANKLINE) && !predecessor.hasAttribute(COMMENT_BLANKLINE))
 				return delimiter + delimiter;
 
-			else if (fIndentRoots && !predecessor.hasAttribute(COMMENT_ROOT) && !predecessor.hasAttribute(COMMENT_PARAMETER) && !predecessor.hasAttribute(COMMENT_BLANKLINE))
+			else if (this.fIndentRoots && !predecessor.hasAttribute(COMMENT_ROOT) && !predecessor.hasAttribute(COMMENT_PARAMETER) && !predecessor.hasAttribute(COMMENT_BLANKLINE))
 				return delimiter + stringToIndent(predecessor.getIndentationReference());
 		}
 		return delimiter;
@@ -159,22 +159,22 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 
 	/**
 	 * Should root tag parameter descriptions be indented after the tag?
-	 * 
+	 *
 	 * @return <code>true</code> iff the descriptions should be indented
 	 *         after, <code>false</code> otherwise.
 	 */
 	protected final boolean isIndentDescriptions() {
-		return fIndentDescriptions;
+		return this.fIndentDescriptions;
 	}
 
 	/**
 	 * Should root tag parameter descriptions be indented?
-	 * 
+	 *
 	 * @return <code>true</code> iff the root tags should be indented,
 	 *         <code>false</code> otherwise.
 	 */
 	protected final boolean isIndentRoots() {
-		return fIndentRoots;
+		return this.fIndentRoots;
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 
 	/**
 	 * Marks the comment range with its HTML tag attributes.
-	 * 
+	 *
 	 * @param range the comment range to mark
 	 * @param token token associated with the comment range
 	 */
@@ -196,7 +196,7 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 
 	/**
 	 * Marks the comment range with its javadoc tag attributes.
-	 * 
+	 *
 	 * @param range the comment range to mark
 	 * @param token token associated with the comment range
 	 */
@@ -234,7 +234,7 @@ public class MultiCommentRegion extends CommentRegion implements IJavaDocTagCons
 		}
 		markHtmlRanges();
 	}
-	
+
 	/*
 	 * @see org.eclipse.jdt.internal.corext.text.comment.CommentRegion#createLine()
 	 * @since 3.1

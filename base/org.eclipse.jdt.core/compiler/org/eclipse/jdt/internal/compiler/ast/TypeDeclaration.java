@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,9 +25,9 @@ public class TypeDeclaration extends Statement implements ProblemSeverities, Ref
 	// Type decl kinds
 	public static final int CLASS_DECL = 1;
 	public static final int INTERFACE_DECL = 2;
-	public static final int ENUM_DECL = 3;	
+	public static final int ENUM_DECL = 3;
 	public static final int ANNOTATION_TYPE_DECL = 4;
-	
+
 	public int modifiers = ClassFileConstants.AccDefault;
 	public int modifiersSourceStart;
 	public Annotation[] annotations;
@@ -49,20 +49,20 @@ public class TypeDeclaration extends Statement implements ProblemSeverities, Ref
 	public int bodyEnd; // doesn't include the trailing comment if any.
 	public CompilationResult compilationResult;
 	public MethodDeclaration[] missingAbstractMethods;
-	public Javadoc javadoc;	
-	
+	public Javadoc javadoc;
+
 	public QualifiedAllocationExpression allocation; // for anonymous only
 	public TypeDeclaration enclosingType; // for member types only
-	
+
 	public FieldBinding enumValuesSyntheticfield; 	// for enum
 
 	// 1.5 support
 	public TypeParameter[] typeParameters;
-	
+
 public TypeDeclaration(CompilationResult compilationResult){
 	this.compilationResult = compilationResult;
 }
-	
+
 /*
  *	We cause the compilation task to abort to a given extent.
  */
@@ -82,11 +82,11 @@ public void abort(int abortLevel, CategorizedProblem problem) {
 /**
  * This method is responsible for adding a <clinit> method declaration to the type method collections.
  * Note that this implementation is inserting it in first place (as VAJ or javac), and that this
- * impacts the behavior of the method ConstantPool.resetForClinit(int. int), in so far as 
- * the latter will have to reset the constant pool state accordingly (if it was added first, it does 
+ * impacts the behavior of the method ConstantPool.resetForClinit(int. int), in so far as
+ * the latter will have to reset the constant pool state accordingly (if it was added first, it does
  * not need to preserve some of the method specific cached entries since this will be the first method).
  * inserts the clinit method declaration in the first position.
- * 
+ *
  * @see org.eclipse.jdt.internal.compiler.codegen.ConstantPool#resetForClinit(int, int)
  */
 public final void addClinit() {
@@ -161,7 +161,7 @@ public MethodDeclaration addMissingAbstractMethodFor(MethodBinding methodBinding
 			argumentsLength == 0 ? Binding.NO_PARAMETERS : argumentTypes, //arguments bindings
 			methodBinding.thrownExceptions, //exceptions
 			this.binding); //declaringClass
-			
+
 	methodDeclaration.scope = new MethodScope(this.scope, methodDeclaration, true);
 	methodDeclaration.bindArguments();
 
@@ -198,7 +198,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		}
 		manageEnclosingInstanceAccessIfNecessary(currentScope, flowInfo);
 		updateMaxFieldCount(); // propagate down the max field count
-		internalAnalyseCode(flowContext, flowInfo); 
+		internalAnalyseCode(flowContext, flowInfo);
 	} catch (AbortType e) {
 		this.ignoreFurtherInvestigation = true;
 	}
@@ -286,7 +286,7 @@ public boolean checkConstructors(Parser parser) {
 							// report the problem and continue the parsing
 							parser.problemReporter().annotationTypeDeclarationCannotHaveConstructor((ConstructorDeclaration) am);
 							break;
-							
+
 					}
 					hasConstructor = true;
 				}
@@ -312,7 +312,7 @@ public ConstructorDeclaration createDefaultConstructor(	boolean needExplicitCons
 	constructor.selector = this.name;
 	constructor.modifiers = this.modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
 
-	//if you change this setting, please update the 
+	//if you change this setting, please update the
 	//SourceIndexer2.buildTypeDeclaration(TypeDeclaration,char[]) method
 	constructor.declarationSourceStart = constructor.sourceStart = this.sourceStart;
 	constructor.declarationSourceEnd =
@@ -345,7 +345,7 @@ public ConstructorDeclaration createDefaultConstructor(	boolean needExplicitCons
 }
 
 // anonymous type constructor creation: rank is important since bindings already got sorted
-public MethodBinding createDefaultConstructorWithBinding(MethodBinding inheritedConstructorBinding) {
+public MethodBinding createDefaultConstructorWithBinding(MethodBinding inheritedConstructorBinding, boolean eraseThrownExceptions) {
 	//Add to method'set, the default constuctor that just recall the
 	//super constructor with the same arguments
 	String baseName = "$anonymous"; //$NON-NLS-1$
@@ -393,15 +393,19 @@ public MethodBinding createDefaultConstructorWithBinding(MethodBinding inherited
 	}
 
 	//============BINDING UPDATE==========================
+	ReferenceBinding[] thrownExceptions = eraseThrownExceptions
+			? this.scope.environment().convertToRawTypes(inheritedConstructorBinding.original().thrownExceptions, true, true)
+			: inheritedConstructorBinding.thrownExceptions;
+
 	SourceTypeBinding sourceType = this.binding;
 	constructor.binding = new MethodBinding(
 			constructor.modifiers, //methodDeclaration
 			argumentsLength == 0 ? Binding.NO_PARAMETERS : argumentTypes, //arguments bindings
-			inheritedConstructorBinding.thrownExceptions, //exceptions
+			thrownExceptions, //exceptions
 			sourceType); //declaringClass
 	constructor.binding.tagBits |= (inheritedConstructorBinding.tagBits & TagBits.HasMissingType);
 	constructor.binding.modifiers |= ExtraCompilerModifiers.AccIsDefaultConstructor;
-			
+
 	constructor.scope = new MethodScope(this.scope, constructor, true);
 	constructor.bindArguments();
 	constructor.constructorCall.resolve(constructor.scope);
@@ -409,7 +413,7 @@ public MethodBinding createDefaultConstructorWithBinding(MethodBinding inherited
 	MethodBinding[] methodBindings = sourceType.methods(); // trigger sorting
 	int length;
 	System.arraycopy(methodBindings, 0, methodBindings = new MethodBinding[(length = methodBindings.length) + 1], 1, length);
-	methodBindings[0] = constructor.binding; 
+	methodBindings[0] = constructor.binding;
 	if (++length > 1)
 		ReferenceBinding.sortMethods(methodBindings, 0, length);	// need to resort, since could be valid methods ahead (140643) - DOM needs eager sorting
 	sourceType.setMethods(methodBindings);
@@ -512,6 +516,13 @@ public void generateCode(ClassFile enclosingClassFile) {
 			enclosingClassFile.recordInnerClasses(this.binding);
 			classFile.recordInnerClasses(this.binding);
 		}
+		TypeVariableBinding[] typeVariables = this.binding.typeVariables();
+		for (int i = 0, max = typeVariables.length; i < max; i++) {
+			TypeVariableBinding typeVariableBinding = typeVariables[i];
+			if ((typeVariableBinding.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
+				Util.recordNestedType(classFile, typeVariableBinding);
+			}
+		}
 
 		// generate all fiels
 		classFile.addFieldInfos();
@@ -557,10 +568,19 @@ public void generateCode(ClassFile enclosingClassFile) {
 public void generateCode(BlockScope blockScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
-	}		
+	}
 	if ((this.bits & ASTNode.HasBeenGenerated) != 0) return;
 	int pc = codeStream.position;
-	if (this.binding != null) ((NestedTypeBinding) this.binding).computeSyntheticArgumentSlotSizes();
+	if (this.binding != null) {
+		SyntheticArgumentBinding[] enclosingInstances = ((NestedTypeBinding) this.binding).syntheticEnclosingInstances();
+		for (int i = 0, slotSize = 0, count = enclosingInstances == null ? 0 : enclosingInstances.length; i < count; i++){
+			SyntheticArgumentBinding enclosingInstance = enclosingInstances[i];
+			enclosingInstance.resolvedPosition = ++slotSize; // shift by 1 to leave room for aload0==this
+			if (slotSize > 0xFF) { // no more than 255 words of arguments
+				blockScope.problemReporter().noMoreAvailableSpaceForArgument(enclosingInstance, blockScope.referenceType());
+			}
+		}
+	}
 	generateCode(codeStream.classFile);
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
@@ -570,7 +590,16 @@ public void generateCode(BlockScope blockScope, CodeStream codeStream) {
  */
 public void generateCode(ClassScope classScope, ClassFile enclosingClassFile) {
 	if ((this.bits & ASTNode.HasBeenGenerated) != 0) return;
-	if (this.binding != null) ((NestedTypeBinding) this.binding).computeSyntheticArgumentSlotSizes();
+	if (this.binding != null) {
+		SyntheticArgumentBinding[] enclosingInstances = ((NestedTypeBinding) this.binding).syntheticEnclosingInstances();
+		for (int i = 0, slotSize = 0, count = enclosingInstances == null ? 0 : enclosingInstances.length; i < count; i++){
+			SyntheticArgumentBinding enclosingInstance = enclosingInstances[i];
+			enclosingInstance.resolvedPosition = ++slotSize; // shift by 1 to leave room for aload0==this
+			if (slotSize > 0xFF) { // no more than 255 words of arguments
+				classScope.problemReporter().noMoreAvailableSpaceForArgument(enclosingInstance, classScope.referenceType());
+			}
+		}
+	}
 	generateCode(enclosingClassFile);
 }
 
@@ -589,13 +618,13 @@ public boolean hasErrors() {
  *	Common flow analysis for all types
  */
 private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
-	if ((this.binding.isPrivate() || (this.binding.tagBits & (TagBits.IsAnonymousType|TagBits.IsLocalType)) == TagBits.IsLocalType) && !this.binding.isUsed()) {
+	if (!this.binding.isUsed() && this.binding.isOrEnclosedByPrivateType()) {
 		if (!this.scope.referenceCompilationUnit().compilationResult.hasSyntaxError) {
 			this.scope.problemReporter().unusedPrivateType(this);
 		}
 	}
-	InitializationFlowContext initializerContext = new InitializationFlowContext(null, this, this.initializerScope);
-	InitializationFlowContext staticInitializerContext = new InitializationFlowContext(null, this, this.staticInitializerScope);
+	InitializationFlowContext initializerContext = new InitializationFlowContext(null, this, flowInfo, flowContext, this.initializerScope);
+	InitializationFlowContext staticInitializerContext = new InitializationFlowContext(null, this, flowInfo, flowContext, this.staticInitializerScope);
 	FlowInfo nonStaticFieldInfo = flowInfo.unconditionalFieldLessCopy();
 	FlowInfo staticFieldInfo = flowInfo.unconditionalFieldLessCopy();
 	if (this.fields != null) {
@@ -604,17 +633,13 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 			if (field.isStatic()) {
 				if ((staticFieldInfo.tagBits & FlowInfo.UNREACHABLE) != 0)
 					field.bits &= ~ASTNode.IsReachable;
-				
+
 				/*if (field.isField()){
 					staticInitializerContext.handledExceptions = NoExceptions; // no exception is allowed jls8.3.2
 				} else {*/
 				staticInitializerContext.handledExceptions = Binding.ANY_EXCEPTION; // tolerate them all, and record them
 				/*}*/
-				staticFieldInfo =
-					field.analyseCode(
-						this.staticInitializerScope,
-						staticInitializerContext,
-						staticFieldInfo);
+				staticFieldInfo = field.analyseCode(this.staticInitializerScope, staticInitializerContext, staticFieldInfo);
 				// in case the initializer is not reachable, use a reinitialized flowInfo and enter a fake reachable
 				// branch, since the previous initializer already got the blame.
 				if (staticFieldInfo == FlowInfo.DEAD_END) {
@@ -624,20 +649,19 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 			} else {
 				if ((nonStaticFieldInfo.tagBits & FlowInfo.UNREACHABLE) != 0)
 					field.bits &= ~ASTNode.IsReachable;
-				
+
 				/*if (field.isField()){
 					initializerContext.handledExceptions = NoExceptions; // no exception is allowed jls8.3.2
 				} else {*/
 					initializerContext.handledExceptions = Binding.ANY_EXCEPTION; // tolerate them all, and record them
 				/*}*/
-				nonStaticFieldInfo =
-					field.analyseCode(this.initializerScope, initializerContext, nonStaticFieldInfo);
+				nonStaticFieldInfo = field.analyseCode(this.initializerScope, initializerContext, nonStaticFieldInfo);
 				// in case the initializer is not reachable, use a reinitialized flowInfo and enter a fake reachable
 				// branch, since the previous initializer already got the blame.
 				if (nonStaticFieldInfo == FlowInfo.DEAD_END) {
 					this.initializerScope.problemReporter().initializerMustCompleteNormally(field);
 					nonStaticFieldInfo = FlowInfo.initial(this.maxFieldCount).setReachMode(FlowInfo.UNREACHABLE);
-				} 
+				}
 			}
 		}
 	}
@@ -660,8 +684,8 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 			if (method.isInitializationMethod()) {
 				if (method.isStatic()) { // <clinit>
 					method.analyseCode(
-						this.scope, 
-						staticInitializerContext,  
+						this.scope,
+						staticInitializerContext,
 						staticFieldInfo.unconditionalInits().discardNonFieldInitializations().addInitializationsFrom(outerInfo));
 				} else { // constructor
 					((ConstructorDeclaration)method).analyseCode(this.scope, initializerContext, constructorInfo.copy(), flowInfo.reachMode());
@@ -685,12 +709,12 @@ public final static int kind(int flags) {
 			return TypeDeclaration.ANNOTATION_TYPE_DECL;
 		case ClassFileConstants.AccEnum :
 			return TypeDeclaration.ENUM_DECL;
-		default : 
+		default :
 			return TypeDeclaration.CLASS_DECL;
-	}		
+	}
 }
 
-/* 
+/*
  * Access emulation for a local type
  * force to emulation of access to direct enclosing instance.
  * By using the initializer scope, we actually only request an argument emulation, the
@@ -701,10 +725,10 @@ public final static int kind(int flags) {
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0) return;
 	NestedTypeBinding nestedType = (NestedTypeBinding) this.binding;
-	
+
 	MethodScope methodScope = currentScope.methodScope();
 	if (!methodScope.isStatic && !methodScope.isConstructorCall){
-		nestedType.addSyntheticArgumentAndField(nestedType.enclosingType());	
+		nestedType.addSyntheticArgumentAndField(nestedType.enclosingType());
 	}
 	// add superclass enclosing instance arg for anonymous types (if necessary)
 	if (nestedType.isAnonymousType()) {
@@ -713,7 +737,7 @@ public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, Fl
 			if (!superclassBinding.isLocalType()
 					|| ((NestedTypeBinding)superclassBinding).getSyntheticField(superclassBinding.enclosingType(), true) != null){
 
-				nestedType.addSyntheticArgument(superclassBinding.enclosingType());	
+				nestedType.addSyntheticArgument(superclassBinding.enclosingType());
 			}
 		}
 		// From 1.5 on, provide access to enclosing instance synthetic constructor argument when declared inside constructor call
@@ -732,7 +756,7 @@ public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, Fl
 //					if (nestedEnclosing.findSuperTypeErasingTo(nestedEnclosing.enclosingType()) == null) { // only if not inheriting
 					SyntheticArgumentBinding syntheticEnclosingInstanceArgument = nestedEnclosing.getSyntheticArgument(nestedEnclosing.enclosingType(), true);
 					if (syntheticEnclosingInstanceArgument != null) {
-						nestedType.addSyntheticArgumentAndField(syntheticEnclosingInstanceArgument);	
+						nestedType.addSyntheticArgumentAndField(syntheticEnclosingInstanceArgument);
 					}
 				}
 //				}
@@ -746,7 +770,7 @@ public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, Fl
  * By using the initializer scope, we actually only request an argument emulation, the
  * field is not added until actually used. However we will force allocations to be qualified
  * with an enclosing instance.
- * 
+ *
  * Local member cannot be static.
  */
 public void manageEnclosingInstanceAccessIfNecessary(ClassScope currentScope, FlowInfo flowInfo) {
@@ -754,7 +778,7 @@ public void manageEnclosingInstanceAccessIfNecessary(ClassScope currentScope, Fl
 	NestedTypeBinding nestedType = (NestedTypeBinding) this.binding;
 	nestedType.addSyntheticArgumentAndField(this.binding.enclosingType());
 	}
-}	
+}
 
 /**
  * A <clinit> will be requested as soon as static fields or assertions are present. It will be eliminated during
@@ -764,7 +788,7 @@ public final boolean needClassInitMethod() {
 	// always need a <clinit> when assertions are present
 	if ((this.bits & ASTNode.ContainsAssertion) != 0)
 		return true;
-	
+
 	switch (kind(this.modifiers)) {
 		case TypeDeclaration.INTERFACE_DECL:
 		case TypeDeclaration.ANNOTATION_TYPE_DECL:
@@ -850,7 +874,7 @@ public StringBuffer printBody(int indent, StringBuffer output) {
 		for (int i = 0; i < this.methods.length; i++) {
 			if (this.methods[i] != null) {
 				output.append('\n');
-				this.methods[i].print(indent + 1, output); 
+				this.methods[i].print(indent + 1, output);
 			}
 		}
 	}
@@ -861,7 +885,7 @@ public StringBuffer printBody(int indent, StringBuffer output) {
 public StringBuffer printHeader(int indent, StringBuffer output) {
 	printModifiers(this.modifiers, output);
 	if (this.annotations != null) printAnnotations(this.annotations, output);
-	
+
 	switch (kind(this.modifiers)) {
 		case TypeDeclaration.CLASS_DECL :
 			output.append("class "); //$NON-NLS-1$
@@ -875,7 +899,7 @@ public StringBuffer printHeader(int indent, StringBuffer output) {
 		case TypeDeclaration.ANNOTATION_TYPE_DECL :
 			output.append("@interface "); //$NON-NLS-1$
 			break;
-	}			
+	}
 	output.append(this.name);
 	if (this.typeParameters != null) {
 		output.append("<");//$NON-NLS-1$
@@ -899,7 +923,7 @@ public StringBuffer printHeader(int indent, StringBuffer output) {
 			case TypeDeclaration.ANNOTATION_TYPE_DECL :
 				output.append(" extends "); //$NON-NLS-1$
 				break;
-		}			
+		}
 		for (int i = 0; i < this.superInterfaces.length; i++) {
 			if (i > 0) output.append( ", "); //$NON-NLS-1$
 			this.superInterfaces[i].print(0, output);
@@ -930,14 +954,14 @@ public void resolve() {
 		}
 		// check @Deprecated annotation
 		if ((sourceType.getAnnotationTagBits() & TagBits.AnnotationDeprecated) == 0
-				&& (sourceType.modifiers & ClassFileConstants.AccDeprecated) != 0 
+				&& (sourceType.modifiers & ClassFileConstants.AccDeprecated) != 0
 				&& this.scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5) {
 			this.scope.problemReporter().missingDeprecatedAnnotationForType(this);
-		}			
+		}
 		if ((this.bits & ASTNode.UndocumentedEmptyBlock) != 0) {
 			this.scope.problemReporter().undocumentedEmptyBlock(this.bodyStart-1, this.bodyEnd);
 		}
-		boolean needSerialVersion = 
+		boolean needSerialVersion =
 						this.scope.compilerOptions().getSeverity(CompilerOptions.MissingSerialVersion) != ProblemSeverities.Ignore
 						&& sourceType.isClass()
 						&& sourceType.findSuperTypeOriginatingFrom(TypeIds.T_JavaIoExternalizable, false /*Externalizable is not a class*/) == null
@@ -949,7 +973,7 @@ public void resolve() {
 			CompilationUnitScope compilationUnitScope = this.scope.compilationUnitScope();
 			MethodBinding methodBinding = sourceType.getExactMethod(TypeConstants.WRITEREPLACE, new TypeBinding[0], compilationUnitScope);
 			ReferenceBinding[] throwsExceptions;
-			needSerialVersion = 
+			needSerialVersion =
 				methodBinding == null
 					|| !methodBinding.isValidBinding()
 					|| methodBinding.returnType.id != TypeIds.T_JavaLangObject
@@ -999,11 +1023,12 @@ public void resolve() {
 				}
 			} while ((current = current.enclosingType()) != null);
 		}
-		this.maxFieldCount = 0;
+		// this.maxFieldCount might already be set
+		int localMaxFieldCount = 0;
 		int lastVisibleFieldID = -1;
 		boolean hasEnumConstants = false;
 		FieldDeclaration[] enumConstantsWithoutBody = null;
-		
+
 		if (this.typeParameters != null) {
 			for (int i = 0, count = this.typeParameters.length; i < count; i++) {
 				this.typeParameters[i].resolve(this.scope);
@@ -1025,6 +1050,7 @@ public void resolve() {
 								enumConstantsWithoutBody = new FieldDeclaration[count];
 							enumConstantsWithoutBody[i] = field;
 						}
+						//$FALL-THROUGH$
 					case AbstractVariableDeclaration.FIELD:
 						FieldBinding fieldBinding = field.binding;
 						if (fieldBinding == null) {
@@ -1039,7 +1065,7 @@ public void resolve() {
 								&& TypeBinding.LONG == fieldBinding.type) {
 							needSerialVersion = false;
 						}
-						this.maxFieldCount++;
+						localMaxFieldCount++;
 						lastVisibleFieldID = field.binding.id;
 						break;
 
@@ -1049,6 +1075,9 @@ public void resolve() {
 				}
 				field.resolve(field.isStatic() ? this.staticInitializerScope : this.initializerScope);
 			}
+		}
+		if (this.maxFieldCount < localMaxFieldCount) {
+			this.maxFieldCount = localMaxFieldCount;
 		}
 		if (needSerialVersion) {
 			this.scope.problemReporter().missingSerialVersion(this);
@@ -1061,7 +1090,7 @@ public void resolve() {
 				}
 				if (this.superInterfaces != null) {
 					this.scope.problemReporter().annotationTypeDeclarationCannotHaveSuperinterfaces(this);
-				}		
+				}
 				break;
 			case TypeDeclaration.ENUM_DECL :
 				// check enum abstract methods
@@ -1085,7 +1114,7 @@ public void resolve() {
 				}
 				break;
 		}
-		
+
 		int missingAbstractMethodslength = this.missingAbstractMethods == null ? 0 : this.missingAbstractMethods.length;
 		int methodsLength = this.methods == null ? 0 : this.methods.length;
 		if ((methodsLength + missingAbstractMethodslength) > 0xFFFF) {
@@ -1109,7 +1138,7 @@ public void resolve() {
 			int severity = reporter.computeSeverity(IProblem.JavadocMissing);
 			if (severity != ProblemSeverities.Ignore) {
 				if (this.enclosingType != null) {
-					visibility = Util.computeOuterMostVisibility(enclosingType, visibility);
+					visibility = Util.computeOuterMostVisibility(this.enclosingType, visibility);
 				}
 				int javadocModifiers = (this.binding.modifiers & ~ExtraCompilerModifiers.AccVisibilityMASK) | visibility;
 				reporter.javadocMissing(this.sourceStart, this.sourceEnd, severity, javadocModifiers);
@@ -1125,7 +1154,7 @@ public void resolve() {
  * Resolve a local type declaration
  */
 public void resolve(BlockScope blockScope) {
-	
+
 	// need to build its scope first and proceed with binding's creation
 	if ((this.bits & ASTNode.IsAnonymousType) == 0) {
 		// check collision scenarii
@@ -1154,7 +1183,7 @@ public void resolve(BlockScope blockScope) {
 	if (this.binding != null) {
 		// remember local types binding for innerclass emulation propagation
 		blockScope.referenceCompilationUnit().record((LocalTypeBinding)this.binding);
-		
+
 		// binding is not set if the receiver could not be created
 		resolve();
 		updateMaxFieldCount();
@@ -1216,7 +1245,7 @@ public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
 				for (int i = 0; i < length; i++) {
 					this.typeParameters[i].traverse(visitor, this.scope);
 				}
-			}				
+			}
 			if (this.memberTypes != null) {
 				int length = this.memberTypes.length;
 				for (int i = 0; i < length; i++)
@@ -1271,7 +1300,7 @@ public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 				for (int i = 0; i < length; i++) {
 					this.typeParameters[i].traverse(visitor, this.scope);
 				}
-			}				
+			}
 			if (this.memberTypes != null) {
 				int length = this.memberTypes.length;
 				for (int i = 0; i < length; i++)
@@ -1308,7 +1337,7 @@ public void traverse(ASTVisitor visitor, ClassScope classScope) {
 	try {
 		if (visitor.visit(this, classScope)) {
 			if (this.javadoc != null) {
-				this.javadoc.traverse(visitor, scope);
+				this.javadoc.traverse(visitor, this.scope);
 			}
 			if (this.annotations != null) {
 				int annotationsLength = this.annotations.length;
@@ -1327,7 +1356,7 @@ public void traverse(ASTVisitor visitor, ClassScope classScope) {
 				for (int i = 0; i < length; i++) {
 					this.typeParameters[i].traverse(visitor, this.scope);
 				}
-			}				
+			}
 			if (this.memberTypes != null) {
 				int length = this.memberTypes.length;
 				for (int i = 0; i < length; i++)
@@ -1354,7 +1383,7 @@ public void traverse(ASTVisitor visitor, ClassScope classScope) {
 	} catch (AbortType e) {
 		// silent abort
 	}
-}	
+}
 
 /**
  * MaxFieldCount's computation is necessary so as to reserve space for
@@ -1375,7 +1404,7 @@ void updateMaxFieldCount() {
 	} else {
 		this.maxFieldCount = outerMostType.maxFieldCount; // down
 	}
-}	
+}
 
 /**
  * Returns whether the type is a secondary one or not.

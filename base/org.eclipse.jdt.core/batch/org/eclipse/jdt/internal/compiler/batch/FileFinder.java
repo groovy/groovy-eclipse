@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class FileFinder {
-	
+
 public static String[] find(File f, String pattern) {
 	ArrayList files = new ArrayList();
 	find0(f, pattern, files);

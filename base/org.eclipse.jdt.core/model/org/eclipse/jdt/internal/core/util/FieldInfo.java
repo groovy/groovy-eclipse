@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,7 +35,7 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	private boolean isSynthetic;
 	private char[] name;
 	private int nameIndex;
-	
+
 	/**
 	 * @param classFileBytes byte[]
 	 * @param constantPool IConstantPool
@@ -54,14 +54,14 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 			throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
 		}
 		this.name = constantPoolEntry.getUtf8Value();
-	
+
 		this.descriptorIndex = u2At(classFileBytes, 4, offset);
 		constantPoolEntry = constantPool.decodeEntry(this.descriptorIndex);
 		if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Utf8) {
 			throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
 		}
 		this.descriptor = constantPoolEntry.getUtf8Value();
-	
+
 		this.attributesCount = u2At(classFileBytes, 6, offset);
 		this.attributes = ClassFileAttribute.NO_ATTRIBUTES;
 		int readOffset = 8;

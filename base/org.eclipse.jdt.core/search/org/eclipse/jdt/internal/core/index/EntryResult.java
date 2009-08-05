@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,7 +46,7 @@ public String[] getDocumentNames(Index index) throws java.io.IOException {
 	if (this.documentTables != null) {
 		int length = this.documentTables.length;
 		if (length == 1 && this.documentNames == null) { // have a single table
-			Object offset = this.documentTables[0].get(word);
+			Object offset = this.documentTables[0].get(this.word);
 			int[] numbers = index.diskIndex.readDocumentNumbers(offset);
 			String[] names = new String[numbers.length];
 			for (int i = 0, l = numbers.length; i < l; i++)
@@ -55,7 +55,7 @@ public String[] getDocumentNames(Index index) throws java.io.IOException {
 		}
 
 		for (int i = 0; i < length; i++) {
-			Object offset = this.documentTables[i].get(word);
+			Object offset = this.documentTables[i].get(this.word);
 			int[] numbers = index.diskIndex.readDocumentNumbers(offset);
 			for (int j = 0, k = numbers.length; j < k; j++)
 				addDocumentName(index.diskIndex.readDocumentName(numbers[j]));

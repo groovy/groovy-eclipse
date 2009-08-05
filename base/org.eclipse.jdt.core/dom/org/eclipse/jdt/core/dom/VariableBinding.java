@@ -13,8 +13,10 @@ package org.eclipse.jdt.core.dom;
 
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.util.IModifierConstants;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
@@ -38,7 +40,7 @@ class VariableBinding implements IVariableBinding {
 	private BindingResolver resolver;
 	private ITypeBinding type;
 	private IAnnotationBinding[] annotations;
-	
+
 	VariableBinding(BindingResolver resolver, org.eclipse.jdt.internal.compiler.lookup.VariableBinding binding) {
 		this.resolver = resolver;
 		this.binding = binding;
@@ -173,7 +175,7 @@ class VariableBinding implements IVariableBinding {
 		if (isField()) {
 			return ((FieldBinding) this.binding).getAccessFlags() & VALID_MODIFIERS;
 		}
-		if (binding.isFinal()) {
+		if (this.binding.isFinal()) {
 			return IModifierConstants.ACC_FINAL;
 		}
 		return Modifier.NONE;
@@ -212,10 +214,6 @@ class VariableBinding implements IVariableBinding {
 			}
 		}
 		// local variable
-		IMethodBinding declaringMethod = getDeclaringMethod();
-		if (declaringMethod == null) return null;
-		JavaElement method = (JavaElement) declaringMethod.getJavaElement();
-		if (method == null) return null;
 		if (!(this.resolver instanceof DefaultBindingResolver)) return null;
 		VariableDeclaration localVar = (VariableDeclaration) ((DefaultBindingResolver) this.resolver).bindingsToAstNodes.get(this);
 		if (localVar == null) return null;
@@ -236,8 +234,34 @@ class VariableBinding implements IVariableBinding {
 			sourceStart = node.getStartPosition();
 			sourceLength = node.getLength();
 		}
+		int sourceEnd = sourceStart+sourceLength-1;
 		char[] typeSig = this.binding.type.genericTypeSignature();
-		return new LocalVariable(method, localVar.getName().getIdentifier(), sourceStart, sourceStart+sourceLength-1, nameStart, nameStart+nameLength-1, new String(typeSig), ((LocalVariableBinding) this.binding).declaration.annotations);
+		JavaElement parent = null;
+		IMethodBinding declaringMethod = getDeclaringMethod();
+		if (declaringMethod == null) {
+			ReferenceContext referenceContext = ((LocalVariableBinding) this.binding).declaringScope.referenceContext();
+			if (referenceContext instanceof TypeDeclaration){
+				// Local variable is declared inside an initializer
+				TypeDeclaration typeDeclaration = (TypeDeclaration) referenceContext;
+				JavaElement typeHandle = null;
+				if (this.resolver instanceof DefaultBindingResolver) {
+					DefaultBindingResolver defaultBindingResolver = (DefaultBindingResolver) this.resolver;
+					typeHandle = Util.getUnresolvedJavaElement(
+						typeDeclaration.binding,
+						defaultBindingResolver.workingCopyOwner,
+						defaultBindingResolver.getBindingsToNodesMap());
+				} else {
+					typeHandle = Util.getUnresolvedJavaElement(typeDeclaration.binding, null, null);
+				}
+				parent = Util.getUnresolvedJavaElement(sourceStart, sourceEnd, typeHandle);
+			} else {
+				return null;
+			}
+		} else {
+			parent = (JavaElement) declaringMethod.getJavaElement();
+		}
+		if (parent == null) return null;
+		return new LocalVariable(parent, localVar.getName().getIdentifier(), sourceStart, sourceEnd, nameStart, nameStart+nameLength-1, new String(typeSig), ((LocalVariableBinding) this.binding).declaration.annotations);
 	}
 
 	/*
@@ -245,7 +269,7 @@ class VariableBinding implements IVariableBinding {
 	 * @since 3.1
 	 */
 	public IVariableBinding getVariableDeclaration() {
-		if (this.isField()) {
+		if (isField()) {
 			FieldBinding fieldBinding = (FieldBinding) this.binding;
 			return this.resolver.getVariableBinding(fieldBinding.original());
 		}
@@ -308,7 +332,7 @@ class VariableBinding implements IVariableBinding {
 			}
 		} else {
 			if (BindingComparator.isEqual(this.binding, otherBinding)) {
-				IMethodBinding declaringMethod = this.getDeclaringMethod();
+				IMethodBinding declaringMethod = getDeclaringMethod();
 				IMethodBinding otherDeclaringMethod = ((VariableBinding) other).getDeclaringMethod();
 				if (declaringMethod == null) {
 					if (otherDeclaringMethod != null) {

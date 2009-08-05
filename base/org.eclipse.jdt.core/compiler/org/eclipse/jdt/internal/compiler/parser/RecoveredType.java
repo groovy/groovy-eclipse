@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,9 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -25,15 +28,17 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 /**
- * Internal type structure for parsing recovery 
+ * Internal type structure for parsing recovery
  */
 
 public class RecoveredType extends RecoveredStatement implements TerminalTokens {
-	public TypeDeclaration typeDeclaration;
+	public static final int MAX_TYPE_DEPTH = 256;
 	
+	public TypeDeclaration typeDeclaration;
+
 	public RecoveredAnnotation[] annotations;
 	public int annotationCount;
-	
+
 	public int modifiers;
 	public int modifiersStart;
 
@@ -46,17 +51,17 @@ public class RecoveredType extends RecoveredStatement implements TerminalTokens 
 
 	public boolean preserveContent = false;	// only used for anonymous types
 	public int bodyEnd;
-	
+
 	public boolean insideEnumConstantPart = false;
-	
+
 	public TypeParameter[] pendingTypeParameters;
 	public int pendingTypeParametersStart;
-	
+
 	int pendingModifiers;
 	int pendingModifersSourceStart = -1;
 	RecoveredAnnotation[] pendingAnnotations;
 	int pendingAnnotationCount;
-	
+
 public RecoveredType(TypeDeclaration typeDeclaration, RecoveredElement parent, int bracketBalance){
 	super(typeDeclaration, parent, bracketBalance);
 	this.typeDeclaration = typeDeclaration;
@@ -70,56 +75,56 @@ public RecoveredType(TypeDeclaration typeDeclaration, RecoveredElement parent, i
 	if(this.foundOpeningBrace) {
 		this.bracketBalance++;
 	}
-	
-	this.preserveContent = this.parser().methodRecoveryActivated || this.parser().statementRecoveryActivated;
+
+	this.preserveContent = parser().methodRecoveryActivated || parser().statementRecoveryActivated;
 }
 public RecoveredElement add(AbstractMethodDeclaration methodDeclaration, int bracketBalanceValue) {
 
 	/* do not consider a method starting passed the type end (if set)
 		it must be belonging to an enclosing type */
-	if (typeDeclaration.declarationSourceEnd != 0 
-		&& methodDeclaration.declarationSourceStart > typeDeclaration.declarationSourceEnd){
+	if (this.typeDeclaration.declarationSourceEnd != 0
+		&& methodDeclaration.declarationSourceStart > this.typeDeclaration.declarationSourceEnd){
 		this.pendingTypeParameters = null;
-		this.resetPendingModifiers();
-		
+		resetPendingModifiers();
+
 		return this.parent.add(methodDeclaration, bracketBalanceValue);
 	}
 
-	if (methods == null) {
-		methods = new RecoveredMethod[5];
-		methodCount = 0;
+	if (this.methods == null) {
+		this.methods = new RecoveredMethod[5];
+		this.methodCount = 0;
 	} else {
-		if (methodCount == methods.length) {
+		if (this.methodCount == this.methods.length) {
 			System.arraycopy(
-				methods, 
-				0, 
-				(methods = new RecoveredMethod[2 * methodCount]), 
-				0, 
-				methodCount); 
+				this.methods,
+				0,
+				(this.methods = new RecoveredMethod[2 * this.methodCount]),
+				0,
+				this.methodCount);
 		}
 	}
 	RecoveredMethod element = new RecoveredMethod(methodDeclaration, this, bracketBalanceValue, this.recoveringParser);
-	methods[methodCount++] = element;
-	
+	this.methods[this.methodCount++] = element;
+
 	if(this.pendingTypeParameters != null) {
 		element.attach(this.pendingTypeParameters, this.pendingTypeParametersStart);
 		this.pendingTypeParameters = null;
 	}
-	
+
 	if(this.pendingAnnotationCount > 0) {
 		element.attach(
-				pendingAnnotations,
-				pendingAnnotationCount,
-				pendingModifiers,
-				pendingModifersSourceStart);
+				this.pendingAnnotations,
+				this.pendingAnnotationCount,
+				this.pendingModifiers,
+				this.pendingModifersSourceStart);
 	}
-	this.resetPendingModifiers();
-	
+	resetPendingModifiers();
+
 	this.insideEnumConstantPart = false;
 
 	/* consider that if the opening brace was not found, it is there */
-	if (!foundOpeningBrace){
-		foundOpeningBrace = true;
+	if (!this.foundOpeningBrace){
+		this.foundOpeningBrace = true;
 		this.bracketBalance++;
 	}
 	/* if method not finished, then method becomes current */
@@ -128,37 +133,37 @@ public RecoveredElement add(AbstractMethodDeclaration methodDeclaration, int bra
 }
 public RecoveredElement add(Block nestedBlockDeclaration,int bracketBalanceValue) {
 	this.pendingTypeParameters = null;
-	this.resetPendingModifiers();
-	
+	resetPendingModifiers();
+
 	int mods = ClassFileConstants.AccDefault;
-	if(this.parser().recoveredStaticInitializerStart != 0) {
+	if(parser().recoveredStaticInitializerStart != 0) {
 		mods = ClassFileConstants.AccStatic;
 	}
 	return this.add(new Initializer(nestedBlockDeclaration, mods), bracketBalanceValue);
 }
 public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanceValue) {
 	this.pendingTypeParameters = null;
-	
+
 	/* do not consider a field starting passed the type end (if set)
 	it must be belonging to an enclosing type */
-	if (typeDeclaration.declarationSourceEnd != 0
-		&& fieldDeclaration.declarationSourceStart > typeDeclaration.declarationSourceEnd) {
-		
-		this.resetPendingModifiers();
-		
+	if (this.typeDeclaration.declarationSourceEnd != 0
+		&& fieldDeclaration.declarationSourceStart > this.typeDeclaration.declarationSourceEnd) {
+
+		resetPendingModifiers();
+
 		return this.parent.add(fieldDeclaration, bracketBalanceValue);
 	}
-	if (fields == null) {
-		fields = new RecoveredField[5];
-		fieldCount = 0;
+	if (this.fields == null) {
+		this.fields = new RecoveredField[5];
+		this.fieldCount = 0;
 	} else {
-		if (fieldCount == fields.length) {
+		if (this.fieldCount == this.fields.length) {
 			System.arraycopy(
-				fields, 
-				0, 
-				(fields = new RecoveredField[2 * fieldCount]), 
-				0, 
-				fieldCount); 
+				this.fields,
+				0,
+				(this.fields = new RecoveredField[2 * this.fieldCount]),
+				0,
+				this.fieldCount);
 		}
 	}
 	RecoveredField element;
@@ -174,20 +179,20 @@ public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanc
 			// never happens, as field is always identified
 			return this;
 	}
-	fields[fieldCount++] = element;
-	
+	this.fields[this.fieldCount++] = element;
+
 	if(this.pendingAnnotationCount > 0) {
 		element.attach(
-				pendingAnnotations,
-				pendingAnnotationCount,
-				pendingModifiers,
-				pendingModifersSourceStart);
+				this.pendingAnnotations,
+				this.pendingAnnotationCount,
+				this.pendingModifiers,
+				this.pendingModifersSourceStart);
 	}
-	this.resetPendingModifiers();
+	resetPendingModifiers();
 
 	/* consider that if the opening brace was not found, it is there */
-	if (!foundOpeningBrace){
-		foundOpeningBrace = true;
+	if (!this.foundOpeningBrace){
+		this.foundOpeningBrace = true;
 		this.bracketBalance++;
 	}
 	/* if field not finished, then field becomes current */
@@ -196,19 +201,19 @@ public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanc
 }
 public RecoveredElement add(TypeDeclaration memberTypeDeclaration, int bracketBalanceValue) {
 	this.pendingTypeParameters = null;
-	
+
 	/* do not consider a type starting passed the type end (if set)
 		it must be belonging to an enclosing type */
-	if (typeDeclaration.declarationSourceEnd != 0 
-		&& memberTypeDeclaration.declarationSourceStart > typeDeclaration.declarationSourceEnd){
-		
-		this.resetPendingModifiers();
-		
+	if (this.typeDeclaration.declarationSourceEnd != 0
+		&& memberTypeDeclaration.declarationSourceStart > this.typeDeclaration.declarationSourceEnd){
+
+		resetPendingModifiers();
+
 		return this.parent.add(memberTypeDeclaration, bracketBalanceValue);
 	}
-	
+
 	this.insideEnumConstantPart = false;
-	
+
 	if ((memberTypeDeclaration.bits & ASTNode.IsAnonymousType) != 0){
 		if (this.methodCount > 0) {
 			// add it to the last method body
@@ -216,44 +221,44 @@ public RecoveredElement add(TypeDeclaration memberTypeDeclaration, int bracketBa
 			lastMethod.methodDeclaration.bodyEnd = 0; // reopen method
 			lastMethod.methodDeclaration.declarationSourceEnd = 0; // reopen method
 			lastMethod.bracketBalance++; // expect one closing brace
-			
-			this.resetPendingModifiers();
-			
+
+			resetPendingModifiers();
+
 			return lastMethod.add(memberTypeDeclaration, bracketBalanceValue);
 		} else {
 			// ignore
 			return this;
 		}
-	}	
-		
-	if (memberTypes == null) {
-		memberTypes = new RecoveredType[5];
-		memberTypeCount = 0;
+	}
+
+	if (this.memberTypes == null) {
+		this.memberTypes = new RecoveredType[5];
+		this.memberTypeCount = 0;
 	} else {
-		if (memberTypeCount == memberTypes.length) {
+		if (this.memberTypeCount == this.memberTypes.length) {
 			System.arraycopy(
-				memberTypes, 
-				0, 
-				(memberTypes = new RecoveredType[2 * memberTypeCount]), 
-				0, 
-				memberTypeCount); 
+				this.memberTypes,
+				0,
+				(this.memberTypes = new RecoveredType[2 * this.memberTypeCount]),
+				0,
+				this.memberTypeCount);
 		}
 	}
 	RecoveredType element = new RecoveredType(memberTypeDeclaration, this, bracketBalanceValue);
-	memberTypes[memberTypeCount++] = element;
-	
+	this.memberTypes[this.memberTypeCount++] = element;
+
 	if(this.pendingAnnotationCount > 0) {
 		element.attach(
-				pendingAnnotations,
-				pendingAnnotationCount,
-				pendingModifiers,
-				pendingModifersSourceStart);
+				this.pendingAnnotations,
+				this.pendingAnnotationCount,
+				this.pendingModifiers,
+				this.pendingModifersSourceStart);
 	}
-	this.resetPendingModifiers();
+	resetPendingModifiers();
 
 	/* consider that if the opening brace was not found, it is there */
-	if (!foundOpeningBrace){
-		foundOpeningBrace = true;
+	if (!this.foundOpeningBrace){
+		this.foundOpeningBrace = true;
 		this.bracketBalance++;
 	}
 	/* if member type not finished, then member type becomes current */
@@ -265,29 +270,29 @@ public void add(TypeParameter[] parameters, int startPos) {
 	this.pendingTypeParametersStart = startPos;
 }
 public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengthPtr, int annotationStart, int bracketBalanceValue) {
-	if (pendingAnnotations == null) {
-		pendingAnnotations = new RecoveredAnnotation[5];
-		pendingAnnotationCount = 0;
+	if (this.pendingAnnotations == null) {
+		this.pendingAnnotations = new RecoveredAnnotation[5];
+		this.pendingAnnotationCount = 0;
 	} else {
-		if (pendingAnnotationCount == pendingAnnotations.length) {
+		if (this.pendingAnnotationCount == this.pendingAnnotations.length) {
 			System.arraycopy(
-				pendingAnnotations, 
-				0, 
-				(pendingAnnotations = new RecoveredAnnotation[2 * pendingAnnotationCount]), 
-				0, 
-				pendingAnnotationCount); 
+				this.pendingAnnotations,
+				0,
+				(this.pendingAnnotations = new RecoveredAnnotation[2 * this.pendingAnnotationCount]),
+				0,
+				this.pendingAnnotationCount);
 		}
 	}
-	
+
 	RecoveredAnnotation element = new RecoveredAnnotation(identifierPtr, identifierLengthPtr, annotationStart, this, bracketBalanceValue);
-	
-	pendingAnnotations[pendingAnnotationCount++] = element;
-	
+
+	this.pendingAnnotations[this.pendingAnnotationCount++] = element;
+
 	return element;
 }
 public void addModifier(int flag, int modifiersSourceStart) {
 	this.pendingModifiers |= flag;
-	
+
 	if (this.pendingModifersSourceStart < 0) {
 		this.pendingModifersSourceStart = modifiersSourceStart;
 	}
@@ -309,7 +314,7 @@ public void attach(RecoveredAnnotation[] annots, int annotCount, int mods, int m
 			this.annotationCount = annotCount;
 		}
 	}
-	
+
 	if (mods != 0) {
 		this.modifiers = mods;
 		this.modifiersStart = modsSourceStart;
@@ -319,30 +324,30 @@ public void attach(RecoveredAnnotation[] annots, int annotCount, int mods, int m
  * Answer the body end of the corresponding parse node
  */
 public int bodyEnd(){
-	if (bodyEnd == 0) return typeDeclaration.declarationSourceEnd;
-	return bodyEnd;
+	if (this.bodyEnd == 0) return this.typeDeclaration.declarationSourceEnd;
+	return this.bodyEnd;
 }
 public boolean bodyStartsAtHeaderEnd(){
-	if (typeDeclaration.superInterfaces == null){
-		if (typeDeclaration.superclass == null){
-			if(typeDeclaration.typeParameters == null) {
-				return typeDeclaration.bodyStart == typeDeclaration.sourceEnd+1;
+	if (this.typeDeclaration.superInterfaces == null){
+		if (this.typeDeclaration.superclass == null){
+			if(this.typeDeclaration.typeParameters == null) {
+				return this.typeDeclaration.bodyStart == this.typeDeclaration.sourceEnd+1;
 			} else {
-				return typeDeclaration.bodyStart == typeDeclaration.typeParameters[typeDeclaration.typeParameters.length-1].sourceEnd+1;
+				return this.typeDeclaration.bodyStart == this.typeDeclaration.typeParameters[this.typeDeclaration.typeParameters.length-1].sourceEnd+1;
 			}
 		} else {
-			return typeDeclaration.bodyStart == typeDeclaration.superclass.sourceEnd+1;
+			return this.typeDeclaration.bodyStart == this.typeDeclaration.superclass.sourceEnd+1;
 		}
 	} else {
-		return typeDeclaration.bodyStart 
-				== typeDeclaration.superInterfaces[typeDeclaration.superInterfaces.length-1].sourceEnd+1;
+		return this.typeDeclaration.bodyStart
+				== this.typeDeclaration.superInterfaces[this.typeDeclaration.superInterfaces.length-1].sourceEnd+1;
 	}
 }
 /*
  * Answer the enclosing type node, or null if none
  */
 public RecoveredType enclosingType(){
-	RecoveredElement current = parent;
+	RecoveredElement current = this.parent;
 	while (current != null){
 		if (current instanceof RecoveredType){
 			return (RecoveredType) current;
@@ -353,38 +358,38 @@ public RecoveredType enclosingType(){
 }
 public int lastMemberEnd() {
 	int lastMemberEnd = this.typeDeclaration.bodyStart;
-	
+
 	if (this.fieldCount > 0) {
-		FieldDeclaration lastField = this.fields[fieldCount - 1].fieldDeclaration;
+		FieldDeclaration lastField = this.fields[this.fieldCount - 1].fieldDeclaration;
 		if (lastMemberEnd < lastField.declarationSourceEnd && lastField.declarationSourceEnd != 0) {
 			lastMemberEnd = lastField.declarationSourceEnd;
 		}
 	}
-	
+
 	if (this.methodCount > 0) {
 		AbstractMethodDeclaration lastMethod = this.methods[this.methodCount - 1].methodDeclaration;
 		if (lastMemberEnd < lastMethod.declarationSourceEnd && lastMethod.declarationSourceEnd != 0) {
 			lastMemberEnd = lastMethod.declarationSourceEnd;
 		}
 	}
-	
+
 	if (this.memberTypeCount > 0) {
 		TypeDeclaration lastType = this.memberTypes[this.memberTypeCount - 1].typeDeclaration;
 		if (lastMemberEnd < lastType.declarationSourceEnd && lastType.declarationSourceEnd != 0) {
 			lastMemberEnd = lastType.declarationSourceEnd;
 		}
 	}
-	
+
 	return lastMemberEnd;
 }
 public char[] name(){
-	return typeDeclaration.name;
+	return this.typeDeclaration.name;
 }
-/* 
+/*
  * Answer the associated parsed structure
  */
 public ASTNode parseTree(){
-	return typeDeclaration;
+	return this.typeDeclaration;
 }
 public void resetPendingModifiers() {
 	this.pendingAnnotations = null;
@@ -401,11 +406,11 @@ public int sourceEnd(){
 public String toString(int tab) {
 	StringBuffer result = new StringBuffer(tabString(tab));
 	result.append("Recovered type:\n"); //$NON-NLS-1$
-	if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
+	if ((this.typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
 		result.append(tabString(tab));
 		result.append(" "); //$NON-NLS-1$
 	}
-	typeDeclaration.print(tab + 1, result);
+	this.typeDeclaration.print(tab + 1, result);
 	if (this.annotations != null) {
 		for (int i = 0; i < this.annotationCount; i++) {
 			result.append("\n"); //$NON-NLS-1$
@@ -439,18 +444,18 @@ public void updateBodyStart(int bodyStart){
 	this.foundOpeningBrace = true;
 	this.typeDeclaration.bodyStart = bodyStart;
 }
-public Statement updatedStatement(){
+public Statement updatedStatement(int depth, Set knownTypes){
 
 	// ignore closed anonymous type
-	if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0 && !this.preserveContent){
+	if ((this.typeDeclaration.bits & ASTNode.IsAnonymousType) != 0 && !this.preserveContent){
 		return null;
 	}
-		
-	TypeDeclaration updatedType = this.updatedTypeDeclaration();
-	if ((updatedType.bits & ASTNode.IsAnonymousType) != 0){
+
+	TypeDeclaration updatedType = updatedTypeDeclaration(depth + 1, knownTypes);
+	if (updatedType != null && (updatedType.bits & ASTNode.IsAnonymousType) != 0){
 		/* in presence of an anonymous type, we want the full allocation expression */
 		QualifiedAllocationExpression allocation = updatedType.allocation;
-		
+
 		if (allocation.statementEnd == -1) {
 			allocation.statementEnd = updatedType.declarationSourceEnd;
 		}
@@ -458,165 +463,182 @@ public Statement updatedStatement(){
 	}
 	return updatedType;
 }
-public TypeDeclaration updatedTypeDeclaration(){
-	int lastEnd = typeDeclaration.bodyStart;
+public TypeDeclaration updatedTypeDeclaration(int depth, Set knownTypes){
+	if (depth >= MAX_TYPE_DEPTH) return null;
+
+	if(knownTypes.contains(this.typeDeclaration)) return null;
+	knownTypes.add(this.typeDeclaration);
+	
+	int lastEnd = this.typeDeclaration.bodyStart;
 	/* update annotations */
-	if (modifiers != 0) {
-		this.typeDeclaration.modifiers |= modifiers;
+	if (this.modifiers != 0) {
+		this.typeDeclaration.modifiers |= this.modifiers;
 		if (this.modifiersStart < this.typeDeclaration.declarationSourceStart) {
-			this.typeDeclaration.declarationSourceStart = modifiersStart;
+			this.typeDeclaration.declarationSourceStart = this.modifiersStart;
 		}
 	}
 	/* update annotations */
-	if (annotationCount > 0){
-		int existingCount = typeDeclaration.annotations == null ? 0 : typeDeclaration.annotations.length;
-		Annotation[] annotationReferences = new Annotation[existingCount + annotationCount];
+	if (this.annotationCount > 0){
+		int existingCount = this.typeDeclaration.annotations == null ? 0 : this.typeDeclaration.annotations.length;
+		Annotation[] annotationReferences = new Annotation[existingCount + this.annotationCount];
 		if (existingCount > 0){
-			System.arraycopy(typeDeclaration.annotations, 0, annotationReferences, annotationCount, existingCount);
+			System.arraycopy(this.typeDeclaration.annotations, 0, annotationReferences, this.annotationCount, existingCount);
 		}
-		for (int i = 0; i < annotationCount; i++){
-			annotationReferences[i] = annotations[i].updatedAnnotationReference();
+		for (int i = 0; i < this.annotationCount; i++){
+			annotationReferences[i] = this.annotations[i].updatedAnnotationReference();
 		}
-		typeDeclaration.annotations = annotationReferences;
-		
+		this.typeDeclaration.annotations = annotationReferences;
+
 		int start = this.annotations[0].annotation.sourceStart;
 		if (start < this.typeDeclaration.declarationSourceStart) {
 			this.typeDeclaration.declarationSourceStart = start;
 		}
 	}
 	/* update member types */
-	if (memberTypeCount > 0){
-		int existingCount = typeDeclaration.memberTypes == null ? 0 : typeDeclaration.memberTypes.length;
-		TypeDeclaration[] memberTypeDeclarations = new TypeDeclaration[existingCount + memberTypeCount];
+	if (this.memberTypeCount > 0){
+		int existingCount = this.typeDeclaration.memberTypes == null ? 0 : this.typeDeclaration.memberTypes.length;
+		TypeDeclaration[] memberTypeDeclarations = new TypeDeclaration[existingCount + this.memberTypeCount];
 		if (existingCount > 0){
-			System.arraycopy(typeDeclaration.memberTypes, 0, memberTypeDeclarations, 0, existingCount);
+			System.arraycopy(this.typeDeclaration.memberTypes, 0, memberTypeDeclarations, 0, existingCount);
 		}
 		// may need to update the declarationSourceEnd of the last type
-		if (memberTypes[memberTypeCount - 1].typeDeclaration.declarationSourceEnd == 0){
+		if (this.memberTypes[this.memberTypeCount - 1].typeDeclaration.declarationSourceEnd == 0){
 			int bodyEndValue = bodyEnd();
-			memberTypes[memberTypeCount - 1].typeDeclaration.declarationSourceEnd = bodyEndValue;
-			memberTypes[memberTypeCount - 1].typeDeclaration.bodyEnd =  bodyEndValue;
+			this.memberTypes[this.memberTypeCount - 1].typeDeclaration.declarationSourceEnd = bodyEndValue;
+			this.memberTypes[this.memberTypeCount - 1].typeDeclaration.bodyEnd =  bodyEndValue;
 		}
-		for (int i = 0; i < memberTypeCount; i++){
-			memberTypeDeclarations[existingCount + i] = memberTypes[i].updatedTypeDeclaration();
+		
+		int updatedCount = 0;
+		for (int i = 0; i < this.memberTypeCount; i++){
+			TypeDeclaration updatedTypeDeclaration = this.memberTypes[i].updatedTypeDeclaration(depth + 1, knownTypes);
+			if (updatedTypeDeclaration != null) {
+				memberTypeDeclarations[existingCount + (updatedCount++)] = updatedTypeDeclaration;
+			}
 		}
-		typeDeclaration.memberTypes = memberTypeDeclarations;
-		if(memberTypeDeclarations[memberTypeDeclarations.length - 1].declarationSourceEnd > lastEnd) {
-			lastEnd = memberTypeDeclarations[memberTypeDeclarations.length - 1].declarationSourceEnd;
+		if (updatedCount < this.memberTypeCount) {
+			int length = existingCount + updatedCount;
+			System.arraycopy(memberTypeDeclarations, 0, memberTypeDeclarations = new TypeDeclaration[length], 0, length);
+		}
+		
+		if (memberTypeDeclarations.length > 0) { 
+			this.typeDeclaration.memberTypes = memberTypeDeclarations;
+			if(memberTypeDeclarations[memberTypeDeclarations.length - 1].declarationSourceEnd > lastEnd) {
+				lastEnd = memberTypeDeclarations[memberTypeDeclarations.length - 1].declarationSourceEnd;
+			}
 		}
 	}
 	/* update fields */
-	if (fieldCount > 0){
-		int existingCount = typeDeclaration.fields == null ? 0 : typeDeclaration.fields.length;
-		FieldDeclaration[] fieldDeclarations = new FieldDeclaration[existingCount + fieldCount];
+	if (this.fieldCount > 0){
+		int existingCount = this.typeDeclaration.fields == null ? 0 : this.typeDeclaration.fields.length;
+		FieldDeclaration[] fieldDeclarations = new FieldDeclaration[existingCount + this.fieldCount];
 		if (existingCount > 0){
-			System.arraycopy(typeDeclaration.fields, 0, fieldDeclarations, 0, existingCount);
+			System.arraycopy(this.typeDeclaration.fields, 0, fieldDeclarations, 0, existingCount);
 		}
 		// may need to update the declarationSourceEnd of the last field
-		if (fields[fieldCount - 1].fieldDeclaration.declarationSourceEnd == 0){
+		if (this.fields[this.fieldCount - 1].fieldDeclaration.declarationSourceEnd == 0){
 			int temp = bodyEnd();
-			fields[fieldCount - 1].fieldDeclaration.declarationSourceEnd = temp;
-			fields[fieldCount - 1].fieldDeclaration.declarationEnd = temp;
+			this.fields[this.fieldCount - 1].fieldDeclaration.declarationSourceEnd = temp;
+			this.fields[this.fieldCount - 1].fieldDeclaration.declarationEnd = temp;
 		}
-		for (int i = 0; i < fieldCount; i++){
-			fieldDeclarations[existingCount + i] = fields[i].updatedFieldDeclaration();
+		for (int i = 0; i < this.fieldCount; i++){
+			fieldDeclarations[existingCount + i] = this.fields[i].updatedFieldDeclaration(depth, knownTypes);
 		}
-		typeDeclaration.fields = fieldDeclarations;
+		this.typeDeclaration.fields = fieldDeclarations;
 		if(fieldDeclarations[fieldDeclarations.length - 1].declarationSourceEnd > lastEnd) {
 			lastEnd = fieldDeclarations[fieldDeclarations.length - 1].declarationSourceEnd;
 		}
 	}
 	/* update methods */
-	int existingCount = typeDeclaration.methods == null ? 0 : typeDeclaration.methods.length;
+	int existingCount = this.typeDeclaration.methods == null ? 0 : this.typeDeclaration.methods.length;
 	boolean hasConstructor = false, hasRecoveredConstructor = false;
 	boolean hasAbstractMethods = false;
 	int defaultConstructorIndex = -1;
-	if (methodCount > 0){
-		AbstractMethodDeclaration[] methodDeclarations = new AbstractMethodDeclaration[existingCount + methodCount];
+	if (this.methodCount > 0){
+		AbstractMethodDeclaration[] methodDeclarations = new AbstractMethodDeclaration[existingCount + this.methodCount];
 		for (int i = 0; i < existingCount; i++){
-			AbstractMethodDeclaration m = typeDeclaration.methods[i];
+			AbstractMethodDeclaration m = this.typeDeclaration.methods[i];
 			if (m.isDefaultConstructor()) defaultConstructorIndex = i;
 			if (m.isAbstract()) hasAbstractMethods = true;
 			methodDeclarations[i] = m;
 		}
 		// may need to update the declarationSourceEnd of the last method
-		if (methods[methodCount - 1].methodDeclaration.declarationSourceEnd == 0){
+		if (this.methods[this.methodCount - 1].methodDeclaration.declarationSourceEnd == 0){
 			int bodyEndValue = bodyEnd();
-			methods[methodCount - 1].methodDeclaration.declarationSourceEnd = bodyEndValue;
-			methods[methodCount - 1].methodDeclaration.bodyEnd = bodyEndValue;
+			this.methods[this.methodCount - 1].methodDeclaration.declarationSourceEnd = bodyEndValue;
+			this.methods[this.methodCount - 1].methodDeclaration.bodyEnd = bodyEndValue;
 		}
-		for (int i = 0; i < methodCount; i++){
-			AbstractMethodDeclaration updatedMethod = methods[i].updatedMethodDeclaration();			
+		for (int i = 0; i < this.methodCount; i++){
+			AbstractMethodDeclaration updatedMethod = this.methods[i].updatedMethodDeclaration(depth, knownTypes);
 			if (updatedMethod.isConstructor()) hasRecoveredConstructor = true;
 			if (updatedMethod.isAbstract()) hasAbstractMethods = true;
-			methodDeclarations[existingCount + i] = updatedMethod;			
+			methodDeclarations[existingCount + i] = updatedMethod;
 		}
-		typeDeclaration.methods = methodDeclarations;
+		this.typeDeclaration.methods = methodDeclarations;
 		if(methodDeclarations[methodDeclarations.length - 1].declarationSourceEnd > lastEnd) {
 			lastEnd = methodDeclarations[methodDeclarations.length - 1].declarationSourceEnd;
 		}
-		if (hasAbstractMethods) typeDeclaration.bits |= ASTNode.HasAbstractMethods;
-		hasConstructor = typeDeclaration.checkConstructors(this.parser());
+		if (hasAbstractMethods) this.typeDeclaration.bits |= ASTNode.HasAbstractMethods;
+		hasConstructor = this.typeDeclaration.checkConstructors(parser());
 	} else {
 		for (int i = 0; i < existingCount; i++){
-			if (typeDeclaration.methods[i].isConstructor()) hasConstructor = true;
-		}		
+			if (this.typeDeclaration.methods[i].isConstructor()) hasConstructor = true;
+		}
 	}
 	/* add clinit ? */
-	if (typeDeclaration.needClassInitMethod()){
+	if (this.typeDeclaration.needClassInitMethod()){
 		boolean alreadyHasClinit = false;
 		for (int i = 0; i < existingCount; i++){
-			if (typeDeclaration.methods[i].isClinit()){
+			if (this.typeDeclaration.methods[i].isClinit()){
 				alreadyHasClinit = true;
 				break;
 			}
 		}
-		if (!alreadyHasClinit) typeDeclaration.addClinit();
+		if (!alreadyHasClinit) this.typeDeclaration.addClinit();
 	}
 	/* add default constructor ? */
 	if (defaultConstructorIndex >= 0 && hasRecoveredConstructor){
 		/* should discard previous default construtor */
-		AbstractMethodDeclaration[] methodDeclarations = new AbstractMethodDeclaration[typeDeclaration.methods.length - 1];
+		AbstractMethodDeclaration[] methodDeclarations = new AbstractMethodDeclaration[this.typeDeclaration.methods.length - 1];
 		if (defaultConstructorIndex != 0){
-			System.arraycopy(typeDeclaration.methods, 0, methodDeclarations, 0, defaultConstructorIndex);
+			System.arraycopy(this.typeDeclaration.methods, 0, methodDeclarations, 0, defaultConstructorIndex);
 		}
-		if (defaultConstructorIndex != typeDeclaration.methods.length-1){
+		if (defaultConstructorIndex != this.typeDeclaration.methods.length-1){
 			System.arraycopy(
-				typeDeclaration.methods, 
-				defaultConstructorIndex+1, 
-				methodDeclarations, 
-				defaultConstructorIndex, 
-				typeDeclaration.methods.length - defaultConstructorIndex - 1);
+				this.typeDeclaration.methods,
+				defaultConstructorIndex+1,
+				methodDeclarations,
+				defaultConstructorIndex,
+				this.typeDeclaration.methods.length - defaultConstructorIndex - 1);
 		}
-		typeDeclaration.methods = methodDeclarations;
+		this.typeDeclaration.methods = methodDeclarations;
 	} else {
-		int kind = TypeDeclaration.kind(typeDeclaration.modifiers);
+		int kind = TypeDeclaration.kind(this.typeDeclaration.modifiers);
 		if (!hasConstructor &&
 				kind != TypeDeclaration.INTERFACE_DECL &&
 				kind != TypeDeclaration.ANNOTATION_TYPE_DECL &&
-				typeDeclaration.allocation == null) {// if was already reduced, then constructor
+				this.typeDeclaration.allocation == null) {// if was already reduced, then constructor
 			boolean insideFieldInitializer = false;
-			RecoveredElement parentElement = this.parent; 
+			RecoveredElement parentElement = this.parent;
 			while (parentElement != null){
 				if (parentElement instanceof RecoveredField){
 						insideFieldInitializer = true;
-						break; 
+						break;
 				}
 				parentElement = parentElement.parent;
 			}
-			typeDeclaration.createDefaultConstructor(!parser().diet || insideFieldInitializer, true);
-		} 
+			this.typeDeclaration.createDefaultConstructor(!parser().diet || insideFieldInitializer, true);
+		}
 	}
-	if (parent instanceof RecoveredType){
-		typeDeclaration.bits |= ASTNode.IsMemberType;
-	} else if (parent instanceof RecoveredMethod){
-		typeDeclaration.bits |= ASTNode.IsLocalType;
+	if (this.parent instanceof RecoveredType){
+		this.typeDeclaration.bits |= ASTNode.IsMemberType;
+	} else if (this.parent instanceof RecoveredMethod){
+		this.typeDeclaration.bits |= ASTNode.IsLocalType;
 	}
-	if(typeDeclaration.declarationSourceEnd == 0) {
-		typeDeclaration.declarationSourceEnd = lastEnd;
-		typeDeclaration.bodyEnd = lastEnd;
+	if(this.typeDeclaration.declarationSourceEnd == 0) {
+		this.typeDeclaration.declarationSourceEnd = lastEnd;
+		this.typeDeclaration.bodyEnd = lastEnd;
 	}
-	return typeDeclaration;
+	return this.typeDeclaration;
 }
 /*
  * Update the corresponding parse node from parser state which
@@ -625,8 +647,8 @@ public TypeDeclaration updatedTypeDeclaration(){
 public void updateFromParserState(){
 
 	// anymous type and enum constant doesn't need to be updated
-	if(this.bodyStartsAtHeaderEnd() && typeDeclaration.allocation == null){
-		Parser parser = this.parser();
+	if(bodyStartsAtHeaderEnd() && this.typeDeclaration.allocation == null){
+		Parser parser = parser();
 		/* might want to recover implemented interfaces */
 		// protection for bugs 15142
 		if (parser.listLength > 0 && parser.astLengthPtr > 0){ // awaiting interface type references
@@ -644,7 +666,7 @@ public void updateFromParserState(){
 				}
 			}
 			if(canConsume) {
-				parser.consumeClassHeaderImplements(); 
+				parser.consumeClassHeaderImplements();
 				// will reset typeListLength to zero
 				// thus this check will only be performed on first errorCheck after class X implements Y,Z,
 			}
@@ -680,10 +702,10 @@ public void updateFromParserState(){
  * in which case both the currentElement is exited
  */
 public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
-	if ((--bracketBalance <= 0) && (parent != null)){
+	if ((--this.bracketBalance <= 0) && (this.parent != null)){
 		this.updateSourceEndIfNecessary(braceStart, braceEnd);
 		this.bodyEnd = braceStart - 1;
-		return parent;
+		return this.parent;
 	}
 	return this;
 }
@@ -693,12 +715,12 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
  */
 public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 	/* in case the opening brace is not close enough to the signature, ignore it */
-	if (bracketBalance == 0){
+	if (this.bracketBalance == 0){
 		/*
-			if (parser.scanner.searchLineNumber(typeDeclaration.sourceEnd) 
+			if (parser.scanner.searchLineNumber(typeDeclaration.sourceEnd)
 				!= parser.scanner.searchLineNumber(braceEnd)){
 		 */
-		Parser parser = this.parser();
+		Parser parser = parser();
 		switch(parser.lastIgnoredToken){
 			case -1 :
 			case TokenNameextends :
@@ -707,15 +729,16 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 			case TokenNameRIGHT_SHIFT :
 			case TokenNameUNSIGNED_RIGHT_SHIFT :
 				if (parser.recoveredStaticInitializerStart == 0) break;
+			//$FALL-THROUGH$
 			default:
-				this.foundOpeningBrace = true;				
-				bracketBalance = 1; // pretend the brace was already there
+				this.foundOpeningBrace = true;
+				this.bracketBalance = 1; // pretend the brace was already there
 		}
-	}	
+	}
 	// might be an initializer
 	if (this.bracketBalance == 1){
 		Block block = new Block(0);
-		Parser parser = this.parser();
+		Parser parser = parser();
 		block.sourceStart = parser.scanner.startPosition;
 		Initializer init;
 		if (parser.recoveredStaticInitializerStart == 0){
@@ -730,7 +753,7 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 	return super.updateOnOpeningBrace(braceStart, braceEnd);
 }
 public void updateParseTree(){
-	this.updatedTypeDeclaration();
+	updatedTypeDeclaration(0, new HashSet());
 }
 /*
  * Update the declarationSourceEnd of the corresponding parse node

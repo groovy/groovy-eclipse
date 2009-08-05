@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import org.eclipse.jdt.internal.compiler.ast.LabeledStatement;
 import org.eclipse.jdt.internal.compiler.ast.Reference;
 import org.eclipse.jdt.internal.compiler.ast.SubRoutineStatement;
 import org.eclipse.jdt.internal.compiler.ast.TryStatement;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
@@ -33,22 +34,41 @@ import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
  *	try statements, exception handlers, etc...
  */
 public class FlowContext implements TypeConstants {
-	
+
 	// preempt marks looping contexts
 	public final static FlowContext NotContinuableContext = new FlowContext(null, null);
-	public ASTNode associatedNode; 
+	public ASTNode associatedNode;
 		public FlowContext parent;
-	public NullInfoRegistry initsOnFinally; 
+	public NullInfoRegistry initsOnFinally;
 		// only used within try blocks; remembers upstream flow info mergedWith
 		// any null related operation happening within the try block
-		
+
 boolean deferNullDiagnostic, preemptNullDiagnostic;
+
+public static final int
+  CAN_ONLY_NULL_NON_NULL = 0x0000,
+  	// check against null and non null, with definite values -- comparisons
+  CAN_ONLY_NULL = 0x0001,
+  	// check against null, with definite values -- comparisons
+  CAN_ONLY_NON_NULL = 0x0002,
+	// check against non null, with definite values -- comparisons
+  MAY_NULL = 0x0003,
+	// check against null, with potential values -- NPE guard
+  CHECK_MASK = 0x00FF,
+  IN_COMPARISON_NULL = 0x0100,
+  IN_COMPARISON_NON_NULL = 0x0200,
+    // check happened in a comparison
+  IN_ASSIGNMENT = 0x0300,
+    // check happened in an assignment
+  IN_INSTANCEOF = 0x0400,
+    // check happened in an instanceof expression
+  CONTEXT_MASK = ~CHECK_MASK;
 
 public FlowContext(FlowContext parent, ASTNode associatedNode) {
 	this.parent = parent;
 	this.associatedNode = associatedNode;
 	if (parent != null) {
-		this.deferNullDiagnostic = 
+		this.deferNullDiagnostic =
 			parent.deferNullDiagnostic || parent.preemptNullDiagnostic;
 		this.initsOnFinally = parent.initsOnFinally;
 	}
@@ -61,19 +81,19 @@ public BranchLabel breakLabel() {
 public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location, FlowInfo flowInfo, BlockScope scope) {
 	// LIGHT-VERSION OF THE EQUIVALENT WITH AN ARRAY OF EXCEPTIONS
 	// check that all the argument exception types are handled
-	// JDK Compatible implementation - when an exception type is thrown, 
+	// JDK Compatible implementation - when an exception type is thrown,
 	// all related catch blocks are marked as reachable... instead of those only
 	// until the point where it is safely handled (Smarter - see comment at the end)
 	FlowContext traversedContext = this;
 	while (traversedContext != null) {
 		SubRoutineStatement sub;
 		if (((sub = traversedContext.subroutine()) != null) && sub.isSubRoutineEscaping()) {
-			// traversing a non-returning subroutine means that all unhandled 
+			// traversing a non-returning subroutine means that all unhandled
 			// exceptions will actually never get sent...
 			return;
 		}
-		
-		// filter exceptions that are locally caught from the innermost enclosing 
+
+		// filter exceptions that are locally caught from the innermost enclosing
 		// try statement to the outermost ones.
 		if (traversedContext instanceof ExceptionHandlingFlowContext) {
 			ExceptionHandlingFlowContext exceptionContext =
@@ -85,9 +105,9 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 					caughtIndex < caughtCount;
 					caughtIndex++) {
 					ReferenceBinding caughtException = caughtExceptions[caughtIndex];
-				    int state = caughtException == null 
+				    int state = caughtException == null
 				    	? Scope.EQUAL_OR_MORE_SPECIFIC /* any exception */
-				        : Scope.compareTypes(raisedException, caughtException);						
+				        : Scope.compareTypes(raisedException, caughtException);
 					switch (state) {
 						case Scope.EQUAL_OR_MORE_SPECIFIC :
 							exceptionContext.recordHandlingException(
@@ -116,15 +136,15 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 			if (exceptionContext.isMethodContext) {
 				if (raisedException.isUncheckedException(false))
 					return;
-					
+
 				// anonymous constructors are allowed to throw any exceptions (their thrown exceptions
 				// clause will be fixed up later as per JLS 8.6).
 				if (exceptionContext.associatedNode instanceof AbstractMethodDeclaration){
 					AbstractMethodDeclaration method = (AbstractMethodDeclaration)exceptionContext.associatedNode;
 					if (method.isConstructor() && method.binding.declaringClass.isAnonymousType()){
-								
+
 						exceptionContext.mergeUnhandledException(raisedException);
-						return; // no need to complain, will fix up constructor exceptions						
+						return; // no need to complain, will fix up constructor exceptions
 					}
 				}
 				break; // not handled anywhere, thus jump to error handling
@@ -132,12 +152,12 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 		}
 
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
-		
+
 		if (traversedContext instanceof InsideSubRoutineFlowContext) {
 			ASTNode node = traversedContext.associatedNode;
 			if (node instanceof TryStatement) {
 				TryStatement tryStatement = (TryStatement) node;
-				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits			
+				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
 			}
 		}
 		traversedContext = traversedContext.parent;
@@ -148,7 +168,7 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 
 public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode location, FlowInfo flowInfo, BlockScope scope) {
 	// check that all the argument exception types are handled
-	// JDK Compatible implementation - when an exception type is thrown, 
+	// JDK Compatible implementation - when an exception type is thrown,
 	// all related catch blocks are marked as reachable... instead of those only
 	// until the point where it is safely handled (Smarter - see comment at the end)
 	int remainingCount; // counting the number of remaining unhandled exceptions
@@ -171,11 +191,11 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 	while (traversedContext != null) {
 		SubRoutineStatement sub;
 		if (((sub = traversedContext.subroutine()) != null) && sub.isSubRoutineEscaping()) {
-			// traversing a non-returning subroutine means that all unhandled 
+			// traversing a non-returning subroutine means that all unhandled
 			// exceptions will actually never get sent...
 			return;
 		}
-		// filter exceptions that are locally caught from the innermost enclosing 
+		// filter exceptions that are locally caught from the innermost enclosing
 		// try statement to the outermost ones.
 		if (traversedContext instanceof ExceptionHandlingFlowContext) {
 			ExceptionHandlingFlowContext exceptionContext =
@@ -190,7 +210,7 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 					for (int raisedIndex = 0; raisedIndex < raisedCount; raisedIndex++) {
 						TypeBinding raisedException;
 						if ((raisedException = raisedExceptions[raisedIndex]) != null) {
-						    int state = caughtException == null 
+						    int state = caughtException == null
 						    	? Scope.EQUAL_OR_MORE_SPECIFIC /* any exception */
 						        : Scope.compareTypes(raisedException, caughtException);
 							switch (state) {
@@ -243,14 +263,14 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 				if (exceptionContext.associatedNode instanceof AbstractMethodDeclaration){
 					AbstractMethodDeclaration method = (AbstractMethodDeclaration)exceptionContext.associatedNode;
 					if (method.isConstructor() && method.binding.declaringClass.isAnonymousType()){
-							
+
 						for (int i = 0; i < raisedCount; i++) {
 							TypeBinding raisedException;
 							if ((raisedException = raisedExceptions[i]) != null) {
 								exceptionContext.mergeUnhandledException(raisedException);
 							}
 						}
-						return; // no need to complain, will fix up constructor exceptions						
+						return; // no need to complain, will fix up constructor exceptions
 					}
 				}
 				break; // not handled anywhere, thus jump to error handling
@@ -258,25 +278,25 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 		}
 		if (remainingCount == 0)
 			return;
-			
+
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
-		
+
 		if (traversedContext instanceof InsideSubRoutineFlowContext) {
 			ASTNode node = traversedContext.associatedNode;
 			if (node instanceof TryStatement) {
 				TryStatement tryStatement = (TryStatement) node;
-				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits			
+				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
 			}
-		}		
+		}
 		traversedContext = traversedContext.parent;
 	}
-	// if reaches this point, then there are some remaining unhandled exception types.	
+	// if reaches this point, then there are some remaining unhandled exception types.
 	nextReport: for (int i = 0; i < raisedCount; i++) {
 		TypeBinding exception;
 		if ((exception = raisedExceptions[i]) != null) {
 			// only one complaint if same exception declared to be thrown more than once
 			for (int j = 0; j < i; j++) {
-				if (raisedExceptions[j] == exception) continue nextReport; // already reported 
+				if (raisedExceptions[j] == exception) continue nextReport; // already reported
 			}
 			scope.problemReporter().unhandledException(exception, location);
 		}
@@ -284,6 +304,28 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 }
 
 public BranchLabel continueLabel() {
+	return null;
+}
+
+public FlowInfo getInitsForFinalBlankInitializationCheck(TypeBinding declaringType, FlowInfo flowInfo) {
+	FlowContext current = this;
+	FlowInfo inits = flowInfo;
+	do {
+		if (current instanceof InitializationFlowContext) {
+			InitializationFlowContext initializationContext = (InitializationFlowContext) current;
+			if (((TypeDeclaration)initializationContext.associatedNode).binding == declaringType) {
+				return inits;
+			}
+			inits = initializationContext.initsBeforeContext;
+			current = initializationContext.initializationParent;
+		} else if (current instanceof ExceptionHandlingFlowContext) {
+			ExceptionHandlingFlowContext exceptionContext = (ExceptionHandlingFlowContext) current;
+			current = exceptionContext.initializationParent == null ? exceptionContext.parent : exceptionContext.initializationParent;
+		} else {
+			current = current.parent;
+		}
+	} while (current != null);
+	// not found
 	return null;
 }
 
@@ -326,18 +368,18 @@ public FlowContext getTargetContextForContinueLabel(char[] labelName) {
 				lastContinuable = current;
 			}
 		}
-		
+
 		char[] currentLabelName;
 		if ((currentLabelName = current.labelName()) != null && CharOperation.equals(currentLabelName, labelName)) {
 			((LabeledStatement)current.associatedNode).bits |= ASTNode.LabelUsed;
 
-			// matching label found					
+			// matching label found
 			if ((lastContinuable != null)
 					&& (current.associatedNode.concreteStatement()	== lastContinuable.associatedNode)) {
-			    
+
 				if (lastNonReturningSubRoutine == null) return lastContinuable;
 				return lastNonReturningSubRoutine;
-			} 
+			}
 			// label is found, but not a continuable location
 			return FlowContext.NotContinuableContext;
 		}
@@ -435,18 +477,18 @@ protected boolean recordFinalAssignment(VariableBinding variable, Reference fina
 }
 
 /**
- * Record a null reference for use by deferred checks. Only looping or 
+ * Record a null reference for use by deferred checks. Only looping or
  * finally contexts really record that information.
  * @param local the local variable involved in the check
  * @param expression the expression within which local lays
  * @param status the status against which the check must be performed; one of
- * 		{@link #CAN_ONLY_NULL CAN_ONLY_NULL}, {@link #CAN_ONLY_NULL_NON_NULL 
- * 		CAN_ONLY_NULL_NON_NULL}, {@link #MAY_NULL MAY_NULL}, 
- *      {@link #CAN_ONLY_NON_NULL CAN_ONLY_NON_NULL}, potentially 
+ * 		{@link #CAN_ONLY_NULL CAN_ONLY_NULL}, {@link #CAN_ONLY_NULL_NON_NULL
+ * 		CAN_ONLY_NULL_NON_NULL}, {@link #MAY_NULL MAY_NULL},
+ *      {@link #CAN_ONLY_NON_NULL CAN_ONLY_NON_NULL}, potentially
  *      combined with a context indicator (one of {@link #IN_COMPARISON_NULL},
  *      {@link #IN_COMPARISON_NON_NULL}, {@link #IN_ASSIGNMENT} or {@link #IN_INSTANCEOF})
  */
-protected void recordNullReference(LocalVariableBinding local, 
+protected void recordNullReference(LocalVariableBinding local,
 	Expression expression, int status) {
 	// default implementation: do nothing
 }
@@ -468,27 +510,8 @@ public void recordSettingFinal(VariableBinding variable, Reference finalReferenc
 	}
 }
 
-public static final int 
-  CAN_ONLY_NULL_NON_NULL = 0x0000, 
-  	// check against null and non null, with definite values -- comparisons
-  CAN_ONLY_NULL = 0x0001,
-  	// check against null, with definite values -- comparisons
-  CAN_ONLY_NON_NULL = 0x0002,
-	// check against non null, with definite values -- comparisons
-  MAY_NULL = 0x0003,
-	// check against null, with potential values -- NPE guard
-  CHECK_MASK = 0x00FF,
-  IN_COMPARISON_NULL = 0x0100,
-  IN_COMPARISON_NON_NULL = 0x0200,
-    // check happened in a comparison
-  IN_ASSIGNMENT = 0x0300,
-    // check happened in an assignment
-  IN_INSTANCEOF = 0x0400,
-    // check happened in an instanceof expression
-  CONTEXT_MASK = ~CHECK_MASK;
-
 /**
- * Record a null reference for use by deferred checks. Only looping or 
+ * Record a null reference for use by deferred checks. Only looping or
  * finally contexts really record that information. The context may
  * emit an error immediately depending on the status of local against
  * flowInfo and its nature (only looping of finally contexts defer part
@@ -498,9 +521,9 @@ public static final int
  * @param scope the scope into which the check is performed
  * @param local the local variable involved in the check
  * @param reference the expression within which local lies
- * @param checkType the status against which the check must be performed; one 
- * 		of {@link #CAN_ONLY_NULL CAN_ONLY_NULL}, {@link #CAN_ONLY_NULL_NON_NULL 
- * 		CAN_ONLY_NULL_NON_NULL}, {@link #MAY_NULL MAY_NULL}, potentially 
+ * @param checkType the status against which the check must be performed; one
+ * 		of {@link #CAN_ONLY_NULL CAN_ONLY_NULL}, {@link #CAN_ONLY_NULL_NON_NULL
+ * 		CAN_ONLY_NULL_NON_NULL}, {@link #MAY_NULL MAY_NULL}, potentially
  *      combined with a context indicator (one of {@link #IN_COMPARISON_NULL},
  *      {@link #IN_COMPARISON_NON_NULL}, {@link #IN_ASSIGNMENT} or {@link #IN_INSTANCEOF})
  * @param flowInfo the flow info at the check point; deferring contexts will
@@ -508,9 +531,9 @@ public static final int
  *  	be known at the time of calling this method (they are influenced by
  * 		code that follows the current point)
  */
-public void recordUsingNullReference(Scope scope, LocalVariableBinding local, 
+public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 		Expression reference, int checkType, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0 || 
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0 ||
 			flowInfo.isDefinitelyUnknown(local)) {
 		return;
 	}
@@ -528,6 +551,7 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 			else if (flowInfo.cannotBeDefinitelyNullOrNonNull(local)) {
 				return;
 			}
+			//$FALL-THROUGH$
 		case CAN_ONLY_NULL | IN_COMPARISON_NULL:
 		case CAN_ONLY_NULL | IN_COMPARISON_NON_NULL:
 		case CAN_ONLY_NULL | IN_ASSIGNMENT:
@@ -565,7 +589,7 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 			// never happens
 	}
 	if (this.parent != null) {
-		this.parent.recordUsingNullReference(scope, local, reference, checkType, 
+		this.parent.recordUsingNullReference(scope, local, reference, checkType,
 				flowInfo);
 	}
 }

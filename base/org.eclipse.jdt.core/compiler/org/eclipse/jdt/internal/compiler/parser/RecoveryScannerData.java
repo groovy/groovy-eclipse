@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,18 +16,18 @@ public class RecoveryScannerData {
 	public int[][] insertedTokens;
 	public int[] insertedTokensPosition;
 	public boolean[] insertedTokenUsed;
-	
+
 	public int replacedTokensPtr = -1;
 	public int[][] replacedTokens;
 	public int[] replacedTokensStart;
 	public int[] replacedTokensEnd;
 	public boolean[] replacedTokenUsed;
-		
+
 	public int removedTokensPtr = -1;
 	public int[] removedTokensStart;
 	public int[] removedTokensEnd;
 	public boolean[] removedTokenUsed;
-	
+
 	public RecoveryScannerData removeUnused() {
 		if(this.insertedTokens != null) {
 			int newInsertedTokensPtr = -1;
@@ -67,7 +67,7 @@ public class RecoveryScannerData {
 			}
 			this.removedTokensPtr = newRemovedTokensPtr;
 		}
-		
+
 		return this;
 	}
 }

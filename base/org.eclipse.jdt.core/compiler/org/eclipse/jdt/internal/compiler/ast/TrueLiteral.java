@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,9 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class TrueLiteral extends MagicLiteral {
+	
 	static final char[] source = {'t' , 'r' , 'u' , 'e'};
+	
 public TrueLiteral(int s , int e) {
 	super(s,e);
 }
@@ -31,11 +33,11 @@ public void computeConstant() {
  * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
- */ 
+ */
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (valueRequired) {
-		codeStream.generateConstant(constant, implicitConversion);
+		codeStream.generateConstant(this.constant, this.implicitConversion);
 	}
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
@@ -59,7 +61,7 @@ public TypeBinding literalType(BlockScope scope) {
 	return TypeBinding.BOOLEAN;
 }
 /**
- * 
+ *
  */
 public char[] source() {
 	return source;

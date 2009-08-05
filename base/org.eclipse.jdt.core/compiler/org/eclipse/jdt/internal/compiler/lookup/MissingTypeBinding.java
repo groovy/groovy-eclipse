@@ -69,7 +69,7 @@ public int problemId() {
  */
 void setMissingSuperclass(ReferenceBinding missingSuperclass) {
 	this.superclass = missingSuperclass;
-}	
+}
 
 public String toString() {
 		return "[MISSING:" + new String(CharOperation.concatWith(this.compoundName, '.')) + "]"; //$NON-NLS-1$ //$NON-NLS-2$

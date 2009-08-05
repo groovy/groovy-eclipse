@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,7 +58,7 @@ public class IndexBasedHierarchyBuilder extends HierarchyBuilder implements Suff
 	 * Cache used to record binaries recreated from index matches
 	 */
 	protected Map binariesFromIndexMatches;
-	
+
 	/**
 	 * Collection used to queue subtype index queries
 	 */
@@ -76,7 +76,7 @@ public class IndexBasedHierarchyBuilder extends HierarchyBuilder implements Suff
 		}
 		public char[] retrieve(){
 			if (this.start > this.end) return null; // none
-			
+
 			char[] name = this.names[this.start++];
 			if (this.start > this.end){
 				this.start = 0;
@@ -87,7 +87,7 @@ public class IndexBasedHierarchyBuilder extends HierarchyBuilder implements Suff
 		public String toString(){
 			StringBuffer buffer = new StringBuffer("Queue:\n"); //$NON-NLS-1$
 			for (int i = this.start; i <= this.end; i++){
-				buffer.append(this.names[i]).append('\n');		
+				buffer.append(this.names[i]).append('\n');
 			}
 			return buffer.toString();
 		}
@@ -103,36 +103,36 @@ public void build(boolean computeSubtypes) {
 	try {
 		// optimize access to zip files while building hierarchy
 		manager.cacheZipFiles();
-				
+
 		if (computeSubtypes) {
 			// Note by construction there always is a focus type here
 			IType focusType = getType();
 			boolean focusIsObject = focusType.getElementName().equals(new String(IIndexConstants.OBJECT));
 			int amountOfWorkForSubtypes = focusIsObject ? 5 : 80; // percentage of work needed to get possible subtypes
-			IProgressMonitor possibleSubtypesMonitor = 
-				this.hierarchy.progressMonitor == null ? 
-					null : 
+			IProgressMonitor possibleSubtypesMonitor =
+				this.hierarchy.progressMonitor == null ?
+					null :
 					new SubProgressMonitor(this.hierarchy.progressMonitor, amountOfWorkForSubtypes);
 			HashSet localTypes = new HashSet(10); // contains the paths that have potential subtypes that are local/anonymous types
 			String[] allPossibleSubtypes;
 			if (((Member)focusType).getOuterMostLocalContext() == null) {
 				// top level or member type
-				allPossibleSubtypes = this.determinePossibleSubTypes(localTypes, possibleSubtypesMonitor);
+				allPossibleSubtypes = determinePossibleSubTypes(localTypes, possibleSubtypesMonitor);
 			} else {
 				// local or anonymous type
 				allPossibleSubtypes = CharOperation.NO_STRINGS;
 			}
 			if (allPossibleSubtypes != null) {
-				IProgressMonitor buildMonitor = 
-					this.hierarchy.progressMonitor == null ? 
-						null : 
+				IProgressMonitor buildMonitor =
+					this.hierarchy.progressMonitor == null ?
+						null :
 						new SubProgressMonitor(this.hierarchy.progressMonitor, 100 - amountOfWorkForSubtypes);
 				this.hierarchy.initialize(allPossibleSubtypes.length);
 				buildFromPotentialSubtypes(allPossibleSubtypes, localTypes, buildMonitor);
 			}
 		} else {
 			this.hierarchy.initialize(1);
-			this.buildSupertypes();
+			buildSupertypes();
 		}
 	} finally {
 		manager.flushZipFiles();
@@ -158,7 +158,7 @@ private void buildForProject(JavaProject project, ArrayList potentialSubtypes, o
 			for (index = 0; index < rootsLength; index++) {
 				if (roots[index].equals(root))
 					break;
-			}		
+			}
 			indexes.put(openables[i], index);
 		}
 		Arrays.sort(openables, new Comparator() {
@@ -170,8 +170,8 @@ private void buildForProject(JavaProject project, ArrayList potentialSubtypes, o
 				return ((Openable) b).getElementName().compareTo(((Openable) a).getElementName());
 			}
 		});
-		
-		IType focusType = this.getType();
+
+		IType focusType = getType();
 		boolean inProjectOfFocusType = focusType != null && focusType.getJavaProject().equals(project);
 		org.eclipse.jdt.core.ICompilationUnit[] unitsToLookInside = null;
 		if (inProjectOfFocusType) {
@@ -195,7 +195,7 @@ private void buildForProject(JavaProject project, ArrayList potentialSubtypes, o
 		Map options = project.getOptions(true);
 		// disable task tags to speed up parsing
 		options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
-		this.hierarchyResolver = 
+		this.hierarchyResolver =
 			new HierarchyResolver(searchableEnvironment, options, this, new DefaultProblemFactory());
 		if (focusType != null) {
 			Member declaringMember = ((Member)focusType).getOuterMostLocalContext();
@@ -230,8 +230,8 @@ private void buildForProject(JavaProject project, ArrayList potentialSubtypes, o
  * Configure this type hierarchy based on the given potential subtypes.
  */
 private void buildFromPotentialSubtypes(String[] allPotentialSubTypes, HashSet localTypes, IProgressMonitor monitor) {
-	IType focusType = this.getType();
-		
+	IType focusType = getType();
+
 	// substitute compilation units with working copies
 	HashMap wcPaths = new HashMap(); // a map from path to working copies
 	int wcLength;
@@ -248,7 +248,7 @@ private void buildFromPotentialSubtypes(String[] allPotentialSubTypes, HashSet l
 		System.arraycopy(allPotentialSubTypes, 0, allPotentialSubTypes = new String[potentialSubtypesLength+wcLength], 0, potentialSubtypesLength);
 		System.arraycopy(newPaths, 0, allPotentialSubTypes, potentialSubtypesLength, wcLength);
 	}
-			
+
 	int length = allPotentialSubTypes.length;
 
 	// inject the compilation unit of the focus type (so that types in
@@ -260,13 +260,13 @@ private void buildFromPotentialSubtypes(String[] allPotentialSubTypes, HashSet l
 		focusPath = focusCU.getPath().toString();
 		if (length > 0) {
 			System.arraycopy(allPotentialSubTypes, 0, allPotentialSubTypes = new String[length+1], 0, length);
-			allPotentialSubTypes[length] = focusPath;	
+			allPotentialSubTypes[length] = focusPath;
 		} else {
 			allPotentialSubTypes = new String[] {focusPath};
 		}
 		length++;
 	}
-	
+
 	/*
 	 * Sort in alphabetical order so that potential subtypes are grouped per project
 	 */
@@ -281,39 +281,39 @@ private void buildFromPotentialSubtypes(String[] allPotentialSubTypes, HashSet l
 		for (int i = 0; i < length; i++) {
 			try {
 				String resourcePath = allPotentialSubTypes[i];
-				
+
 				// skip duplicate paths (e.g. if focus path was injected when it was already a potential subtype)
 				if (i > 0 && resourcePath.equals(allPotentialSubTypes[i-1])) continue;
-				
+
 				Openable handle;
 				org.eclipse.jdt.core.ICompilationUnit workingCopy = (org.eclipse.jdt.core.ICompilationUnit)wcPaths.get(resourcePath);
 				if (workingCopy != null) {
 					handle = (Openable)workingCopy;
 				} else {
-					handle = 
-						resourcePath.equals(focusPath) ? 
+					handle =
+						resourcePath.equals(focusPath) ?
 							focusCU :
 							factory.createOpenable(resourcePath, this.scope);
 					if (handle == null) continue; // match is outside classpath
 				}
-				
+
 				IJavaProject project = handle.getJavaProject();
 				if (currentProject == null) {
 					currentProject = project;
 					potentialSubtypes = new ArrayList(5);
 				} else if (!currentProject.equals(project)) {
 					// build current project
-					this.buildForProject((JavaProject)currentProject, potentialSubtypes, workingCopies, localTypes, monitor);
+					buildForProject((JavaProject)currentProject, potentialSubtypes, workingCopies, localTypes, monitor);
 					currentProject = project;
 					potentialSubtypes = new ArrayList(5);
 				}
-				
+
 				potentialSubtypes.add(handle);
 			} catch (JavaModelException e) {
 				continue;
 			}
 		}
-		
+
 		// build last project
 		try {
 			if (currentProject == null) {
@@ -325,11 +325,11 @@ private void buildFromPotentialSubtypes(String[] allPotentialSubTypes, HashSet l
 					potentialSubtypes.add(focusType.getCompilationUnit());
 				}
 			}
-			this.buildForProject((JavaProject)currentProject, potentialSubtypes, workingCopies, localTypes, monitor);
+			buildForProject((JavaProject)currentProject, potentialSubtypes, workingCopies, localTypes, monitor);
 		} catch (JavaModelException e) {
 			// ignore
 		}
-		
+
 		// Compute hierarchy of focus type if not already done (case of a type with potential subtypes that are not real subtypes)
 		if (!this.hierarchy.contains(focusType)) {
 			try {
@@ -340,12 +340,12 @@ private void buildFromPotentialSubtypes(String[] allPotentialSubTypes, HashSet l
 				} else {
 					potentialSubtypes.add(focusType.getCompilationUnit());
 				}
-				this.buildForProject((JavaProject)currentProject, potentialSubtypes, workingCopies, localTypes, monitor);
+				buildForProject((JavaProject)currentProject, potentialSubtypes, workingCopies, localTypes, monitor);
 			} catch (JavaModelException e) {
 				// ignore
 			}
 		}
-		
+
 		// Add focus if not already in (case of a type with no explicit super type)
 		if (!this.hierarchy.contains(focusType)) {
 			this.hierarchy.addRootClass(focusType);
@@ -400,11 +400,11 @@ private String[] determinePossibleSubTypes(final HashSet localTypes, IProgressMo
 		}
 	}
 	PathCollector collector = new PathCollector();
-	
+
 	try {
 		if (monitor != null) monitor.beginTask("", MAXTICKS); //$NON-NLS-1$
 		searchAllPossibleSubTypes(
-			this.getType(),
+			getType(),
 			this.scope,
 			this.binariesFromIndexMatches,
 			collector,
@@ -420,7 +420,7 @@ private String[] determinePossibleSubTypes(final HashSet localTypes, IProgressMo
 	int count = 0;
 	for (Iterator iter = paths.iterator(); iter.hasNext();) {
 		result[count++] = (String) iter.next();
-	} 
+	}
 	return result;
 }
 
@@ -461,7 +461,7 @@ public static void searchAllPossibleSubTypes(
 			pathRequestor.acceptPath(documentPath, isLocalOrAnonymous);
 			char[] typeName = record.simpleName;
 			int suffix = documentPath.toLowerCase().lastIndexOf(SUFFIX_STRING_class);
-			if (suffix != -1){ 
+			if (suffix != -1){
 				HierarchyBinaryType binaryType = (HierarchyBinaryType)binariesFromIndexMatches.get(documentPath);
 				if (binaryType == null){
 					char[] enclosingTypeName = record.enclosingTypeName;
@@ -489,7 +489,7 @@ public static void searchAllPossibleSubTypes(
 				queue.add(typeName);
 			}
 			return true;
-		}		
+		}
 	};
 
 	int superRefKind;
@@ -502,9 +502,9 @@ public static void searchAllPossibleSubTypes(
 		new SuperTypeReferencePattern(null, null, superRefKind, SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
 	MatchLocator.setFocus(pattern, type);
 	SubTypeSearchJob job = new SubTypeSearchJob(
-		pattern, 
+		pattern,
 		new JavaSearchParticipant(), // java search only
-		scope, 
+		scope,
 		searchRequestor);
 
 	int ticks = 0;
@@ -520,7 +520,7 @@ public static void searchAllPossibleSubTypes(
 
 			// search all index references to a given supertype
 			pattern.superSimpleName = currentTypeName;
-			indexManager.performConcurrentJob(job, waitingPolicy, progressMonitor == null ? null : new NullProgressMonitor() { 
+			indexManager.performConcurrentJob(job, waitingPolicy, progressMonitor == null ? null : new NullProgressMonitor() {
 				// don't report progress since this is too costly for deep hierarchies (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=34078 )
 				// just handle isCanceled() (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=179511 )
 				public void setCanceled(boolean value) {

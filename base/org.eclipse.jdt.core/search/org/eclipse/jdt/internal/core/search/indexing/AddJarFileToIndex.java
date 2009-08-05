@@ -95,7 +95,7 @@ class AddJarFileToIndex extends IndexRequest {
 				Path zipFilePath = null;
 
 				monitor.enterWrite(); // ask permission to write
-				if (resource != null) {
+				if (this.resource != null) {
 					URI location = this.resource.getLocationURI();
 					if (location == null) return false;
 					if (JavaModelManager.ZIP_ACCESS_VERBOSE)
@@ -179,10 +179,9 @@ class AddJarFileToIndex extends IndexRequest {
 				// Index the jar for the first time or reindex the jar in case the previous index file has been corrupted
 				// index already existed: recreate it so that we forget about previous entries
 				SearchParticipant participant = SearchEngine.getDefaultSearchParticipant();
-				index = manager.recreateIndex(this.containerPath);
-				if (index == null) {
+				if (!this.manager.resetIndex(this.containerPath)) {
 					// failed to recreate index, see 73330
-					manager.removeIndex(this.containerPath);
+					this.manager.removeIndex(this.containerPath);
 					return false;
 				}
 				index.separator = JAR_SEPARATOR;
@@ -220,7 +219,7 @@ class AddJarFileToIndex extends IndexRequest {
 				org.eclipse.jdt.internal.core.util.Util.verbose("-> failed to index " + this.containerPath + " because of the following exception:"); //$NON-NLS-1$ //$NON-NLS-2$
 				e.printStackTrace();
 			}
-			manager.removeIndex(this.containerPath);
+			this.manager.removeIndex(this.containerPath);
 			return false;
 		}
 		return true;

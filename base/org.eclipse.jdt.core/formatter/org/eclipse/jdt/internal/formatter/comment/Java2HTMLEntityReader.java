@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.compiler.parser.*;
  * <code>SubstitutionTextReader</code> that will substitute html entities for
  * html symbols encountered in the original text. Line breaks and whitespaces
  * are preserved.
- * 
+ *
  * @since 3.0
  */
 public class Java2HTMLEntityReader extends SubstitutionTextReader {
@@ -50,7 +50,7 @@ public class Java2HTMLEntityReader extends SubstitutionTextReader {
 
 	/**
 	 * Creates a new instance that will read from <code>reader</code>
-	 * 
+	 *
 	 * @param reader the source reader
 	 */
 	public Java2HTMLEntityReader(Reader reader) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,34 +27,34 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public final static int Bit2 = 0x2;					// return type (operator) | name reference kind (name ref) | has local type (type, method, field decl)
 	public final static int Bit3 = 0x4;					// return type (operator) | name reference kind (name ref) | implicit this (this ref)
 	public final static int Bit4 = 0x8;					// return type (operator) | first assignment to local (name ref,local decl) | undocumented empty block (block, type and method decl)
-	public final static int Bit5 = 0x10;				// value for return (expression) | has all method bodies (unit) | supertype ref (type ref) | resolved (field decl)
-	public final static int Bit6 = 0x20;				// depth (name ref, msg) | ignore need cast check (cast expression) | error in signature (method declaration/ initializer) | is recovered (annotation reference)
-	public final static int Bit7 = 0x40;				// depth (name ref, msg) | operator (operator) | need runtime checkcast (cast expression) | label used (labelStatement) | needFreeReturn (AbstractMethodDeclaration)
-	public final static int Bit8 = 0x80;				// depth (name ref, msg) | operator (operator) | unsafe cast (cast expression) | is default constructor (constructor declaration)
+	public final static int Bit5 = 0x10;					// value for return (expression) | has all method bodies (unit) | supertype ref (type ref) | resolved (field decl)
+	public final static int Bit6 = 0x20;					// depth (name ref, msg) | ignore need cast check (cast expression) | error in signature (method declaration/ initializer) | is recovered (annotation reference)
+	public final static int Bit7 = 0x40;					// depth (name ref, msg) | operator (operator) | need runtime checkcast (cast expression) | label used (labelStatement) | needFreeReturn (AbstractMethodDeclaration)
+	public final static int Bit8 = 0x80;					// depth (name ref, msg) | operator (operator) | unsafe cast (cast expression) | is default constructor (constructor declaration)
 	public final static int Bit9 = 0x100;				// depth (name ref, msg) | operator (operator) | is local type (type decl)
 	public final static int Bit10= 0x200;				// depth (name ref, msg) | operator (operator) | is anonymous type (type decl)
 	public final static int Bit11 = 0x400;				// depth (name ref, msg) | operator (operator) | is member type (type decl)
 	public final static int Bit12 = 0x800;				// depth (name ref, msg) | operator (operator) | has abstract methods (type decl)
-	public final static int Bit13 = 0x1000;				// depth (name ref, msg) | is secondary type (type decl)
-	public final static int Bit14 = 0x2000;				// strictly assigned (reference lhs) | discard enclosing instance (explicit constr call) | hasBeenGenerated (type decl)
-	public final static int Bit15 = 0x4000;				// is unnecessary cast (expression) | is varargs (type ref) | isSubRoutineEscaping (try statement) | superAccess (javadoc allocation expression/javadoc message send/javadoc return statement)
-	public final static int Bit16 = 0x8000;				// in javadoc comment (name ref, type ref, msg)
-	public final static int Bit17 = 0x10000;			// compound assigned (reference lhs)
+	public final static int Bit13 = 0x1000;			// depth (name ref, msg) | is secondary type (type decl)
+	public final static int Bit14 = 0x2000;			// strictly assigned (reference lhs) | discard enclosing instance (explicit constr call) | hasBeenGenerated (type decl)
+	public final static int Bit15 = 0x4000;			// is unnecessary cast (expression) | is varargs (type ref) | isSubRoutineEscaping (try statement) | superAccess (javadoc allocation expression/javadoc message send/javadoc return statement)
+	public final static int Bit16 = 0x8000;			// in javadoc comment (name ref, type ref, msg)
+	public final static int Bit17 = 0x10000;			// compound assigned (reference lhs) | unchecked (msg, alloc, explicit constr call)
 	public final static int Bit18 = 0x20000;			// non null (expression) | onDemand (import reference)
-	public final static int Bit19 = 0x40000;			// didResolve (parameterized qualified type ref/parameterized single type ref)  | empty (javadoc return statement)
+	public final static int Bit19 = 0x40000;			// didResolve (parameterized qualified type ref/parameterized single type ref)  | empty (javadoc return statement) | needReceiverGenericCast (msg/fieldref)
 	public final static int Bit20 = 0x80000;
 	public final static int Bit21 = 0x100000;
 	public final static int Bit22 = 0x200000;			// parenthesis count (expression) | used (import reference)
 	public final static int Bit23 = 0x400000;			// parenthesis count (expression)
 	public final static int Bit24 = 0x800000;			// parenthesis count (expression)
-	public final static int Bit25 = 0x1000000;			// parenthesis count (expression)
-	public final static int Bit26 = 0x2000000;			// parenthesis count (expression)
-	public final static int Bit27 = 0x4000000;			// parenthesis count (expression)
-	public final static int Bit28 = 0x8000000;			// parenthesis count (expression)
-	public final static int Bit29 = 0x10000000;			// parenthesis count (expression)
-	public final static int Bit30 = 0x20000000;			// elseif (if statement) | try block exit (try statement) | fall-through (case statement) | ignore no effect assign (expression ref) | needScope (for statement) | isAnySubRoutineEscaping (return statement) | blockExit (synchronized statement)
-	public final static int Bit31 = 0x40000000;			// local declaration reachable (local decl) | ignore raw type check (type ref) | discard entire assignment (assignment) | isSynchronized (return statement) | thenExit (if statement) 
-	public final static int Bit32 = 0x80000000;			// reachable (statement)
+	public final static int Bit25 = 0x1000000;		// parenthesis count (expression)
+	public final static int Bit26 = 0x2000000;		// parenthesis count (expression)
+	public final static int Bit27 = 0x4000000;		// parenthesis count (expression)
+	public final static int Bit28 = 0x8000000;		// parenthesis count (expression)
+	public final static int Bit29 = 0x10000000;		// parenthesis count (expression)
+	public final static int Bit30 = 0x20000000;		// elseif (if statement) | try block exit (try statement) | fall-through (case statement) | ignore no effect assign (expression ref) | needScope (for statement) | isAnySubRoutineEscaping (return statement) | blockExit (synchronized statement)
+	public final static int Bit31 = 0x40000000;		// local declaration reachable (local decl) | ignore raw type check (type ref) | discard entire assignment (assignment) | isSynchronized (return statement) | thenExit (if statement)
+	public final static int Bit32 = 0x80000000;		// reachable (statement)
 
 	public final static long Bit32L = 0x80000000L;
 	public final static long Bit33L = 0x100000000L;
@@ -112,6 +112,9 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	// for name refs or local decls
 	public static final int FirstAssignmentToLocal = Bit4;
 
+	// for msg or field references
+	public static final int NeedReceiverGenericCast = Bit19;
+	
 	// for this reference
 	public static final int IsImplicitThis = Bit3;
 
@@ -155,6 +158,9 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 
 	// for explicit constructor call
 	public static final int DiscardEnclosingInstance = Bit14; // used for codegen
+
+	// for all method/constructor invocations (msg, alloc, expl. constr call)
+	public static final int Unchecked = Bit17;
 	
 	// for empty statement
 	public static final int IsUsefulEmptyStatement = Bit1;
@@ -165,7 +171,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 
 	// for initializer and method declaration
 	public static final int ErrorInSignature = Bit6;
-	
+
 	// for abstract method declaration
 	public static final int NeedFreeReturn = Bit7; // abstract method declaration
 
@@ -206,20 +212,20 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	// for import reference
 	public static final int OnDemand = Bit18;
 	public static final int Used = Bit2;
-	
+
 	// for parameterized qualified/single type ref
 	public static final int DidResolve = Bit19;
-	
+
 	// for return statement
 	public static final int IsAnySubRoutineEscaping = Bit30;
 	public static final int IsSynchronized = Bit31;
-	
+
 	// for synchronized statement
 	public static final int BlockExit = Bit30;
-	
+
 	// for annotation reference
 	public static final int IsRecovered = Bit6;
-	
+
 	// constants used when checking invocation arguments
 	public static final int INVOCATION_ARGUMENT_OK = 0;
 	public static final int INVOCATION_ARGUMENT_UNCHECKED = 1;
@@ -238,14 +244,14 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		    	return INVOCATION_ARGUMENT_WILDCARD;
 			}
 		}
-		TypeBinding checkedParameterType = originalParameterType == null ? parameterType : originalParameterType;
+		TypeBinding checkedParameterType = parameterType; // originalParameterType == null ? parameterType : originalParameterType;
 		if (argumentType != checkedParameterType && argumentType.needsUncheckedConversion(checkedParameterType)) {
 			scope.problemReporter().unsafeTypeConversion(argument, argumentType, checkedParameterType);
 			return INVOCATION_ARGUMENT_UNCHECKED;
 		}
 		return INVOCATION_ARGUMENT_OK;
 	}
-	public static void checkInvocationArguments(BlockScope scope, Expression receiver, TypeBinding receiverType, MethodBinding method, Expression[] arguments, TypeBinding[] argumentTypes, boolean argsContainCast, InvocationSite invocationSite) {
+	public static boolean checkInvocationArguments(BlockScope scope, Expression receiver, TypeBinding receiverType, MethodBinding method, Expression[] arguments, TypeBinding[] argumentTypes, boolean argsContainCast, InvocationSite invocationSite) {
 		TypeBinding[] params = method.parameters;
 		int paramLength = params.length;
 		boolean isRawMemberInvocation = !method.isStatic()
@@ -253,11 +259,12 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 				&& method.declaringClass.isRawType()
 				&& method.hasSubstitutedParameters();
 
+		boolean uncheckedBoundCheck = (method.tagBits & TagBits.HasUncheckedTypeArgumentForBoundCheck) != 0;
 		MethodBinding rawOriginalGenericMethod = null;
 		if (!isRawMemberInvocation) {
 			if (method instanceof ParameterizedGenericMethodBinding) {
 				ParameterizedGenericMethodBinding paramMethod = (ParameterizedGenericMethodBinding) method;
-				if (paramMethod.isUnchecked || (paramMethod.isRaw && method.hasSubstitutedParameters())) {
+				if (paramMethod.isRaw && method.hasSubstitutedParameters()) {
 					rawOriginalGenericMethod = method.original();
 				}
 			}
@@ -293,9 +300,8 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 					for (int i = lastIndex; i < argLength; i++) {
 						invocationStatus |= checkInvocationArgument(scope, arguments[i], parameterType, argumentTypes[i], originalRawParam);
 					}
-				}
-
-			   if (paramLength == argumentTypes.length) { // 70056
+				} 
+				if (paramLength == argLength) { // 70056
 					int varargsIndex = paramLength - 1;
 					ArrayBinding varargsType = (ArrayBinding) params[varargsIndex];
 					TypeBinding lastArgType = argumentTypes[varargsIndex];
@@ -332,9 +338,15 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		    scope.problemReporter().wildcardInvocation((ASTNode)invocationSite, receiverType, method, argumentTypes);
 		} else if (!method.isStatic() && !receiverType.isUnboundWildcard() && method.declaringClass.isRawType() && method.hasSubstitutedParameters()) {
 		    scope.problemReporter().unsafeRawInvocation((ASTNode)invocationSite, method);
-		} else if (rawOriginalGenericMethod != null) {
-		    scope.problemReporter().unsafeRawGenericMethodInvocation((ASTNode)invocationSite, method);
+		} else if (rawOriginalGenericMethod != null 
+				|| uncheckedBoundCheck
+				|| ((invocationStatus & INVOCATION_ARGUMENT_UNCHECKED) != 0 
+						&& method instanceof ParameterizedGenericMethodBinding
+						/*&& method.returnType != scope.environment().convertToRawType(method.returnType.erasure(), true)*/)) {
+			scope.problemReporter().unsafeRawGenericMethodInvocation((ASTNode)invocationSite, method, argumentTypes);
+			return true;
 		}
+		return false;
 	}
 	public ASTNode concreteStatement() {
 		return this;
@@ -342,10 +354,8 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 
 	public final boolean isFieldUseDeprecated(FieldBinding field, Scope scope, boolean isStrictlyAssigned) {
 		// ignore references insing Javadoc comments
-		if ((this.bits & ASTNode.InsideJavadoc) ==0 &&
-				!isStrictlyAssigned && 
-				(field.isPrivate() || (field.declaringClass != null && field.declaringClass.isLocalType())) && !scope.isDefinedInField(field)) {
-			// ignore cases where field is used from within inside itself
+		if ((this.bits & ASTNode.InsideJavadoc) == 0 && !isStrictlyAssigned && field.isOrEnclosedByPrivateType() && !scope.isDefinedInField(field)) {
+			// ignore cases where field is used from inside itself
 			field.original().modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 		}
 
@@ -354,7 +364,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 				scope.environment().getAccessRestriction(field.declaringClass.erasure());
 			if (restriction != null) {
 				scope.problemReporter().forbiddenReference(field, this,
-						restriction.classpathEntryType, restriction.classpathEntryName, 
+						restriction.classpathEntryType, restriction.classpathEntryName,
 						restriction.getProblemId());
 			}
 		}
@@ -380,9 +390,8 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public final boolean isMethodUseDeprecated(MethodBinding method, Scope scope,
 			boolean isExplicitUse) {
 		// ignore references insing Javadoc comments
-		if ((this.bits & ASTNode.InsideJavadoc) ==0 &&
-				(method.isPrivate() || method.declaringClass.isLocalType()) && !scope.isDefinedInMethod(method)) {
-			// ignore cases where method is used from within inside itself (e.g. direct recursions)
+		if ((this.bits & ASTNode.InsideJavadoc) == 0 && method.isOrEnclosedByPrivateType() && !scope.isDefinedInMethod(method)) {
+			// ignore cases where method is used from inside itself (e.g. direct recursions)
 			method.original().modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 		}
 
@@ -439,9 +448,8 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 
 		ReferenceBinding refType = (ReferenceBinding) type;
 		// ignore references insing Javadoc comments
-		if ((this.bits & ASTNode.InsideJavadoc) == 0 &&
-				(refType.isPrivate() || refType.isLocalType()) && !scope.isDefinedInType(refType)) {
-			// ignore cases where type is used from within inside itself
+		if ((this.bits & ASTNode.InsideJavadoc) == 0 && refType.isOrEnclosedByPrivateType() && !scope.isDefinedInType(refType)) {
+			// ignore cases where type is used from inside itself
 			((ReferenceBinding)refType.erasure()).modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 		}
 

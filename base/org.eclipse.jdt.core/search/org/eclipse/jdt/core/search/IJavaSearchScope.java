@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -53,9 +53,9 @@ int REFERENCED_PROJECTS = 8;
  *
  * @param resourcePath if the resource is contained in
  * a JAR file, the path is composed of 2 paths separated
- * by <code>JAR_FILE_ENTRY_SEPARATOR</code>: the first path is the full OS path 
+ * by <code>JAR_FILE_ENTRY_SEPARATOR</code>: the first path is the full OS path
  * to the JAR (if it is an external JAR), or the workspace relative <code>IPath</code>
- * to the JAR (if it is an internal JAR), 
+ * to the JAR (if it is an internal JAR),
  * the second path is the path to the resource inside the JAR.
  * @return whether the resource is enclosed by this scope
  */
@@ -83,14 +83,14 @@ public boolean encloses(IJavaElement element);
  *        For example, d:\libs\mylib.jar
  * </li>
  * </ul>
- * 
+ *
  * @return an array of paths to the enclosing projects and JARS.
  */
 IPath[] enclosingProjectsAndJars();
 /**
  * Returns whether this scope contains any <code>.class</code> files (either
  * in folders or within JARs).
- * 
+ *
  * @return whether this scope contains any <code>.class</code> files
  * @deprecated Use
  * {@link org.eclipse.jdt.core.search.SearchEngine#createJavaSearchScope(IJavaElement[])}
@@ -98,9 +98,9 @@ IPath[] enclosingProjectsAndJars();
  */
 boolean includesBinaries();
 /**
- * Returns whether this scope includes classpaths defined by 
+ * Returns whether this scope includes classpaths defined by
  * the projects of the resources of this search scope.
- * 
+ *
  * @return whether this scope includes classpaths
  * @deprecated Use
  * {@link org.eclipse.jdt.core.search.SearchEngine#createJavaSearchScope(IJavaElement[])}
@@ -110,7 +110,7 @@ boolean includesClasspaths();
 /**
  * Sets whether this scope contains any <code>.class</code> files (either
  * in folders or within JARs).
- * 
+ *
  * @param includesBinaries whether this scope contains any <code>.class</code> files
  * @deprecated Use
  * {@link org.eclipse.jdt.core.search.SearchEngine#createJavaSearchScope(IJavaElement[])}
@@ -118,9 +118,9 @@ boolean includesClasspaths();
  */
 public void setIncludesBinaries(boolean includesBinaries);
 /**
- * Sets whether this scope includes the classpaths defined by 
+ * Sets whether this scope includes the classpaths defined by
  * the projects of the resources of this search scope.
- * 
+ *
  * @param includesClasspaths whether this scope includes classpaths
  * @deprecated Use
  * {@link org.eclipse.jdt.core.search.SearchEngine#createJavaSearchScope(IJavaElement[])}

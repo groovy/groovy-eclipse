@@ -17,12 +17,5 @@ import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
  */
 class JarPackageFragmentRootInfo extends PackageFragmentRootInfo {
 	// a map from package name (String[]) to a size-2 array of Array<String>, the first element being the .class file names, and the second element being the non-Java resource names
-	HashtableOfArrayToObject rawPackageInfo; 
-/**
- * Returns an array of non-java resources contained in the receiver.
- */
-public Object[] getNonJavaResources() {
-	fNonJavaResources = NO_NON_JAVA_RESOURCES;
-	return fNonJavaResources;
-}
+	HashtableOfArrayToObject rawPackageInfo;
 }

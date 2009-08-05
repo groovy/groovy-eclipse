@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,262 +24,263 @@ import org.eclipse.jdt.core.compiler.IProblem;
  */
 public class CompletionRequestorWrapper extends CompletionRequestor {
 	private static boolean DECODE_SIGNATURE = false;
-	
+
 	private org.eclipse.jdt.core.ICompletionRequestor requestor;
 	public CompletionRequestorWrapper(org.eclipse.jdt.core.ICompletionRequestor requestor) {
 		this.requestor = requestor;
 	}
-	
+
 	public void accept(CompletionProposal proposal) {
-		switch(proposal.getKind()) {
+		InternalCompletionProposal internalCompletionProposal = (InternalCompletionProposal) proposal;
+		switch(internalCompletionProposal.getKind()) {
 			case CompletionProposal.KEYWORD:
 				this.requestor.acceptKeyword(
-						proposal.getName(),
-						proposal.getReplaceStart(),
-						proposal.getReplaceEnd(),
-						proposal.getRelevance());
+						internalCompletionProposal.getName(),
+						internalCompletionProposal.getReplaceStart(),
+						internalCompletionProposal.getReplaceEnd(),
+						internalCompletionProposal.getRelevance());
 				break;
 			case CompletionProposal.PACKAGE_REF:
 				if(DECODE_SIGNATURE) {
 					this.requestor.acceptPackage(
-							proposal.getDeclarationSignature(),
-							proposal.getCompletion(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance());
+							internalCompletionProposal.getDeclarationSignature(),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance());
 				} else {
 					this.requestor.acceptPackage(
-							proposal.getPackageName(),
-							proposal.getCompletion(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance());
+							internalCompletionProposal.getPackageName(),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance());
 				}
 				break;
 			case CompletionProposal.TYPE_REF:
-				if((proposal.getFlags() & Flags.AccEnum) != 0) {
+				if((internalCompletionProposal.getFlags() & Flags.AccEnum) != 0) {
 					// does not exist for old requestor
-				} else if((proposal.getFlags() & Flags.AccInterface) != 0) {
+				} else if((internalCompletionProposal.getFlags() & Flags.AccInterface) != 0) {
 					if(DECODE_SIGNATURE) {
 						this.requestor.acceptInterface(
-								proposal.getDeclarationSignature(),
-								Signature.getSignatureSimpleName(proposal.getSignature()),
-								proposal.getCompletion(),
-								proposal.getFlags() & ~Flags.AccInterface,
-								proposal.getReplaceStart(),
-								proposal.getReplaceEnd(),
-								proposal.getRelevance());
+								internalCompletionProposal.getDeclarationSignature(),
+								Signature.getSignatureSimpleName(internalCompletionProposal.getSignature()),
+								internalCompletionProposal.getCompletion(),
+								internalCompletionProposal.getFlags() & ~Flags.AccInterface,
+								internalCompletionProposal.getReplaceStart(),
+								internalCompletionProposal.getReplaceEnd(),
+								internalCompletionProposal.getRelevance());
 					} else {
 						this.requestor.acceptInterface(
-								proposal.getPackageName() == null ? CharOperation.NO_CHAR : proposal.getPackageName(),
-								proposal.getTypeName(),
-								proposal.getCompletion(),
-								proposal.getFlags() & ~Flags.AccInterface,
-								proposal.getReplaceStart(),
-								proposal.getReplaceEnd(),
-								proposal.getRelevance());
+								internalCompletionProposal.getPackageName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getPackageName(),
+								internalCompletionProposal.getTypeName(),
+								internalCompletionProposal.getCompletion(),
+								internalCompletionProposal.getFlags() & ~Flags.AccInterface,
+								internalCompletionProposal.getReplaceStart(),
+								internalCompletionProposal.getReplaceEnd(),
+								internalCompletionProposal.getRelevance());
 					}
 				} else {
 					if(DECODE_SIGNATURE) {
 						this.requestor.acceptClass(
-								proposal.getDeclarationSignature(),
-								Signature.getSignatureSimpleName(proposal.getSignature()),
-								proposal.getCompletion(),
-								proposal.getFlags(),
-								proposal.getReplaceStart(),
-								proposal.getReplaceEnd(),
-								proposal.getRelevance());
+								internalCompletionProposal.getDeclarationSignature(),
+								Signature.getSignatureSimpleName(internalCompletionProposal.getSignature()),
+								internalCompletionProposal.getCompletion(),
+								internalCompletionProposal.getFlags(),
+								internalCompletionProposal.getReplaceStart(),
+								internalCompletionProposal.getReplaceEnd(),
+								internalCompletionProposal.getRelevance());
 					} else {
 						this.requestor.acceptClass(
-								proposal.getPackageName() == null ? CharOperation.NO_CHAR : proposal.getPackageName(),
-								proposal.getTypeName(),
-								proposal.getCompletion(),
-								proposal.getFlags(),
-								proposal.getReplaceStart(),
-								proposal.getReplaceEnd(),
-								proposal.getRelevance());
+								internalCompletionProposal.getPackageName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getPackageName(),
+								internalCompletionProposal.getTypeName(),
+								internalCompletionProposal.getCompletion(),
+								internalCompletionProposal.getFlags(),
+								internalCompletionProposal.getReplaceStart(),
+								internalCompletionProposal.getReplaceEnd(),
+								internalCompletionProposal.getRelevance());
 					}
 				}
 				break;
 			case CompletionProposal.FIELD_REF:
 				if(DECODE_SIGNATURE) {
 					this.requestor.acceptField(
-							Signature.getSignatureQualifier(proposal.getDeclarationSignature()),
-							Signature.getSignatureSimpleName(proposal.getDeclarationSignature()),
-							proposal.getName(),
-							Signature.getSignatureQualifier(proposal.getSignature()),
-							Signature.getSignatureSimpleName(proposal.getSignature()), 
-							proposal.getCompletion(),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							Signature.getSignatureQualifier(internalCompletionProposal.getDeclarationSignature()),
+							Signature.getSignatureSimpleName(internalCompletionProposal.getDeclarationSignature()),
+							internalCompletionProposal.getName(),
+							Signature.getSignatureQualifier(internalCompletionProposal.getSignature()),
+							Signature.getSignatureSimpleName(internalCompletionProposal.getSignature()),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 					);
 				} else {
 					this.requestor.acceptField(
-							proposal.getDeclarationPackageName() == null ? CharOperation.NO_CHAR : proposal.getDeclarationPackageName(),
-							proposal.getDeclarationTypeName() == null ? CharOperation.NO_CHAR : proposal.getDeclarationTypeName(),
-							proposal.getName(),
-							proposal.getPackageName() == null ? CharOperation.NO_CHAR : proposal.getPackageName(),
-							proposal.getTypeName() == null ? CharOperation.NO_CHAR : proposal.getTypeName(),
-							proposal.getCompletion(),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							internalCompletionProposal.getDeclarationPackageName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getDeclarationPackageName(),
+							internalCompletionProposal.getDeclarationTypeName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getDeclarationTypeName(),
+							internalCompletionProposal.getName(),
+							internalCompletionProposal.getPackageName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getPackageName(),
+							internalCompletionProposal.getTypeName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getTypeName(),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 					);
 				}
 				break;
 			case CompletionProposal.METHOD_REF:
 				if(DECODE_SIGNATURE) {
 					this.requestor.acceptMethod(
-							Signature.getSignatureQualifier(proposal.getDeclarationSignature()),
-							Signature.getSignatureSimpleName(proposal.getDeclarationSignature()),
-							proposal.getName(),
-							getParameterPackages(proposal.getSignature()),
-							getParameterTypes(proposal.getSignature()),
-							proposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : proposal.findParameterNames(null),
-							Signature.getSignatureQualifier(Signature.getReturnType(proposal.getSignature())),
-							Signature.getSignatureSimpleName(Signature.getReturnType(proposal.getSignature())),
-							proposal.getCompletion(),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							Signature.getSignatureQualifier(internalCompletionProposal.getDeclarationSignature()),
+							Signature.getSignatureSimpleName(internalCompletionProposal.getDeclarationSignature()),
+							internalCompletionProposal.getName(),
+							getParameterPackages(internalCompletionProposal.getSignature()),
+							getParameterTypes(internalCompletionProposal.getSignature()),
+							internalCompletionProposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.findParameterNames(null),
+							Signature.getSignatureQualifier(Signature.getReturnType(internalCompletionProposal.getSignature())),
+							Signature.getSignatureSimpleName(Signature.getReturnType(internalCompletionProposal.getSignature())),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 						);
 				} else {
 					this.requestor.acceptMethod(
-							proposal.getDeclarationPackageName() == null ? CharOperation.NO_CHAR : proposal.getDeclarationPackageName(),
-							proposal.getDeclarationTypeName() == null ? CharOperation.NO_CHAR : proposal.getDeclarationTypeName(),
-							proposal.getName(),
-							proposal.getParameterPackageNames() == null ? CharOperation.NO_CHAR_CHAR : proposal.getParameterPackageNames(),
-							proposal.getParameterTypeNames() == null ? CharOperation.NO_CHAR_CHAR : proposal.getParameterTypeNames(),
-							proposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : proposal.findParameterNames(null),
-							proposal.getPackageName() == null ? CharOperation.NO_CHAR : proposal.getPackageName(),
-							proposal.getTypeName() == null ? CharOperation.NO_CHAR : proposal.getTypeName(),
-							proposal.getCompletion(),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							internalCompletionProposal.getDeclarationPackageName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getDeclarationPackageName(),
+							internalCompletionProposal.getDeclarationTypeName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getDeclarationTypeName(),
+							internalCompletionProposal.getName(),
+							internalCompletionProposal.getParameterPackageNames() == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.getParameterPackageNames(),
+							internalCompletionProposal.getParameterTypeNames() == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.getParameterTypeNames(),
+							internalCompletionProposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.findParameterNames(null),
+							internalCompletionProposal.getPackageName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getPackageName(),
+							internalCompletionProposal.getTypeName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getTypeName(),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 					);
 				}
 				break;
 			case CompletionProposal.METHOD_DECLARATION:
 				if(DECODE_SIGNATURE) {
 					this.requestor.acceptMethodDeclaration(
-							Signature.getSignatureQualifier(proposal.getDeclarationSignature()),
-							Signature.getSignatureSimpleName(proposal.getDeclarationSignature()),
-							proposal.getName(),
-							getParameterPackages(proposal.getSignature()),
-							getParameterTypes(proposal.getSignature()),
-							proposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : proposal.findParameterNames(null),
-							Signature.getSignatureQualifier(Signature.getReturnType(proposal.getSignature())),
-							Signature.getSignatureSimpleName(Signature.getReturnType(proposal.getSignature())),
-							proposal.getCompletion(),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							Signature.getSignatureQualifier(internalCompletionProposal.getDeclarationSignature()),
+							Signature.getSignatureSimpleName(internalCompletionProposal.getDeclarationSignature()),
+							internalCompletionProposal.getName(),
+							getParameterPackages(internalCompletionProposal.getSignature()),
+							getParameterTypes(internalCompletionProposal.getSignature()),
+							internalCompletionProposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.findParameterNames(null),
+							Signature.getSignatureQualifier(Signature.getReturnType(internalCompletionProposal.getSignature())),
+							Signature.getSignatureSimpleName(Signature.getReturnType(internalCompletionProposal.getSignature())),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 					);
 				} else {
 					this.requestor.acceptMethodDeclaration(
-							proposal.getDeclarationPackageName(),
-							proposal.getDeclarationTypeName(),
-							proposal.getName(),
-							proposal.getParameterPackageNames() == null ? CharOperation.NO_CHAR_CHAR : proposal.getParameterPackageNames(),
-							proposal.getParameterTypeNames() == null ? CharOperation.NO_CHAR_CHAR : proposal.getParameterTypeNames(),
-							proposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : proposal.findParameterNames(null),
-							proposal.getPackageName(),
-							proposal.getTypeName(),
-							proposal.getCompletion(),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							internalCompletionProposal.getDeclarationPackageName(),
+							internalCompletionProposal.getDeclarationTypeName(),
+							internalCompletionProposal.getName(),
+							internalCompletionProposal.getParameterPackageNames() == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.getParameterPackageNames(),
+							internalCompletionProposal.getParameterTypeNames() == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.getParameterTypeNames(),
+							internalCompletionProposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.findParameterNames(null),
+							internalCompletionProposal.getPackageName(),
+							internalCompletionProposal.getTypeName(),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 					);
 				}
 				break;
 			case CompletionProposal.ANONYMOUS_CLASS_DECLARATION:
 				if(DECODE_SIGNATURE) {
 					this.requestor.acceptAnonymousType(
-							Signature.getSignatureQualifier(proposal.getDeclarationSignature()),
-							Signature.getSignatureSimpleName(proposal.getDeclarationSignature()), 
-							getParameterPackages(proposal.getSignature()),
-							getParameterTypes(proposal.getSignature()),
-							proposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : proposal.findParameterNames(null),
-							proposal.getCompletion(),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							Signature.getSignatureQualifier(internalCompletionProposal.getDeclarationSignature()),
+							Signature.getSignatureSimpleName(internalCompletionProposal.getDeclarationSignature()),
+							getParameterPackages(internalCompletionProposal.getSignature()),
+							getParameterTypes(internalCompletionProposal.getSignature()),
+							internalCompletionProposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.findParameterNames(null),
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 						);
 				} else {
 					this.requestor.acceptAnonymousType(
-						proposal.getDeclarationPackageName(),
-						proposal.getDeclarationTypeName(),
-						proposal.getParameterPackageNames() == null ? CharOperation.NO_CHAR_CHAR : proposal.getParameterPackageNames(),
-						proposal.getParameterTypeNames() == null ? CharOperation.NO_CHAR_CHAR : proposal.getParameterTypeNames(),
-						proposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : proposal.findParameterNames(null),
-						proposal.getCompletion(),
-						proposal.getFlags(),
-						proposal.getReplaceStart(),
-						proposal.getReplaceEnd(),
-						proposal.getRelevance()
+						internalCompletionProposal.getDeclarationPackageName(),
+						internalCompletionProposal.getDeclarationTypeName(),
+						internalCompletionProposal.getParameterPackageNames() == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.getParameterPackageNames(),
+						internalCompletionProposal.getParameterTypeNames() == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.getParameterTypeNames(),
+						internalCompletionProposal.findParameterNames(null) == null ? CharOperation.NO_CHAR_CHAR : internalCompletionProposal.findParameterNames(null),
+						internalCompletionProposal.getCompletion(),
+						internalCompletionProposal.getFlags(),
+						internalCompletionProposal.getReplaceStart(),
+						internalCompletionProposal.getReplaceEnd(),
+						internalCompletionProposal.getRelevance()
 					);
 				}
 				break;
 			case CompletionProposal.LABEL_REF :
 				this.requestor.acceptLabel(
-					proposal.getCompletion(),
-					proposal.getReplaceStart(),
-					proposal.getReplaceEnd(),
-					proposal.getRelevance()
+					internalCompletionProposal.getCompletion(),
+					internalCompletionProposal.getReplaceStart(),
+					internalCompletionProposal.getReplaceEnd(),
+					internalCompletionProposal.getRelevance()
 				);
 				break;
 			case CompletionProposal.LOCAL_VARIABLE_REF:
 				if(DECODE_SIGNATURE) {
 					this.requestor.acceptLocalVariable(
-							proposal.getCompletion(),
-							Signature.getSignatureQualifier(proposal.getSignature()),
-							Signature.getSignatureSimpleName(proposal.getSignature()),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							internalCompletionProposal.getCompletion(),
+							Signature.getSignatureQualifier(internalCompletionProposal.getSignature()),
+							Signature.getSignatureSimpleName(internalCompletionProposal.getSignature()),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 					);
 				} else {
 					this.requestor.acceptLocalVariable(
-							proposal.getCompletion(),
-							proposal.getPackageName() == null ? CharOperation.NO_CHAR : proposal.getPackageName(),
-							proposal.getTypeName(),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							internalCompletionProposal.getCompletion(),
+							internalCompletionProposal.getPackageName() == null ? CharOperation.NO_CHAR : internalCompletionProposal.getPackageName(),
+							internalCompletionProposal.getTypeName(),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 					);
 				}
 				break;
 			case CompletionProposal.VARIABLE_DECLARATION:
 				if(DECODE_SIGNATURE) {
 					this.requestor.acceptLocalVariable(
-							proposal.getCompletion(),
-							Signature.getSignatureQualifier(proposal.getSignature()),
-							Signature.getSignatureSimpleName(proposal.getSignature()),
-							proposal.getFlags(),
-							proposal.getReplaceStart(),
-							proposal.getReplaceEnd(),
-							proposal.getRelevance()
+							internalCompletionProposal.getCompletion(),
+							Signature.getSignatureQualifier(internalCompletionProposal.getSignature()),
+							Signature.getSignatureSimpleName(internalCompletionProposal.getSignature()),
+							internalCompletionProposal.getFlags(),
+							internalCompletionProposal.getReplaceStart(),
+							internalCompletionProposal.getReplaceEnd(),
+							internalCompletionProposal.getRelevance()
 						);
 				} else {
 					this.requestor.acceptLocalVariable(
-						proposal.getCompletion(),
-						proposal.getPackageName(),
-						proposal.getTypeName(),
-						proposal.getFlags(),
-						proposal.getReplaceStart(),
-						proposal.getReplaceEnd(),
-						proposal.getRelevance()
+						internalCompletionProposal.getCompletion(),
+						internalCompletionProposal.getPackageName(),
+						internalCompletionProposal.getTypeName(),
+						internalCompletionProposal.getFlags(),
+						internalCompletionProposal.getReplaceStart(),
+						internalCompletionProposal.getReplaceEnd(),
+						internalCompletionProposal.getRelevance()
 					);
 				}
 				break;
@@ -288,33 +289,33 @@ public class CompletionRequestorWrapper extends CompletionRequestor {
 					IExtendedCompletionRequestor r = (IExtendedCompletionRequestor) this.requestor;
 					if(DECODE_SIGNATURE) {
 						r.acceptPotentialMethodDeclaration(
-								Signature.getSignatureQualifier(proposal.getDeclarationSignature()),
-								Signature.getSignatureSimpleName(proposal.getDeclarationSignature()),
-								proposal.getName(),
-								proposal.getReplaceStart(),
-								proposal.getReplaceEnd(),
-								proposal.getRelevance()
+								Signature.getSignatureQualifier(internalCompletionProposal.getDeclarationSignature()),
+								Signature.getSignatureSimpleName(internalCompletionProposal.getDeclarationSignature()),
+								internalCompletionProposal.getName(),
+								internalCompletionProposal.getReplaceStart(),
+								internalCompletionProposal.getReplaceEnd(),
+								internalCompletionProposal.getRelevance()
 						);
 					} else {
 						r.acceptPotentialMethodDeclaration(
-								proposal.getDeclarationPackageName(),
-								proposal.getDeclarationTypeName(),
-								proposal.getName(),
-								proposal.getReplaceStart(),
-								proposal.getReplaceEnd(),
-								proposal.getRelevance()
+								internalCompletionProposal.getDeclarationPackageName(),
+								internalCompletionProposal.getDeclarationTypeName(),
+								internalCompletionProposal.getName(),
+								internalCompletionProposal.getReplaceStart(),
+								internalCompletionProposal.getReplaceEnd(),
+								internalCompletionProposal.getRelevance()
 						);
 					}
 				}
 				break;
-				
+
 		}
 	}
-	
+
 	public void completionFailure(IProblem problem) {
 		this.requestor.acceptError(problem);
 	}
-	
+
 	private char[][] getParameterPackages(char[] methodSignature) {
 		char[][] parameterQualifiedTypes = Signature.getParameterTypes(methodSignature);
 		int length = parameterQualifiedTypes == null ? 0 : parameterQualifiedTypes.length;
@@ -325,7 +326,7 @@ public class CompletionRequestorWrapper extends CompletionRequestor {
 
 		return parameterPackages;
 	}
-	
+
 	private char[][] getParameterTypes(char[] methodSignature) {
 		char[][] parameterQualifiedTypes = Signature.getParameterTypes(methodSignature);
 		int length = parameterQualifiedTypes == null ? 0 : parameterQualifiedTypes.length;

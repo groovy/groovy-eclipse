@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,16 +18,16 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class TryStatement extends SubRoutineStatement {
-	
+
 	private final static char[] SECRET_RETURN_ADDRESS_NAME = " returnAddress".toCharArray(); //$NON-NLS-1$
 	private final static char[] SECRET_ANY_HANDLER_NAME = " anyExceptionHandler".toCharArray(); //$NON-NLS-1$
 	private final static char[] SECRET_RETURN_VALUE_NAME = " returnValue".toCharArray(); //$NON-NLS-1$
-	
+
 	public Block tryBlock;
 	public Block[] catchBlocks;
 
 	public Argument[] catchArguments;
-	
+
 	// should rename into subRoutineComplete to be set to false by default
 
 	public Block finallyBlock;
@@ -36,12 +36,12 @@ public class TryStatement extends SubRoutineStatement {
 	public UnconditionalFlowInfo subRoutineInits;
 	ReferenceBinding[] caughtExceptionTypes;
 	boolean[] catchExits;
-	
+
 	BranchLabel subRoutineStartLabel;
 	public LocalVariableBinding anyExceptionVariable,
 		returnAddressVariable,
 		secretReturnValue;
-	
+
 	ExceptionLabel[] declaredExceptionLabels; // only set while generating code
 
 	// for inlining/optimizing JSR instructions
@@ -53,8 +53,8 @@ public class TryStatement extends SubRoutineStatement {
 	private final static int NO_FINALLY = 0;										// no finally block
 	private final static int FINALLY_SUBROUTINE = 1; 					// finally is generated as a subroutine (using jsr/ret bytecodes)
 	private final static int FINALLY_DOES_NOT_COMPLETE = 2;		// non returning finally is optimized with only one instance of finally block
-	private final static int FINALLY_INLINE = 3;								// finally block must be inlined since cannot use jsr/ret bytecodes >1.5	
-	
+	private final static int FINALLY_INLINE = 3;								// finally block must be inlined since cannot use jsr/ret bytecodes >1.5
+
 	// for local variables table attributes
 	int mergedInitStateIndex = -1;
 	int preTryInitStateIndex = -1;
@@ -63,7 +63,7 @@ public class TryStatement extends SubRoutineStatement {
 
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 
-	// Consider the try block and catch block so as to compute the intersection of initializations and	
+	// Consider the try block and catch block so as to compute the intersection of initializations and
 	// the minimum exit relative depth amongst all of them. Then consider the subroutine, and append its
 	// initialization to the try/catch ones, if the subroutine completes normally. If the subroutine does not
 	// complete, then only keep this result for the rest of the analysis
@@ -87,6 +87,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				flowContext,
 				this,
 				this.caughtExceptionTypes,
+				null,
 				this.scope,
 				flowInfo.unconditionalInits());
 		handlingContext.initsOnFinally =
@@ -132,8 +133,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 									this.caughtExceptionTypes[i]))
 							.addPotentialInitializationsFrom(
 								tryInfo.nullInfoLessUnconditionalCopy())
-								// remove null info to protect point of 
-								// exception null info 
+								// remove null info to protect point of
+								// exception null info
 							.addPotentialInitializationsFrom(
 								handlingContext.initsOnReturn.
 									nullInfoLessUnconditionalCopy());
@@ -145,7 +146,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				catchInfo.markAsDefinitelyNonNull(catchArg);
 				/*
 				"If we are about to consider an unchecked exception handler, potential inits may have occured inside
-				the try block that need to be detected , e.g. 
+				the try block that need to be detected , e.g.
 				try { x = 1; throwSomething();} catch(Exception e){ x = 2} "
 				"(uncheckedExceptionTypes notNil and: [uncheckedExceptionTypes at: index])
 				ifTrue: [catchInits addPotentialInitializationsFrom: tryInits]."
@@ -159,19 +160,19 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 						flowContext,
 						catchInfo);
 				this.catchExitInitStateIndexes[i] = currentScope.methodScope().recordInitializationStates(catchInfo);
-				this.catchExits[i] = 
+				this.catchExits[i] =
 					(catchInfo.tagBits & FlowInfo.UNREACHABLE) != 0;
 				tryInfo = tryInfo.mergedWith(catchInfo.unconditionalInits());
 			}
 		}
 		this.mergedInitStateIndex =
 			currentScope.methodScope().recordInitializationStates(tryInfo);
-		
+
 		// chain up null info registry
 		if (flowContext.initsOnFinally != null) {
 			flowContext.initsOnFinally.add(handlingContext.initsOnFinally);
 		}
-		
+
 		return tryInfo;
 	} else {
 		InsideSubRoutineFlowContext insideSubContext;
@@ -198,12 +199,13 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				insideSubContext,
 				this,
 				this.caughtExceptionTypes,
+				null,
 				this.scope,
 				flowInfo.unconditionalInits());
 		handlingContext.initsOnFinally =
 			new NullInfoRegistry(flowInfo.unconditionalInits());
 		// only try blocks initialize that member - may consider creating a
-		// separate class if needed		
+		// separate class if needed
 
 		FlowInfo tryInfo;
 		if (this.tryBlock.isEmptyBlock()) {
@@ -243,8 +245,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 									this.caughtExceptionTypes[i]))
 									.addPotentialInitializationsFrom(
 								tryInfo.nullInfoLessUnconditionalCopy())
-								// remove null info to protect point of 
-								// exception null info 
+								// remove null info to protect point of
+								// exception null info
 							.addPotentialInitializationsFrom(
 									handlingContext.initsOnReturn.
 									nullInfoLessUnconditionalCopy());
@@ -256,7 +258,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				catchInfo.markAsDefinitelyNonNull(catchArg);
 				/*
 				"If we are about to consider an unchecked exception handler, potential inits may have occured inside
-				the try block that need to be detected , e.g. 
+				the try block that need to be detected , e.g.
 				try { x = 1; throwSomething();} catch(Exception e){ x = 2} "
 				"(uncheckedExceptionTypes notNil and: [uncheckedExceptionTypes at: index])
 				ifTrue: [catchInits addPotentialInitializationsFrom: tryInits]."
@@ -282,9 +284,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				(tryInfo.tagBits & FlowInfo.UNREACHABLE) == 0 ?
 					flowInfo.unconditionalCopy().
 					addPotentialInitializationsFrom(tryInfo).
-						// lighten the influence of the try block, which may have 
+						// lighten the influence of the try block, which may have
 						// exited at any point
-					addPotentialInitializationsFrom(insideSubContext.initsOnReturn) : 
+					addPotentialInitializationsFrom(insideSubContext.initsOnReturn) :
 					insideSubContext.initsOnReturn),
 			currentScope);
 
@@ -324,7 +326,7 @@ public void exitAnyExceptionHandler() {
 	if (this.subRoutineStartLabel == null)
 		return;
 	super.exitAnyExceptionHandler();
-}	
+}
 
 public void exitDeclaredExceptionHandlers(CodeStream codeStream) {
 	for (int i = 0, length = this.declaredExceptionLabels == null ? 0 : this.declaredExceptionLabels.length; i < length; i++) {
@@ -337,11 +339,11 @@ private int finallyMode() {
 		return NO_FINALLY;
 	} else if (isSubRoutineEscaping()) {
 		return FINALLY_DOES_NOT_COMPLETE;
-	} else if (scope.compilerOptions().inlineJsrBytecode) {
+	} else if (this.scope.compilerOptions().inlineJsrBytecode) {
 		return FINALLY_INLINE;
 	} else {
 		return FINALLY_SUBROUTINE;
-	}	
+	}
 }
 /**
  * Try statement code generation with or without jsr bytecode use
@@ -362,7 +364,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 	int pc = codeStream.position;
 	int finallyMode = finallyMode();
-	
+
 	boolean requiresNaturalExit = false;
 	// preparing exception labels
 	int maxCatches = this.catchArguments == null ? 0 : this.catchArguments.length;
@@ -379,7 +381,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	}
 	if (this.subRoutineStartLabel != null) {
 		this.subRoutineStartLabel.initialize(codeStream);
-		this.enterAnyExceptionHandler(codeStream);
+		enterAnyExceptionHandler(codeStream);
 	}
 	// generate the try block
 	try {
@@ -395,7 +397,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if (tryBlockHasSomeCode) {
 		// natural exit may require subroutine invocation (if finally != null)
 		BranchLabel naturalExitLabel = new BranchLabel(codeStream);
-		BranchLabel postCatchesFinallyLabel = null;		
+		BranchLabel postCatchesFinallyLabel = null;
 		for (int i = 0; i < maxCatches; i++) {
 			exceptionLabels[i].placeEnd();
 		}
@@ -429,10 +431,10 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 		thrown) into their own catch variables, the one specified in the source
 		that must denote the handled exception.
 		*/
-		this.exitAnyExceptionHandler();
+		exitAnyExceptionHandler();
 		if (this.catchArguments != null) {
 			postCatchesFinallyLabel = new BranchLabel(codeStream);
-			
+
 			for (int i = 0; i < maxCatches; i++) {
 				/*
 				 * This should not happen. For consistency purpose, if the exception label is never used
@@ -462,14 +464,14 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 				// Keep track of the pcs at diverging point for computing the local attribute
 				// since not passing the catchScope, the block generation will exitUserScope(catchScope)
 				this.catchBlocks[i].generateCode(this.scope, codeStream);
-				this.exitAnyExceptionHandler();
+				exitAnyExceptionHandler();
 				if (!this.catchExits[i]) {
 					switch(finallyMode) {
 						case FINALLY_INLINE :
 							// inlined finally here can see all merged variables
 							if (isStackMapFrameCodeStream) {
 								((StackMapFrameCodeStream) codeStream).pushStateIndex(this.naturalExitMergeInitStateIndex);
-							}							
+							}
 							if (this.catchExitInitStateIndexes[i] != -1) {
 								codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.catchExitInitStateIndexes[i]);
 								codeStream.addDefinitelyAssignedVariables(currentScope, this.catchExitInitStateIndexes[i]);
@@ -483,7 +485,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 							break;
 						case FINALLY_SUBROUTINE :
 							requiresNaturalExit = true;
-							// fall through
+							//$FALL-THROUGH$
 						case NO_FINALLY :
 							if (this.naturalExitMergeInitStateIndex != -1) {
 								codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.naturalExitMergeInitStateIndex);
@@ -499,8 +501,8 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 			}
 		}
 		// extra handler for trailing natural exit (will be fixed up later on when natural exit is generated below)
-		ExceptionLabel naturalExitExceptionHandler = requiresNaturalExit && (finallyMode == FINALLY_SUBROUTINE) 
-					? new ExceptionLabel(codeStream, null) 
+		ExceptionLabel naturalExitExceptionHandler = requiresNaturalExit && (finallyMode == FINALLY_SUBROUTINE)
+					? new ExceptionLabel(codeStream, null)
 					: null;
 
 		// addition of a special handler so as to ensure that any uncaught exception (or exception thrown
@@ -513,9 +515,9 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 				codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.preTryInitStateIndex);
 				codeStream.addDefinitelyAssignedVariables(currentScope, this.preTryInitStateIndex);
 			}
-			this.placeAllAnyExceptionHandler();
+			placeAllAnyExceptionHandler();
 			if (naturalExitExceptionHandler != null) naturalExitExceptionHandler.place();
-			
+
 			switch(finallyMode) {
 				case FINALLY_SUBROUTINE :
 					// any exception handler
@@ -528,7 +530,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 					// subroutine
 					this.subRoutineStartLabel.place();
 					codeStream.pushExceptionOnStack(this.scope.getJavaLangThrowable());
-					position = codeStream.position;	
+					position = codeStream.position;
 					codeStream.store(this.returnAddressVariable, false);
 					codeStream.recordPositionsFrom(position, this.finallyBlock.sourceStart);
 					this.finallyBlock.generateCode(this.scope, codeStream);
@@ -564,7 +566,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 					this.finallyBlock.generateCode(this.scope, codeStream);
 					break;
 			}
-			
+
 			// will naturally fall into subsequent code after subroutine invocation
 			if (requiresNaturalExit) {
 				switch(finallyMode) {
@@ -653,9 +655,9 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 			nextReusableTarget: for (int i = 0, count = this.reusableJSRTargetsCount; i < count; i++) {
 				Object reusableJSRTarget = this.reusableJSRTargets[i];
 				differentTarget: {
-					if (targetLocation == reusableJSRTarget) 
+					if (targetLocation == reusableJSRTarget)
 						break differentTarget;
-					if (targetLocation instanceof Constant 
+					if (targetLocation instanceof Constant
 							&& reusableJSRTarget instanceof Constant
 							&& ((Constant)targetLocation).hasSameValue((Constant) reusableJSRTarget)) {
 						break differentTarget;
@@ -664,7 +666,7 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 					continue nextReusableTarget;
 				}
 				// current target has been used in the past, simply branch to its label
-				if ((this.reusableJSRStateIndexes[i] != stateIndex) && finallyMode == FINALLY_INLINE && isStackMapFrameCodeStream) {
+				if ((this.reusableJSRStateIndexes[i] != stateIndex) && finallyMode == FINALLY_INLINE) {
 					reuseTargetLocation = false;
 					break nextReusableTarget;
 				} else {
@@ -750,12 +752,12 @@ public StringBuffer printStatement(int indent, StringBuffer output) {
 }
 
 public void resolve(BlockScope upperScope) {
-	// special scope for secret locals optimization.	
+	// special scope for secret locals optimization.
 	this.scope = new BlockScope(upperScope);
 
 	BlockScope tryScope = new BlockScope(this.scope);
 	BlockScope finallyScope = null;
-	
+
 	if (this.finallyBlock != null) {
 		if (this.finallyBlock.isEmptyBlock()) {
 			if ((this.finallyBlock.bits & ASTNode.UndocumentedEmptyBlock) != 0) {
@@ -839,7 +841,7 @@ public void resolve(BlockScope upperScope) {
 	} else {
 		this.caughtExceptionTypes = new ReferenceBinding[0];
 	}
-	
+
 	if (finallyScope != null){
 		// add finallyScope as last subscope, so it can be shifted behind try/catch subscopes.
 		// the shifting is necessary to achieve no overlay in between the finally scope and its

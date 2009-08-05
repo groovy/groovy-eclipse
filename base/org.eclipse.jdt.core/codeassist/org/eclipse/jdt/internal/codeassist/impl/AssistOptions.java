@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,6 +28,8 @@ public class AssistOptions {
 		"org.eclipse.jdt.core.codeComplete.fieldPrefixes"; 	//$NON-NLS-1$
 	public static final String OPTION_StaticFieldPrefixes =
 		"org.eclipse.jdt.core.codeComplete.staticFieldPrefixes"; 	//$NON-NLS-1$
+	public static final String OPTION_StaticFinalFieldPrefixes =
+		"org.eclipse.jdt.core.codeComplete.staticFinalFieldPrefixes"; 	//$NON-NLS-1$
 	public static final String OPTION_LocalPrefixes =
 		"org.eclipse.jdt.core.codeComplete.localPrefixes"; 	//$NON-NLS-1$
 	public static final String OPTION_ArgumentPrefixes =
@@ -36,6 +38,8 @@ public class AssistOptions {
 		"org.eclipse.jdt.core.codeComplete.fieldSuffixes"; 	//$NON-NLS-1$
 	public static final String OPTION_StaticFieldSuffixes =
 		"org.eclipse.jdt.core.codeComplete.staticFieldSuffixes"; 	//$NON-NLS-1$
+	public static final String OPTION_StaticFinalFieldSuffixes =
+		"org.eclipse.jdt.core.codeComplete.staticFinalFieldSuffixes"; 	//$NON-NLS-1$
 	public static final String OPTION_LocalSuffixes =
 		"org.eclipse.jdt.core.codeComplete.localSuffixes"; 	//$NON-NLS-1$
 	public static final String OPTION_ArgumentSuffixes =
@@ -48,10 +52,10 @@ public class AssistOptions {
 		"org.eclipse.jdt.core.codeComplete.camelCaseMatch"; 	//$NON-NLS-1$
 	public static final String OPTION_SuggestStaticImports =
 		"org.eclipse.jdt.core.codeComplete.suggestStaticImports"; 	//$NON-NLS-1$
-	
+
 	public static final String ENABLED = "enabled"; //$NON-NLS-1$
 	public static final String DISABLED = "disabled"; //$NON-NLS-1$
-	
+
 	public boolean checkVisibility = false;
 	public boolean checkDeprecation = false;
 	public boolean checkForbiddenReference = false;
@@ -61,21 +65,23 @@ public class AssistOptions {
 	public boolean suggestStaticImport = true;
 	public char[][] fieldPrefixes = null;
 	public char[][] staticFieldPrefixes = null;
+	public char[][] staticFinalFieldPrefixes = null;
 	public char[][] localPrefixes = null;
 	public char[][] argumentPrefixes = null;
 	public char[][] fieldSuffixes = null;
 	public char[][] staticFieldSuffixes = null;
+	public char[][] staticFinalFieldSuffixes = null;
 	public char[][] localSuffixes = null;
 	public char[][] argumentSuffixes = null;
 
-	/** 
+	/**
 	 * Initializing the assist options with default settings
 	 */
 	public AssistOptions() {
 		// Initializing the assist options with default settings
 	}
 
-	/** 
+	/**
 	 * Initializing the assist options with external settings
 	 */
 	public AssistOptions(Map settings) {
@@ -105,7 +111,7 @@ public class AssistOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() > 0){
-					this.fieldPrefixes = this.splitAndTrimOn(',', stringValue.toCharArray());
+					this.fieldPrefixes = splitAndTrimOn(',', stringValue.toCharArray());
 				} else {
 					this.fieldPrefixes = null;
 				}
@@ -115,9 +121,19 @@ public class AssistOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() > 0){
-					this.staticFieldPrefixes = this.splitAndTrimOn(',', stringValue.toCharArray());
+					this.staticFieldPrefixes = splitAndTrimOn(',', stringValue.toCharArray());
 				} else {
 					this.staticFieldPrefixes = null;
+				}
+			}
+		}
+		if ((optionValue = optionsMap.get(OPTION_StaticFinalFieldPrefixes)) != null) {
+			if (optionValue instanceof String) {
+				String stringValue = (String) optionValue;
+				if (stringValue.length() > 0){
+					this.staticFinalFieldPrefixes = splitAndTrimOn(',', stringValue.toCharArray());
+				} else {
+					this.staticFinalFieldPrefixes = null;
 				}
 			}
 		}
@@ -125,7 +141,7 @@ public class AssistOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() > 0){
-					this.localPrefixes = this.splitAndTrimOn(',', stringValue.toCharArray());
+					this.localPrefixes = splitAndTrimOn(',', stringValue.toCharArray());
 				} else {
 					this.localPrefixes = null;
 				}
@@ -135,7 +151,7 @@ public class AssistOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() > 0){
-					this.argumentPrefixes = this.splitAndTrimOn(',', stringValue.toCharArray());
+					this.argumentPrefixes = splitAndTrimOn(',', stringValue.toCharArray());
 				} else {
 					this.argumentPrefixes = null;
 				}
@@ -145,7 +161,7 @@ public class AssistOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() > 0){
-					this.fieldSuffixes = this.splitAndTrimOn(',', stringValue.toCharArray());
+					this.fieldSuffixes = splitAndTrimOn(',', stringValue.toCharArray());
 				} else {
 					this.fieldSuffixes = null;
 				}
@@ -155,9 +171,19 @@ public class AssistOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() > 0){
-					this.staticFieldSuffixes = this.splitAndTrimOn(',', stringValue.toCharArray());
+					this.staticFieldSuffixes = splitAndTrimOn(',', stringValue.toCharArray());
 				} else {
 					this.staticFieldSuffixes = null;
+				}
+			}
+		}
+		if ((optionValue = optionsMap.get(OPTION_StaticFinalFieldSuffixes)) != null) {
+			if (optionValue instanceof String) {
+				String stringValue = (String) optionValue;
+				if (stringValue.length() > 0){
+					this.staticFinalFieldSuffixes = splitAndTrimOn(',', stringValue.toCharArray());
+				} else {
+					this.staticFinalFieldSuffixes = null;
 				}
 			}
 		}
@@ -165,7 +191,7 @@ public class AssistOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() > 0){
-					this.localSuffixes = this.splitAndTrimOn(',', stringValue.toCharArray());
+					this.localSuffixes = splitAndTrimOn(',', stringValue.toCharArray());
 				} else {
 					this.localSuffixes = null;
 				}
@@ -175,7 +201,7 @@ public class AssistOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() > 0){
-					this.argumentSuffixes = this.splitAndTrimOn(',', stringValue.toCharArray());
+					this.argumentSuffixes = splitAndTrimOn(',', stringValue.toCharArray());
 				} else {
 					this.argumentSuffixes = null;
 				}
@@ -217,12 +243,12 @@ public class AssistOptions {
 			}
 		}
 	}
-	
+
 	private char[][] splitAndTrimOn(char divider, char[] arrayToSplit) {
 		char[][] result = CharOperation.splitAndTrimOn(',', arrayToSplit);
-		
+
 		int length = result.length;
-		
+
 		int resultCount = 0;
 		for (int i = 0; i < length; i++) {
 			if(result[i].length != 0) {

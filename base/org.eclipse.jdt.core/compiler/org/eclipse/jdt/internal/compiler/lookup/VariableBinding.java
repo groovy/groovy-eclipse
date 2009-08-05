@@ -15,7 +15,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 
 public abstract class VariableBinding extends Binding {
-    
+
 	public int modifiers;
 	public TypeBinding type;
 	public char[] name;
@@ -32,7 +32,7 @@ public abstract class VariableBinding extends Binding {
 			this.tagBits |= (type.tagBits & TagBits.HasMissingType);
 		}
 	}
-	
+
 	public Constant constant() {
 		return this.constant;
 	}
@@ -40,16 +40,16 @@ public abstract class VariableBinding extends Binding {
 	public abstract AnnotationBinding[] getAnnotations();
 
 	public final boolean isBlankFinal(){
-		return (modifiers & ExtraCompilerModifiers.AccBlankFinal) != 0;
+		return (this.modifiers & ExtraCompilerModifiers.AccBlankFinal) != 0;
 	}
 	/* Answer true if the receiver is final and cannot be changed
 	*/
-	
+
 	public final boolean isFinal() {
-		return (modifiers & ClassFileConstants.AccFinal) != 0;
+		return (this.modifiers & ClassFileConstants.AccFinal) != 0;
 	}
 	public char[] readableName() {
-		return name;
+		return this.name;
 	}
 	public void setConstant(Constant constant) {
 		this.constant = constant;
@@ -60,9 +60,9 @@ public abstract class VariableBinding extends Binding {
 		if ((this.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
 			output.append("[unresolved] "); //$NON-NLS-1$
 		}
-		output.append(type != null ? type.debugName() : "<no type>"); //$NON-NLS-1$
+		output.append(this.type != null ? this.type.debugName() : "<no type>"); //$NON-NLS-1$
 		output.append(" "); //$NON-NLS-1$
-		output.append((name != null) ? new String(name) : "<no name>"); //$NON-NLS-1$
+		output.append((this.name != null) ? new String(this.name) : "<no name>"); //$NON-NLS-1$
 		return output.toString();
 	}
 }

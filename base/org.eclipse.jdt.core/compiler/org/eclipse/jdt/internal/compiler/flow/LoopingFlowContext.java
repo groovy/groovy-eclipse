@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
  *	try statements, exception handlers, etc...
  */
 public class LoopingFlowContext extends SwitchFlowContext {
-	
+
 	public BranchLabel continueLabel;
 	public UnconditionalFlowInfo initsOnContinue = FlowInfo.DEAD_END;
 	private UnconditionalFlowInfo upstreamNullFlowInfo;
@@ -34,18 +34,18 @@ public class LoopingFlowContext extends SwitchFlowContext {
 	private int innerFlowContextsCount = 0;
 	private LabelFlowContext breakTargetContexts[] = null;
 	private int breakTargetsCount = 0;
-	
+
 	Reference finalAssignments[];
 	VariableBinding finalVariables[];
 	int assignCount = 0;
-	
+
 	LocalVariableBinding[] nullLocals;
 	Expression[] nullReferences;
 	int[] nullCheckTypes;
 	int nullCount;
-	
+
 	Scope associatedScope;
-	
+
 	public LoopingFlowContext(
 		FlowContext parent,
 		FlowInfo upstreamNullFlowInfo,
@@ -54,23 +54,23 @@ public class LoopingFlowContext extends SwitchFlowContext {
 		BranchLabel continueLabel,
 		Scope associatedScope) {
 		super(parent, associatedNode, breakLabel);
-		preemptNullDiagnostic = true; 
-			// children will defer to this, which may defer to its own parent 
+		this.preemptNullDiagnostic = true;
+			// children will defer to this, which may defer to its own parent
 		this.continueLabel = continueLabel;
 		this.associatedScope = associatedScope;
 		this.upstreamNullFlowInfo = upstreamNullFlowInfo.unconditionalCopy();
 	}
 
 /**
- * Perform deferred checks relative to final variables duplicate initialization 
+ * Perform deferred checks relative to final variables duplicate initialization
  * of lack of initialization.
  * @param scope the scope to which this context is associated
  * @param flowInfo the flow info against which checks must be performed
  */
 public void complainOnDeferredFinalChecks(BlockScope scope, FlowInfo flowInfo) {
 	// complain on final assignments in loops
-	for (int i = 0; i < assignCount; i++) {
-		VariableBinding variable = finalVariables[i];
+	for (int i = 0; i < this.assignCount; i++) {
+		VariableBinding variable = this.finalVariables[i];
 		if (variable == null) continue;
 		boolean complained = false; // remember if have complained on this final assignment
 		if (variable instanceof FieldBinding) {
@@ -78,22 +78,22 @@ public void complainOnDeferredFinalChecks(BlockScope scope, FlowInfo flowInfo) {
 				complained = true;
 				scope.problemReporter().duplicateInitializationOfBlankFinalField(
 					(FieldBinding) variable,
-					finalAssignments[i]);
+					this.finalAssignments[i]);
 			}
 		} else {
 			if (flowInfo.isPotentiallyAssigned((LocalVariableBinding) variable)) {
 				complained = true;
 				scope.problemReporter().duplicateInitializationOfFinalLocal(
 					(LocalVariableBinding) variable,
-					finalAssignments[i]);
+					this.finalAssignments[i]);
 			}
 		}
-		// any reference reported at this level is removed from the parent context where it 
+		// any reference reported at this level is removed from the parent context where it
 		// could also be reported again
 		if (complained) {
-			FlowContext context = parent;
+			FlowContext context = this.parent;
 			while (context != null) {
-				context.removeFinalAssignmentIfAny(finalAssignments[i]);
+				context.removeFinalAssignmentIfAny(this.finalAssignments[i]);
 				context = context.parent;
 			}
 		}
@@ -185,9 +185,9 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 					}
 					break;
 				default:
-					// never happens	
+					// never happens
 			}
-			this.parent.recordUsingNullReference(scope, local, expression, 
+			this.parent.recordUsingNullReference(scope, local, expression,
 					this.nullCheckTypes[i], flowInfo);
 		}
 	}
@@ -209,6 +209,7 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 						}
 						continue;
 					}
+					//$FALL-THROUGH$
 				case CAN_ONLY_NULL | IN_COMPARISON_NULL:
 				case CAN_ONLY_NULL | IN_COMPARISON_NON_NULL:
 				case CAN_ONLY_NULL | IN_ASSIGNMENT:
@@ -244,7 +245,7 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 					}
 					break;
 				default:
-					// never happens	
+					// never happens
 			}
 		}
 	}
@@ -254,17 +255,17 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 		this.breakTargetContexts[i].initsOnBreak.addPotentialNullInfoFrom(flowInfo);
 	}
 }
-	
+
 	public BranchLabel continueLabel() {
-		return continueLabel;
+		return this.continueLabel;
 	}
 
 	public String individualToString() {
 		StringBuffer buffer = new StringBuffer("Looping flow context"); //$NON-NLS-1$
-		buffer.append("[initsOnBreak - ").append(initsOnBreak.toString()).append(']'); //$NON-NLS-1$
-		buffer.append("[initsOnContinue - ").append(initsOnContinue.toString()).append(']'); //$NON-NLS-1$
-		buffer.append("[finalAssignments count - ").append(assignCount).append(']'); //$NON-NLS-1$
-		buffer.append("[nullReferences count - ").append(nullCount).append(']'); //$NON-NLS-1$
+		buffer.append("[initsOnBreak - ").append(this.initsOnBreak.toString()).append(']'); //$NON-NLS-1$
+		buffer.append("[initsOnContinue - ").append(this.initsOnContinue.toString()).append(']'); //$NON-NLS-1$
+		buffer.append("[finalAssignments count - ").append(this.assignCount).append(']'); //$NON-NLS-1$
+		buffer.append("[nullReferences count - ").append(this.nullCount).append(']'); //$NON-NLS-1$
 		return buffer.toString();
 	}
 
@@ -273,7 +274,7 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 	}
 
 	public boolean isContinuedTo() {
-		return initsOnContinue != FlowInfo.DEAD_END;
+		return this.initsOnContinue != FlowInfo.DEAD_END;
 	}
 
 public void recordBreakTo(FlowContext targetContext) {
@@ -290,12 +291,12 @@ public void recordBreakTo(FlowContext targetContext) {
 
 public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
-	if ((initsOnContinue.tagBits & FlowInfo.UNREACHABLE) == 0) {
-		initsOnContinue = initsOnContinue.
+	if ((this.initsOnContinue.tagBits & FlowInfo.UNREACHABLE) == 0) {
+		this.initsOnContinue = this.initsOnContinue.
 			mergedWith(flowInfo.unconditionalInitsWithoutSideEffect());
-	} 
+	}
 	else {
-		initsOnContinue = flowInfo.unconditionalCopy();
+		this.initsOnContinue = flowInfo.unconditionalCopy();
 	}
 	FlowContext inner = innerFlowContext;
 	while (inner != this && !(inner instanceof LoopingFlowContext)) {
@@ -312,17 +313,17 @@ public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) 
 			this.innerFlowContexts = new LoopingFlowContext[5];
 			this.innerFlowInfos = new UnconditionalFlowInfo[5];
 		}
-		else if (this.innerFlowContextsCount == 
+		else if (this.innerFlowContextsCount ==
 				(length = this.innerFlowContexts.length) - 1) {
-			System.arraycopy(this.innerFlowContexts, 0, 
-				(this.innerFlowContexts = new LoopingFlowContext[length + 5]), 
+			System.arraycopy(this.innerFlowContexts, 0,
+				(this.innerFlowContexts = new LoopingFlowContext[length + 5]),
 				0, length);
-			System.arraycopy(this.innerFlowInfos, 0, 
-				(this.innerFlowInfos= new UnconditionalFlowInfo[length + 5]), 
+			System.arraycopy(this.innerFlowInfos, 0,
+				(this.innerFlowInfos= new UnconditionalFlowInfo[length + 5]),
 				0, length);
 		}
 		this.innerFlowContexts[this.innerFlowContextsCount] = (LoopingFlowContext) inner;
-		this.innerFlowInfos[this.innerFlowContextsCount++] = 
+		this.innerFlowInfos[this.innerFlowContextsCount++] =
 			flowInfo.unconditionalInitsWithoutSideEffect();
 	}
 	}
@@ -336,56 +337,56 @@ public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) 
 		if (binding instanceof LocalVariableBinding) {
 			Scope scope = ((LocalVariableBinding) binding).declaringScope;
 			while ((scope = scope.parent) != null) {
-				if (scope == associatedScope)
+				if (scope == this.associatedScope)
 					return false;
 			}
 		}
-		if (assignCount == 0) {
-			finalAssignments = new Reference[5];
-			finalVariables = new VariableBinding[5];
+		if (this.assignCount == 0) {
+			this.finalAssignments = new Reference[5];
+			this.finalVariables = new VariableBinding[5];
 		} else {
-			if (assignCount == finalAssignments.length)
+			if (this.assignCount == this.finalAssignments.length)
 				System.arraycopy(
-					finalAssignments,
+					this.finalAssignments,
 					0,
-					(finalAssignments = new Reference[assignCount * 2]),
+					(this.finalAssignments = new Reference[this.assignCount * 2]),
 					0,
-					assignCount);
+					this.assignCount);
 			System.arraycopy(
-				finalVariables,
+				this.finalVariables,
 				0,
-				(finalVariables = new VariableBinding[assignCount * 2]),
+				(this.finalVariables = new VariableBinding[this.assignCount * 2]),
 				0,
-				assignCount);
+				this.assignCount);
 		}
-		finalAssignments[assignCount] = finalAssignment;
-		finalVariables[assignCount++] = binding;
+		this.finalAssignments[this.assignCount] = finalAssignment;
+		this.finalVariables[this.assignCount++] = binding;
 		return true;
 	}
 
-protected void recordNullReference(LocalVariableBinding local, 
+protected void recordNullReference(LocalVariableBinding local,
 	Expression expression, int status) {
-	if (nullCount == 0) {
-		nullLocals = new LocalVariableBinding[5];
-		nullReferences = new Expression[5];
-		nullCheckTypes = new int[5];
-	} 
-	else if (nullCount == nullLocals.length) {
-		System.arraycopy(nullLocals, 0, 
-			nullLocals = new LocalVariableBinding[nullCount * 2], 0, nullCount);
-		System.arraycopy(nullReferences, 0, 
-			nullReferences = new Expression[nullCount * 2], 0, nullCount);
-		System.arraycopy(nullCheckTypes, 0, 
-			nullCheckTypes = new int[nullCount * 2], 0, nullCount);
+	if (this.nullCount == 0) {
+		this.nullLocals = new LocalVariableBinding[5];
+		this.nullReferences = new Expression[5];
+		this.nullCheckTypes = new int[5];
 	}
-	nullLocals[nullCount] = local;
-	nullReferences[nullCount] = expression;
-	nullCheckTypes[nullCount++] = status;
+	else if (this.nullCount == this.nullLocals.length) {
+		System.arraycopy(this.nullLocals, 0,
+			this.nullLocals = new LocalVariableBinding[this.nullCount * 2], 0, this.nullCount);
+		System.arraycopy(this.nullReferences, 0,
+			this.nullReferences = new Expression[this.nullCount * 2], 0, this.nullCount);
+		System.arraycopy(this.nullCheckTypes, 0,
+			this.nullCheckTypes = new int[this.nullCount * 2], 0, this.nullCount);
+	}
+	this.nullLocals[this.nullCount] = local;
+	this.nullReferences[this.nullCount] = expression;
+	this.nullCheckTypes[this.nullCount++] = status;
 }
-	
+
 public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 		Expression reference, int checkType, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0 || 
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0 ||
 			flowInfo.isDefinitelyUnknown(local)) {
 		return;
 	}
@@ -456,12 +457,12 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 			// never happens
 	}
 }
-	
+
 	void removeFinalAssignmentIfAny(Reference reference) {
-		for (int i = 0; i < assignCount; i++) {
-			if (finalAssignments[i] == reference) {
-				finalAssignments[i] = null;
-				finalVariables[i] = null;
+		for (int i = 0; i < this.assignCount; i++) {
+			if (this.finalAssignments[i] == reference) {
+				this.finalAssignments[i] = null;
+				this.finalVariables[i] = null;
 				return;
 			}
 		}

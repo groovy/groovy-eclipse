@@ -31,22 +31,22 @@ import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
 /**
  * Wrapper used to link {@link IRestrictedAccessTypeRequestor} with {@link TypeNameRequestor}.
  * This wrapper specifically allows usage of internal method {@link BasicSearchEngine#searchAllTypeNames(
- * 	char[] packageName, 
- * 	int packageMatchRule, 
+ * 	char[] packageName,
+ * 	int packageMatchRule,
  * 	char[] typeName,
- * 	int typeMatchRule, 
- * 	int searchFor, 
- * 	org.eclipse.jdt.core.search.IJavaSearchScope scope, 
+ * 	int typeMatchRule,
+ * 	int searchFor,
+ * 	org.eclipse.jdt.core.search.IJavaSearchScope scope,
  * 	IRestrictedAccessTypeRequestor nameRequestor,
  * 	int waitingPolicy,
  * 	org.eclipse.core.runtime.IProgressMonitor monitor) }.
  * from  API method {@link org.eclipse.jdt.core.search.SearchEngine#searchAllTypeNames(
- * 	char[] packageName, 
+ * 	char[] packageName,
  * 	int packageMatchRule,
  * 	char[] typeName,
- * 	int matchRule, 
- * 	int searchFor, 
- * 	org.eclipse.jdt.core.search.IJavaSearchScope scope, 
+ * 	int matchRule,
+ * 	int searchFor,
+ * 	org.eclipse.jdt.core.search.IJavaSearchScope scope,
  * 	TypeNameRequestor nameRequestor,
  * 	int waitingPolicy,
  * 	org.eclipse.core.runtime.IProgressMonitor monitor) }.
@@ -117,7 +117,7 @@ public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName,
 private IType createTypeFromJar(String resourcePath, int separatorIndex) throws JavaModelException {
 	// path to a class file inside a jar
 	// Optimization: cache package fragment root handle and package handles
-	if (this.lastPkgFragmentRootPath == null 
+	if (this.lastPkgFragmentRootPath == null
 			|| this.lastPkgFragmentRootPath.length() > resourcePath.length()
 			|| !resourcePath.startsWith(this.lastPkgFragmentRootPath)) {
 		String jarPath= resourcePath.substring(0, separatorIndex);
@@ -144,13 +144,13 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 		this.packageHandles.put(pkgName, pkgFragment);
 	}
 	return pkgFragment.getClassFile(simpleNames[length]).getType();
-}	
+}
 private IType createTypeFromPath(String resourcePath, String simpleTypeName, char[][] enclosingTypeNames) throws JavaModelException {
 	// path to a file in a directory
 	// Optimization: cache package fragment root handle and package handles
 	int rootPathLength = -1;
-	if (this.lastPkgFragmentRootPath == null 
-		|| !(resourcePath.startsWith(this.lastPkgFragmentRootPath) 
+	if (this.lastPkgFragmentRootPath == null
+		|| !(resourcePath.startsWith(this.lastPkgFragmentRootPath)
 			&& (rootPathLength = this.lastPkgFragmentRootPath.length()) > 0
 			&& resourcePath.charAt(rootPathLength) == '/')) {
 		PackageFragmentRoot root = (PackageFragmentRoot) ((AbstractJavaSearchScope)this.scope).packageFragmentRoot(resourcePath, -1/*not a jar*/, null/*no jar path*/);
@@ -191,5 +191,5 @@ private IType createTypeFromPath(String resourcePath, String simpleTypeName, cha
 		IClassFile classFile= pkgFragment.getClassFile(simpleName);
 		return classFile.getType();
 	}
-}	
+}
 }

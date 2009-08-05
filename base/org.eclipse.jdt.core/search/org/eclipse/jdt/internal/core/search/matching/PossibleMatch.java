@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -66,10 +66,12 @@ public char[] getContents() {
 		if (this.openable instanceof ClassFile) {
 			String fileName = getSourceFileName();
 			if (fileName == NO_SOURCE_FILE_NAME) return CharOperation.NO_CHAR;
-	
+
 			SourceMapper sourceMapper = this.openable.getSourceMapper();
-			IType type = ((ClassFile) this.openable).getType();
-			contents = sourceMapper.findSource(type, fileName);
+			if (sourceMapper != null) {
+				IType type = ((ClassFile) this.openable).getType();
+				contents = sourceMapper.findSource(type, fileName);
+			}
 		} else {
 			contents = this.document.getCharContents();
 		}
@@ -130,7 +132,7 @@ PossibleMatch getSimilarMatch() {
 private String getSourceFileName() {
 	if (this.sourceFileName != null) return this.sourceFileName;
 
-	this.sourceFileName = NO_SOURCE_FILE_NAME; 
+	this.sourceFileName = NO_SOURCE_FILE_NAME;
 	if (this.openable.getSourceMapper() != null) {
 		BinaryType type = (BinaryType) ((ClassFile) this.openable).getType();
 		ClassFileReader reader = MatchLocator.classFileReader(type);
@@ -140,7 +142,7 @@ private String getSourceFileName() {
 		}
 	}
 	return this.sourceFileName;
-}	
+}
 boolean hasSimilarMatch() {
 	return this.similarMatch != null && this.source == NO_SOURCE_FILE;
 }

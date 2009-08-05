@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 BEA Systems, Inc.
+ * Copyright (c) 2005, 2009 BEA Systems, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ public static MethodInfo createAnnotationMethod(byte classFileBytes[], int offse
 		int utf8Offset = methodInfo.constantPoolOffsets[methodInfo.u2At(readOffset)] - methodInfo.structOffset;
 		char[] attributeName = methodInfo.utf8At(utf8Offset + 3, methodInfo.u2At(utf8Offset + 1));
 		if (attributeName.length > 0) {
-			switch(attributeName[0]) {				
+			switch(attributeName[0]) {
 				case 'A':
 					if (CharOperation.equals(attributeName, AttributeNamesConstants.AnnotationDefaultName)) {
 						// readOffset + 6 so the offset is at the start of the 'member_value' entry
@@ -44,7 +44,7 @@ public static MethodInfo createAnnotationMethod(byte classFileBytes[], int offse
 				case 'R' :
 					AnnotationInfo[] methodAnnotations = null;
 					if (CharOperation.equals(attributeName, AttributeNamesConstants.RuntimeVisibleAnnotationsName)) {
-						methodAnnotations = decodeMethodAnnotations(readOffset, true, methodInfo);						
+						methodAnnotations = decodeMethodAnnotations(readOffset, true, methodInfo);
 					} else if (CharOperation.equals(attributeName, AttributeNamesConstants.RuntimeInvisibleAnnotationsName)) {
 						methodAnnotations = decodeMethodAnnotations(readOffset, false, methodInfo);
 					}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ public interface IDependent {
  * e.g.
  *  "c:\\source\\com\\p\\X.java" or
  *  "/com/p/Y.java".
- * 
+ *
  * The path to the zip or jar file (optional) must be separated
  * from the actual path part by JAR_FILE_ENTRY_SEPARATOR,
  * e.g.
@@ -35,8 +35,8 @@ public interface IDependent {
  *  "/lib/some.zip|/com/q/Y.class".
  *
  * The proper file name includes the suffix extension (e.g.&nbsp;".java")
- * e.g.&nbsp;"c:/org/eclipse/jdt/internal/compileri/env/IDependent.java" 
- * 
+ * e.g.&nbsp;"c:/org/eclipse/jdt/internal/compileri/env/IDependent.java"
+ *
  * Return null if no file defines the type.
  */
 

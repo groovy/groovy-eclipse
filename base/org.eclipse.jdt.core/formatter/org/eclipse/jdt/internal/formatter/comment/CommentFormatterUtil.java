@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,14 +27,14 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Comment formatting utils.
- * 
+ *
  * @since 3.1
  */
 public class CommentFormatterUtil {
 
 	/**
 	 * Evaluates the edit on the given string.
-	 * 
+	 *
 	 * @throws IllegalArgumentException if the positions are not inside the
 	 *                 string
 	 */
@@ -54,12 +54,12 @@ public class CommentFormatterUtil {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Creates edits that describe how to format the given string. Returns
 	 * <code>null</code> if the code could not be formatted for the given
 	 * kind.
-	 * 
+	 *
 	 * @throws IllegalArgumentException if the offset and length are not
 	 *                 inside the string
 	 */
@@ -74,7 +74,7 @@ public class CommentFormatterUtil {
 	/**
 	 * Returns a document with the given content and the given positions
 	 * registered with the {@link DefaultPositionUpdater}.
-	 * 
+	 *
 	 * @param content the content
 	 * @param positions the positions
 	 * @return the document
@@ -85,12 +85,12 @@ public class CommentFormatterUtil {
 		try {
 			if (positions != null) {
 				final String POS_CATEGORY= "myCategory"; //$NON-NLS-1$
-				
+
 				doc.addPositionCategory(POS_CATEGORY);
 				doc.addPositionUpdater(new DefaultPositionUpdater(POS_CATEGORY) {
 					protected boolean notDeleted() {
-						if (fOffset < fPosition.offset && (fPosition.offset + fPosition.length < fOffset + fLength)) {
-							fPosition.offset= fOffset + fLength; // deleted positions: set to end of remove
+						if (this.fOffset < this.fPosition.offset && (this.fPosition.offset + this.fPosition.length < this.fOffset + this.fLength)) {
+							this.fPosition.offset= this.fOffset + this.fLength; // deleted positions: set to end of remove
 							return false;
 						}
 						return true;
@@ -112,7 +112,7 @@ public class CommentFormatterUtil {
 
 	/**
 	 * Logs the given throwable.
-	 * 
+	 *
 	 * @param t the throwable
 	 * @since 3.1
 	 */

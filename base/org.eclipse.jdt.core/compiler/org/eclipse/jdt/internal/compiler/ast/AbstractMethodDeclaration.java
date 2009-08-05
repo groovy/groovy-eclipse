@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,9 +25,9 @@ import org.eclipse.jdt.internal.compiler.util.Util;
 public abstract class AbstractMethodDeclaration
 	extends ASTNode
 	implements ProblemSeverities, ReferenceContext {
-		
+
 	public MethodScope scope;
-	//it is not relevent for constructor but it helps to have the name of the constructor here 
+	//it is not relevent for constructor but it helps to have the name of the constructor here
 	//which is always the name of the class.....parsing do extra work to fill it up while it do not have to....
 	public char[] selector;
 	public int declarationSourceStart;
@@ -41,17 +41,17 @@ public abstract class AbstractMethodDeclaration
 	public int explicitDeclarations;
 	public MethodBinding binding;
 	public boolean ignoreFurtherInvestigation = false;
-	
+
 	public Javadoc javadoc;
-	
+
 	public int bodyStart;
 	public int bodyEnd = -1;
 	public CompilationResult compilationResult;
-	
+
 	AbstractMethodDeclaration(CompilationResult compilationResult){
 		this.compilationResult = compilationResult;
 	}
-	
+
 	/*
 	 *	We cause the compilation task to abort to a given extent.
 	 */
@@ -148,17 +148,17 @@ public abstract class AbstractMethodDeclaration
 	}
 
 	public CompilationResult compilationResult() {
-		
+
 		return this.compilationResult;
 	}
-	
+
 	/**
 	 * Bytecode generation for a method
 	 * @param classScope
 	 * @param classFile
 	 */
 	public void generateCode(ClassScope classScope, ClassFile classFile) {
-		
+
 		int problemResetPC = 0;
 		classFile.codeStream.wideMode = false; // reset wideMode to false
 		if (this.ignoreFurtherInvestigation) {
@@ -184,7 +184,7 @@ public abstract class AbstractMethodDeclaration
 				try {
 					classFile.contentsOffset = problemResetPC;
 					classFile.methodCount--;
-					classFile.codeStream.resetInWideMode();
+					classFile.codeStream.resetInWideMode(); // request wide mode
 					this.generateCode(classFile); // restart method generation
 				} catch (AbortMethod e2) {
 					int problemsLength;
@@ -253,18 +253,21 @@ public abstract class AbstractMethodDeclaration
 		TypeBinding[] parameters = this.binding.parameters;
 		int size = 1; // an abstact method or a native method cannot be static
 		for (int i = 0, max = parameters.length; i < max; i++) {
-			TypeBinding parameter = parameters[i];
-			if (parameter == TypeBinding.LONG || parameter == TypeBinding.DOUBLE) {
-				size += 2;
-			} else {
-				size++;
+			switch(parameters[i].id) {
+				case TypeIds.T_long :
+				case TypeIds.T_double :
+					size += 2;
+					break;
+				default :
+					size++;
+					break;
 			}
 			if (size > 0xFF) {
 				this.scope.problemReporter().noMoreAvailableSpaceForArgument(this.scope.locals[i], this.scope.locals[i].declaration);
 			}
 		}
 	}
-	
+
 	public boolean hasErrors() {
 		return this.ignoreFurtherInvestigation;
 	}
@@ -280,7 +283,7 @@ public abstract class AbstractMethodDeclaration
 
 		return false;
 	}
-	
+
 	public boolean isClinit() {
 
 		return false;
@@ -335,7 +338,7 @@ public abstract class AbstractMethodDeclaration
 		printIndent(tab, output);
 		printModifiers(this.modifiers, output);
 		if (this.annotations != null) printAnnotations(this.annotations, output);
-		
+
 		TypeParameter[] typeParams = typeParameters();
 		if (typeParams != null) {
 			output.append('<');
@@ -347,7 +350,7 @@ public abstract class AbstractMethodDeclaration
 			typeParams[max].print(0, output);
 			output.append('>');
 		}
-		
+
 		printReturnType(0, output).append(this.selector).append('(');
 		if (this.arguments != null) {
 			for (int i = 0; i < this.arguments.length; i++) {
@@ -369,14 +372,14 @@ public abstract class AbstractMethodDeclaration
 
 	public StringBuffer printBody(int indent, StringBuffer output) {
 
-		if (isAbstract() || (this.modifiers & ExtraCompilerModifiers.AccSemicolonBody) != 0) 
+		if (isAbstract() || (this.modifiers & ExtraCompilerModifiers.AccSemicolonBody) != 0)
 			return output.append(';');
 
 		output.append(" {"); //$NON-NLS-1$
 		if (this.statements != null) {
 			for (int i = 0; i < this.statements.length; i++) {
 				output.append('\n');
-				this.statements[i].printStatement(indent, output); 
+				this.statements[i].printStatement(indent, output);
 			}
 		}
 		output.append('\n');
@@ -385,7 +388,7 @@ public abstract class AbstractMethodDeclaration
 	}
 
 	public StringBuffer printReturnType(int indent, StringBuffer output) {
-		
+
 		return output;
 	}
 
@@ -396,10 +399,10 @@ public abstract class AbstractMethodDeclaration
 		}
 
 		try {
-			bindArguments(); 
+			bindArguments();
 			bindThrownExceptions();
 			resolveJavadoc();
-			resolveAnnotations(scope, this.annotations, this.binding);
+			resolveAnnotations(this.scope, this.annotations, this.binding);
 			resolveStatements();
 			// check @Deprecated annotation presence
 			if (this.binding != null
@@ -415,7 +418,7 @@ public abstract class AbstractMethodDeclaration
 	}
 
 	public void resolveJavadoc() {
-		
+
 		if (this.binding == null) return;
 		if (this.javadoc != null) {
 			this.javadoc.resolve(this.scope);
@@ -424,16 +427,16 @@ public abstract class AbstractMethodDeclaration
 		if (this.binding.declaringClass != null && !this.binding.declaringClass.isLocalType()) {
 			// Set javadoc visibility
 			int javadocVisibility = this.binding.modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
-			ClassScope classScope = scope.classScope();
+			ClassScope classScope = this.scope.classScope();
 			ProblemReporter reporter = this.scope.problemReporter();
 			int severity = reporter.computeSeverity(IProblem.JavadocMissing);
 			if (severity != ProblemSeverities.Ignore) {
-				if (classScope != null) {			
+				if (classScope != null) {
 					javadocVisibility = Util.computeOuterMostVisibility(classScope.referenceType(), javadocVisibility);
 				}
 				int javadocModifiers = (this.binding.modifiers & ~ExtraCompilerModifiers.AccVisibilityMASK) | javadocVisibility;
-				reporter.javadocMissing(this.sourceStart, this.sourceEnd, severity, javadocModifiers);				
-			}			
+				reporter.javadocMissing(this.sourceStart, this.sourceEnd, severity, javadocModifiers);
+			}
 		}
 	}
 
@@ -457,7 +460,7 @@ public abstract class AbstractMethodDeclaration
 		ClassScope classScope) {
 		// default implementation: subclass will define it
 	}
-	
+
 	public TypeParameter[] typeParameters() {
 	    return null;
 	}

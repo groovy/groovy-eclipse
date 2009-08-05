@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,28 +13,32 @@ package org.eclipse.jdt.internal.compiler.lookup;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 
 public interface TagBits {
-    
+
 	// Tag bits in the tagBits int of every TypeBinding
 	long IsArrayType = ASTNode.Bit1;
 	long IsBaseType = ASTNode.Bit2;
 	long IsNestedType = ASTNode.Bit3;
 	long IsMemberType = ASTNode.Bit4;
-	long MemberTypeMask = IsNestedType | IsMemberType;
+	long ContainsNestedTypeReferences = ASTNode.Bit12; // method/parameterized type binding
+	long MemberTypeMask = IsNestedType | IsMemberType | ContainsNestedTypeReferences;
 	long IsLocalType = ASTNode.Bit5;
-	long LocalTypeMask = IsNestedType | IsLocalType;
+	long LocalTypeMask = IsNestedType | IsLocalType | ContainsNestedTypeReferences;
 	long IsAnonymousType = ASTNode.Bit6;
-	long AnonymousTypeMask = LocalTypeMask | IsAnonymousType;
+	long AnonymousTypeMask = LocalTypeMask | IsAnonymousType | ContainsNestedTypeReferences;
 	long IsBinaryBinding = ASTNode.Bit7;
-	
+
 	// set for all bindings either represeting a missing type (type), or directly referencing a missing type (field/method/variable)
 	long HasMissingType = ASTNode.Bit8;
+
+	// for method
+	long HasUncheckedTypeArgumentForBoundCheck = ASTNode.Bit9;
 	
 	// for the type cycle hierarchy check used by ClassScope
 	long BeginHierarchyCheck = ASTNode.Bit9;  // type
 	long EndHierarchyCheck = ASTNode.Bit10; // type
-	long ContainsNestedTypesInSignature = ASTNode.Bit10; // method
 	long HasParameterAnnotations = ASTNode.Bit11; // method
-	
+
+
 	// test bit to see if default abstract methods were computed
 	long KnowsDefaultAbstractMethods = ASTNode.Bit11; // type
 
@@ -58,10 +62,10 @@ public interface TagBits {
 
 	// set for parameterized type with successfull bound check
 	long PassedBoundCheck = ASTNode.Bit23;
-	
+
 	// set for parameterized type NOT of the form X<?,?>
-	long IsBoundParameterizedType = ASTNode.Bit24; 
-	
+	long IsBoundParameterizedType = ASTNode.Bit24;
+
 	// used by BinaryTypeBinding
 	long HasUnresolvedTypeVariables = ASTNode.Bit25;
 	long HasUnresolvedSuperclass = ASTNode.Bit26;
@@ -71,11 +75,11 @@ public interface TagBits {
 
 	long HasTypeVariable = ASTNode.Bit30; // set either for type variables (direct) or parameterized types indirectly referencing type variables
 	long HasDirectWildcard = ASTNode.Bit31; // set for parameterized types directly referencing wildcards
-	
+
 	// for the annotation cycle hierarchy check used by ClassScope
 	long BeginAnnotationCheck = ASTNode.Bit32L;
 	long EndAnnotationCheck = ASTNode.Bit33L;
-	
+
 	// standard annotations
 	// 9-bits for targets
 	long AnnotationResolved = ASTNode.Bit34L;
@@ -106,9 +110,9 @@ public interface TagBits {
 	long AnnotationOverride = ASTNode.Bit50L;
 	long AnnotationSuppressWarnings = ASTNode.Bit51L;
 	long AllStandardAnnotationsMask = AnnotationTargetMASK | AnnotationRetentionMASK | AnnotationDeprecated | AnnotationDocumented | AnnotationInherited |  AnnotationOverride | AnnotationSuppressWarnings;
-	
+
 	long DefaultValueResolved = ASTNode.Bit52L;
-	
+
 	// set when type contains non-private constructor(s)
 	long HasNonPrivateConstructor = ASTNode.Bit53L;
 }

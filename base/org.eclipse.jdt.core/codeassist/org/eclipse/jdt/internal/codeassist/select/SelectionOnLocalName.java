@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,32 +14,32 @@ import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 
 public class SelectionOnLocalName extends LocalDeclaration{
-	
+
 	public SelectionOnLocalName(char[] name,	int sourceStart, int sourceEnd) {
 
 		super(name, sourceStart, sourceEnd);
 	}
-	
+
 	public void resolve(BlockScope scope) {
 
 		super.resolve(scope);
-		throw new SelectionNodeFound(binding);
+		throw new SelectionNodeFound(this.binding);
 	}
 
 	public StringBuffer printAsExpression(int indent, StringBuffer output) {
 		printIndent(indent, output);
 		output.append("<SelectionOnLocalName:"); //$NON-NLS-1$
 		printModifiers(this.modifiers, output);
-		 type.print(0, output).append(' ').append(this.name);
-		if (initialization != null) {
+		 this.type.print(0, output).append(' ').append(this.name);
+		if (this.initialization != null) {
 			output.append(" = "); //$NON-NLS-1$
-			initialization.printExpression(0, output);
+			this.initialization.printExpression(0, output);
 		}
 		return output.append('>');
 	}
-	
+
 	public StringBuffer printStatement(int indent, StringBuffer output) {
-		this.printAsExpression(indent, output);
+		printAsExpression(indent, output);
 		return output.append(';');
 	}
 }

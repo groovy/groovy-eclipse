@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,15 +19,15 @@ import org.eclipse.jdt.core.formatter.IndentManipulation;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class LineCommentEndOffsets {
-	
+
 	private int[] offsets;
 	private final List commentList;
-	
+
 	public LineCommentEndOffsets(List commentList) {
 		this.commentList= commentList;
 		this.offsets= null; // create on demand
 	}
-	
+
 	private int[] getOffsets() {
 		if (this.offsets == null) {
 			if (this.commentList != null) {
@@ -55,18 +55,18 @@ public class LineCommentEndOffsets {
 		}
 		return this.offsets;
 	}
-	
+
 	public boolean isEndOfLineComment(int offset) {
 		return offset >= 0 && Arrays.binarySearch(getOffsets(), offset) >= 0;
 	}
-	
+
 	public boolean isEndOfLineComment(int offset, char[] content) {
 		if (offset < 0 || (offset < content.length && !IndentManipulation.isLineDelimiterChar(content[offset]))) {
 			return false;
 		}
 		return Arrays.binarySearch(getOffsets(), offset) >= 0;
 	}
-	
+
 	public boolean remove(int offset) {
 		int[] offsetArray= getOffsets(); // returns the shared array
 		int index= Arrays.binarySearch(offsetArray, offset);
@@ -81,5 +81,5 @@ public class LineCommentEndOffsets {
 		}
 		return false;
 	}
-	
+
 }

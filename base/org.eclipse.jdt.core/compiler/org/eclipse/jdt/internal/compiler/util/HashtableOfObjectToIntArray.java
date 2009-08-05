@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,7 @@ package org.eclipse.jdt.internal.compiler.util;
  * Hashtable of {Object --> int[] }
  */
 public final class HashtableOfObjectToIntArray implements Cloneable {
-	
+
 	// to avoid using Enumerations, walk the individual tables skipping nulls
 	public Object[] keyTable;
 	public int[][] valueTable;
@@ -103,7 +103,7 @@ public final class HashtableOfObjectToIntArray implements Cloneable {
 		this.valueTable[index] = value;
 
 		// assumes the threshold is never equal to the size of the table
-		if (++elementSize > threshold)
+		if (++this.elementSize > this.threshold)
 			rehash();
 		return value;
 	}
@@ -115,7 +115,7 @@ public final class HashtableOfObjectToIntArray implements Cloneable {
 		while ((currentKey = this.keyTable[index]) != null) {
 			if (currentKey.equals(key)) {
 				int[] value = this.valueTable[index];
-				elementSize--;
+				this.elementSize--;
 				this.keyTable[index] = null;
 				rehash();
 				return value;
@@ -129,7 +129,7 @@ public final class HashtableOfObjectToIntArray implements Cloneable {
 
 	private void rehash() {
 
-		HashtableOfObjectToIntArray newHashtable = new HashtableOfObjectToIntArray(elementSize * 2);		// double the number of expected elements
+		HashtableOfObjectToIntArray newHashtable = new HashtableOfObjectToIntArray(this.elementSize * 2);		// double the number of expected elements
 		Object currentKey;
 		for (int i = this.keyTable.length; --i >= 0;)
 			if ((currentKey = this.keyTable[i]) != null)
@@ -141,15 +141,28 @@ public final class HashtableOfObjectToIntArray implements Cloneable {
 	}
 
 	public int size() {
-		return elementSize;
+		return this.elementSize;
 	}
-	
+
 	public String toString() {
-		String s = ""; //$NON-NLS-1$
+		StringBuffer buffer = new StringBuffer();
 		Object key;
-		for (int i = 0, length = this.keyTable.length; i < length; i++)
-			if ((key = this.keyTable[i]) != null)
-				s += key + " -> " + this.valueTable[i] + "\n"; 	//$NON-NLS-2$ //$NON-NLS-1$
-		return s;
+		for (int i = 0, length = this.keyTable.length; i < length; i++) {
+			if ((key = this.keyTable[i]) != null) {
+				buffer.append(key).append(" -> "); //$NON-NLS-1$
+				int[] ints = this.valueTable[i];
+				buffer.append('[');
+				if (ints != null) {
+					for (int j = 0, max = ints.length; j < max; j++) {
+						if (j > 0) {
+							buffer.append(',');
+						}
+						buffer.append(ints[j]);
+					}
+				}
+				buffer.append("]\n"); //$NON-NLS-1$
+			}
+		}
+		return String.valueOf(buffer);
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,11 +21,11 @@ import org.eclipse.jdt.core.util.IConstantValueAttribute;
 public class ConstantValueAttribute
 	extends ClassFileAttribute
 	implements IConstantValueAttribute {
-	
+
 	private int constantValueIndex;
 	private IConstantPoolEntry constantPoolEntry;
 
-	
+
 	ConstantValueAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);
 		this.constantValueIndex = u2At(classFileBytes, 6, offset);

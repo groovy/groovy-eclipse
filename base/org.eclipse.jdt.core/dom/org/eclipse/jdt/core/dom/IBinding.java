@@ -102,7 +102,7 @@ public interface IBinding {
 	 * <li>Variable bindings - these are annotations on a field, enum constant,
 	 * or formal parameter declaration.</li>
 	 * <li>Annotation bindings - an empty array is always returned</li>
-	 * <li>Member value pair bindings - an empty array is always returned<li>
+	 * <li>Member value pair bindings - an empty array is always returned</li>
 	 * </ul>
 	 *
 	 * @return the list of resolved annotations, or the empty list if there are no

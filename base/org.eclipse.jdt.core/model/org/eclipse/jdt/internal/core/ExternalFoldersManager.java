@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -17,11 +17,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -35,12 +37,11 @@ import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class ExternalFoldersManager {
-	private static final boolean DEBUG = false;
 	private static final String EXTERNAL_PROJECT_NAME = ".org.eclipse.jdt.core.external.folders"; //$NON-NLS-1$
 	private static final String LINKED_FOLDER_NAME = ".link"; //$NON-NLS-1$
 	private HashMap folders;
 	private int counter = 0;
-	
+
 	/*
 	 * Returns a set of external path to external folders referred to on the given classpath.
 	 * Returns null if none.
@@ -69,7 +70,7 @@ public class ExternalFoldersManager {
 		return folders;
 	}
 
-	
+
 	public static boolean isExternalFolderPath(IPath externalPath) {
 		if (externalPath == null)
 			return false;
@@ -104,7 +105,7 @@ public class ExternalFoldersManager {
 		knownFolders.put(externalFolderPath, result);
 		return result;
 	}
-	
+
 	public IFolder createLinkFolder(IPath externalFolderPath, boolean refreshIfExistAlready, IProgressMonitor monitor) throws CoreException {
 		IProject externalFoldersProject = createExternalFoldersProject(monitor); // run outside synchronized as this can create a resource
 		IFolder result = addFolder(externalFolderPath, externalFoldersProject);
@@ -114,7 +115,7 @@ public class ExternalFoldersManager {
 			result.refreshLocal(IResource.DEPTH_INFINITE,  monitor);
 		return result;
 	}
-	
+
 	public void cleanUp(IProgressMonitor monitor) throws CoreException {
 		ArrayList toDelete = getFoldersToCleanUp(monitor);
 		if (toDelete == null)
@@ -135,13 +136,14 @@ public class ExternalFoldersManager {
 		if (roots == null && sourceAttachments == null)
 			return null;
 		HashMap knownFolders = getFolders();
-		Iterator iterator = knownFolders.keySet().iterator();
+		Iterator iterator = knownFolders.entrySet().iterator();
 		ArrayList result = null;
 		while (iterator.hasNext()) {
-			IPath path = (IPath) iterator.next();
+			Map.Entry entry = (Map.Entry) iterator.next();
+			IPath path = (IPath) entry.getKey();
 			if ((roots != null && !roots.containsKey(path))
 					&& (sourceAttachments != null && !sourceAttachments.containsKey(path))) {
-				IFolder folder = (IFolder) knownFolders.get(path);
+				IFolder folder = (IFolder) entry.getValue();
 				if (folder != null) {
 					if (result == null)
 						result = new ArrayList();
@@ -155,23 +157,36 @@ public class ExternalFoldersManager {
 	public IProject getExternalFoldersProject() {
 		return ResourcesPlugin.getWorkspace().getRoot().getProject(EXTERNAL_PROJECT_NAME);
 	}
-	private IProject createExternalFoldersProject(IProgressMonitor monitor) {
+	private IProject createExternalFoldersProject(IProgressMonitor monitor) throws CoreException {
 		IProject project = getExternalFoldersProject();
 		if (!project.isAccessible()) {
-			try {
-				if (!project.exists()) {
-					IProjectDescription desc = project.getWorkspace().newProjectDescription(project.getName());
-					IPath stateLocation = JavaCore.getPlugin().getStateLocation();
-					desc.setLocation(stateLocation.append(EXTERNAL_PROJECT_NAME));
-					project.create(DEBUG ? null : desc, DEBUG ? IResource.NONE : IResource.HIDDEN, monitor);
-				}
+			if (!project.exists()) {
+				createExternalFoldersProject(project, monitor);
+			}
+			openExternalFoldersProject(project, monitor);
+		}
+		return project;
+	}
+
+	/*
+	 * Attempt to open the given project (assuming it exists).
+	 * If failing to open, make all attempts to recreate the missing pieces.
+	 */
+	private void openExternalFoldersProject(IProject project, IProgressMonitor monitor) throws CoreException {
+		try {
+			project.open(monitor);
+		} catch (CoreException e1) {
+			if (e1.getStatus().getCode() == IResourceStatus.FAILED_READ_METADATA) {
+				// workspace was moved 
+				// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=241400 and https://bugs.eclipse.org/bugs/show_bug.cgi?id=252571 )
+				project.delete(false/*don't delete content*/, true/*force*/, monitor);
+				createExternalFoldersProject(project, monitor);
+			} else {
+				// .project or folder on disk have been deleted, recreate them
+				IPath stateLocation = JavaCore.getPlugin().getStateLocation();
+				IPath projectPath = stateLocation.append(EXTERNAL_PROJECT_NAME);
+				projectPath.toFile().mkdirs();
 				try {
-					project.open(monitor);
-				} catch (CoreException e1) {
-					// .project or folder on disk have been deleted, recreate them
-					IPath stateLocation = DEBUG ? ResourcesPlugin.getWorkspace().getRoot().getLocation() : JavaCore.getPlugin().getStateLocation();
-					IPath projectPath = stateLocation.append(EXTERNAL_PROJECT_NAME);
-					projectPath.toFile().mkdirs();
 				    FileOutputStream output = new FileOutputStream(projectPath.append(".project").toOSString()); //$NON-NLS-1$
 				    try {
 				        output.write((
@@ -189,45 +204,57 @@ public class ExternalFoldersManager {
 				    } finally {
 				        output.close();
 				    }
-					project.open(null);
+				} catch (IOException e) {
+					// fallback to re-creating the project
+					project.delete(false/*don't delete content*/, true/*force*/, monitor);
+					createExternalFoldersProject(project, monitor);
 				}
-			} catch (CoreException e) {
-				Util.log(e, "Problem creating hidden project for external folders"); //$NON-NLS-1$
-				return project;
-			} catch (IOException e) {
-				Util.log(e, "Problem creating hidden project for external folders"); //$NON-NLS-1$
-				return project;
 			}
+			project.open(monitor);
 		}
-		return project;
 	}
-	
+
+
+	private void createExternalFoldersProject(IProject project, IProgressMonitor monitor) throws CoreException {
+		IProjectDescription desc = project.getWorkspace().newProjectDescription(project.getName());
+		IPath stateLocation = JavaCore.getPlugin().getStateLocation();
+		desc.setLocation(stateLocation.append(EXTERNAL_PROJECT_NAME));
+		project.create(desc, IResource.HIDDEN, monitor);
+	}
+
 	public synchronized IFolder getFolder(IPath externalFolderPath) {
 		return (IFolder) getFolders().get(externalFolderPath);
 	}
-	
+
 	private HashMap getFolders() {
 		if (this.folders == null) {
 			this.folders = new HashMap();
 			IProject project = getExternalFoldersProject();
-			if (project.isAccessible()) {
-				try {
-					IResource[] members = project.members();
-					for (int i = 0, length = members.length; i < length; i++) {
-						IResource member = members[i];
-						if (member.getType() == IResource.FOLDER && member.isLinked() && member.getName().startsWith(LINKED_FOLDER_NAME)) {
-							IPath externalFolderPath = member.getLocation();
-							this.folders.put(externalFolderPath, member);
-						}
+			try {
+				if (!project.isAccessible()) {
+					if (project.exists()) {
+						// workspace was moved (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=252571 )
+						openExternalFoldersProject(project, null/*no progress*/);
+					} else {
+						// if project doesn't exist, do not open and recreate it as it means that there are no external folders
+						return this.folders;
 					}
-				} catch (CoreException e) {
-					Util.log(e, "Exception while initializing external folders"); //$NON-NLS-1$
 				}
+				IResource[] members = project.members();
+				for (int i = 0, length = members.length; i < length; i++) {
+					IResource member = members[i];
+					if (member.getType() == IResource.FOLDER && member.isLinked() && member.getName().startsWith(LINKED_FOLDER_NAME)) {
+						IPath externalFolderPath = member.getLocation();
+						this.folders.put(externalFolderPath, member);
+					}
+				}
+			} catch (CoreException e) {
+				Util.log(e, "Exception while initializing external folders"); //$NON-NLS-1$
 			}
 		}
 		return this.folders;
 	}
-	
+
 	/*
 	 * Refreshes the external folders referenced on the classpath of the given source project
 	 */
@@ -242,7 +269,7 @@ public class ExternalFoldersManager {
 			if (externalFolders == null)
 				return;
 			final Iterator iterator = externalFolders.iterator();
-			Job refreshJob = new Job(Messages.refreshing_external_folders) { 
+			Job refreshJob = new Job(Messages.refreshing_external_folders) {
 				public boolean belongsTo(Object family) {
 					return family == ResourcesPlugin.FAMILY_MANUAL_REFRESH;
 				}

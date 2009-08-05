@@ -29,49 +29,49 @@ public interface IJavaSearchConstants {
 	 * of match in unknown.
 	 */
 	int UNKNOWN = -1;
-	
+
 	/* Nature of searched element */
-	
+
 	/**
 	 * The searched element is a type, which may include classes, interfaces,
 	 * enums, and annotation types.
-	 * 
+	 *
 	 * @category searchFor
 	 */
 	int TYPE= 0;
 
 	/**
 	 * The searched element is a method.
-	 * 
+	 *
 	 * @category searchFor
 	 */
 	int METHOD= 1;
 
 	/**
 	 * The searched element is a package.
-	 * 
+	 *
 	 * @category searchFor
 	 */
 	int PACKAGE= 2;
 
 	/**
 	 * The searched element is a constructor.
-	 * 
+	 *
 	 * @category searchFor
 	 */
 	int CONSTRUCTOR= 3;
 
 	/**
 	 * The searched element is a field.
-	 * 
+	 *
 	 * @category searchFor
 	 */
 	int FIELD= 4;
 
 	/**
-	 * The searched element is a class. 
+	 * The searched element is a class.
 	 * More selective than using {@link #TYPE}.
-	 * 
+	 *
 	 * @category searchFor
 	 */
 	int CLASS= 5;
@@ -79,7 +79,7 @@ public interface IJavaSearchConstants {
 	/**
 	 * The searched element is an interface.
 	 * More selective than using {@link #TYPE}.
-	 * 
+	 *
 	 * @category searchFor
 	 */
 	int INTERFACE= 6;
@@ -87,7 +87,7 @@ public interface IJavaSearchConstants {
 	/**
 	 * The searched element is an enum.
 	 * More selective than using {@link #TYPE}.
-	 * 
+	 *
 	 * @since 3.1
 	 * @category searchFor
 	 */
@@ -96,7 +96,7 @@ public interface IJavaSearchConstants {
 	/**
 	 * The searched element is an annotation type.
 	 * More selective than using {@link #TYPE}.
-	 * 
+	 *
 	 * @since 3.1
 	 * @category searchFor
 	 */
@@ -105,7 +105,7 @@ public interface IJavaSearchConstants {
 	/**
 	 * The searched element is a class or enum type.
 	 * More selective than using {@link #TYPE}.
-	 * 
+	 *
 	 * @since 3.1
 	 * @category searchFor
 	 */
@@ -114,12 +114,12 @@ public interface IJavaSearchConstants {
 	/**
 	 * The searched element is a class or interface type.
 	 * More selective than using {@link #TYPE}.
-	 * 
+	 *
 	 * @since 3.1
 	 * @category searchFor
 	 */
 	int CLASS_AND_INTERFACE= 10;
-	
+
 	/**
 	 * The searched element is an interface or annotation type.
 	 * More selective than using {@link #TYPE}.
@@ -134,18 +134,18 @@ public interface IJavaSearchConstants {
 	 * The search result is a declaration.
 	 * Can be used in conjunction with any of the nature of searched elements
 	 * so as to better narrow down the search.
-	 * 
+	 *
 	 * @category limitTo
 	 */
 	int DECLARATIONS= 0;
 
 	/**
-	 * The search result is a type that implements an interface or extends a class. 
+	 * The search result is a type that implements an interface or extends a class.
 	 * Used in conjunction with either TYPE or CLASS or INTERFACE, it will
 	 * respectively search for any type implementing/extending a type,
 	 * or rather exclusively search for classes implementing/extending the type, or
 	 * interfaces extending the type.
-	 * 
+	 *
 	 * @category limitTo
 	 */
 	int IMPLEMENTORS= 1;
@@ -156,17 +156,17 @@ public interface IJavaSearchConstants {
 	 * so as to better narrow down the search.
 	 * References can contain implementers since they are more generic kind
 	 * of matches.
-	 * 
+	 *
 	 * @category limitTo
 	 */
 	int REFERENCES= 2;
 
 	/**
-	 * The search result is a declaration, a reference, or an implementer 
+	 * The search result is a declaration, a reference, or an implementer
 	 * of an interface.
 	 * Can be used in conjunction with any of the nature of searched elements
 	 * so as to better narrow down the search.
-	 * 
+	 *
 	 * @category limitTo
 	 */
 	int ALL_OCCURRENCES= 3;
@@ -175,17 +175,17 @@ public interface IJavaSearchConstants {
 	 * When searching for field matches, it will exclusively find read accesses, as
 	 * opposed to write accesses. Note that some expressions are considered both
 	 * as field read/write accesses: for example, x++; x+= 1;
-	 * 
+	 *
 	 * @since 2.0
 	 * @category limitTo
 	 */
 	int READ_ACCESSES = 4;
-	
+
 	/**
 	 * When searching for field matches, it will exclusively find write accesses, as
 	 * opposed to read accesses. Note that some expressions are considered both
 	 * as field read/write accesses: for example,  x++; x+= 1;
-	 * 
+	 *
 	 * @since 2.0
 	 * @category limitTo
 	 */
@@ -194,7 +194,7 @@ public interface IJavaSearchConstants {
 	/**
 	 * Ignore declaring type while searching result.
 	 * Can be used in conjunction with any of the nature of match.
-	 * 
+	 *
 	 * @since 3.1
 	 * @category limitTo
 	 */
@@ -213,7 +213,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int IGNORE_RETURN_TYPE = 0x20;
-	
+
 	/**
 	 * Return only type references used as the type of a field declaration.
 	 * <p>
@@ -224,7 +224,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int FIELD_DECLARATION_TYPE_REFERENCE = 0x40;
-	
+
 	/**
 	 * Return only type references used as the type of a local variable declaration.
 	 * <p>
@@ -235,7 +235,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int LOCAL_VARIABLE_DECLARATION_TYPE_REFERENCE = 0x80;
-	
+
 	/**
 	 * Return only type references used as the type of a method parameter
 	 * declaration.
@@ -247,7 +247,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int PARAMETER_DECLARATION_TYPE_REFERENCE = 0x100;
-	
+
 	/**
 	 * Return only type references used as a super type or as a super interface.
 	 * <p>
@@ -258,7 +258,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int SUPERTYPE_TYPE_REFERENCE = 0x200;
-	
+
 	/**
 	 * Return only type references used in a throws clause.
 	 * <p>
@@ -269,7 +269,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int THROWS_CLAUSE_TYPE_REFERENCE = 0x400;
-	
+
 	/**
 	 * Return only type references used in a cast expression.
 	 * <p>
@@ -280,7 +280,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int CAST_TYPE_REFERENCE = 0x800;
-	
+
 	/**
 	 * Return only type references used in a catch header.
 	 * <p>
@@ -291,7 +291,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int CATCH_TYPE_REFERENCE = 0x1000;
-	
+
 	/**
 	 * Return only type references used in class instance creation.
 	 * <p>
@@ -316,7 +316,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int CLASS_INSTANCE_CREATION_TYPE_REFERENCE = 0x2000;
-	
+
 	/**
 	 * Return only type references used as a method return type.
 	 * <p>
@@ -327,7 +327,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int RETURN_TYPE_REFERENCE = 0x4000;
-	
+
 	/**
 	 * Return only type references used in an import declaration.
 	 * <p>
@@ -385,7 +385,8 @@ public interface IJavaSearchConstants {
 	int WILDCARD_BOUND_TYPE_REFERENCE = 0x80000;
 
 	/**
-	 * Return only type references used as an instance of.
+	 * Return only type references used as a type of an <code>instanceof</code>
+	 * expression.
 	 * <p>
 	 * When this flag is set, only {@link TypeReferenceMatch} matches will be
 	 * returned.
@@ -394,7 +395,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int INSTANCEOF_TYPE_REFERENCE = 0x100000;
-	
+
 	/**
 	 * Return only super field accesses or super method invocations (e.g. using the
 	 * <code>super</code> qualifier).
@@ -412,7 +413,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int SUPER_REFERENCE = 0x1000000;
-	
+
 	/**
 	 * Return only qualified field accesses or qualified method invocations.
 	 * <p>
@@ -429,7 +430,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int QUALIFIED_REFERENCE = 0x2000000;
-	
+
 	/**
 	 * Return only primary field accesses or primary method invocations (e.g. using
 	 * the <code>this</code> qualifier).
@@ -447,7 +448,7 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int THIS_REFERENCE = 0x4000000;
-	
+
 	/**
 	 * Return only field accesses or method invocations without any qualification.
 	 * <p>
@@ -464,28 +465,28 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int IMPLICIT_THIS_REFERENCE = 0x8000000;
-	
+
 	/* Syntactic match modes */
-	
+
 	/**
 	 * The search pattern matches exactly the search result,
 	 * that is, the source of the search result equals the search pattern.
-	 * 
+	 *
 	 * @deprecated Use {@link SearchPattern#R_EXACT_MATCH} instead.
 	 * @category matchRule
 	 */
 	int EXACT_MATCH = 0;
 	/**
 	 * The search pattern is a prefix of the search result.
-	 * 
+	 *
 	 * @deprecated Use {@link SearchPattern#R_PREFIX_MATCH} instead.
 	 * @category matchRule
 	 */
 	int PREFIX_MATCH = 1;
 	/**
-	 * The search pattern contains one or more wild cards ('*') where a 
+	 * The search pattern contains one or more wild cards ('*') where a
 	 * wild-card can replace 0 or more characters in the search result.
-	 * 
+	 *
 	 * @deprecated Use {@link SearchPattern#R_PATTERN_MATCH} instead.
 	 * @category matchRule
 	 */
@@ -493,11 +494,11 @@ public interface IJavaSearchConstants {
 
 
 	/* Case sensitivity */
-	
+
 	/**
 	 * The search pattern matches the search result only
 	 * if cases are the same.
-	 * 
+	 *
 	 * @deprecated Use the methods that take the matchMode
 	 *   with {@link SearchPattern#R_CASE_SENSITIVE} as a matchRule instead.
 	 * @category matchRule
@@ -505,16 +506,16 @@ public interface IJavaSearchConstants {
 	boolean CASE_SENSITIVE = true;
 	/**
 	 * The search pattern ignores cases in the search result.
-	 * 
+	 *
 	 * @deprecated Use the methods that take the matchMode
 	 *   without {@link SearchPattern#R_CASE_SENSITIVE} as a matchRule instead.
 	 * @category matchRule
 	 */
 	boolean CASE_INSENSITIVE = false;
-	
+
 
 	/* Waiting policies */
-	
+
 	/**
 	 * The search operation starts immediately, even if the underlying indexer
 	 * has not finished indexing the workspace. Results will more likely
@@ -527,10 +528,10 @@ public interface IJavaSearchConstants {
 	 */
 	int CANCEL_IF_NOT_READY_TO_SEARCH = IJob.CancelIfNotReady;
 	/**
-	 * The search operation waits for the underlying indexer to finish indexing 
+	 * The search operation waits for the underlying indexer to finish indexing
 	 * the workspace before starting the search.
 	 */
 	int WAIT_UNTIL_READY_TO_SEARCH = IJob.WaitUntilReady;
-	
-	
+
+
 }

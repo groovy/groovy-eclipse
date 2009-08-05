@@ -12,7 +12,7 @@ package org.eclipse.jdt.core;
 
 /**
  * Represents a stand-alone instance or class (static) initializer in a type.
- * 
+ *
  * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface IInitializer extends IMember {

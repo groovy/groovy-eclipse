@@ -51,9 +51,9 @@ import org.eclipse.jdt.core.IJavaElement;
  * in source code. The DOM does not have a notion of type signatures, only raw text. Example type
  * names are <code>"Object"</code>, <code>"java.io.File"</code>, and <code>"int[]"</code>.
  * </p>
- * 
+ *
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  * @noimplement This interface is not intended to be implemented by clients.
  */
@@ -65,49 +65,49 @@ public interface IDOMNode extends Cloneable  {
 	 * @see #getNodeType()
 	 */
 	public static int COMPILATION_UNIT= 1;
-	
+
 	/**
 	 * Node type constant indicating a package declaration.
 	 * Nodes of this type maybe by safely cast to <code>IDOMPackage</code>.
 	* @see #getNodeType()
 	 */
 	public static int PACKAGE= 2;
-	
+
 	/**
 	 * Node type constant indicating an import declaration.
 	 * Nodes of this type maybe by safely cast to <code>IDOMImport</code>.
 	 * @see #getNodeType()
 	 */
 	public static int IMPORT= 3;
-	
+
 	/**
 	 * Node type constant indicating a type declaration.
 	 * Nodes of this type maybe by safely cast to <code>IDOMType</code>.
 	 * @see #getNodeType()
 	 */
 	public static int TYPE= 4;
-	
+
 	/**
 	 * Node type constant indicating a field declaration.
 	 * Nodes of this type maybe by safely cast to <code>IDOMField</code>.
 	 * @see #getNodeType()
 	 */
 	public static int FIELD= 5;
-	
+
 	/**
 	 * Node type constant indicating a method (or constructor) declaration.
 	 * Nodes of this type maybe by safely cast to <code>IDOMMethod</code>.
 	 * @see #getNodeType()
 	 */
 	public static int METHOD= 6;
-	
+
 	/**
 	 * Node type constant indicating an initializer declaration.
 	 * Nodes of this type maybe by safely cast to <code>IDOMInitializer</code>.
 	 * @see #getNodeType()
 	 */
 	public static int INITIALIZER= 7;
-	
+
 /**
  * Adds the given un-parented node (document fragment) as the last child of this node.
  *
@@ -159,7 +159,7 @@ public char[] getCharacters();
 public IDOMNode getChild(String name);
 /**
  * Returns an enumeration of children of this node. Returns an empty enumeration
- * if this node has no children (including nodes that cannot have children). 
+ * if this node has no children (including nodes that cannot have children).
  * Children appear in the order in which they are declared in the source code.
  *
  * @return an enumeration of the children
@@ -184,13 +184,13 @@ public String getContents();
  */
 public IDOMNode getFirstChild();
 /**
- * Returns a handle for the Java element associated with this 
+ * Returns a handle for the Java element associated with this
  * document fragment, based on the parent Java element.
  *
  * @param parent the parent Java element
  * @exception IllegalArgumentException if the parent element is not
  *   of a valid parent type for this node
- * @return a handle for the Java element associated with this 
+ * @return a handle for the Java element associated with this
  *         document fragment, based on the parent Java element
  */
 public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentException;
@@ -216,7 +216,7 @@ public int getNodeType();
 /**
  * Returns the parent of this node.
  *
- * @return the parent node, or <code>null</code> if this node does not have a 
+ * @return the parent node, or <code>null</code> if this node does not have a
  *   parent
  */
 public IDOMNode getParent();

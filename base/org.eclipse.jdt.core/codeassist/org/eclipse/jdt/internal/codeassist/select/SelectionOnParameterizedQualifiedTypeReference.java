@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,7 +28,7 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 		System.arraycopy(this.typeArguments, 0, this.typeArguments = new TypeReference[length + 1][], 0, length);
 		this.typeArguments[length] = assistTypeArguments;
 	}
-	
+
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
 		super.resolveType(scope, checkBounds);
 		//// removed unnecessary code to solve bug 94653
@@ -38,7 +38,7 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 		//}
 		throw new SelectionNodeFound(this.resolvedType);
 	}
-	
+
 	public TypeBinding resolveType(ClassScope scope) {
 		super.resolveType(scope);
 		//// removed unnecessary code to solve bug 94653
@@ -48,16 +48,16 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 		//}
 		throw new SelectionNodeFound(this.resolvedType);
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append("<SelectOnType:");//$NON-NLS-1$
-		int length = tokens.length;
+		int length = this.tokens.length;
 		for (int i = 0; i < length; i++) {
 			if(i != 0) {
 				output.append('.');
 			}
-			output.append(tokens[i]);
-			TypeReference[] typeArgument = typeArguments[i];
+			output.append(this.tokens[i]);
+			TypeReference[] typeArgument = this.typeArguments[i];
 			if (typeArgument != null) {
 				output.append('<');
 				int max = typeArgument.length - 1;
@@ -68,9 +68,9 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 				typeArgument[max].print(0, output);
 				output.append('>');
 			}
-			
+
 		}
-		output.append('>'); 
+		output.append('>');
 		return output;
 	}
 }

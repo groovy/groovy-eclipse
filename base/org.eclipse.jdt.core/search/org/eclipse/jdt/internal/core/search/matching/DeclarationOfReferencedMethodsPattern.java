@@ -26,6 +26,6 @@ public DeclarationOfReferencedMethodsPattern(IJavaElement enclosingElement) {
 
 	this.enclosingElement = enclosingElement;
 	this.knownMethods = new SimpleSet();
-	((InternalSearchPattern)this).mustResolve = true;
+	this.mustResolve = true;
 }
 }

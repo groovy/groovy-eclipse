@@ -20,10 +20,10 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 /**
- * CombinedBinaryExpression is an implementation of BinaryExpression that 
+ * CombinedBinaryExpression is an implementation of BinaryExpression that
  * specifically attempts to mitigate the issues raised by expressions which
- * have a very deep leftmost branch. It does so by maintaining a table of 
- * direct references to its subexpressions, and implementing non-recursive 
+ * have a very deep leftmost branch. It does so by maintaining a table of
+ * direct references to its subexpressions, and implementing non-recursive
  * variants of the most significant recursive algorithms of its ancestors.
  * The subexpressions table only holds intermediate binary expressions. Its
  * role is to provide the reversed navigation through the left relationship
@@ -35,7 +35,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
  * table.<br>
  * Notes:
  * <ul>
- * <li>CombinedBinaryExpression is not meant to behave in other ways than 
+ * <li>CombinedBinaryExpression is not meant to behave in other ways than
  *     BinaryExpression in any observable respect;</li>
  * <li>visitors that implement their own traversal upon binary expressions
  *     should consider taking advantage of combined binary expressions, or
@@ -47,17 +47,17 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
  */
 public class CombinedBinaryExpression extends BinaryExpression {
 
-	/** 
-	 * The number of consecutive binary expressions of this' left branch that 
+	/**
+	 * The number of consecutive binary expressions of this' left branch that
 	 * bear the same operator as this.<br>
-	 * Notes: 
-	 * <ul><li>the presence of a CombinedBinaryExpression instance resets 
+	 * Notes:
+	 * <ul><li>the presence of a CombinedBinaryExpression instance resets
 	 *         arity, even when its operator is compatible;</li>
 	 *	   <li>this property is maintained by the parser.</li>
 	 * </ul>
 	 */
 	public int arity;
-	
+
 	/**
 	 * The threshold that will trigger the creation of the next full-fledged
 	 * CombinedBinaryExpression. This field is only maintained for the
@@ -65,30 +65,30 @@ public class CombinedBinaryExpression extends BinaryExpression {
 	 * policy, which scales better with very large expressions.
 	 */
 	public int arityMax;
-	
+
 	/**
 	 * Upper limit for {@link #arityMax}.
 	 */
 	public static final int ARITY_MAX_MAX = 160;
-	
+
 	/**
 	 * Default lower limit for {@link #arityMax}.
 	 */
 	public static final int ARITY_MAX_MIN = 20;
-	
+
 	/**
 	 * Default value for the first term of the series of {@link #arityMax}
-	 * values. Changing this allows for experimentation. Not meant to be 
+	 * values. Changing this allows for experimentation. Not meant to be
 	 * changed during a parse operation.
 	 */
 	public static int defaultArityMaxStartingValue = ARITY_MAX_MIN;
-	
+
 	/**
 	 * A table of references to the binary expressions of this' left branch.
 	 * Instances of CombinedBinaryExpression are not repeated here. Instead,
 	 * the left subexpression of referencesTable[0] may be a combined binary
-	 * expression, if appropriate. Null when this only cares about tracking 
-	 * the expression's arity. 
+	 * expression, if appropriate. Null when this only cares about tracking
+	 * the expression's arity.
 	 */
 	public BinaryExpression referencesTable[];
 
@@ -115,21 +115,21 @@ public CombinedBinaryExpression(CombinedBinaryExpression expression) {
 	initArity(expression.left, expression.arity);
 }
 
-public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, 
+public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo flowInfo) {
-	// keep implementation in sync with BinaryExpression#analyseCode	
+	// keep implementation in sync with BinaryExpression#analyseCode
 	if (this.referencesTable == null) {
 		return super.analyseCode(currentScope, flowContext, flowInfo);
 	}
 	BinaryExpression cursor;
-	if ((cursor = this.referencesTable[0]).resolvedType.id != 
+	if ((cursor = this.referencesTable[0]).resolvedType.id !=
 			TypeIds.T_JavaLangString) {
 		cursor.left.checkNPE(currentScope, flowContext, flowInfo);
 	}
 	flowInfo = cursor.left.analyseCode(currentScope, flowContext, flowInfo).
-		unconditionalInits();	
+		unconditionalInits();
 	for (int i = 0, end = this.arity; i < end; i ++) {
-		if ((cursor = this.referencesTable[i]).resolvedType.id != 
+		if ((cursor = this.referencesTable[i]).resolvedType.id !=
 				TypeIds.T_JavaLangString) {
 			cursor.right.checkNPE(currentScope, flowContext, flowInfo);
 		}
@@ -144,15 +144,15 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		unconditionalInits();
 }
 
-public void generateOptimizedStringConcatenation(BlockScope blockScope, 
+public void generateOptimizedStringConcatenation(BlockScope blockScope,
 		CodeStream codeStream, int typeID) {
 	// keep implementation in sync with BinaryExpression and Expression
 	// #generateOptimizedStringConcatenation
 	if (this.referencesTable == null) {
-		super.generateOptimizedStringConcatenation(blockScope, codeStream, 
+		super.generateOptimizedStringConcatenation(blockScope, codeStream,
 			typeID);
-	} else {	
-		if ((((this.bits & ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT) == 
+	} else {
+		if ((((this.bits & ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT) ==
 				OperatorIds.PLUS)
 			&& ((this.bits & ASTNode.ReturnTypeIDMASK) == TypeIds.T_JavaLangString)) {
 			if (this.constant != Constant.NotAConstant) {
@@ -161,34 +161,34 @@ public void generateOptimizedStringConcatenation(BlockScope blockScope,
 						this.implicitConversion & TypeIds.COMPILE_TYPE_MASK);
 			} else {
 				BinaryExpression cursor = this.referencesTable[0];
-		
+
 				int restart = 0;
 	//			int cursorTypeID;
 				int pc = codeStream.position;
 				for (restart = this.arity - 1; restart >= 0; restart--) {
-					if ((cursor = this.referencesTable[restart]).constant != 
+					if ((cursor = this.referencesTable[restart]).constant !=
 							Constant.NotAConstant) {
-						codeStream.generateConstant(cursor.constant, 
+						codeStream.generateConstant(cursor.constant,
 							cursor.implicitConversion);
 						codeStream.invokeStringConcatenationAppendForType(
 							cursor.implicitConversion & TypeIds.COMPILE_TYPE_MASK);
 						break;
 					}
-					// never happens for now - may reconsider if we decide to 
+					// never happens for now - may reconsider if we decide to
 					// cover more than string concatenation
-	//				if (!((((cursor = this.referencesTable[restart]).bits & 
-	//						ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT) == 
-	//							OperatorIds.PLUS) & 
-	//						((cursorTypeID = cursor.bits & ASTNode.ReturnTypeIDMASK) == 
+	//				if (!((((cursor = this.referencesTable[restart]).bits &
+	//						ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT) ==
+	//							OperatorIds.PLUS) &
+	//						((cursorTypeID = cursor.bits & ASTNode.ReturnTypeIDMASK) ==
 	//							TypeIds.T_JavaLangString)) {
-	//					if (cursorTypeID == T_JavaLangString && 
-	//							cursor.constant != Constant.NotAConstant && 
+	//					if (cursorTypeID == T_JavaLangString &&
+	//							cursor.constant != Constant.NotAConstant &&
 	//							cursor.constant.stringValue().length() == 0) {
 	//						break; // optimize str + ""
 	//					}
 	//					cursor.generateCode(blockScope, codeStream, true);
 	//					codeStream.invokeStringConcatenationAppendForType(
-	//							cursorTypeID);					
+	//							cursorTypeID);
 	//					break;
 	//				}
 				}
@@ -201,11 +201,11 @@ public void generateOptimizedStringConcatenation(BlockScope blockScope,
 				}
 				int pcAux;
 				for (int i = restart; i < this.arity; i++) {
-					codeStream.recordPositionsFrom(pc, 
+					codeStream.recordPositionsFrom(pc,
 						(cursor = this.referencesTable[i]).left.sourceStart);
 					pcAux = codeStream.position;
-					cursor.right.generateOptimizedStringConcatenation(blockScope, 
-						codeStream,	cursor.right.implicitConversion & 
+					cursor.right.generateOptimizedStringConcatenation(blockScope,
+						codeStream,	cursor.right.implicitConversion &
 							TypeIds.COMPILE_TYPE_MASK);
 					codeStream.recordPositionsFrom(pcAux, cursor.right.sourceStart);
 				}
@@ -218,34 +218,34 @@ public void generateOptimizedStringConcatenation(BlockScope blockScope,
 				codeStream.recordPositionsFrom(pc, this.right.sourceStart);
 			}
 		} else {
-			super.generateOptimizedStringConcatenation(blockScope, codeStream, 
+			super.generateOptimizedStringConcatenation(blockScope, codeStream,
 				typeID);
 		}
 	}
 }
 
-public void generateOptimizedStringConcatenationCreation(BlockScope blockScope, 
+public void generateOptimizedStringConcatenationCreation(BlockScope blockScope,
 		CodeStream codeStream, int typeID) {
 	// keep implementation in sync with BinaryExpression
 	// #generateOptimizedStringConcatenationCreation
 	if (this.referencesTable == null) {
-		super.generateOptimizedStringConcatenationCreation(blockScope, 
+		super.generateOptimizedStringConcatenationCreation(blockScope,
 			codeStream,	typeID);
 	} else {
-		if ((((this.bits & ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT) == 
-				OperatorIds.PLUS) && 
-					((this.bits & ASTNode.ReturnTypeIDMASK) == 
-						TypeIds.T_JavaLangString) && 
+		if ((((this.bits & ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT) ==
+				OperatorIds.PLUS) &&
+					((this.bits & ASTNode.ReturnTypeIDMASK) ==
+						TypeIds.T_JavaLangString) &&
 					this.constant == Constant.NotAConstant) {
 			int pc = codeStream.position;
 			BinaryExpression cursor = this.referencesTable[this.arity - 1];
 				// silence warnings
 			int restart = 0;
 			for (restart = this.arity - 1; restart >= 0; restart--) {
-				if (((((cursor = this.referencesTable[restart]).bits & 
-						ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT) == 
-							OperatorIds.PLUS) && 
-						((cursor.bits & ASTNode.ReturnTypeIDMASK) == 
+				if (((((cursor = this.referencesTable[restart]).bits &
+						ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT) ==
+							OperatorIds.PLUS) &&
+						((cursor.bits & ASTNode.ReturnTypeIDMASK) ==
 							TypeIds.T_JavaLangString)) {
 					if (cursor.constant != Constant.NotAConstant) {
 						codeStream.newStringContatenation(); // new: java.lang.StringBuffer
@@ -256,8 +256,8 @@ public void generateOptimizedStringConcatenationCreation(BlockScope blockScope,
 						break;
 					}
 				} else {
-					cursor.generateOptimizedStringConcatenationCreation(blockScope, 
-						codeStream, cursor.implicitConversion & 
+					cursor.generateOptimizedStringConcatenationCreation(blockScope,
+						codeStream, cursor.implicitConversion &
 							TypeIds.COMPILE_TYPE_MASK);
 					break;
 				}
@@ -271,11 +271,11 @@ public void generateOptimizedStringConcatenationCreation(BlockScope blockScope,
 			}
 			int pcAux;
 			for (int i = restart; i < this.arity; i++) {
-				codeStream.recordPositionsFrom(pc, 
+				codeStream.recordPositionsFrom(pc,
 					(cursor = this.referencesTable[i]).left.sourceStart);
 				pcAux = codeStream.position;
-				cursor.right.generateOptimizedStringConcatenation(blockScope, 
-					codeStream,	cursor.right.implicitConversion & 
+				cursor.right.generateOptimizedStringConcatenation(blockScope,
+					codeStream,	cursor.right.implicitConversion &
 						TypeIds.COMPILE_TYPE_MASK);
 				codeStream.recordPositionsFrom(pcAux, cursor.right.sourceStart);
 			}
@@ -287,7 +287,7 @@ public void generateOptimizedStringConcatenationCreation(BlockScope blockScope,
 				this.right.implicitConversion & TypeIds.COMPILE_TYPE_MASK);
 			codeStream.recordPositionsFrom(pc, this.right.sourceStart);
 		} else {
-			super.generateOptimizedStringConcatenationCreation(blockScope, 
+			super.generateOptimizedStringConcatenationCreation(blockScope,
 				codeStream, typeID);
 		}
 	}
@@ -298,18 +298,18 @@ private void initArity(Expression expression, int value) {
 		this.referencesTable = new BinaryExpression[value];
 		this.referencesTable[value - 1] = (BinaryExpression) expression;
 		for (int i = value - 1; i > 0; i--) {
-			this.referencesTable[i - 1] = 
-				(BinaryExpression) this.referencesTable[i].left; 
+			this.referencesTable[i - 1] =
+				(BinaryExpression) this.referencesTable[i].left;
 		}
 	} else {
 		this.arityMax = defaultArityMaxStartingValue;
 	}
 }
 
-public StringBuffer printExpressionNoParenthesis(int indent, 
+public StringBuffer printExpressionNoParenthesis(int indent,
 		StringBuffer output) {
-	// keep implementation in sync with 
-	// BinaryExpression#printExpressionNoParenthesis and 
+	// keep implementation in sync with
+	// BinaryExpression#printExpressionNoParenthesis and
 	// OperatorExpression#printExpression
 	if (this.referencesTable == null) {
 		return super.printExpressionNoParenthesis(indent, output);
@@ -320,7 +320,7 @@ public StringBuffer printExpressionNoParenthesis(int indent,
 	}
 	output = this.referencesTable[0].left.
 		printExpression(indent, output);
-	for (int i = 0, end = this.arity; 
+	for (int i = 0, end = this.arity;
 				i < end; i++) {
 		output.append(' ').append(operatorString).append(' ');
 		output = this.referencesTable[i].right.
@@ -338,7 +338,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	}
 	BinaryExpression cursor;
 	if ((cursor = this.referencesTable[0]).left instanceof CastExpression) {
-		cursor.left.bits |= ASTNode.DisableUnnecessaryCastCheck; 
+		cursor.left.bits |= ASTNode.DisableUnnecessaryCastCheck;
 			// will check later on
 	}
 	cursor.left.resolveType(scope);
@@ -355,8 +355,8 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 	} else {
 		if (visitor.visit(this, scope)) {
 			int restart;
-			for (restart = this.arity - 1; 
-					restart >= 0; 
+			for (restart = this.arity - 1;
+					restart >= 0;
 					restart--) {
 				if (!visitor.visit(
 						this.referencesTable[restart], scope)) {
@@ -371,7 +371,7 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 			if (restart == 0) {
 				this.referencesTable[0].left.traverse(visitor, scope);
 			}
-			for (int i = restart, end = this.arity; 
+			for (int i = restart, end = this.arity;
 						i < end; i++) {
 				this.referencesTable[i].right.traverse(visitor, scope);
 				visitor.endVisit(this.referencesTable[i], scope);
@@ -383,10 +383,10 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 }
 
 /**
- * Change {@link #arityMax} if and as needed. The current policy is to double 
- * arityMax each time this method is called, until it reaches 
+ * Change {@link #arityMax} if and as needed. The current policy is to double
+ * arityMax each time this method is called, until it reaches
  * {@link #ARITY_MAX_MAX}. Other policies may consider incrementing it less
- * agressively. Call only after an appropriate value has been assigned to 
+ * agressively. Call only after an appropriate value has been assigned to
  * {@link #left}.
  */
 // more sophisticate increment policies would leverage the leftmost expression

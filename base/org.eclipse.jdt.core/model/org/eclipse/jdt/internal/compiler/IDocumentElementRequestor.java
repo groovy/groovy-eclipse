@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,7 +38,7 @@ import org.eclipse.jdt.core.compiler.CategorizedProblem;
  * other simpler elements (package, import) are read all at once:
  * - accept<Element>
  */
- 
+
 public interface IDocumentElementRequestor {
 /**
  * @param declarationStart - a source position corresponding to the start of the package
@@ -46,7 +46,7 @@ public interface IDocumentElementRequestor {
  * @param declarationEnd - a source position corresponding to the end of the package
  *  declaration
  * @param javaDocPositions - answer back an array of sourceStart/sourceEnd
- * positions of the available JavaDoc comments. The array is a flattened 
+ * positions of the available JavaDoc comments. The array is a flattened
  * structure: 2*n entries with consecutives start and end positions.
  * If no JavaDoc is available, then null is answered instead of an empty array.
  * e.g. { 10, 20, 25, 45 }  --> javadoc1 from 10 to 20, javadoc2 from 25 to 45
@@ -57,10 +57,10 @@ public interface IDocumentElementRequestor {
  * @param onDemand - a boolean equals to true if the import is an import on demand
  */
 void acceptImport(
-	int declarationStart, 
+	int declarationStart,
 	int declarationEnd,
-	int[] javaDocPositions,	
-	char[] name, 
+	int[] javaDocPositions,
+	char[] name,
 	int nameStartPosition,
 	boolean onDemand,
 	int modifiers);
@@ -70,7 +70,7 @@ void acceptImport(
  * @param declarationEnd - a source position corresponding to the end of the package
  *  declaration
  * @param javaDocPositions - answer back an array of sourceStart/sourceEnd
- * positions of the available JavaDoc comments. The array is a flattened 
+ * positions of the available JavaDoc comments. The array is a flattened
  * structure: 2*n entries with consecutives start and end positions.
  * If no JavaDoc is available, then null is answered instead of an empty array.
  * e.g. { 10, 20, 25, 45 }  --> javadoc1 from 10 to 20, javadoc2 from 25 to 45
@@ -84,7 +84,7 @@ void acceptImport(
 void acceptInitializer(
 	int declarationStart,
 	int declarationEnd,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
 	int modifiersStart,
 	int bodyStart,
@@ -94,7 +94,7 @@ void acceptInitializer(
  * of the parse action, so as to allow computation of normalized ranges.
  *
  * A line separator might corresponds to several characters in the source,
- * 
+ *
  */
 void acceptLineSeparatorPositions(int[] positions);
 /**
@@ -103,7 +103,7 @@ void acceptLineSeparatorPositions(int[] positions);
  * @param declarationEnd - a source position corresponding to the end of the package
  *  declaration
  * @param javaDocPositions - answer back an array of sourceStart/sourceEnd
- * positions of the available JavaDoc comments. The array is a flattened 
+ * positions of the available JavaDoc comments. The array is a flattened
  * structure: 2*n entries with consecutives start and end positions.
  * If no JavaDoc is available, then null is answered instead of an empty array.
  * e.g. { 10, 20, 25, 45 }  --> javadoc1 from 10 to 20, javadoc2 from 25 to 45
@@ -113,10 +113,10 @@ void acceptLineSeparatorPositions(int[] positions);
  *  name
  */
 void acceptPackage(
-	int declarationStart, 
+	int declarationStart,
 	int declarationEnd,
-	int[] javaDocPositions,	
-	char[] name, 
+	int[] javaDocPositions,
+	char[] name,
 	int nameStartPosition);
 /**
  * @param problem - Used to report a problem while running the JDOM
@@ -126,7 +126,7 @@ void acceptProblem(CategorizedProblem problem);
  * @param declarationStart - a source position corresponding to the start
  *  of this class.
  * @param javaDocPositions - answer back an array of sourceStart/sourceEnd
- * positions of the available JavaDoc comments. The array is a flattened 
+ * positions of the available JavaDoc comments. The array is a flattened
  * structure: 2*n entries with consecutives start and end positions.
  * If no JavaDoc is available, then null is answered instead of an empty array.
  * e.g. { 10, 20, 25, 45 }  --> javadoc1 from 10 to 20, javadoc2 from 25 to 45
@@ -157,7 +157,7 @@ void enterClass(
 	int[] javaDocPositions,
 	int modifiers,
 	int modifiersStart,
-	int classStart, 
+	int classStart,
 	char[] name,
 	int nameStart,
 	int nameEnd,
@@ -170,10 +170,10 @@ void enterClass(
 	int bodyStart);
 void enterCompilationUnit();
 /**
- * @param declarationStart - a source position corresponding to the first character 
+ * @param declarationStart - a source position corresponding to the first character
  *  of this constructor declaration
  * @param javaDocPositions - answer back an array of sourceStart/sourceEnd
- * positions of the available JavaDoc comments. The array is a flattened 
+ * positions of the available JavaDoc comments. The array is a flattened
  * structure: 2*n entries with consecutives start and end positions.
  * If no JavaDoc is available, then null is answered instead of an empty array.
  * e.g. { 10, 20, 25, 45 }  --> javadoc1 from 10 to 20, javadoc2 from 25 to 45
@@ -197,33 +197,33 @@ void enterCompilationUnit();
  *  character of the respective exception types
  * @param exceptionTypeEnds - a list of source positions corresponding to the last
  *  character of the respective exception types
- * @param bodyStart - a source position corresponding to the start of this 
+ * @param bodyStart - a source position corresponding to the start of this
  *  constructor's body
  */
 void enterConstructor(
 	int declarationStart,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
-	int modifiersStart, 
+	int modifiersStart,
 	char[] name,
 	int nameStart,
 	int nameEnd,
 	char[][] parameterTypes,
 	int [] parameterTypeStarts,
-	int [] parameterTypeEnds,			
+	int [] parameterTypeEnds,
 	char[][] parameterNames,
 	int [] parameterNameStarts,
 	int [] parameterNameEnds,
-	int parametersEnd,	
+	int parametersEnd,
 	char[][] exceptionTypes,
 	int [] exceptionTypeStarts,
 	int [] exceptionTypeEnds,
 	int bodyStart);
 /**
- * @param declarationStart - a source position corresponding to the first character 
+ * @param declarationStart - a source position corresponding to the first character
  *  of this field
  * @param javaDocPositions - answer back an array of sourceStart/sourceEnd
- * positions of the available JavaDoc comments. The array is a flattened 
+ * positions of the available JavaDoc comments. The array is a flattened
  * structure: 2*n entries with consecutives start and end positions.
  * If no JavaDoc is available, then null is answered instead of an empty array.
  * e.g. { 10, 20, 25, 45 }  --> javadoc1 from 10 to 20, javadoc2 from 25 to 45
@@ -246,7 +246,7 @@ void enterConstructor(
  */
 void enterField(
 	int declarationStart,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
 	int modifiersStart,
 	char[] type,
@@ -262,7 +262,7 @@ void enterField(
  * @param declarationStart - a source position corresponding to the start
  *  of this class.
  * @param javaDocPositions - answer back an array of sourceStart/sourceEnd
- * positions of the available JavaDoc comments. The array is a flattened 
+ * positions of the available JavaDoc comments. The array is a flattened
  * structure: 2*n entries with consecutives start and end positions.
  * If no JavaDoc is available, then null is answered instead of an empty array.
  * e.g. { 10, 20, 25, 45 }  --> javadoc1 from 10 to 20, javadoc2 from 25 to 45
@@ -285,7 +285,7 @@ void enterField(
  */
 void enterInterface(
 	int declarationStart,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
 	int modifiersStart,
 	int interfaceStart,
@@ -297,10 +297,10 @@ void enterInterface(
 	int[] superinterfaceEnds,
 	int bodyStart);
 /**
- * @param declarationStart - a source position corresponding to the first character 
+ * @param declarationStart - a source position corresponding to the first character
  *  of this constructor declaration
  * @param javaDocPositions - answer back an array of sourceStart/sourceEnd
- * positions of the available JavaDoc comments. The array is a flattened 
+ * positions of the available JavaDoc comments. The array is a flattened
  * structure: 2*n entries with consecutives start and end positions.
  * If no JavaDoc is available, then null is answered instead of an empty array.
  * e.g. { 10, 20, 25, 45 }  --> javadoc1 from 10 to 20, javadoc2 from 25 to 45
@@ -336,14 +336,14 @@ void enterInterface(
  *  character of the respective exception types
  * @param exceptionTypeEnds - a list of source positions corresponding to the last
  *  character of the respective exception types
- * @param bodyStart - a source position corresponding to the start of this 
+ * @param bodyStart - a source position corresponding to the start of this
  *  method's body
  */
 void enterMethod(
 	int declarationStart,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
-	int modifiersStart, 
+	int modifiersStart,
 	char[] returnType,
 	int returnTypeStart,
 	int returnTypeEnd,
@@ -353,13 +353,13 @@ void enterMethod(
 	int nameEnd,
 	char[][] parameterTypes,
 	int [] parameterTypeStarts,
-	int [] parameterTypeEnds,			
+	int [] parameterTypeEnds,
 	char[][] parameterNames,
 	int [] parameterNameStarts,
 	int [] parameterNameEnds,
 	int parametersEnd,
 	int extendedReturnTypeDimensionCount,
-	int extendedReturnTypeDimensionEnd,	
+	int extendedReturnTypeDimensionEnd,
 	char[][] exceptionTypes,
 	int [] exceptionTypeStarts,
 	int [] exceptionTypeEnds,

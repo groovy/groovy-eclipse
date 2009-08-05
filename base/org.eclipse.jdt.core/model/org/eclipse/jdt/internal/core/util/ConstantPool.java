@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,11 +18,11 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
  * Default implementation of IConstantPool.
  */
 public class ConstantPool extends ClassFileStruct implements IConstantPool {
-	
+
 	private int constantPoolCount;
 	private int[] constantPoolOffset;
 	private byte[] classFileBytes;
-	
+
 	ConstantPool(byte[] reference, int[] constantPoolOffset) {
 		this.constantPoolCount = constantPoolOffset.length;
 		this.constantPoolOffset = constantPoolOffset;
@@ -43,7 +43,7 @@ public class ConstantPool extends ClassFileStruct implements IConstantPool {
 				constantPoolEntry.setClassInfoName(getUtf8ValueAt(constantPoolEntry.getClassInfoNameIndex()));
 				break;
 			case IConstantPoolConstant.CONSTANT_Double :
-				constantPoolEntry.setDoubleValue(doubleAt(classFileBytes, 1, this.constantPoolOffset[index]));
+				constantPoolEntry.setDoubleValue(doubleAt(this.classFileBytes, 1, this.constantPoolOffset[index]));
 				break;
 			case IConstantPoolConstant.CONSTANT_Fieldref :
 				constantPoolEntry.setClassIndex(u2At(this.classFileBytes,  1, this.constantPoolOffset[index]));
@@ -67,13 +67,13 @@ public class ConstantPool extends ClassFileStruct implements IConstantPool {
 				constantPoolEntry.setMethodDescriptor(getUtf8ValueAt(methodDescriptorIndex));
 				break;
 			case IConstantPoolConstant.CONSTANT_Float :
-				constantPoolEntry.setFloatValue(floatAt(classFileBytes, 1, this.constantPoolOffset[index]));
+				constantPoolEntry.setFloatValue(floatAt(this.classFileBytes, 1, this.constantPoolOffset[index]));
 				break;
 			case IConstantPoolConstant.CONSTANT_Integer :
-				constantPoolEntry.setIntegerValue(i4At(classFileBytes, 1, this.constantPoolOffset[index]));
+				constantPoolEntry.setIntegerValue(i4At(this.classFileBytes, 1, this.constantPoolOffset[index]));
 				break;
 			case IConstantPoolConstant.CONSTANT_Long :
-				constantPoolEntry.setLongValue(i8At(classFileBytes, 1, this.constantPoolOffset[index]));
+				constantPoolEntry.setLongValue(i8At(this.classFileBytes, 1, this.constantPoolOffset[index]));
 				break;
 			case IConstantPoolConstant.CONSTANT_NameAndType :
 				constantPoolEntry.setNameAndTypeNameIndex(u2At(this.classFileBytes,  1, this.constantPoolOffset[index]));
@@ -101,11 +101,11 @@ public class ConstantPool extends ClassFileStruct implements IConstantPool {
 	 * @see IConstantPool#getEntryKind(int)
 	 */
 	public int getEntryKind(int index) {
-		return this.u1At(this.classFileBytes, 0, this.constantPoolOffset[index]);
+		return u1At(this.classFileBytes, 0, this.constantPoolOffset[index]);
 	}
 
 	private char[] getUtf8ValueAt(int utf8Index) {
 		int utf8Offset = this.constantPoolOffset[utf8Index];
-		return utf8At(classFileBytes, 0, utf8Offset + 3, u2At(classFileBytes, 0, utf8Offset + 1));
+		return utf8At(this.classFileBytes, 0, utf8Offset + 3, u2At(this.classFileBytes, 0, utf8Offset + 1));
 	}
 }

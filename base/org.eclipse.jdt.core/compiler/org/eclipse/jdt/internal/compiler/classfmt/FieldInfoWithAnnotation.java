@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 BEA Systems, Inc.
+ * Copyright (c) 2005, 2009 BEA Systems, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,13 +36,13 @@ protected void initialize() {
 	super.initialize();
 }
 protected void reset() {
-	if (annotations != null)
+	if (this.annotations != null)
 		for (int i = 0, max = this.annotations.length; i < max; i++)
 			this.annotations[i].reset();
 	super.reset();
 }
 public String toString() {
-	StringBuffer buffer = new StringBuffer(this.getClass().getName());
+	StringBuffer buffer = new StringBuffer(getClass().getName());
 	if (this.annotations != null) {
 		buffer.append('\n');
 		for (int i = 0; i < this.annotations.length; i++) {

@@ -20,7 +20,7 @@ import org.eclipse.jdt.internal.compiler.batch.Main;
  * <pre>
  * BatchCompiler.compile("C:\\mySources\\X.java -d C:\\myOutput", new PrintWriter(System.out), new PrintWriter(System.err), null);
  * </pre>
- * 
+ *
  * @since 3.4
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -28,7 +28,7 @@ public final class BatchCompiler {
 
 	/**
 	 * Invokes the Eclipse Compiler for Java with the given command line arguments, using the given writers
-	 * to print messages, and reporting progress to the given compilation progress. Returns whether 
+	 * to print messages, and reporting progress to the given compilation progress. Returns whether
 	 * the compilation completed successfully.
 	 * <p>
 	 * Reasons for a compilation failing to complete successfully include:</p>
@@ -41,7 +41,7 @@ public final class BatchCompiler {
 	 * The specification of the command line arguments is defined by running the batch compiler's help
 	 * <pre>BatchCompiler.compile("-help", new PrintWriter(System.out), new PrintWriter(System.err), null);</pre>
 	 * </p>
-	 * 
+	 *
 	 * @param commandLine the command line arguments passed to the compiler
 	 * @param outWriter the writer used to print standard messages
 	 * @param errWriter the writer used to print error messages
@@ -54,7 +54,7 @@ public final class BatchCompiler {
 
 	/**
 	 * Invokes the Eclipse Compiler for Java with the given command line arguments, using the given writers
-	 * to print messages, and reporting progress to the given compilation progress. Returns whether 
+	 * to print messages, and reporting progress to the given compilation progress. Returns whether
 	 * the compilation completed successfully.
 	 * <p>
 	 * Reasons for a compilation failing to complete successfully include:</p>
@@ -67,9 +67,9 @@ public final class BatchCompiler {
 	 * The specification of the command line arguments is defined by running the batch compiler's help
 	 * <pre>BatchCompiler.compile("-help", new PrintWriter(System.out), new PrintWriter(System.err), null);</pre>
 	 * </p>
-	 * Note that a <code>true</code> returned value indicates that no errors were reported, no runtime exceptions 
+	 * Note that a <code>true</code> returned value indicates that no errors were reported, no runtime exceptions
 	 * occurred and that the compilation was not canceled.
-	 * 
+	 *
 	 * @param commandLineArguments the command line arguments passed to the compiler
 	 * @param outWriter the writer used to print standard messages
 	 * @param errWriter the writer used to print error messages

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,7 +62,7 @@ boolean isPackage(char[][] parentPackageName, char[] packageName);
 /**
  * This method cleans the environment uo. It is responsible for releasing the memory
  * and freeing resources. Passed that point, the name environment is no longer usable.
- * 
+ *
  * A name environment can have a long life cycle, therefore it is the responsibility of
  * the code which created it to decide when it is a good time to clean it up.
  */

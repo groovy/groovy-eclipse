@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,7 +26,6 @@ public class ParameterizedMethodBinding extends MethodBinding {
 	 * Create method of parameterized type, substituting original parameters/exception/return type with type arguments.
 	 */
 	public ParameterizedMethodBinding(final ParameterizedTypeBinding parameterizedDeclaringClass, MethodBinding originalMethod) {
-
 		super(
 				originalMethod.modifiers,
 				originalMethod.selector,
@@ -36,7 +35,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 				parameterizedDeclaringClass);
 		this.originalMethod = originalMethod;
 		this.tagBits = originalMethod.tagBits;
-		
+
 		final TypeVariableBinding[] originalVariables = originalMethod.typeVariables;
 		Substitution substitution = null;
 		final int length = originalVariables.length;
@@ -49,14 +48,14 @@ public class ParameterizedMethodBinding extends MethodBinding {
 			final TypeVariableBinding[] substitutedVariables = new TypeVariableBinding[length];
 			for (int i = 0; i < length; i++) { // copy original type variable to relocate
 				TypeVariableBinding originalVariable = originalVariables[i];
-				substitutedVariables[i] = new TypeVariableBinding(originalVariable.sourceName, this, originalVariable.rank);
+				substitutedVariables[i] = new TypeVariableBinding(originalVariable.sourceName, this, originalVariable.rank, parameterizedDeclaringClass.environment);
 			}
 			this.typeVariables = substitutedVariables;
-			
+
 			// need to substitute old var refs with new ones (double substitution: declaringClass + new type variables)
 			substitution = new Substitution() {
-				public LookupEnvironment environment() { 
-					return parameterizedDeclaringClass.environment; 
+				public LookupEnvironment environment() {
+					return parameterizedDeclaringClass.environment;
 				}
 				public boolean isRawSubstitution() {
 					return !isStatic && parameterizedDeclaringClass.isRawSubstitution();
@@ -71,7 +70,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 			        return typeVariable;
 				}
 			};
-		
+
 			// initialize new variable bounds
 			for (int i = 0; i < length; i++) {
 				TypeVariableBinding originalVariable = originalVariables[i];
@@ -82,7 +81,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 					substitutedVariable.firstBound = originalVariable.firstBound == originalVariable.superclass
 						? substitutedSuperclass // could be array type or interface
 						: substitutedInterfaces[0];
-				}				
+				}
 				switch (substitutedSuperclass.kind()) {
 					case Binding.ARRAY_TYPE :
 						substitutedVariable.superclass = parameterizedDeclaringClass.environment.getResolvedType(TypeConstants.JAVA_LANG_OBJECT, null);
@@ -107,10 +106,10 @@ public class ParameterizedMethodBinding extends MethodBinding {
 			this.parameters = Scope.substitute(substitution, this.parameters);
 			this.thrownExceptions = Scope.substitute(substitution, this.thrownExceptions);
 		    // error case where exception type variable would have been substituted by a non-reference type (207573)
-		    if (this.thrownExceptions == null) this.thrownExceptions = Binding.NO_EXCEPTIONS;	    			
+		    if (this.thrownExceptions == null) this.thrownExceptions = Binding.NO_EXCEPTIONS;
 		}
 		checkMissingType: {
-			if ((this.tagBits & TagBits.HasMissingType) != 0) 
+			if ((this.tagBits & TagBits.HasMissingType) != 0)
 				break checkMissingType;
 			if ((this.returnType.tagBits & TagBits.HasMissingType) != 0) {
 				this.tagBits |=  TagBits.HasMissingType;
@@ -127,16 +126,15 @@ public class ParameterizedMethodBinding extends MethodBinding {
 					this.tagBits |=  TagBits.HasMissingType;
 					break checkMissingType;
 				}
-			}			
+			}
 		}
 	}
-	
+
 	/**
 	 * Create method of parameterized type, substituting original parameters/exception/return type with type arguments.
 	 * This is a CODE ASSIST method ONLY.
 	 */
 	public ParameterizedMethodBinding(final ReferenceBinding declaringClass, MethodBinding originalMethod, char[][] alternateParamaterNames, final LookupEnvironment environment) {
-
 		super(
 				originalMethod.modifiers,
 				originalMethod.selector,
@@ -146,7 +144,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 				declaringClass);
 		this.originalMethod = originalMethod;
 		this.tagBits = originalMethod.tagBits;
-		
+
 		final TypeVariableBinding[] originalVariables = originalMethod.typeVariables;
 		Substitution substitution = null;
 		final int length = originalVariables.length;
@@ -162,14 +160,15 @@ public class ParameterizedMethodBinding extends MethodBinding {
 								originalVariable.sourceName :
 								alternateParamaterNames[i],
 							this,
-							originalVariable.rank);
+							originalVariable.rank,
+							environment);
 			}
 			this.typeVariables = substitutedVariables;
-			
+
 			// need to substitute old var refs with new ones (double substitution: declaringClass + new type variables)
 			substitution = new Substitution() {
-				public LookupEnvironment environment() { 
-					return environment; 
+				public LookupEnvironment environment() {
+					return environment;
 				}
 				public boolean isRawSubstitution() {
 					return false;
@@ -182,7 +181,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 			        return typeVariable;
 				}
 			};
-		
+
 			// initialize new variable bounds
 			for (int i = 0; i < length; i++) {
 				TypeVariableBinding originalVariable = originalVariables[i];
@@ -193,7 +192,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 					substitutedVariable.firstBound = originalVariable.firstBound == originalVariable.superclass
 						? substitutedSuperclass // could be array type or interface
 						: substitutedInterfaces[0];
-				}				
+				}
 				switch (substitutedSuperclass.kind()) {
 					case Binding.ARRAY_TYPE :
 						substitutedVariable.superclass = environment.getResolvedType(TypeConstants.JAVA_LANG_OBJECT, null);
@@ -218,10 +217,10 @@ public class ParameterizedMethodBinding extends MethodBinding {
 			this.parameters = Scope.substitute(substitution, this.parameters);
 			this.thrownExceptions = Scope.substitute(substitution, this.thrownExceptions);
 		    // error case where exception type variable would have been substituted by a non-reference type (207573)
-		    if (this.thrownExceptions == null) this.thrownExceptions = Binding.NO_EXCEPTIONS;	    			
+		    if (this.thrownExceptions == null) this.thrownExceptions = Binding.NO_EXCEPTIONS;
 		}
 		checkMissingType: {
-			if ((this.tagBits & TagBits.HasMissingType) != 0) 
+			if ((this.tagBits & TagBits.HasMissingType) != 0)
 				break checkMissingType;
 			if ((this.returnType.tagBits & TagBits.HasMissingType) != 0) {
 				this.tagBits |=  TagBits.HasMissingType;
@@ -238,8 +237,8 @@ public class ParameterizedMethodBinding extends MethodBinding {
 					this.tagBits |=  TagBits.HasMissingType;
 					break checkMissingType;
 				}
-			}			
-		}		
+			}
+		}
 	}
 
 	public ParameterizedMethodBinding() {
@@ -276,14 +275,14 @@ public class ParameterizedMethodBinding extends MethodBinding {
 	 * Returns true if some parameters got substituted.
 	 */
 	public boolean hasSubstitutedParameters() {
-		return this.parameters != originalMethod.parameters;
+		return this.parameters != this.originalMethod.parameters;
 	}
 
 	/**
 	 * Returns true if the return type got substituted.
 	 */
 	public boolean hasSubstitutedReturnType() {
-		return this.returnType != originalMethod.returnType;
+		return this.returnType != this.originalMethod.returnType;
 	}
 
 	/**

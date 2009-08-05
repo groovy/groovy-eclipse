@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -92,10 +92,10 @@ public char[] get(char[] object) {
 }
 
 public boolean includes(char[] object) {
-	int length = values.length;
+	int length = this.values.length;
 	int index = (CharOperation.hashCode(object) & 0x7FFFFFFF) % length;
 	char[] current;
-	while ((current = values[index]) != null) {
+	while ((current = this.values[index]) != null) {
 		if (CharOperation.equals(current, object)) return true;
 		if (++index == length) index = 0;
 	}
@@ -103,15 +103,15 @@ public boolean includes(char[] object) {
 }
 
 public char[] remove(char[] object) {
-	int length = values.length;
+	int length = this.values.length;
 	int index = (CharOperation.hashCode(object) & 0x7FFFFFFF) % length;
 	char[] current;
-	while ((current = values[index]) != null) {
+	while ((current = this.values[index]) != null) {
 		if (CharOperation.equals(current, object)) {
-			elementSize--;
-			char[] oldValue = values[index];
-			values[index] = null;
-			if (values[index + 1 == length ? 0 : index + 1] != null)
+			this.elementSize--;
+			char[] oldValue = this.values[index];
+			this.values[index] = null;
+			if (this.values[index + 1 == length ? 0 : index + 1] != null)
 				rehash(); // only needed if a possible collision existed
 			return oldValue;
 		}
@@ -121,10 +121,10 @@ public char[] remove(char[] object) {
 }
 
 private void rehash() {
-	SimpleSetOfCharArray newSet = new SimpleSetOfCharArray(elementSize * 2); // double the number of expected elements
+	SimpleSetOfCharArray newSet = new SimpleSetOfCharArray(this.elementSize * 2); // double the number of expected elements
 	char[] current;
-	for (int i = values.length; --i >= 0;)
-		if ((current = values[i]) != null)
+	for (int i = this.values.length; --i >= 0;)
+		if ((current = this.values[i]) != null)
 			newSet.add(current);
 
 	this.values = newSet.values;
@@ -135,8 +135,8 @@ private void rehash() {
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	char[] object;
-	for (int i = 0, l = values.length; i < l; i++)
-		if ((object = values[i]) != null)
+	for (int i = 0, l = this.values.length; i < l; i++)
+		if ((object = this.values[i]) != null)
 			s += new String(object) + "\n"; //$NON-NLS-1$
 	return s;
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,18 +26,18 @@ import org.eclipse.jdt.internal.core.SimpleDelta;
  * Collects changes (reported through fine-grained deltas) that can affect a type hierarchy.
  */
 public class ChangeCollector {
-	
+
 	/*
 	 * A table from ITypes to TypeDeltas
 	 */
 	HashMap changes = new HashMap();
-	
+
 	TypeHierarchy hierarchy;
-	
+
 	public ChangeCollector(TypeHierarchy hierarchy) {
 		this.hierarchy = hierarchy;
 	}
-	
+
 	/*
 	 * Adds the children of the given delta to the list of changes.
 	 */
@@ -64,7 +64,7 @@ public class ChangeCollector {
 			}
 		}
 	}
-	
+
 	/*
 	 * Adds the given delta on a compilation unit to the list of changes.
 	 */
@@ -92,7 +92,7 @@ public class ChangeCollector {
 				break;
 		}
 	}
-	
+
 	private void addChange(IImportContainer importContainer, IJavaElementDelta newDelta) throws JavaModelException {
 		int newKind = newDelta.getKind();
 		if (newKind == IJavaElementDelta.CHANGED) {
@@ -162,7 +162,7 @@ public class ChangeCollector {
 			this.changes.put(importDecl, delta);
 		}
 	}
-	
+
 	/*
 	 * Adds a change for the given member (a method, a field or an initializer) and the types it defines.
 	 */
@@ -190,7 +190,7 @@ public class ChangeCollector {
 				break;
 		}
 	}
-	
+
 	/*
 	 * Adds a change for the given type and the types it defines.
 	 */
@@ -232,7 +232,7 @@ public class ChangeCollector {
 					if (hasSuperTypeChange(type)) {
 						existingDelta.superTypes();
 						hasChange = true;
-					} 
+					}
 					if (hasVisibilityChange(type)) {
 						existingDelta.modifiers();
 						hasChange = true;
@@ -247,8 +247,8 @@ public class ChangeCollector {
 		} else {
 			// check whether the type addition affects the hierarchy
 			String typeName = type.getElementName();
-			if (this.hierarchy.hasSupertype(typeName) 
-					|| this.hierarchy.subtypesIncludeSupertypeOf(type) 
+			if (this.hierarchy.hasSupertype(typeName)
+					|| this.hierarchy.subtypesIncludeSupertypeOf(type)
 					|| this.hierarchy.missingTypes.contains(typeName)) {
 				SimpleDelta delta = new SimpleDelta();
 				delta.added();
@@ -256,7 +256,7 @@ public class ChangeCollector {
 			}
 		}
 	}
-	
+
 	private void addTypeChange(IType type, int newFlags, SimpleDelta existingDelta) throws JavaModelException {
 		if (existingDelta != null) {
 			switch (existingDelta.getKind()) {
@@ -268,7 +268,7 @@ public class ChangeCollector {
 							&& hasSuperTypeChange(type)) {
 						existingDelta.superTypes();
 						hasChange = true;
-					} 
+					}
 					if ((existingFlags & IJavaElementDelta.F_MODIFIERS) != 0
 							&& hasVisibilityChange(type)) {
 						existingDelta.modifiers();
@@ -285,7 +285,7 @@ public class ChangeCollector {
 		} else {
 			// check whether the type change affects the hierarchy
 			SimpleDelta typeDelta = null;
-			if ((newFlags & IJavaElementDelta.F_SUPER_TYPES) != 0 
+			if ((newFlags & IJavaElementDelta.F_SUPER_TYPES) != 0
 					&& this.hierarchy.includesTypeOrSupertype(type)) {
 				typeDelta = new SimpleDelta();
 				typeDelta.superTypes();
@@ -326,7 +326,7 @@ public class ChangeCollector {
 			}
 		}
 	}
-	
+
 	/*
 	 * Returns all types defined in the given element excluding the given element.
 	 */
@@ -360,7 +360,7 @@ public class ChangeCollector {
 				break;
 		}
 	}
-	
+
 	/*
 	 * Returns all types in the existing hierarchy that have the given element as a parent.
 	 */
@@ -388,7 +388,7 @@ public class ChangeCollector {
 				break;
 		}
 	}
-	
+
 	private boolean hasSuperTypeChange(IType type) throws JavaModelException {
 		// check super class
 		IType superclass = this.hierarchy.getSuperclass(type);
@@ -397,7 +397,7 @@ public class ChangeCollector {
 		if (existingSuperclassName != null && !existingSuperclassName.equals(newSuperclassName)) {
 			return true;
 		}
-		
+
 		// check super interfaces
 		IType[] existingSuperInterfaces = this.hierarchy.getSuperInterfaces(type);
 		String[] newSuperInterfaces = type.getSuperInterfaceNames();
@@ -410,10 +410,10 @@ public class ChangeCollector {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	private boolean hasVisibilityChange(IType type) throws JavaModelException {
 		int existingFlags = this.hierarchy.getCachedFlags(type);
 		int newFlags = type.getFlags();
@@ -424,9 +424,9 @@ public class ChangeCollector {
 	 * Whether the hierarchy needs refresh according to the changes collected so far.
 	 */
 	public boolean needsRefresh() {
-		return changes.size() != 0;
+		return this.changes.size() != 0;
 	}
-	
+
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		Iterator iterator = this.changes.entrySet().iterator();

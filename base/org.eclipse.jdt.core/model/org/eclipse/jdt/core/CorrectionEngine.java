@@ -16,7 +16,6 @@ import java.util.Map;
 import org.eclipse.core.resources.*;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.parser.*;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.util.Messages;
@@ -24,14 +23,14 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * This class is the entry point for source corrections.
- * 
+ *
  * This class is intended to be instantiated by clients.
- * 
- * @since 2.0 
+ *
+ * @since 2.0
  * @noextend This class is not intended to be subclassed by clients.
  */
-public class CorrectionEngine implements ProblemReasons {
-	
+public class CorrectionEngine {
+
 	/**
 	 * This field is not intended to be used by client.
 	 */
@@ -80,7 +79,7 @@ public class CorrectionEngine implements ProblemReasons {
 	 * This field is not intended to be used by client.
 	 */
 	protected int filter;
-		
+
 	/**
 	 * The CorrectionEngine is responsible for computing problem corrections.
 	 *
@@ -91,13 +90,13 @@ public class CorrectionEngine implements ProblemReasons {
 	public CorrectionEngine(Map setting) {
 		// settings ignored for now
 	}
-	
+
 	/**
 	 * Performs code correction for the given marker,
 	 * reporting results to the given correction requestor.
-	 * 
+	 *
 	 * Correction results are answered through a requestor.
-	 * 
+	 *
 	 * @param marker
 	 * 		the marker which describe the problem to correct.
 	 * @param targetUnit
@@ -108,32 +107,32 @@ public class CorrectionEngine implements ProblemReasons {
 	 * 		the given correction requestor
 	 * @exception IllegalArgumentException if <code>requestor</code> is <code>null</code>
 	 * @exception JavaModelException currently this exception is never thrown, but the opportunity to thrown an exception
-	 * 	when the correction failed is kept for later. 
-	 * @since 2.0 
+	 * 	when the correction failed is kept for later.
+	 * @since 2.0
 	 */
 	public void computeCorrections(IMarker marker, ICompilationUnit targetUnit, int positionOffset, ICorrectionRequestor requestor) throws JavaModelException {
-		
+
 		IJavaElement element = targetUnit == null ? JavaCore.create(marker.getResource()) : targetUnit;
-		
+
 		if(!(element instanceof ICompilationUnit))
 			return;
-			
+
 		ICompilationUnit unit = (ICompilationUnit) element;
-		
+
 		int id = marker.getAttribute(IJavaModelMarker.ID, -1);
 		String[] args = Util.getProblemArgumentsFromMarker(marker.getAttribute(IJavaModelMarker.ARGUMENTS, "")); //$NON-NLS-1$
 		int start = marker.getAttribute(IMarker.CHAR_START, -1);
 		int end = marker.getAttribute(IMarker.CHAR_END, -1);
-		
+
 		computeCorrections(unit, id, start + positionOffset, end + positionOffset, args, requestor);
 	}
-	
+
 	/**
 	 * Performs code correction for the given IProblem,
 	 * reporting results to the given correction requestor.
-	 * 
+	 *
 	 * Correction results are answered through a requestor.
-	 * 
+	 *
 	 * @param problem
 	 * 		the problem which describe the problem to correct.
 	 * @param targetUnit
@@ -143,16 +142,16 @@ public class CorrectionEngine implements ProblemReasons {
 	 * @exception IllegalArgumentException if <code>targetUnit</code> or <code>requestor</code> is <code>null</code>
 	 * @exception JavaModelException currently this exception is never thrown, but the opportunity to thrown an exception
 	 * 	when the correction failed is kept for later.
-	 * @since 2.0 
+	 * @since 2.0
 	 */
 	public void computeCorrections(IProblem problem, ICompilationUnit targetUnit, ICorrectionRequestor requestor) throws JavaModelException {
 		if (requestor == null) {
 			throw new IllegalArgumentException(Messages.correction_nullUnit);
 		}
 		this.computeCorrections(
-			targetUnit, problem.getID(), 
-			problem.getSourceStart(), 
-			problem.getSourceEnd(), 
+			targetUnit, problem.getID(),
+			problem.getSourceStart(),
+			problem.getSourceEnd(),
 			problem.getArguments(),
 			requestor);
 	}
@@ -164,19 +163,19 @@ public class CorrectionEngine implements ProblemReasons {
 	 *
 	 *  @param unit org.eclipse.jdt.internal.core.ICompilationUnit
 	 *      the compilation unit.
-	 *  
+	 *
 	 * 	@param id int
 	 * 		the id of the problem.
-	 * 
+	 *
 	 * 	@param start int
 	 * 		a position in the source where the error begin.
 	 *
 	 *  @param end int
-	 *      a position in the source where the error finish. 
-	 * 
+	 *      a position in the source where the error finish.
+	 *
 	 * 	@param arguments String[]
 	 * 		arguments of the problem.
-	 * 
+	 *
 	 * @exception IllegalArgumentException if <code>requestor</code> is <code>null</code>
 	 * @exception JavaModelException currently this exception is never thrown, but the opportunity to thrown an exception
 	 * 	when the correction failed is kept for later.
@@ -185,16 +184,16 @@ public class CorrectionEngine implements ProblemReasons {
 	private void computeCorrections(ICompilationUnit unit, int id, int start, int end, String[] arguments, ICorrectionRequestor requestor) {
 
 		if(id == -1 || arguments == null || start == -1 || end == -1)
-			return;		
+			return;
 		if (requestor == null) {
 			throw new IllegalArgumentException(Messages.correction_nullRequestor);
 		}
-		
+
 		this.correctionRequestor = requestor;
 		this.correctionStart = start;
 		this.correctionEnd = end;
 		this.compilationUnit = unit;
-		
+
 		String argument = null;
 		try {
 			switch (id) {
@@ -207,13 +206,13 @@ public class CorrectionEngine implements ProblemReasons {
 					this.filter = CLASSES | INTERFACES;
 					argument = arguments[0];
 					break;
-					
+
 				// Method correction
 				case IProblem.UndefinedMethod :
 					this.filter = METHOD;
 					argument = arguments[1];
 					break;
-					
+
 				// Field and local variable correction
 				case IProblem.UndefinedField :
 					this.filter = FIELD;
@@ -237,36 +236,36 @@ public class CorrectionEngine implements ProblemReasons {
 			String source = this.compilationUnit.getSource();
 			Scanner scanner = new Scanner();
 			scanner.setSource(source.toCharArray());
-			
+
 			scanner.resetTo(this.correctionStart, this.correctionEnd);
 			int token = 0;
 			char[] argumentSource = CharOperation.NO_CHAR;
-			
+
 			// search last segment position
 			while(true) {
 				token = scanner.getNextToken();
 				if (token == TerminalTokens.TokenNameEOF) return;
-				
+
 				char[] tokenSource = scanner.getCurrentTokenSource();
-				
+
 				argumentSource = CharOperation.concat(argumentSource, tokenSource);
 				if(!CharOperation.prefixEquals(argumentSource, argument))
 					return;
-				
+
 				if(CharOperation.equals(argument, argumentSource)) {
 					this.correctionStart = scanner.startPosition;
 					this.correctionEnd = scanner.currentPosition;
 					this.prefixLength = CharOperation.lastIndexOf('.', argument) + 1;
 					break;
 				}
-				
+
 			}
-		
+
 			// search completion position
 			int completionPosition = this.correctionStart;
 			scanner.resetTo(completionPosition, this.correctionEnd);
 			int position = completionPosition;
-			
+
 			for (int i = 0; i < 4; i++) {
 				if(scanner.getNextCharAsJavaIdentifierPart()) {
 					completionPosition = position;
@@ -280,7 +279,7 @@ public class CorrectionEngine implements ProblemReasons {
 				Hashtable options = new Hashtable(oldOptions);
 				options.put(JavaCore.CODEASSIST_CAMEL_CASE_MATCH, JavaCore.DISABLED);
 				JavaCore.setOptions(options);
-				
+
 				this.compilationUnit.codeComplete(
 					completionPosition,
 					this.completionRequestor
@@ -324,7 +323,7 @@ public class CorrectionEngine implements ProblemReasons {
 								proposal.getFlags(),
 								CorrectionEngine.this.correctionStart,
 								CorrectionEngine.this.correctionEnd);
-						}					
+						}
 					}
 					break;
 				case CompletionProposal.FIELD_REF:
@@ -397,18 +396,18 @@ public class CorrectionEngine implements ProblemReasons {
 		}
 	};
 
-	
+
 	/**
 	 * Return an array of strings which contains one entry per warning token
 	 * accepted by the <code>@SuppressWarnings</code> annotation. This array is
 	 * neither null nor empty, it contains at least the String <code>all</code>.
 	 * It should not be modified by the caller (please take a copy if modifications
 	 * are needed).<br>
-	 * <b>Note:</b> The tokens returned are not necessarily standardized across Java 
-	 * compilers. If you were to use one of these tokens in a <code>@SuppressWarnings</code> 
-	 * annotation in the Java source code, the effects (if any) may vary from 
+	 * <b>Note:</b> The tokens returned are not necessarily standardized across Java
+	 * compilers. If you were to use one of these tokens in a <code>@SuppressWarnings</code>
+	 * annotation in the Java source code, the effects (if any) may vary from
 	 * compiler to compiler.
-	 * 
+	 *
 	 * @return an array of strings which contains one entry per warning token
 	 * 			accepted by the <code>@SuppressWarnings</code> annotation.
 	 * @since 3.2
@@ -416,12 +415,12 @@ public class CorrectionEngine implements ProblemReasons {
 	public static String[] getAllWarningTokens() {
 		return CompilerOptions.warningTokens;
 	}
-	
+
 	/**
 	 * Helper method for decoding problem marker attributes. Returns an array of String arguments
-	 * extracted from the problem marker "arguments" attribute, or <code>null</code> if the marker 
+	 * extracted from the problem marker "arguments" attribute, or <code>null</code> if the marker
 	 * "arguments" attribute is missing or ill-formed.
-	 * 
+	 *
 	 * @param problemMarker
 	 * 		the problem marker to decode arguments from.
 	 * @return an array of String arguments, or <code>null</code> if unable to extract arguments
@@ -430,37 +429,37 @@ public class CorrectionEngine implements ProblemReasons {
 	public static String[] getProblemArguments(IMarker problemMarker){
 		String argumentsString = problemMarker.getAttribute(IJavaModelMarker.ARGUMENTS, null);
 		return Util.getProblemArgumentsFromMarker(argumentsString);
-	}	
-	
+	}
+
 	/**
-	 * Returns a token which can be used to suppress a given warning using 
-	 * <code>@SuppressWarnings</code> annotation, for a given problem ID 
-	 * ({@link IProblem }). If a particular problem is not suppressable, 
-	 * <code>null</code> will be returned. 
+	 * Returns a token which can be used to suppress a given warning using
+	 * <code>@SuppressWarnings</code> annotation, for a given problem ID
+	 * ({@link IProblem }). If a particular problem is not suppressable,
+	 * <code>null</code> will be returned.
 	 * <p>
-	 * <b>Note:</b> <code>@SuppressWarnings</code> can only suppress warnings, 
-	 * which means that if some problems got promoted to ERROR using custom compiler 
-	 * settings ({@link IJavaProject#setOption(String, String)}), the 
+	 * <b>Note:</b> <code>@SuppressWarnings</code> can only suppress warnings,
+	 * which means that if some problems got promoted to ERROR using custom compiler
+	 * settings ({@link IJavaProject#setOption(String, String)}), the
 	 * <code>@SuppressWarnings</code> annotation will be ineffective.
 	 * </p>
 	 * <p>
-	 * <b>Note:</b> <code>@SuppressWarnings</code> can be argumented with 
+	 * <b>Note:</b> <code>@SuppressWarnings</code> can be argumented with
 	 * <code>"all"</code> so as to suppress all possible warnings at once.
 	 * </p>
 	 * <p>
-	 * <b>Note:</b> The tokens returned are not necessarily standardized across Java 
-	 * compilers. If you were to use one of these tokens in an @SuppressWarnings 
-	 * annotation in the Java source code, the effects (if any) may vary from 
+	 * <b>Note:</b> The tokens returned are not necessarily standardized across Java
+	 * compilers. If you were to use one of these tokens in an @SuppressWarnings
+	 * annotation in the Java source code, the effects (if any) may vary from
 	 * compiler to compiler.
 	 * </p>
 	 * @param problemID
 	 *         the ID of a given warning to suppress
-	 * @return a String which can be used in <code>@SuppressWarnings</code> annotation, 
+	 * @return a String which can be used in <code>@SuppressWarnings</code> annotation,
 	 * or <code>null</code> if unable to suppress this warning.
 	 * @since 3.1
 	 */
 	public static String getWarningToken(int problemID){
-		long irritant = ProblemReporter.getIrritant(problemID);
+		int irritant = ProblemReporter.getIrritant(problemID);
 		if (irritant != 0) {
 			return CompilerOptions.warningTokenFromIrritant(irritant);
 		}

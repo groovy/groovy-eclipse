@@ -21,40 +21,40 @@ import java.util.List;
  * ConditionalExpression:
  *    Expression <b>?</b> Expression <b>:</b> Expression
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class ConditionalExpression extends Expression {
-	
+
 	/**
 	 * The "expression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(ConditionalExpression.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "thenExpression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor THEN_EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor THEN_EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(ConditionalExpression.class, "thenExpression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "elseExpression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor ELSE_EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor ELSE_EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(ConditionalExpression.class, "elseExpression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(4);
 		createPropertyList(ConditionalExpression.class, properyList);
@@ -67,18 +67,18 @@ public class ConditionalExpression extends Expression {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The condition expression; lazily initialized; defaults to an unspecified,
 	 * but legal, expression.
@@ -98,13 +98,13 @@ public class ConditionalExpression extends Expression {
 	private Expression elseExpression = null;
 
 	/**
-	 * Creates a new unparented conditional expression node owned by the given 
+	 * Creates a new unparented conditional expression node owned by the given
 	 * AST. By default, the condition, "then", and "else" expresssions are
 	 * unspecified, but legal.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	ConditionalExpression(AST ast) {
@@ -117,7 +117,7 @@ public class ConditionalExpression extends Expression {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -149,7 +149,7 @@ public class ConditionalExpression extends Expression {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -162,7 +162,7 @@ public class ConditionalExpression extends Expression {
 	 */
 	ASTNode clone0(AST target) {
 		ConditionalExpression result = new ConditionalExpression(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setExpression((Expression) getExpression().clone(target));
 		result.setThenExpression(
 			(Expression) getThenExpression().clone(target));
@@ -192,12 +192,12 @@ public class ConditionalExpression extends Expression {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the condition of this conditional expression.
-	 * 
+	 *
 	 * @return the condition node
-	 */ 
+	 */
 	public Expression getExpression() {
 		if (this.conditionExpression == null) {
 			// lazy init must be thread-safe for readers
@@ -211,10 +211,10 @@ public class ConditionalExpression extends Expression {
 		}
 		return this.conditionExpression;
 	}
-	
+
 	/**
 	 * Sets the condition of this conditional expression.
-	 * 
+	 *
 	 * @param expression the condition node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -222,7 +222,7 @@ public class ConditionalExpression extends Expression {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setExpression(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -232,12 +232,12 @@ public class ConditionalExpression extends Expression {
 		this.conditionExpression = expression;
 		postReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
 	}
-	
+
 	/**
 	 * Returns the "then" part of this conditional expression.
-	 * 
+	 *
 	 * @return the "then" expression node
-	 */ 
+	 */
 	public Expression getThenExpression() {
 		if (this.thenExpression == null) {
 			// lazy init must be thread-safe for readers
@@ -251,10 +251,10 @@ public class ConditionalExpression extends Expression {
 		}
 		return this.thenExpression;
 	}
-	
+
 	/**
 	 * Sets the "then" part of this conditional expression.
-	 * 
+	 *
 	 * @param expression the "then" expression node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -262,7 +262,7 @@ public class ConditionalExpression extends Expression {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setThenExpression(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -275,9 +275,9 @@ public class ConditionalExpression extends Expression {
 
 	/**
 	 * Returns the "else" part of this conditional expression.
-	 * 
+	 *
 	 * @return the "else" expression node
-	 */ 
+	 */
 	public Expression getElseExpression() {
 		if (this.elseExpression == null) {
 			// lazy init must be thread-safe for readers
@@ -291,10 +291,10 @@ public class ConditionalExpression extends Expression {
 		}
 		return this.elseExpression;
 	}
-	
+
 	/**
 	 * Sets the "else" part of this conditional expression.
-	 * 
+	 *
 	 * @param expression the "else" expression node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -302,7 +302,7 @@ public class ConditionalExpression extends Expression {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setElseExpression(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -320,12 +320,12 @@ public class ConditionalExpression extends Expression {
 		// treat Code as free
 		return BASE_NODE_SIZE + 3 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
-		return 
+		return
 			memSize()
 			+ (this.conditionExpression == null ? 0 : getExpression().treeSize())
 			+ (this.thenExpression == null ? 0 : getThenExpression().treeSize())

@@ -204,7 +204,7 @@ public int hashCode() {
  * @see IMethod
  */
 public boolean isConstructor() throws JavaModelException {
-	if (!this.getElementName().equals(this.parent.getElementName())) {
+	if (!getElementName().equals(this.parent.getElementName())) {
 		// faster than reaching the info
 		return false;
 	}
@@ -227,9 +227,9 @@ public boolean isResolved() {
  * @see IMethod#isSimilar(IMethod)
  */
 public boolean isSimilar(IMethod method) {
-	return 
+	return
 		areSimilarMethods(
-			this.getElementName(), this.getParameterTypes(),
+			getElementName(), getParameterTypes(),
 			method.getElementName(), method.getParameterTypes(),
 			null);
 }

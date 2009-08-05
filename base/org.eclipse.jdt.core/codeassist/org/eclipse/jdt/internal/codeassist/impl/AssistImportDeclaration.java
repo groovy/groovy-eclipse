@@ -23,8 +23,8 @@ public class AssistImportDeclaration extends ImportDeclaration {
 		super(parent, name, isOnDemand);
 		this.infoCache = infoCache;
 	}
-	
+
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
-		return infoCache.get(this);
+		return this.infoCache.get(this);
 	}
 }

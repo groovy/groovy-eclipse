@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ import org.eclipse.core.resources.IMarker;
 public interface ICodeCompletionRequestor {
 /**
  * Code assist notification of a class completion.
- * 
+ *
  * @param packageName Declaring package name of the class.
  * @param className Name of the class.
  * @param completionName The completion for the class.
@@ -62,21 +62,21 @@ void acceptError(IMarker marker);
  * Code assist notification of a field completion.
  *
  * @param declaringTypePackageName Name of the package in which the type that contains this field is declared.
- * 
+ *
  * @param declaringTypeName Name of the type declaring this new field.
- * 
+ *
  * @param name Name of the field.
- * 
+ *
  * @param typePackageName Name of the package in which the type of this field is declared.
- * 
+ *
  * @param typeName Name of the type of this field.
- * 
+ *
  * @param completionName The completion for the field.
- * 
+ *
  * @param modifiers The modifiers of this field.
- * 
+ *
  * @param completionStart The start position of insertion of the name of this field.
- * 
+ *
  * @param completionEnd The end position of insertion of the name of this field.
  *
  * NOTE - All package and type names are presented in their readable form:
@@ -139,15 +139,15 @@ void acceptLabel(char[] labelName, int completionStart, int completionEnd);
  * Code assist notification of a local variable completion.
  *
  * @param name Name of the new local variable.
- * 
+ *
  * @param typePackageName Name of the package in which the type of this new local variable is declared.
- * 
+ *
  * @param typeName Name of the type of this new local variable.
- * 
+ *
  * @param modifiers The modifiers of this new local variable.
- * 
+ *
  * @param completionStart The start position of insertion of the name of this new local variable.
- * 
+ *
  * @param completionEnd The end position of insertion of the name of this new local variable.
  *
  * NOTE - All package and type names are presented in their readable form:
@@ -168,28 +168,28 @@ void acceptLocalVariable(
  * Code assist notification of a method completion.
  *
  * @param declaringTypePackageName Name of the package in which the type that contains this new method is declared.
- * 
+ *
  * @param declaringTypeName Name of the type declaring this new method.
- * 
+ *
  * @param selector Name of the new method.
- * 
+ *
  * @param parameterPackageNames Names of the packages in which the parameter types are declared.
  *    	Should contain as many elements as parameterTypeNames.
- * 
+ *
  * @param parameterTypeNames Names of the parameters types.
  *    	Should contain as many elements as parameterPackageNames.
- * 
+ *
  * @param returnTypePackageName Name of the package in which the return type is declared.
- * 
+ *
  * @param returnTypeName Name of the return type of this new method, should be <code>null</code> for a constructor.
- * 
+ *
  * @param completionName The completion for the method.
  *   	Can include zero, one or two brackets. If the closing bracket is included, then the cursor should be placed before it.
- * 
+ *
  * @param modifiers The modifiers of this new method.
- * 
+ *
  * @param completionStart The start position of insertion of the name of this new method.
- * 
+ *
  * @param completionEnd The end position of insertion of the name of this new method.
  *
  * NOTE - All package and type names are presented in their readable form:
@@ -241,7 +241,7 @@ void acceptPackage(
 	int completionEnd);
 /**
  * Code assist notification of a type completion.
- * 
+ *
  * @param packageName Declaring package name of the type.
  * @param typeName Name of the type.
  * @param completionName The completion for the type.

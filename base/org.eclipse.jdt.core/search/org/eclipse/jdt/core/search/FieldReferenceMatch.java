@@ -12,7 +12,6 @@ package org.eclipse.jdt.core.search;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.internal.core.search.matching.InternalReferenceMatch;
 
 /**
  * A Java search match that represents a field reference.
@@ -20,17 +19,17 @@ import org.eclipse.jdt.internal.core.search.matching.InternalReferenceMatch;
  * <p>
  * This class is intended to be instantiated and subclassed by clients.
  * </p>
- * 
+ *
  * @since 3.0
  */
-public class FieldReferenceMatch extends InternalReferenceMatch {
+public class FieldReferenceMatch extends ReferenceMatch {
 
 private boolean isReadAccess;
 private boolean isWriteAccess;
 
 /**
  * Creates a new field reference match.
- * 
+ *
  * @param enclosingElement the inner-most enclosing member that references
  * 		this field
  * @param accuracy one of {@link #A_ACCURATE} or {@link #A_INACCURATE}
@@ -52,7 +51,7 @@ public FieldReferenceMatch(IJavaElement enclosingElement, int accuracy, int offs
 /**
  * Returns whether the field reference is a read access to the field.
  * Note that a field reference can be read and written at once in case of compound assignments (e.g. i += 0;)
- * 
+ *
  * @return whether the field reference is a read access to the field.
  */
 public final boolean isReadAccess() {
@@ -62,7 +61,7 @@ public final boolean isReadAccess() {
 /**
  * Returns whether the field reference is a write access to the field.
  * Note that a field reference can be read and written at once in case of compound assignments (e.g. i += 0;)
- * 
+ *
  * @return whether the field reference is a write access to the field.
  */
 public final boolean isWriteAccess() {

@@ -15,9 +15,9 @@ package org.eclipse.jdt.internal.core;
  * The uniqueKey contains the genericSignature of the resolved method. Use BindingKey to decode it.
  */
 public class ResolvedSourceMethod extends SourceMethod {
-	
+
 	private String uniqueKey;
-	
+
 	/*
 	 * See class comments.
 	 */
@@ -25,7 +25,7 @@ public class ResolvedSourceMethod extends SourceMethod {
 		super(parent, name, parameterTypes);
 		this.uniqueKey = uniqueKey;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.core.SourceMethod#getKey()
 	 */
@@ -38,7 +38,7 @@ public class ResolvedSourceMethod extends SourceMethod {
 	public boolean isResolved() {
 		return true;
 	}
-	
+
 	/**
 	 * @private Debugging purposes
 	 */

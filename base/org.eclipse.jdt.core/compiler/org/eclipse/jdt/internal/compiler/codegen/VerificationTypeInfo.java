@@ -143,13 +143,13 @@ public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	switch(this.tag) {
 		case VerificationTypeInfo.ITEM_UNINITIALIZED_THIS :
-			buffer.append("uninitialized_this(").append(this.readableName()).append(")"); //$NON-NLS-1$//$NON-NLS-2$
+			buffer.append("uninitialized_this(").append(readableName()).append(")"); //$NON-NLS-1$//$NON-NLS-2$
 			break;
 		case VerificationTypeInfo.ITEM_UNINITIALIZED :
-			buffer.append("uninitialized(").append(this.readableName()).append(")"); //$NON-NLS-1$//$NON-NLS-2$
+			buffer.append("uninitialized(").append(readableName()).append(")"); //$NON-NLS-1$//$NON-NLS-2$
 			break;
 		case VerificationTypeInfo.ITEM_OBJECT :
-			buffer.append(this.readableName());
+			buffer.append(readableName());
 			break;
 		case VerificationTypeInfo.ITEM_DOUBLE :
 			buffer.append('D');
@@ -183,7 +183,7 @@ public VerificationTypeInfo duplicate() {
 public boolean equals(Object obj) {
 	if (obj instanceof VerificationTypeInfo) {
 		VerificationTypeInfo info1 = (VerificationTypeInfo) obj;
-		return info1.tag == this.tag && CharOperation.equals(info1.constantPoolName(), this.constantPoolName());
+		return info1.tag == this.tag && CharOperation.equals(info1.constantPoolName(), constantPoolName());
 	}
 	return false;
 }

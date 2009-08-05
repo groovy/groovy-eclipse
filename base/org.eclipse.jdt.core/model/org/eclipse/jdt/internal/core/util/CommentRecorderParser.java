@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,16 +14,17 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
+import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 
 /**
  * Internal parser used for parsing source to create DOM AST nodes.
- * 
+ *
  * @since 3.0
  */
 public class CommentRecorderParser extends Parser {
-	
+
 	// support for comments
 	int[] commentStops = new int[10];
 	int[] commentStarts = new int[10];
@@ -39,7 +40,7 @@ public class CommentRecorderParser extends Parser {
 	}
 
 	// old javadoc style check which doesn't include all leading comments into declaration
-	// for backward compatibility with 2.1 DOM 
+	// for backward compatibility with 2.1 DOM
 	public void checkComment() {
 
 		// discard obsolete comments while inside methods or fields initializer (see bug 74369)
@@ -49,12 +50,12 @@ public class CommentRecorderParser extends Parser {
 		boolean deprecated = false;
 		boolean checkDeprecated = false;
 		int lastCommentIndex = -1;
-		
+
 		//since jdk1.2 look only in the last java doc comment...
 		nextComment : for (lastCommentIndex = this.scanner.commentPtr; lastCommentIndex >= 0; lastCommentIndex--){
 			//look for @deprecated into the first javadoc comment preceeding the declaration
 			int commentSourceStart = this.scanner.commentStarts[lastCommentIndex];
-			// javadoc only (non javadoc comment have negative end positions.)
+			// javadoc only (non javadoc comment have negative start and/or end positions.)
 			if ((commentSourceStart < 0) ||
 				(this.modifiersSourceStart != -1 && this.modifiersSourceStart < commentSourceStart) ||
 				(this.scanner.commentStops[lastCommentIndex] < 0))
@@ -71,7 +72,7 @@ public class CommentRecorderParser extends Parser {
 			}
 			deprecated = this.javadocParser.checkDeprecation(lastCommentIndex);
 			this.javadoc = this.javadocParser.docComment;
-			if (currentElement == null) this.lastJavadocEnd = commentSourceEnd;
+			if (this.currentElement == null) this.lastJavadocEnd = commentSourceEnd;
 			break nextComment;
 		}
 		if (deprecated) {
@@ -79,7 +80,7 @@ public class CommentRecorderParser extends Parser {
 		}
 		// modify the modifier source start to point at the first comment
 		if (lastCommentIndex >= 0 && checkDeprecated) {
-			this.modifiersSourceStart = this.scanner.commentStarts[lastCommentIndex]; 
+			this.modifiersSourceStart = this.scanner.commentStarts[lastCommentIndex];
 			if (this.modifiersSourceStart < 0) {
 				this.modifiersSourceStart = -this.modifiersSourceStart;
 			}
@@ -108,26 +109,6 @@ public class CommentRecorderParser extends Parser {
 		super.consumeInterfaceHeader();
 	}
 
-	/**
-	 * Insure that start position is always positive.
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#containsComment(int, int)
-	 */
-	public boolean containsComment(int sourceStart, int sourceEnd) {
-		int iComment = this.scanner.commentPtr;
-		for (; iComment >= 0; iComment--) {
-			int commentStart = this.scanner.commentStarts[iComment];
-			if (commentStart < 0) {
-				commentStart = -commentStart;
-			}
-			// ignore comments before start
-			if (commentStart < sourceStart) continue;
-			// ignore comments after end
-			if (commentStart > sourceEnd) continue;
-			return true;
-		}
-		return false;
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#endParse(int)
 	 */
@@ -148,7 +129,7 @@ public class CommentRecorderParser extends Parser {
 
 		int lastCommentIndex = this.scanner.commentPtr;
 		if (lastCommentIndex < 0) return position; // no comment
-	
+
 		// compute the index of the first obsolete comment
 		int index = lastCommentIndex;
 		int validCount = 0;
@@ -168,14 +149,14 @@ public class CommentRecorderParser extends Parser {
 			while (index<lastCommentIndex && (immediateCommentEnd = -this.scanner.commentStops[index+1])  > 0){ // only tolerating non-javadoc comments (non-javadoc comment end positions are negative)
 				// is there any line break until the end of the immediate comment ? (thus only tolerating line comment)
 				immediateCommentEnd--; // comment end in one char too far
-				if (org.eclipse.jdt.internal.compiler.util.Util.getLineNumber(position, this.scanner.lineEnds, 0, this.scanner.linePtr) 
+				if (org.eclipse.jdt.internal.compiler.util.Util.getLineNumber(position, this.scanner.lineEnds, 0, this.scanner.linePtr)
 						!= org.eclipse.jdt.internal.compiler.util.Util.getLineNumber(immediateCommentEnd, this.scanner.lineEnds, 0, this.scanner.linePtr)) break;
 				position = immediateCommentEnd;
 				validCount--; // flush this comment
 				index++;
 			}
 		}
-	
+
 		if (index < 0) return position; // no obsolete comment
 		pushOnCommentsStack(0, index); // store comment before flushing them
 
@@ -199,7 +180,7 @@ public class CommentRecorderParser extends Parser {
 				break;
 			default:
 				System.arraycopy(this.scanner.commentStarts, index + 1, this.scanner.commentStarts, 0, validCount);
-				System.arraycopy(this.scanner.commentStops, index + 1, this.scanner.commentStops, 0, validCount);		
+				System.arraycopy(this.scanner.commentStops, index + 1, this.scanner.commentStops, 0, validCount);
 				System.arraycopy(this.scanner.commentTagStarts, index + 1, this.scanner.commentTagStarts, 0, validCount);
 		}
 		this.scanner.commentPtr = validCount - 1;
@@ -233,17 +214,17 @@ public class CommentRecorderParser extends Parser {
 		super.initialize();
 		this.commentPtr = -1;
 	}
-	
+
 	/* (non-Javadoc)
 	 * Create and store a specific comment recorder scanner.
 	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#initializeScanner()
 	 */
 	public void initializeScanner() {
-		this.scanner = new CommentRecorderScanner(
-				false /*comment*/, 
-				false /*whitespace*/, 
-				this.options.getSeverity(CompilerOptions.NonExternalizedString) != ProblemSeverities.Ignore /*nls*/, 
-				this.options.sourceLevel /*sourceLevel*/, 
+		this.scanner = new Scanner(
+				false /*comment*/,
+				false /*whitespace*/,
+				this.options.getSeverity(CompilerOptions.NonExternalizedString) != ProblemSeverities.Ignore /*nls*/,
+				this.options.sourceLevel /*sourceLevel*/,
 				this.options.taskTags/*taskTags*/,
 				this.options.taskPriorites/*taskPriorities*/,
 				this.options.isTaskCaseSensitive/*taskCaseSensitive*/);
@@ -253,7 +234,7 @@ public class CommentRecorderParser extends Parser {
 	 * Push all stored comments in stack.
 	 */
 	private void pushOnCommentsStack(int start, int end) {
-	
+
 		for (int i=start; i<=end; i++) {
 			// First see if comment hasn't been already stored
 			int scannerStart = this.scanner.commentStarts[i]<0 ? -this.scanner.commentStarts[i] : this.scanner.commentStarts[i];

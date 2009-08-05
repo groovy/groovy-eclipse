@@ -21,7 +21,7 @@ import java.util.List;
  * SynchronizedStatement:
  *    <b>synchronized</b> <b>(</b> Expression <b>)</b> Block
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -31,23 +31,23 @@ public class SynchronizedStatement extends Statement {
 	 * The "expression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(SynchronizedStatement.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "body" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor BODY_PROPERTY = 
+	public static final ChildPropertyDescriptor BODY_PROPERTY =
 		new ChildPropertyDescriptor(SynchronizedStatement.class, "body", Block.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(3);
 		createPropertyList(SynchronizedStatement.class, propertyList);
@@ -59,20 +59,20 @@ public class SynchronizedStatement extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
-	 * The expression; lazily initialized; defaults to an unspecified, but 
+	 * The expression; lazily initialized; defaults to an unspecified, but
 	 * legal, expression.
 	 */
 	private Expression expression = null;
@@ -83,13 +83,13 @@ public class SynchronizedStatement extends Statement {
 	private Block body = null;
 
 	/**
-	 * Creates a new unparented synchronized statement node owned by the given 
+	 * Creates a new unparented synchronized statement node owned by the given
 	 * AST. By default, the expression is unspecified, but legal, and the
 	 * blody is an empty block.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	SynchronizedStatement(AST ast) {
@@ -102,7 +102,7 @@ public class SynchronizedStatement extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -126,7 +126,7 @@ public class SynchronizedStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -139,7 +139,7 @@ public class SynchronizedStatement extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		SynchronizedStatement result = new SynchronizedStatement(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.setExpression((Expression) getExpression().clone(target));
 		result.setBody((Block) getBody().clone(target));
@@ -166,12 +166,12 @@ public class SynchronizedStatement extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the expression of this synchronized statement.
-	 * 
+	 *
 	 * @return the expression node
-	 */ 
+	 */
 	public Expression getExpression() {
 		if (this.expression == null) {
 			// lazy init must be thread-safe for readers
@@ -185,10 +185,10 @@ public class SynchronizedStatement extends Statement {
 		}
 		return this.expression;
 	}
-	
+
 	/**
 	 * Sets the expression of this synchronized statement.
-	 * 
+	 *
 	 * @param expression the expression node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -196,7 +196,7 @@ public class SynchronizedStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setExpression(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -209,9 +209,9 @@ public class SynchronizedStatement extends Statement {
 
 	/**
 	 * Returns the body of this synchronized statement.
-	 * 
+	 *
 	 * @return the body block node
-	 */ 
+	 */
 	public Block getBody() {
 		if (this.body == null) {
 			// lazy init must be thread-safe for readers
@@ -225,10 +225,10 @@ public class SynchronizedStatement extends Statement {
 		}
 		return this.body;
 	}
-	
+
 	/**
 	 * Sets the body of this synchronized statement.
-	 * 
+	 *
 	 * @param block the body statement node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -236,7 +236,7 @@ public class SynchronizedStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setBody(Block block) {
 		if (block == null) {
 			throw new IllegalArgumentException();
@@ -246,14 +246,14 @@ public class SynchronizedStatement extends Statement {
 		this.body = block;
 		postReplaceChild(oldChild, block, BODY_PROPERTY);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 2 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

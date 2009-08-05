@@ -25,8 +25,8 @@ public class JavaModelCache {
 	public static final int DEFAULT_PROJECT_SIZE = 5;  // average 25552 bytes per project.
 	public static final int DEFAULT_ROOT_SIZE = 50; // average 2590 bytes per root -> maximum size : 25900*BASE_VALUE bytes
 	public static final int DEFAULT_PKG_SIZE = 500; // average 1782 bytes per pkg -> maximum size : 178200*BASE_VALUE bytes
-	public static final int DEFAULT_OPENABLE_SIZE = 500; // average 6629 bytes per openable (includes children) -> maximum size : 662900*BASE_VALUE bytes
-	public static final int DEFAULT_CHILDREN_SIZE = 500*20; // average 20 children per openable
+	public static final int DEFAULT_OPENABLE_SIZE = 250; // average 6629 bytes per openable (includes children) -> maximum size : 662900*BASE_VALUE bytes
+	public static final int DEFAULT_CHILDREN_SIZE = 250*20; // average 20 children per openable
 	public static final String RATIO_PROPERTY = "org.eclipse.jdt.core.javamodelcache.ratio"; //$NON-NLS-1$
 	
 	public static final Object NON_EXISTING_JAR_TYPE_INFO = new Object();
@@ -35,22 +35,22 @@ public class JavaModelCache {
 	 * The memory ratio that should be applied to the above constants.
 	 */
 	protected double memoryRatio = -1;
-	
+
 	/**
 	 * Active Java Model Info
 	 */
 	protected Object modelInfo;
-	
+
 	/**
 	 * Cache of open projects.
 	 */
 	protected HashMap projectCache;
-	
+
 	/**
 	 * Cache of open package fragment roots.
 	 */
 	protected ElementCache rootCache;
-	
+
 	/**
 	 * Cache of open package fragments
 	 */
@@ -65,12 +65,12 @@ public class JavaModelCache {
 	 * Cache of open children of openable Java Model Java elements
 	 */
 	protected Map childrenCache;
-	
+
 	/*
 	 * Cache of open binary type (inside a jar) that have a non-open parent
 	 */
 	protected LRUCache jarTypeCache;
-	
+
 public JavaModelCache() {
 	// set the size of the caches in function of the maximum amount of memory available
 	double ratio = getMemoryRatio();
@@ -156,10 +156,10 @@ public IJavaElement getExistingElement(IJavaElement element) {
 
 protected double getMemoryRatio() {
 	if (this.memoryRatio == -1) {
-		long maxMemory = Runtime.getRuntime().maxMemory();		
+		long maxMemory = Runtime.getRuntime().maxMemory();
 		// if max memory is infinite, set the ratio to 4d which corresponds to the 256MB that Eclipse defaults to
 		// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=111299)
-		this.memoryRatio = maxMemory == Long.MAX_VALUE ? 4d : ((double) maxMemory) / (64 * 0x100000); // 64MB is the base memory for most JVM	
+		this.memoryRatio = maxMemory == Long.MAX_VALUE ? 4d : ((double) maxMemory) / (64 * 0x100000); // 64MB is the base memory for most JVM
 	}
 	return this.memoryRatio;
 }

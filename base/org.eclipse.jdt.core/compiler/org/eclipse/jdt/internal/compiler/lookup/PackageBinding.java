@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,22 +42,22 @@ public PackageBinding(LookupEnvironment environment) {
 	this(CharOperation.NO_CHAR_CHAR, null, environment);
 }
 private void addNotFoundPackage(char[] simpleName) {
-	knownPackages.put(simpleName, LookupEnvironment.TheNotFoundPackage);
+	this.knownPackages.put(simpleName, LookupEnvironment.TheNotFoundPackage);
 }
 private void addNotFoundType(char[] simpleName) {
-	if (knownTypes == null)
-		knownTypes = new HashtableOfType(25);
-	knownTypes.put(simpleName, LookupEnvironment.TheNotFoundType);
+	if (this.knownTypes == null)
+		this.knownTypes = new HashtableOfType(25);
+	this.knownTypes.put(simpleName, LookupEnvironment.TheNotFoundType);
 }
 void addPackage(PackageBinding element) {
 	if ((element.tagBits & TagBits.HasMissingType) == 0) clearMissingTagBit();
-	knownPackages.put(element.compoundName[element.compoundName.length - 1], element);
+	this.knownPackages.put(element.compoundName[element.compoundName.length - 1], element);
 }
 void addType(ReferenceBinding element) {
 	if ((element.tagBits & TagBits.HasMissingType) == 0) clearMissingTagBit();
-	if (knownTypes == null)
-		knownTypes = new HashtableOfType(25);
-	knownTypes.put(element.compoundName[element.compoundName.length - 1], element);
+	if (this.knownTypes == null)
+		this.knownTypes = new HashtableOfType(25);
+	this.knownTypes.put(element.compoundName[element.compoundName.length - 1], element);
 }
 
 void clearMissingTagBit() {
@@ -71,14 +71,14 @@ void clearMissingTagBit() {
  * org.eclipse.jdt.core --> org/eclipse/jdt/core
  */
 public char[] computeUniqueKey(boolean isLeaf) {
-	return CharOperation.concatWith(compoundName, '/');
+	return CharOperation.concatWith(this.compoundName, '/');
 }
 private PackageBinding findPackage(char[] name) {
-	if (!environment.isPackage(this.compoundName, name))
+	if (!this.environment.isPackage(this.compoundName, name))
 		return null;
 
 	char[][] subPkgCompoundName = CharOperation.arrayConcat(this.compoundName, name);
-	PackageBinding subPackageBinding = new PackageBinding(subPkgCompoundName, this, environment);
+	PackageBinding subPackageBinding = new PackageBinding(subPkgCompoundName, this, this.environment);
 	addPackage(subPackageBinding);
 	return subPackageBinding;
 }
@@ -111,9 +111,8 @@ PackageBinding getPackage(char[] name) {
 */
 
 PackageBinding getPackage0(char[] name) {
-	return knownPackages.get(name);
+	return this.knownPackages.get(name);
 }
-
 /* Answer the type named name; ask the oracle for the type if its not in the cache.
 * Answer a NotVisible problem type if the type is not visible from the invocationPackage.
 * Answer null if it could not be resolved.
@@ -121,6 +120,7 @@ PackageBinding getPackage0(char[] name) {
 * NOTE: This should only be used by source types/scopes which know there is NOT a
 * package with the same name.
 */
+
 ReferenceBinding getType(char[] name) {
 	ReferenceBinding referenceBinding = getType0(name);
 	if (referenceBinding == null) {
@@ -139,7 +139,6 @@ ReferenceBinding getType(char[] name) {
 		return new ProblemReferenceBinding(new char[][]{ name }, referenceBinding, ProblemReasons.InternalNameProvided);
 	return referenceBinding;
 }
-
 /* Answer the type named name if it exists in the cache.
 * Answer theNotFoundType if it could not be resolved the first time
 * it was looked up, otherwise answer null.
@@ -147,10 +146,11 @@ ReferenceBinding getType(char[] name) {
 * NOTE: Senders must convert theNotFoundType into a real problem
 * reference type if its to returned.
 */
+
 ReferenceBinding getType0(char[] name) {
-	if (knownTypes == null)
+	if (this.knownTypes == null)
 		return null;
-	return knownTypes.get(name);
+	return this.knownTypes.get(name);
 }
 /* Answer the package or type named name; ask the oracle if it is not in the cache.
 * Answer null if it could not be resolved.
@@ -204,7 +204,19 @@ public Binding getTypeOrPackage(char[] name) {
 
 	return null;
 }
-
+public final boolean isViewedAsDeprecated() {
+	if ((this.tagBits & TagBits.DeprecatedAnnotationResolved) == 0) {
+		this.tagBits |= TagBits.DeprecatedAnnotationResolved;
+		if (this.compoundName != CharOperation.NO_CHAR_CHAR) {
+			ReferenceBinding packageInfo = this.getType(TypeConstants.PACKAGE_INFO_NAME);
+			if (packageInfo != null) {
+				packageInfo.initializeDeprecatedAnnotationTagBits();
+				this.tagBits |= packageInfo.tagBits & TagBits.AllStandardAnnotationsMask;
+			}
+		}
+	}
+	return (this.tagBits & TagBits.AnnotationDeprecated) != 0;
+}
 /* API
 * Answer the receiver's binding type from Binding.BindingID.
 */
@@ -219,14 +231,14 @@ public int problemId() {
 }
 
 public char[] readableName() /*java.lang*/ {
-	return CharOperation.concatWith(compoundName, '.');
+	return CharOperation.concatWith(this.compoundName, '.');
 }
 public String toString() {
 	String str;
-	if (compoundName == CharOperation.NO_CHAR_CHAR) {
+	if (this.compoundName == CharOperation.NO_CHAR_CHAR) {
 		str = "The Default Package"; //$NON-NLS-1$
 	} else {
-		str = "package " + ((compoundName != null) ? CharOperation.toString(compoundName) : "UNNAMED"); //$NON-NLS-1$ //$NON-NLS-2$
+		str = "package " + ((this.compoundName != null) ? CharOperation.toString(this.compoundName) : "UNNAMED"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	if ((this.tagBits & TagBits.HasMissingType) != 0) {
 		str += "[MISSING]"; //$NON-NLS-1$

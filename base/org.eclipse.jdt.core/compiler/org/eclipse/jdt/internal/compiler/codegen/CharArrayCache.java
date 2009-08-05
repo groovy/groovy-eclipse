@@ -28,7 +28,7 @@ public CharArrayCache() {
 /**
  * Constructs a new, empty hashtable with the specified initial
  * capacity.
- * @param initialCapacity int 
+ * @param initialCapacity int
  *	the initial number of buckets; must be less than Integer.MAX_VALUE / 2
  */
 public CharArrayCache(int initialCapacity) {
@@ -81,10 +81,10 @@ public int get(char[] key) {
 	return -1;
 }
 /**
- * Puts the specified element into the hashtable if it wasn't there already, 
+ * Puts the specified element into the hashtable if it wasn't there already,
  * using the specified key.  The element may be retrieved by doing a get() with the same key.
- * The key and the element cannot be null. 
- * 
+ * The key and the element cannot be null.
+ *
  * @param key the given key in the hashtable
  * @param value the given value
  * @return int the old value of the key, or -value if it did not have one.
@@ -110,13 +110,13 @@ public int putIfAbsent(char[] key, int value) {
 /**
  * Puts the specified element into the hashtable, using the specified
  * key.  The element may be retrieved by doing a get() with the same key.
- * The key and the element cannot be null. 
- * 
+ * The key and the element cannot be null.
+ *
  * @param key <CODE>Object</CODE> the specified key in the hashtable
  * @param value <CODE>int</CODE> the specified element
  * @return int the old value of the key, or -1 if it did not have one.
  */
-private int put(char[] key, int value) { 
+private int put(char[] key, int value) {
 	int length = this.keyTable.length, index = CharOperation.hashCode(key) % length;
 	while (this.keyTable[index] != null) {
 		if (CharOperation.equals(this.keyTable[index], key))

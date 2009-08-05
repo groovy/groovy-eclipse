@@ -158,11 +158,11 @@ void branchWide() {
 
 public int forwardReferenceCount() {
 	if (this.delegate != null) this.delegate.forwardReferenceCount();
-	return forwardReferenceCount;
+	return this.forwardReferenceCount;
 }
 public int[] forwardReferences() {
 	if (this.delegate != null) this.delegate.forwardReferences();
-	return forwardReferences;
+	return this.forwardReferences;
 }
 public void initialize(CodeStream stream) {
     this.codeStream = stream;
@@ -181,7 +181,6 @@ public boolean isStandardLabel(){
 * Place the label. If we have forward references resolve them.
 */
 public void place() { // Currently lacking wide support.
-	if (CodeStream.DEBUG) System.out.println("\t\t\t\t<place at: "+this.codeStream.position+" - "+ this); //$NON-NLS-1$ //$NON-NLS-2$
 //	if ((this.tagBits & USED) == 0 && this.forwardReferenceCount == 0) {
 //		return;
 //	}

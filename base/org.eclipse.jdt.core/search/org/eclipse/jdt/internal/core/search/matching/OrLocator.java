@@ -264,6 +264,9 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, IJa
 	if (closestPattern != null)
 		closestPattern.matchReportReference(reference, element, localElement, otherElements, elementBinding, accuracy, locator);
 }
+protected void matchReportReference(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
+	matchReportReference(reference, element, null, null, elementBinding, accuracy, locator);
+}
 public SearchMatch newDeclarationMatch(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, int length, MatchLocator locator) {
 	PatternLocator closestPattern = null;
 	int level = IMPOSSIBLE_MATCH;

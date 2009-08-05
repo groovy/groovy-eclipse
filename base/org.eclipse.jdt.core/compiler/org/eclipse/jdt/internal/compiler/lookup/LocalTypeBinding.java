@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ public final class LocalTypeBinding extends NestedTypeBinding {
 	public MethodBinding enclosingMethod;
 
 //	public ReferenceBinding anonymousOriginalSuperType;
-	
+
 public LocalTypeBinding(ClassScope scope, SourceTypeBinding enclosingType, CaseStatement switchCase, ReferenceBinding anonymousOriginalSuperType) {
 	super(
 		new char[][] {CharOperation.concat(LocalTypeBinding.LocalTypePrefix, scope.referenceContext.name)},
@@ -97,19 +97,19 @@ public char[] computeUniqueKey(boolean isLeaf) {
 	// insert $sourceStart
 	sig.append('$');
 	sig.append(String.valueOf(this.sourceStart));
-	
+
 	// insert $LocalName if local
 	if (!isAnonymousType()) {
 		sig.append('$');
 		sig.append(this.sourceName);
 	}
-	
+
 	// insert remaining from outer key
 	sig.append(outerKey, semicolon, outerKey.length-semicolon);
-	
+
 	int sigLength = sig.length();
 	char[] uniqueKey = new char[sigLength];
-	sig.getChars(0, sigLength, uniqueKey, 0);			
+	sig.getChars(0, sigLength, uniqueKey, 0);
 	return uniqueKey;
 }
 
@@ -129,7 +129,7 @@ ArrayBinding createArrayType(int dimensionCount, LookupEnvironment lookupEnviron
 			return this.localArrayBindings[i];
 
 	// no matching array
-	System.arraycopy(this.localArrayBindings, 0, this.localArrayBindings = new ArrayBinding[length + 1], 0, length); 
+	System.arraycopy(this.localArrayBindings, 0, this.localArrayBindings = new ArrayBinding[length + 1], 0, length);
 	return this.localArrayBindings[length] = new ArrayBinding(this, dimensionCount, lookupEnvironment);
 }
 
@@ -156,9 +156,9 @@ public char[] readableName() /*java.lang.Object,  p.X<T> */ {
 		readableName = CharOperation.concat(enclosingType().readableName(), this.sourceName, '.');
 	} else {
 		readableName = this.sourceName;
-	}    
+	}
 	TypeVariableBinding[] typeVars;
-	if ((typeVars = this.typeVariables()) != Binding.NO_TYPE_VARIABLES) {
+	if ((typeVars = typeVariables()) != Binding.NO_TYPE_VARIABLES) {
 	    StringBuffer nameBuffer = new StringBuffer(10);
 	    nameBuffer.append(readableName).append('<');
 	    for (int i = 0, length = typeVars.length; i < length; i++) {
@@ -183,7 +183,7 @@ public char[] shortReadableName() /*Object*/ {
 		shortReadableName = this.sourceName;
 	}
 	TypeVariableBinding[] typeVars;
-	if ((typeVars = this.typeVariables()) != Binding.NO_TYPE_VARIABLES) {
+	if ((typeVars = typeVariables()) != Binding.NO_TYPE_VARIABLES) {
 	    StringBuffer nameBuffer = new StringBuffer(10);
 	    nameBuffer.append(shortReadableName).append('<');
 	    for (int i = 0, length = typeVars.length; i < length; i++) {
@@ -193,7 +193,7 @@ public char[] shortReadableName() /*Object*/ {
 	    nameBuffer.append('>');
 		int nameLength = nameBuffer.length();
 		shortReadableName = new char[nameLength];
-		nameBuffer.getChars(0, nameLength, shortReadableName, 0);	    
+		nameBuffer.getChars(0, nameLength, shortReadableName, 0);
 	}
 	return shortReadableName;
 }

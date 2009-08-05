@@ -98,7 +98,7 @@ String getElementName();
  * Returns the binding key for this field. A binding key is a key that uniquely
  * identifies this field. It allows access to generic info for parameterized
  * fields.
- * 
+ *
  * @return the binding key for this field
  * @see org.eclipse.jdt.core.dom.IBinding#getKey()
  * @see BindingKey
@@ -122,7 +122,7 @@ String getKey();
 String getTypeSignature() throws JavaModelException;
 /**
  * Returns whether this field represents an enum constant.
- * 
+ *
  * @return whether this field represents an enum constant
  * @exception JavaModelException if this element does not exist or if an
  *      exception occurs while accessing its corresponding resource
@@ -132,7 +132,7 @@ boolean isEnumConstant() throws JavaModelException;
 /**
  * Returns whether this field represents a resolved field.
  * If a field is resolved, its key contains resolved information.
- * 
+ *
  * @return whether this field represents a resolved field.
  * @since 3.1
  */

@@ -14,12 +14,13 @@ import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -70,7 +71,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 
 	protected static final JavaElement[] NO_ELEMENTS = new JavaElement[0];
 	protected static final Object NO_INFO = new Object();
-	
+
 	/**
 	 * Constructs a handle for a java element with
 	 * the given parent element.
@@ -110,14 +111,14 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	 * @see Object#equals
 	 */
 	public boolean equals(Object o) {
-		
+
 		if (this == o) return true;
-	
+
 		// Java model parent is null
 		if (this.parent == null) return super.equals(o);
-	
+
 		// assume instanceof check is done in subclass
-		JavaElement other = (JavaElement) o;		
+		JavaElement other = (JavaElement) o;
 		return getElementName().equals(other.getElementName()) &&
 				this.parent.equals(other.parent);
 	}
@@ -150,7 +151,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	 * @see IJavaElement
 	 */
 	public boolean exists() {
-		
+
 		try {
 			getElementInfo();
 			return true;
@@ -159,7 +160,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Returns the <code>ASTNode</code> that corresponds to this <code>JavaElement</code>
 	 * or <code>null</code> if there is no corresponding node.
@@ -172,21 +173,21 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	 * Puts the newly created element info in the given map.
 	 */
 	protected abstract void generateInfos(Object info, HashMap newElements, IProgressMonitor pm) throws JavaModelException;
-	
+
 	/**
 	 * @see IJavaElement
 	 */
 	public IJavaElement getAncestor(int ancestorType) {
-		
+
 		IJavaElement element = this;
 		while (element != null) {
 			if (element.getElementType() == ancestorType)  return element;
 			element= element.getParent();
 		}
-		return null;				
+		return null;
 	}
 	/**
-	 * @see IParent 
+	 * @see IParent
 	 */
 	public IJavaElement[] getChildren() throws JavaModelException {
 		Object elementInfo = getElementInfo();
@@ -227,7 +228,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		return null;
 	}
 	/**
-	 * Returns the info for this handle.  
+	 * Returns the info for this handle.
 	 * If this element is not already open, it and all of its parents are opened.
 	 * Does not return null.
 	 * NOTE: BinaryType infos are NOT rooted under JavaElementInfo.
@@ -237,7 +238,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		return getElementInfo(null);
 	}
 	/**
-	 * Returns the info for this handle.  
+	 * Returns the info for this handle.
 	 * If this element is not already open, it and all of its parents are opened.
 	 * Does not return null.
 	 * NOTE: BinaryType infos are NOT rooted under JavaElementInfo.
@@ -320,7 +321,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	 * @see IJavaElement
 	 */
 	public IOpenable getOpenable() {
-		return this.getOpenableParent();	
+		return getOpenableParent();
 	}
 	/**
 	 * Return the first instance of IOpenable in the parent
@@ -443,7 +444,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 	}
 	/**
-	 * @see IParent 
+	 * @see IParent
 	 */
 	public boolean hasChildren() throws JavaModelException {
 		// if I am not open, return true to avoid opening (case of a Java project, a compilation unit or a class file).
@@ -477,7 +478,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 		return parentElement != null;
 	}
-	
+
 	/**
 	 * @see IJavaElement
 	 */
@@ -537,7 +538,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	/**
 	 */
 	public String readableName() {
-		return this.getElementName();
+		return getElementName();
 	}
 	public JavaElement resolved(Binding binding) {
 		return this;
@@ -573,9 +574,9 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	protected void toString(int tab, StringBuffer buffer) {
 		Object info = this.toStringInfo(tab, buffer);
 		if (tab == 0) {
-			this.toStringAncestors(buffer);
+			toStringAncestors(buffer);
 		}
-		this.toStringChildren(tab, buffer, info);
+		toStringChildren(tab, buffer, info);
 	}
 	/**
 	 *  Debugging purposes
@@ -589,14 +590,14 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	public String toStringWithAncestors(boolean showResolvedInfo) {
 		StringBuffer buffer = new StringBuffer();
 		this.toStringInfo(0, buffer, NO_INFO, showResolvedInfo);
-		this.toStringAncestors(buffer);
+		toStringAncestors(buffer);
 		return buffer.toString();
 	}
 	/**
 	 *  Debugging purposes
 	 */
 	protected void toStringAncestors(StringBuffer buffer) {
-		JavaElement parentElement = (JavaElement)this.getParent();
+		JavaElement parentElement = (JavaElement)getParent();
 		if (parentElement != null && parentElement.getParent() != null) {
 			buffer.append(" [in "); //$NON-NLS-1$
 			parentElement.toStringInfo(0, buffer, NO_INFO, false/*don't show resolved info*/);
@@ -628,7 +629,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	 * @param showResolvedInfo TODO
 	 */
 	protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
-		buffer.append(this.tabString(tab));
+		buffer.append(tabString(tab));
 		toStringName(buffer);
 		if (info == null) {
 			buffer.append(" (not open)"); //$NON-NLS-1$
@@ -640,9 +641,9 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	protected void toStringName(StringBuffer buffer) {
 		buffer.append(getElementName());
 	}
-	
+
 	protected URL getJavadocBaseLocation() throws JavaModelException {
-		IPackageFragmentRoot root= (IPackageFragmentRoot) this.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+		IPackageFragmentRoot root= (IPackageFragmentRoot) getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 		if (root == null) {
 			return null;
 		}
@@ -662,7 +663,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 		return null;
 	}
-	
+
 	private static IClasspathEntry getRealClasspathEntry(IJavaProject jproject, IPath containerPath, IPath libPath) throws JavaModelException {
 		IClasspathContainer container= JavaCore.getClasspathContainer(containerPath, jproject);
 		if (container != null) {
@@ -683,7 +684,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 		return null; // not found
 	}
-	
+
 	protected static URL getLibraryJavadocLocation(IClasspathEntry entry) throws JavaModelException {
 		switch(entry.getEntryKind()) {
 			case IClasspathEntry.CPE_LIBRARY :
@@ -692,7 +693,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 			default :
 				throw new IllegalArgumentException("Entry must be of kind CPE_LIBRARY or CPE_VARIABLE"); //$NON-NLS-1$
 		}
-		
+
 		IClasspathAttribute[] extraAttributes= entry.getExtraAttributes();
 		for (int i= 0; i < extraAttributes.length; i++) {
 			IClasspathAttribute attrib= extraAttributes[i];
@@ -707,14 +708,14 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 		return null;
 	}
-	
+
 	/*
 	 * @see IJavaElement#getAttachedJavadoc(IProgressMonitor)
 	 */
 	public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelException {
 		return null;
 	}
-	
+
 	int getIndexOf(byte[] array, byte[] toBeFound, int start) {
 		if (array == null || toBeFound == null)
 			return -1;
@@ -732,10 +733,10 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 			}
 		}
 		return -1;
-	}	
+	}
 	/*
 	 * We don't use getContentEncoding() on the URL connection, because it might leave open streams behind.
-	 * See https://bugs.eclipse.org/bugs/show_bug.cgi?id=117890 
+	 * See https://bugs.eclipse.org/bugs/show_bug.cgi?id=117890
 	 */
 	protected String getURLContents(String docUrlValue) throws JavaModelException {
 		InputStream stream = null;
@@ -770,7 +771,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 			}
 			try {
 				if (encoding == null) {
-					encoding = this.getJavaProject().getProject().getDefaultCharset();
+					encoding = getJavaProject().getProject().getDefaultCharset();
 				}
 			} catch (CoreException e) {
 				// ignore
@@ -782,18 +783,19 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 					// platform encoding is used
 					return new String(contents);
 				}
-			}			
+			}
  		} catch (MalformedURLException e) {
  			throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.CANNOT_RETRIEVE_ATTACHED_JAVADOC, this));
 		} catch (FileNotFoundException e) {
 			// ignore. see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=120559
+		} catch(SocketException e) {
+			// ignore. see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=247845
+		} catch(UnknownHostException e) {
+			// ignore. see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=247845
+		} catch(ProtocolException e) {
+			// ignore. see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=247845
 		} catch(IOException e) {
-			StringWriter stringWriter = new StringWriter();
-			PrintWriter writer = new PrintWriter(stringWriter);
-			e.printStackTrace(writer);
-			writer.flush();
-			writer.close();
-			throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.CANNOT_RETRIEVE_ATTACHED_JAVADOC, this, String.valueOf(stringWriter.getBuffer())));
+			throw new JavaModelException(e, IJavaModelStatusConstants.IO_EXCEPTION);
 		} finally {
 			if (stream != null) {
 				try {

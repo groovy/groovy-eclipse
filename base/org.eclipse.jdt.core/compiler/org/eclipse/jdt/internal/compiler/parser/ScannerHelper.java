@@ -19,18 +19,18 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 
 public class ScannerHelper {
-	
-	public final static long[] Bits = { 
+
+	public final static long[] Bits = {
 		ASTNode.Bit1, ASTNode.Bit2, ASTNode.Bit3, ASTNode.Bit4, ASTNode.Bit5, ASTNode.Bit6,
-		ASTNode.Bit7, ASTNode.Bit8, ASTNode.Bit9, ASTNode.Bit10, ASTNode.Bit11, ASTNode.Bit12, 
-		ASTNode.Bit13, ASTNode.Bit14, ASTNode.Bit15, ASTNode.Bit16, ASTNode.Bit17, ASTNode.Bit18, 
-		ASTNode.Bit19, ASTNode.Bit20, ASTNode.Bit21, ASTNode.Bit22, ASTNode.Bit23, ASTNode.Bit24, 
-		ASTNode.Bit25, ASTNode.Bit26, ASTNode.Bit27, ASTNode.Bit28, ASTNode.Bit29, ASTNode.Bit30, 
-		ASTNode.Bit31, ASTNode.Bit32, ASTNode.Bit33L, ASTNode.Bit34L, ASTNode.Bit35L, ASTNode.Bit36L, 
-		ASTNode.Bit37L, ASTNode.Bit38L, ASTNode.Bit39L, ASTNode.Bit40L, ASTNode.Bit41L, ASTNode.Bit42L, 
-		ASTNode.Bit43L, ASTNode.Bit44L, ASTNode.Bit45L, ASTNode.Bit46L, ASTNode.Bit47L, ASTNode.Bit48L, 
-		ASTNode.Bit49L, ASTNode.Bit50L, ASTNode.Bit51L, ASTNode.Bit52L, ASTNode.Bit53L, ASTNode.Bit54L, 
-		ASTNode.Bit55L, ASTNode.Bit56L, ASTNode.Bit57L, ASTNode.Bit58L, ASTNode.Bit59L, ASTNode.Bit60L, 
+		ASTNode.Bit7, ASTNode.Bit8, ASTNode.Bit9, ASTNode.Bit10, ASTNode.Bit11, ASTNode.Bit12,
+		ASTNode.Bit13, ASTNode.Bit14, ASTNode.Bit15, ASTNode.Bit16, ASTNode.Bit17, ASTNode.Bit18,
+		ASTNode.Bit19, ASTNode.Bit20, ASTNode.Bit21, ASTNode.Bit22, ASTNode.Bit23, ASTNode.Bit24,
+		ASTNode.Bit25, ASTNode.Bit26, ASTNode.Bit27, ASTNode.Bit28, ASTNode.Bit29, ASTNode.Bit30,
+		ASTNode.Bit31, ASTNode.Bit32, ASTNode.Bit33L, ASTNode.Bit34L, ASTNode.Bit35L, ASTNode.Bit36L,
+		ASTNode.Bit37L, ASTNode.Bit38L, ASTNode.Bit39L, ASTNode.Bit40L, ASTNode.Bit41L, ASTNode.Bit42L,
+		ASTNode.Bit43L, ASTNode.Bit44L, ASTNode.Bit45L, ASTNode.Bit46L, ASTNode.Bit47L, ASTNode.Bit48L,
+		ASTNode.Bit49L, ASTNode.Bit50L, ASTNode.Bit51L, ASTNode.Bit52L, ASTNode.Bit53L, ASTNode.Bit54L,
+		ASTNode.Bit55L, ASTNode.Bit56L, ASTNode.Bit57L, ASTNode.Bit58L, ASTNode.Bit59L, ASTNode.Bit60L,
 		ASTNode.Bit61L, ASTNode.Bit62L, ASTNode.Bit63L, ASTNode.Bit64L,
 	};
 
@@ -77,18 +77,18 @@ public class ScannerHelper {
 		OBVIOUS_IDENT_CHAR_NATURES[26] = C_IDENT_PART;
 		OBVIOUS_IDENT_CHAR_NATURES[27] = C_IDENT_PART;
 		OBVIOUS_IDENT_CHAR_NATURES[127] = C_IDENT_PART;
-		
-		for (int i = '0'; i <= '9'; i++) 
+
+		for (int i = '0'; i <= '9'; i++)
 			OBVIOUS_IDENT_CHAR_NATURES[i] = C_DIGIT | C_IDENT_PART;
-		
-		for (int i = 'a'; i <= 'z'; i++) 
+
+		for (int i = 'a'; i <= 'z'; i++)
 			OBVIOUS_IDENT_CHAR_NATURES[i] = C_LOWER_LETTER | C_IDENT_PART | C_IDENT_START;
-		for (int i = 'A'; i <= 'Z'; i++) 
+		for (int i = 'A'; i <= 'Z'; i++)
 			OBVIOUS_IDENT_CHAR_NATURES[i] = C_UPPER_LETTER | C_IDENT_PART | C_IDENT_START;
 
 		OBVIOUS_IDENT_CHAR_NATURES['_'] = C_SPECIAL | C_IDENT_PART | C_IDENT_START;
 		OBVIOUS_IDENT_CHAR_NATURES['$'] = C_SPECIAL | C_IDENT_PART | C_IDENT_START;
-		
+
 		OBVIOUS_IDENT_CHAR_NATURES[9] = C_SPACE | C_JLS_SPACE; // \ u0009: HORIZONTAL TABULATION
 		OBVIOUS_IDENT_CHAR_NATURES[10] = C_SPACE | C_JLS_SPACE; // \ u000a: LINE FEED
 		OBVIOUS_IDENT_CHAR_NATURES[11] = C_SPACE;
@@ -99,7 +99,7 @@ public class ScannerHelper {
 		OBVIOUS_IDENT_CHAR_NATURES[30] = C_SPACE;
 		OBVIOUS_IDENT_CHAR_NATURES[31] = C_SPACE;
 		OBVIOUS_IDENT_CHAR_NATURES[32] = C_SPACE | C_JLS_SPACE; //  \ u0020: SPACE
-		
+
 		OBVIOUS_IDENT_CHAR_NATURES['.'] = C_SEPARATOR;
 		OBVIOUS_IDENT_CHAR_NATURES[':'] = C_SEPARATOR;
 		OBVIOUS_IDENT_CHAR_NATURES[';'] = C_SEPARATOR;
@@ -127,7 +127,7 @@ public class ScannerHelper {
 		OBVIOUS_IDENT_CHAR_NATURES['"'] = C_SEPARATOR;
 		OBVIOUS_IDENT_CHAR_NATURES['\''] = C_SEPARATOR;
 	}
-	
+
 static {
 	Tables = new long[2][][];
 	Tables[START_INDEX] = new long[2][];
@@ -231,7 +231,7 @@ public static boolean isJavaIdentifierStart(char c) {
 		return (ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[c] & ScannerHelper.C_IDENT_START) != 0;
 	}
 	return Character.isJavaIdentifierStart(c);
-}	
+}
 public static boolean isJavaIdentifierStart(char high, char low) {
 	int codePoint = toCodePoint(high, low);
 	switch((codePoint & 0x1F0000) >> 16) {
@@ -245,7 +245,7 @@ public static boolean isJavaIdentifierStart(char high, char low) {
 	return false;
 }
 
-private static int toCodePoint(char high, char low) {	
+private static int toCodePoint(char high, char low) {
 	return (high - Scanner.HIGH_SURROGATE_MIN_VALUE) * 0x400 + (low - Scanner.LOW_SURROGATE_MIN_VALUE) + 0x10000;
 }
 public static boolean isDigit(char c) throws InvalidInputException {
@@ -303,7 +303,7 @@ public static char toUpperCase(char c) {
 		if ((ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[c] & ScannerHelper.C_UPPER_LETTER) != 0) {
 			return c;
 		} else if ((ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[c] & ScannerHelper.C_LOWER_LETTER) != 0) {
-			return (char) (c - 32); 
+			return (char) (c - 32);
 		}
 	}
 	return Character.toUpperCase(c);
@@ -313,7 +313,7 @@ public static char toLowerCase(char c) {
 		if ((ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[c] & ScannerHelper.C_LOWER_LETTER) != 0) {
 			return c;
 		} else if ((ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[c] & ScannerHelper.C_UPPER_LETTER) != 0) {
-			return (char) (32 + c); 
+			return (char) (32 + c);
 		}
 	}
 	return Character.toLowerCase(c);
@@ -332,13 +332,13 @@ public static boolean isUpperCase(char c) {
 }
 /**
  * Include also non JLS whitespaces.
- * 
+ *
  * return true if Character.isWhitespace(c) would return true
  */
 public static boolean isWhitespace(char c) {
 	if (c < MAX_OBVIOUS) {
 		return (ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[c] & ScannerHelper.C_SPACE) != 0;
-	}	
+	}
 	return Character.isWhitespace(c);
 }
 public static boolean isLetter(char c) {

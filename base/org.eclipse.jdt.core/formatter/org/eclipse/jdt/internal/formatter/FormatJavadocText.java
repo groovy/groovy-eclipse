@@ -122,7 +122,7 @@ void clean() {
 
 void closeTag() {
 	this.htmlTagIndex |= JAVADOC_CLOSED_TAG;
-}	
+}
 
 int getHtmlTagIndex() {
 	return this.htmlTagIndex & JAVADOC_TAGS_INDEX_MASK;
@@ -141,7 +141,7 @@ FormatJavadocNode getLastNode() {
 
 /**
  * Returns whether the text is a closing html tag or not.
- * 
+ *
  * @return <code>true</code> if the node is an html tag and has '/' before its
  * 	name (e.g. </bla>), <code>false</code> otherwise.
  */
@@ -151,7 +151,7 @@ public boolean isClosingHtmlTag() {
 
 /**
  * Returns whether the text is a html tag or not.
- * 
+ *
  * @return <code>true</code> if the node is a html tag, <code>false</code>
  * 	otherwise.
  */
@@ -164,19 +164,19 @@ public boolean isHtmlTag() {
  * <p>
  * The text in an immutable tags is <b>never</b> formatted.
  * </p>
- * 
+ *
  * @return <code>true</code> if the node is an immutable tag,
  *		<code>false</code> otherwise.
  */
 public boolean isImmutableHtmlTag() {
 	return this.htmlTagIndex != -1 && (this.htmlTagIndex & JAVADOC_TAGS_ID_MASK) == JAVADOC_IMMUTABLE_TAGS_ID;
-	
+
 }
 
 /**
  * Returns whether the text at the given separator index position is after a
  * separator tag or not.
- * 
+ *
  * @return <code>true</code> if the text is after a separator tag,
  *		<code>false</code> otherwise or if the given index is out the range of
  *		the text separators.
@@ -186,7 +186,7 @@ public boolean isTextAfterHtmlSeparatorTag(int separatorIndex) {
 	if (ptr > this.separatorsPtr) return false;
 	int tagIndex = this.htmlIndexes[ptr] & JAVADOC_TAGS_ID_MASK;
 	return tagIndex != -1 && tagIndex == JAVADOC_SEPARATOR_TAGS_ID;
-	
+
 }
 
 /* (non-Javadoc)
@@ -251,7 +251,7 @@ public void toStringDebug(StringBuffer buffer, char[] source) {
 			for (int t=0; t<this.depth; t++) buffer.append('\t');
 		}
 	}
-	if (separatorsPtr == -1) {
+	if (this.separatorsPtr == -1) {
 		super.toStringDebug(buffer, source);
 		return;
 	}

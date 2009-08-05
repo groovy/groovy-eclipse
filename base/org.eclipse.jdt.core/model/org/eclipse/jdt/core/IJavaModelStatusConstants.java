@@ -7,7 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- * 
+ *
  * TODO missing 2.1 and subsequent contributions
  * COMPILER_FAILURE
  *******************************************************************************/
@@ -28,7 +28,7 @@ public interface IJavaModelStatusConstants {
 	/**
 	 * Status constant indicating that a container path was resolved
 	 * to invalid entries (null or container).
-	 * 
+	 *
 	 * @since 2.0
 	 */
 	public static final int INVALID_CP_CONTAINER_ENTRY = 962;
@@ -36,7 +36,7 @@ public interface IJavaModelStatusConstants {
 	/**
 	 * Status constant indicating that a container path was not resolvable
 	 * indicating either the referred container is undefined, unbound.
-	 * 
+	 *
 	 * @since 2.0
 	 */
 	public static final int CP_CONTAINER_PATH_UNBOUND = 963;
@@ -58,11 +58,11 @@ public interface IJavaModelStatusConstants {
 	 * Use <code>getException</code> to retrieve a <code>CoreException</code>.
 	 */
 	public static final int CORE_EXCEPTION = 966;
-    
+
 	/**
 	 * Status constant indicating one or more of the elements
 	 * supplied are not of a valid type for the operation to
-	 * process. 
+	 * process.
 	 * The element(s) can be retrieved using <code>getElements</code> on the status object.
 	 */
 	public static final int INVALID_ELEMENT_TYPES = 967;
@@ -75,7 +75,7 @@ public interface IJavaModelStatusConstants {
 
 	/**
 	 * Status constant indicating that one or more elements
-	 * supplied do not exist. 
+	 * supplied do not exist.
 	 * The element(s) can be retrieved using <code>getElements</code> on the status object.
 	 *
 	 * @see IJavaModelStatus#isDoesNotExist()
@@ -87,22 +87,22 @@ public interface IJavaModelStatusConstants {
 	 * supplied to the operation.
 	 */
 	public static final int NULL_PATH = 970;
-    
+
 	/**
 	 * Status constant indicating that a path outside of the
-	 * project was supplied to the operation. The path can be retrieved using 
+	 * project was supplied to the operation. The path can be retrieved using
 	 * <code>getPath</code> on the status object.
 	 */
 	public static final int PATH_OUTSIDE_PROJECT = 971;
-    
+
 	/**
-	 * Status constant indicating that a relative path 
+	 * Status constant indicating that a relative path
 	 * was supplied to the operation when an absolute path is
 	 * required. The path can be retrieved using <code>getPath</code> on the
 	 * status object.
 	 */
 	public static final int RELATIVE_PATH = 972;
-    
+
 	/**
 	 * Status constant indicating that a path specifying a device
 	 * was supplied to the operation when a path with no device is
@@ -110,45 +110,45 @@ public interface IJavaModelStatusConstants {
 	 * status object.
 	 */
 	public static final int DEVICE_PATH = 973;
-    
+
 	/**
 	 * Status constant indicating that a string
 	 * was supplied to the operation that was <code>null</code>.
 	 */
 	public static final int NULL_STRING = 974;
-    
+
 	/**
 	 * Status constant indicating that the operation encountered
 	 * a read-only element.
 	 * The element(s) can be retrieved using <code>getElements</code> on the status object.
 	 */
 	public static final int READ_ONLY = 976;
-    
+
 	/**
 	 * Status constant indicating that a naming collision would occur
 	 * if the operation proceeded.
 	 */
 	public static final int NAME_COLLISION = 977;
-    
+
 	/**
-	 * Status constant indicating that a destination provided for a copy/move/rename operation 
-	 * is invalid. 
+	 * Status constant indicating that a destination provided for a copy/move/rename operation
+	 * is invalid.
 	 * The destination element can be retrieved using <code>getElements</code> on the status object.
 	 */
 	public static final int INVALID_DESTINATION = 978;
-    
+
 	/**
-	 * Status constant indicating that a path provided to an operation 
+	 * Status constant indicating that a path provided to an operation
 	 * is invalid. The path can be retrieved using <code>getPath</code> on the
 	 * status object.
 	 */
 	public static final int INVALID_PATH = 979;
-    
+
 	/**
 	 * Status constant indicating the given source position is out of bounds.
 	 */
 	public static final int INDEX_OUT_OF_BOUNDS = 980;
-    
+
 	/**
 	 * Status constant indicating there is an update conflict
 	 * for a working copy. The compilation unit on which the
@@ -177,19 +177,19 @@ public interface IJavaModelStatusConstants {
 
 	/**
 	 * Status constant indicating that an <code>java.io.IOException</code>
-	 * occurred. 
+	 * occurred.
 	 */
 	public static final int IO_EXCEPTION = 985;
 
 	/**
 	 * Status constant indicating that a <code>DOMException</code>
-	 * occurred. 
+	 * occurred.
 	 */
 	public static final int DOM_EXCEPTION = 986;
 
 	/**
 	 * Status constant indicating that a <code>TargetException</code>
-	 * occurred. 
+	 * occurred.
 	 */
 	public static final int TARGET_EXCEPTION = 987;
 
@@ -252,7 +252,7 @@ public interface IJavaModelStatusConstants {
 	 * has been made locally available.
 	 */
 	 public static final int NO_LOCAL_CONTENTS = 999;
-	 
+
 	 /**
 	  * Status indicating that a .classpath file is ill-formed, and thus cannot
 	  * be read/written successfully.
@@ -265,10 +265,10 @@ public interface IJavaModelStatusConstants {
 	  * @since 2.1
 	  */
 	 public static final int CLASSPATH_CYCLE = 1001;
-	 
+
 	/**
 	 * Status constant indicating that an inclusion or an exclusion pattern got specified
-	 * on a classpath source entry, though it was explicitely disabled 
+	 * on a classpath source entry, though it was explicitely disabled
 	 * according to its project preference settings.
 	 * @see org.eclipse.jdt.core.IJavaProject#getOptions(boolean)
 	 * @since 2.1
@@ -283,25 +283,25 @@ public interface IJavaModelStatusConstants {
 	 * @since 2.1
 	 */
 	public static final int DISABLED_CP_MULTIPLE_OUTPUT_LOCATIONS = 1003;
-	
+
 	/**
 	 * Status constant indicating that a project is prerequisiting some library for which the
-	 * classfile JDK version level is more recent than the project JDK target level setting. 
+	 * classfile JDK version level is more recent than the project JDK target level setting.
 	 * This can indicate some binary incompatibility issues later on.
 	 * @since 3.0
 	 */
 	public static final int INCOMPATIBLE_JDK_LEVEL	= 1004;
-	
+
 	/**
 	 * Status constant indicating that a compiler failure occurred.
 	 * @since 3.0
 	 */
-	public static final int COMPILER_FAILURE	= 1005;	
+	public static final int COMPILER_FAILURE	= 1005;
 	/**
 	 * Status constant indicating that an element is not on its project's claspath.
 	 * @since 3.1
 	 */
-	public static final int ELEMENT_NOT_ON_CLASSPATH	= 1006;	
+	public static final int ELEMENT_NOT_ON_CLASSPATH	= 1006;
 	/**
 	 * Status constant indicating that a compiler option is invalid.
 	 * @since 3.1
@@ -310,27 +310,27 @@ public interface IJavaModelStatusConstants {
 	/**
 	 * <p>Status constant indicating that the attached javadoc content cannot be retrieved due to multiple reasons:
 	 * invalid url, timed-out,...</p>
-	 * 
+	 *
 	 * @since 3.2
 	 */
 	public static final int CANNOT_RETRIEVE_ATTACHED_JAVADOC = 1008;
 	/**
 	 * <p>Status constant indicating that the attached javadoc content format is unrecognized.</p>
-	 * 
+	 *
 	 * @since 3.2
 	 */
 	public static final int UNKNOWN_JAVADOC_FORMAT = 1009;
 	/**
 	 * <p>Status constant indicating that the variable is deprecated.</p>
-	 * 
+	 *
 	 * @since 3.3
 	 */
 	public static final int DEPRECATED_VARIABLE = 1010;
-	
+
 	/**
 	 * <p>Status constant indicating that a text edit can not be applied as there
 	 * is a problem with the text edit location.</p>
-	 * 
+	 *
 	 * @since 3.4
 	 */
 	public static final int BAD_TEXT_EDIT_LOCATION = 1011;

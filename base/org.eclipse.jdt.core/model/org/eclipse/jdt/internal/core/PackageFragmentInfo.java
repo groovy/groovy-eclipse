@@ -41,10 +41,10 @@ boolean containsJavaResources() {
 Object[] getNonJavaResources(IResource underlyingResource, PackageFragmentRoot rootHandle) {
 	if (this.nonJavaResources == null) {
 		try {
-			this.nonJavaResources = 
+			this.nonJavaResources =
 				PackageFragmentRootInfo.computeFolderNonJavaResources(
-					rootHandle, 
-					(IContainer)underlyingResource, 
+					rootHandle,
+					(IContainer)underlyingResource,
 					rootHandle.fullInclusionPatternChars(),
 					rootHandle.fullExclusionPatternChars());
 		} catch (JavaModelException e) {

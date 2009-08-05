@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.core.util.Messages;
  * contents are located in a contiguous range of a shared document. A shared
  * document is a char array, and is shared in the sense that the contents of other
  * document fragments may also be contained in the array.
- * 
+ *
  * <p>A node maintains indicies of relevant portions of its contents
  * in the shared document. Thus the original document and indicies create a
  * form from which to generate the contents of the document fragment. As attributes
@@ -45,11 +45,11 @@ import org.eclipse.jdt.internal.core.util.Messages;
  * preceding the node on the line where the node begins, and to include and trailing
  * whitespace up to the line where the next node begins. Any trailing // comments
  * that begin on the line where the current node ends, are considered part of that
- * node. 
+ * node.
  *
  * @see IDOMNode
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 public abstract class DOMNode implements IDOMNode {
@@ -94,7 +94,7 @@ public abstract class DOMNode implements IDOMNode {
 	 * shared document, or when the attributes of a
 	 * descendant have been altered. False when the
 	 * contents of this node and all descendants are
-	 * consistent with the content of the shared 
+	 * consistent with the content of the shared
 	 * document.
 	 */
 	protected boolean fIsFragmented= false;
@@ -150,7 +150,7 @@ public abstract class DOMNode implements IDOMNode {
 	 * expression
 	 */
 	protected static final int MASK_FIELD_HAS_INITIALIZER= 0x00000001;
-	
+
 	/**
 	 * A bit mask indicating this field is a secondary variable
 	 * declarator for a previous field declaration.
@@ -174,7 +174,7 @@ public abstract class DOMNode implements IDOMNode {
 	 * body.
 	 */
 	protected static final int MASK_HAS_BODY= 0x00000010;
-	
+
 	/**
 	 * A bit mask indicating this node currently has a
 	 * preceding comment.
@@ -218,10 +218,10 @@ public abstract class DOMNode implements IDOMNode {
  * Creates a new empty document fragment.
  */
 DOMNode() {
-	fName= null;
-	fDocument= null;
-	fSourceRange= new int[]{-1, -1};
-	fNameRange= new int[]{-1, -1};
+	this.fName= null;
+	this.fDocument= null;
+	this.fSourceRange= new int[]{-1, -1};
+	this.fNameRange= new int[]{-1, -1};
 	fragment();
 }
 /**
@@ -243,10 +243,10 @@ DOMNode() {
  */
 DOMNode(char[] document, int[] sourceRange, String name, int[] nameRange) {
 	super();
-	fDocument= document;
-	fSourceRange= sourceRange;
-	fName= name;
-	fNameRange= nameRange;
+	this.fDocument= document;
+	this.fSourceRange= sourceRange;
+	this.fName= name;
+	this.fNameRange= nameRange;
 
 }
 /**
@@ -255,12 +255,12 @@ DOMNode(char[] document, int[] sourceRange, String name, int[] nameRange) {
  *
  * <p>When a child is added, this node must be considered fragmented such that
  * the contents of this node are properly generated.
- * 
+ *
  * @see IDOMNode#addChild(IDOMNode)
  */
 public void addChild(IDOMNode child) throws IllegalArgumentException, DOMException {
 	basicAddChild(child);
-	
+
 	// if the node is a constructor, it must also be fragmented to update the constructor's name
 	if (child.getNodeType() == IDOMNode.METHOD && ((IDOMMethod)child).isConstructor()) {
 		((DOMNode)child).fragment();
@@ -276,13 +276,13 @@ public void addChild(IDOMNode child) throws IllegalArgumentException, DOMExcepti
  * using the original document and indicies as a form for the current
  * attribute values of this node. If this node not fragmented, the
  * contents can be obtained from the document.
- * 
+ *
  */
 protected void appendContents(CharArrayBuffer buffer) {
 	if (isFragmented()) {
 		appendFragmentedContents(buffer);
 	} else {
-		buffer.append(fDocument, fSourceRange[0], fSourceRange[1] + 1 - fSourceRange[0]);
+		buffer.append(this.fDocument, this.fSourceRange[0], this.fSourceRange[1] + 1 - this.fSourceRange[0]);
 	}
 }
 /**
@@ -294,9 +294,9 @@ protected void appendContents(CharArrayBuffer buffer) {
  *
  */
 protected void appendContentsOfChildren(CharArrayBuffer buffer) {
-	DOMNode child= fFirstChild;
+	DOMNode child= this.fFirstChild;
 	DOMNode sibling;
-	
+
 	int start= 0, end= 0;
 	if (child != null) {
 		start= child.getStartPosition();
@@ -341,42 +341,42 @@ protected abstract void appendFragmentedContents(CharArrayBuffer buffer);
 void basicAddChild(IDOMNode child) throws IllegalArgumentException, DOMException {
 	// verify child may be added
 	if (!canHaveChildren()) {
-		throw new DOMException(Messages.dom_unableAddChild); 
+		throw new DOMException(Messages.dom_unableAddChild);
 	}
 	if (child == null) {
-		throw new IllegalArgumentException(Messages.dom_addNullChild); 
+		throw new IllegalArgumentException(Messages.dom_addNullChild);
 	}
 	if (!isAllowableChild(child)) {
-		throw new DOMException(Messages.dom_addIncompatibleChild); 
+		throw new DOMException(Messages.dom_addIncompatibleChild);
 	}
 	if (child.getParent() != null) {
-		throw new DOMException(Messages.dom_addChildWithParent); 
+		throw new DOMException(Messages.dom_addChildWithParent);
 	}
 	/* NOTE: To test if the child is an ancestor of this node, we
 	 * need only test if the root of this node is the child (the child
 	 * is already a root since we have just guarenteed it has no parent).
 	 */
 	if (child == getRoot()) {
-		throw new DOMException(Messages.dom_addAncestorAsChild); 
+		throw new DOMException(Messages.dom_addAncestorAsChild);
 	}
 
 	DOMNode node= (DOMNode)child;
-	
+
 	// if the child is not already part of this document, localize its contents
 	// before adding it to the tree
 	if (node.getDocument() != getDocument()) {
 		node.localizeContents();
 	}
-	
+
 	// add the child last
-	if (fFirstChild == null) {
+	if (this.fFirstChild == null) {
 		// this is the first and only child
-		fFirstChild= node;
+		this.fFirstChild= node;
 	} else {
-		fLastChild.fNextNode= node;
-		node.fPreviousNode= fLastChild;
+		this.fLastChild.fNextNode= node;
+		node.fPreviousNode= this.fLastChild;
 	}
-	fLastChild= node;
+	this.fLastChild= node;
 	node.fParent= this;
 }
 /**
@@ -389,7 +389,7 @@ protected void becomeDetailed() throws DOMException {
 	if (!isDetailed()) {
 		DOMNode detailed= getDetailedNode();
 		if (detailed == null) {
-			throw new DOMException(Messages.dom_cannotDetail); 
+			throw new DOMException(Messages.dom_cannotDetail);
 		}
 		if (detailed != this) {
 			shareContents(detailed);
@@ -416,13 +416,13 @@ public Object clone() {
 	// create a new buffer with all my contents and children contents
 	int length= 0;
 	char[] buffer= null;
-	int offset= fSourceRange[0];
-	
+	int offset= this.fSourceRange[0];
+
 	if (offset >= 0) {
-		length= fSourceRange[1] - offset + 1;
+		length= this.fSourceRange[1] - offset + 1;
 		buffer= new char[length];
-		System.arraycopy(fDocument, offset, buffer, 0, length);
-	}	
+		System.arraycopy(this.fDocument, offset, buffer, 0, length);
+	}
 	DOMNode clone= newDOMNode();
 	clone.shareContents(this);
 	clone.fDocument = buffer;
@@ -436,17 +436,17 @@ public Object clone() {
 		Enumeration children= getChildren();
 		while (children.hasMoreElements()) {
 			DOMNode child= (DOMNode)children.nextElement();
-			if (child.fDocument == fDocument) {
+			if (child.fDocument == this.fDocument) {
 				DOMNode childClone= child.cloneSharingDocument(buffer, offset);
 				clone.basicAddChild(childClone);
 			} else {
 				DOMNode childClone= (DOMNode)child.clone();
 				clone.addChild(childClone);
 			}
-			
+
 		}
 	}
-	
+
 	return clone;
 }
 private DOMNode cloneSharingDocument(char[] document, int rootOffset) {
@@ -457,12 +457,12 @@ private DOMNode cloneSharingDocument(char[] document, int rootOffset) {
 	if (rootOffset > 0) {
 		clone.offset(0 - rootOffset);
 	}
-	
+
 	if (canHaveChildren()) {
 		Enumeration children = getChildren();
 		while (children.hasMoreElements()) {
 			DOMNode child = (DOMNode) children.nextElement();
-			if (child.fDocument == fDocument) {
+			if (child.fDocument == this.fDocument) {
 				DOMNode childClone= child.cloneSharingDocument(document, rootOffset);
 				clone.basicAddChild(childClone);
 			} else {
@@ -482,9 +482,9 @@ private DOMNode cloneSharingDocument(char[] document, int rootOffset) {
  */
 protected void fragment() {
 	if (!isFragmented()) {
-		fIsFragmented= true;
-		if (fParent != null) {
-			fParent.fragment();
+		this.fIsFragmented= true;
+		if (this.fParent != null) {
+			this.fParent.fragment();
 		}
 	}
 }
@@ -500,7 +500,7 @@ public char[] getCharacters() {
  * @see IDOMNode#getChild(String)
  */
 public IDOMNode getChild(String name) {
-	DOMNode child = fFirstChild;
+	DOMNode child = this.fFirstChild;
 	while (child != null) {
 		String n = child.getName();
 		if (name == null) {
@@ -520,7 +520,7 @@ public IDOMNode getChild(String name) {
  * @see IDOMNode#getChildren()
  */
 public Enumeration getChildren() {
-	return new SiblingEnumeration(fFirstChild);
+	return new SiblingEnumeration(this.fFirstChild);
 }
 /**
  * Returns the current contents of this document fragment,
@@ -530,7 +530,7 @@ public Enumeration getChildren() {
  * using the original document and indicies as a form for the current
  * attribute values of this node. If this node not fragmented, the
  * contents can be obtained from the document.
- * 
+ *
  * @see IDOMNode#getContents()
  */
 public String getContents() {
@@ -551,14 +551,14 @@ protected DOMNode getDetailedNode() {
  * The document may be shared by other nodes.
  */
 protected char[] getDocument() {
-	return fDocument;
+	return this.fDocument;
 }
 /**
  * Returns the original position of the last character of this
  * node's contents in its document.
  */
 public int getEndPosition() {
-	return fSourceRange[1];
+	return this.fSourceRange[1];
 }
 /**
  * Returns a factory with which to create new document fragments.
@@ -570,40 +570,40 @@ protected IDOMFactory getFactory() {
  * @see IDOMNode#getFirstChild()
  */
 public IDOMNode getFirstChild() {
-	return fFirstChild;
+	return this.fFirstChild;
 }
 /**
  * Returns the position at which the first child of this node should be inserted.
  */
 public int getInsertionPosition() {
-	return fInsertionPosition;
+	return this.fInsertionPosition;
 }
 /**
  * Returns <code>true</code> if the given mask of this node's state flag
  * is turned on, otherwise <code>false</code>.
  */
 protected boolean getMask(int mask) {
-	return (fStateMask & mask) > 0;
+	return (this.fStateMask & mask) > 0;
 }
 /**
  * @see IDOMNode#getName()
  */
 public String getName() {
-	return fName;
+	return this.fName;
 }
 /**
  * Returns the source code to be used for this node's name.
  */
 protected char[] getNameContents() {
 	if (isNameAltered()) {
-		return fName.toCharArray();
+		return this.fName.toCharArray();
 	} else {
-		if (fName == null || fNameRange[0] < 0) {
+		if (this.fName == null || this.fNameRange[0] < 0) {
 			return null;
 		} else {
-			int length = fNameRange[1] + 1 - fNameRange[0];
+			int length = this.fNameRange[1] + 1 - this.fNameRange[0];
 			char[] result = new char[length];
-			System.arraycopy(fDocument, fNameRange[0], result, 0, length);
+			System.arraycopy(this.fDocument, this.fNameRange[0], result, 0, length);
 			return result;
 		}
 	}
@@ -612,13 +612,13 @@ protected char[] getNameContents() {
  * @see IDOMNode#getNextNode()
  */
 public IDOMNode getNextNode() {
-	return fNextNode;
+	return this.fNextNode;
 }
 /**
  * @see IDOMNode#getParent()
  */
 public IDOMNode getParent() {
-	return fParent;
+	return this.fParent;
 }
 /**
  * Answers a source position which corresponds to the end of the parent
@@ -640,16 +640,16 @@ protected int getParentEndDeclaration() {
  * @see IDOMNode#getPreviousNode()
  */
 public IDOMNode getPreviousNode() {
-	return fPreviousNode;
+	return this.fPreviousNode;
 }
 /**
  * Returns the root node of this document fragment.
  */
 protected IDOMNode getRoot() {
-	if (fParent == null) {
+	if (this.fParent == null) {
 		return this;
 	} else {
-		return fParent.getRoot();
+		return this.fParent.getRoot();
 	}
 }
 /**
@@ -657,7 +657,7 @@ protected IDOMNode getRoot() {
  * node's contents in its document.
  */
 public int getStartPosition() {
-	return fSourceRange[0];
+	return this.fSourceRange[0];
 }
 /**
  * @see IDOMNode#insertSibling(IDOMNode)
@@ -665,27 +665,27 @@ public int getStartPosition() {
 public void insertSibling(IDOMNode sibling) throws IllegalArgumentException, DOMException {
 	// verify sibling may be added
 	if (sibling == null) {
-		throw new IllegalArgumentException(Messages.dom_addNullSibling); 
+		throw new IllegalArgumentException(Messages.dom_addNullSibling);
 	}
-	if (fParent == null) {
-		throw new DOMException(Messages.dom_addSiblingBeforeRoot); 
+	if (this.fParent == null) {
+		throw new DOMException(Messages.dom_addSiblingBeforeRoot);
 	}
-	if (!fParent.isAllowableChild(sibling)) {
-		throw new DOMException(Messages.dom_addIncompatibleSibling); 
+	if (!this.fParent.isAllowableChild(sibling)) {
+		throw new DOMException(Messages.dom_addIncompatibleSibling);
 	}
 	if (sibling.getParent() != null) {
-		throw new DOMException(Messages.dom_addSiblingWithParent); 
+		throw new DOMException(Messages.dom_addSiblingWithParent);
 	}
 	/* NOTE: To test if the sibling is an ancestor of this node, we
 	 * need only test if the root of this node is the child (the sibling
 	 * is already a root since we have just guaranteed it has no parent).
 	 */
 	if (sibling == getRoot()) {
-		throw new DOMException(Messages.dom_addAncestorAsSibling); 
+		throw new DOMException(Messages.dom_addAncestorAsSibling);
 	}
 
 	DOMNode node= (DOMNode)sibling;
-	
+
 	// if the sibling is not already part of this document, localize its contents
 	// before inserting it into the tree
 	if (node.getDocument() != getDocument()) {
@@ -693,21 +693,21 @@ public void insertSibling(IDOMNode sibling) throws IllegalArgumentException, DOM
 	}
 
 	// insert the node
-	if (fPreviousNode == null) {
-		fParent.fFirstChild= node;
+	if (this.fPreviousNode == null) {
+		this.fParent.fFirstChild= node;
 	} else {
-		fPreviousNode.fNextNode= node;	
+		this.fPreviousNode.fNextNode= node;
 	}
-	node.fParent= fParent;
-	node.fPreviousNode= fPreviousNode;
+	node.fParent= this.fParent;
+	node.fPreviousNode= this.fPreviousNode;
 	node.fNextNode= this;
-	fPreviousNode= node;
+	this.fPreviousNode= node;
 
 	// if the node is a constructor, it must also be fragmented to update the constructor's name
 	if (node.getNodeType() == IDOMNode.METHOD && ((IDOMMethod)node).isConstructor()) {
 		node.fragment();
 	} else {
-		fParent.fragment();
+		this.fParent.fragment();
 	}
 }
 /**
@@ -735,13 +735,13 @@ protected boolean isDetailed() {
 	return getMask(MASK_DETAILED_SOURCE_INDEXES);
 }
 /**
- * Returns <code>true</code> if this node's or a descendant node's contents 
+ * Returns <code>true</code> if this node's or a descendant node's contents
  * have been altered since this node was created. This indicates
  * that the contents of this node are no longer consistent with
  * the contents of this node's document.
  */
 protected boolean isFragmented() {
-	return fIsFragmented;
+	return this.fIsFragmented;
 }
 /**
  * Returns <code>true</code> if this noed's name has been altered
@@ -804,17 +804,17 @@ void normalizeEndPosition(ILineStartFinder finder, DOMNode next) {
 		// to the end of the enclosing node
 		DOMNode parent = (DOMNode) getParent();
 		if (parent == null || parent instanceof DOMCompilationUnit) {
-			setSourceRangeEnd(fDocument.length - 1);
+			setSourceRangeEnd(this.fDocument.length - 1);
 		} else {
 			// parent is a type
 			int temp = ((DOMType)parent).getCloseBodyPosition() - 1;
 			setSourceRangeEnd(temp);
-			fInsertionPosition = Math.max(finder.getLineStart(temp + 1), getEndPosition());
+			this.fInsertionPosition = Math.max(finder.getLineStart(temp + 1), getEndPosition());
 		}
 	} else {
 		// this node's end position is just before the start of the next node
 		int temp = next.getStartPosition() - 1;
-		fInsertionPosition = Math.max(finder.getLineStart(temp + 1), getEndPosition());
+		this.fInsertionPosition = Math.max(finder.getLineStart(temp + 1), getEndPosition());
 		next.normalizeStartPosition(getEndPosition(), finder);
 		setSourceRangeEnd(next.getStartPosition() - 1);
 	}
@@ -826,14 +826,14 @@ void normalizeStartPosition(int previousEnd, ILineStartFinder finder) {
 	int nodeStart = getStartPosition();
 	int lineStart = finder.getLineStart(nodeStart);
 	if (nodeStart > lineStart && (lineStart > previousEnd || (previousEnd == 0 && lineStart == 0)))
-		setStartPosition(lineStart);			
+		setStartPosition(lineStart);
 }
 /**
  * Offsets all the source indexes in this node by the given amount.
  */
 protected void offset(int offset) {
-	offsetRange(fNameRange, offset);
-	offsetRange(fSourceRange, offset);
+	offsetRange(this.fNameRange, offset);
+	offsetRange(this.fSourceRange, offset);
 }
 /**
  * Offsets the source range by the given amount
@@ -867,30 +867,30 @@ protected int[] rangeCopy(int[] range) {
  */
 public void remove() {
 
-	if (fParent != null) {
-		fParent.fragment();
+	if (this.fParent != null) {
+		this.fParent.fragment();
 	}
-	
+
 	// link siblings
-	if (fNextNode != null) {
-		fNextNode.fPreviousNode= fPreviousNode;
+	if (this.fNextNode != null) {
+		this.fNextNode.fPreviousNode= this.fPreviousNode;
 	}
-	if (fPreviousNode != null) {
-		fPreviousNode.fNextNode= fNextNode;
+	if (this.fPreviousNode != null) {
+		this.fPreviousNode.fNextNode= this.fNextNode;
 	}
 	// fix parent's pointers
-	if (fParent != null) {
-		if (fParent.fFirstChild == this) {
-			fParent.fFirstChild= fNextNode;
+	if (this.fParent != null) {
+		if (this.fParent.fFirstChild == this) {
+			this.fParent.fFirstChild= this.fNextNode;
 		}
-		if (fParent.fLastChild == this) {
-			fParent.fLastChild= fPreviousNode;
+		if (this.fParent.fLastChild == this) {
+			this.fParent.fLastChild= this.fPreviousNode;
 		}
 	}
 	// remove myself
-	fParent= null;
-	fNextNode= null;
-	fPreviousNode= null;
+	this.fParent= null;
+	this.fNextNode= null;
+	this.fPreviousNode= null;
 }
 /**
  * Sets the specified mask of this node's state mask on or off
@@ -898,16 +898,16 @@ public void remove() {
  */
 protected void setMask(int mask, boolean on) {
 	if (on) {
-		fStateMask |= mask;
+		this.fStateMask |= mask;
 	} else {
-		fStateMask &= ~mask;
+		this.fStateMask &= ~mask;
 	}
 }
 /**
  * @see IDOMNode#setName
  */
 public void setName(String name) {
-	fName= name;
+	this.fName= name;
 	setNameAltered(true);
 	fragment();
 }
@@ -925,7 +925,7 @@ protected void setNameAltered(boolean altered) {
  * normalizing the source range of each node.
  */
 protected void setSourceRangeEnd(int end) {
-	fSourceRange[1]= end;
+	this.fSourceRange[1]= end;
 }
 /**
  * Sets the original position of the first character of this node's contents
@@ -933,7 +933,7 @@ protected void setSourceRangeEnd(int end) {
  * normalizing the source range of each node.
  */
 protected void setStartPosition(int start) {
-	fSourceRange[0]= start;
+	this.fSourceRange[0]= start;
 }
 /**
  * Sets the contents of this node and descendant nodes to be the
@@ -943,14 +943,14 @@ protected void setStartPosition(int start) {
  * the contents of this node.
  */
 protected void shareContents(DOMNode node) {
-	fDocument= node.fDocument;
-	fIsFragmented= node.fIsFragmented;
-	fName= node.fName;
-	fNameRange= rangeCopy(node.fNameRange);
-	fSourceRange= rangeCopy(node.fSourceRange);
-	fStateMask= node.fStateMask;
+	this.fDocument= node.fDocument;
+	this.fIsFragmented= node.fIsFragmented;
+	this.fName= node.fName;
+	this.fNameRange= rangeCopy(node.fNameRange);
+	this.fSourceRange= rangeCopy(node.fSourceRange);
+	this.fStateMask= node.fStateMask;
 
-	
+
 	if (canHaveChildren()) {
 		Enumeration myChildren= getChildren();
 		Enumeration otherChildren= node.getChildren();

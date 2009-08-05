@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2007 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,7 +36,7 @@ public class CompletionOnParameterizedQualifiedTypeReference extends Parameteriz
 	public static final int K_CLASS = 1;
 	public static final int K_INTERFACE = 2;
 	public static final int K_EXCEPTION = 3;
-	
+
 	private int kind = K_TYPE;
 	public char[] completionIdentifier;
 	/**
@@ -47,7 +47,7 @@ public class CompletionOnParameterizedQualifiedTypeReference extends Parameteriz
 	public CompletionOnParameterizedQualifiedTypeReference(char[][] tokens,	TypeReference[][] typeArguments, char[] completionIdentifier, long[] positions) {
 		this(tokens, typeArguments, completionIdentifier, positions, K_TYPE);
 	}
-	
+
 	/**
 	 * @param tokens
 	 * @param typeArguments
@@ -59,33 +59,33 @@ public class CompletionOnParameterizedQualifiedTypeReference extends Parameteriz
 		this.completionIdentifier = completionIdentifier;
 		this.kind = kind;
 	}
-	
+
 	public boolean isClass(){
 		return this.kind == K_CLASS;
 	}
-	
+
 	public boolean isInterface(){
 		return this.kind == K_INTERFACE;
 	}
-	
+
 	public boolean isException(){
 		return this.kind == K_EXCEPTION;
 	}
-	
+
 	public boolean isSuperType(){
 		return this.kind == K_CLASS || this.kind == K_INTERFACE;
 	}
-	
+
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
 		super.resolveType(scope, checkBounds);
 		throw new CompletionNodeFound(this, this.resolvedType, scope);
 	}
-	
+
 	public TypeBinding resolveType(ClassScope scope) {
 		super.resolveType(scope);
 		throw new CompletionNodeFound(this, this.resolvedType, scope);
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		switch (this.kind) {
 			case K_CLASS :
@@ -101,10 +101,10 @@ public class CompletionOnParameterizedQualifiedTypeReference extends Parameteriz
 				output.append("<CompleteOnType:");//$NON-NLS-1$
 				break;
 		}
-		int length = tokens.length;
+		int length = this.tokens.length;
 		for (int i = 0; i < length - 1; i++) {
-			output.append(tokens[i]);
-			TypeReference[] typeArgument = typeArguments[i];
+			output.append(this.tokens[i]);
+			TypeReference[] typeArgument = this.typeArguments[i];
 			if (typeArgument != null) {
 				output.append('<');
 				int max = typeArgument.length - 1;
@@ -117,8 +117,8 @@ public class CompletionOnParameterizedQualifiedTypeReference extends Parameteriz
 			}
 			output.append('.');
 		}
-		output.append(tokens[length - 1]);
-		TypeReference[] typeArgument = typeArguments[length - 1];
+		output.append(this.tokens[length - 1]);
+		TypeReference[] typeArgument = this.typeArguments[length - 1];
 		if (typeArgument != null) {
 			output.append('<');
 			int max = typeArgument.length - 1;
@@ -129,7 +129,7 @@ public class CompletionOnParameterizedQualifiedTypeReference extends Parameteriz
 			typeArgument[max].print(0, output);
 			output.append('>');
 		}
-		output.append('.').append(completionIdentifier).append('>'); 
+		output.append('.').append(this.completionIdentifier).append('>');
 		return output;
-	}	
+	}
 }

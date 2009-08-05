@@ -43,13 +43,18 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 
 		TypeBinding type = this.resolvedType = getTypeBinding(scope);
 		// End resolution when getTypeBinding(scope) returns null. This may happen in
-		// certain circumstances, typically when an illegal access is done on a type 
+		// certain circumstances, typically when an illegal access is done on a type
 		// variable (see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=204749)
-		if (type == null) return null;		
+		if (type == null) return null;
 		if (!type.isValidBinding()) {
 			Binding binding = scope.getTypeOrPackage(this.tokens);
 			if (binding instanceof PackageBinding) {
 				this.packageBinding = (PackageBinding) binding;
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=211054
+				// allow references to current package only. All other package references should be reported as invalid
+				if (scope.compilationUnitScope().fPackage != this.packageBinding) {
+					scope.problemReporter().javadocInvalidReference(this.sourceStart, this.sourceEnd);
+				}
 			} else {
 				reportInvalidType(scope);
 			}
@@ -61,7 +66,7 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 		// raw convert all enclosing types when dealing with Javadoc references
 		if (type.isGenericType() || type.isParameterizedType()) {
 			this.resolvedType = scope.environment().convertToRawType(type, true /*force the conversion of enclosing types*/);
-		}		
+		}
 		return this.resolvedType;
 	}
 	protected void reportDeprecatedType(TypeBinding type, Scope scope) {

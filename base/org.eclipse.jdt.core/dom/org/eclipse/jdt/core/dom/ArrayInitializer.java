@@ -21,26 +21,26 @@ import java.util.List;
  * ArrayInitializer:
  * 		<b>{</b> [ Expression { <b>,</b> Expression} [ <b>,</b> ]] <b>}</b>
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class ArrayInitializer extends Expression {
-	
+
 	/**
 	 * The "expressions" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildListPropertyDescriptor EXPRESSIONS_PROPERTY = 
+	public static final ChildListPropertyDescriptor EXPRESSIONS_PROPERTY =
 		new ChildListPropertyDescriptor(ArrayInitializer.class, "expressions", Expression.class, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(2);
 		createPropertyList(ArrayInitializer.class, properyList);
@@ -51,18 +51,18 @@ public class ArrayInitializer extends Expression {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The list of expressions (element type:
 	 * <code>Expression</code>). Defaults to an empty list.
@@ -71,13 +71,13 @@ public class ArrayInitializer extends Expression {
 		new ASTNode.NodeList(EXPRESSIONS_PROPERTY);
 
 	/**
-	 * Creates a new AST node for an array initializer owned by the 
+	 * Creates a new AST node for an array initializer owned by the
 	 * given AST. By default, the list of expressions is empty.
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	ArrayInitializer(AST ast) {
-		super(ast);	
+		super(ast);
 	}
 
 	/* (omit javadoc for this method)
@@ -86,7 +86,7 @@ public class ArrayInitializer extends Expression {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -110,7 +110,7 @@ public class ArrayInitializer extends Expression {
 	 */
 	ASTNode clone0(AST target) {
 		ArrayInitializer result = new ArrayInitializer(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.expressions().addAll(ASTNode.copySubtrees(target, expressions()));
 		return result;
 	}
@@ -133,24 +133,24 @@ public class ArrayInitializer extends Expression {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the live ordered list of expressions in this array initializer.
-	 * 
-	 * @return the live list of expressions 
+	 *
+	 * @return the live list of expressions
 	 *    (element type: <code>Expression</code>)
-	 */ 
+	 */
 	public List expressions() {
 		return this.expressions;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return BASE_NODE_SIZE + 1 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,7 +46,7 @@ private int bufferIndex, bufferEnd; // used when reading from the file into the 
 private int streamEnd; // used when writing data from the streamBuffer to the file
 char separator = Index.DEFAULT_SEPARATOR;
 
-public static final String SIGNATURE= "INDEX VERSION 1.125"; //$NON-NLS-1$
+public static final String SIGNATURE= "INDEX VERSION 1.126"; //$NON-NLS-1$
 private static final char[] SIGNATURE_CHARS = SIGNATURE.toCharArray();
 public static boolean DEBUG = false;
 
@@ -78,7 +78,7 @@ int[] asArray() {
 	int[] result = new int[this.size];
 	System.arraycopy(this.elements, 0, result, 0, this.size);
 	return result;
-}	
+}
 }
 
 
@@ -571,9 +571,9 @@ private synchronized String[] readAllDocumentNames() throws IOException {
 		this.bufferIndex = 0;
 		this.bufferEnd = stream.read(this.streamBuffer, 0, this.streamBuffer.length);
 		int lastIndex = this.numberOfChunks - 1;
-		String[] docNames = new String[lastIndex * CHUNK_SIZE + sizeOfLastChunk];
+		String[] docNames = new String[lastIndex * CHUNK_SIZE + this.sizeOfLastChunk];
 		for (int i = 0; i < this.numberOfChunks; i++)
-			readChunk(docNames, stream, i * CHUNK_SIZE, i < lastIndex ? CHUNK_SIZE : sizeOfLastChunk);
+			readChunk(docNames, stream, i * CHUNK_SIZE, i < lastIndex ? CHUNK_SIZE : this.sizeOfLastChunk);
 		return docNames;
 	} finally {
 		stream.close();
@@ -692,8 +692,8 @@ private void readChunk(String[] docNames, FileInputStream stream, int index, int
 	for (int i = 1; i < size; i++) {
 		if (stream != null && this.bufferIndex + 2 >= this.bufferEnd)
 			readStreamBuffer(stream);
-		int start = streamBuffer[this.bufferIndex++] & 0xFF;
-		int end = streamBuffer[this.bufferIndex++] & 0xFF;
+		int start = this.streamBuffer[this.bufferIndex++] & 0xFF;
+		int end = this.streamBuffer[this.bufferIndex++] & 0xFF;
 		String next  = new String(readStreamChars(stream));
 		if (start > 0) {
 			if (end > 0) {
@@ -831,17 +831,17 @@ private void readStreamBuffer(FileInputStream stream) throws IOException {
 	this.bufferIndex = 0;
 }
 /**
- * Reads in a string from the specified data input stream. The 
- * string has been encoded using a modified UTF-8 format. 
+ * Reads in a string from the specified data input stream. The
+ * string has been encoded using a modified UTF-8 format.
  * <p>
  * The first two bytes are read as an unsigned short.
  * This value gives the number of following bytes that are in the encoded string,
- * not the length of the resulting string. The following bytes are then 
- * interpreted as bytes encoding characters in the UTF-8 format 
- * and are converted into characters. 
+ * not the length of the resulting string. The following bytes are then
+ * interpreted as bytes encoding characters in the UTF-8 format
+ * and are converted into characters.
  * <p>
- * This method blocks until all the bytes are read, the end of the 
- * stream is detected, or an exception is thrown. 
+ * This method blocks until all the bytes are read, the end of the
+ * stream is detected, or an exception is thrown.
  *
  * @param      stream   a data input stream.
  * @return     UTF decoded string as a char array
@@ -854,7 +854,7 @@ private char[] readStreamChars(FileInputStream stream) throws IOException {
 	// read chars array length
 	if (stream != null && this.bufferIndex + 2 >= this.bufferEnd)
 		readStreamBuffer(stream);
-	int length = (streamBuffer[this.bufferIndex++] & 0xFF) << 8;
+	int length = (this.streamBuffer[this.bufferIndex++] & 0xFF) << 8;
 	length += this.streamBuffer[this.bufferIndex++] & 0xFF;
 
 	// fill the chars from bytes buffer
@@ -954,10 +954,10 @@ private int readStreamInt(FileInputStream stream) throws IOException {
 	if (this.bufferIndex + 4 >= this.bufferEnd) {
 		readStreamBuffer(stream);
 	}
-	int val = (streamBuffer[this.bufferIndex++] & 0xFF) << 24;
-	val += (streamBuffer[this.bufferIndex++] & 0xFF) << 16;
-	val += (streamBuffer[this.bufferIndex++] & 0xFF) << 8;
-	return val + (streamBuffer[this.bufferIndex++] & 0xFF);
+	int val = (this.streamBuffer[this.bufferIndex++] & 0xFF) << 24;
+	val += (this.streamBuffer[this.bufferIndex++] & 0xFF) << 16;
+	val += (this.streamBuffer[this.bufferIndex++] & 0xFF) << 8;
+	return val + (this.streamBuffer[this.bufferIndex++] & 0xFF);
 }
 private void writeAllDocumentNames(String[] sortedDocNames, FileOutputStream stream) throws IOException {
 	if (sortedDocNames.length == 0)
@@ -1171,12 +1171,12 @@ private void writeOffsetToHeader(int offsetToHeader) throws IOException {
 	}
 }
 /**
- * Writes a string to the given output stream using UTF-8 
- * encoding in a machine-independent manner. 
+ * Writes a string to the given output stream using UTF-8
+ * encoding in a machine-independent manner.
  * <p>
- * First, two bytes of the array are giving the number of bytes to 
- * follow. This value is the number of bytes actually written out, 
- * not the length of the string. Following the length, each character 
+ * First, two bytes of the array are giving the number of bytes to
+ * follow. This value is the number of bytes actually written out,
+ * not the length of the string. Following the length, each character
  * of the string is put in the bytes array, in sequence, using the UTF-8
  * encoding for the character.
  * </p>

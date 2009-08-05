@@ -19,17 +19,17 @@ public class CompilationUnitElementInfo extends OpenableElementInfo {
 	 */
 	protected int sourceLength;
 
-	/** 
+	/**
 	 * Timestamp of original resource at the time this element
 	 * was opened or last updated.
 	 */
 	protected long timestamp;
-	
+
 	/*
 	 * Number of annotations in this compilation unit
 	 */
 	public int annotationNumber = 0;
-	
+
 /**
  * Returns the length of the source string.
  */

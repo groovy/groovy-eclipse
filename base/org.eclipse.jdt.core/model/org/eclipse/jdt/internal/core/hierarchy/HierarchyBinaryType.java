@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,7 @@ public class HierarchyBinaryType implements IBinaryType {
 	private char[][] superInterfaces = NoInterface;
 	private char[][] typeParameterSignatures;
 	private char[] genericSignature;
-	
+
 public HierarchyBinaryType(int modifiers, char[] qualification, char[] sourceName, char[] enclosingTypeName, char[][] typeParameterSignatures, char typeSuffix){
 
 	this.modifiers = modifiers;
@@ -49,6 +49,9 @@ public HierarchyBinaryType(int modifiers, char[] qualification, char[] sourceNam
  * @see org.eclipse.jdt.internal.compiler.env.IBinaryType
  */
 public IBinaryAnnotation[] getAnnotations() {
+	return null;
+}
+public char[] getEnclosingMethod() {
 	return null;
 }
 /**
@@ -85,7 +88,7 @@ public char[] getGenericSignature() {
 			buffer.append(Signature.createTypeSignature("java.lang.Object", true/*resolved*/)); //$NON-NLS-1$
 		else
 			buffer.append(Signature.createTypeSignature(this.superclass, true/*resolved*/));
-		if (this.superInterfaces != null) 
+		if (this.superInterfaces != null)
 			for (int i = 0, length = this.superInterfaces.length; i < length; i++)
 				buffer.append(Signature.createTypeSignature(this.superInterfaces[i], true/*resolved*/));
 		this.genericSignature = buffer.toString().toCharArray();
@@ -191,17 +194,17 @@ public void recordSuperType(char[] superTypeName, char[] superQualification, cha
 			superQualification = CharOperation.subarray(superQualification, 0, length - enclosingSuperName.length - 1);
 		}
 	}
-	
+
 	if (superClassOrInterface == IIndexConstants.CLASS_SUFFIX){
 		// interfaces are indexed as having superclass references to Object by default,
 		// this is an artifact used for being able to query them only.
-		if (TypeDeclaration.kind(this.modifiers) == TypeDeclaration.INTERFACE_DECL) return; 
+		if (TypeDeclaration.kind(this.modifiers) == TypeDeclaration.INTERFACE_DECL) return;
 		char[] encodedName = CharOperation.concat(superQualification, superTypeName, '/');
-		CharOperation.replace(encodedName, '.', '/'); 
+		CharOperation.replace(encodedName, '.', '/');
 		this.superclass = encodedName;
 	} else {
 		char[] encodedName = CharOperation.concat(superQualification, superTypeName, '/');
-		CharOperation.replace(encodedName, '.', '/'); 
+		CharOperation.replace(encodedName, '.', '/');
 		if (this.superInterfaces == NoInterface){
 			this.superInterfaces = new char[][] { encodedName };
 		} else {
@@ -226,13 +229,13 @@ public String toString() {
 	switch (TypeDeclaration.kind(this.modifiers)) {
 		case TypeDeclaration.CLASS_DECL :
 			buffer.append("class "); //$NON-NLS-1$
-			break;		
+			break;
 		case TypeDeclaration.INTERFACE_DECL :
 			buffer.append("interface "); //$NON-NLS-1$
-			break;		
+			break;
 		case TypeDeclaration.ENUM_DECL :
 			buffer.append("enum "); //$NON-NLS-1$
-			break;		
+			break;
 	}
 	if (this.name != null) {
 		buffer.append(this.name);

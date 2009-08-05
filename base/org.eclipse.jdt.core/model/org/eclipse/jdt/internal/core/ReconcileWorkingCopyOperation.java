@@ -75,7 +75,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 
 			// check is problem requestor is active
 			IProblemRequestor problemRequestor = workingCopy.getPerWorkingCopyInfo();
-			if (problemRequestor != null) 
+			if (problemRequestor != null)
 				problemRequestor =  ((JavaModelManager.PerWorkingCopyInfo)problemRequestor).getProblemRequestor();
 			boolean defaultRequestorIsActive = problemRequestor != null && problemRequestor.isActive();
 			IProblemRequestor ownerProblemRequestor = this.workingCopyOwner.getProblemRequestor(workingCopy);
@@ -167,21 +167,21 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 			// make working copy consistent
 			if (this.problems == null) this.problems = new HashMap();
 			this.resolveBindings = this.requestorIsActive;
-			this.ast = workingCopy.makeConsistent(this.astLevel, this.resolveBindings, reconcileFlags, this.problems, this.progressMonitor);
+			this.ast = workingCopy.makeConsistent(this.astLevel, this.resolveBindings, this.reconcileFlags, this.problems, this.progressMonitor);
 			this.deltaBuilder.buildDeltas();
 			if (this.ast != null && this.deltaBuilder.delta != null)
 				this.deltaBuilder.delta.changedAST(this.ast);
 			return this.ast;
 		}
-		if (this.ast != null) 
+		if (this.ast != null)
 			return this.ast; // no need to recompute AST if known already
-		
+
 		CompilationUnitDeclaration unit = null;
 		try {
 			JavaModelManager.getJavaModelManager().abortOnMissingSource.set(Boolean.TRUE);
 			CompilationUnit source = workingCopy.cloneCachingContents();
 			// find problems if needed
-			if (JavaProject.hasJavaNature(workingCopy.getJavaProject().getProject()) 
+			if (JavaProject.hasJavaNature(workingCopy.getJavaProject().getProject())
 					&& (this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0) {
 				this.resolveBindings = this.requestorIsActive;
 				if (this.problems == null)
@@ -192,13 +192,13 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 						this.workingCopyOwner,
 						this.problems,
 						this.astLevel != ICompilationUnit.NO_AST/*creating AST if level is not NO_AST */,
-						reconcileFlags,
+						this.reconcileFlags,
 						this.progressMonitor);
 				if (this.progressMonitor != null) this.progressMonitor.worked(1);
 			}
-			
+
 			// create AST if needed
-			if (this.astLevel != ICompilationUnit.NO_AST 
+			if (this.astLevel != ICompilationUnit.NO_AST
 					&& unit !=null/*unit is null if working copy is consistent && (problem detection not forced || non-Java project) -> don't create AST as per API*/) {
 				Map options = workingCopy.getJavaProject().getOptions(true);
 				// convert AST
@@ -209,7 +209,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 						options,
 						this.resolveBindings,
 						source,
-						reconcileFlags,
+						this.reconcileFlags,
 						this.progressMonitor);
 				if (this.ast != null) {
 					if (this.deltaBuilder.delta == null) {
@@ -232,7 +232,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 	    }
 		return this.ast;
 	}
-	
+
 	private void notifyParticipants(final CompilationUnit workingCopy) {
 		IJavaProject javaProject = getWorkingCopy().getJavaProject();
 		CompilationParticipant[] participants = JavaModelManager.getJavaModelManager().compilationParticipants.getCompilationParticipants(javaProject);

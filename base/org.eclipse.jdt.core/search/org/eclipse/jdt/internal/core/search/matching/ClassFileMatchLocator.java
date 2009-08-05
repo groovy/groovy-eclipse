@@ -24,7 +24,7 @@ import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 
 public class ClassFileMatchLocator implements IIndexConstants {
 
-private static final long TARGET_ANNOTATION_BITS = 
+private static final long TARGET_ANNOTATION_BITS =
 	TagBits.AnnotationForType |
 	TagBits.AnnotationForParameter |
 	TagBits.AnnotationForPackage |
@@ -171,10 +171,10 @@ public void locateMatches(MatchLocator locator, ClassFile classFile, IBinaryType
 	int bFieldsLength = binaryFields == null ? 0 : binaryFields.length;
 	IBinaryField[] unresolvedFields = null;
 	boolean hasUnresolvedFields = false;
-	
+
 	// Report as many accurate matches as possible
 	int accuracy = SearchMatch.A_ACCURATE;
-	boolean mustResolve = ((InternalSearchPattern)pattern).mustResolve;
+	boolean mustResolve = pattern.mustResolve;
 	if (mustResolve) {
 		BinaryTypeBinding binding = locator.cacheBinaryType(binaryType, info);
 		if (binding != null) {
@@ -309,7 +309,7 @@ public void locateMatches(MatchLocator locator, ClassFile classFile, IBinaryType
  */
 private void matchAnnotations(SearchPattern pattern, MatchLocator locator, ClassFile classFile, IBinaryType binaryType) throws CoreException {
 	// Only process TypeReference patterns
-	switch (((InternalSearchPattern)pattern).kind) {
+	switch (pattern.kind) {
 		case TYPE_REF_PATTERN:
 			break;
 		case OR_PATTERN:
@@ -317,7 +317,7 @@ private void matchAnnotations(SearchPattern pattern, MatchLocator locator, Class
 			for (int i = 0, length = patterns.length; i < length; i++) {
 				matchAnnotations(patterns[i], locator, classFile, binaryType);
 			}
-			// fall through default to return
+			// $FALL-THROUGH$ - fall through default to return
 		default:
 			return;
 	}
@@ -352,7 +352,7 @@ private void matchAnnotations(SearchPattern pattern, MatchLocator locator, Class
 			}
 		}
 	}
-	
+
 	// Look for references in fields annotations
 	FieldInfo[] fields = (FieldInfo[]) binaryType.getFields();
 	if (fields != null) {
@@ -373,7 +373,7 @@ private void matchAnnotations(SearchPattern pattern, MatchLocator locator, Class
  * Default is to return false.
  */
 boolean matchBinary(SearchPattern pattern, Object binaryInfo, IBinaryType enclosingBinaryType) {
-	switch (((InternalSearchPattern)pattern).kind) {
+	switch (pattern.kind) {
 		case CONSTRUCTOR_PATTERN :
 			return matchConstructor((ConstructorPattern) pattern, binaryInfo, enclosingBinaryType);
 		case FIELD_PATTERN :

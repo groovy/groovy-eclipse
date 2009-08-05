@@ -21,12 +21,12 @@ import java.util.List;
  * SuperFieldAccess:
  *     [ ClassName <b>.</b> ] <b>super</b> <b>.</b> Identifier
  * </pre>
- * 
+ *
  * <p>
  * See <code>FieldAccess</code> for guidelines on handling other expressions
  * that resemble qualified names.
  * </p>
- * 
+ *
  * @see FieldAccess
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
@@ -37,23 +37,23 @@ public class SuperFieldAccess extends Expression {
 	 * The "qualifier" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor QUALIFIER_PROPERTY = 
+	public static final ChildPropertyDescriptor QUALIFIER_PROPERTY =
 		new ChildPropertyDescriptor(SuperFieldAccess.class, "qualifier", Name.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "name" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor NAME_PROPERTY = 
+	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(SuperFieldAccess.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(3);
 		createPropertyList(SuperFieldAccess.class, propertyList);
@@ -65,17 +65,17 @@ public class SuperFieldAccess extends Expression {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The optional qualifier; <code>null</code> for none; defaults to none.
 	 */
@@ -89,12 +89,12 @@ public class SuperFieldAccess extends Expression {
 
 	/**
 	 * Creates a new unparented node for a super field access expression owned
-	 * by the given AST. By default, field name is an unspecified, but legal, 
+	 * by the given AST. By default, field name is an unspecified, but legal,
 	 * name, and there is no qualifier.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	SuperFieldAccess(AST ast) {
@@ -107,7 +107,7 @@ public class SuperFieldAccess extends Expression {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -131,7 +131,7 @@ public class SuperFieldAccess extends Expression {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -144,7 +144,7 @@ public class SuperFieldAccess extends Expression {
 	 */
 	ASTNode clone0(AST target) {
 		SuperFieldAccess result = new SuperFieldAccess(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setName((SimpleName) ASTNode.copySubtree(target, getName()));
 		result.setQualifier((Name) ASTNode.copySubtree(target, getQualifier()));
 		return result;
@@ -170,28 +170,28 @@ public class SuperFieldAccess extends Expression {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
-	 * Returns the qualifier of this "super" field access expression, or 
+	 * Returns the qualifier of this "super" field access expression, or
 	 * <code>null</code> if there is none.
-	 * 
+	 *
 	 * @return the qualifier name node, or <code>null</code> if there is none
-	 */ 
+	 */
 	public Name getQualifier() {
 		return this.optionalQualifier;
 	}
-	
+
 	/**
 	 * Sets or clears the qualifier of this "super" field access expression.
-	 * 
-	 * @param name the qualifier name node, or <code>null</code> if 
+	 *
+	 * @param name the qualifier name node, or <code>null</code> if
 	 *    there is none
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setQualifier(Name name) {
 		ASTNode oldChild = this.optionalQualifier;
 		preReplaceChild(oldChild, name, QUALIFIER_PROPERTY);
@@ -200,11 +200,11 @@ public class SuperFieldAccess extends Expression {
 	}
 
 	/**
-	 * Returns the name of the field accessed in this "super" field access 
+	 * Returns the name of the field accessed in this "super" field access
 	 * expression.
-	 * 
+	 *
 	 * @return the field name
-	 */ 
+	 */
 	public SimpleName getName() {
 		if (this.fieldName == null) {
 			// lazy init must be thread-safe for readers
@@ -234,18 +234,18 @@ public class SuperFieldAccess extends Expression {
 	public IVariableBinding resolveFieldBinding() {
 		return this.ast.getBindingResolver().resolveField(this);
 	}
-		
+
 	/**
-	 * Sets the name of the field accessed in this "super" field access 
+	 * Sets the name of the field accessed in this "super" field access
 	 * expression.
-	 * 
+	 *
 	 * @param fieldName the field name
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setName(SimpleName fieldName) {
 		if (fieldName == null) {
 			throw new IllegalArgumentException();
@@ -263,12 +263,12 @@ public class SuperFieldAccess extends Expression {
 		// treat Code as free
 		return BASE_NODE_SIZE + 2 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
-		return 
+		return
 			memSize()
 			+ (this.optionalQualifier == null ? 0 : getQualifier().treeSize())
 			+ (this.fieldName == null ? 0 : getName().treeSize());

@@ -17,9 +17,9 @@ import org.eclipse.jdt.core.JavaModelException;
  * The uniqueKey contains the genericTypeSignature of the resolved type. Use BindingKey to decode it.
  */
 public class ResolvedSourceType extends SourceType {
-	
+
 	private String uniqueKey;
-	
+
 	/*
 	 * See class comments.
 	 */
@@ -27,25 +27,25 @@ public class ResolvedSourceType extends SourceType {
 		super(parent, name);
 		this.uniqueKey = uniqueKey;
 	}
-	
+
 	public String getFullyQualifiedParameterizedName() throws JavaModelException {
 		return getFullyQualifiedParameterizedName(getFullyQualifiedName('.'), this.uniqueKey);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.core.SourceType#getKey()
 	 */
 	public String getKey() {
 		return this.uniqueKey;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.core.SourceType#isResolved()
 	 */
 	public boolean isResolved() {
 		return true;
 	}
-	
+
 	/**
 	 * @private Debugging purposes
 	 */
@@ -57,7 +57,7 @@ public class ResolvedSourceType extends SourceType {
 			buffer.append("}"); //$NON-NLS-1$
 		}
 	}
-	
+
 	public JavaElement unresolved() {
 		SourceRefElement handle = new SourceType(this.parent, this.name);
 		handle.occurrenceCount = this.occurrenceCount;

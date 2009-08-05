@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
  * A hashset of char[] whose values can be garbage collected.
  */
 public class WeakHashSetOfCharArray {
-	
+
 	public static class HashableWeakReference extends WeakReference {
 		public int hashCode;
 		public HashableWeakReference(char[] referent, ReferenceQueue queue) {
@@ -41,16 +41,16 @@ public class WeakHashSetOfCharArray {
 			return "[hashCode=" + this.hashCode + "] \"" + new String(referent) + '\"'; //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
-	
+
 	HashableWeakReference[] values;
 	public int elementSize; // number of elements in the table
 	int threshold;
-	ReferenceQueue referenceQueue = new ReferenceQueue();	
-	
+	ReferenceQueue referenceQueue = new ReferenceQueue();
+
 	public WeakHashSetOfCharArray() {
 		this(5);
 	}
-	
+
 	public WeakHashSetOfCharArray(int size) {
 		this.elementSize = 0;
 		this.threshold = size; // size represents the expected number of elements
@@ -59,7 +59,7 @@ public class WeakHashSetOfCharArray {
 			extraRoom++;
 		this.values = new HashableWeakReference[extraRoom];
 	}
-	
+
 	/*
 	 * Adds the given char array to this set.
 	 * If a char array that is equals to the given char array already exists, do nothing.
@@ -67,7 +67,7 @@ public class WeakHashSetOfCharArray {
 	 */
 	public char[] add(char[] array) {
 		cleanupGarbageCollectedValues();
-		int valuesLength = this.values.length, 
+		int valuesLength = this.values.length,
 			index = (CharOperation.hashCode(array) & 0x7FFFFFFF) % valuesLength;
 		HashableWeakReference currentValue;
 		while ((currentValue = this.values[index]) != null) {
@@ -84,10 +84,10 @@ public class WeakHashSetOfCharArray {
 		// assumes the threshold is never equal to the size of the table
 		if (++this.elementSize > this.threshold)
 			rehash();
-		
+
 		return array;
 	}
-		
+
 	private void addValue(HashableWeakReference value) {
 		char[] array = (char[]) value.get();
 		if (array == null) return;
@@ -108,7 +108,7 @@ public class WeakHashSetOfCharArray {
 		if (++this.elementSize > this.threshold)
 			rehash();
 	}
-	
+
 	private void cleanupGarbageCollectedValues() {
 		HashableWeakReference toBeRemoved;
 		while ((toBeRemoved = (HashableWeakReference) this.referenceQueue.poll()) != null) {
@@ -134,11 +134,11 @@ public class WeakHashSetOfCharArray {
 			}
 		}
 	}
-	
+
 	public boolean contains(char[] array) {
 		return get(array) != null;
 	}
-	
+
 	/*
 	 * Return the char array that is in this set and that is equals to the given char array.
 	 * Return null if not found.
@@ -159,7 +159,7 @@ public class WeakHashSetOfCharArray {
 		}
 		return null;
 	}
-		
+
 	private void rehash() {
 		WeakHashSetOfCharArray newHashSet = new WeakHashSetOfCharArray(this.elementSize * 2);		// double the number of expected elements
 		newHashSet.referenceQueue = this.referenceQueue;

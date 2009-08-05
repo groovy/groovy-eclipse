@@ -23,12 +23,12 @@ import java.util.Map;
  * Assignment:
  *    Expression AssignmentOperator Expression
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class Assignment extends Expression {
-		
+
 	/**
  	 * Assignment operators (typesafe enumeration).
 	 * <pre>
@@ -48,34 +48,34 @@ public class Assignment extends Expression {
 	 * </pre>
 	 */
 	public static class Operator {
-	
+
 		/**
 		 * The name of the operator
 		 */
 		private String op;
-		
+
 		/**
 		 * Creates a new assignment operator with the given name.
 		 * <p>
 		 * Note: this constructor is private. The only instances
 		 * ever created are the ones for the standard operators.
 		 * </p>
-		 * 
+		 *
 		 * @param op the character sequence for the operator
 		 */
 		private Operator(String op) {
 			this.op = op;
 		}
-		
+
 		/**
 		 * Returns the character sequence for the operator.
-		 * 
+		 *
 		 * @return the character sequence for the operator
 		 */
 		public String toString() {
-			return op;
+			return this.op;
 		}
-		
+
 		/** = operator. */
 		public static final Operator ASSIGN = new Operator("=");//$NON-NLS-1$
 		/** += operator. */
@@ -103,23 +103,23 @@ public class Assignment extends Expression {
 		/** &gt;&gt;&gt;= operator. */
 		public static final Operator RIGHT_SHIFT_UNSIGNED_ASSIGN =
 			new Operator(">>>=");//$NON-NLS-1$
-		
+
 		/**
 		 * Returns the assignment operator corresponding to the given string,
 		 * or <code>null</code> if none.
 		 * <p>
 		 * <code>toOperator</code> is the converse of <code>toString</code>:
-		 * that is, <code>Operator.toOperator(op.toString()) == op</code> for all 
+		 * that is, <code>Operator.toOperator(op.toString()) == op</code> for all
 		 * operators <code>op</code>.
 		 * </p>
-		 * 
+		 *
 		 * @param token the character sequence for the operator
 		 * @return the assignment operator, or <code>null</code> if none
 		 */
 		public static Operator toOperator(String token) {
 			return (Operator) CODES.get(token);
 		}
-		
+
 		/**
 		 * Map from token to operator (key type: <code>String</code>;
 		 * value type: <code>Operator</code>).
@@ -146,35 +146,35 @@ public class Assignment extends Expression {
 			}
 		}
 	}
-	
+
 	/**
 	 * The "leftHandSide" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor LEFT_HAND_SIDE_PROPERTY = 
+	public static final ChildPropertyDescriptor LEFT_HAND_SIDE_PROPERTY =
 		new ChildPropertyDescriptor(Assignment.class, "leftHandSide", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "operator" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final SimplePropertyDescriptor OPERATOR_PROPERTY = 
+	public static final SimplePropertyDescriptor OPERATOR_PROPERTY =
 		new SimplePropertyDescriptor(Assignment.class, "operator", Assignment.Operator.class, MANDATORY); //$NON-NLS-1$
-	
+
 	/**
 	 * The "rightHandSide" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor RIGHT_HAND_SIDE_PROPERTY = 
+	public static final ChildPropertyDescriptor RIGHT_HAND_SIDE_PROPERTY =
 		new ChildPropertyDescriptor(Assignment.class, "rightHandSide", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(4);
 		createPropertyList(Assignment.class, properyList);
@@ -187,18 +187,18 @@ public class Assignment extends Expression {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The assignment operator; defaults to Assignment.Operator.ASSIGN
 	 */
@@ -217,10 +217,10 @@ public class Assignment extends Expression {
 	private Expression rightHandSide = null;
 
 	/**
-	 * Creates a new AST node for an assignment expression owned by the given 
+	 * Creates a new AST node for an assignment expression owned by the given
 	 * AST. By default, the node has an assignment operator, and unspecified
 	 * left and right hand sides.
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	Assignment(AST ast) {
@@ -233,7 +233,7 @@ public class Assignment extends Expression {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -286,7 +286,7 @@ public class Assignment extends Expression {
 	 */
 	ASTNode clone0(AST target) {
 		Assignment result = new Assignment(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setOperator(getOperator());
 		result.setLeftHandSide((Expression) getLeftHandSide().clone(target));
 		result.setRightHandSide((Expression) getRightHandSide().clone(target));
@@ -313,22 +313,22 @@ public class Assignment extends Expression {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the operator of this assignment expression.
-	 * 
+	 *
 	 * @return the assignment operator
-	 */ 
+	 */
 	public Assignment.Operator getOperator() {
 		return this.assignmentOperator;
 	}
 
 	/**
 	 * Sets the operator of this assignment expression.
-	 * 
+	 *
 	 * @param assignmentOperator the assignment operator
 	 * @exception IllegalArgumentException if the argument is incorrect
-	 */ 
+	 */
 	public void setOperator(Assignment.Operator assignmentOperator) {
 		if (assignmentOperator == null) {
 			throw new IllegalArgumentException();
@@ -340,9 +340,9 @@ public class Assignment extends Expression {
 
 	/**
 	 * Returns the left hand side of this assignment expression.
-	 * 
+	 *
 	 * @return the left hand side node
-	 */ 
+	 */
 	public Expression getLeftHandSide() {
 		if (this.leftHandSide  == null) {
 			// lazy init must be thread-safe for readers
@@ -356,10 +356,10 @@ public class Assignment extends Expression {
 		}
 		return this.leftHandSide;
 	}
-		
+
 	/**
 	 * Sets the left hand side of this assignment expression.
-	 * 
+	 *
 	 * @param expression the left hand side node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -367,7 +367,7 @@ public class Assignment extends Expression {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setLeftHandSide(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -381,9 +381,9 @@ public class Assignment extends Expression {
 
 	/**
 	 * Returns the right hand side of this assignment expression.
-	 * 
+	 *
 	 * @return the right hand side node
-	 */ 
+	 */
 	public Expression getRightHandSide() {
 		if (this.rightHandSide  == null) {
 			// lazy init must be thread-safe for readers
@@ -397,10 +397,10 @@ public class Assignment extends Expression {
 		}
 		return this.rightHandSide;
 	}
-		
+
 	/**
 	 * Sets the right hand side of this assignment expression.
-	 * 
+	 *
 	 * @param expression the right hand side node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -408,7 +408,7 @@ public class Assignment extends Expression {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setRightHandSide(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -427,12 +427,12 @@ public class Assignment extends Expression {
 		// treat Code as free
 		return BASE_NODE_SIZE + 3 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
-		return 
+		return
 			memSize()
 			+ (this.leftHandSide == null ? 0 : getLeftHandSide().treeSize())
 			+ (this.rightHandSide == null ? 0 : getRightHandSide().treeSize());

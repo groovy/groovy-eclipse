@@ -41,7 +41,6 @@ class MemberDeclarationVisitor extends ASTVisitor {
 	int nodesCount = 0;
 
 	// Local and other elements storage
-	IJavaElement currentDeclaration;
 	private Annotation annotation;
 	private LocalDeclaration localDeclaration;
 	IJavaElement localElement;
@@ -135,7 +134,7 @@ private int matchNode(ASTNode reference) {
  */
 private void storeHandle(int idx) {
 	if (this.localDeclaration == null) return;
-	IJavaElement handle = locator.createHandle(this.localDeclaration, this.enclosingElement);
+	IJavaElement handle = this.locator.createHandle(this.localDeclaration, this.enclosingElement);
     if (this.nodesCount == 1) {
     	if (this.localElement == null) {
     		if (this.annotation == null) {
@@ -163,9 +162,9 @@ private void storeHandle(int idx) {
 	    	if (this.annotation == null) {
 		    	this.localElements[idx] =  handle;
     		} else {
-		    	IJavaElement annotHandle = locator.createHandle(this.annotation, (IAnnotatable) handle);
+		    	IJavaElement annotHandle = this.locator.createHandle(this.annotation, (IAnnotatable) handle);
 		    	if (annotHandle == null) {
-			    	annotHandle = locator.createHandle(this.annotation, (IAnnotatable) this.enclosingElement);
+			    	annotHandle = this.locator.createHandle(this.annotation, (IAnnotatable) this.enclosingElement);
 		    	}
 		    	this.localElements[idx] = annotHandle == null ? handle : annotHandle;
     		}
@@ -243,23 +242,23 @@ public boolean visit(SingleTypeReference typeReference, BlockScope unused) {
 public boolean visit(TypeDeclaration typeDeclaration, BlockScope unused) {
 	try {
 		char[] simpleName;
-		if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {				
+		if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
 			simpleName = CharOperation.NO_CHAR;
 		} else {
 			simpleName = typeDeclaration.name;
 		}
-		int occurrenceCount = occurrencesCounts.get(simpleName);
+		int occurrenceCount = this.occurrencesCounts.get(simpleName);
 		if (occurrenceCount == HashtableOfIntValues.NO_VALUE) {
 			occurrenceCount = 1;
 		} else {
 			occurrenceCount = occurrenceCount + 1;
 		}
-		occurrencesCounts.put(simpleName, occurrenceCount);
-		if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {				
-			this.locator.reportMatching(typeDeclaration, this.enclosingElement, -1, nodeSet, occurrenceCount);
+		this.occurrencesCounts.put(simpleName, occurrenceCount);
+		if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
+			this.locator.reportMatching(typeDeclaration, this.enclosingElement, -1, this.nodeSet, occurrenceCount);
 		} else {
-			Integer level = (Integer) nodeSet.matchingNodes.removeKey(typeDeclaration);
-			this.locator.reportMatching(typeDeclaration, this.enclosingElement, level != null ? level.intValue() : -1, nodeSet, occurrenceCount);
+			Integer level = (Integer) this.nodeSet.matchingNodes.removeKey(typeDeclaration);
+			this.locator.reportMatching(typeDeclaration, this.enclosingElement, level != null ? level.intValue() : -1, this.nodeSet, occurrenceCount);
 		}
 		return false; // don't visit members as this was done during reportMatching(...)
 	} catch (CoreException e) {

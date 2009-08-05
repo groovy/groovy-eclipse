@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,32 +18,32 @@ package org.eclipse.jdt.core.dom;
  * @since 2.0
  */
 public class Message {
-	
+
 	/**
 	 * The message.
 	 */
 	private String message;
-	
+
 	/**
 	 * The character index into the original source string, or -1 if none.
 	 */
 	private int startPosition;
-	
+
 	/**
 	 * The length in characters of the original source file indicating
 	 * where the source fragment corresponding to this message ends.
 	 */
 	private int length;
-	
+
 	/**
 	 * Creates a message.
-	 * 
+	 *
 	 * @param message the localized message reported by the compiler
-	 * @param startPosition the 0-based character index into the 
+	 * @param startPosition the 0-based character index into the
 	 *    original source file, or <code>-1</code> if no source position
 	 *    information is to be recorded for this message
 	 * @throws IllegalArgumentException if the message is null
-	 * @throws IllegalArgumentException if the startPosition is lower than -1. 
+	 * @throws IllegalArgumentException if the startPosition is lower than -1.
 	 */
 	public Message(String message, int startPosition) {
 		if (message == null) {
@@ -59,16 +59,16 @@ public class Message {
 
 	/**
 	 * Creates a message.
-	 * 
+	 *
 	 * @param message the localized message reported by the compiler
-	 * @param startPosition the 0-based character index into the 
+	 * @param startPosition the 0-based character index into the
 	 *    original source file, or <code>-1</code> if no source position
 	 *    information is to be recorded for this message
 	 * @param length the length in character of the original source file indicating
-	 * 	  where the source fragment corresponding to this message ends. 0 or a negative number 
+	 * 	  where the source fragment corresponding to this message ends. 0 or a negative number
 	 *    if none. A negative number will be converted to a 0-length.
 	 * @throws IllegalArgumentException if the message is null
-	 * @throws IllegalArgumentException if the startPosition is lower than -1. 
+	 * @throws IllegalArgumentException if the startPosition is lower than -1.
 	 */
 	public Message(String message, int startPosition, int length) {
 		if (message == null) {
@@ -85,19 +85,19 @@ public class Message {
 			this.length = length;
 		}
 	}
-	
+
 	/**
 	 * Returns the localized message.
-	 * 
+	 *
 	 * @return the localized message
 	 */
 	public String getMessage() {
-		return message;
+		return this.message;
 	}
-	
+
 	/**
 	 * Returns the character index into the original source file.
-	 * 
+	 *
 	 * @return the 0-based character index, or <code>-1</code>
 	 *    if no source position information is recorded for this
 	 *    message
@@ -110,25 +110,25 @@ public class Message {
 
 	/**
 	 * Returns the character index into the original source file.
-	 * 
+	 *
 	 * @return the 0-based character index, or <code>-1</code>
 	 *    if no source position information is recorded for this
 	 *    message
 	 * @see #getLength()
 	 */
 	public int getStartPosition() {
-		return startPosition;
+		return this.startPosition;
 	}
-	
+
 	/**
 	 * Returns the length in characters of the original source file indicating
 	 * where the source fragment corresponding to this message ends.
-	 * 
+	 *
 	 * @return a length, or <code>0</code>
 	 *    if no source length information is recorded for this message
 	 * @see #getStartPosition()
 	 */
 	public int getLength() {
-		return length;
+		return this.length;
 	}
 }

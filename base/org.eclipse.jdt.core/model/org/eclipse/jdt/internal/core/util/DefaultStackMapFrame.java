@@ -27,10 +27,10 @@ public class DefaultStackMapFrame extends ClassFileStruct implements IStackMapFr
 	private IVerificationTypeInfo[] locals;
 	private IVerificationTypeInfo[] stackItems;
 	private int offsetDelta;
-	
+
 	/**
 	 * Constructor for StackMapFrame.
-	 * 
+	 *
 	 * @param classFileBytes
 	 * @param constantPool
 	 * @param offset
@@ -55,7 +55,7 @@ public class DefaultStackMapFrame extends ClassFileStruct implements IStackMapFr
 		} else {
 			this.locals = EMPTY_LOCALS_OR_STACK_ITEMS;
 		}
-		int tempStackItems = u2At(classFileBytes, readOffset, offset);
+		int tempStackItems = u2At(classFileBytes, this.readOffset, offset);
 		this.readOffset += 2;
 		this.numberOfStackItems = tempStackItems;
 		if (tempStackItems != 0) {

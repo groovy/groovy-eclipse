@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,7 +34,7 @@ public class CompletionJavadoc extends Javadoc {
 	/**
 	 * Resolve selected node if not null and throw exception to let clients know
 	 * that it has been found.
-	 * 
+	 *
 	 * @throws CompletionNodeFound
 	 */
 	private void internalResolve(Scope scope) {
@@ -89,7 +89,7 @@ public class CompletionJavadoc extends Javadoc {
 			throw new CompletionNodeFound(this.completionNode, qualifiedBinding, scope);
 		}
 	}
-	
+
 	/*
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#print(int, java.lang.StringBuffer)
 	 */
@@ -98,7 +98,7 @@ public class CompletionJavadoc extends Javadoc {
 		boolean nodePrinted = false;
 		if (this.paramReferences != null) {
 			for (int i = 0, length = this.paramReferences.length; i < length; i++) {
-				printIndent(indent, output).append(" * @param "); //$NON-NLS-1$		
+				printIndent(indent, output).append(" * @param "); //$NON-NLS-1$
 				this.paramReferences[i].print(indent, output).append('\n');
 				if (!nodePrinted && this.completionNode != null) {
 					nodePrinted =  this.completionNode == this.paramReferences[i];
@@ -107,7 +107,7 @@ public class CompletionJavadoc extends Javadoc {
 		}
 		if (this.paramTypeParameters != null) {
 			for (int i = 0, length = this.paramTypeParameters.length; i < length; i++) {
-				printIndent(indent, output).append(" * @param <"); //$NON-NLS-1$		
+				printIndent(indent, output).append(" * @param <"); //$NON-NLS-1$
 				this.paramTypeParameters[i].print(indent, output).append(">\n"); //$NON-NLS-1$
 				if (!nodePrinted && this.completionNode != null) {
 					nodePrinted =  this.completionNode == this.paramTypeParameters[i];
@@ -120,7 +120,7 @@ public class CompletionJavadoc extends Javadoc {
 		}
 		if (this.exceptionReferences != null) {
 			for (int i = 0, length = this.exceptionReferences.length; i < length; i++) {
-				printIndent(indent, output).append(" * @throws "); //$NON-NLS-1$		
+				printIndent(indent, output).append(" * @throws "); //$NON-NLS-1$
 				this.exceptionReferences[i].print(indent, output).append('\n');
 				if (!nodePrinted && this.completionNode != null) {
 					nodePrinted =  this.completionNode == this.exceptionReferences[i];
@@ -129,7 +129,7 @@ public class CompletionJavadoc extends Javadoc {
 		}
 		if (this.seeReferences != null) {
 			for (int i = 0, length = this.seeReferences.length; i < length; i++) {
-				printIndent(indent, output).append(" * @see "); //$NON-NLS-1$		
+				printIndent(indent, output).append(" * @see "); //$NON-NLS-1$
 				this.seeReferences[i].print(indent, output).append('\n');
 				if (!nodePrinted && this.completionNode != null) {
 					nodePrinted =  this.completionNode == this.seeReferences[i];
@@ -137,7 +137,7 @@ public class CompletionJavadoc extends Javadoc {
 			}
 		}
 		if (!nodePrinted && this.completionNode != null) {
-			printIndent(indent, output).append(" * "); //$NON-NLS-1$		
+			printIndent(indent, output).append(" * "); //$NON-NLS-1$
 			this.completionNode.print(indent, output).append('\n');
 		}
 		printIndent(indent, output).append(" */\n"); //$NON-NLS-1$
@@ -147,7 +147,7 @@ public class CompletionJavadoc extends Javadoc {
 	/**
 	 * Resolve completion node if not null and throw exception to let clients know
 	 * that it has been found.
-	 * 
+	 *
 	 * @throws CompletionNodeFound
 	 */
 	public void resolve(ClassScope scope) {
@@ -158,7 +158,7 @@ public class CompletionJavadoc extends Javadoc {
 	/**
 	 * Resolve completion node if not null and throw exception to let clients know
 	 * that it has been found.
-	 * 
+	 *
 	 * @throws CompletionNodeFound
 	 */
 	public void resolve(CompilationUnitScope scope) {
@@ -168,7 +168,7 @@ public class CompletionJavadoc extends Javadoc {
 	/**
 	 * Resolve completion node if not null and throw exception to let clients know
 	 * that it has been found.
-	 * 
+	 *
 	 * @throws CompletionNodeFound
 	 */
 	public void resolve(MethodScope scope) {
@@ -187,7 +187,7 @@ public class CompletionJavadoc extends Javadoc {
 		if (md == null) return null;
 		int argumentsSize = md.arguments == null ? 0 : md.arguments.length;
 		if (argumentsSize == 0) return null;
-		
+
 		// Store all method arguments if there's no @param in javadoc
 		if (paramTagsSize == 0) {
 			char[][] missingParams = new char[argumentsSize][];
@@ -251,7 +251,7 @@ public class CompletionJavadoc extends Javadoc {
 				break;
 		}
 		if (typeVariables == null || typeVariables.length == 0) return null;
-		
+
 		// Store all type parameters if there's no @param in javadoc
 		if (parameters != null) {
 			int typeParametersLength = parameters.length;

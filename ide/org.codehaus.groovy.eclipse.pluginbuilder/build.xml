@@ -26,7 +26,7 @@
   			<arg value="-verbose"/>
   			<jvmarg value="-DbuildHome=${buildHome}"/>
   			<jvmarg value="-Dbuilder=${buildHome}/build-files"/>
-  			<jvmarg value="-DbuildDirectory=${buildDirectory}"/>
+  			<jvmarg value="-DbuildDirectory=/tmp/groovybuild"/>
   			<jvmarg value="-DbuildResultsDirectory=/tmp/groovybuild/results"/>
   			<jvmarg value="-DpluginPath=${eclipse.installation.dir}/eclipse/plugins"/>
   			<jvmarg value="-DbaseLocation=${buildDirectory}"/>

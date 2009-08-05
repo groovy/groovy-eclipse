@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,8 +30,8 @@ public PostfixExpression(Expression lhs, Expression expression, int operator, in
  * @param valueRequired boolean
  */
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
-	// various scenarii are possible, setting an array reference, 
-	// a field reference, a blank final field reference, a field of an enclosing instance or 
+	// various scenarii are possible, setting an array reference,
+	// a field reference, a blank final field reference, a field of an enclosing instance or
 	// just a local variable.
 
 	int pc = codeStream.position;
@@ -48,13 +48,13 @@ public String operatorToString() {
 			return "++"; //$NON-NLS-1$
 		case MINUS :
 			return "--"; //$NON-NLS-1$
-	} 
+	}
 	return "unknown operator"; //$NON-NLS-1$
 }
 
 public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
-	return this.lhs.printExpression(indent, output).append(' ').append(operatorToString()); 
-} 
+	return this.lhs.printExpression(indent, output).append(' ').append(operatorToString());
+}
 
 public boolean restrainUsageToNumericTypes() {
 	return true;

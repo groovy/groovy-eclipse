@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,7 +42,7 @@ public RenameElementsOperation(IJavaElement[] elements, IJavaElement[] destinati
  * @see MultiOperation
  */
 protected String getMainTaskName() {
-	return Messages.operation_renameElementProgress; 
+	return Messages.operation_renameElementProgress;
 }
 /**
  * @see CopyElementsOperation#isRename()
@@ -67,17 +67,17 @@ protected IJavaModelStatus verify() {
 protected void verify(IJavaElement element) throws JavaModelException {
 	if (element == null || !element.exists())
 		error(IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST, element);
-		
+
 	if (element.isReadOnly())
 		error(IJavaModelStatusConstants.READ_ONLY, element);
-		
+
 	if (!(element instanceof ISourceReference))
 		error(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, element);
-		
+
 	int elementType = element.getElementType();
 	if (elementType < IJavaElement.TYPE || elementType == IJavaElement.INITIALIZER)
 		error(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, element);
-		
+
 	verifyRenaming(element);
 }
 }

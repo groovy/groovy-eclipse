@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,9 +28,9 @@ import org.eclipse.jdt.internal.core.util.Messages;
  * @see IDOMType
  * @see DOMNode
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
- */ 
+ */
 // TODO (jerome) - add implementation support for 1.5 features
 /* package */ class DOMType extends DOMMember implements IDOMType {
 	/**
@@ -72,7 +72,7 @@ import org.eclipse.jdt.internal.core.util.Messages;
 	 * The original inclusive souce range of the 'implements' keyword
 	 * in the document, including surrounding whitespace, or -1's if
 	 * the keyword was not present in the document.
-	 */	
+	 */
 	protected int[]	 fImplementsRange;
 
 	/**
@@ -90,22 +90,22 @@ import org.eclipse.jdt.internal.core.util.Messages;
 	 */
 	protected int[]  fInterfacesRange;
 
-	
 
-	/** 
+
+	/**
 	 * The original source range of the first character following the
 	 * type name superclass name, or interface list, up to and including
 	 * the first character before the first type member.
-	 */	
+	 */
 	protected int[]  fOpenBodyRange;
 
-	/** 
+	/**
 	 * The original source range of the first new line or non whitespace
 	 * character preceding the close brace of the type's body, up to the
 	 * and including the first character before the next node (if there are
 	 * no following nodes, the range ends at the position of the last
 	 * character in the document).
-	 */	
+	 */
 	protected int[]  fCloseBodyRange;
 
 	/**
@@ -114,7 +114,7 @@ import org.eclipse.jdt.internal.core.util.Messages;
 	 * or implement any interfaces.
 	 */
 	protected String[] fSuperInterfaces= CharOperation.NO_STRINGS;
-	
+
 	/**
 	 * The formal type parameters.
 	 * @since 3.0
@@ -126,13 +126,13 @@ import org.eclipse.jdt.internal.core.util.Messages;
 	 * @since 3.0
 	 */
 	protected boolean fIsEnum= false;
-	
+
 	/**
 	 * Indicates this type is an annotatation type (interface).
 	 * @since 3.0
 	 */
 	protected boolean fIsAnnotation= false;
-	
+
 	/**
 	 * This position is the position of the end of the last line separator before the closing brace starting
 	 * position of the receiver.
@@ -205,19 +205,19 @@ DOMType() {
 DOMType(char[] document, int[] sourceRange, String name, int[] nameRange, int[] commentRange, int flags, int[] modifierRange, int[] typeRange, int[] superclassRange, int[] extendsRange, String[] implementsList, int[] implementsRange, int[] implementsKeywordRange, int[] openBodyRange, int[] closeBodyRange, boolean isClass) {
 	super(document, sourceRange, name, nameRange, commentRange, flags, modifierRange);
 
-	fTypeRange= typeRange;
+	this.fTypeRange= typeRange;
 	setMask(MASK_TYPE_IS_CLASS, isClass);
 
-	fExtendsRange= extendsRange;
-	fImplementsRange= implementsKeywordRange;
-	fSuperclassRange= superclassRange;
-	fInterfacesRange= implementsRange;
-	fCloseBodyRange= closeBodyRange;
+	this.fExtendsRange= extendsRange;
+	this.fImplementsRange= implementsKeywordRange;
+	this.fSuperclassRange= superclassRange;
+	this.fInterfacesRange= implementsRange;
+	this.fCloseBodyRange= closeBodyRange;
 	setMask(MASK_TYPE_HAS_SUPERCLASS, superclassRange[0] > 0);
 	setMask(MASK_TYPE_HAS_INTERFACES, implementsList != null);
-	fSuperInterfaces= implementsList;
-	fOpenBodyRange= openBodyRange;
-	fCloseBodyRange= closeBodyRange;
+	this.fSuperInterfaces= implementsList;
+	this.fOpenBodyRange= openBodyRange;
+	this.fCloseBodyRange= closeBodyRange;
 	setMask(MASK_DETAILED_SOURCE_INDEXES, true);
 
 }
@@ -255,35 +255,35 @@ DOMType(char[] document, int[] sourceRange, String name, int[] nameRange, int fl
  */
 public void addSuperInterface(String name) throws IllegalArgumentException {
 	if (name == null) {
-		throw new IllegalArgumentException(Messages.dom_addNullInterface); 
+		throw new IllegalArgumentException(Messages.dom_addNullInterface);
 	}
-	if (fSuperInterfaces == null) {
-		fSuperInterfaces= new String[1];
-		fSuperInterfaces[0]= name;
+	if (this.fSuperInterfaces == null) {
+		this.fSuperInterfaces= new String[1];
+		this.fSuperInterfaces[0]= name;
 	} else {
-		fSuperInterfaces= appendString(fSuperInterfaces, name);
+		this.fSuperInterfaces= appendString(this.fSuperInterfaces, name);
 	}
-	setSuperInterfaces(fSuperInterfaces);
+	setSuperInterfaces(this.fSuperInterfaces);
 }
 /**
  * @see DOMMember#appendMemberBodyContents(CharArrayBuffer)
  */
 protected void appendMemberBodyContents(CharArrayBuffer buffer) {
-	buffer.append(fDocument, fOpenBodyRange[0], fOpenBodyRange[1] + 1 - fOpenBodyRange[0]);
+	buffer.append(this.fDocument, this.fOpenBodyRange[0], this.fOpenBodyRange[1] + 1 - this.fOpenBodyRange[0]);
 	appendContentsOfChildren(buffer);
-	buffer.append(fDocument, fCloseBodyRange[0], fCloseBodyRange[1] + 1 - fCloseBodyRange[0]);
-	buffer.append(fDocument, fCloseBodyRange[1] + 1, fSourceRange[1] - fCloseBodyRange[1]);
+	buffer.append(this.fDocument, this.fCloseBodyRange[0], this.fCloseBodyRange[1] + 1 - this.fCloseBodyRange[0]);
+	buffer.append(this.fDocument, this.fCloseBodyRange[1] + 1, this.fSourceRange[1] - this.fCloseBodyRange[1]);
 }
 /**
  * @see DOMMember#appendMemberDeclarationContents(CharArrayBuffer )
  */
 protected void appendMemberDeclarationContents(CharArrayBuffer  buffer) {
-	
-	if (fTypeKeyword != null) {
-		buffer.append(fTypeKeyword);
-		buffer.append(fDocument, fTypeRange[1], fNameRange[0] - fTypeRange[1] );
+
+	if (this.fTypeKeyword != null) {
+		buffer.append(this.fTypeKeyword);
+		buffer.append(this.fDocument, this.fTypeRange[1], this.fNameRange[0] - this.fTypeRange[1] );
 	} else {
-		buffer.append(fDocument, fTypeRange[0], fTypeRange[1] + 1 - fTypeRange[0]);
+		buffer.append(this.fDocument, this.fTypeRange[0], this.fTypeRange[1] + 1 - this.fTypeRange[0]);
 	}
 
 	buffer.append(getName());
@@ -291,85 +291,85 @@ protected void appendMemberDeclarationContents(CharArrayBuffer  buffer) {
 	if (isClass()) {
 		boolean hasInterfaces = false;
 		if (getMask(MASK_TYPE_HAS_SUPERCLASS)) {
-			if (fExtendsRange[0] < 0) {
+			if (this.fExtendsRange[0] < 0) {
 				buffer.append(" extends "); //$NON-NLS-1$
 			} else {
-				buffer.append(fDocument, fExtendsRange[0], fExtendsRange[1] + 1 - fExtendsRange[0]);
+				buffer.append(this.fDocument, this.fExtendsRange[0], this.fExtendsRange[1] + 1 - this.fExtendsRange[0]);
 			}
-			if (fSuperclass != null) {
-				buffer.append(fSuperclass);
+			if (this.fSuperclass != null) {
+				buffer.append(this.fSuperclass);
 			} else {
-				buffer.append(fDocument, fSuperclassRange[0], fSuperclassRange[1] + 1 - fSuperclassRange[0]);
+				buffer.append(this.fDocument, this.fSuperclassRange[0], this.fSuperclassRange[1] + 1 - this.fSuperclassRange[0]);
 			}
 		}
 		if (getMask(MASK_TYPE_HAS_INTERFACES)) {
 			hasInterfaces = true;
-			if (fImplementsRange[0] < 0) {
+			if (this.fImplementsRange[0] < 0) {
 				buffer.append(" implements "); //$NON-NLS-1$
 			} else {
-				buffer.append(fDocument, fImplementsRange[0], fImplementsRange[1] + 1 - fImplementsRange[0]);
+				buffer.append(this.fDocument, this.fImplementsRange[0], this.fImplementsRange[1] + 1 - this.fImplementsRange[0]);
 			}
-			if (fInterfaces != null) {
-				buffer.append(fInterfaces);
+			if (this.fInterfaces != null) {
+				buffer.append(this.fInterfaces);
 			} else {
-				buffer.append(fDocument, fInterfacesRange[0], fInterfacesRange[1] + 1 - fInterfacesRange[0]);
+				buffer.append(this.fDocument, this.fInterfacesRange[0], this.fInterfacesRange[1] + 1 - this.fInterfacesRange[0]);
 			}
 		}
 		if (hasInterfaces) {
-			if (fImplementsRange[0] < 0) {
+			if (this.fImplementsRange[0] < 0) {
 				buffer.append(' ');
 			} else {
-				buffer.append(fDocument, fInterfacesRange[1] + 1, fOpenBodyRange[0] - fInterfacesRange[1] - 1);
+				buffer.append(this.fDocument, this.fInterfacesRange[1] + 1, this.fOpenBodyRange[0] - this.fInterfacesRange[1] - 1);
 			}
 		} else {
-			if (fSuperclassRange[0] < 0) {
+			if (this.fSuperclassRange[0] < 0) {
 				buffer.append(' ');
-			} else if (fImplementsRange[0] > 0) {
-				buffer.append(fDocument, fSuperclassRange[1] + 1, fImplementsRange[0] - fSuperclassRange[1] - 1);
-				buffer.append(fDocument, fInterfacesRange[1] + 1, fOpenBodyRange[0] - fInterfacesRange[1] - 1);
+			} else if (this.fImplementsRange[0] > 0) {
+				buffer.append(this.fDocument, this.fSuperclassRange[1] + 1, this.fImplementsRange[0] - this.fSuperclassRange[1] - 1);
+				buffer.append(this.fDocument, this.fInterfacesRange[1] + 1, this.fOpenBodyRange[0] - this.fInterfacesRange[1] - 1);
 			} else {
-				buffer.append(fDocument, fSuperclassRange[1] + 1, fOpenBodyRange[0] - fSuperclassRange[1] - 1);
+				buffer.append(this.fDocument, this.fSuperclassRange[1] + 1, this.fOpenBodyRange[0] - this.fSuperclassRange[1] - 1);
 			}
 		}
 	} else {
 		if (getMask(MASK_TYPE_HAS_INTERFACES)) {
-			if (fExtendsRange[0] < 0) {
+			if (this.fExtendsRange[0] < 0) {
 				buffer.append(" extends "); //$NON-NLS-1$
 			} else {
-				buffer.append(fDocument, fExtendsRange[0], fExtendsRange[1] + 1 - fExtendsRange[0]);
+				buffer.append(this.fDocument, this.fExtendsRange[0], this.fExtendsRange[1] + 1 - this.fExtendsRange[0]);
 			}
-			if (fInterfaces != null) {
-				buffer.append(fInterfaces);
+			if (this.fInterfaces != null) {
+				buffer.append(this.fInterfaces);
 				buffer.append(' ');
 			} else {
-				buffer.append(fDocument, fInterfacesRange[0], fInterfacesRange[1] + 1 - fInterfacesRange[0]);
+				buffer.append(this.fDocument, this.fInterfacesRange[0], this.fInterfacesRange[1] + 1 - this.fInterfacesRange[0]);
 			}
 		} else {
-			if (fImplementsRange[0] < 0) {
+			if (this.fImplementsRange[0] < 0) {
 				buffer.append(' ');
 			} else {
-				buffer.append(fDocument, fNameRange[1] + 1, fOpenBodyRange[0] - fNameRange[1] - 1);
+				buffer.append(this.fDocument, this.fNameRange[1] + 1, this.fOpenBodyRange[0] - this.fNameRange[1] - 1);
 			}
 		}
 	}
-	
+
 }
 /**
  * @see DOMMember#appendSimpleContents(CharArrayBuffer)
  */
 protected void appendSimpleContents(CharArrayBuffer buffer) {
 	// append eveything before my name
-	buffer.append(fDocument, fSourceRange[0], fNameRange[0] - fSourceRange[0]);
+	buffer.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0]);
 	// append my name
-	buffer.append(fName);
+	buffer.append(this.fName);
 
-	
+
 	// append everything after my name and before my first child
-	buffer.append(fDocument, fNameRange[1] + 1, fOpenBodyRange[1] - fNameRange[1]);
+	buffer.append(this.fDocument, this.fNameRange[1] + 1, this.fOpenBodyRange[1] - this.fNameRange[1]);
 	// append my children
 	appendContentsOfChildren(buffer);
 	// append from my last child to my end
-	buffer.append(fDocument, fCloseBodyRange[0], fSourceRange[1] - fCloseBodyRange[0] + 1);
+	buffer.append(this.fDocument, this.fCloseBodyRange[0], this.fSourceRange[1] - this.fCloseBodyRange[0] + 1);
 
 
 }
@@ -385,7 +385,7 @@ public boolean canHaveChildren() {
  * been normalized and is present only for normalization.
  */
 int getCloseBodyPosition() {
-	return fCloseBodyRange[0];
+	return this.fCloseBodyRange[0];
 }
 /**
  * @see DOMNode#getDetailedNode()
@@ -399,7 +399,7 @@ protected DOMNode getDetailedNode() {
 public int getInsertionPosition() {
 	// this should return the position of the end of the last line separator before the closing brace of the type
 	// See PR 1GELSDQ: ITPJUI:WINNT - JDOM: IType.createMethod does not insert nicely for inner types
-	return fInsertionPosition;
+	return this.fInsertionPosition;
 }
 /**
  * @see IDOMNode#getJavaElement
@@ -410,16 +410,16 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 			return ((ICompilationUnit)parent).getType(getName());
 		case IJavaElement.TYPE:
 			return ((IType)parent).getType(getName());
-		// Note: creating local/anonymous type is not supported 
+		// Note: creating local/anonymous type is not supported
 		default:
-			throw new IllegalArgumentException(Messages.element_illegalParent); 
+			throw new IllegalArgumentException(Messages.element_illegalParent);
 	}
 }
 /**
  * @see DOMMember#getMemberDeclarationStartPosition()
  */
 protected int getMemberDeclarationStartPosition() {
-	return fTypeRange[0];
+	return this.fTypeRange[0];
 }
 /**
  * @see IDOMNode#getNodeType()
@@ -431,7 +431,7 @@ public int getNodeType() {
  * Answers the open body range end position.
  */
 int getOpenBodyEnd() {
-	return fOpenBodyRange[1];
+	return this.fOpenBodyRange[1];
 }
 /**
  * @see IDOMType#getSuperclass()
@@ -439,10 +439,10 @@ int getOpenBodyEnd() {
 public String getSuperclass() {
 	becomeDetailed();
 	if (getMask(MASK_TYPE_HAS_SUPERCLASS)) {
-		if (fSuperclass != null) {
-			return fSuperclass;
+		if (this.fSuperclass != null) {
+			return this.fSuperclass;
 		} else {
-			return new String(fDocument, fSuperclassRange[0], fSuperclassRange[1] + 1 - fSuperclassRange[0]);
+			return new String(this.fDocument, this.fSuperclassRange[0], this.fSuperclassRange[1] + 1 - this.fSuperclassRange[0]);
 		}
 	} else {
 		return null;
@@ -452,7 +452,7 @@ public String getSuperclass() {
  * @see IDOMType#getSuperInterfaces()
  */
 public String[] getSuperInterfaces() {
-	return fSuperInterfaces;
+	return this.fSuperInterfaces;
 }
 /**
  * @see IDOMNode
@@ -460,12 +460,12 @@ public String[] getSuperInterfaces() {
 public boolean isAllowableChild(IDOMNode node) {
 	if (node != null) {
 		int type= node.getNodeType();
-		return type == IDOMNode.TYPE || type == IDOMNode.FIELD|| type == IDOMNode.METHOD || 
-			type == IDOMNode.INITIALIZER; 
+		return type == IDOMNode.TYPE || type == IDOMNode.FIELD|| type == IDOMNode.METHOD ||
+			type == IDOMNode.INITIALIZER;
 	} else {
 		return false;
 	}
-	
+
 }
 /**
  * @see IDOMType#isClass()
@@ -491,25 +491,25 @@ void normalize(ILineStartFinder finder) {
 	DOMNode lastNode = null;
 	// look for the open body
 	Scanner scanner = new Scanner();
-	scanner.setSource(fDocument);
-	scanner.resetTo(fNameRange[1] + 1, fDocument.length);
-	
+	scanner.setSource(this.fDocument);
+	scanner.resetTo(this.fNameRange[1] + 1, this.fDocument.length);
+
 	try {
 		int currentToken = scanner.getNextToken();
 		while(currentToken != TerminalTokens.TokenNameLBRACE &&
 				currentToken != TerminalTokens.TokenNameEOF) {
 			currentToken = scanner.getNextToken();
 		}
-		if(currentToken == TerminalTokens.TokenNameLBRACE) {		
+		if(currentToken == TerminalTokens.TokenNameLBRACE) {
 			openBodyEnd = scanner.currentPosition - 1;
 			openBodyStart = scanner.startPosition;
 		} else {
-			openBodyEnd = fDocument.length;
-			openBodyStart = fDocument.length;
+			openBodyEnd = this.fDocument.length;
+			openBodyStart = this.fDocument.length;
 		}
 	} catch(InvalidInputException e) {
-		openBodyEnd = fDocument.length;
-		openBodyStart = fDocument.length;
+		openBodyEnd = this.fDocument.length;
+		openBodyStart = this.fDocument.length;
 	}
 	if (first != null) {
 		int lineStart = finder.getLineStart(first.getStartPosition());
@@ -517,7 +517,7 @@ void normalize(ILineStartFinder finder) {
 			openBodyEnd = lineStart - 1;
 		} else {
 			openBodyEnd = first.getStartPosition() - 1;
-		}		
+		}
 		lastNode = (DOMNode) first.getNextNode();
 		if (lastNode == null) {
 			lastNode = first;
@@ -526,43 +526,43 @@ void normalize(ILineStartFinder finder) {
 				lastNode = (DOMNode) lastNode.getNextNode();
 			}
 		}
-		scanner.setSource(fDocument);
-		scanner.resetTo(lastNode.getEndPosition() + 1, fDocument.length);
+		scanner.setSource(this.fDocument);
+		scanner.resetTo(lastNode.getEndPosition() + 1, this.fDocument.length);
 		try {
 			int currentToken = scanner.getNextToken();
 			while(currentToken != TerminalTokens.TokenNameRBRACE &&
 					currentToken != TerminalTokens.TokenNameEOF) {
 				currentToken = scanner.getNextToken();
 			}
-			if(currentToken == TerminalTokens.TokenNameRBRACE) {		
+			if(currentToken == TerminalTokens.TokenNameRBRACE) {
 				closeBodyStart = scanner.startPosition;
 				closeBodyEnd = scanner.currentPosition - 1;
 			} else {
-				closeBodyStart = fDocument.length;
-				closeBodyEnd = fDocument.length;
+				closeBodyStart = this.fDocument.length;
+				closeBodyEnd = this.fDocument.length;
 			}
 		} catch(InvalidInputException e) {
-			closeBodyStart = fDocument.length;
-			closeBodyEnd = fDocument.length;
+			closeBodyStart = this.fDocument.length;
+			closeBodyEnd = this.fDocument.length;
 		}
 	} else {
-		scanner.resetTo(openBodyEnd, fDocument.length);
+		scanner.resetTo(openBodyEnd, this.fDocument.length);
 		try {
 			int currentToken = scanner.getNextToken();
 			while(currentToken != TerminalTokens.TokenNameRBRACE &&
 					currentToken != TerminalTokens.TokenNameEOF) {
 				currentToken = scanner.getNextToken();
 			}
-			if(currentToken == TerminalTokens.TokenNameRBRACE) {		
+			if(currentToken == TerminalTokens.TokenNameRBRACE) {
 				closeBodyStart = scanner.startPosition;
 				closeBodyEnd = scanner.currentPosition - 1;
 			} else {
-				closeBodyStart = fDocument.length;
-				closeBodyEnd = fDocument.length;
+				closeBodyStart = this.fDocument.length;
+				closeBodyEnd = this.fDocument.length;
 			}
 		} catch(InvalidInputException e) {
-			closeBodyStart = fDocument.length;
-			closeBodyEnd = fDocument.length;
+			closeBodyStart = this.fDocument.length;
+			closeBodyEnd = this.fDocument.length;
 		}
 		openBodyEnd = closeBodyEnd - 1;
 	}
@@ -570,12 +570,12 @@ void normalize(ILineStartFinder finder) {
 	setOpenBodyRangeStart(openBodyStart);
 	setCloseBodyRangeStart(closeBodyStart);
 	setCloseBodyRangeEnd(closeBodyEnd);
-	fInsertionPosition = finder.getLineStart(closeBodyStart);
-	if (lastNode != null && fInsertionPosition < lastNode.getEndPosition()) {
-		fInsertionPosition = getCloseBodyPosition();
+	this.fInsertionPosition = finder.getLineStart(closeBodyStart);
+	if (lastNode != null && this.fInsertionPosition < lastNode.getEndPosition()) {
+		this.fInsertionPosition = getCloseBodyPosition();
 	}
-	if (fInsertionPosition <= openBodyEnd) {
-		fInsertionPosition = getCloseBodyPosition();
+	if (this.fInsertionPosition <= openBodyEnd) {
+		this.fInsertionPosition = getCloseBodyPosition();
 	}
 	super.normalize(finder);
 }
@@ -589,7 +589,7 @@ void normalizeEndPosition(ILineStartFinder finder, DOMNode next) {
 		// to the end of the enclosing node
 		DOMNode parent = (DOMNode) getParent();
 		if (parent == null || parent instanceof DOMCompilationUnit) {
-			setSourceRangeEnd(fDocument.length - 1);
+			setSourceRangeEnd(this.fDocument.length - 1);
 		} else {
 			// parent is a type
 			setSourceRangeEnd(((DOMType)parent).getCloseBodyPosition() - 1);
@@ -606,13 +606,13 @@ void normalizeEndPosition(ILineStartFinder finder, DOMNode next) {
  */
 protected void offset(int offset) {
 	super.offset(offset);
-	offsetRange(fCloseBodyRange, offset);
-	offsetRange(fExtendsRange, offset);
-	offsetRange(fImplementsRange, offset);
-	offsetRange(fInterfacesRange, offset);
-	offsetRange(fOpenBodyRange, offset);
-	offsetRange(fSuperclassRange, offset);
-	offsetRange(fTypeRange, offset);
+	offsetRange(this.fCloseBodyRange, offset);
+	offsetRange(this.fExtendsRange, offset);
+	offsetRange(this.fImplementsRange, offset);
+	offsetRange(this.fInterfacesRange, offset);
+	offsetRange(this.fOpenBodyRange, offset);
+	offsetRange(this.fSuperclassRange, offset);
+	offsetRange(this.fTypeRange, offset);
 }
 /**
  * @see IDOMType#setClass(boolean)
@@ -622,23 +622,23 @@ public void setClass(boolean b) {
 	fragment();
 	setMask(MASK_TYPE_IS_CLASS, b);
 	if (b) {
-		fTypeKeyword= "class"; //$NON-NLS-1$
+		this.fTypeKeyword= "class"; //$NON-NLS-1$
 	} else {
-		fTypeKeyword= "interface"; //$NON-NLS-1$
+		this.fTypeKeyword= "interface"; //$NON-NLS-1$
 		setSuperclass(null);
 	}
 }
 /**
- * Sets the end of the close body range 
+ * Sets the end of the close body range
  */
 void setCloseBodyRangeEnd(int end) {
-	fCloseBodyRange[1] = end;
+	this.fCloseBodyRange[1] = end;
 }
 /**
- * Sets the start of the close body range 
+ * Sets the start of the close body range
  */
 void setCloseBodyRangeStart(int start) {
-	fCloseBodyRange[0] = start;
+	this.fCloseBodyRange[0] = start;
 }
 /**
  * Sets the name of this node.
@@ -651,7 +651,7 @@ void setCloseBodyRangeStart(int start) {
  */
 public void setName(String name) throws IllegalArgumentException {
 	if (name == null) {
-		throw new IllegalArgumentException(Messages.element_nullName); 
+		throw new IllegalArgumentException(Messages.element_nullName);
 	}
 	super.setName(name);
 	Enumeration children= getChildren();
@@ -663,16 +663,16 @@ public void setName(String name) throws IllegalArgumentException {
 	}
 }
 /**
- * Sets the end of the open body range 
+ * Sets the end of the open body range
  */
 void setOpenBodyRangeEnd(int end) {
-	fOpenBodyRange[1] = end;
+	this.fOpenBodyRange[1] = end;
 }
 /**
- * Sets the start of the open body range 
+ * Sets the start of the open body range
  */
 void setOpenBodyRangeStart(int start) {
-	fOpenBodyRange[0] = start;
+	this.fOpenBodyRange[0] = start;
 }
 /**
  * @see IDOMType#setSuperclass(String)
@@ -680,7 +680,7 @@ void setOpenBodyRangeStart(int start) {
 public void setSuperclass(String superclassName) {
 	becomeDetailed();
 	fragment();
-	fSuperclass= superclassName;
+	this.fSuperclass= superclassName;
 	setMask(MASK_TYPE_HAS_SUPERCLASS, superclassName != null);
 }
 /**
@@ -689,13 +689,13 @@ public void setSuperclass(String superclassName) {
 public void setSuperInterfaces(String[] names) {
 	becomeDetailed();
 	if (names == null) {
-		throw new IllegalArgumentException(Messages.dom_nullInterfaces); 
+		throw new IllegalArgumentException(Messages.dom_nullInterfaces);
 	}
 	fragment();
-	fSuperInterfaces= names;
+	this.fSuperInterfaces= names;
 	if (names.length == 0) {
-		fInterfaces= null;
-		fSuperInterfaces= CharOperation.NO_STRINGS;
+		this.fInterfaces= null;
+		this.fSuperInterfaces= CharOperation.NO_STRINGS;
 		setMask(MASK_TYPE_HAS_INTERFACES, false);
 	} else {
 		setMask(MASK_TYPE_HAS_INTERFACES, true);
@@ -706,14 +706,14 @@ public void setSuperInterfaces(String[] names) {
 			}
 			buffer.append(names[i]);
 		}
-		fInterfaces = buffer.getContents();
+		this.fInterfaces = buffer.getContents();
 	}
 }
 /**
  * Sets the type keyword
  */
 void setTypeKeyword(String keyword) {
-	fTypeKeyword = keyword;
+	this.fTypeKeyword = keyword;
 }
 /**
  * @see DOMNode#shareContents(DOMNode)
@@ -721,17 +721,17 @@ void setTypeKeyword(String keyword) {
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMType type= (DOMType)node;
-	fCloseBodyRange= rangeCopy(type.fCloseBodyRange);
-	fExtendsRange= type.fExtendsRange;
-	fImplementsRange= rangeCopy(type.fImplementsRange);
-	fInterfaces= type.fInterfaces;
-	fInterfacesRange= rangeCopy(type.fInterfacesRange);
-	fOpenBodyRange= rangeCopy(type.fOpenBodyRange);
-	fSuperclass= type.fSuperclass;
-	fSuperclassRange= rangeCopy(type.fSuperclassRange);
-	fSuperInterfaces= type.fSuperInterfaces;
-	fTypeKeyword= type.fTypeKeyword;
-	fTypeRange= rangeCopy(type.fTypeRange);
+	this.fCloseBodyRange= rangeCopy(type.fCloseBodyRange);
+	this.fExtendsRange= type.fExtendsRange;
+	this.fImplementsRange= rangeCopy(type.fImplementsRange);
+	this.fInterfaces= type.fInterfaces;
+	this.fInterfacesRange= rangeCopy(type.fInterfacesRange);
+	this.fOpenBodyRange= rangeCopy(type.fOpenBodyRange);
+	this.fSuperclass= type.fSuperclass;
+	this.fSuperclassRange= rangeCopy(type.fSuperclassRange);
+	this.fSuperInterfaces= type.fSuperInterfaces;
+	this.fTypeKeyword= type.fTypeKeyword;
+	this.fTypeRange= rangeCopy(type.fTypeRange);
 }
 /**
  * @see IDOMNode#toString()

@@ -34,24 +34,24 @@ public interface ITypeParameter extends IJavaElement, ISourceReference {
 	 * source (without the <code>extends</code> keyword) if the type parameter comes from a
 	 * compilation unit. It is the dot-separated fully qualified name of the bound if the type
 	 * parameter comes from a class file.
-	 * 
+	 *
 	 * @return the names of the bounds
 	 * @throws JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource
 	 */
 	String[] getBounds() throws JavaModelException;
-	
+
 	/**
 	 * Returns the declaring member of this type parameter. This can be either an <code>IType</code>
 	 * or an <code>IMethod</code>.
 	 * <p>
 	 * This is a handle-only method.
 	 * </p>
-	 * 
+	 *
 	 * @return the declaring member of this type parameter.
 	 */
 	IMember getDeclaringMember();
-	
+
 	/**
 	 * Returns the source range of this type parameter's name,
 	 * or <code>null</code> if this type parameter does not have

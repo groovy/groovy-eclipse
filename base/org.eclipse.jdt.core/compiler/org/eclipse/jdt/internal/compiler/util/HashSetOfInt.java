@@ -14,7 +14,7 @@ package org.eclipse.jdt.internal.compiler.util;
  * HashSet of Object[]
  */
 public final class HashSetOfInt implements Cloneable {
-	
+
 	// to avoid using Enumerations, walk the individual tables skipping nulls
 	public int[] set;
 
@@ -60,7 +60,7 @@ public final class HashSetOfInt implements Cloneable {
 		}
 		return false;
 	}
-	
+
 	public int add(int element) {
 		int length = this.set.length;
 		int index = element % length;
@@ -75,7 +75,7 @@ public final class HashSetOfInt implements Cloneable {
 		this.set[index] = element;
 
 		// assumes the threshold is never equal to the size of the table
-		if (++this.elementSize > threshold)
+		if (++this.elementSize > this.threshold)
 			rehash();
 		return element;
 	}
@@ -101,7 +101,7 @@ public final class HashSetOfInt implements Cloneable {
 
 	private void rehash() {
 
-		HashSetOfInt newHashSet = new HashSetOfInt(elementSize * 2);		// double the number of expected elements
+		HashSetOfInt newHashSet = new HashSetOfInt(this.elementSize * 2);		// double the number of expected elements
 		int currentElement;
 		for (int i = this.set.length; --i >= 0;)
 			if ((currentElement = this.set[i]) != 0)
@@ -112,7 +112,7 @@ public final class HashSetOfInt implements Cloneable {
 	}
 
 	public int size() {
-		return elementSize;
+		return this.elementSize;
 	}
 
 	public String toString() {

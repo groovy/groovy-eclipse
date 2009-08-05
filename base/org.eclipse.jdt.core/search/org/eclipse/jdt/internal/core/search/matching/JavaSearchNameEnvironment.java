@@ -41,14 +41,14 @@ import org.eclipse.jdt.internal.core.util.Util;
  * A name environment based on the classpath of a Java project.
  */
 public class JavaSearchNameEnvironment implements INameEnvironment, SuffixConstants {
-	
+
 	ClasspathLocation[] locations;
-	
+
 	/*
 	 * A map from the fully qualified slash-separated name of the main type (String) to the working copy
 	 */
 	HashMap workingCopies;
-	
+
 public JavaSearchNameEnvironment(IJavaProject javaProject, org.eclipse.jdt.core.ICompilationUnit[] copies) {
 	computeClasspathLocations(javaProject.getProject().getWorkspace().getRoot(), (JavaProject) javaProject);
 	try {
@@ -120,9 +120,9 @@ private void computeClasspathLocations(IWorkspaceRoot workspaceRoot, JavaProject
 }
 
 private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeName) {
-	String 
-		binaryFileName = null, qBinaryFileName = null, 
-		sourceFileName = null, qSourceFileName = null, 
+	String
+		binaryFileName = null, qBinaryFileName = null,
+		sourceFileName = null, qSourceFileName = null,
 		qPackageName = null;
 	NameEnvironmentAnswer suggestedAnswer = null;
 	for (int i = 0, length = this.locations.length; i < length; i++) {
@@ -159,10 +159,10 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 					binaryFileName = qBinaryFileName.substring(typeNameStart);
 				}
 			}
-			answer = 
+			answer =
 				location.findClass(
-					binaryFileName, 
-					qPackageName, 
+					binaryFileName,
+					qPackageName,
 					qBinaryFileName);
 		}
 		if (answer != null) {

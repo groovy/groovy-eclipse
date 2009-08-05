@@ -43,12 +43,24 @@ public class JavadocArgumentExpression extends Expression {
 				typeRef.resolvedType = this.resolvedType;
 				// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=195374
 				// reproduce javadoc 1.3.1 / 1.4.2 behavior
-				if (typeRef instanceof SingleTypeReference && 
+				if (typeRef instanceof SingleTypeReference &&
 						this.resolvedType.leafComponentType().enclosingType() != null &&
 						scope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_4) {
 					scope.problemReporter().javadocInvalidMemberTypeQualification(this.sourceStart, this.sourceEnd, scope.getDeclarationModifiers());
 					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=228648
 					// do not return now but report unresolved reference as expected depending on compliance settings
+				} else if (typeRef instanceof QualifiedTypeReference) {
+					TypeBinding enclosingType = this.resolvedType.leafComponentType().enclosingType();
+					if (enclosingType != null) {
+						// https://bugs.eclipse.org/bugs/show_bug.cgi?id=233187
+						// inner type references should be fully qualified
+						int compoundLength = 2;
+						while ((enclosingType = enclosingType.enclosingType()) != null) compoundLength++;
+						int typeNameLength = typeRef.getTypeName().length;
+						if (typeNameLength != compoundLength && typeNameLength != (compoundLength+this.resolvedType.getPackage().compoundName.length)) {
+							scope.problemReporter().javadocInvalidMemberTypeQualification(typeRef.sourceStart, typeRef.sourceEnd, scope.getDeclarationModifiers());
+						}
+					}
 				}
 				if (!this.resolvedType.isValidBinding()) {
 					scope.problemReporter().javadocInvalidType(typeRef, this.resolvedType, scope.getDeclarationModifiers());
@@ -62,7 +74,7 @@ public class JavadocArgumentExpression extends Expression {
 		}
 		return null;
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		if (this.argument == null) {
 			if (this.token != null) {

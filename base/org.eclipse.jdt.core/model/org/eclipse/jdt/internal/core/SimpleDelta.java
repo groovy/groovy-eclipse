@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,19 +21,19 @@ public class SimpleDelta {
 	 * @see IJavaElementDelta#getKind()
 	 */
 	protected int kind = 0;
-	
+
 	/*
 	 * @see IJavaElementDelta#getFlags()
 	 */
 	protected int changeFlags = 0;
-	
+
 	/*
 	 * Marks this delta as added
 	 */
 	public void added() {
 		this.kind = IJavaElementDelta.ADDED;
 	}
-	
+
 	/*
 	 * Marks this delta as changed with the given change flag
 	 */
@@ -41,14 +41,14 @@ public class SimpleDelta {
 		this.kind = IJavaElementDelta.CHANGED;
 		this.changeFlags |= flags;
 	}
-	
+
 	/*
 	 * @see IJavaElementDelta#getFlags()
 	 */
 	public int getFlags() {
 		return this.changeFlags;
 	}
-	
+
 	/*
 	 * @see IJavaElementDelta#getKind()
 	 */
@@ -70,7 +70,7 @@ public class SimpleDelta {
 		this.kind = IJavaElementDelta.REMOVED;
 		this.changeFlags = 0;
 	}
-	
+
 	/*
 	 * Mark this delta has a having a super type change
 	 */

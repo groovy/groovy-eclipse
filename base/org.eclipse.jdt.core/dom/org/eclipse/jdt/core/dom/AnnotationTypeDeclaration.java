@@ -39,43 +39,43 @@ import java.util.List;
  * modifiers). The source range extends through the last character of the "}"
  * token following the body declarations.
  * </p>
- * 
+ *
  * @since 3.1
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class AnnotationTypeDeclaration extends AbstractTypeDeclaration {
-	
+
 	/**
 	 * The "javadoc" structural property of this node type.
 	 */
-	public static final ChildPropertyDescriptor JAVADOC_PROPERTY = 
+	public static final ChildPropertyDescriptor JAVADOC_PROPERTY =
 		internalJavadocPropertyFactory(AnnotationTypeDeclaration.class);
 
 	/**
 	 * The "modifiers" structural property of this node type.
 	 */
-	public static final ChildListPropertyDescriptor MODIFIERS2_PROPERTY = 
+	public static final ChildListPropertyDescriptor MODIFIERS2_PROPERTY =
 		internalModifiers2PropertyFactory(AnnotationTypeDeclaration.class);
-	
+
 	/**
 	 * The "name" structural property of this node type.
 	 */
-	public static final ChildPropertyDescriptor NAME_PROPERTY = 
+	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		internalNamePropertyFactory(AnnotationTypeDeclaration.class);
 
 	/**
 	 * The "bodyDeclarations" structural property of this node type.
 	 */
-	public static final ChildListPropertyDescriptor BODY_DECLARATIONS_PROPERTY = 
+	public static final ChildListPropertyDescriptor BODY_DECLARATIONS_PROPERTY =
 		internalBodyDeclarationPropertyFactory(AnnotationTypeDeclaration.class);
-	
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(5);
 		createPropertyList(AnnotationTypeDeclaration.class, properyList);
@@ -89,28 +89,28 @@ public class AnnotationTypeDeclaration extends AbstractTypeDeclaration {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
-	 * Creates a new AST node for an annotation type declaration owned by the given 
+	 * Creates a new AST node for an annotation type declaration owned by the given
 	 * AST. By default, the type declaration is for an annotation
-	 * type of an unspecified, but legal, name; no modifiers; no javadoc; 
+	 * type of an unspecified, but legal, name; no modifiers; no javadoc;
 	 * and an empty list of body declarations.
 	 * <p>
-	 * N.B. This constructor is package-private; all subclasses must be 
-	 * declared in the same package; clients are unable to declare 
+	 * N.B. This constructor is package-private; all subclasses must be
+	 * declared in the same package; clients are unable to declare
 	 * additional subclasses.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	AnnotationTypeDeclaration(AST ast) {
@@ -124,7 +124,7 @@ public class AnnotationTypeDeclaration extends AbstractTypeDeclaration {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -148,7 +148,7 @@ public class AnnotationTypeDeclaration extends AbstractTypeDeclaration {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -162,7 +162,7 @@ public class AnnotationTypeDeclaration extends AbstractTypeDeclaration {
 		// allow default implementation to flag the error
 		return super.internalGetChildListProperty(property);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on BodyDeclaration.
 	 */
@@ -211,7 +211,7 @@ public class AnnotationTypeDeclaration extends AbstractTypeDeclaration {
 	 */
 	ASTNode clone0(AST target) {
 		AnnotationTypeDeclaration result = new AnnotationTypeDeclaration(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setJavadoc(
 			(Javadoc) ASTNode.copySubtree(target, getJavadoc()));
 		result.modifiers().addAll(ASTNode.copySubtrees(target, modifiers()));
@@ -227,7 +227,7 @@ public class AnnotationTypeDeclaration extends AbstractTypeDeclaration {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -242,21 +242,21 @@ public class AnnotationTypeDeclaration extends AbstractTypeDeclaration {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on AsbtractTypeDeclaration.
 	 */
 	ITypeBinding internalResolveBinding() {
 		return this.ast.getBindingResolver().resolveType(this);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize();
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

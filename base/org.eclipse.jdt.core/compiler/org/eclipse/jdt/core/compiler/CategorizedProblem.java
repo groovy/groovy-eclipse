@@ -26,12 +26,12 @@ import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
  * <ul>
  * <li> its location (originating source file name, source position, line number), </li>
  * <li> its message description and a predicate to check its severity (warning or error). </li>
- * <li> its ID : a number identifying the very nature of this problem. All possible IDs for standard Java 
+ * <li> its ID : a number identifying the very nature of this problem. All possible IDs for standard Java
  * problems are listed as constants on {@link IProblem}, </li>
  * <li> its marker type : a string identifying the problem creator. It corresponds to the marker type
  * chosen if this problem was to be persisted. Standard Java problems are associated to marker
  * type "org.eclipse.jdt.core.problem"), </li>
- * <li> its category ID : a number identifying the category this problem belongs to. All possible IDs for 
+ * <li> its category ID : a number identifying the category this problem belongs to. All possible IDs for
  * standard Java problem categories are listed in this class. </li>
  * </ul>
  * <p>
@@ -50,17 +50,17 @@ import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
  * <code> IMarker#SOURCE_ID</code> attribute to
  * <code> JavaBuilder#SOURCE_ID</code>; compiler
  * participants may specify the <code> IMarker#SOURCE_ID</code>
- * attribute of their markers by adding it to the extra marker attributes of the problems they generate; 
+ * attribute of their markers by adding it to the extra marker attributes of the problems they generate;
  * markers resulting from compiler participants' problems that do not have the
  * <code> IMarker#SOURCE_ID</code> extra attribute set do not have the
  * <code> JavaBuilder#SOURCE_ID</code> attribute set either.
- * 
+ *
  * @since 3.2
  */
 public abstract class CategorizedProblem implements IProblem {
-	
+
 	/**
-	 * List of standard category IDs used by Java problems, more categories will be added 
+	 * List of standard category IDs used by Java problems, more categories will be added
 	 * in the future.
 	 */
 	public static final int CAT_UNSPECIFIED = 0;
@@ -75,7 +75,7 @@ public abstract class CategorizedProblem implements IProblem {
 	/** Category for fatal problems related to type members, could be addressed by some field or method change */
 	public static final int CAT_MEMBER = 50;
 	/** Category for fatal problems which could not be addressed by external changes, but require an edit to be addressed */
-	public static final int CAT_INTERNAL = 60;	
+	public static final int CAT_INTERNAL = 60;
 	/** Category for optional problems in Javadoc */
 	public static final int CAT_JAVADOC = 70;
 	/** Category for optional problems related to coding style practices */
@@ -93,9 +93,9 @@ public abstract class CategorizedProblem implements IProblem {
 	/** Category for optional problems related to internationalization of String literals */
 	public static final int CAT_NLS = 140;
 	/** Category for optional problems related to access restrictions */
-	public static final int CAT_RESTRICTION = 150;	
-	
-/** 
+	public static final int CAT_RESTRICTION = 150;
+
+/**
  * Returns an integer identifying the category of this problem. Categories, like problem IDs are
  * defined in the context of some marker type. Custom implementations of {@link CategorizedProblem}
  * may choose arbitrary values for problem/category IDs, as long as they are associated with a different
@@ -115,12 +115,12 @@ public abstract int getCategoryID();
 public abstract String getMarkerType();
 
 /**
- * Returns the names of the extra marker attributes associated to this problem when persisted into a marker 
+ * Returns the names of the extra marker attributes associated to this problem when persisted into a marker
  * by the JavaBuilder. Extra attributes are only optional, and are allowing client customization of generated
  * markers. By default, no EXTRA attributes is persisted, and a categorized problem only persists the following attributes:
  * <ul>
  * <li>	<code>IMarker#MESSAGE</code> -&gt; {@link IProblem#getMessage()}</li>
- * <li>	<code>IMarker#SEVERITY</code> -&gt; <code> IMarker#SEVERITY_ERROR</code> or 
+ * <li>	<code>IMarker#SEVERITY</code> -&gt; <code> IMarker#SEVERITY_ERROR</code> or
  *         <code>IMarker#SEVERITY_WARNING</code> depending on {@link IProblem#isError()} or {@link IProblem#isWarning()}</li>
  * <li>	<code>IJavaModelMarker#ID</code> -&gt; {@link IProblem#getID()}</li>
  * <li>	<code>IMarker#CHAR_START</code>  -&gt; {@link IProblem#getSourceStart()}</li>
@@ -129,7 +129,7 @@ public abstract String getMarkerType();
  * <li>	<code>IJavaModelMarker#ARGUMENTS</code>  -&gt; some <code>String[]</code> used to compute quickfixes </li>
  * <li>	<code>IJavaModelMarker#CATEGORY_ID</code> -&gt; {@link CategorizedProblem#getCategoryID()}</li>
  * </ul>
- * The names must be eligible for marker creation, as defined by <code>IMarker#setAttributes(String[], Object[])</code>, 
+ * The names must be eligible for marker creation, as defined by <code>IMarker#setAttributes(String[], Object[])</code>,
  * and there must be as many names as values according to {@link #getExtraMarkerAttributeValues()}.
  * Note that extra marker attributes will be inserted after default ones (as described in {@link CategorizedProblem#getMarkerType()},
  * and thus could be used to override defaults.
@@ -140,9 +140,9 @@ public String[] getExtraMarkerAttributeNames() {
 }
 
 /**
- * Returns the respective values for the extra marker attributes associated to this problem when persisted into 
+ * Returns the respective values for the extra marker attributes associated to this problem when persisted into
  * a marker by the JavaBuilder. Each value must correspond to a matching attribute name, as defined by
- * {@link #getExtraMarkerAttributeNames()}. 
+ * {@link #getExtraMarkerAttributeNames()}.
  * The values must be eligible for marker creation, as defined by <code> IMarker#setAttributes(String[], Object[])}.
  * @return the values of the corresponding extra marker attributes
  */

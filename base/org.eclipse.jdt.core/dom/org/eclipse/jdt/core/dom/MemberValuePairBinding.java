@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 BEA Systems, Inc.
+ * Copyright (c) 2005, 2009 BEA Systems, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,9 +130,9 @@ class MemberValuePairBinding implements IMemberValuePairBinding {
 	}
 
 	public Object getValue() {
-		if (value == null)
+		if (this.value == null)
 			init();
-		return value == NoValue ? null : this.value;
+		return this.value == NoValue ? null : this.value;
 	}
 
 	private void init() {

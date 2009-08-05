@@ -16,8 +16,8 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 
 public class ClassFilePool {
 	public static final int POOL_SIZE = 25; // need to have enough for 2 units
-	ClassFile[] classFiles; 
-	
+	ClassFile[] classFiles;
+
 private ClassFilePool() {
 	// prevent instantiation
 	this.classFiles = new ClassFile[POOL_SIZE];
@@ -26,7 +26,7 @@ private ClassFilePool() {
 public static ClassFilePool newInstance() {
 	return new ClassFilePool();
 }
-	
+
 public synchronized ClassFile acquire(SourceTypeBinding typeBinding) {
 	for (int i = 0; i < POOL_SIZE; i++) {
 		ClassFile classFile = this.classFiles[i];

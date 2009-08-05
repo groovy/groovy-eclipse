@@ -211,7 +211,7 @@ public class MethodInvocation extends Expression {
 	 */
 	ASTNode clone0(AST target) {
 		MethodInvocation result = new MethodInvocation(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setName((SimpleName) getName().clone(target));
 		result.setExpression(
 			(Expression) ASTNode.copySubtree(target, getExpression()));

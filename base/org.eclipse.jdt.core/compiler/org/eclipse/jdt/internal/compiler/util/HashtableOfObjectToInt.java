@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,7 @@ package org.eclipse.jdt.internal.compiler.util;
  * Hashtable of {Object --> int }
  */
 public final class HashtableOfObjectToInt implements Cloneable {
-	
+
 	// to avoid using Enumerations, walk the individual tables skipping nulls
 	public Object[] keyTable;
 	public int[] valueTable;
@@ -103,7 +103,7 @@ public final class HashtableOfObjectToInt implements Cloneable {
 		this.valueTable[index] = value;
 
 		// assumes the threshold is never equal to the size of the table
-		if (++elementSize > threshold)
+		if (++this.elementSize > this.threshold)
 			rehash();
 		return value;
 	}
@@ -115,7 +115,7 @@ public final class HashtableOfObjectToInt implements Cloneable {
 		while ((currentKey = this.keyTable[index]) != null) {
 			if (currentKey.equals(key)) {
 				int value = this.valueTable[index];
-				elementSize--;
+				this.elementSize--;
 				this.keyTable[index] = null;
 				rehash();
 				return value;
@@ -129,7 +129,7 @@ public final class HashtableOfObjectToInt implements Cloneable {
 
 	private void rehash() {
 
-		HashtableOfObjectToInt newHashtable = new HashtableOfObjectToInt(elementSize * 2);		// double the number of expected elements
+		HashtableOfObjectToInt newHashtable = new HashtableOfObjectToInt(this.elementSize * 2);		// double the number of expected elements
 		Object currentKey;
 		for (int i = this.keyTable.length; --i >= 0;)
 			if ((currentKey = this.keyTable[i]) != null)
@@ -141,9 +141,9 @@ public final class HashtableOfObjectToInt implements Cloneable {
 	}
 
 	public int size() {
-		return elementSize;
+		return this.elementSize;
 	}
-	
+
 	public String toString() {
 		String s = ""; //$NON-NLS-1$
 		Object key;

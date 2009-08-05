@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,11 +23,11 @@ package org.eclipse.jdt.core.dom;
  * @since 3.1
  */
 public abstract class Annotation extends Expression implements IExtendedModifier {
-	
+
 	/**
 	 * Returns structural property descriptor for the "typeName" property
 	 * of this node.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	abstract ChildPropertyDescriptor internalTypeNameProperty();
@@ -35,7 +35,7 @@ public abstract class Annotation extends Expression implements IExtendedModifier
 	/**
 	 * Returns structural property descriptor for the "typeName" property
 	 * of this node.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	public final ChildPropertyDescriptor getTypeNameProperty() {
@@ -45,13 +45,13 @@ public abstract class Annotation extends Expression implements IExtendedModifier
 	/**
 	 * Creates and returns a structural property descriptor for the
 	 * "typeName" property declared on the given concrete node type.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	static final ChildPropertyDescriptor internalTypeNamePropertyFactory(Class nodeClass) {
 		return new ChildPropertyDescriptor(nodeClass, "typeName", Name.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * The annotation type name; lazily initialized; defaults to an unspecified,
 	 * legal Java identifier.
@@ -59,37 +59,37 @@ public abstract class Annotation extends Expression implements IExtendedModifier
 	Name typeName = null;
 
 	/**
-	 * Creates a new AST node for an annotation node owned by the 
+	 * Creates a new AST node for an annotation node owned by the
 	 * given AST.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	Annotation(AST ast) {
 		super(ast);
 	}
-	
+
 	/**
 	 * @see IExtendedModifier#isModifier()
-	 */ 
+	 */
 	public boolean isModifier() {
 		return false;
 	}
-	
+
 	/**
 	 * @see IExtendedModifier#isAnnotation()
-	 */ 
+	 */
 	public boolean isAnnotation() {
 		return true;
 	}
 
 	/**
 	 * Returns the annotation type name of this annotation.
-	 * 
+	 *
 	 * @return the annotation type name
-	 */ 
+	 */
 	public Name getTypeName() {
 		if (this.typeName == null) {
 			// lazy init must be thread-safe for readers
@@ -103,17 +103,17 @@ public abstract class Annotation extends Expression implements IExtendedModifier
 		}
 		return this.typeName;
 	}
-	
+
 	/**
 	 * Sets the annotation type name of this annotation.
-	 * 
+	 *
 	 * @param typeName the annotation type name
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setTypeName(Name typeName) {
 		if (typeName == null) {
 			throw new IllegalArgumentException();
@@ -128,10 +128,10 @@ public abstract class Annotation extends Expression implements IExtendedModifier
 	/**
 	 * Returns whether this is a normal annotation
 	 * ({@link NormalAnnotation}).
-	 * 
+	 *
 	 * @return <code>true</code> if this is a normal annotation,
 	 *    and <code>false</code> otherwise
-	 */ 
+	 */
 	public boolean isNormalAnnotation() {
 		return (this instanceof NormalAnnotation);
 	}
@@ -139,10 +139,10 @@ public abstract class Annotation extends Expression implements IExtendedModifier
 	/**
 	 * Returns whether this is a marker annotation
 	 * ({@link MarkerAnnotation}).
-	 * 
+	 *
 	 * @return <code>true</code> if this is a marker annotation,
 	 *    and <code>false</code> otherwise
-	 */ 
+	 */
 	public boolean isMarkerAnnotation() {
 		return (this instanceof MarkerAnnotation);
 	}
@@ -150,10 +150,10 @@ public abstract class Annotation extends Expression implements IExtendedModifier
 	/**
 	 * Returns whether this is a single member annotation.
 	 * ({@link SingleMemberAnnotation}).
-	 * 
+	 *
 	 * @return <code>true</code> if this is a single member annotation,
 	 *    and <code>false</code> otherwise
-	 */ 
+	 */
 	public boolean isSingleMemberAnnotation() {
 		return (this instanceof SingleMemberAnnotation);
 	}
@@ -171,10 +171,10 @@ public abstract class Annotation extends Expression implements IExtendedModifier
 	 * Note that bindings (which includes resolved annotations) are generally unavailable unless
 	 * requested when the AST is being built.
 	 * </p>
-	 * 
+	 *
 	 * @return the resolved annotation, or <code>null</code> if the annotation cannot be resolved
 	 * @since 3.2
-	 */	
+	 */
 	public IAnnotationBinding resolveAnnotationBinding() {
 	    return this.ast.getBindingResolver().resolveAnnotation(this);
 	}

@@ -26,7 +26,7 @@ public class ProcessTaskManager implements Runnable {
 	volatile int currentIndex, availableIndex, size, sleepCount;
 	CompilationUnitDeclaration[] units;
 
-	public static int PROCESSED_QUEUE_SIZE = 12; 
+	public static final int PROCESSED_QUEUE_SIZE = 12;
 
 public ProcessTaskManager(Compiler compiler) {
 	this.compiler = compiler;
@@ -35,7 +35,7 @@ public ProcessTaskManager(Compiler compiler) {
 	this.currentIndex = 0;
 	this.availableIndex = 0;
 	this.size = PROCESSED_QUEUE_SIZE;
-	this.sleepCount = 0; // 0 is no one, +1 is the processing thread & -1 is the writing/main thread 
+	this.sleepCount = 0; // 0 is no one, +1 is the processing thread & -1 is the writing/main thread
 	this.units = new CompilationUnitDeclaration[this.size];
 
 	synchronized (this) {
@@ -76,9 +76,9 @@ public CompilationUnitDeclaration removeNextUnit() throws Error {
 				if (this.processingThread == null) {
 					if (this.caughtException != null) {
 						// rethrow the caught exception from the processingThread in the main compiler thread
-						if (caughtException instanceof Error)
-							throw (Error) caughtException;
-						throw (RuntimeException) caughtException;
+						if (this.caughtException instanceof Error)
+							throw (Error) this.caughtException;
+						throw (RuntimeException) this.caughtException;
 					}
 					return null;
 				}
@@ -94,7 +94,7 @@ public CompilationUnitDeclaration removeNextUnit() throws Error {
 				next = this.units[this.currentIndex];
 			} while (next == null);
 		}
-	
+
 		this.units[this.currentIndex++] = null;
 		if (this.currentIndex >= this.size)
 			this.currentIndex = 0;
@@ -110,37 +110,37 @@ public CompilationUnitDeclaration removeNextUnit() throws Error {
 
 public void run() {
 	while (this.processingThread != null) {
-		unitToProcess = null;
+		this.unitToProcess = null;
 		int index = -1;
 		try {
 			synchronized (this) {
 				if (this.processingThread == null) return;
 
-				unitToProcess = this.compiler.getUnitToProcess(this.unitIndex);
-				if (unitToProcess == null) {
+				this.unitToProcess = this.compiler.getUnitToProcess(this.unitIndex);
+				if (this.unitToProcess == null) {
 					this.processingThread = null;
 					return;
 				}
 				index = this.unitIndex++;
 			}
-	
+
 			try {
-				this.compiler.reportProgress(Messages.bind(Messages.compilation_processing, new String(unitToProcess.getFileName())));
+				this.compiler.reportProgress(Messages.bind(Messages.compilation_processing, new String(this.unitToProcess.getFileName())));
 				if (this.compiler.options.verbose)
 					this.compiler.out.println(
 						Messages.bind(Messages.compilation_process,
 						new String[] {
 							String.valueOf(index + 1),
 							String.valueOf(this.compiler.totalUnits),
-							new String(unitToProcess.getFileName())
+							new String(this.unitToProcess.getFileName())
 						}));
-				this.compiler.process(unitToProcess, index);
+				this.compiler.process(this.unitToProcess, index);
 			} finally {
-				if (unitToProcess != null)
-					unitToProcess.cleanUp();
+				if (this.unitToProcess != null)
+					this.unitToProcess.cleanUp();
 			}
 
-			addNextUnit(unitToProcess);
+			addNextUnit(this.unitToProcess);
 		} catch (Error e) {
 			synchronized (this) {
 				this.processingThread = null;

@@ -45,7 +45,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	protected static final int APPEND = 1; // insert at the end
 	protected static final int REMOVEALL_APPEND = 2; // remove all existing ones with same ID, and add new one at the end
 	protected static final int KEEP_EXISTING = 3; // do not insert if already existing with same ID
-	
+
 	/*
 	 * Whether tracing post actions is enabled.
 	 */
@@ -65,7 +65,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	public static final String HAS_MODIFIED_RESOURCE_ATTR = "hasModifiedResource"; //$NON-NLS-1$
 	public static final String TRUE = JavaModelManager.TRUE;
 	//public static final String FALSE = "false";
-		
+
 	/**
 	 * The elements this operation operates on,
 	 * or <code>null</code> if this operation
@@ -83,7 +83,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * empty result if no elements are created, or if this
 	 * operation is not actually executed.
 	 */
-	protected static IJavaElement[] NO_ELEMENTS= new IJavaElement[] {};
+	protected static final IJavaElement[] NO_ELEMENTS= new IJavaElement[] {};
 
 
 	/**
@@ -108,7 +108,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	/*
 	 * A per thread stack of java model operations (PerThreadObject of ArrayList).
 	 */
-	protected static ThreadLocal operationStacks = new ThreadLocal();
+	protected static final ThreadLocal OPERATION_STACKS = new ThreadLocal();
 	protected JavaModelOperation() {
 		// default constructor used in subclasses
 	}
@@ -140,14 +140,14 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		this.elementsToProcess = elements;
 		this.force= force;
 	}
-	
+
 	/**
 	 * Common constructor for all Java Model operations.
 	 */
 	protected JavaModelOperation(IJavaElement element) {
 		this.elementsToProcess = new IJavaElement[]{element};
 	}
-	
+
 	/*
 	 * Registers the given action at the end of the list of actions to run.
 	 */
@@ -181,7 +181,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 			if ((delta.getFlags() & IJavaElementDelta.F_AST_AFFECTED) != 0) {
 				previousDelta.changedAST(delta.getCompilationUnitAST());
 			}
-						
+
 		} else {
 			reconcileDeltas.put(workingCopy, delta);
 		}
@@ -190,7 +190,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * Deregister the reconcile delta for the given working copy
 	 */
 	protected void removeReconcileDelta(ICompilationUnit workingCopy) {
-		JavaModelManager.getJavaModelManager().getDeltaProcessor().reconcileDeltas.remove(workingCopy);		
+		JavaModelManager.getJavaModelManager().getDeltaProcessor().reconcileDeltas.remove(workingCopy);
 	}
 	protected void applyTextEdit(ICompilationUnit cu, TextEdit edits) throws JavaModelException {
 		try {
@@ -204,8 +204,8 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * @see IProgressMonitor
 	 */
 	public void beginTask(String name, int totalWork) {
-		if (progressMonitor != null) {
-			progressMonitor.beginTask(name, totalWork);
+		if (this.progressMonitor != null) {
+			this.progressMonitor.beginTask(name, totalWork);
 		}
 	}
 	/*
@@ -224,7 +224,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 */
 	protected void checkCanceled() {
 		if (isCanceled()) {
-			throw new OperationCanceledException(Messages.operation_cancelled); 
+			throw new OperationCanceledException(Messages.operation_cancelled);
 		}
 	}
 	/**
@@ -232,11 +232,11 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * @see JavaModelOperation#verify()
 	 */
 	protected IJavaModelStatus commonVerify() {
-		if (elementsToProcess == null || elementsToProcess.length == 0) {
+		if (this.elementsToProcess == null || this.elementsToProcess.length == 0) {
 			return new JavaModelStatus(IJavaModelStatusConstants.NO_ELEMENTS_TO_PROCESS);
 		}
-		for (int i = 0; i < elementsToProcess.length; i++) {
-			if (elementsToProcess[i] == null) {
+		for (int i = 0; i < this.elementsToProcess.length; i++) {
+			if (this.elementsToProcess[i] == null) {
 				return new JavaModelStatus(IJavaModelStatusConstants.NO_ELEMENTS_TO_PROCESS);
 			}
 		}
@@ -245,12 +245,18 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	/**
 	 * Convenience method to copy resources
 	 */
-	protected void copyResources(IResource[] resources, IPath destinationPath) throws JavaModelException {
+	protected void copyResources(IResource[] resources, IPath container) throws JavaModelException {
 		IProgressMonitor subProgressMonitor = getSubProgressMonitor(resources.length);
-		IWorkspace workspace = resources[0].getWorkspace();
+		IWorkspaceRoot root =  ResourcesPlugin.getWorkspace().getRoot();
 		try {
-			workspace.copy(resources, destinationPath, false, subProgressMonitor);
-			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+			for (int i = 0, length = resources.length; i < length; i++) {
+				IResource resource = resources[i];
+				IPath destination = container.append(resource.getName());
+				if (root.findMember(destination) == null) {
+					resource.copy(destination, false, subProgressMonitor);
+				}
+			}
+			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 		} catch (CoreException e) {
 			throw new JavaModelException(e);
 		}
@@ -262,10 +268,10 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		IFile file= folder.getFile(new Path(name));
 		try {
 			file.create(
-				contents, 
-				forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY, 
+				contents,
+				forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY,
 				getSubProgressMonitor(1));
-				setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+				setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 		} catch (CoreException e) {
 			throw new JavaModelException(e);
 		}
@@ -281,7 +287,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 				forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY,
 				true, // local
 				getSubProgressMonitor(1));
-			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 		} catch (CoreException e) {
 			throw new JavaModelException(e);
 		}
@@ -294,23 +300,23 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		boolean forceFlag,
 		IResource rootResource)
 		throws JavaModelException {
-	
+
 		IContainer resource = (IContainer) ((JavaElement)fragment).resource();
-	
+
 		try {
 			resource.delete(
-				forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY, 
+				forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY,
 				getSubProgressMonitor(1));
-			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 			while (resource instanceof IFolder) {
 				// deleting a package: delete the parent if it is empty (eg. deleting x.y where folder x doesn't have resources but y)
 				// without deleting the package fragment root
 				resource = resource.getParent();
 				if (!resource.equals(rootResource) && resource.members().length == 0) {
 					resource.delete(
-						forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY, 
+						forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY,
 						getSubProgressMonitor(1));
-					setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+					setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 				}
 			}
 		} catch (CoreException e) {
@@ -323,7 +329,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	protected void deleteResource(IResource resource,int flags) throws JavaModelException {
 		try {
 			resource.delete(flags, getSubProgressMonitor(1));
-			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 		} catch (CoreException e) {
 			throw new JavaModelException(e);
 		}
@@ -338,9 +344,9 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		try {
 			workspace.delete(
 				resources,
-				forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY, 
+				forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY,
 				subProgressMonitor);
-				setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+				setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 		} catch (CoreException e) {
 			throw new JavaModelException(e);
 		}
@@ -349,8 +355,8 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * @see IProgressMonitor
 	 */
 	public void done() {
-		if (progressMonitor != null) {
-			progressMonitor.done();
+		if (this.progressMonitor != null) {
+			this.progressMonitor.done();
 		}
 	}
 	/*
@@ -416,18 +422,18 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * otherwise <code>null</code>.
 	 */
 	protected ICompilationUnit getCompilationUnitFor(IJavaElement element) {
-	
+
 		return ((JavaElement)element).getCompilationUnit();
 	}
 	/*
 	 * Returns the stack of operations running in the current thread.
-	 * Returns an empty stack if no operations are currently running in this thread. 
+	 * Returns an empty stack if no operations are currently running in this thread.
 	 */
 	protected static ArrayList getCurrentOperationStack() {
-		ArrayList stack = (ArrayList)operationStacks.get();
+		ArrayList stack = (ArrayList)OPERATION_STACKS.get();
 		if (stack == null) {
 			stack = new ArrayList();
-			operationStacks.set(stack);
+			OPERATION_STACKS.set(stack);
 		}
 		return stack;
 	}
@@ -445,10 +451,10 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * or <code>null</code> if not applicable.
 	 */
 	protected IJavaElement getElementToProcess() {
-		if (elementsToProcess == null || elementsToProcess.length == 0) {
+		if (this.elementsToProcess == null || this.elementsToProcess.length == 0) {
 			return null;
 		}
-		return elementsToProcess[0];
+		return this.elementsToProcess[0];
 	}
 	/**
 	 * Returns the Java Model this operation is operating in.
@@ -478,26 +484,26 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * or <code>null</code> if not applicable.
 	 */
 	protected IJavaElement getParentElement() {
-		if (parentElements == null || parentElements.length == 0) {
+		if (this.parentElements == null || this.parentElements.length == 0) {
 			return null;
 		}
-		return parentElements[0];
+		return this.parentElements[0];
 	}
 	/**
 	 * Returns the parent elements to which this operation applies,
 	 * or <code>null</code> if not applicable.
 	 */
 	protected IJavaElement[] getParentElements() {
-		return parentElements;
+		return this.parentElements;
 	}
 	/**
 	 * Returns the elements created by this operation.
 	 */
 	public IJavaElement[] getResultElements() {
-		return resultElements;
+		return this.resultElements;
 	}
 	/*
-	 * Returns the scheduling rule for this operation (i.e. the resource that needs to be locked 
+	 * Returns the scheduling rule for this operation (i.e. the resource that needs to be locked
 	 * while this operation is running.
 	 * Subclasses can override.
 	 */
@@ -509,8 +515,8 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 */
 	protected IProgressMonitor getSubProgressMonitor(int workAmount) {
 		IProgressMonitor sub = null;
-		if (progressMonitor != null) {
-			sub = new SubProgressMonitor(progressMonitor, workAmount, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
+		if (this.progressMonitor != null) {
+			sub = new SubProgressMonitor(this.progressMonitor, workAmount, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
 		}
 		return sub;
 	}
@@ -520,19 +526,19 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * Returns false if this operation has not been executed yet.
 	 */
 	public boolean hasModifiedResource() {
-		return !this.isReadOnly() && getAttribute(HAS_MODIFIED_RESOURCE_ATTR) == TRUE; 
+		return !isReadOnly() && getAttribute(HAS_MODIFIED_RESOURCE_ATTR) == TRUE;
 	}
 	public void internalWorked(double work) {
-		if (progressMonitor != null) {
-			progressMonitor.internalWorked(work);
+		if (this.progressMonitor != null) {
+			this.progressMonitor.internalWorked(work);
 		}
 	}
 	/**
 	 * @see IProgressMonitor
 	 */
 	public boolean isCanceled() {
-		if (progressMonitor != null) {
-			return progressMonitor.isCanceled();
+		if (this.progressMonitor != null) {
+			return this.progressMonitor.isCanceled();
 		}
 		return false;
 	}
@@ -548,7 +554,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 */
 	protected boolean isTopLevelOperation() {
 		ArrayList stack;
-		return 
+		return
 			(stack = getCurrentOperationStack()).size() > 0
 			&& stack.get(0) == this;
 	}
@@ -564,19 +570,25 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		}
 		return -1;
 	}
-	
+
 	/**
 	 * Convenience method to move resources
 	 */
-	protected void moveResources(IResource[] resources, IPath destinationPath) throws JavaModelException {
+	protected void moveResources(IResource[] resources, IPath container) throws JavaModelException {
 		IProgressMonitor subProgressMonitor = null;
-		if (progressMonitor != null) {
-			subProgressMonitor = new SubProgressMonitor(progressMonitor, resources.length, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
+		if (this.progressMonitor != null) {
+			subProgressMonitor = new SubProgressMonitor(this.progressMonitor, resources.length, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
 		}
-		IWorkspace workspace = resources[0].getWorkspace();
+		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		try {
-			workspace.move(resources, destinationPath, false, subProgressMonitor);
-			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+			for (int i = 0, length = resources.length; i < length; i++) {
+				IResource resource = resources[i];
+				IPath destination = container.append(resource.getName());
+				if (root.findMember(destination) == null) {
+					resource.move(destination, false, subProgressMonitor);
+				}
+			}
+			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 		} catch (CoreException e) {
 			throw new JavaModelException(e);
 		}
@@ -596,8 +608,8 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		ArrayList stack = getCurrentOperationStack();
 		int size = stack.size();
 		if (size > 0) {
-			if (size == 1) { // top level operation 
-				operationStacks.set(null); // release reference (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=33927)
+			if (size == 1) { // top level operation
+				OPERATION_STACKS.set(null); // release reference (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=33927)
 			}
 			return (JavaModelOperation)stack.remove(size-1);
 		} else {
@@ -626,7 +638,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 					break;
 			}
 		}
-		
+
 		JavaModelOperation topLevelOp = (JavaModelOperation)getCurrentOperationStack().get(0);
 		IPostAction[] postActions = topLevelOp.actions;
 		if (postActions == null) {
@@ -666,7 +678,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 			}
 		}
 		return false;
-	}	
+	}
 	/*
 	 * Pushes the given operation on the stack of operations currently running in this thread.
 	 */
@@ -681,7 +693,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		if (POST_ACTION_VERBOSE) {
 			System.out.println("(" + Thread.currentThread() + ") [JavaModelOperation.removeAllPostAction(String)] Removing actions " + actionID); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		
+
 		JavaModelOperation topLevelOp = (JavaModelOperation)getCurrentOperationStack().get(0);
 		IPostAction[] postActions = topLevelOp.actions;
 		if (postActions == null) return;
@@ -692,7 +704,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 			postActions[topLevelOp.actionsEnd--] = null;
 		}
 	}
-	
+
 	/**
 	 * Runs this operation and registers any deltas created.
 	 *
@@ -704,7 +716,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 		DeltaProcessor deltaProcessor = manager.getDeltaProcessor();
 		int previousDeltaCount = deltaProcessor.javaModelDeltas.size();
 		try {
-			progressMonitor = monitor;
+			this.progressMonitor = monitor;
 			pushOperation(this);
 			try {
 				if (canModifyRoots()) {
@@ -712,24 +724,24 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 					// noop if aready initialized
 					JavaModelManager.getDeltaState().initializeRoots(false/*not initiAfterLoad*/);
 				}
-				
+
 				executeOperation();
 			} finally {
-				if (this.isTopLevelOperation()) {
-					this.runPostActions();
+				if (isTopLevelOperation()) {
+					runPostActions();
 				}
 			}
 		} finally {
 			try {
 				// reacquire delta processor as it can have been reset during executeOperation()
 				deltaProcessor = manager.getDeltaProcessor();
-				
+
 				// update JavaModel using deltas that were recorded during this operation
 				for (int i = previousDeltaCount, size = deltaProcessor.javaModelDeltas.size(); i < size; i++) {
 					deltaProcessor.updateJavaModel((IJavaElementDelta)deltaProcessor.javaModelDeltas.get(i));
 				}
-				
-				// close the parents of the created elements and reset their project's cache (in case we are in an 
+
+				// close the parents of the created elements and reset their project's cache (in case we are in an
 				// IWorkspaceRunnable and the clients wants to use the created element's parent)
 				// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=83646
 				for (int i = 0, length = this.resultElements.length; i < length; i++) {
@@ -746,15 +758,14 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 					}
 				}
 				deltaProcessor.resetProjectCaches();
-				deltaProcessor.projectCachesToReset.clear();
-				
+
 				// fire only iff:
 				// - the operation is a top level operation
 				// - the operation did produce some delta(s)
 				// - but the operation has not modified any resource
-				if (this.isTopLevelOperation()) {
-					if ((deltaProcessor.javaModelDeltas.size() > previousDeltaCount || !deltaProcessor.reconcileDeltas.isEmpty()) 
-							&& !this.hasModifiedResource()) {
+				if (isTopLevelOperation()) {
+					if ((deltaProcessor.javaModelDeltas.size() > previousDeltaCount || !deltaProcessor.reconcileDeltas.isEmpty())
+							&& !hasModifiedResource()) {
 						deltaProcessor.fire(null, DeltaProcessor.DEFAULT_CHANGE_EVENT);
 					} // else deltas are fired while processing the resource delta
 				}
@@ -776,7 +787,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 			if (isReadOnly()) {
 				run(monitor);
 			} else {
-				// Use IWorkspace.run(...) to ensure that a build will be done in autobuild mode.
+				// Use IWorkspace.run(...) to ensure that resource changes are batched
 				// Note that if the tree is locked, this will throw a CoreException, but this is ok
 				// as this operation is modifying the tree (not read-only) and a CoreException will be thrown anyway.
 				ResourcesPlugin.getWorkspace().run(this, getSchedulingRule(), IWorkspace.AVOID_UPDATE, monitor);
@@ -821,8 +832,8 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * @see IProgressMonitor
 	 */
 	public void setCanceled(boolean b) {
-		if (progressMonitor != null) {
-			progressMonitor.setCanceled(b);
+		if (this.progressMonitor != null) {
+			this.progressMonitor.setCanceled(b);
 		}
 	}
 	/**
@@ -830,22 +841,22 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * @see CreateElementInCUOperation#checkCanceled
 	 */
 	protected void setNested(boolean nested) {
-		isNested = nested;
+		this.isNested = nested;
 	}
 	/**
 	 * @see IProgressMonitor
 	 */
 	public void setTaskName(String name) {
-		if (progressMonitor != null) {
-			progressMonitor.setTaskName(name);
+		if (this.progressMonitor != null) {
+			this.progressMonitor.setTaskName(name);
 		}
 	}
 	/**
 	 * @see IProgressMonitor
 	 */
 	public void subTask(String name) {
-		if (progressMonitor != null) {
-			progressMonitor.subTask(name);
+		if (this.progressMonitor != null) {
+			this.progressMonitor.subTask(name);
 		}
 	}
 	/**
@@ -861,13 +872,13 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	protected IJavaModelStatus verify() {
 		return commonVerify();
 	}
-	
+
 	/**
 	 * @see IProgressMonitor
 	 */
 	public void worked(int work) {
-		if (progressMonitor != null) {
-			progressMonitor.worked(work);
+		if (this.progressMonitor != null) {
+			this.progressMonitor.worked(work);
 			checkCanceled();
 		}
 	}

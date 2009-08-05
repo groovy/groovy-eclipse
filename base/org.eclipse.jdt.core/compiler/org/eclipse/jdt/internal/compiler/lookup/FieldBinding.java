@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,7 +47,7 @@ public final boolean canBeSeenBy(PackageBinding invocationPackage) {
 	if (isPrivate()) return false;
 
 	// isProtected() or isDefault()
-	return invocationPackage == declaringClass.getPackage();
+	return invocationPackage == this.declaringClass.getPackage();
 }
 /* Answer true if the receiver is visible to the type provided by the scope.
 * InvocationSite implements isSuperAccess() to provide additional information
@@ -155,19 +155,19 @@ public final boolean canBeSeenBy(TypeBinding receiverType, InvocationSite invoca
  */
 public char[] computeUniqueKey(boolean isLeaf) {
 	// declaring key
-	char[] declaringKey = 
-		this.declaringClass == null /*case of length field for an array*/ 
-			? CharOperation.NO_CHAR 
+	char[] declaringKey =
+		this.declaringClass == null /*case of length field for an array*/
+			? CharOperation.NO_CHAR
 			: this.declaringClass.computeUniqueKey(false/*not a leaf*/);
 	int declaringLength = declaringKey.length;
-	
+
 	// name
 	int nameLength = this.name.length;
-	
+
 	// return type
 	char[] returnTypeKey = this.type == null ? new char[] {'V'} : this.type.computeUniqueKey(false/*not a leaf*/);
 	int returnTypeLength = returnTypeKey.length;
-	
+
 	char[] uniqueKey = new char[declaringLength + 1 + nameLength + 1 + returnTypeLength];
 	int index = 0;
 	System.arraycopy(declaringKey, 0, uniqueKey, index, declaringLength);
@@ -200,7 +200,7 @@ public Constant constant() {
 						fieldDecl.resolve(initScope); //side effect on binding
 					} finally {
 						initScope.insideTypeAnnotation = old;
-					}					
+					}
 					fieldConstant = originalField.constant == null ? Constant.NotAConstant : originalField.constant;
 				} else {
 					fieldConstant = Constant.NotAConstant; // shouldn't occur per construction (paranoid null check)
@@ -224,15 +224,15 @@ public char[] genericSignature() {
     return this.type.genericTypeSignature();
 }
 public final int getAccessFlags() {
-	return modifiers & ExtraCompilerModifiers.AccJustFlag;
+	return this.modifiers & ExtraCompilerModifiers.AccJustFlag;
 }
 
 public AnnotationBinding[] getAnnotations() {
-	FieldBinding originalField = this.original();
+	FieldBinding originalField = original();
 	ReferenceBinding declaringClassBinding = originalField.declaringClass;
 	if (declaringClassBinding == null) {
 		return Binding.NO_ANNOTATIONS;
-	}	
+	}
 	return declaringClassBinding.retrieveAnnotations(originalField);
 }
 
@@ -242,7 +242,7 @@ public AnnotationBinding[] getAnnotations() {
  * @see org.eclipse.jdt.internal.compiler.lookup.Binding#getAnnotationTagBits()
  */
 public long getAnnotationTagBits() {
-	FieldBinding originalField = this.original();
+	FieldBinding originalField = original();
 	if ((originalField.tagBits & TagBits.AnnotationResolved) == 0 && originalField.declaringClass instanceof SourceTypeBinding) {
 		ClassScope scope = ((SourceTypeBinding) originalField.declaringClass).scope;
 		if (scope == null) { // synthetic fields do not have a scope nor any annotations
@@ -254,7 +254,7 @@ public long getAnnotationTagBits() {
 		if (fieldDecl != null) {
 			MethodScope initializationScope = isStatic() ? typeDecl.staticInitializerScope : typeDecl.initializerScope;
 			FieldBinding previousField = initializationScope.initializedField;
-			int previousFieldID = initializationScope.lastVisibleFieldID;			
+			int previousFieldID = initializationScope.lastVisibleFieldID;
 			try {
 				initializationScope.initializedField = originalField;
 				initializationScope.lastVisibleFieldID = originalField.id;
@@ -278,61 +278,69 @@ public final boolean isDefault() {
 */
 
 public final boolean isDeprecated() {
-	return (modifiers & ClassFileConstants.AccDeprecated) != 0;
+	return (this.modifiers & ClassFileConstants.AccDeprecated) != 0;
 }
 /* Answer true if the receiver has private visibility
 */
 
 public final boolean isPrivate() {
-	return (modifiers & ClassFileConstants.AccPrivate) != 0;
+	return (this.modifiers & ClassFileConstants.AccPrivate) != 0;
+}
+/* Answer true if the receiver has private visibility or is enclosed by a class that does.
+*/
+
+public final boolean isOrEnclosedByPrivateType() {
+	if ((this.modifiers & ClassFileConstants.AccPrivate) != 0)
+		return true;
+	return this.declaringClass != null && this.declaringClass.isOrEnclosedByPrivateType();
 }
 /* Answer true if the receiver has private visibility and is used locally
 */
 
 public final boolean isProtected() {
-	return (modifiers & ClassFileConstants.AccProtected) != 0;
+	return (this.modifiers & ClassFileConstants.AccProtected) != 0;
 }
 /* Answer true if the receiver has public visibility
 */
 
 public final boolean isPublic() {
-	return (modifiers & ClassFileConstants.AccPublic) != 0;
+	return (this.modifiers & ClassFileConstants.AccPublic) != 0;
 }
 /* Answer true if the receiver is a static field
 */
 
 public final boolean isStatic() {
-	return (modifiers & ClassFileConstants.AccStatic) != 0;
+	return (this.modifiers & ClassFileConstants.AccStatic) != 0;
 }
 /* Answer true if the receiver is not defined in the source of the declaringClass
 */
 
 public final boolean isSynthetic() {
-	return (modifiers & ClassFileConstants.AccSynthetic) != 0;
+	return (this.modifiers & ClassFileConstants.AccSynthetic) != 0;
 }
 /* Answer true if the receiver is a transient field
 */
 
 public final boolean isTransient() {
-	return (modifiers & ClassFileConstants.AccTransient) != 0;
+	return (this.modifiers & ClassFileConstants.AccTransient) != 0;
 }
 /* Answer true if the receiver's declaring type is deprecated (or any of its enclosing types)
 */
 
 public final boolean isUsed() {
-	return (modifiers & ExtraCompilerModifiers.AccLocallyUsed) != 0;
+	return (this.modifiers & ExtraCompilerModifiers.AccLocallyUsed) != 0;
 }
 /* Answer true if the receiver has protected visibility
 */
 
 public final boolean isViewedAsDeprecated() {
-	return (modifiers & (ClassFileConstants.AccDeprecated | ExtraCompilerModifiers.AccDeprecatedImplicitly)) != 0;
+	return (this.modifiers & (ClassFileConstants.AccDeprecated | ExtraCompilerModifiers.AccDeprecatedImplicitly)) != 0;
 }
 /* Answer true if the receiver is a volatile field
 */
 
 public final boolean isVolatile() {
-	return (modifiers & ClassFileConstants.AccVolatile) != 0;
+	return (this.modifiers & ClassFileConstants.AccVolatile) != 0;
 }
 
 public final int kind() {
@@ -352,9 +360,9 @@ public void setAnnotations(AnnotationBinding[] annotations) {
 public FieldDeclaration sourceField() {
 	SourceTypeBinding sourceType;
 	try {
-		sourceType = (SourceTypeBinding) declaringClass;
+		sourceType = (SourceTypeBinding) this.declaringClass;
 	} catch (ClassCastException e) {
-		return null;		
+		return null;
 	}
 
 	FieldDeclaration[] fields = sourceType.scope.referenceContext.fields;
@@ -363,6 +371,6 @@ public FieldDeclaration sourceField() {
 			if (this == fields[i].binding)
 				return fields[i];
 	}
-	return null;		
+	return null;
 }
 }

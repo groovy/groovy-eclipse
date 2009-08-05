@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ public class StringLiteral extends Literal {
 
 		this(start,end);
 		this.source = token;
-		this.lineNumber = lineNumber - 1; // line number is 1 based 
+		this.lineNumber = lineNumber - 1; // line number is 1 based
 	}
 
 	public StringLiteral(int s, int e) {
@@ -34,8 +34,8 @@ public class StringLiteral extends Literal {
 	}
 
 	public void computeConstant() {
-	
-		constant = StringConstant.fromValue(String.valueOf(source));
+
+		this.constant = StringConstant.fromValue(String.valueOf(this.source));
 	}
 
 	public ExtendedStringLiteral extendWith(CharLiteral lit){
@@ -58,12 +58,12 @@ public class StringLiteral extends Literal {
 	}
 	/**
 	 * Code generation for string literal
-	 */ 
+	 */
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 
 		int pc = codeStream.position;
 		if (valueRequired)
-			codeStream.ldc(constant.stringValue());
+			codeStream.ldc(this.constant.stringValue());
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
@@ -73,11 +73,11 @@ public class StringLiteral extends Literal {
 	}
 
 	public StringBuffer printExpression(int indent, StringBuffer output) {
-	
+
 		// handle some special char.....
 		output.append('\"');
-		for (int i = 0; i < source.length; i++) {
-			switch (source[i]) {
+		for (int i = 0; i < this.source.length; i++) {
+			switch (this.source[i]) {
 				case '\b' :
 					output.append("\\b"); //$NON-NLS-1$
 					break;
@@ -103,16 +103,16 @@ public class StringLiteral extends Literal {
 					output.append("\\\\"); //$NON-NLS-1$
 					break;
 				default :
-					output.append(source[i]);
+					output.append(this.source[i]);
 			}
 		}
-		output.append('\"'); 
+		output.append('\"');
 		return output;
 	}
 
 	public char[] source() {
 
-		return source;
+		return this.source;
 	}
 
 	public void traverse(ASTVisitor visitor, BlockScope scope) {

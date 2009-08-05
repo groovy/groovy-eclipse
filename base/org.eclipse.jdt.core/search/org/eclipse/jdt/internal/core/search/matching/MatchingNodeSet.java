@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -50,7 +50,7 @@ private HashtableOfLong possibleMatchingNodesKeys = new HashtableOfLong(7);
 
 public MatchingNodeSet(boolean mustResolvePattern) {
 	super();
-	mustResolve = mustResolvePattern;
+	this.mustResolve = mustResolvePattern;
 }
 
 public int addMatch(ASTNode node, int matchLevel) {
@@ -98,7 +98,7 @@ public void addPossibleMatch(ASTNode node) {
 }
 public void addTrustedMatch(ASTNode node, boolean isExact) {
 	addTrustedMatch(node, isExact ? EXACT_MATCH : POTENTIAL_MATCH);
-	
+
 }
 void addTrustedMatch(ASTNode node, Integer level) {
 	// remove existing node at same position from set
@@ -108,7 +108,7 @@ void addTrustedMatch(ASTNode node, Integer level) {
 	ASTNode existing = (ASTNode) this.matchingNodesKeys.get(key);
 	if (existing != null && existing.getClass().equals(node.getClass()))
 		this.matchingNodes.removeKey(existing);
-	
+
 	// map node to its accuracy level
 	this.matchingNodes.put(node, level);
 	this.matchingNodesKeys.put(key, node);

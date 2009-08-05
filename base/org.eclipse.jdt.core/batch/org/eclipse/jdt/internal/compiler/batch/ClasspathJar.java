@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,11 +10,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -28,161 +26,46 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
+import org.eclipse.jdt.internal.compiler.util.ManifestAnalyzer;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class ClasspathJar extends ClasspathLocation {
-	
+
 protected File file;
 protected ZipFile zipFile;
 protected boolean closeZipFileAtEnd;
 protected Hashtable packageCache;
 
-public ClasspathJar(File file, boolean closeZipFileAtEnd, 
+public ClasspathJar(File file, boolean closeZipFileAtEnd,
 		AccessRuleSet accessRuleSet, String destinationPath) {
 	super(accessRuleSet, destinationPath);
 	this.file = file;
 	this.closeZipFileAtEnd = closeZipFileAtEnd;
 }
 
-// manifest file analyzer limited to Class-Path sections analysis
-public static class ManifestAnalyzer {
-	private static final int
-		START = 0,
-		IN_CLASSPATH_HEADER = 1, // multistate
-		PAST_CLASSPATH_HEADER = 2,
-		SKIPPING_WHITESPACE = 3,
-		READING_JAR = 4,
-		CONTINUING = 5,
-		SKIP_LINE = 6;
-	private static final char[] CLASSPATH_HEADER_TOKEN = 
-		"Class-Path:".toCharArray(); //$NON-NLS-1$
-	private int ClasspathSectionsCount;
-	private ArrayList calledFilesNames;
-	public boolean analyzeManifestContents(Reader reader) throws IOException {
-		int state = START, substate = 0;
-		StringBuffer currentJarToken = new StringBuffer();
-		int currentChar;
-		this.ClasspathSectionsCount = 0;
-		this.calledFilesNames = null;
-		for (;;) {
-			currentChar = reader.read();
-			switch (state) {
-				case START:
-					if (currentChar == -1) {
-						return true;
-					} else if (currentChar == CLASSPATH_HEADER_TOKEN[0]) {
-						state = IN_CLASSPATH_HEADER;
-						substate = 1;
-					} else {
-						state = SKIP_LINE;
-					}
-					break;
-				case IN_CLASSPATH_HEADER:
-					if (currentChar == -1) {
-						return true;
-					} else if (currentChar == '\n') {
-						state = START;
-					} else if (currentChar != CLASSPATH_HEADER_TOKEN[substate++]) {
-						state = SKIP_LINE;
-					} else if (substate == CLASSPATH_HEADER_TOKEN.length) {
-						state = PAST_CLASSPATH_HEADER;
-					}
-					break;
-				case PAST_CLASSPATH_HEADER:
-					if (currentChar == ' ') {
-						state = SKIPPING_WHITESPACE;
-						this.ClasspathSectionsCount++;
-					} else {
-						return false;
-					}
-					break;
-				case SKIPPING_WHITESPACE:
-					if (currentChar == -1) {
-						return true;
-					} else if (currentChar == '\n') {
-						state = CONTINUING;
-					} else if (currentChar != ' ') {
-						currentJarToken.append((char) currentChar);
-						state = READING_JAR;
-					}
-					break;
-				case CONTINUING:
-					if (currentChar == -1) {
-						return true;
-					} else if (currentChar == '\n') {
-						state = START;
-					} else if (currentChar == ' ') {
-						state = SKIPPING_WHITESPACE;
-					} else if (currentChar == CLASSPATH_HEADER_TOKEN[0]) {
-						state = IN_CLASSPATH_HEADER;
-						substate = 1;
-					} else if (this.calledFilesNames == null) {
-						return false;
-					} else {
-						state = SKIP_LINE;
-					}
-					break;
-				case SKIP_LINE:
-					if (currentChar == -1) {
-						return true;
-					} else if (currentChar == '\n') {
-						state = START;
-					}
-					break;
-				case READING_JAR:	
-					if (currentChar == -1) {
-						return false;
-					} else if (currentChar == '\n') {
-						// appends token below
-						state = CONTINUING;
-					} else if (currentChar == ' ') {
-						// appends token below
-						state = SKIPPING_WHITESPACE;
-					} else {
-						currentJarToken.append((char) currentChar);
-						break;
-					}
-					if (this.calledFilesNames == null) {
-						this.calledFilesNames = new ArrayList();
-					}
-					this.calledFilesNames.add(currentJarToken.toString());
-					currentJarToken.setLength(0);
-					break;
-			}
-		}	
-	}
-	public int getClasspathSectionsCount() {
-		return this.ClasspathSectionsCount;
-	}
-	public List getCalledFileNames() {
-		return this.calledFilesNames;
-	}
-}
-
 public List fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemReporter) {
 	// expected to be called once only - if multiple calls desired, consider
 	// using a cache
-	BufferedReader reader = null;
+	InputStream inputStream = null;
 	try {
 		initialize();
 		ArrayList result = new ArrayList();
-		ZipEntry manifest =	this.zipFile.getEntry("META-INF/MANIFEST.MF"); //$NON-NLS-1$
+		ZipEntry manifest = this.zipFile.getEntry("META-INF/MANIFEST.MF"); //$NON-NLS-1$
 		if (manifest != null) { // non-null implies regular file
-			reader = new BufferedReader(new InputStreamReader(this.zipFile.getInputStream(manifest)));
+			inputStream = this.zipFile.getInputStream(manifest);
 			ManifestAnalyzer analyzer = new ManifestAnalyzer();
-			boolean success = analyzer.analyzeManifestContents(reader);
+			boolean success = analyzer.analyzeManifestContents(inputStream);
 			List calledFileNames = analyzer.getCalledFileNames();
 			if (problemReporter != null) {
-				if (!success || 
-						analyzer.getClasspathSectionsCount() == 1 &&  calledFileNames == null) {
-					problemReporter.invalidClasspathSection(this.getPath());
+				if (!success || analyzer.getClasspathSectionsCount() == 1 &&  calledFileNames == null) {
+					problemReporter.invalidClasspathSection(getPath());
 				} else if (analyzer.getClasspathSectionsCount() > 1) {
-					problemReporter.multipleClasspathSections(this.getPath());				
+					problemReporter.multipleClasspathSections(getPath());
 				}
 			}
 			if (calledFileNames != null) {
 				Iterator calledFilesIterator = calledFileNames.iterator();
-				String directoryPath = this.getPath();
+				String directoryPath = getPath();
 				int lastSeparator = directoryPath.lastIndexOf(File.separatorChar);
 				directoryPath = directoryPath.substring(0, lastSeparator + 1); // potentially empty (see bug 214731)
 				while (calledFilesIterator.hasNext()) {
@@ -194,9 +77,9 @@ public List fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemRe
 	} catch (IOException e) {
 		return null;
 	} finally {
-		if (reader != null) {
+		if (inputStream != null) {
 			try {
-				reader.close();
+				inputStream.close();
 			} catch (IOException e) {
 				// best effort
 			}
@@ -207,7 +90,7 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 	return findClass(typeName, qualifiedPackageName, qualifiedBinaryFileName, false);
 }
 public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
-	if (!isPackage(qualifiedPackageName)) 
+	if (!isPackage(qualifiedPackageName))
 		return null; // most common case
 
 	try {
@@ -222,7 +105,7 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 	return null;
 }
 public char[][][] findTypeNames(String qualifiedPackageName) {
-	if (!isPackage(qualifiedPackageName)) 
+	if (!isPackage(qualifiedPackageName))
 		return null; // most common case
 
 	ArrayList answers = new ArrayList();
@@ -285,7 +168,7 @@ public boolean isPackage(String qualifiedPackageName) {
 }
 public void reset() {
 	if (this.zipFile != null && this.closeZipFileAtEnd) {
-		try { 
+		try {
 			this.zipFile.close();
 		} catch(IOException e) {
 			// ignore

@@ -19,9 +19,9 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 public class TypeParameter extends SourceRefElement implements ITypeParameter {
 
 	static final ITypeParameter[] NO_TYPE_PARAMETERS = new ITypeParameter[0];
-	
+
 	protected String name;
-	
+
 	public TypeParameter(JavaElement parent, String name) {
 		super(parent);
 		this.name = name;
@@ -52,7 +52,7 @@ public class TypeParameter extends SourceRefElement implements ITypeParameter {
 	protected char getHandleMementoDelimiter() {
 		return JavaElement.JEM_TYPE_PARAMETER;
 	}
-	
+
 	public ISourceRange getNameRange() throws JavaModelException {
 		SourceMapper mapper= getSourceMapper();
 		if (mapper != null) {

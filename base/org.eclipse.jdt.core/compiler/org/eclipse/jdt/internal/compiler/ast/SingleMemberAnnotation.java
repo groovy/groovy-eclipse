@@ -17,7 +17,7 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
  * SingleMemberAnnotation node
  */
 public class SingleMemberAnnotation extends Annotation {
-	
+
 	public Expression memberValue;
 	private MemberValuePair[] singlePairs; // fake pair set, only value has accurate positions
 
@@ -36,21 +36,21 @@ public class SingleMemberAnnotation extends Annotation {
 	 */
 	public MemberValuePair[] memberValuePairs() {
 		if (this.singlePairs == null) {
-			this.singlePairs =  
-				new MemberValuePair[]{ 
+			this.singlePairs =
+				new MemberValuePair[]{
 					new MemberValuePair(VALUE, this.memberValue.sourceStart, this.memberValue.sourceEnd, this.memberValue)
 				};
 		}
 		return this.singlePairs;
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		super.printExpression(indent, output);
 		output.append('(');
 		this.memberValue.printExpression(indent, output);
 		return output.append(')');
 	}
-	
+
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {

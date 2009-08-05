@@ -18,10 +18,10 @@ import java.util.List;
  * Field access expression AST node type.
  *
  * <pre>
- * FieldAccess: 
+ * FieldAccess:
  * 		Expression <b>.</b> Identifier
  * </pre>
- * 
+ *
  * <p>
  * Note that there are several kinds of expressions that resemble field access
  * expressions: qualified names, this expressions, and super field access
@@ -48,7 +48,7 @@ import java.util.List;
  *   (<code>FieldAccess</code>).</li>
  * </ul>
  * </p>
- * 
+ *
  * @see QualifiedName
  * @see ThisExpression
  * @see SuperFieldAccess
@@ -56,28 +56,28 @@ import java.util.List;
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class FieldAccess extends Expression {
-	
+
 	/**
 	 * The "expression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(FieldAccess.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "name" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor NAME_PROPERTY = 
+	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(FieldAccess.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(3);
 		createPropertyList(FieldAccess.class, properyList);
@@ -89,18 +89,18 @@ public class FieldAccess extends Expression {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The expression; lazily initialized; defaults to an unspecified,
 	 * but legal, simple name.
@@ -120,7 +120,7 @@ public class FieldAccess extends Expression {
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	FieldAccess(AST ast) {
@@ -133,7 +133,7 @@ public class FieldAccess extends Expression {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -157,7 +157,7 @@ public class FieldAccess extends Expression {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -170,7 +170,7 @@ public class FieldAccess extends Expression {
 	 */
 	ASTNode clone0(AST target) {
 		FieldAccess result = new FieldAccess(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setExpression((Expression) getExpression().clone(target));
 		result.setName((SimpleName) getName().clone(target));
 		return result;
@@ -196,12 +196,12 @@ public class FieldAccess extends Expression {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the expression of this field access expression.
-	 * 
+	 *
 	 * @return the expression node
-	 */ 
+	 */
 	public Expression getExpression() {
 		if (this.expression == null) {
 			// lazy init must be thread-safe for readers
@@ -215,10 +215,10 @@ public class FieldAccess extends Expression {
 		}
 		return this.expression;
 	}
-		
+
 	/**
 	 * Sets the expression of this field access expression.
-	 * 
+	 *
 	 * @param expression the new expression
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -226,7 +226,7 @@ public class FieldAccess extends Expression {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setExpression(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -239,9 +239,9 @@ public class FieldAccess extends Expression {
 
 	/**
 	 * Returns the name of the field accessed in this field access expression.
-	 * 
+	 *
 	 * @return the field name
-	 */ 
+	 */
 	public SimpleName getName() {
 		if (this.fieldName == null) {
 			// lazy init must be thread-safe for readers
@@ -255,17 +255,17 @@ public class FieldAccess extends Expression {
 		}
 		return this.fieldName;
 	}
-		
+
 	/**
 	 * Sets the name of the field accessed in this field access expression.
-	 * 
+	 *
 	 * @param fieldName the field name
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setName(SimpleName fieldName) {
 		if (fieldName == null) {
 			throw new IllegalArgumentException();
@@ -283,7 +283,7 @@ public class FieldAccess extends Expression {
 		// treat Code as free
 		return BASE_NODE_SIZE + 2 * 4;
 	}
-	
+
 	/**
 	 * Resolves and returns the binding for the field accessed by this
 	 * expression.
@@ -299,12 +299,12 @@ public class FieldAccess extends Expression {
 	public IVariableBinding resolveFieldBinding() {
 		return this.ast.getBindingResolver().resolveField(this);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
-		return 
+		return
 			memSize()
 			+ (this.expression == null ? 0 : getExpression().treeSize())
 			+ (this.fieldName == null ? 0 : getName().treeSize());

@@ -26,20 +26,20 @@ import org.eclipse.text.edits.ReplaceEdit;
 
 /**
  * Helper class to provide String manipulation functions dealing with indentations.
- * 
+ *
  * @since 3.2
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class IndentManipulation {
-	
+
 	private IndentManipulation() {
 		// don't instantiate
 	}
-	
+
 	/**
 	 * Returns <code>true</code> if the given character is an indentation character. Indentation character are all whitespace characters
 	 * except the line delimiter characters.
-	 * 
+	 *
 	 * @param ch the given character
 	 * @return Returns <code>true</code> if this the character is a indent character, <code>false</code> otherwise
 	 */
@@ -49,19 +49,19 @@ public final class IndentManipulation {
 
 	/**
 	 * Returns <code>true</code> if the given character is a line delimiter character.
-	 * 
+	 *
 	 * @param ch the given character
 	 * @return Returns <code>true</code> if this the character is a line delimiter character, <code>false</code> otherwise
 	 */
-	public static boolean isLineDelimiterChar(char ch) { 
+	public static boolean isLineDelimiterChar(char ch) {
 		return ch == '\n' || ch == '\r';
-	}	
-	
+	}
+
 	/**
 	 * Returns the indentation of the given line in indentation units. Odd spaces are
 	 * not counted. This method only analyzes the content of <code>line</code> up to the first
 	 * non-whitespace character.
-	 * 
+	 *
 	 * @param line the string to measure the indent of
 	 * @param tabWidth the width of one tab character in space equivalents
 	 * @param indentWidth the width of one indentation unit in space equivalents
@@ -77,18 +77,18 @@ public final class IndentManipulation {
 		if (indentWidth <= 0 || tabWidth < 0 || line == null) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		int visualLength= measureIndentInSpaces(line, tabWidth);
 		return visualLength / indentWidth;
 	}
-	
+
 	/**
 	 * Returns the indentation of the given line in space equivalents.
-	 * 
+	 *
 	 * <p>Tab characters are counted using the given <code>tabWidth</code> and every other indent
 	 * character as one. This method analyzes the content of <code>line</code> up to the first
 	 * non-whitespace character.</p>
-	 * 
+	 *
 	 * @param line the string to measure the indent of
 	 * @param tabWidth the width of one tab in space equivalents
 	 * @return the measured indent width in space equivalents
@@ -102,7 +102,7 @@ public final class IndentManipulation {
 		if (tabWidth < 0 || line == null) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		int length= 0;
 		int max= line.length();
 		for (int i= 0; i < max; i++) {
@@ -118,12 +118,12 @@ public final class IndentManipulation {
 		}
 		return length;
 	}
-	
+
 	/**
 	 * Returns the leading indentation string of the given line. Note that the returned string
 	 * need not be equal to the leading whitespace as odd spaces are not considered part of the
 	 * indentation.
-	 * 
+	 *
 	 * @param line the line to scan
 	 * @param tabWidth the size of one tab in space equivalents
 	 * @param indentWidth the width of one indentation unit in space equivalents
@@ -139,10 +139,10 @@ public final class IndentManipulation {
 		if (tabWidth < 0 || indentWidth <= 0 || line == null) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		int size= line.length();
 		int end= 0;
-		
+
 		int spaceEquivs= 0;
 		int characters= 0;
 		for (int i= 0; i < size; i++) {
@@ -172,9 +172,9 @@ public final class IndentManipulation {
 		}
 	}
 
-	
+
 	/**
-	 * Removes the given number of indentation units from a given line. If the line 
+	 * Removes the given number of indentation units from a given line. If the line
 	 * has less than the given indent, all the available indentation is removed.
 	 * If <code>indentsToRemove <= 0</code> the line is returned.
 	 *
@@ -193,12 +193,12 @@ public final class IndentManipulation {
 		if (tabWidth < 0 || indentWidth <= 0 || line == null) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		if (indentUnitsToRemove <= 0)
 			return line;
 
 		final int spaceEquivalentsToRemove= indentUnitsToRemove * indentWidth;
-		
+
 		int start= 0;
 		int spaceEquivalents= 0;
 		int size= line.length();
@@ -213,7 +213,7 @@ public final class IndentManipulation {
 			} else {
 				// Assert.isTrue(false, "Line does not have requested number of indents");
 				start= i;
-				break; 
+				break;
 			}
 			if (spaceEquivalents == spaceEquivalentsToRemove) {
 				start= i + 1;
@@ -235,7 +235,7 @@ public final class IndentManipulation {
 			trimmed= Util.EMPTY_STRING;
 		else
 			trimmed= line.substring(start);
-		
+
 		if (prefix == null)
 			return trimmed;
 		return prefix + trimmed;
@@ -246,7 +246,7 @@ public final class IndentManipulation {
 	 * and a new indent string is added.
 	 * <p>The first line of the code will not be changed (It is considered to have no indent as it might start in
 	 * the middle of a line).</p>
-	 * 
+	 *
 	 * @param code the code to change the indent of
 	 * @param indentUnitsToRemove the number of indent units to remove from each line (except the first) of the given code
 	 * @param tabWidth the size of one tab in space equivalents
@@ -268,7 +268,7 @@ public final class IndentManipulation {
 		if (tabWidth < 0 || indentWidth <= 0 || code == null || indentUnitsToRemove < 0 || newIndentString == null || lineDelim == null) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		try {
 			ILineTracker tracker= new DefaultLineTracker();
 			tracker.set(code);
@@ -276,20 +276,20 @@ public final class IndentManipulation {
 			if (nLines == 1) {
 				return code;
 			}
-			
+
 			StringBuffer buf= new StringBuffer();
-			
+
 			for (int i= 0; i < nLines; i++) {
 				IRegion region= tracker.getLineInformation(i);
 				int start= region.getOffset();
 				int end= start + region.getLength();
 				String line= code.substring(start, end);
-				
+
 				if (i == 0) {  // no indent for first line (contained in the formatted string)
 					buf.append(line);
 				} else { // no new line after last line
 					buf.append(lineDelim);
-					buf.append(newIndentString); 
+					buf.append(newIndentString);
 					buf.append(trimIndent(line, indentUnitsToRemove, tabWidth, indentWidth));
 				}
 			}
@@ -302,11 +302,11 @@ public final class IndentManipulation {
 
 	/**
 	 * Returns the text edits retrieved after changing the indentation of a, possible multi-line, code string.
-	 * 
+	 *
 	 * <p>The given number of indent units is removed, and a new indent string is added.</p>
 	 * <p>The first line of the code will not be changed (It is considered to have no indent as it might start in
 	 * the middle of a line).</p>
-	 * 
+	 *
 	 * @param source The code to change the indent of
 	 * @param indentUnitsToRemove the number of indent units to remove from each line (except the first) of the given code
 	 * @param tabWidth the size of one tab in space equivalents
@@ -326,7 +326,7 @@ public final class IndentManipulation {
 		if (tabWidth < 0 || indentWidth <= 0 || source == null || indentUnitsToRemove < 0 || newIndentString == null) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		ArrayList result= new ArrayList();
 		try {
 			ILineTracker tracker= new DefaultLineTracker();
@@ -351,16 +351,16 @@ public final class IndentManipulation {
 		}
 		return (ReplaceEdit[])result.toArray(new ReplaceEdit[result.size()]);
 	}
-	
+
 	/*
 	 * Returns the index where the indent of the given size ends.
 	 * Returns <code>-1<code> if the line isn't prefixed with an indent of
 	 * the given number of indents.
 	 */
 	private static int indexOfIndent(CharSequence line, int numberOfIndentUnits, int tabWidth, int indentWidth) {
-		
+
 		int spaceEquivalents= numberOfIndentUnits * indentWidth;
-		
+
 		int size= line.length();
 		int result= -1;
 		int blanks= 0;
@@ -380,13 +380,13 @@ public final class IndentManipulation {
 			return -1;
 		return result + 1;
 	}
-	
+
 	/**
 	 * Returns the tab width as configured in the given map.
 	 * <p>Use {@link org.eclipse.jdt.core.IJavaProject#getOptions(boolean)} to get the most current project options.</p>
-	 * 
+	 *
 	 * @param options the map to get the formatter settings from.
-	 * 
+	 *
 	 * @return the tab width
 	 * @exception IllegalArgumentException if the given <code>options</code> is null
 	 */
@@ -396,13 +396,13 @@ public final class IndentManipulation {
 		}
 		return getIntValue(options, DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, 4);
 	}
-	
+
 	/**
 	 * Returns the tab width as configured in the given map.
 	 * <p>Use {@link org.eclipse.jdt.core.IJavaProject#getOptions(boolean)} to get the most current project options.</p>
-	 * 
+	 *
 	 * @param options the map to get the formatter settings from
-	 * 
+	 *
 	 * @return the indent width
 	 * @exception IllegalArgumentException if the given <code>options</code> is null
 	 */
@@ -417,7 +417,7 @@ public final class IndentManipulation {
 		}
 		return tabWidth;
 	}
-	
+
 	private static int getIntValue(Map options, String key, int def) {
 		try {
 			return Integer.parseInt((String) options.get(key));

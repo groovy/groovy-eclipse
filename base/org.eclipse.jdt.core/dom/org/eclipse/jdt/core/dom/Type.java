@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
 package org.eclipse.jdt.core.dom;
 
 /**
- * Abstract base class of all type AST node types. A type node represents a 
+ * Abstract base class of all type AST node types. A type node represents a
  * reference to a primitive type (including void), to an array type, or to a
  * simple named type (or type variable), to a qualified type, to a
  * parameterized type, or to a wildcard type. Note that not all of these
@@ -46,31 +46,31 @@ package org.eclipse.jdt.core.dom;
  * QualifiedType:
  *    Type <b>.</b> SimpleName
  * WildcardType:
- *    <b>?</b> [ ( <b>extends</b> | <b>super</b>) Type ] 
+ *    <b>?</b> [ ( <b>extends</b> | <b>super</b>) Type ]
  * </pre>
  * </p>
- * 
+ *
  * @since 2.0
  */
 public abstract class Type extends ASTNode {
-	
+
 	/**
 	 * Creates a new AST node for a type owned by the given AST.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	Type(AST ast) {
 		super(ast);
 	}
-	
+
 	/**
 	 * Returns whether this type is a primitive type
-	 * (<code>PrimitiveType</code>). 
-	 * 
-	 * @return <code>true</code> if this is a primitive type, and 
+	 * (<code>PrimitiveType</code>).
+	 *
+	 * @return <code>true</code> if this is a primitive type, and
 	 *    <code>false</code> otherwise
 	 */
 	public final boolean isPrimitiveType() {
@@ -78,10 +78,10 @@ public abstract class Type extends ASTNode {
 	}
 
 	/**
-	 * Returns whether this type is a simple type 
+	 * Returns whether this type is a simple type
 	 * (<code>SimpleType</code>).
-	 * 
-	 * @return <code>true</code> if this is a simple type, and 
+	 *
+	 * @return <code>true</code> if this is a simple type, and
 	 *    <code>false</code> otherwise
 	 */
 	public final boolean isSimpleType() {
@@ -91,8 +91,8 @@ public abstract class Type extends ASTNode {
 	/**
 	 * Returns whether this type is an array type
 	 * (<code>ArrayType</code>).
-	 * 
-	 * @return <code>true</code> if this is an array type, and 
+	 *
+	 * @return <code>true</code> if this is an array type, and
 	 *    <code>false</code> otherwise
 	 */
 	public final boolean isArrayType() {
@@ -101,9 +101,9 @@ public abstract class Type extends ASTNode {
 
 	/**
 	 * Returns whether this type is a parameterized type
-	 * (<code>ParameterizedType</code>). 
-	 * 
-	 * @return <code>true</code> if this is a parameterized type, and 
+	 * (<code>ParameterizedType</code>).
+	 *
+	 * @return <code>true</code> if this is a parameterized type, and
 	 *    <code>false</code> otherwise
 	 * @since 3.1
 	 */
@@ -113,7 +113,7 @@ public abstract class Type extends ASTNode {
 
 	/**
 	 * Returns whether this type is a qualified type
-	 * (<code>QualifiedType</code>). 
+	 * (<code>QualifiedType</code>).
 	 * <p>
 	 * Note that a type like "A.B" can be represented either of two ways:
 	 * <ol>
@@ -124,14 +124,14 @@ public abstract class Type extends ASTNode {
 	 * <code>SimpleType(QualifiedName(SimpleName("A"),SimpleName("B")))</code>
 	 * </li>
 	 * </ol>
-	 * The first form is preferred when "A" is known to be a type. However, a 
+	 * The first form is preferred when "A" is known to be a type. However, a
 	 * parser cannot always determine this. Clients should be prepared to handle
 	 * either rather than make assumptions. (Note also that the first form
-	 * became possible as of JLS3; only the second form existed in the 
+	 * became possible as of JLS3; only the second form existed in the
 	 * JLS2 API.)
 	 * </p>
-	 * 
-	 * @return <code>true</code> if this is a qualified type, and 
+	 *
+	 * @return <code>true</code> if this is a qualified type, and
 	 *    <code>false</code> otherwise
 	 * @since 3.1
 	 */
@@ -143,11 +143,11 @@ public abstract class Type extends ASTNode {
 	 * Returns whether this type is a wildcard type
 	 * (<code>WildcardType</code>).
 	 * <p>
-	 * Note that a wildcard type is only meaningful as a 
+	 * Note that a wildcard type is only meaningful as a
 	 * type argument of a <code>ParameterizedType</code> node.
 	 * </p>
-	 * 
-	 * @return <code>true</code> if this is a wildcard type, and 
+	 *
+	 * @return <code>true</code> if this is a wildcard type, and
 	 *    <code>false</code> otherwise
 	 * @since 3.1
 	 */
@@ -161,10 +161,10 @@ public abstract class Type extends ASTNode {
 	 * Note that bindings are generally unavailable unless requested when the
 	 * AST is being built.
 	 * </p>
-	 * 
-	 * @return the type binding, or <code>null</code> if the binding cannot be 
+	 *
+	 * @return the type binding, or <code>null</code> if the binding cannot be
 	 *    resolved
-	 */	
+	 */
 	public final ITypeBinding resolveBinding() {
 		return this.ast.getBindingResolver().resolveType(this);
 	}

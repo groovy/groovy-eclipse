@@ -58,7 +58,7 @@ public class CreateImportOperation extends CreateElementInCUOperation {
 	 * The name of the import to be created.
 	 */
 	protected String importName;
-	
+
 	/*
 	 * The flags of the import to be created (either Flags#AccDefault or Flags#AccStatic)
 	 */
@@ -92,7 +92,7 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 			return null;
 		}
 	}
-	
+
 	AST ast = this.cuAST.getAST();
 	ImportDeclaration importDeclaration = ast.newImportDeclaration();
 	importDeclaration.setStatic(Flags.isStatic(this.flags));
@@ -118,7 +118,7 @@ protected IJavaElement generateResultHandle() {
  * @see CreateElementInCUOperation#getMainTaskName()
  */
 public String getMainTaskName(){
-	return Messages.operation_createImportsProgress; 
+	return Messages.operation_createImportsProgress;
 }
 /**
  * Sets the correct position for the new import:<ul>

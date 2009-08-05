@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,11 +19,11 @@ public abstract class FlowInfo {
 	public final static int REACHABLE = 0;
 	public final static int UNREACHABLE = 1;
 	public final static int NULL_FLAG_MASK = 2;
-	
+
 	public final static int UNKNOWN = 0;
 	public final static int NULL = 1;
 	public final static int NON_NULL = -1;
-	
+
 	public static final UnconditionalFlowInfo DEAD_END; // Represents a dead branch status of initialization
 	static {
 		DEAD_END = new UnconditionalFlowInfo();
@@ -33,7 +33,7 @@ public abstract class FlowInfo {
 /**
  * Add other inits to this flow info, then return this. The operation semantics
  * are to match as closely as possible the application to this flow info of all
- * the operations that resulted into otherInits. 
+ * the operations that resulted into otherInits.
  * @param otherInits other inits to add to this
  * @return this, modified according to otherInits information
  */
@@ -45,7 +45,7 @@ abstract public FlowInfo addInitializationsFrom(FlowInfo otherInits);
  * semantics are to wave into this flow info the consequences of a possible
  * path into the operations that resulted into otherInits. The fact that this
  * path may be left unexecuted under peculiar conditions results into less
- * specific results than {@link #addInitializationsFrom(FlowInfo) 
+ * specific results than {@link #addInitializationsFrom(FlowInfo)
  * addInitializationsFrom}.
  * @param otherInits other inits to compose over this
  * @return this, modified according to otherInits information
@@ -58,11 +58,11 @@ abstract public FlowInfo addPotentialInitializationsFrom(FlowInfo otherInits);
 	}
 
 	public static FlowInfo conditional(FlowInfo initsWhenTrue, FlowInfo initsWhenFalse){
-
+		if (initsWhenTrue == initsWhenFalse) return initsWhenTrue;
 		// if (initsWhenTrue.equals(initsWhenFalse)) return initsWhenTrue; -- could optimize if #equals is defined
 		return new ConditionalFlowInfo(initsWhenTrue, initsWhenFalse);
 	}
-	
+
 /**
  * Check whether a given local variable is known to be unable to gain a definite
  * non null or definite null status by the use of an enclosing flow info. The
@@ -71,7 +71,7 @@ abstract public FlowInfo addPotentialInitializationsFrom(FlowInfo otherInits);
  * then it won't ever be promoted as definitely null or definitely non null. (It
  * could still get promoted to definite unknown).
  * @param local the variable to ckeck
- * @return true iff this flow info prevents local from being promoted to 
+ * @return true iff this flow info prevents local from being promoted to
  *         definite non null or definite null against an enclosing flow info
  */
 public boolean cannotBeDefinitelyNullOrNonNull(LocalVariableBinding local) {
@@ -80,7 +80,7 @@ public boolean cannotBeDefinitelyNullOrNonNull(LocalVariableBinding local) {
 }
 
 /**
- * Check whether a given local variable is known to be non null, either because 
+ * Check whether a given local variable is known to be non null, either because
  * it is definitely non null, or because is has been tested against non null.
  * @param local the variable to ckeck
  * @return true iff local cannot be null for this flow info
@@ -110,11 +110,11 @@ public boolean canOnlyBeNull(LocalVariableBinding local) {
 		info.maxFieldCount = maxFieldCount;
 		return info;
 	}
-	
+
 /**
  * Return the flow info that would result from the path associated to the
  * value false for the condition expression that generated this flow info.
- * May be this flow info if it is not an instance of {@link 
+ * May be this flow info if it is not an instance of {@link
  * ConditionalFlowInfo}. May have a side effect on subparts of this flow
  * info (subtrees get merged).
  * @return the flow info associated to the false branch of the condition
@@ -125,7 +125,7 @@ abstract public FlowInfo initsWhenFalse();
 /**
  * Return the flow info that would result from the path associated to the
  * value true for the condition expression that generated this flow info.
- * May be this flow info if it is not an instance of {@link 
+ * May be this flow info if it is not an instance of {@link
  * ConditionalFlowInfo}. May have a side effect on subparts of this flow
  * info (subtrees get merged).
  * @return the flow info associated to the true branch of the condition
@@ -136,7 +136,7 @@ abstract public FlowInfo initsWhenFalse();
 	/**
 	 * Check status of definite assignment for a field.
 	 */
-	 abstract public boolean isDefinitelyAssigned(FieldBinding field);   
+	 abstract public boolean isDefinitelyAssigned(FieldBinding field);
 
 	/**
 	 * Check status of definite assignment for a local.
@@ -167,35 +167,35 @@ public abstract boolean isDefinitelyUnknown(LocalVariableBinding local);
 	/**
 	 * Check status of potential assignment for a field.
 	 */
-	 abstract public boolean isPotentiallyAssigned(FieldBinding field);   
+	 abstract public boolean isPotentiallyAssigned(FieldBinding field);
 
 	/**
 	 * Check status of potential assignment for a local variable.
 	 */
 
-	 abstract public boolean isPotentiallyAssigned(LocalVariableBinding field);   
+	 abstract public boolean isPotentiallyAssigned(LocalVariableBinding field);
 
 /**
- * Check status of potential null assignment for a local. Return true if there 
+ * Check status of potential null assignment for a local. Return true if there
  * is a reasonable expectation that the variable be non null at this point.
  * @param local LocalVariableBinding - the binding for the checked local
- * @return true if there is a reasonable expectation that local be non null at 
+ * @return true if there is a reasonable expectation that local be non null at
  * this point
  */
 public abstract boolean isPotentiallyNonNull(LocalVariableBinding local);
-	
+
 /**
- * Check status of potential null assignment for a local. Return true if there 
- * is a reasonable expectation that the variable be null at this point. This 
+ * Check status of potential null assignment for a local. Return true if there
+ * is a reasonable expectation that the variable be null at this point. This
  * includes the protected null case, so as to augment diagnostics, but does not
  * really check that someone deliberately assigned to null on any specific
  * path
  * @param local LocalVariableBinding - the binding for the checked local
- * @return true if there is a reasonable expectation that local be null at 
+ * @return true if there is a reasonable expectation that local be null at
  * this point
  */
 public abstract boolean isPotentiallyNull(LocalVariableBinding local);
-	
+
 /**
  * Return true if the given local may have been assigned to an unknown value.
  * @param local the local to check
@@ -223,13 +223,13 @@ public abstract boolean isProtectedNull(LocalVariableBinding local);
  * @param local the checked local variable
  */
 abstract public void markAsComparedEqualToNonNull(LocalVariableBinding local);
-	
+
 /**
  * Record that a local variable got checked to be null.
  * @param local the checked local variable
  */
 abstract public void markAsComparedEqualToNull(LocalVariableBinding local);
-	
+
 	/**
 	 * Record a field got definitely assigned.
 	 */
@@ -259,41 +259,41 @@ abstract public void markAsDefinitelyUnknown(LocalVariableBinding local);
  * Merge branches using optimized boolean conditions
  */
 public static UnconditionalFlowInfo mergedOptimizedBranches(
-		FlowInfo initsWhenTrue, boolean isOptimizedTrue, 
-		FlowInfo initsWhenFalse, boolean isOptimizedFalse, 
+		FlowInfo initsWhenTrue, boolean isOptimizedTrue,
+		FlowInfo initsWhenFalse, boolean isOptimizedFalse,
 		boolean allowFakeDeadBranch) {
 	UnconditionalFlowInfo mergedInfo;
 	if (isOptimizedTrue){
 		if (initsWhenTrue == FlowInfo.DEAD_END && allowFakeDeadBranch) {
 			mergedInfo = initsWhenFalse.setReachMode(FlowInfo.UNREACHABLE).
 				unconditionalInits();
-		} 
+		}
 		else {
-			mergedInfo = 
+			mergedInfo =
 				initsWhenTrue.addPotentialInitializationsFrom(initsWhenFalse.
 					nullInfoLessUnconditionalCopy()).
 				unconditionalInits();
 		}
-	} 
+	}
 	else if (isOptimizedFalse) {
 		if (initsWhenFalse == FlowInfo.DEAD_END && allowFakeDeadBranch) {
 			mergedInfo = initsWhenTrue.setReachMode(FlowInfo.UNREACHABLE).
 				unconditionalInits();
-		} 
+		}
 		else {
-			mergedInfo = 
+			mergedInfo =
 				initsWhenFalse.addPotentialInitializationsFrom(initsWhenTrue.
 					nullInfoLessUnconditionalCopy()).
 				unconditionalInits();
 		}
-	} 
+	}
 	else {
 		mergedInfo = initsWhenTrue.
 			mergedWith(initsWhenFalse.unconditionalInits());
 	}
 	return mergedInfo;
 }
-	
+
 /**
  * Return REACHABLE if this flow info is reachable, UNREACHABLE
  * else.
@@ -303,12 +303,12 @@ public static UnconditionalFlowInfo mergedOptimizedBranches(
 public int reachMode() {
 	return this.tagBits & UNREACHABLE;
 }
-	
+
 /**
  * Return a flow info that carries the same information as the result of
- * {@link #initsWhenTrue() initsWhenTrue}, but warrantied to be different 
+ * {@link #initsWhenTrue() initsWhenTrue}, but warrantied to be different
  * from this.<br>
- * Caveat: side effects on the result may affect components of this. 
+ * Caveat: side effects on the result may affect components of this.
  * @return the result of initsWhenTrue or a copy of it
  */
 abstract public FlowInfo safeInitsWhenTrue();
@@ -321,10 +321,10 @@ abstract public FlowInfo safeInitsWhenTrue();
 abstract public FlowInfo setReachMode(int reachMode);
 
 /**
- * Return the intersection of this and otherInits, that is 
+ * Return the intersection of this and otherInits, that is
  * one of:<ul>
  *   <li>the receiver updated in the following way:<ul>
- *     <li>intersection of definitely assigned variables, 
+ *     <li>intersection of definitely assigned variables,
  *     <li>union of potentially assigned variables,
  *     <li>similar operations for null,</ul>
  *   <li>or the receiver or otherInits if the other one is non
@@ -362,7 +362,7 @@ abstract public UnconditionalFlowInfo unconditionalCopy();
 
 /**
  * Return a new flow info that holds the same information as this would after
- * a call to {@link #unconditionalInits() unconditionalInits} followed by the 
+ * a call to {@link #unconditionalInits() unconditionalInits} followed by the
  * erasure of fields specific information, but leaving this flow info unaffected.
  * @return a new flow info carrying the unconditional flow info for local variables
  */
@@ -372,7 +372,7 @@ abstract public UnconditionalFlowInfo unconditionalFieldLessCopy();
  * Return a flow info that merges the possible paths of execution described by
  * this flow info. In case of an unconditional flow info, return this. In case
  * of a conditional flow info, merge branches recursively. Caveat: this may
- * be affected, and modifying the result may affect this. 
+ * be affected, and modifying the result may affect this.
  * @return a flow info that merges the possible paths of execution described by
  * 			this
  */
@@ -380,8 +380,8 @@ abstract public UnconditionalFlowInfo unconditionalInits();
 
 /**
  * Return a new flow info that holds the same information as this would after
- * a call to {@link #unconditionalInits() unconditionalInits}, but leaving 
- * this info unaffected. Side effects on the result might affect this though 
+ * a call to {@link #unconditionalInits() unconditionalInits}, but leaving
+ * this info unaffected. Side effects on the result might affect this though
  * (consider it as read only).
  * @return a flow info carrying this unconditional flow info
  */

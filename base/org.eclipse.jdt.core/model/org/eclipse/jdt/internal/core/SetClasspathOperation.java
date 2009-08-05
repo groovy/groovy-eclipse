@@ -10,7 +10,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import org.eclipse.core.resources.IResourceRuleFactory;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.MultiRule;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatus;
@@ -28,7 +32,7 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 	IClasspathEntry[] newRawClasspath;
 	IPath newOutputLocation;
 	JavaProject project;
-			
+
 	/**
 	 * When executed, this operation sets the raw classpath and output location of the given project.
 	 */
@@ -52,17 +56,31 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 		try {
 			// set raw classpath and null out resolved info
 			PerProjectInfo perProjectInfo = this.project.getPerProjectInfo();
-			ClasspathChange classpathChange = perProjectInfo.setClasspath(this.newRawClasspath, this.newOutputLocation, JavaModelStatus.VERIFIED_OK/*format is ok*/, null, null, null, null);
-			
+			ClasspathChange classpathChange = perProjectInfo.setRawClasspath(this.newRawClasspath, this.newOutputLocation, JavaModelStatus.VERIFIED_OK/*format is ok*/);
+
 			// if needed, generate delta, update project ref, create markers, ...
 			classpathChanged(classpathChange);
-			
+
 			// write .classpath file
 			if (this.canChangeResources && perProjectInfo.writeAndCacheClasspath(this.project, this.newRawClasspath, this.newOutputLocation))
 				setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
-		} finally {		
+		} finally {
 			done();
 		}
+	}
+	
+	protected ISchedulingRule getSchedulingRule() {
+		if (this.canChangeResources) {
+			IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
+			return new MultiRule(new ISchedulingRule[] {
+				// use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
+				ruleFactory.modifyRule(this.project.getProject()),
+				
+				// and external project modification rule in case the external folders are modified
+				ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject())
+			});
+		}
+		return super.getSchedulingRule();
 	}
 
 	public String toString(){

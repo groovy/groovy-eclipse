@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,23 +21,25 @@ public class SyntheticMethodBinding extends MethodBinding {
 	public FieldBinding targetWriteField;		// write access to a field
 	public MethodBinding targetMethod;			// method or constructor
 	public TypeBinding targetEnumType; 			// enum type
-	
+
 	public int purpose;
 
 	public final static int FieldReadAccess = 1; 		// field read
 	public final static int FieldWriteAccess = 2; 		// field write
-	public final static int MethodAccess = 3; 		// normal method 
-	public final static int ConstructorAccess = 4; 	// constructor
-	public final static int SuperMethodAccess = 5; // super method
-	public final static int BridgeMethod = 6; // bridge method
-	public final static int EnumValues = 7; // enum #values()
-	public final static int EnumValueOf = 8; // enum #valueOf(String)
-	public final static int SwitchTable = 9; // switch table method
+	public final static int SuperFieldReadAccess = 3; // super field read
+	public final static int SuperFieldWriteAccess = 4; // super field write
+	public final static int MethodAccess = 5; 		// normal method
+	public final static int ConstructorAccess = 6; 	// constructor
+	public final static int SuperMethodAccess = 7; // super method
+	public final static int BridgeMethod = 8; // bridge method
+	public final static int EnumValues = 9; // enum #values()
+	public final static int EnumValueOf = 10; // enum #valueOf(String)
+	public final static int SwitchTable = 11; // switch table method
 
 	public int sourceStart = 0; // start position of the matching declaration
 	public int index; // used for sorting access methods in the class file
-	
-	public SyntheticMethodBinding(FieldBinding targetField, boolean isReadAccess, ReferenceBinding declaringClass) {
+
+	public SyntheticMethodBinding(FieldBinding targetField, boolean isReadAccess, boolean isSuperAccess, ReferenceBinding declaringClass) {
 
 		this.modifiers = ClassFileConstants.AccDefault | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic;
 		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
@@ -55,7 +57,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				this.parameters[0] = declaringSourceType;
 			}
 			this.targetReadField = targetField;
-			this.purpose = SyntheticMethodBinding.FieldReadAccess;
+			this.purpose = isSuperAccess ? SyntheticMethodBinding.SuperFieldReadAccess : SyntheticMethodBinding.FieldReadAccess;
 		} else {
 			this.returnType = TypeBinding.VOID;
 			if (targetField.isStatic()) {
@@ -67,11 +69,11 @@ public class SyntheticMethodBinding extends MethodBinding {
 				this.parameters[1] = targetField.type;
 			}
 			this.targetWriteField = targetField;
-			this.purpose = SyntheticMethodBinding.FieldWriteAccess;
+			this.purpose = isSuperAccess ? SyntheticMethodBinding.SuperFieldWriteAccess : SyntheticMethodBinding.FieldWriteAccess;
 		}
 		this.thrownExceptions = Binding.NO_EXCEPTIONS;
 		this.declaringClass = declaringSourceType;
-	
+
 		// check for method collision
 		boolean needRename;
 		do {
@@ -83,7 +85,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				if ((range = ReferenceBinding.binarySearch(this.selector, methods)) >= 0) {
 					int paramCount = this.parameters.length;
 					nextMethod: for (int imethod = (int)range, end = (int)(range >> 32); imethod <= end; imethod++) {
-						MethodBinding method = methods[imethod];			
+						MethodBinding method = methods[imethod];
 						if (method.parameters.length == paramCount) {
 							TypeBinding[] toMatch = method.parameters;
 							for (int i = 0; i < paramCount; i++) {
@@ -95,12 +97,12 @@ public class SyntheticMethodBinding extends MethodBinding {
 							break check;
 						}
 					}
-				}				
+				}
 				// check for collision with synthetic accessors
 				if (knownAccessMethods != null) {
 					for (int i = 0, length = knownAccessMethods.length; i < length; i++) {
 						if (knownAccessMethods[i] == null) continue;
-						if (CharOperation.equals(this.selector, knownAccessMethods[i].selector) && this.areParametersEqual(methods[i])) {
+						if (CharOperation.equals(this.selector, knownAccessMethods[i].selector) && areParametersEqual(methods[i])) {
 							needRename = true;
 							break check;
 						}
@@ -108,10 +110,10 @@ public class SyntheticMethodBinding extends MethodBinding {
 				}
 			}
 			if (needRename) { // retry with a selector postfixed by a growing methodId
-				this.setSelector(CharOperation.concat(TypeConstants.SYNTHETIC_ACCESS_METHOD_PREFIX, String.valueOf(++methodId).toCharArray()));
+				setSelector(CharOperation.concat(TypeConstants.SYNTHETIC_ACCESS_METHOD_PREFIX, String.valueOf(++methodId).toCharArray()));
 			}
 		} while (needRename);
-	
+
 		// retrieve sourceStart position for the target field for line number attributes
 		FieldDeclaration[] fieldDecls = declaringSourceType.scope.referenceContext.fields;
 		if (fieldDecls != null) {
@@ -122,7 +124,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				}
 			}
 		}
-	
+
 	/* did not find the target field declaration - it is a synthetic one
 		public class A {
 			public class B {
@@ -135,7 +137,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 			public static void main(String args[]) {
 				new A().new B().new C().foo();
 			}
-		}	
+		}
 	*/
 		// We now at this point - per construction - it is for sure an enclosing instance, we are going to
 		// show the target field type declaration location.
@@ -157,7 +159,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 		this.purpose = SyntheticMethodBinding.SwitchTable;
 		this.thrownExceptions = Binding.NO_EXCEPTIONS;
 		this.declaringClass = declaringSourceType;
-  
+
 		if (declaringSourceType.isStrictfp()) {
 			this.modifiers |= ClassFileConstants.AccStrictfp;
 		}
@@ -172,7 +174,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				if ((range = ReferenceBinding.binarySearch(this.selector, methods)) >= 0) {
 					int paramCount = this.parameters.length;
 					nextMethod: for (int imethod = (int)range, end = (int)(range >> 32); imethod <= end; imethod++) {
-						MethodBinding method = methods[imethod];			
+						MethodBinding method = methods[imethod];
 						if (method.parameters.length == paramCount) {
 							TypeBinding[] toMatch = method.parameters;
 							for (int i = 0; i < paramCount; i++) {
@@ -184,12 +186,12 @@ public class SyntheticMethodBinding extends MethodBinding {
 							break check;
 						}
 					}
-				}						
+				}
 				// check for collision with synthetic accessors
 				if (knownAccessMethods != null) {
 					for (int i = 0, length = knownAccessMethods.length; i < length; i++) {
 						if (knownAccessMethods[i] == null) continue;
-						if (CharOperation.equals(this.selector, knownAccessMethods[i].selector) && this.areParametersEqual(methods[i])) {
+						if (CharOperation.equals(this.selector, knownAccessMethods[i].selector) && areParametersEqual(methods[i])) {
 							needRename = true;
 							break check;
 						}
@@ -197,7 +199,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				}
 			}
 			if (needRename) { // retry with a selector postfixed by a growing methodId
-				this.setSelector(CharOperation.concat(selector, String.valueOf(++methodId).toCharArray()));
+				setSelector(CharOperation.concat(selector, String.valueOf(++methodId).toCharArray()));
 			}
 		} while (needRename);
 
@@ -205,13 +207,13 @@ public class SyntheticMethodBinding extends MethodBinding {
 		// show the target field type declaration location.
 		this.sourceStart = declaringSourceType.scope.referenceContext.sourceStart; // use the target declaring class name position instead
 	}
-	
-	public SyntheticMethodBinding(MethodBinding targetMethod, boolean isSuperAccess, ReferenceBinding receiverType) {
-	
+
+	public SyntheticMethodBinding(MethodBinding targetMethod, boolean isSuperAccess, ReferenceBinding declaringClass) {
+
 		if (targetMethod.isConstructor()) {
-			this.initializeConstructorAccessor(targetMethod);
+			initializeConstructorAccessor(targetMethod);
 		} else {
-			this.initializeMethodAccessor(targetMethod, isSuperAccess, receiverType);
+			initializeMethodAccessor(targetMethod, isSuperAccess, declaringClass);
 		}
 	}
 
@@ -219,7 +221,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 	 * Construct a bridge method
 	 */
 	public SyntheticMethodBinding(MethodBinding overridenMethodToBridge, MethodBinding targetMethod, SourceTypeBinding declaringClass) {
-		
+
 	    this.declaringClass = declaringClass;
 	    this.selector = overridenMethodToBridge.selector;
 	    // amongst other, clear the AccGenericSignature, so as to ensure no remains of original inherited persist (101794)
@@ -233,9 +235,9 @@ public class SyntheticMethodBinding extends MethodBinding {
 	    this.purpose = SyntheticMethodBinding.BridgeMethod;
 		SyntheticMethodBinding[] knownAccessMethods = declaringClass.syntheticMethods();
 		int methodId = knownAccessMethods == null ? 0 : knownAccessMethods.length;
-		this.index = methodId;	    
+		this.index = methodId;
 	}
-	
+
 	/**
 	 * Construct enum special methods: values or valueOf methods
 	 */
@@ -268,30 +270,29 @@ public class SyntheticMethodBinding extends MethodBinding {
 	 * collision with an existing constructor, then add again an extra argument (declaringClass again).
 	 */
 	 public void initializeConstructorAccessor(MethodBinding accessedConstructor) {
-	
+
 		this.targetMethod = accessedConstructor;
 		this.modifiers = ClassFileConstants.AccDefault | ClassFileConstants.AccSynthetic;
 		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
-		SourceTypeBinding sourceType = (SourceTypeBinding) accessedConstructor.declaringClass; 
-		SyntheticMethodBinding[] knownSyntheticMethods = 
-			sourceType.syntheticMethods(); 
+		SourceTypeBinding sourceType = (SourceTypeBinding) accessedConstructor.declaringClass;
+		SyntheticMethodBinding[] knownSyntheticMethods = sourceType.syntheticMethods();
 		this.index = knownSyntheticMethods == null ? 0 : knownSyntheticMethods.length;
-	
+
 		this.selector = accessedConstructor.selector;
 		this.returnType = accessedConstructor.returnType;
 		this.purpose = SyntheticMethodBinding.ConstructorAccess;
 		this.parameters = new TypeBinding[accessedConstructor.parameters.length + 1];
 		System.arraycopy(
-			accessedConstructor.parameters, 
-			0, 
-			this.parameters, 
-			0, 
-			accessedConstructor.parameters.length); 
-		this.parameters[accessedConstructor.parameters.length] = 
-			accessedConstructor.declaringClass; 
+			accessedConstructor.parameters,
+			0,
+			this.parameters,
+			0,
+			accessedConstructor.parameters.length);
+		this.parameters[accessedConstructor.parameters.length] =
+			accessedConstructor.declaringClass;
 		this.thrownExceptions = accessedConstructor.thrownExceptions;
 		this.declaringClass = sourceType;
-	
+
 		// check for method collision
 		boolean needRename;
 		do {
@@ -301,7 +302,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				MethodBinding[] methods = sourceType.methods();
 				for (int i = 0, length = methods.length; i < length; i++) {
 					if (CharOperation.equals(this.selector, methods[i].selector)
-						&& this.areParametersEqual(methods[i])) {
+						&& areParametersEqual(methods[i])) {
 						needRename = true;
 						break check;
 					}
@@ -312,7 +313,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 						if (knownSyntheticMethods[i] == null)
 							continue;
 						if (CharOperation.equals(this.selector, knownSyntheticMethods[i].selector)
-							&& this.areParametersEqual(knownSyntheticMethods[i])) {
+								&& areParametersEqual(knownSyntheticMethods[i])) {
 							needRename = true;
 							break check;
 						}
@@ -322,18 +323,18 @@ public class SyntheticMethodBinding extends MethodBinding {
 			if (needRename) { // retry with a new extra argument
 				int length = this.parameters.length;
 				System.arraycopy(
-					this.parameters, 
-					0, 
-					this.parameters = new TypeBinding[length + 1], 
-					0, 
-					length); 
+					this.parameters,
+					0,
+					this.parameters = new TypeBinding[length + 1],
+					0,
+					length);
 				this.parameters[length] = this.declaringClass;
 			}
 		} while (needRename);
-	
+
 		// retrieve sourceStart position for the target method for line number attributes
-		AbstractMethodDeclaration[] methodDecls = 
-			sourceType.scope.referenceContext.methods; 
+		AbstractMethodDeclaration[] methodDecls =
+			sourceType.scope.referenceContext.methods;
 		if (methodDecls != null) {
 			for (int i = 0, length = methodDecls.length; i < length; i++) {
 				if (methodDecls[i].binding == accessedConstructor) {
@@ -348,7 +349,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 	 * An method accessor is a method with an access$N selector, where N is incremented in case of collisions.
 	 */
 	public void initializeMethodAccessor(MethodBinding accessedMethod, boolean isSuperAccess, ReferenceBinding receiverType) {
-		
+
 		this.targetMethod = accessedMethod;
 		this.modifiers = ClassFileConstants.AccDefault | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic;
 		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
@@ -356,11 +357,11 @@ public class SyntheticMethodBinding extends MethodBinding {
 		SyntheticMethodBinding[] knownAccessMethods = declaringSourceType.syntheticMethods();
 		int methodId = knownAccessMethods == null ? 0 : knownAccessMethods.length;
 		this.index = methodId;
-	
+
 		this.selector = CharOperation.concat(TypeConstants.SYNTHETIC_ACCESS_METHOD_PREFIX, String.valueOf(methodId).toCharArray());
 		this.returnType = accessedMethod.returnType;
 		this.purpose = isSuperAccess ? SyntheticMethodBinding.SuperMethodAccess : SyntheticMethodBinding.MethodAccess;
-		
+
 		if (accessedMethod.isStatic()) {
 			this.parameters = accessedMethod.parameters;
 		} else {
@@ -370,7 +371,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 		}
 		this.thrownExceptions = accessedMethod.thrownExceptions;
 		this.declaringClass = declaringSourceType;
-	
+
 		// check for method collision
 		boolean needRename;
 		do {
@@ -379,7 +380,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				// check for collision with known methods
 				MethodBinding[] methods = declaringSourceType.methods();
 				for (int i = 0, length = methods.length; i < length; i++) {
-					if (CharOperation.equals(this.selector, methods[i].selector) && this.areParametersEqual(methods[i])) {
+					if (CharOperation.equals(this.selector, methods[i].selector) && areParametersEqual(methods[i])) {
 						needRename = true;
 						break check;
 					}
@@ -388,7 +389,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				if (knownAccessMethods != null) {
 					for (int i = 0, length = knownAccessMethods.length; i < length; i++) {
 						if (knownAccessMethods[i] == null) continue;
-						if (CharOperation.equals(this.selector, knownAccessMethods[i].selector) && this.areParametersEqual(knownAccessMethods[i])) {
+						if (CharOperation.equals(this.selector, knownAccessMethods[i].selector) && areParametersEqual(knownAccessMethods[i])) {
 							needRename = true;
 							break check;
 						}
@@ -396,10 +397,10 @@ public class SyntheticMethodBinding extends MethodBinding {
 				}
 			}
 			if (needRename) { // retry with a selector & a growing methodId
-				this.setSelector(CharOperation.concat(TypeConstants.SYNTHETIC_ACCESS_METHOD_PREFIX, String.valueOf(++methodId).toCharArray()));
+				setSelector(CharOperation.concat(TypeConstants.SYNTHETIC_ACCESS_METHOD_PREFIX, String.valueOf(++methodId).toCharArray()));
 			}
 		} while (needRename);
-	
+
 		// retrieve sourceStart position for the target method for line number attributes
 		AbstractMethodDeclaration[] methodDecls = declaringSourceType.scope.referenceContext.methods;
 		if (methodDecls != null) {

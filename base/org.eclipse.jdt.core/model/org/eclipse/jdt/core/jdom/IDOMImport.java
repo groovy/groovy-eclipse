@@ -14,19 +14,19 @@ package org.eclipse.jdt.core.jdom;
  * Represents an import declaration.
  * The corresponding syntactic unit is ImportDeclaration (JLS2 7.5).
  * An import has no children and its parent is a compilation unit.
- * 
+ *
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface IDOMImport extends IDOMNode {
 /**
  * The <code>IDOMImport</code> refinement of this <code>IDOMNode</code>
- * method returns the name of this import. The syntax for an import name 
+ * method returns the name of this import. The syntax for an import name
  * corresponds to a fully qualified type name, or to an on-demand package name
  * as defined by ImportDeclaration (JLS2 7.5).
- * 
+ *
  * @return  the name of this import
  */
 public String getName();
@@ -58,7 +58,7 @@ void setFlags(int flags);
 
 /**
  * The <code>IDOMImport</code> refinement of this <code>IDOMNode</code>
- * method sets the name of this import. The syntax for an import name 
+ * method sets the name of this import. The syntax for an import name
  * corresponds to a fully qualified type name, or to an on-demand package name
  * as defined by ImportDeclaration (JLS2 7.5).
  *

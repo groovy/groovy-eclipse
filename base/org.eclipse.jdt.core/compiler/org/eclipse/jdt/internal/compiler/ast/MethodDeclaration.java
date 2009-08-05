@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,10 +28,10 @@ import org.eclipse.jdt.internal.compiler.problem.AbortMethod;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 
 public class MethodDeclaration extends AbstractMethodDeclaration {
-	
+
 	public TypeReference returnType;
 	public TypeParameter[] typeParameters;
-	
+
 	/**
 	 * MethodDeclaration constructor comment.
 	 */
@@ -39,26 +39,24 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 		super(compilationResult);
 	}
 
-	public void analyseCode(
-		ClassScope classScope,
-		InitializationFlowContext initializationContext,
-		FlowInfo flowInfo) {
-
+	public void analyseCode(ClassScope classScope, InitializationFlowContext initializationContext, FlowInfo flowInfo) {
 		// starting of the code analysis for methods
 		if (this.ignoreFurtherInvestigation)
 			return;
 		try {
 			if (this.binding == null)
 				return;
-				
-			if (!this.binding.isUsed() && 
-					(this.binding.isPrivate() 
-						|| (((this.binding.modifiers & (ExtraCompilerModifiers.AccOverriding|ExtraCompilerModifiers.AccImplementing)) == 0) && this.binding.declaringClass.isLocalType()))) {
-				if (!classScope.referenceCompilationUnit().compilationResult.hasSyntaxError) {
-					this.scope.problemReporter().unusedPrivateMethod(this);
+
+			if (!this.binding.isUsed() && !this.binding.isAbstract()) {
+				if (this.binding.isPrivate()
+					|| (((this.binding.modifiers & (ExtraCompilerModifiers.AccOverriding|ExtraCompilerModifiers.AccImplementing)) == 0)
+						&& this.binding.isOrEnclosedByPrivateType())) {
+					if (!classScope.referenceCompilationUnit().compilationResult.hasSyntaxError) {
+						this.scope.problemReporter().unusedPrivateMethod(this);
+					}
 				}
 			}
-				
+
 			// skip enum implicit methods
 			if (this.binding.declaringClass.isEnum() && (this.selector == TypeConstants.VALUES || this.selector == TypeConstants.VALUEOF))
 				return;
@@ -66,12 +64,13 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 			// may be in a non necessary <clinit> for innerclass with static final constant fields
 			if (this.binding.isAbstract() || this.binding.isNative())
 				return;
-			
+
 			ExceptionHandlingFlowContext methodContext =
 				new ExceptionHandlingFlowContext(
 					initializationContext,
 					this,
 					this.binding.thrownExceptions,
+					null,
 					this.scope,
 					FlowInfo.DEAD_END);
 
@@ -83,13 +82,11 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 			}
 			// propagate to statements
 			if (this.statements != null) {
-				boolean didAlreadyComplain = false;
+				int complaintLevel = (flowInfo.reachMode() & FlowInfo.UNREACHABLE) == 0 ? Statement.NOT_COMPLAINED : Statement.COMPLAINED_FAKE_REACHABLE;
 				for (int i = 0, count = this.statements.length; i < count; i++) {
 					Statement stat = this.statements[i];
-					if (!stat.complainIfUnreachable(flowInfo, this.scope, didAlreadyComplain)) {
+					if ((complaintLevel = stat.complainIfUnreachable(flowInfo, this.scope, complaintLevel)) < Statement.COMPLAINED_UNREACHABLE) {
 						flowInfo = stat.analyseCode(this.scope, methodContext, flowInfo);
-					} else {
-						didAlreadyComplain = true;
 					}
 				}
 			}
@@ -100,7 +97,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 					this.bits |= ASTNode.NeedFreeReturn;
 				}
 			} else {
-				if (flowInfo != FlowInfo.DEAD_END) { 
+				if (flowInfo != FlowInfo.DEAD_END) {
 					this.scope.problemReporter().shouldReturn(returnTypeBinding, this);
 				}
 			}
@@ -137,13 +134,13 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 		if (CharOperation.equals(this.scope.enclosingSourceType().sourceName, this.selector)) {
 			this.scope.problemReporter().methodWithConstructorName(this);
 		}
-		
+
 		if (this.typeParameters != null) {
 			for (int i = 0, length = this.typeParameters.length; i < length; i++) {
 				this.typeParameters[i].resolve(this.scope);
 			}
 		}
-		
+
 		// check @Override annotation
 		final CompilerOptions compilerOptions = this.scope.compilerOptions();
 		checkOverride: {
@@ -163,21 +160,22 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 					break checkOverride;
 				// claims to override, and doesn't actually do so
 				this.scope.problemReporter().methodMustOverride(this);
-			} else if (!this.binding.declaringClass.isInterface() 	
+			} else if (!this.binding.declaringClass.isInterface()
 						&& (bindingModifiers & (ClassFileConstants.AccStatic|ExtraCompilerModifiers.AccOverriding)) == ExtraCompilerModifiers.AccOverriding) {
 				// actually overrides, but did not claim to do so
 				this.scope.problemReporter().missingOverrideAnnotation(this);
 			}
 		}
-				
+
 		// by grammatical construction, interface methods are always abstract
 		switch (TypeDeclaration.kind(this.scope.referenceType().modifiers)) {
 			case TypeDeclaration.ENUM_DECL :
 				if (this.selector == TypeConstants.VALUES) break;
 				if (this.selector == TypeConstants.VALUEOF) break;
+				//$FALL-THROUGH$
 			case TypeDeclaration.CLASS_DECL :
 				// if a method has an semicolon body and is not declared as abstract==>error
-				// native methods may have a semicolon body 
+				// native methods may have a semicolon body
 				if ((this.modifiers & ExtraCompilerModifiers.AccSemicolonBody) != 0) {
 					if ((this.modifiers & ClassFileConstants.AccNative) == 0)
 						if ((this.modifiers & ClassFileConstants.AccAbstract) == 0)
@@ -189,7 +187,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 				}
 		}
 		super.resolveStatements();
-		
+
 		// TagBits.OverridingMethodWithSupercall is set during the resolveStatements() call
 		if (compilerOptions.getSeverity(CompilerOptions.OverridingMethodWithoutSuperInvocation) != ProblemSeverities.Ignore) {
 			if (this.binding != null) {
@@ -220,7 +218,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 				for (int i = 0; i < typeParametersLength; i++) {
 					this.typeParameters[i].traverse(visitor, this.scope);
 				}
-			}			
+			}
 			if (this.returnType != null)
 				this.returnType.traverse(visitor, this.scope);
 			if (this.arguments != null) {
@@ -243,5 +241,5 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 	}
 	public TypeParameter[] typeParameters() {
 	    return this.typeParameters;
-	}		
+	}
 }

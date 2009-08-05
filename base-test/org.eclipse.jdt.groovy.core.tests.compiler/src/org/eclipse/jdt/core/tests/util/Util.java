@@ -32,6 +32,7 @@ import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -1323,7 +1324,7 @@ public static String getProblemLog(CompilationResult compilationResult, boolean 
 					if (showWarningToken) {
 						long irritant = ProblemReporter.getIrritant(problem.getID());
 						if (irritant != 0) {
-							String warningToken = CompilerOptions.warningTokenFromIrritant(irritant);
+							String warningToken = "";//CompilerOptions.warningTokenFromIrritant(irritant);
 							if (warningToken != null) {
 								buffer.append("[@sup:").append(warningToken).append("] ");
 							}

@@ -39,72 +39,72 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
- 
+
 public class SelectionOnQualifiedAllocationExpression extends QualifiedAllocationExpression {
 
 	public SelectionOnQualifiedAllocationExpression() {
 		// constructor without argument
 	}
-	
+
 	public SelectionOnQualifiedAllocationExpression(TypeDeclaration anonymous) {
 		super(anonymous);
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		if (this.enclosingInstance == null)
 			output.append("<SelectOnAllocationExpression:");  //$NON-NLS-1$
-		else 
+		else
 			output.append("<SelectOnQualifiedAllocationExpression:"); //$NON-NLS-1$
 
-		return super.printExpression(indent, output).append('>'); 
+		return super.printExpression(indent, output).append('>');
 	}
-	
+
 	public TypeBinding resolveType(BlockScope scope) {
 		super.resolveType(scope);
-	
-		if (binding == null) {
+
+		if (this.binding == null) {
 			throw new SelectionNodeFound();
 		}
-		
+
 		// tolerate some error cases
-		if (!binding.isValidBinding()) {
-			switch (binding.problemId()) {
+		if (!this.binding.isValidBinding()) {
+			switch (this.binding.problemId()) {
 				case ProblemReasons.NotVisible:
 					// visibility is ignored
 					break;
 				case ProblemReasons.NotFound:
-					if (resolvedType != null && resolvedType.isValidBinding()) {
-						throw new SelectionNodeFound(resolvedType);
+					if (this.resolvedType != null && this.resolvedType.isValidBinding()) {
+						throw new SelectionNodeFound(this.resolvedType);
 					}
 					throw new SelectionNodeFound();
 				default:
 					throw new SelectionNodeFound();
 			}
 		}
-		
-		if (anonymousType == null)
-			throw new SelectionNodeFound(binding);
-	
+
+		if (this.anonymousType == null)
+			throw new SelectionNodeFound(this.binding);
+
 		// if selecting a type for an anonymous type creation, we have to
-		// find its target super constructor (if extending a class) or its target 
+		// find its target super constructor (if extending a class) or its target
 		// super interface (if extending an interface)
-		if (anonymousType.binding != null) {
-			LocalTypeBinding localType = (LocalTypeBinding) anonymousType.binding;
+		if (this.anonymousType.binding != null) {
+			LocalTypeBinding localType = (LocalTypeBinding) this.anonymousType.binding;
 			if (localType.superInterfaces == Binding.NO_SUPERINTERFACES) {
 				// find the constructor binding inside the super constructor call
-				ConstructorDeclaration constructor = (ConstructorDeclaration) anonymousType.declarationOf(binding.original());
+				ConstructorDeclaration constructor = (ConstructorDeclaration) this.anonymousType.declarationOf(this.binding.original());
 				if (constructor != null) {
 					throw new SelectionNodeFound(constructor.constructorCall.binding);
 				}
-				throw new SelectionNodeFound(binding);
+				throw new SelectionNodeFound(this.binding);
 			}
 			// open on the only super interface
 			throw new SelectionNodeFound(localType.superInterfaces[0]);
 		} else {
 			if (this.resolvedType.isInterface()) {
-				throw new SelectionNodeFound(resolvedType);
+				throw new SelectionNodeFound(this.resolvedType);
 			}
-			throw new SelectionNodeFound(binding);
+			throw new SelectionNodeFound(this.binding);
 		}
 	}
 }

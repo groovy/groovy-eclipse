@@ -21,13 +21,13 @@ import org.eclipse.jdt.internal.core.util.Util;
  *
  */
 public class UserLibraryClasspathContainer implements IClasspathContainer {
-	
+
 	private String name;
-	
+
 	public UserLibraryClasspathContainer(String name) {
 		this.name = name;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.core.IClasspathContainer#getClasspathEntries()
 	 */
@@ -63,7 +63,7 @@ public class UserLibraryClasspathContainer implements IClasspathContainer {
 	public IPath getPath() {
 		return new Path(JavaCore.USER_LIBRARY_CONTAINER_ID).append(this.name);
 	}
-	
+
 	private UserLibrary getUserLibrary() {
 		UserLibrary userLibrary = JavaModelManager.getUserLibraryManager().getUserLibrary(this.name);
 		if (userLibrary == null && (JavaModelManager.CP_RESOLVE_VERBOSE || JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE)) {

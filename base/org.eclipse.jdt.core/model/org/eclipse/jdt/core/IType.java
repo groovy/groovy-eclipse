@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
  * Represents either a source type in a compilation unit (either a top-level
- * type, a member type, a local type or an anonymous type) 
+ * type, a member type, a local type or an anonymous type)
  * or a binary type in a class file. Enumeration classes and annotation
  * types are subkinds of classes and interfaces, respectively.
  * <p>
@@ -38,22 +38,22 @@ import org.eclipse.core.runtime.IProgressMonitor;
 public interface IType extends IMember, IAnnotatable {
 	/**
 	 * Do code completion inside a code snippet in the context of the current type.
-	 * 
-	 * If the type can access to his source code and the insertion position is valid,
-	 * then completion is performed against source. Otherwise the completion is performed
-	 * against type structure and given locals variables.
-	 * 
+	 *
+	 * If the type has access to its source code and the insertion position is valid,
+	 * then completion is performed against the source. Otherwise the completion is performed
+	 * against the type structure and the given locals variables.
+	 *
 	 * @param snippet the code snippet
 	 * @param insertion the position with in source where the snippet
 	 * is inserted. This position must not be in comments.
 	 * A possible value is -1, if the position is not known.
-	 * @param position the position within snippet where the user 
+	 * @param position the position within snippet where the user
 	 * is performing code assist.
-	 * @param localVariableTypeNames an array (possibly empty) of fully qualified 
+	 * @param localVariableTypeNames an array (possibly empty) of fully qualified
 	 * type names of local variables visible at the current scope
-	 * @param localVariableNames an array (possibly empty) of local variable names 
+	 * @param localVariableNames an array (possibly empty) of local variable names
 	 * that are visible at the current scope
-	 * @param localVariableModifiers an array (possible empty) of modifiers for 
+	 * @param localVariableModifiers an array (possible empty) of modifiers for
 	 * local variables
 	 * @param isStatic whether the current scope is in a static context
 	 * @param requestor the completion requestor
@@ -75,29 +75,29 @@ public interface IType extends IMember, IAnnotatable {
 
 	/**
 	 * Do code completion inside a code snippet in the context of the current type.
-	 * It considers types in the working copies with the given owner first. In other words, 
+	 * It considers types in the working copies with the given owner first. In other words,
 	 * the owner's working copies will take precedence over their original compilation units
 	 * in the workspace.
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
 	 * unit had been deleted.
 	 * </p><p>
-	 * If the type can access to his source code and the insertion position is valid,
-	 * then completion is performed against source. Otherwise the completion is performed
-	 * against type structure and given locals variables.
+	 * If the type has access to its source code and the insertion position is valid,
+	 * then completion is performed against the source. Otherwise the completion is performed
+	 * against the type structure and the given locals variables.
 	 * </p>
-	 * 
+	 *
 	 * @param snippet the code snippet
 	 * @param insertion the position with in source where the snippet
 	 * is inserted. This position must not be in comments.
 	 * A possible value is -1, if the position is not known.
-	 * @param position the position with in snippet where the user 
+	 * @param position the position with in snippet where the user
 	 * is performing code assist.
-	 * @param localVariableTypeNames an array (possibly empty) of fully qualified 
+	 * @param localVariableTypeNames an array (possibly empty) of fully qualified
 	 * type names of local variables visible at the current scope
-	 * @param localVariableNames an array (possibly empty) of local variable names 
+	 * @param localVariableNames an array (possibly empty) of local variable names
 	 * that are visible at the current scope
-	 * @param localVariableModifiers an array (possible empty) of modifiers for 
+	 * @param localVariableModifiers an array (possible empty) of modifiers for
 	 * local variables
 	 * @param isStatic whether the current scope is in a static context
 	 * @param requestor the completion requestor
@@ -118,25 +118,25 @@ public interface IType extends IMember, IAnnotatable {
 		ICompletionRequestor requestor,
 		WorkingCopyOwner owner)
 		throws JavaModelException;
-	
+
 	/**
 	 * Do code completion inside a code snippet in the context of the current type.
-	 * 
-	 * If the type can access to his source code and the insertion position is valid,
-	 * then completion is performed against source. Otherwise the completion is performed
-	 * against type structure and given locals variables.
-	 * 
+	 *
+	 * If the type has access to its source code and the insertion position is valid,
+	 * then completion is performed against the source. Otherwise the completion is performed
+	 * against the type structure and the given locals variables.
+	 *
 	 * @param snippet the code snippet
 	 * @param insertion the position with in source where the snippet
 	 * is inserted. This position must not be in comments.
 	 * A possible value is -1, if the position is not known.
-	 * @param position the position within snippet where the user 
+	 * @param position the position within snippet where the user
 	 * is performing code assist.
-	 * @param localVariableTypeNames an array (possibly empty) of fully qualified 
+	 * @param localVariableTypeNames an array (possibly empty) of fully qualified
 	 * type names of local variables visible at the current scope
-	 * @param localVariableNames an array (possibly empty) of local variable names 
+	 * @param localVariableNames an array (possibly empty) of local variable names
 	 * that are visible at the current scope
-	 * @param localVariableModifiers an array (possible empty) of modifiers for 
+	 * @param localVariableModifiers an array (possible empty) of modifiers for
 	 * local variables
 	 * @param isStatic whether the current scope is in a static context
 	 * @param requestor the completion requestor
@@ -154,32 +154,90 @@ public interface IType extends IMember, IAnnotatable {
 		boolean isStatic,
 		CompletionRequestor requestor)
 		throws JavaModelException;
+	
+	/**
+	 * Do code completion inside a code snippet in the context of the current type.
+	 *
+	 * If the type has access to its source code and the insertion position is valid,
+	 * then completion is performed against the source. Otherwise the completion is performed
+	 * against the type structure and the given locals variables.
+	 * <p>
+	 * If {@link IProgressMonitor} is not <code>null</code> then some proposals which
+	 * can be very long to compute are proposed. To avoid that the code assist operation
+	 * take too much time a {@link IProgressMonitor} which automatically cancel the code
+	 * assist operation when a specified amount of time is reached could be used.
+	 * 
+	 * <pre>
+	 * new IProgressMonitor() {
+	 *     private final static int TIMEOUT = 500; //ms
+	 *     private long endTime;
+	 *     public void beginTask(String name, int totalWork) {
+	 *         fEndTime= System.currentTimeMillis() + TIMEOUT;
+	 *     }
+	 *     public boolean isCanceled() {
+	 *         return endTime <= System.currentTimeMillis();
+	 *     }
+	 *     ...
+	 * };
+	 * </pre>
+	 * <p>
+	 *
+	 * @param snippet the code snippet
+	 * @param insertion the position with in source where the snippet
+	 * is inserted. This position must not be in comments.
+	 * A possible value is -1, if the position is not known.
+	 * @param position the position within snippet where the user
+	 * is performing code assist.
+	 * @param localVariableTypeNames an array (possibly empty) of fully qualified
+	 * type names of local variables visible at the current scope
+	 * @param localVariableNames an array (possibly empty) of local variable names
+	 * that are visible at the current scope
+	 * @param localVariableModifiers an array (possible empty) of modifiers for
+	 * local variables
+	 * @param isStatic whether the current scope is in a static context
+	 * @param requestor the completion requestor
+	 * @param monitor the progress monitor used to report progress
+	 * @exception JavaModelException if this element does not exist or if an
+	 *		exception occurs while accessing its corresponding resource.
+	 * @since 3.5
+	 */
+	void codeComplete(
+		char[] snippet,
+		int insertion,
+		int position,
+		char[][] localVariableTypeNames,
+		char[][] localVariableNames,
+		int[] localVariableModifiers,
+		boolean isStatic,
+		CompletionRequestor requestor,
+		IProgressMonitor monitor)
+		throws JavaModelException;
 
 	/**
 	 * Do code completion inside a code snippet in the context of the current type.
-	 * It considers types in the working copies with the given owner first. In other words, 
+	 * It considers types in the working copies with the given owner first. In other words,
 	 * the owner's working copies will take precedence over their original compilation units
 	 * in the workspace.
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
 	 * unit had been deleted.
 	 * </p><p>
-	 * If the type can access to his source code and the insertion position is valid,
-	 * then completion is performed against source. Otherwise the completion is performed
-	 * against type structure and given locals variables.
+	 * If the type has access to its source code and the insertion position is valid,
+	 * then completion is performed against the source. Otherwise the completion is performed
+	 * against the type structure and the given locals variables.
 	 * </p>
-	 * 
+	 *
 	 * @param snippet the code snippet
 	 * @param insertion the position with in source where the snippet
 	 * is inserted. This position must not be in comments.
 	 * A possible value is -1, if the position is not known.
-	 * @param position the position with in snippet where the user 
+	 * @param position the position with in snippet where the user
 	 * is performing code assist.
-	 * @param localVariableTypeNames an array (possibly empty) of fully qualified 
+	 * @param localVariableTypeNames an array (possibly empty) of fully qualified
 	 * type names of local variables visible at the current scope
-	 * @param localVariableNames an array (possibly empty) of local variable names 
+	 * @param localVariableNames an array (possibly empty) of local variable names
 	 * that are visible at the current scope
-	 * @param localVariableModifiers an array (possible empty) of modifiers for 
+	 * @param localVariableModifiers an array (possible empty) of modifiers for
 	 * local variables
 	 * @param isStatic whether the current scope is in a static context
 	 * @param requestor the completion requestor
@@ -198,6 +256,73 @@ public interface IType extends IMember, IAnnotatable {
 		boolean isStatic,
 		CompletionRequestor requestor,
 		WorkingCopyOwner owner)
+		throws JavaModelException;
+	
+	/**
+	 * Do code completion inside a code snippet in the context of the current type.
+	 * It considers types in the working copies with the given owner first. In other words,
+	 * the owner's working copies will take precedence over their original compilation units
+	 * in the workspace.
+	 * <p>
+	 * Note that if a working copy is empty, it will be as if the original compilation
+	 * unit had been deleted.
+	 * </p><p>
+	 * If the type has access to its source code and the insertion position is valid,
+	 * then completion is performed against the source. Otherwise the completion is performed
+	 * against the type structure and the given locals variables.
+	 * </p>
+	 * <p>
+	 * If {@link IProgressMonitor} is not <code>null</code> then some proposals which
+	 * can be very long to compute are proposed. To avoid that the code assist operation
+	 * take too much time a {@link IProgressMonitor} which automatically cancel the code
+	 * assist operation when a specified amount of time is reached could be used.
+	 * 
+	 * <pre>
+	 * new IProgressMonitor() {
+	 *     private final static int TIMEOUT = 500; //ms
+	 *     private long endTime;
+	 *     public void beginTask(String name, int totalWork) {
+	 *         fEndTime= System.currentTimeMillis() + TIMEOUT;
+	 *     }
+	 *     public boolean isCanceled() {
+	 *         return endTime <= System.currentTimeMillis();
+	 *     }
+	 *     ...
+	 * };
+	 * </pre>
+	 * <p>
+	 *
+	 * @param snippet the code snippet
+	 * @param insertion the position with in source where the snippet
+	 * is inserted. This position must not be in comments.
+	 * A possible value is -1, if the position is not known.
+	 * @param position the position with in snippet where the user
+	 * is performing code assist.
+	 * @param localVariableTypeNames an array (possibly empty) of fully qualified
+	 * type names of local variables visible at the current scope
+	 * @param localVariableNames an array (possibly empty) of local variable names
+	 * that are visible at the current scope
+	 * @param localVariableModifiers an array (possible empty) of modifiers for
+	 * local variables
+	 * @param isStatic whether the current scope is in a static context
+	 * @param requestor the completion requestor
+	 * @param owner the owner of working copies that take precedence over their original compilation units
+	 * @param monitor the progress monitor used to report progress
+	 * @exception JavaModelException if this element does not exist or if an
+	 *		exception occurs while accessing its corresponding resource.
+	 * @since 3.5
+	 */
+	void codeComplete(
+		char[] snippet,
+		int insertion,
+		int position,
+		char[][] localVariableTypeNames,
+		char[][] localVariableNames,
+		int[] localVariableModifiers,
+		boolean isStatic,
+		CompletionRequestor requestor,
+		WorkingCopyOwner owner,
+		IProgressMonitor monitor)
 		throws JavaModelException;
 
 
@@ -233,7 +358,7 @@ public interface IType extends IMember, IAnnotatable {
 	 */
 	IField createField(String contents, IJavaElement sibling, boolean force, IProgressMonitor monitor)
 		throws JavaModelException;
-		
+
 	/**
 	 * Creates and returns a static initializer in this type with the
 	 * given contents.
@@ -258,7 +383,7 @@ public interface IType extends IMember, IAnnotatable {
 	 */
 	IInitializer createInitializer(String contents, IJavaElement sibling, IProgressMonitor monitor)
 		throws JavaModelException;
-		
+
 	/**
 	 * Creates and returns a method or constructor in this type with the
 	 * given contents.
@@ -292,7 +417,7 @@ public interface IType extends IMember, IAnnotatable {
 	 */
 	IMethod createMethod(String contents, IJavaElement sibling, boolean force, IProgressMonitor monitor)
 		throws JavaModelException;
-		
+
 	/**
 	 * Creates and returns a type in this type with the
 	 * given contents.
@@ -325,8 +450,8 @@ public interface IType extends IMember, IAnnotatable {
 	 */
 	IType createType(String contents, IJavaElement sibling, boolean force, IProgressMonitor monitor)
 		throws JavaModelException;
-		
-	/** 
+
+	/**
 	 * Finds the methods in this type that correspond to
 	 * the given method.
 	 * A method m1 corresponds to another method m2 if:
@@ -338,15 +463,15 @@ public interface IType extends IMember, IAnnotatable {
 	 * </ul>
 	 * @param method the given method
 	 * @return the found method or <code>null</code> if no such methods can be found.
-	 * 
-	 * @since 2.0 
+	 *
+	 * @since 2.0
 	 */
 	IMethod[] findMethods(IMethod method);
 
 	/**
 	 * Returns the children of this type that have the given category as a <code>@category</code> tag.
 	 * Returns an empty array if no children with this category exist.
-	 * 
+	 *
 	 * @return the children for the given category.
 	 * @exception JavaModelException if this element does not exist or if an
 	 *      exception occurs while accessing its corresponding resource.
@@ -357,21 +482,21 @@ public interface IType extends IMember, IAnnotatable {
 	/**
 	 * Returns the simple name of this type, unqualified by package or enclosing type.
 	 * This is a handle-only method.
-	 * 
+	 *
 	 * @return the simple name of this type
 	 */
 	String getElementName();
-	
+
 	/**
 	 * Returns the field with the specified name
 	 * in this type (for example, <code>"bar"</code>).
 	 * This is a handle-only method.  The field may or may not exist.
-	 * 
+	 *
 	 * @param name the given name
 	 * @return the field with the specified name in this type
 	 */
 	IField getField(String name);
-	
+
 	/**
 	 * Returns the fields declared by this type.
 	 * If this is a source type, the results are listed in the order
@@ -383,9 +508,9 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return the fields declared by this type
 	 */
 	IField[] getFields() throws JavaModelException;
-	
+
 	/**
-	 * Returns the fully qualified name of this type, 
+	 * Returns the fully qualified name of this type,
 	 * including qualification for any containing types and packages.
 	 * This is the name of the package, followed by <code>'.'</code>,
 	 * followed by the type-qualified name.
@@ -401,18 +526,18 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return the fully qualified name of this type
 	 */
 	String getFullyQualifiedName();
-	
+
 	/**
-	 * Returns the fully qualified name of this type, 
+	 * Returns the fully qualified name of this type,
 	 * including qualification for any containing types and packages.
 	 * This is the name of the package, followed by <code>'.'</code>,
 	 * followed by the type-qualified name using the <code>enclosingTypeSeparator</code>.
-	 * 
+	 *
 	 * For example:
 	 * <ul>
-	 * <li>the fully qualified name of a class B defined as a member of a class A in a compilation unit A.java 
+	 * <li>the fully qualified name of a class B defined as a member of a class A in a compilation unit A.java
 	 *     in a package x.y using the '.' separator is "x.y.A.B"</li>
-	 * <li>the fully qualified name of a class B defined as a member of a class A in a compilation unit A.java 
+	 * <li>the fully qualified name of a class B defined as a member of a class A in a compilation unit A.java
 	 *     in a package x.y using the '$' separator is "x.y.A$B"</li>
 	 * <li>the fully qualified name of a binary type whose class file is x/y/A$B.class
 	 *     using the '.' separator is "x.y.A.B"</li>
@@ -421,7 +546,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * <li>the fully qualified name of an anonymous binary type whose class file is x/y/A$1.class
 	 *     using the '.' separator is "x.y.A.1"</li>
 	 * </ul>
-	 * 
+	 *
 	 * This is a handle-only method.
 	 *
 	 * @param enclosingTypeSeparator the given enclosing type separator
@@ -430,12 +555,12 @@ public interface IType extends IMember, IAnnotatable {
 	 * @since 2.0
 	 */
 	String getFullyQualifiedName(char enclosingTypeSeparator);
-	
+
 	/**
-	 * Returns this type's fully qualified name using a '.' enclosing type separator 
+	 * Returns this type's fully qualified name using a '.' enclosing type separator
 	 * followed by its type parameters between angle brackets if it is a generic type.
 	 * For example, "p.X&lt;T&gt;", "java.util.Map&lt;java.lang.String, p.X&gt;"
-	 * 
+	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *      exception occurs while accessing its corresponding resource.
 	 * @return the fully qualified parameterized representation of this type
@@ -448,12 +573,12 @@ public interface IType extends IMember, IAnnotatable {
 	 * the order they are defined in the source.
 	 * Numbering starts at 1 (thus the first occurrence is occurrence 1, not occurrence 0).
 	 * This is a handle-only method.  The initializer may or may not be present.
-	 * 
+	 *
 	 * @param occurrenceCount the specified position
 	 * @return the initializer with the specified position relative to the order they are defined in the source
 	 */
 	IInitializer getInitializer(int occurrenceCount);
-	
+
 	/**
 	 * Returns the initializers declared by this type.
 	 * For binary types this is an empty collection.
@@ -465,19 +590,19 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return the initializers declared by this type
 	 */
 	IInitializer[] getInitializers() throws JavaModelException;
-	
+
 	/**
 	 * Returns the binding key for this type. A binding key is a key that uniquely
 	 * identifies this type. It allows access to generic info for parameterized
 	 * types.
-	 * 
+	 *
 	 * @return the binding key for this type
 	 * @see org.eclipse.jdt.core.dom.IBinding#getKey()
 	 * @see BindingKey
 	 * @since 3.1
 	 */
 	String getKey();
-	
+
 	/**
 	 * Returns the method with the specified name and parameter types
 	 * in this type (for example, <code>"foo", {"I", "QString;"}</code>).
@@ -489,16 +614,16 @@ public interface IType extends IMember, IAnnotatable {
 	 * or resolved (for binary types), and either basic (for basic types)
 	 * or rich (for parameterized types). See {@link Signature} for details.
 	 * </p>
-	 * 
+	 *
 	 * @param name the given name
 	 * @param parameterTypeSignatures the given parameter types
 	 * @return the method with the specified name and parameter types in this type
 	 */
 	IMethod getMethod(String name, String[] parameterTypeSignatures);
-	
+
 	/**
 	 * Returns the methods and constructors declared by this type.
-	 * For binary types, this may include the special <code>&lt;clinit&gt;</code>; method 
+	 * For binary types, this may include the special <code>&lt;clinit&gt;</code>; method
 	 * and synthetic methods.
 	 * If this is a source type, the results are listed in the order
 	 * in which they appear in the source, otherwise, the results are
@@ -509,15 +634,15 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return the methods and constructors declared by this type
 	 */
 	IMethod[] getMethods() throws JavaModelException;
-	
+
 	/**
 	 * Returns the package fragment in which this element is defined.
 	 * This is a handle-only method.
-	 * 
+	 *
 	 * @return the package fragment in which this element is defined
 	 */
 	IPackageFragment getPackageFragment();
-	
+
 	/**
 	 * Returns the name of this type's superclass, or <code>null</code>
 	 * for source types that do not specify a superclass.
@@ -538,9 +663,9 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return the name of this type's superclass, or <code>null</code> for source types that do not specify a superclass
 	 */
 	String getSuperclassName() throws JavaModelException;
-	
+
 	/**
-	 * Returns the type signature of this type's superclass, or 
+	 * Returns the type signature of this type's superclass, or
 	 * <code>null</code> if none.
 	 * <p>
 	 * The type signature may be either unresolved (for source types)
@@ -555,7 +680,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * @since 3.0
 	 */
 	String getSuperclassTypeSignature() throws JavaModelException;
-	
+
 	/**
 	 * Returns the type signatures of the interfaces that this type
 	 * implements or extends, in the order in which they are listed in the
@@ -577,12 +702,12 @@ public interface IType extends IMember, IAnnotatable {
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
 	 * @return  the type signatures of interfaces that this type implements
-	 * or extends, in the order in which they are listed in the source, 
+	 * or extends, in the order in which they are listed in the source,
 	 * an empty collection if none
 	 * @since 3.0
 	 */
 	String[] getSuperInterfaceTypeSignatures() throws JavaModelException;
-	
+
 	/**
 	 * Returns the names of interfaces that this type implements or extends,
 	 * in the order in which they are listed in the source.
@@ -602,11 +727,11 @@ public interface IType extends IMember, IAnnotatable {
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
-	 * @return  the names of interfaces that this type implements or extends, in the order in which they are listed in the source, 
+	 * @return  the names of interfaces that this type implements or extends, in the order in which they are listed in the source,
 	 * an empty collection if none
 	 */
 	String[] getSuperInterfaceNames() throws JavaModelException;
-	
+
 	/**
 	 * Returns the formal type parameter signatures for this type.
 	 * Returns an empty array if this type has no formal type parameters.
@@ -623,7 +748,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * @since 3.0
 	 */
 	String[] getTypeParameterSignatures() throws JavaModelException;
-	
+
 	/**
 	 * Returns the formal type parameters for this type.
 	 * Returns an empty array if this type has no formal type parameters.
@@ -639,49 +764,49 @@ public interface IType extends IMember, IAnnotatable {
 	/**
 	 * Returns the member type declared in this type with the given simple name.
 	 * This is a handle-only method. The type may or may not exist.
-	 * 
+	 *
 	 * @param name the given simple name
 	 * @return the member type declared in this type with the given simple name
 	 */
 	IType getType(String name);
-	
+
 	/**
 	 * Returns the type parameter declared in this type with the given name.
 	 * This is a handle-only method. The type parameter may or may not exist.
-	 * 
+	 *
 	 * @param name the given simple name
 	 * @return the type parameter declared in this type with the given name
 	 * @since 3.1
 	 */
 	ITypeParameter getTypeParameter(String name);
-	
+
 	/**
-	 * Returns the type-qualified name of this type, 
+	 * Returns the type-qualified name of this type,
 	 * including qualification for any enclosing types,
 	 * but not including package qualification.
-	 * For source types, this consists of the simple names of any enclosing types, 
+	 * For source types, this consists of the simple names of any enclosing types,
 	 * separated by <code>'$'</code>, followed by the simple name of this type
 	 * or the occurrence count of this type if it is anonymous.
 	 * For binary types, this is the name of the class file without the ".class" suffix.
 	 * This method is fully equivalent to <code>getTypeQualifiedName('$')</code>.
 	 * This is a handle-only method.
-	 * 
+	 *
 	 * @see #getTypeQualifiedName(char)
 	 * @return the type-qualified name of this type
 	 */
 	String getTypeQualifiedName();
-	
+
 	/**
-	 * Returns the type-qualified name of this type, 
+	 * Returns the type-qualified name of this type,
 	 * including qualification for any enclosing types,
 	 * but not including package qualification.
-	 * For source types, this consists of the simple names of any enclosing types, 
-	 * separated by <code>enclosingTypeSeparator</code>, followed by the 
+	 * For source types, this consists of the simple names of any enclosing types,
+	 * separated by <code>enclosingTypeSeparator</code>, followed by the
 	 * simple name of this type  or the occurrence count of this type if it is anonymous.
 	 * For binary types, this is the name of the class file without the ".class" suffix,
-	 * and - since 3.4 - the '$' characters in the class file name are replaced with the 
+	 * and - since 3.4 - the '$' characters in the class file name are replaced with the
 	 * <code>enclosingTypeSeparator</code> character.
-	 * 
+	 *
 	 * For example:
 	 * <ul>
 	 * <li>the type qualified name of a class B defined as a member of a class A
@@ -697,13 +822,13 @@ public interface IType extends IMember, IAnnotatable {
 	 * </ul>
 	 *
 	 * This is a handle-only method.
-	 * 
+	 *
 	 * @param enclosingTypeSeparator the specified enclosing type separator
 	 * @return the type-qualified name of this type
 	 * @since 2.0
 	 */
 	String getTypeQualifiedName(char enclosingTypeSeparator);
-	
+
 	/**
 	 * Returns the immediate member types declared by this type.
 	 * The results are listed in the order in which they appear in the source or class file.
@@ -713,7 +838,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return the immediate member types declared by this type
 	 */
 	IType[] getTypes() throws JavaModelException;
-	
+
 	/**
 	 * Returns whether this type represents an anonymous type.
 	 *
@@ -735,13 +860,13 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return true if this type represents a class, false otherwise
 	 */
 	boolean isClass() throws JavaModelException;
-	
+
 	/**
 	 * Returns whether this type represents an enumeration class.
 	 * <p>
 	 * Note that an enumeration class can neither be a class, an interface, nor an annotation type.
 	 * </p>
-	 * 
+	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
 	 * @return true if this type represents an enumeration class,
@@ -761,11 +886,11 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return true if this type represents an interface, false otherwise
 	 */
 	boolean isInterface() throws JavaModelException;
-	
+
 	/**
 	 * Returns whether this type represents an annotation type.
 	 * <p>
-	 * Note that an annotation type is also an interface, but it can neither be a class nor an enumeration class. 
+	 * Note that an annotation type is also an interface, but it can neither be a class nor an enumeration class.
 	 * </p>
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
@@ -798,7 +923,7 @@ public interface IType extends IMember, IAnnotatable {
 	/**
 	 * Returns whether this type represents a resolved type.
 	 * If a type is resolved, its key contains resolved information.
-	 * 
+	 *
 	 * @return whether this type represents a resolved type.
 	 * @since 3.1
 	 */
@@ -806,19 +931,19 @@ public interface IType extends IMember, IAnnotatable {
 	/**
 	 * Loads a previously saved ITypeHierarchy from an input stream. A type hierarchy can
 	 * be stored using ITypeHierachy#store(OutputStream).
-	 * 
+	 *
 	 * Only hierarchies originally created by the following methods can be loaded:
 	 * <ul>
 	 * <li>IType#newSupertypeHierarchy(IProgressMonitor)</li>
 	 * <li>IType#newTypeHierarchy(IJavaProject, IProgressMonitor)</li>
 	 * <li>IType#newTypeHierarchy(IProgressMonitor)</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param input stream where hierarchy will be read
 	 * @param monitor the given progress monitor
 	 * @return the stored hierarchy
 	 * @exception JavaModelException if the hierarchy could not be restored, reasons include:
-	 *      - type is not the focus of the hierarchy or 
+	 *      - type is not the focus of the hierarchy or
 	 *		- unable to read the input stream (wrong format, IOException during reading, ...)
 	 * @see ITypeHierarchy#store(java.io.OutputStream, IProgressMonitor)
 	 * @since 2.1
@@ -834,11 +959,11 @@ public interface IType extends IMember, IAnnotatable {
 	 * @return a type hierarchy for this type containing this type and all of its supertypes
 	 */
 	ITypeHierarchy newSupertypeHierarchy(IProgressMonitor monitor) throws JavaModelException;
-	
+
 	/**
 	 * Creates and returns a type hierarchy for this type containing
-	 * this type and all of its supertypes, considering types in the given 
-	 * working copies. In other words, the list of working copies will take 
+	 * this type and all of its supertypes, considering types in the given
+	 * working copies. In other words, the list of working copies will take
 	 * precedence over their original compilation units in the workspace.
 	 * <p>
 	 * Note that passing an empty working copy will be as if the original compilation
@@ -854,11 +979,11 @@ public interface IType extends IMember, IAnnotatable {
 	 */
 	ITypeHierarchy newSupertypeHierarchy(ICompilationUnit[] workingCopies, IProgressMonitor monitor)
 		throws JavaModelException;
-		
+
 	/**
 	 * Creates and returns a type hierarchy for this type containing
-	 * this type and all of its supertypes, considering types in the given 
-	 * working copies. In other words, the list of working copies will take 
+	 * this type and all of its supertypes, considering types in the given
+	 * working copies. In other words, the list of working copies will take
 	 * precedence over their original compilation units in the workspace.
 	 * <p>
 	 * Note that passing an empty working copy will be as if the original compilation
@@ -875,12 +1000,12 @@ public interface IType extends IMember, IAnnotatable {
 	 */
 	ITypeHierarchy newSupertypeHierarchy(IWorkingCopy[] workingCopies, IProgressMonitor monitor)
 		throws JavaModelException;
-		
+
 	/**
 	 * Creates and returns a type hierarchy for this type containing
-	 * this type and all of its supertypes, considering types in the 
-	 * working copies with the given owner. 
-	 * In other words, the owner's working copies will take 
+	 * this type and all of its supertypes, considering types in the
+	 * working copies with the given owner.
+	 * In other words, the owner's working copies will take
 	 * precedence over their original compilation units in the workspace.
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
@@ -899,7 +1024,7 @@ public interface IType extends IMember, IAnnotatable {
 
 	/**
 	 * Creates and returns a type hierarchy for this type containing
-	 * this type, all of its supertypes, and all its subtypes 
+	 * this type, all of its supertypes, and all its subtypes
 	 * in the context of the given project.
 	 *
 	 * @param project the given project
@@ -907,17 +1032,17 @@ public interface IType extends IMember, IAnnotatable {
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
 	 * @return a type hierarchy for this type containing
-	 * this type, all of its supertypes, and all its subtypes 
+	 * this type, all of its supertypes, and all its subtypes
 	 * in the context of the given project
 	 */
 	ITypeHierarchy newTypeHierarchy(IJavaProject project, IProgressMonitor monitor) throws JavaModelException;
-	
+
 	/**
 	 * Creates and returns a type hierarchy for this type containing
-	 * this type, all of its supertypes, and all its subtypes 
-	 * in the context of the given project, considering types in the 
-	 * working copies with the given owner. 
-	 * In other words, the owner's working copies will take 
+	 * this type, all of its supertypes, and all its subtypes
+	 * in the context of the given project, considering types in the
+	 * working copies with the given owner.
+	 * In other words, the owner's working copies will take
 	 * precedence over their original compilation units in the workspace.
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
@@ -930,7 +1055,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
 	 * @return a type hierarchy for this type containing
-	 * this type, all of its supertypes, and all its subtypes 
+	 * this type, all of its supertypes, and all its subtypes
 	 * in the context of the given project
 	 * @since 3.0
 	 */
@@ -947,11 +1072,11 @@ public interface IType extends IMember, IAnnotatable {
 	 * this type, all of its supertypes, and all its subtypes in the workspace
 	 */
 	ITypeHierarchy newTypeHierarchy(IProgressMonitor monitor) throws JavaModelException;
-	
+
 	/**
 	 * Creates and returns a type hierarchy for this type containing
-	 * this type, all of its supertypes, and all its subtypes in the workspace, 
-	 * considering types in the given working copies. In other words, the list of working 
+	 * this type, all of its supertypes, and all its subtypes in the workspace,
+	 * considering types in the given working copies. In other words, the list of working
 	 * copies that will take precedence over their original compilation units in the workspace.
 	 * <p>
 	 * Note that passing an empty working copy will be as if the original compilation
@@ -966,11 +1091,11 @@ public interface IType extends IMember, IAnnotatable {
 	 * @since 3.0
 	 */
 	ITypeHierarchy newTypeHierarchy(ICompilationUnit[] workingCopies, IProgressMonitor monitor) throws JavaModelException;
-	
+
 	/**
 	 * Creates and returns a type hierarchy for this type containing
-	 * this type, all of its supertypes, and all its subtypes in the workspace, 
-	 * considering types in the given working copies. In other words, the list of working 
+	 * this type, all of its supertypes, and all its subtypes in the workspace,
+	 * considering types in the given working copies. In other words, the list of working
 	 * copies that will take precedence over their original compilation units in the workspace.
 	 * <p>
 	 * Note that passing an empty working copy will be as if the original compilation
@@ -986,12 +1111,12 @@ public interface IType extends IMember, IAnnotatable {
 	 * @deprecated Use {@link #newTypeHierarchy(ICompilationUnit[], IProgressMonitor)} instead
 	 */
 	ITypeHierarchy newTypeHierarchy(IWorkingCopy[] workingCopies, IProgressMonitor monitor) throws JavaModelException;
-	
+
 	/**
 	 * Creates and returns a type hierarchy for this type containing
-	 * this type, all of its supertypes, and all its subtypes in the workspace, 
-	 * considering types in the working copies with the given owner. 
-	 * In other words, the owner's working copies will take 
+	 * this type, all of its supertypes, and all its subtypes in the workspace,
+	 * considering types in the working copies with the given owner.
+	 * In other words, the owner's working copies will take
 	 * precedence over their original compilation units in the workspace.
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
@@ -1007,10 +1132,10 @@ public interface IType extends IMember, IAnnotatable {
 	 * @since 3.0
 	 */
 	ITypeHierarchy newTypeHierarchy(WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException;
-	
+
 	/**
-	 * Resolves the given type name within the context of this type (depending on the type hierarchy 
-	 * and its imports). 
+	 * Resolves the given type name within the context of this type (depending on the type hierarchy
+	 * and its imports).
 	 * <p>
 	 * Multiple answers might be found in case there are ambiguous matches.
 	 * </p>
@@ -1025,21 +1150,21 @@ public interface IType extends IMember, IAnnotatable {
 	 *<p>
 	 * For example, resolution of <code>"Object"</code> would typically return
 	 * <code>{{"java.lang", "Object"}}</code>. Another resolution that returns
-	 * <code>{{"", "X.Inner"}}</code> represents the inner type Inner defined in type X in the 
+	 * <code>{{"", "X.Inner"}}</code> represents the inner type Inner defined in type X in the
 	 * default package.
 	 * </p>
-	 * 
+	 *
 	 * @param typeName the given type name
-	 * @exception JavaModelException if code resolve could not be performed. 
+	 * @exception JavaModelException if code resolve could not be performed.
 	 * @return the resolved type names or <code>null</code> if unable to find any matching type
 	 * @see #getTypeQualifiedName(char)
 	 */
 	String[][] resolveType(String typeName) throws JavaModelException;
 
 	/**
-	 * Resolves the given type name within the context of this type (depending on the type hierarchy 
-	 * and its imports) and using the given owner's working copies, considering types in the 
-	 * working copies with the given owner. In other words, the owner's working copies will take 
+	 * Resolves the given type name within the context of this type (depending on the type hierarchy
+	 * and its imports) and using the given owner's working copies, considering types in the
+	 * working copies with the given owner. In other words, the owner's working copies will take
 	 * precedence over their original compilation units in the workspace.
 	 * <p>
 	 * Note that if a working copy is empty, it will be as if the original compilation
@@ -1058,13 +1183,13 @@ public interface IType extends IMember, IAnnotatable {
 	 *<p>
 	 * For example, resolution of <code>"Object"</code> would typically return
 	 * <code>{{"java.lang", "Object"}}</code>. Another resolution that returns
-	 * <code>{{"", "X.Inner"}}</code> represents the inner type Inner defined in type X in the 
+	 * <code>{{"", "X.Inner"}}</code> represents the inner type Inner defined in type X in the
 	 * default package.
 	 * </p>
-	 * 
+	 *
 	 * @param typeName the given type name
 	 * @param owner the owner of working copies that take precedence over their original compilation units
-	 * @exception JavaModelException if code resolve could not be performed. 
+	 * @exception JavaModelException if code resolve could not be performed.
 	 * @return the resolved type names or <code>null</code> if unable to find any matching type
 	 * @see #getTypeQualifiedName(char)
 	 * @since 3.0

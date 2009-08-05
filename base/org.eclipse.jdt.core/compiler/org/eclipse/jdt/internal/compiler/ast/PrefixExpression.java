@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,15 +33,15 @@ public String operatorToString() {
 			return "++"; //$NON-NLS-1$
 		case MINUS :
 			return "--"; //$NON-NLS-1$
-	} 
+	}
 	return "unknown operator"; //$NON-NLS-1$
 }
 
 public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
 
 	output.append(operatorToString()).append(' ');
-	return this.lhs.printExpression(0, output); 
-} 
+	return this.lhs.printExpression(0, output);
+}
 
 public boolean restrainUsageToNumericTypes() {
 	return true;

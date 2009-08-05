@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,25 +15,25 @@ package org.eclipse.jdt.internal.core.dom.rewrite;
  *
  */
 public abstract class RewriteEvent {
-	
+
 	/**
 	 * Change kind to describe that the event is an insert event.
 	 * Does not apply for list events.
 	 */
 	public static final int INSERTED= 1;
-	
+
 	/**
 	 * Change kind to describe that the event is an remove event.
 	 * Does not apply for list events.
 	 */
 	public static final int REMOVED= 2;
-	
+
 	/**
 	 * Change kind to describe that the event is an replace event.
 	 * Does not apply for list events.
 	 */
 	public static final int REPLACED= 4;
-	
+
 	/**
 	 * Change kind to signal that children changed. Does only apply for list events.
 	 */
@@ -43,23 +43,23 @@ public abstract class RewriteEvent {
 	 * Change kind to signal that the property did not change
 	 */
 	public static final int UNCHANGED= 0;
-	
+
 	/**
 	 * @return Returns the event's change kind.
 	 */
 	public abstract int getChangeKind();
-	
+
 	/**
 	 * @return Returns true if the given event is a list event.
 	 */
 	public abstract boolean isListRewrite();
-	
+
 	/**
 	 * @return Returns the original value. For lists this is a <code>List<code> of ASTNode's, for non-list
 	 * events this can be an ASTNode (for node properties), Integer (for an integer property),
 	 * Boolean (for boolean node properties) or properties like Operator.
 	 * <code>null</code> is returned if the event is a insert event.
-	 */	
+	 */
 	public abstract Object getOriginalValue();
 
 	/**
@@ -67,13 +67,13 @@ public abstract class RewriteEvent {
 	 * events this can be an ASTNode (for node properties), Integer (for an integer property),
 	 * Boolean (for boolean node properties) or properties like Operator.
 	 * <code>null</code> is returned if the event is a remove event.
-	 */	
+	 */
 	public abstract Object getNewValue();
-	
+
 	/**
 	 * @return Return the events describing the changes in a list. returns <code>null</code> if the
 	 * event is not a list event.
 	 */
 	public abstract RewriteEvent[] getChildren();
-	
+
 }

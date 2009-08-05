@@ -25,7 +25,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	private boolean DEBUG_PARSECHECK = false;
 
 	private static final int STACK_INCREMENT = 256;
-	
+
 //	private static final int ERROR_CODE = 1;
 	private static final int BEFORE_CODE = 2;
 	private static final int INSERTION_CODE = 3;
@@ -42,66 +42,66 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	private static final int BUFF_SIZE    = 32;
 	private static final int MAX_DISTANCE = 30;
 	private static final int MIN_DISTANCE = 3;
-	
+
 	private CompilerOptions options;
-	
+
 	private LexStream lexStream;
 	private int errorToken;
 	private int errorTokenStart;
-	
+
 	private int currentToken = 0;
-	
+
 	private int stackLength;
 	private int stateStackTop;
 	private int[] stack;
-	
+
 	private int[] locationStack;
 	private int[] locationStartStack;
-	
+
 	private int tempStackTop;
 	private int[] tempStack;
-	
+
 	private int prevStackTop;
 	private int[] prevStack;
 	private int nextStackTop;
 	private int[] nextStack;
-	
+
 	private int scopeStackTop;
     private int[] scopeIndex;
     private int[] scopePosition;
-	
+
 	int[] list = new int[NUM_SYMBOLS + 1];
 	int[] buffer = new int[BUFF_SIZE];
-	
+
 	private static final int NIL = -1;
 	int[] stateSeen;
-	
+
 	int statePoolTop;
 	StateInfo[] statePool;
-	
+
 	private Parser parser;
-	
+
 	private RecoveryScanner recoveryScanner;
-	
+
 	private boolean reportProblem;
-	
+
 	private static class RepairCandidate {
 		public int symbol;
 		public int location;
-		
+
 		public RepairCandidate(){
 			this.symbol = 0;
 			this.location = 0;
 		}
 	}
-	
+
 	private static class PrimaryRepairInfo {
 		public int distance;
 		public int misspellIndex;
 		public int code;
 		public int bufferPosition;
 		public int symbol;
-		
+
 		public PrimaryRepairInfo(){
 			this.distance = 0;
 			this.misspellIndex = 0;
@@ -109,7 +109,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			this.bufferPosition = 0;
 			this.symbol = 0;
 		}
-		
+
 		public PrimaryRepairInfo copy(){
 			PrimaryRepairInfo c = new PrimaryRepairInfo();
 			c.distance = this.distance;
@@ -118,10 +118,10 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			c.bufferPosition = this .bufferPosition;
 			c.symbol = this.symbol;
 			return c;
-			
+
 		}
 	}
-	
+
 	static class SecondaryRepairInfo {
 		public int code;
 		public int distance;
@@ -131,12 +131,12 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		public int symbol;
 
 		boolean recoveryOnNextStack;
-	} 
-	
+	}
+
 	private static class StateInfo {
 	    int state;
 	    int next;
-	    
+
 	    public StateInfo(int state, int next){
 	    	this.state = state;
 	    	this.next = next;
@@ -153,34 +153,34 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		this.lexStream = new LexStream(BUFF_SIZE, parser.scanner, intervalStartToSkip, intervalEndToSkip, intervalFlagsToSkip, firstToken, start, end);
 		this.recoveryScanner = parser.recoveryScanner;
 	}
-	
+
 	private ProblemReporter problemReporter(){
-		return parser.problemReporter();
+		return this.parser.problemReporter();
 	}
 
 	private void reallocateStacks()	{
-		int old_stack_length = stackLength;
+		int old_stack_length = this.stackLength;
 
-		stackLength += STACK_INCREMENT;
+		this.stackLength += STACK_INCREMENT;
 
 		if(old_stack_length == 0){
-			stack = new int[stackLength];
-			locationStack = new int[stackLength];
-			locationStartStack = new int[stackLength];
-			tempStack = new int[stackLength];
-			prevStack = new int[stackLength];
-			nextStack = new int[stackLength];
-			scopeIndex = new int[stackLength];
-			scopePosition = new int[stackLength];
+			this.stack = new int[this.stackLength];
+			this.locationStack = new int[this.stackLength];
+			this.locationStartStack = new int[this.stackLength];
+			this.tempStack = new int[this.stackLength];
+			this.prevStack = new int[this.stackLength];
+			this.nextStack = new int[this.stackLength];
+			this.scopeIndex = new int[this.stackLength];
+			this.scopePosition = new int[this.stackLength];
 		} else {
-			System.arraycopy(stack, 0, stack = new int[stackLength], 0, old_stack_length);
-			System.arraycopy(locationStack, 0, locationStack = new int[stackLength], 0, old_stack_length);
-			System.arraycopy(locationStartStack, 0, locationStartStack = new int[stackLength], 0, old_stack_length);
-			System.arraycopy(tempStack, 0, tempStack = new int[stackLength], 0, old_stack_length);
-			System.arraycopy(prevStack, 0, prevStack = new int[stackLength], 0, old_stack_length);
-			System.arraycopy(nextStack, 0, nextStack = new int[stackLength], 0, old_stack_length);
-			System.arraycopy(scopeIndex, 0, scopeIndex = new int[stackLength], 0, old_stack_length);
-			System.arraycopy(scopePosition, 0, scopePosition = new int[stackLength], 0, old_stack_length);
+			System.arraycopy(this.stack, 0, this.stack = new int[this.stackLength], 0, old_stack_length);
+			System.arraycopy(this.locationStack, 0, this.locationStack = new int[this.stackLength], 0, old_stack_length);
+			System.arraycopy(this.locationStartStack, 0, this.locationStartStack = new int[this.stackLength], 0, old_stack_length);
+			System.arraycopy(this.tempStack, 0, this.tempStack = new int[this.stackLength], 0, old_stack_length);
+			System.arraycopy(this.prevStack, 0, this.prevStack = new int[this.stackLength], 0, old_stack_length);
+			System.arraycopy(this.nextStack, 0, this.nextStack = new int[this.stackLength], 0, old_stack_length);
+			System.arraycopy(this.scopeIndex, 0, this.scopeIndex = new int[this.stackLength], 0, old_stack_length);
+			System.arraycopy(this.scopePosition, 0, this.scopePosition = new int[this.stackLength], 0, old_stack_length);
 		}
 		return;
 	}
@@ -194,30 +194,30 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			this.recoveryScanner.record = record;
 		}
 		try {
-			lexStream.reset();
-	
-			currentToken = lexStream.getToken();
-	
+			this.lexStream.reset();
+
+			this.currentToken = this.lexStream.getToken();
+
 			int prev_pos;
 			int pos;
 			int next_pos;
 			int act = START_STATE;
-	
+
 			reallocateStacks();
-	
+
 			//
 			// Start parsing
 			//
-			stateStackTop = 0;
-			stack[stateStackTop] = act;
-	
-			int tok = lexStream.kind(currentToken);
-			locationStack[stateStackTop] = currentToken;
-			locationStartStack[stateStackTop] = lexStream.start(currentToken);
-			
+			this.stateStackTop = 0;
+			this.stack[this.stateStackTop] = act;
+
+			int tok = this.lexStream.kind(this.currentToken);
+			this.locationStack[this.stateStackTop] = this.currentToken;
+			this.locationStartStack[this.stateStackTop] = this.lexStream.start(this.currentToken);
+
 			boolean forceRecoveryAfterLBracketMissing = false;
 	//		int forceRecoveryToken = -1;
-	
+
 			//
 			// Process a terminal
 			//
@@ -226,16 +226,16 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 				// Synchronize state stacks and update the location stack
 				//
 				prev_pos = -1;
-				prevStackTop = -1;
-	
+				this.prevStackTop = -1;
+
 				next_pos = -1;
-				nextStackTop = -1;
-	
-				pos = stateStackTop;
-				tempStackTop = stateStackTop - 1;
-				for (int i = 0; i <= stateStackTop; i++)
-					tempStack[i] = stack[i];
-	
+				this.nextStackTop = -1;
+
+				pos = this.stateStackTop;
+				this.tempStackTop = this.stateStackTop - 1;
+				for (int i = 0; i <= this.stateStackTop; i++)
+					this.tempStack[i] = this.stack[i];
+
 				act = Parser.tAction(act, tok);
 				//
 				// When a reduce action is encountered, we compute all REDUCE
@@ -245,21 +245,21 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 				//
 				while (act <= NUM_RULES) {
 					do {
-						tempStackTop -= (Parser.rhs[act]-1);
-						act = Parser.ntAction(tempStack[tempStackTop], Parser.lhs[act]);
+						this.tempStackTop -= (Parser.rhs[act]-1);
+						act = Parser.ntAction(this.tempStack[this.tempStackTop], Parser.lhs[act]);
 					} while(act <= NUM_RULES);
 					//
 					// ... Update the maximum useful position of the
 					// (STATE_)STACK, push goto state into stack, and
 					// compute next action on current symbol ...
 					//
-					if (tempStackTop + 1 >= stackLength)
+					if (this.tempStackTop + 1 >= this.stackLength)
 						reallocateStacks();
-					pos = pos < tempStackTop ? pos : tempStackTop;
-					tempStack[tempStackTop + 1] = act;
+					pos = pos < this.tempStackTop ? pos : this.tempStackTop;
+					this.tempStack[this.tempStackTop + 1] = act;
 					act = Parser.tAction(act, tok);
 				}
-	
+
 				//
 				// At this point, we have a shift, shift-reduce, accept or error
 				// action.  STACK contains the configuration of the state stack
@@ -270,15 +270,15 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 				// reductions are executed.
 				//
 				while(act > ERROR_ACTION || act < ACCEPT_ACTION) { // SHIFT-REDUCE action or SHIFT action ?
-					nextStackTop = tempStackTop + 1;
-					for (int i = next_pos + 1; i <= nextStackTop; i++)
-						nextStack[i] = tempStack[i];
-	
-					for (int i = pos + 1; i <= nextStackTop; i++) {
-						locationStack[i] = locationStack[stateStackTop];
-						locationStartStack[i] = locationStartStack[stateStackTop];
+					this.nextStackTop = this.tempStackTop + 1;
+					for (int i = next_pos + 1; i <= this.nextStackTop; i++)
+						this.nextStack[i] = this.tempStack[i];
+
+					for (int i = pos + 1; i <= this.nextStackTop; i++) {
+						this.locationStack[i] = this.locationStack[this.stateStackTop];
+						this.locationStartStack[i] = this.locationStartStack[this.stateStackTop];
 					}
-	
+
 					//
 					// If we have a shift-reduce, process it as well as
 					// the goto-reduce actions that follow it.
@@ -286,25 +286,25 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 					if (act > ERROR_ACTION) {
 						act -= ERROR_ACTION;
 						do {
-							nextStackTop -= (Parser.rhs[act]-1);
-							act = Parser.ntAction(nextStack[nextStackTop], Parser.lhs[act]);
+							this.nextStackTop -= (Parser.rhs[act]-1);
+							act = Parser.ntAction(this.nextStack[this.nextStackTop], Parser.lhs[act]);
 						} while(act <= NUM_RULES);
-						pos = pos < nextStackTop ? pos : nextStackTop;
+						pos = pos < this.nextStackTop ? pos : this.nextStackTop;
 					}
-	
-					if (nextStackTop + 1 >= stackLength)
+
+					if (this.nextStackTop + 1 >= this.stackLength)
 						reallocateStacks();
-	
-					tempStackTop = nextStackTop;
-					nextStack[++nextStackTop] = act;
-					next_pos = nextStackTop;
-	
+
+					this.tempStackTop = this.nextStackTop;
+					this.nextStack[++this.nextStackTop] = act;
+					next_pos = this.nextStackTop;
+
 					//
 					// Simulate the parser through the next token without
 					// destroying STACK or next_stack.
 					//
-					currentToken = lexStream.getToken();
-					tok = lexStream.kind(currentToken);
+					this.currentToken = this.lexStream.getToken();
+					tok = this.lexStream.kind(this.currentToken);
 					act = Parser.tAction(act, tok);
 					while(act <= NUM_RULES) {
 						//
@@ -316,26 +316,26 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 							if(DEBUG) {
 								System.out.println(Parser.name[Parser.non_terminal_index[lhs_symbol]]);
 							}
-							tempStackTop -= (Parser.rhs[act]-1);
-							act = (tempStackTop > next_pos
-									   ? tempStack[tempStackTop]
-									   : nextStack[tempStackTop]);
+							this.tempStackTop -= (Parser.rhs[act]-1);
+							act = (this.tempStackTop > next_pos
+									   ? this.tempStack[this.tempStackTop]
+									   : this.nextStack[this.tempStackTop]);
 							act = Parser.ntAction(act, lhs_symbol);
 						}   while(act <= NUM_RULES);
-	
+
 						//
 						// ... Update the maximum useful position of the
 						// (STATE_)STACK, push GOTO state into stack, and
 						// compute next action on current symbol ...
 						//
-						if (tempStackTop + 1 >= stackLength)
+						if (this.tempStackTop + 1 >= this.stackLength)
 							reallocateStacks();
-	
-						next_pos = next_pos < tempStackTop ? next_pos : tempStackTop;
-						tempStack[tempStackTop + 1] = act;
+
+						next_pos = next_pos < this.tempStackTop ? next_pos : this.tempStackTop;
+						this.tempStack[this.tempStackTop + 1] = act;
 						act = Parser.tAction(act, tok);
 					}
-	
+
 	//				if((tok != TokenNameRBRACE || (forceRecoveryToken != currentToken && (lexStream.flags(currentToken) & LexStream.LBRACE_MISSING) != 0))
 	//					&& (lexStream.flags(currentToken) & LexStream.IS_AFTER_JUMP) !=0) {
 	//					act = ERROR_ACTION;
@@ -345,27 +345,27 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	//						forceRecoveryToken = currentToken;
 	//					}
 	//				}
-					
+
 					//
 					// No error was detected, Read next token into
 					// PREVTOK element, advance CURTOK pointer and
 					// update stacks.
 					//
 					if (act != ERROR_ACTION) {
-						prevStackTop = stateStackTop;
-						for (int i = prev_pos + 1; i <= prevStackTop; i++)
-							prevStack[i] = stack[i];
+						this.prevStackTop = this.stateStackTop;
+						for (int i = prev_pos + 1; i <= this.prevStackTop; i++)
+							this.prevStack[i] = this.stack[i];
 						prev_pos = pos;
-	
-						stateStackTop = nextStackTop;
-						for (int i = pos + 1; i <= stateStackTop; i++)
-							stack[i] = nextStack[i];
-						locationStack[stateStackTop] = currentToken;
-						locationStartStack[stateStackTop] = lexStream.start(currentToken);
+
+						this.stateStackTop = this.nextStackTop;
+						for (int i = pos + 1; i <= this.stateStackTop; i++)
+							this.stack[i] = this.nextStack[i];
+						this.locationStack[this.stateStackTop] = this.currentToken;
+						this.locationStartStack[this.stateStackTop] = this.lexStream.start(this.currentToken);
 						pos = next_pos;
 					}
 				}
-	
+
 				//
 				// At this stage, either we have an ACCEPT or an ERROR
 				// action.
@@ -374,21 +374,21 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 					//
 					// An error was detected.
 					//
-					RepairCandidate candidate = errorRecovery(currentToken, forceRecoveryAfterLBracketMissing);
-					
+					RepairCandidate candidate = errorRecovery(this.currentToken, forceRecoveryAfterLBracketMissing);
+
 					forceRecoveryAfterLBracketMissing = false;
-					
-					if(parser.reportOnlyOneSyntaxError) {
+
+					if(this.parser.reportOnlyOneSyntaxError) {
 						return;
 					}
-					
-					if(this.parser.problemReporter().options.maxProblemsPerUnit < this.parser.compilationUnit.compilationResult.problemCount) {						
+
+					if(this.parser.problemReporter().options.maxProblemsPerUnit < this.parser.compilationUnit.compilationResult.problemCount) {
 						if(this.recoveryScanner == null || !this.recoveryScanner.record) return;
 						this.reportProblem = false;
 					}
-	
-					act = stack[stateStackTop];
-	
+
+					act = this.stack[this.stateStackTop];
+
 					//
 					// If the recovery was successful on a nonterminal candidate,
 					// parse through that candidate and "read" the next token.
@@ -402,18 +402,18 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 						}
 						act = Parser.ntAction(act, lhs_symbol);
 						while(act <= NUM_RULES) {
-							stateStackTop -= (Parser.rhs[act]-1);
-							act = Parser.ntAction(stack[stateStackTop], Parser.lhs[act]);
+							this.stateStackTop -= (Parser.rhs[act]-1);
+							act = Parser.ntAction(this.stack[this.stateStackTop], Parser.lhs[act]);
 						}
-						stack[++stateStackTop] = act;
-						currentToken = lexStream.getToken();
-						tok = lexStream.kind(currentToken);
-						locationStack[stateStackTop] = currentToken;
-						locationStartStack[stateStackTop] = lexStream.start(currentToken);
+						this.stack[++this.stateStackTop] = act;
+						this.currentToken = this.lexStream.getToken();
+						tok = this.lexStream.kind(this.currentToken);
+						this.locationStack[this.stateStackTop] = this.currentToken;
+						this.locationStartStack[this.stateStackTop] = this.lexStream.start(this.currentToken);
 					} else {
 						tok = candidate.symbol;
-						locationStack[stateStackTop] = candidate.location;
-						locationStartStack[stateStackTop] = lexStream.start(candidate.location);
+						this.locationStack[this.stateStackTop] = candidate.location;
+						this.locationStartStack[this.stateStackTop] = this.lexStream.start(candidate.location);
 					}
 				}
 			} while (act != ACCEPT_ACTION);
@@ -424,7 +424,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		}
 		return;
 	}
-	
+
 	private static char[] displayEscapeCharacters(char[] tokenSource, int start, int end) {
 		StringBuffer tokenSourceBuffer = new StringBuffer();
 		for (int i = 0; i < start; i++) {
@@ -432,7 +432,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		}
 		for (int i = start; i < end; i++) {
 			char c = tokenSource[i];
-			
+
 			switch (c) {
                 case '\r' :
                     tokenSourceBuffer.append("\\r"); //$NON-NLS-1$
@@ -486,28 +486,28 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 //
 	private RepairCandidate errorRecovery(int error_token, boolean forcedError) {
 		this.errorToken = error_token;
-		this.errorTokenStart = lexStream.start(error_token);
-		
-		int prevtok = lexStream.previous(error_token);
-		int prevtokKind = lexStream.kind(prevtok);
-		
+		this.errorTokenStart = this.lexStream.start(error_token);
+
+		int prevtok = this.lexStream.previous(error_token);
+		int prevtokKind = this.lexStream.kind(prevtok);
+
 		if(forcedError) {
 			int name_index = Parser.terminal_index[TokenNameLBRACE];
 
 			reportError(INSERTION_CODE, name_index, prevtok, prevtok);
-			
+
 			RepairCandidate candidate = new RepairCandidate();
 			candidate.symbol = TokenNameLBRACE;
 			candidate.location = error_token;
-			lexStream.reset(error_token);
-			
-			stateStackTop = nextStackTop;
-			for (int j = 0; j <= stateStackTop; j++) {
-				stack[j] = nextStack[j];
+			this.lexStream.reset(error_token);
+
+			this.stateStackTop = this.nextStackTop;
+			for (int j = 0; j <= this.stateStackTop; j++) {
+				this.stack[j] = this.nextStack[j];
 			}
-			locationStack[stateStackTop] = error_token;
-			locationStartStack[stateStackTop] = lexStream.start(error_token);
-			
+			this.locationStack[this.stateStackTop] = error_token;
+			this.locationStartStack[this.stateStackTop] = this.lexStream.start(error_token);
+
 			return candidate;
 		}
 
@@ -526,7 +526,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			return candidate;
 		}
 
-		if (lexStream.kind(error_token) == EOFT_SYMBOL) {
+		if (this.lexStream.kind(error_token) == EOFT_SYMBOL) {
 			reportError(EOF_CODE,
 						Parser.terminal_index[EOFT_SYMBOL],
 						prevtok,
@@ -543,8 +543,8 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// a successful recovery or have consumed the remaining input
 		// tokens.
 		//
-		while(lexStream.kind(buffer[BUFF_UBOUND]) != EOFT_SYMBOL) {
-			candidate = secondaryPhase(buffer[MAX_DISTANCE - MIN_DISTANCE + 2]);
+		while(this.lexStream.kind(this.buffer[BUFF_UBOUND]) != EOFT_SYMBOL) {
+			candidate = secondaryPhase(this.buffer[MAX_DISTANCE - MIN_DISTANCE + 2]);
 			if (candidate.symbol != 0) {
 				return candidate;
 			}
@@ -555,15 +555,15 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// remaining tokens in the input.
 		//
 		int i;
-		for (i = BUFF_UBOUND; lexStream.kind(buffer[i]) == EOFT_SYMBOL; i--){/*empty*/}
+		for (i = BUFF_UBOUND; this.lexStream.kind(this.buffer[i]) == EOFT_SYMBOL; i--){/*empty*/}
 
 		reportError(DELETION_CODE,
 					Parser.terminal_index[prevtokKind],//Parser.terminal_index[lexStream.kind(prevtok)],
 					error_token,
-					buffer[i]);
+					this.buffer[i]);
 
 		candidate.symbol = 0;
-		candidate.location = buffer[i];
+		candidate.location = this.buffer[i];
 
 		return candidate;
 	}
@@ -582,14 +582,14 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		//
 		// Initialize the buffer.
 		//
-		int i = (nextStackTop >= 0 ? 3 : 2);
-		buffer[i] = error_token;
+		int i = (this.nextStackTop >= 0 ? 3 : 2);
+		this.buffer[i] = error_token;
 
 		for (int j = i; j > 0; j--)
-			buffer[j - 1] = lexStream.previous(buffer[j]);
+			this.buffer[j - 1] = this.lexStream.previous(this.buffer[j]);
 
 		for (int k = i + 1; k < BUFF_SIZE; k++)
-			buffer[k] = lexStream.next(buffer[k - 1]);
+			this.buffer[k] = this.lexStream.next(this.buffer[k - 1]);
 
 		//
 		// If NEXT_STACK_TOP > 0 then the parse was successful on CURTOK
@@ -597,9 +597,9 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// that case, first check whether or not primary recovery is
 		// possible on next_stack ...
 		//
-		if (nextStackTop >= 0) {
+		if (this.nextStackTop >= 0) {
 			repair.bufferPosition = 3;
-			repair = checkPrimaryDistance(nextStack, nextStackTop, repair);
+			repair = checkPrimaryDistance(this.nextStack, this.nextStackTop, repair);
 		}
 
 		//
@@ -608,7 +608,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		PrimaryRepairInfo new_repair = repair.copy();
 
 		new_repair.bufferPosition = 2;
-		new_repair = checkPrimaryDistance(stack, stateStackTop, new_repair);
+		new_repair = checkPrimaryDistance(this.stack, this.stateStackTop, new_repair);
 		if (new_repair.distance > repair.distance || new_repair.misspellIndex > repair.misspellIndex) {
 			repair = new_repair;
 		}
@@ -617,11 +617,11 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// Finally, if prev_stack_top >= 0 then try primary recovery on
 		// the prev_stack configuration.
 		//
-		
-		if (prevStackTop >= 0) {
+
+		if (this.prevStackTop >= 0) {
 			new_repair = repair.copy();
 			new_repair.bufferPosition = 1;
-			new_repair = checkPrimaryDistance(prevStack,prevStackTop, new_repair);
+			new_repair = checkPrimaryDistance(this.prevStack,this.prevStackTop, new_repair);
 			if (new_repair.distance > repair.distance || new_repair.misspellIndex > repair.misspellIndex) {
 				repair = new_repair;
 			}
@@ -632,12 +632,12 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// ensure that we cannot do better with a similar secondary
 		// phase recovery.
 		//
-		if (nextStackTop >= 0) {// next_stack available
-			if (secondaryCheck(nextStack,nextStackTop,3,repair.distance)) {
+		if (this.nextStackTop >= 0) {// next_stack available
+			if (secondaryCheck(this.nextStack,this.nextStackTop,3,repair.distance)) {
 				return candidate;
 			}
 		}
-		else if (secondaryCheck(stack, stateStackTop, 2, repair.distance)) {
+		else if (secondaryCheck(this.stack, this.stateStackTop, 2, repair.distance)) {
 			return candidate;
 		}
 
@@ -678,7 +678,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// the error token.
 		//
 		if (repair.code == INSERTION_CODE) {
-			if (buffer[repair.bufferPosition - 1] == 0) {
+			if (this.buffer[repair.bufferPosition - 1] == 0) {
 				repair.code = BEFORE_CODE;
 			}
 		}
@@ -688,17 +688,17 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// update stack accordingly and call diagnostic routine.
 		//
 		if (repair.bufferPosition == 1) {
-			stateStackTop = prevStackTop;
-			for (int j = 0; j <= stateStackTop; j++) {
-				stack[j] = prevStack[j];
+			this.stateStackTop = this.prevStackTop;
+			for (int j = 0; j <= this.stateStackTop; j++) {
+				this.stack[j] = this.prevStack[j];
 			}
-		} else if (nextStackTop >= 0 && repair.bufferPosition >= 3) {
-			stateStackTop = nextStackTop;
-			for (int j = 0; j <= stateStackTop; j++) {
-				stack[j] = nextStack[j];
+		} else if (this.nextStackTop >= 0 && repair.bufferPosition >= 3) {
+			this.stateStackTop = this.nextStackTop;
+			for (int j = 0; j <= this.stateStackTop; j++) {
+				this.stack[j] = this.nextStack[j];
 			}
-			locationStack[stateStackTop] = buffer[3];
-			locationStartStack[stateStackTop] = lexStream.start(buffer[3]);
+			this.locationStack[this.stateStackTop] = this.buffer[3];
+			this.locationStartStack[this.stateStackTop] = this.lexStream.start(this.buffer[3]);
 		}
 
 		return primaryDiagnosis(repair);
@@ -713,9 +713,9 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 //	   otherwise it returns 0.
 //
 	private int mergeCandidate(int state, int buffer_position) {
-		char[] name1 = lexStream.name(buffer[buffer_position]);
-		char[] name2 = lexStream.name(buffer[buffer_position + 1]);
-		
+		char[] name1 = this.lexStream.name(this.buffer[buffer_position]);
+		char[] name2 = this.lexStream.name(this.buffer[buffer_position + 1]);
+
 		int len  = name1.length + name2.length;
 
 		char[] str = CharOperation.concat(name1, name2);
@@ -762,11 +762,11 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	    PrimaryRepairInfo scope_repair = scopeTrial(stck, stack_top, repair.copy());
 	    if (scope_repair.distance > repair.distance)
 	        repair = scope_repair;
-	        
+
 		//
 		//  Next, try merging the error token with its successor.
 		//
-	    if(buffer[repair.bufferPosition] != 0 && buffer[repair.bufferPosition + 1] != 0) {// do not merge the first token
+	    if(this.buffer[repair.bufferPosition] != 0 && this.buffer[repair.bufferPosition + 1] != 0) {// do not merge the first token
 			symbol = mergeCandidate(stck[stack_top], repair.bufferPosition);
 			if (symbol != 0) {
 				j = parseCheck(stck, stack_top, symbol, repair.bufferPosition+2);
@@ -785,10 +785,10 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		j = parseCheck(
 				stck,
 				stack_top,
-				lexStream.kind(buffer[repair.bufferPosition + 1]),
+				this.lexStream.kind(this.buffer[repair.bufferPosition + 1]),
 				repair.bufferPosition + 2);
-		if (lexStream.kind(buffer[repair.bufferPosition]) == EOLT_SYMBOL &&
-			lexStream.afterEol(buffer[repair.bufferPosition+1])) {
+		if (this.lexStream.kind(this.buffer[repair.bufferPosition]) == EOLT_SYMBOL &&
+			this.lexStream.afterEol(this.buffer[repair.bufferPosition+1])) {
 			 k = 10;
 		} else {
 			k = 0;
@@ -806,22 +806,22 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		//
 		next_state = stck[stack_top];
 		max_pos = stack_top;
-		tempStackTop = stack_top - 1;
+		this.tempStackTop = stack_top - 1;
 
-		tok = lexStream.kind(buffer[repair.bufferPosition]);
-		lexStream.reset(buffer[repair.bufferPosition + 1]);
+		tok = this.lexStream.kind(this.buffer[repair.bufferPosition]);
+		this.lexStream.reset(this.buffer[repair.bufferPosition + 1]);
 		act = Parser.tAction(next_state, tok);
 		while(act <= NUM_RULES) {
 			do {
-				tempStackTop -= (Parser.rhs[act]-1);
+				this.tempStackTop -= (Parser.rhs[act]-1);
 				symbol = Parser.lhs[act];
-				act = (tempStackTop > max_pos
-									  ? tempStack[tempStackTop]
-									  : stck[tempStackTop]);
+				act = (this.tempStackTop > max_pos
+									  ? this.tempStack[this.tempStackTop]
+									  : stck[this.tempStackTop]);
 				act = Parser.ntAction(act, symbol);
 			} while(act <= NUM_RULES);
-			max_pos = max_pos < tempStackTop ? max_pos : tempStackTop;
-			tempStack[tempStackTop + 1] = act;
+			max_pos = max_pos < this.tempStackTop ? max_pos : this.tempStackTop;
+			this.tempStack[this.tempStackTop + 1] = act;
 			next_state = act;
 			act = Parser.tAction(next_state, tok);
 		}
@@ -834,10 +834,10 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			symbol = Parser.asr[i];
 			if (symbol != EOFT_SYMBOL && symbol != ERROR_SYMBOL) {
 				if (root == 0) {
-					list[symbol] = symbol;
+					this.list[symbol] = symbol;
 				} else {
-					list[symbol] = list[root];
-					list[root] = symbol;
+					this.list[symbol] = this.list[root];
+					this.list[root] = symbol;
 				}
 				root = symbol;
 			}
@@ -846,20 +846,20 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		if (stck[stack_top] != next_state) {
 			for (i = Parser.asi(stck[stack_top]); Parser.asr[i] != 0; i++) {
 				symbol = Parser.asr[i];
-				if (symbol != EOFT_SYMBOL && symbol != ERROR_SYMBOL && list[symbol] == 0) {
+				if (symbol != EOFT_SYMBOL && symbol != ERROR_SYMBOL && this.list[symbol] == 0) {
 					if (root == 0) {
-						list[symbol] = symbol;
+						this.list[symbol] = symbol;
 					} else {
-						list[symbol] = list[root];
-						list[root] = symbol;
+						this.list[symbol] = this.list[root];
+						this.list[root] = symbol;
 					}
 					root = symbol;
 				}
 			}
 		}
 
-		i = list[root];
-		list[root] = 0;
+		i = this.list[root];
+		this.list[root] = 0;
 		root = i;
 
 		//
@@ -868,7 +868,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		//
 		symbol = root;
 		while(symbol != 0) {
-			if (symbol == EOLT_SYMBOL && lexStream.afterEol(buffer[repair.bufferPosition])) {
+			if (symbol == EOLT_SYMBOL && this.lexStream.afterEol(this.buffer[repair.bufferPosition])) {
 				k = 10;
 			} else {
 				k = 0;
@@ -884,14 +884,9 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 				repair.distance = j;
 				repair.symbol = symbol;
 				repair.code = INSERTION_CODE;
-			} else if (j == repair.distance && k == repair.misspellIndex && isBetterSymbol(symbol, repair.symbol)) {
-				repair.misspellIndex = k;
-				repair.distance = j;
-				repair.symbol = symbol;
-				repair.code = INSERTION_CODE;
 			}
 
-			symbol = list[symbol];
+			symbol = this.list[symbol];
 		}
 
 		//
@@ -899,13 +894,13 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// in the current state, except EOFT and ERROR_SYMBOL.
 		//
 		symbol = root;
-		
-		if(buffer[repair.bufferPosition] != 0) {// do not replace the first token
+
+		if(this.buffer[repair.bufferPosition] != 0) {// do not replace the first token
 			while(symbol != 0) {
-				if (symbol == EOLT_SYMBOL && lexStream.afterEol(buffer[repair.bufferPosition+1])) {
+				if (symbol == EOLT_SYMBOL && this.lexStream.afterEol(this.buffer[repair.bufferPosition+1])) {
 					k = 10;
 				} else {
-					k = misspell(symbol, buffer[repair.bufferPosition]);
+					k = misspell(symbol, this.buffer[repair.bufferPosition]);
 				}
 				j = parseCheck(stck, stack_top, symbol, repair.bufferPosition+1);
 				if (j > repair.distance) {
@@ -917,14 +912,10 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 					repair.misspellIndex = k;
 					repair.symbol = symbol;
 					repair.code = SUBSTITUTION_CODE;
-				} else if (j == repair.distance && k > repair.misspellIndex && isBetterSymbol(symbol, repair.symbol)) {
-					repair.misspellIndex = k;
-					repair.symbol = symbol;
-					repair.code = SUBSTITUTION_CODE;
 				}
 				i = symbol;
-				symbol = list[symbol];
-				list[i] = 0;                             // reset element
+				symbol = this.list[symbol];
+				this.list[i] = 0;                             // reset element
 			}
 		}
 
@@ -971,18 +962,18 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		//
 		//  Issue diagnostic.
 		//
-		int prevtok = buffer[repair.bufferPosition - 1];
-		int	curtok  = buffer[repair.bufferPosition];
+		int prevtok = this.buffer[repair.bufferPosition - 1];
+		int	curtok  = this.buffer[repair.bufferPosition];
 
 		switch(repair.code) {
 			case INSERTION_CODE:
 			case BEFORE_CODE: {
 				if (repair.symbol > NT_OFFSET)
-					 name_index = getNtermIndex(stack[stateStackTop],
+					 name_index = getNtermIndex(this.stack[this.stateStackTop],
 												repair.symbol,
 												repair.bufferPosition);
-				else name_index = getTermIndex(stack,
-											   stateStackTop,
+				else name_index = getTermIndex(this.stack,
+											   this.stateStackTop,
 											   repair.symbol,
 											   repair.bufferPosition);
 
@@ -991,7 +982,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 				break;
 			}
 			case INVALID_CODE: {
-				name_index = getNtermIndex(stack[stateStackTop],
+				name_index = getNtermIndex(this.stack[this.stateStackTop],
 										   repair.symbol,
 										   repair.bufferPosition + 1);
 				reportError(repair.code, name_index, curtok, curtok);
@@ -1002,7 +993,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 					name_index = Parser.terminal_index[repair.symbol];
 				else
 				{
-					name_index = getTermIndex(stack, stateStackTop,
+					name_index = getTermIndex(this.stack, this.stateStackTop,
 											  repair.symbol,
 											  repair.bufferPosition + 1);
 					if (name_index != Parser.terminal_index[repair.symbol])
@@ -1015,25 +1006,25 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 				reportError(repair.code,
 							 Parser.terminal_index[repair.symbol],
 							 curtok,
-							 lexStream.next(curtok));
+							 this.lexStream.next(curtok));
 				break;
 			}
 			case SCOPE_CODE: {
-	            for (int i = 0; i < scopeStackTop; i++) {
+	            for (int i = 0; i < this.scopeStackTop; i++) {
 	                reportError(repair.code,
-	                            -scopeIndex[i],
-	                            locationStack[scopePosition[i]],
+	                            -this.scopeIndex[i],
+	                            this.locationStack[this.scopePosition[i]],
 	                            prevtok,
-	                            Parser.non_terminal_index[Parser.scope_lhs[scopeIndex[i]]]);
+	                            Parser.non_terminal_index[Parser.scope_lhs[this.scopeIndex[i]]]);
 	            }
-	
-	            repair.symbol = Parser.scope_lhs[scopeIndex[scopeStackTop]] + NT_OFFSET;
-	            stateStackTop = scopePosition[scopeStackTop];
+
+	            repair.symbol = Parser.scope_lhs[this.scopeIndex[this.scopeStackTop]] + NT_OFFSET;
+	            this.stateStackTop = this.scopePosition[this.scopeStackTop];
 	            reportError(repair.code,
-	                        -scopeIndex[scopeStackTop],
-	                        locationStack[scopePosition[scopeStackTop]],
+	                        -this.scopeIndex[this.scopeStackTop],
+	                        this.locationStack[this.scopePosition[this.scopeStackTop]],
 	                        prevtok,
-	                        getNtermIndex(stack[stateStackTop],
+	                        getNtermIndex(this.stack[this.stateStackTop],
 	                                      repair.symbol,
 	                                      repair.bufferPosition)
 	                       );
@@ -1053,28 +1044,28 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			case BEFORE_CODE:
 			case SCOPE_CODE: {
 				candidate.symbol = repair.symbol;
-				candidate.location = buffer[repair.bufferPosition];
-				lexStream.reset(buffer[repair.bufferPosition]);
+				candidate.location = this.buffer[repair.bufferPosition];
+				this.lexStream.reset(this.buffer[repair.bufferPosition]);
 				break;
 			}
 			case INVALID_CODE:
 			case SUBSTITUTION_CODE: {
 				candidate.symbol = repair.symbol;
-				candidate.location = buffer[repair.bufferPosition];
-				lexStream.reset(buffer[repair.bufferPosition + 1]);
+				candidate.location = this.buffer[repair.bufferPosition];
+				this.lexStream.reset(this.buffer[repair.bufferPosition + 1]);
 				break;
 			}
 			case MERGE_CODE: {
 				candidate.symbol = repair.symbol;
-				candidate.location = buffer[repair.bufferPosition];
-				lexStream.reset(buffer[repair.bufferPosition + 2]);
+				candidate.location = this.buffer[repair.bufferPosition];
+				this.lexStream.reset(this.buffer[repair.bufferPosition + 2]);
 				break;
 			}
 			default: {// deletion
-				candidate.location = buffer[repair.bufferPosition + 1];
+				candidate.location = this.buffer[repair.bufferPosition + 1];
 				candidate.symbol =
-						  lexStream.kind(buffer[repair.bufferPosition + 1]);
-				lexStream.reset(buffer[repair.bufferPosition + 2]);
+						  this.lexStream.kind(this.buffer[repair.bufferPosition + 1]);
+				this.lexStream.reset(this.buffer[repair.bufferPosition + 2]);
 				break;
 			}
 		}
@@ -1103,7 +1094,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			max_pos = stack_top,
 			highest_symbol = tok;
 
-		tempStackTop = stack_top - 1;
+		this.tempStackTop = stack_top - 1;
 
 		//
 		// Compute all reduce and associated actions induced by the
@@ -1111,7 +1102,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// and ACCEPT actions cannot be computed on the candidate in
 		// this context, since we know that it is suitable for recovery.
 		//
-		lexStream.reset(buffer[buffer_position]);
+		this.lexStream.reset(this.buffer[buffer_position]);
 		act = Parser.tAction(act, tok);
 		while(act <= NUM_RULES) {
 			//
@@ -1119,11 +1110,11 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			// until a goto action is computed ...
 			//
 			do {
-				tempStackTop -= (Parser.rhs[act]-1);
+				this.tempStackTop -= (Parser.rhs[act]-1);
 				int lhs_symbol = Parser.lhs[act];
-				act = (tempStackTop > max_pos
-									  ? tempStack[tempStackTop]
-									  : stck[tempStackTop]);
+				act = (this.tempStackTop > max_pos
+									  ? this.tempStack[this.tempStackTop]
+									  : stck[this.tempStackTop]);
 				act = Parser.ntAction(act, lhs_symbol);
 			} while(act <= NUM_RULES);
 
@@ -1132,8 +1123,8 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			// push goto state into the stack, and compute next
 			// action on candidate ...
 			//
-			max_pos = max_pos < tempStackTop ? max_pos : tempStackTop;
-			tempStack[tempStackTop + 1] = act;
+			max_pos = max_pos < this.tempStackTop ? max_pos : this.tempStackTop;
+			this.tempStack[this.tempStackTop + 1] = act;
 			act = Parser.tAction(act, tok);
 		}
 
@@ -1149,17 +1140,17 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// max_pos as computed in the previous loop).  At that point,
 		// return the highest_symbol computed.
 		//
-		tempStackTop++; // adjust top of stack to reflect last goto
+		this.tempStackTop++; // adjust top of stack to reflect last goto
 						  // next move is shift or shift-reduce.
-		int threshold = tempStackTop;
+		int threshold = this.tempStackTop;
 
-		tok = lexStream.kind(buffer[buffer_position]);
-		lexStream.reset(buffer[buffer_position + 1]);
+		tok = this.lexStream.kind(this.buffer[buffer_position]);
+		this.lexStream.reset(this.buffer[buffer_position + 1]);
 
 		if (act > ERROR_ACTION) {  // shift-reduce on candidate?
 			act -= ERROR_ACTION;
 		} else {
-			tempStack[tempStackTop + 1] = act;
+			this.tempStack[this.tempStackTop + 1] = act;
 			act = Parser.tAction(act, tok);
 		}
 
@@ -1169,24 +1160,24 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			// until a goto action is computed ...
 			//
 			do {
-				tempStackTop -= (Parser.rhs[act]-1);
+				this.tempStackTop -= (Parser.rhs[act]-1);
 
-				if (tempStackTop < threshold) {
+				if (this.tempStackTop < threshold) {
 					return (highest_symbol > NT_OFFSET
 						 ? Parser.non_terminal_index[highest_symbol - NT_OFFSET]
 						 : Parser.terminal_index[highest_symbol]);
 				}
 
 				int lhs_symbol = Parser.lhs[act];
-				if (tempStackTop == threshold)
+				if (this.tempStackTop == threshold)
 					highest_symbol = lhs_symbol + NT_OFFSET;
-				act = (tempStackTop > max_pos
-									  ? tempStack[tempStackTop]
-									  : stck[tempStackTop]);
+				act = (this.tempStackTop > max_pos
+									  ? this.tempStack[this.tempStackTop]
+									  : stck[this.tempStackTop]);
 				act = Parser.ntAction(act, lhs_symbol);
 			} while(act <= NUM_RULES);
 
-			tempStack[tempStackTop + 1] = act;
+			this.tempStack[this.tempStackTop + 1] = act;
 			act = Parser.tAction(act, tok);
 		}
 
@@ -1207,19 +1198,19 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 //
 	private int getNtermIndex(int start, int sym, int buffer_position) {
 		int highest_symbol = sym - NT_OFFSET,
-			tok = lexStream.kind(buffer[buffer_position]);
-		lexStream.reset(buffer[buffer_position + 1]);
+			tok = this.lexStream.kind(this.buffer[buffer_position]);
+		this.lexStream.reset(this.buffer[buffer_position + 1]);
 
 		//
 		// Initialize stack index of temp_stack and initialize maximum
 		// position of state stack that is still useful.
 		//
-		tempStackTop = 0;
-		tempStack[tempStackTop] = start;
+		this.tempStackTop = 0;
+		this.tempStack[this.tempStackTop] = start;
 
 		int act = Parser.ntAction(start, highest_symbol);
 		if (act > NUM_RULES) { // goto action?
-			tempStack[tempStackTop + 1] = act;
+			this.tempStack[this.tempStackTop + 1] = act;
 			act = Parser.tAction(act, tok);
 		}
 
@@ -1229,29 +1220,18 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			// until a goto action is computed ...
 			//
 			do {
-				tempStackTop -= (Parser.rhs[act]-1);
-				if (tempStackTop < 0)
+				this.tempStackTop -= (Parser.rhs[act]-1);
+				if (this.tempStackTop < 0)
 					return Parser.non_terminal_index[highest_symbol];
-				if (tempStackTop == 0)
+				if (this.tempStackTop == 0)
 					highest_symbol = Parser.lhs[act];
-				act = Parser.ntAction(tempStack[tempStackTop], Parser.lhs[act]);
+				act = Parser.ntAction(this.tempStack[this.tempStackTop], Parser.lhs[act]);
 			} while(act <= NUM_RULES);
-			tempStack[tempStackTop + 1] = act;
+			this.tempStack[this.tempStackTop + 1] = act;
 			act = Parser.tAction(act, tok);
 		}
 
 		return Parser.non_terminal_index[highest_symbol];
-	}
-
-	private boolean isBetterSymbol(int symbol, int actualSymbol) {
-//		switch (actualSymbol) {
-//			case TokenNameinterface :
-//				if(symbol == TokenNameclass) {
-//					return true;
-//				}
-//				break;
-//		}
-		return false;
 	}
 
 //
@@ -1261,7 +1241,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 //	   considered to be misspelling of each other.
 //
 	private int misspell(int sym, int tok) {
-		
+
 
 		//
 		//
@@ -1278,7 +1258,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		//
 		//
 		//
-		char[] tokenName = lexStream.name(tok);
+		char[] tokenName = this.lexStream.name(tok);
 		int len = tokenName.length;
 		int m = len < MAX_NAME_LENGTH ? len : MAX_NAME_LENGTH;
 		char[] s2 = new char[m + 1];
@@ -1368,53 +1348,53 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 
 		return(count * 10 / ((n < len ? len : n) + num_errors));
 	}
-	
+
 	private PrimaryRepairInfo scopeTrial(int stck[], int stack_top, PrimaryRepairInfo repair) {
-	    stateSeen = new int[stackLength];
-	    for (int i = 0; i < stackLength; i++)
-	        stateSeen[i] = NIL;
-	    
-	    statePoolTop = 0;
-	    statePool = new StateInfo[stackLength];
-	
+	    this.stateSeen = new int[this.stackLength];
+	    for (int i = 0; i < this.stackLength; i++)
+	        this.stateSeen[i] = NIL;
+
+	    this.statePoolTop = 0;
+	    this.statePool = new StateInfo[this.stackLength];
+
 	    scopeTrialCheck(stck, stack_top, repair, 0);
-	
-	    stateSeen = null;
-	    statePoolTop = 0;
-	
+
+	    this.stateSeen = null;
+	    this.statePoolTop = 0;
+
 	    repair.code = SCOPE_CODE;
 	    repair.misspellIndex = 10;
-	
+
 	    return repair;
 	}
-	
+
 	private void scopeTrialCheck(int stck[], int stack_top, PrimaryRepairInfo repair, int indx) {
 		if(indx > 20) return; // avoid too much recursive call to improve performance
-		
+
 		int act = stck[stack_top];
-	
-	    for (int i = stateSeen[stack_top]; i != NIL; i = statePool[i].next) {
-	        if (statePool[i].state == act) return;
+
+	    for (int i = this.stateSeen[stack_top]; i != NIL; i = this.statePool[i].next) {
+	        if (this.statePool[i].state == act) return;
 	    }
 
-	    int old_state_pool_top = statePoolTop++;
-	    if(statePoolTop >= statePool.length) {
-	    	System.arraycopy(statePool, 0, statePool = new StateInfo[statePoolTop * 2], 0, statePoolTop);
+	    int old_state_pool_top = this.statePoolTop++;
+	    if(this.statePoolTop >= this.statePool.length) {
+	    	System.arraycopy(this.statePool, 0, this.statePool = new StateInfo[this.statePoolTop * 2], 0, this.statePoolTop);
 	    }
-	    
-	    statePool[old_state_pool_top] = new StateInfo(act, stateSeen[stack_top]);
-	    stateSeen[stack_top] = old_state_pool_top;
-	
+
+	    this.statePool[old_state_pool_top] = new StateInfo(act, this.stateSeen[stack_top]);
+	    this.stateSeen[stack_top] = old_state_pool_top;
+
 	    next : for (int i = 0; i < SCOPE_SIZE; i++) {
 	        //
 	        // Use the scope lookahead symbol to force all reductions
 	        // inducible by that symbol.
 	        //
 	        act = stck[stack_top];
-	        tempStackTop = stack_top - 1;
+	        this.tempStackTop = stack_top - 1;
 	        int max_pos = stack_top;
 	        int tok = Parser.scope_la[i];
-	        lexStream.reset(buffer[repair.bufferPosition]);
+	        this.lexStream.reset(this.buffer[repair.bufferPosition]);
 	        act = Parser.tAction(act, tok);
 	        while(act <= NUM_RULES) {
 	            //
@@ -1422,20 +1402,20 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	            // reduction, until a goto action is computed ...
 	            //
 	            do  {
-	                tempStackTop -= (Parser.rhs[act]-1);
+	                this.tempStackTop -= (Parser.rhs[act]-1);
 	                int lhs_symbol = Parser.lhs[act];
-	                act =  (tempStackTop > max_pos
-	                            ?  tempStack[tempStackTop]
-	                            :  stck[tempStackTop]);
+	                act =  (this.tempStackTop > max_pos
+	                            ?  this.tempStack[this.tempStackTop]
+	                            :  stck[this.tempStackTop]);
 	                act = Parser.ntAction(act, lhs_symbol);
 	            }  while(act <= NUM_RULES);
-	            if (tempStackTop + 1 >= stackLength)
+	            if (this.tempStackTop + 1 >= this.stackLength)
 	                return;
-	            max_pos = max_pos < tempStackTop ? max_pos : tempStackTop;
-	            tempStack[tempStackTop + 1] = act;
+	            max_pos = max_pos < this.tempStackTop ? max_pos : this.tempStackTop;
+	            this.tempStack[this.tempStackTop + 1] = act;
 	            act = Parser.tAction(act, tok);
 	        }
-	
+
 	        //
 	        // If the lookahead symbol is parsable, then we check
 	        // whether or not we have a match between the scope
@@ -1445,9 +1425,9 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	        if (act != ERROR_ACTION) {
 	        	int j, k;
 	            k = Parser.scope_prefix[i];
-	            for (j = tempStackTop + 1;
+	            for (j = this.tempStackTop + 1;
 	                 j >= (max_pos + 1) &&
-	                 Parser.in_symbol(tempStack[j]) == Parser.scope_rhs[k]; j--) {
+	                 Parser.in_symbol(this.tempStack[j]) == Parser.scope_rhs[k]; j--) {
 	                 k++;
 	            }
 	            if (j == max_pos) {
@@ -1512,23 +1492,23 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	                            act = Parser.ntAction(stck[top], Parser.lhs[act]);
 	                        }
 	                        top++;
-	
+
 	                        j = act;
 	                        act = stck[top];  // save
 	                        stck[top] = j;    // swap
 	                        scopeTrialCheck(stck, top, repair, indx+1);
 	                        stck[top] = act; // restore
 	                    } else if (distance > repair.distance) {
-	                        scopeStackTop = indx;
+	                        this.scopeStackTop = indx;
 	                        repair.distance = distance;
 	                    }
-	
-	                    if (lexStream.kind(buffer[repair.bufferPosition]) == EOFT_SYMBOL &&
+
+	                    if (this.lexStream.kind(this.buffer[repair.bufferPosition]) == EOFT_SYMBOL &&
 	                        repair.distance == previous_distance) {
-	                        scopeStackTop = indx;
+	                        this.scopeStackTop = indx;
 	                        repair.distance = MAX_DISTANCE;
 	                    }
-	
+
 	                    //
 	                    // If this scope recovery has beaten the
 	                    // previous distance, then we have found a
@@ -1538,8 +1518,8 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	                    // (INDX) in SCOPE_INDEX and SCOPE_STACK.
 	                    //
 	                    if (repair.distance > previous_distance) {
-	                        scopeIndex[indx] = i;
-	                        scopePosition[indx] = stack_position;
+	                        this.scopeIndex[indx] = i;
+	                        this.scopePosition[indx] = stack_position;
 	                        return;
 	                    }
 	                }
@@ -1562,12 +1542,12 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 
 		for (top = stack_top - 1; top >= 0; top--) {
 			j = parseCheck(stck, top,
-						   lexStream.kind(buffer[buffer_position]),
+						   this.lexStream.kind(this.buffer[buffer_position]),
 						   buffer_position + 1);
 			if (((j - buffer_position + 1) > MIN_DISTANCE) && (j > distance))
 				return true;
 		}
-		
+
 		PrimaryRepairInfo repair = new PrimaryRepairInfo();
 	    repair.bufferPosition = buffer_position + 1;
 	    repair.distance = distance;
@@ -1611,17 +1591,17 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// If the next_stack is available, try misplaced and secondary
 		// recovery on it first.
 		//
-		if (nextStackTop >= 0) {
+		if (this.nextStackTop >= 0) {
 			int  save_location;
 
-			buffer[2] = error_token;
-			buffer[1] = lexStream.previous(buffer[2]);
-			buffer[0] = lexStream.previous(buffer[1]);
+			this.buffer[2] = error_token;
+			this.buffer[1] = this.lexStream.previous(this.buffer[2]);
+			this.buffer[0] = this.lexStream.previous(this.buffer[1]);
 
 			for (k = 3; k < BUFF_UBOUND; k++)
-				buffer[k] = lexStream.next(buffer[k - 1]);
+				this.buffer[k] = this.lexStream.next(this.buffer[k - 1]);
 
-			buffer[BUFF_UBOUND] = lexStream.badtoken();// elmt not available
+			this.buffer[BUFF_UBOUND] = this.lexStream.badtoken();// elmt not available
 
 			//
 			// If we are at the end of the input stream, compute the
@@ -1630,57 +1610,57 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			//
 			for (next_last_index = MAX_DISTANCE - 1;
 				 next_last_index >= 1 &&
-				 lexStream.kind(buffer[next_last_index]) == EOFT_SYMBOL;
+				 this.lexStream.kind(this.buffer[next_last_index]) == EOFT_SYMBOL;
 				 next_last_index--){/*empty*/}
 			next_last_index = next_last_index + 1;
 
-			save_location = locationStack[nextStackTop];
-			int save_location_start = locationStartStack[nextStackTop];
-			locationStack[nextStackTop] = buffer[2];
-			locationStartStack[nextStackTop] = lexStream.start(buffer[2]);
-			misplaced.numDeletions = nextStackTop;
-			misplaced = misplacementRecovery(nextStack, nextStackTop,
+			save_location = this.locationStack[this.nextStackTop];
+			int save_location_start = this.locationStartStack[this.nextStackTop];
+			this.locationStack[this.nextStackTop] = this.buffer[2];
+			this.locationStartStack[this.nextStackTop] = this.lexStream.start(this.buffer[2]);
+			misplaced.numDeletions = this.nextStackTop;
+			misplaced = misplacementRecovery(this.nextStack, this.nextStackTop,
 											 next_last_index,
 											 misplaced, true);
 			if (misplaced.recoveryOnNextStack)
 				misplaced.distance++;
 
-			repair.numDeletions = nextStackTop + BUFF_UBOUND;
-			repair = secondaryRecovery(nextStack, nextStackTop,
+			repair.numDeletions = this.nextStackTop + BUFF_UBOUND;
+			repair = secondaryRecovery(this.nextStack, this.nextStackTop,
 									   next_last_index,
 									   repair, true);
 			if (repair.recoveryOnNextStack)
 				repair.distance++;
 
-			locationStack[nextStackTop] = save_location;
-			locationStartStack[nextStackTop] = save_location_start;
+			this.locationStack[this.nextStackTop] = save_location;
+			this.locationStartStack[this.nextStackTop] = save_location_start;
 		} else {            // next_stack not available, initialize ...
-			misplaced.numDeletions = stateStackTop;
-			repair.numDeletions = stateStackTop + BUFF_UBOUND;
+			misplaced.numDeletions = this.stateStackTop;
+			repair.numDeletions = this.stateStackTop + BUFF_UBOUND;
 		}
 
 		//
 		// Try secondary recovery on the "stack" configuration.
 		//
-		buffer[3] = error_token;
+		this.buffer[3] = error_token;
 
-		buffer[2] = lexStream.previous(buffer[3]);
-		buffer[1] = lexStream.previous(buffer[2]);
-		buffer[0] = lexStream.previous(buffer[1]);
+		this.buffer[2] = this.lexStream.previous(this.buffer[3]);
+		this.buffer[1] = this.lexStream.previous(this.buffer[2]);
+		this.buffer[0] = this.lexStream.previous(this.buffer[1]);
 
 		for (k = 4; k < BUFF_SIZE; k++)
-			buffer[k] = lexStream.next(buffer[k - 1]);
+			this.buffer[k] = this.lexStream.next(this.buffer[k - 1]);
 
 		for (last_index = MAX_DISTANCE - 1;
-			 last_index >= 1 && lexStream.kind(buffer[last_index]) == EOFT_SYMBOL;
+			 last_index >= 1 && this.lexStream.kind(this.buffer[last_index]) == EOFT_SYMBOL;
 			 last_index--){/*empty*/}
 		last_index++;
 
-		misplaced = misplacementRecovery(stack, stateStackTop,
+		misplaced = misplacementRecovery(this.stack, this.stateStackTop,
 										 last_index,
 										 misplaced, false);
 
-		repair = secondaryRecovery(stack, stateStackTop,
+		repair = secondaryRecovery(this.stack, this.stateStackTop,
 								   last_index, repair, false);
 
 		//
@@ -1707,21 +1687,21 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		// buffer, location_stack and last_index.
 		//
 		if (repair.recoveryOnNextStack) {
-			stateStackTop = nextStackTop;
-			for (i = 0; i <= stateStackTop; i++)
-				stack[i] = nextStack[i];
+			this.stateStackTop = this.nextStackTop;
+			for (i = 0; i <= this.stateStackTop; i++)
+				this.stack[i] = this.nextStack[i];
 
-			buffer[2] = error_token;
-			buffer[1] = lexStream.previous(buffer[2]);
-			buffer[0] = lexStream.previous(buffer[1]);
+			this.buffer[2] = error_token;
+			this.buffer[1] = this.lexStream.previous(this.buffer[2]);
+			this.buffer[0] = this.lexStream.previous(this.buffer[1]);
 
 			for (k = 3; k < BUFF_UBOUND; k++)
-				buffer[k] = lexStream.next(buffer[k - 1]);
+				this.buffer[k] = this.lexStream.next(this.buffer[k - 1]);
 
-			buffer[BUFF_UBOUND] = lexStream.badtoken();// elmt not available
+			this.buffer[BUFF_UBOUND] = this.lexStream.badtoken();// elmt not available
 
-			locationStack[nextStackTop] = buffer[2];
-			locationStartStack[nextStackTop] = lexStream.start(buffer[2]);
+			this.locationStack[this.nextStackTop] = this.buffer[2];
+			this.locationStartStack[this.nextStackTop] = this.lexStream.start(this.buffer[2]);
 			last_index = next_last_index;
 		}
 
@@ -1731,45 +1711,45 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	    //
 	    if (repair.code == SECONDARY_CODE || repair.code == DELETION_CODE) {
 	        PrimaryRepairInfo scope_repair = new PrimaryRepairInfo();
-	
+
 	        scope_repair.distance = 0;
 	        for (scope_repair.bufferPosition = 2;
 	             scope_repair.bufferPosition <= repair.bufferPosition &&
 	             repair.code != SCOPE_CODE; scope_repair.bufferPosition++) {
-	            scope_repair = scopeTrial(stack, stateStackTop, scope_repair);
+	            scope_repair = scopeTrial(this.stack, this.stateStackTop, scope_repair);
 	            j = (scope_repair.distance == MAX_DISTANCE
 	                                        ? last_index
 	                                        : scope_repair.distance);
 	            k = scope_repair.bufferPosition - 1;
 	            if ((j - k) > MIN_DISTANCE && (j - k) > (repair.distance - repair.numDeletions)) {
 	                repair.code = SCOPE_CODE;
-	                i = scopeIndex[scopeStackTop];       // upper bound
+	                i = this.scopeIndex[this.scopeStackTop];       // upper bound
 	                repair.symbol = Parser.scope_lhs[i] + NT_OFFSET;
-	                repair.stackPosition = stateStackTop;
+	                repair.stackPosition = this.stateStackTop;
 	                repair.bufferPosition = scope_repair.bufferPosition;
 	            }
 	        }
 	    }
-	
+
 	    //
 	    // If no successful recovery is found and we have reached the
 	    // end of the file, check whether or not scope recovery is
 	    // applicable at the end of the file after discarding some
 	    // states.
 	    //
-	    if (repair.code == 0 && lexStream.kind(buffer[last_index]) == EOFT_SYMBOL) {
+	    if (repair.code == 0 && this.lexStream.kind(this.buffer[last_index]) == EOFT_SYMBOL) {
 	        PrimaryRepairInfo scope_repair = new PrimaryRepairInfo();
-	
+
 	        scope_repair.bufferPosition = last_index;
 	        scope_repair.distance = 0;
-	        for (top = stateStackTop;
+	        for (top = this.stateStackTop;
 	             top >= 0 && repair.code == 0; top--)
 	        {
-	            scope_repair = scopeTrial(stack, top, scope_repair);
+	            scope_repair = scopeTrial(this.stack, top, scope_repair);
 	            if (scope_repair.distance > 0)
 	            {
 	                repair.code = SCOPE_CODE;
-	                i = scopeIndex[scopeStackTop];    // upper bound
+	                i = this.scopeIndex[this.scopeStackTop];    // upper bound
 	                repair.symbol = Parser.scope_lhs[i] + NT_OFFSET;
 	                repair.stackPosition = top;
 	                repair.bufferPosition = scope_repair.bufferPosition;
@@ -1791,24 +1771,24 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		//
 		switch(repair.code) {
 			case MISPLACED_CODE:
-				 candidate.location = buffer[2];
-				 candidate.symbol = lexStream.kind(buffer[2]);
-				 lexStream.reset(lexStream.next(buffer[2]));
+				 candidate.location = this.buffer[2];
+				 candidate.symbol = this.lexStream.kind(this.buffer[2]);
+				 this.lexStream.reset(this.lexStream.next(this.buffer[2]));
 
 				 break;
 
 			case DELETION_CODE:
-				 candidate.location = buffer[repair.bufferPosition];
+				 candidate.location = this.buffer[repair.bufferPosition];
 				 candidate.symbol =
-						   lexStream.kind(buffer[repair.bufferPosition]);
-				 lexStream.reset(lexStream.next(buffer[repair.bufferPosition]));
+						   this.lexStream.kind(this.buffer[repair.bufferPosition]);
+				 this.lexStream.reset(this.lexStream.next(this.buffer[repair.bufferPosition]));
 
 				 break;
 
 		default: // SCOPE_CODE || SECONDARY_CODE
 				 candidate.symbol = repair.symbol;
-				 candidate.location = buffer[repair.bufferPosition];
-				 lexStream.reset(buffer[repair.bufferPosition]);
+				 candidate.location = this.buffer[repair.bufferPosition];
+				 this.lexStream.reset(this.buffer[repair.bufferPosition]);
 
 				 break;
 		}
@@ -1823,16 +1803,16 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 //	   the best misplacement recovery computed previously.
 //
 	private SecondaryRepairInfo misplacementRecovery(int stck[], int stack_top, int last_index, SecondaryRepairInfo repair, boolean stack_flag) {
-		int  previous_loc = buffer[2];
+		int  previous_loc = this.buffer[2];
 		int stack_deletions = 0;
 
 		for (int top = stack_top - 1; top >= 0; top--) {
-			if (locationStack[top] < previous_loc) {
+			if (this.locationStack[top] < previous_loc) {
 				stack_deletions++;
 			}
-			previous_loc = locationStack[top];
+			previous_loc = this.locationStack[top];
 
-			int j = parseCheck(stck, top, lexStream.kind(buffer[2]), 3);
+			int j = parseCheck(stck, top, this.lexStream.kind(this.buffer[2]), 3);
 			if (j == MAX_DISTANCE) {
 				 j = last_index;
 			}
@@ -1856,18 +1836,18 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	private SecondaryRepairInfo secondaryRecovery(int stck[],int stack_top, int last_index, SecondaryRepairInfo repair, boolean stack_flag) {
 		int previous_loc;
 		int stack_deletions = 0;
-		
-		previous_loc = buffer[2];
+
+		previous_loc = this.buffer[2];
 		for (int top = stack_top; top >= 0 && repair.numDeletions >= stack_deletions; top--) {
-			if (locationStack[top] < previous_loc) {
+			if (this.locationStack[top] < previous_loc) {
 				stack_deletions++;
 			}
-			previous_loc = locationStack[top];
+			previous_loc = this.locationStack[top];
 
 			for (int i = 2;
 				 i <= (last_index - MIN_DISTANCE + 1) &&
 				 (repair.numDeletions >= (stack_deletions + i - 1)); i++) {
-				int j = parseCheck(stck, top, lexStream.kind(buffer[i]), i + 1);
+				int j = parseCheck(stck, top, this.lexStream.kind(this.buffer[i]), i + 1);
 
 				if (j == MAX_DISTANCE) {
 					 j = last_index;
@@ -1921,27 +1901,27 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	private void secondaryDiagnosis(SecondaryRepairInfo repair) {
 		switch(repair.code) {
 			case SCOPE_CODE: {
-	            if (repair.stackPosition < stateStackTop) {
+	            if (repair.stackPosition < this.stateStackTop) {
 	                reportError(DELETION_CODE,
 	                            Parser.terminal_index[ERROR_SYMBOL],
-	                            locationStack[repair.stackPosition],
-	                            buffer[1]);
+	                            this.locationStack[repair.stackPosition],
+	                            this.buffer[1]);
 	            }
-	            for (int i = 0; i < scopeStackTop; i++) {
+	            for (int i = 0; i < this.scopeStackTop; i++) {
 	                reportError(SCOPE_CODE,
-	                            -scopeIndex[i],
-	                            locationStack[scopePosition[i]],
-	                            buffer[1],
-	                            Parser.non_terminal_index[Parser.scope_lhs[scopeIndex[i]]]);
+	                            -this.scopeIndex[i],
+	                            this.locationStack[this.scopePosition[i]],
+	                            this.buffer[1],
+	                            Parser.non_terminal_index[Parser.scope_lhs[this.scopeIndex[i]]]);
 	            }
-	
-	            repair.symbol = Parser.scope_lhs[scopeIndex[scopeStackTop]] + NT_OFFSET;
-	            stateStackTop = scopePosition[scopeStackTop];
+
+	            repair.symbol = Parser.scope_lhs[this.scopeIndex[this.scopeStackTop]] + NT_OFFSET;
+	            this.stateStackTop = this.scopePosition[this.scopeStackTop];
 	            reportError(SCOPE_CODE,
-	                        -scopeIndex[scopeStackTop],
-	                        locationStack[scopePosition[scopeStackTop]],
-	                        buffer[1],
-	                        getNtermIndex(stack[stateStackTop],
+	                        -this.scopeIndex[this.scopeStackTop],
+	                        this.locationStack[this.scopePosition[this.scopeStackTop]],
+	                        this.buffer[1],
+	                        getNtermIndex(this.stack[this.stateStackTop],
 	                                      repair.symbol,
 	                                      repair.bufferPosition)
 	                       );
@@ -1950,13 +1930,13 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			default: {
 				reportError(repair.code,
 							(repair.code == SECONDARY_CODE
-										  ? getNtermIndex(stack[repair.stackPosition],
+										  ? getNtermIndex(this.stack[repair.stackPosition],
 														  repair.symbol,
 														  repair.bufferPosition)
 										  : Parser.terminal_index[ERROR_SYMBOL]),
-							locationStack[repair.stackPosition],
-							buffer[repair.bufferPosition - 1]);
-				stateStackTop = repair.stackPosition;
+							this.locationStack[repair.stackPosition],
+							this.buffer[repair.bufferPosition - 1]);
+				this.stateStackTop = repair.stackPosition;
 			}
 		}
 	}
@@ -1981,23 +1961,23 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		//
 		act = stck[stack_top];
 		if (first_token > NT_OFFSET) {
-			tempStackTop = stack_top;
-			if(DEBUG_PARSECHECK) {
-				System.out.println(tempStackTop);
+			this.tempStackTop = stack_top;
+			if(this.DEBUG_PARSECHECK) {
+				System.out.println(this.tempStackTop);
 			}
 			max_pos = stack_top;
 			indx = buffer_position;
-			ct = lexStream.kind(buffer[indx]);
-			lexStream.reset(lexStream.next(buffer[indx]));
+			ct = this.lexStream.kind(this.buffer[indx]);
+			this.lexStream.reset(this.lexStream.next(this.buffer[indx]));
 			int lhs_symbol = first_token - NT_OFFSET;
 			act = Parser.ntAction(act, lhs_symbol);
 			if (act <= NUM_RULES) {
 				// same loop as 'process_non_terminal'
 				do {
-					tempStackTop -= (Parser.rhs[act]-1);
-					
-					if(DEBUG_PARSECHECK) {
-						System.out.print(tempStackTop);
+					this.tempStackTop -= (Parser.rhs[act]-1);
+
+					if(this.DEBUG_PARSECHECK) {
+						System.out.print(this.tempStackTop);
 						System.out.print(" ("); //$NON-NLS-1$
 						System.out.print(-(Parser.rhs[act]-1));
 						System.out.print(") [max:"); //$NON-NLS-1$
@@ -2008,35 +1988,35 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 						System.out.print(Parser.name[Parser.non_terminal_index[Parser.lhs[act]]]);
 						System.out.println();
 					}
-					
+
 					if(Parser.rules_compliance[act] > this.options.sourceLevel) {
 					 	return 0;
 					}
 					lhs_symbol = Parser.lhs[act];
-					act = (tempStackTop > max_pos
-										  ? tempStack[tempStackTop]
-										  : stck[tempStackTop]);
+					act = (this.tempStackTop > max_pos
+										  ? this.tempStack[this.tempStackTop]
+										  : stck[this.tempStackTop]);
 					act = Parser.ntAction(act, lhs_symbol);
 				} while(act <= NUM_RULES);
-	
-				max_pos = max_pos < tempStackTop ? max_pos : tempStackTop;
+
+				max_pos = max_pos < this.tempStackTop ? max_pos : this.tempStackTop;
 			}
 		} else {
-			tempStackTop = stack_top - 1;
-			
-			if(DEBUG_PARSECHECK) {
-				System.out.println(tempStackTop);
+			this.tempStackTop = stack_top - 1;
+
+			if(this.DEBUG_PARSECHECK) {
+				System.out.println(this.tempStackTop);
 			}
-			
-			max_pos = tempStackTop;
+
+			max_pos = this.tempStackTop;
 			indx = buffer_position - 1;
 			ct = first_token;
-			lexStream.reset(buffer[buffer_position]);
+			this.lexStream.reset(this.buffer[buffer_position]);
 		}
 
 		process_terminal: for (;;) {
-			if(DEBUG_PARSECHECK) {
-				System.out.print(tempStackTop + 1);
+			if(this.DEBUG_PARSECHECK) {
+				System.out.print(this.tempStackTop + 1);
 				System.out.print(" (+1) [max:"); //$NON-NLS-1$
 				System.out.print(max_pos);
 				System.out.print("]\tprocess_terminal    \t"); //$NON-NLS-1$
@@ -2045,18 +2025,18 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 				System.out.print(Parser.name[Parser.terminal_index[ct]]);
 				System.out.println();
 			}
-			
-			if (++tempStackTop >= stackLength)  // Stack overflow!!!
+
+			if (++this.tempStackTop >= this.stackLength)  // Stack overflow!!!
 				return indx;
-			tempStack[tempStackTop] = act;
+			this.tempStack[this.tempStackTop] = act;
 
 			act = Parser.tAction(act, ct);
 
 			if (act <= NUM_RULES) {               // reduce action
-				tempStackTop--;
-				
-				if(DEBUG_PARSECHECK) {
-					System.out.print(tempStackTop);
+				this.tempStackTop--;
+
+				if(this.DEBUG_PARSECHECK) {
+					System.out.print(this.tempStackTop);
 					System.out.print(" (-1) [max:"); //$NON-NLS-1$
 					System.out.print(max_pos);
 					System.out.print("]\treduce"); //$NON-NLS-1$
@@ -2067,18 +2047,18 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 				if (indx == MAX_DISTANCE)
 					return indx;
 				indx++;
-				ct = lexStream.kind(buffer[indx]);
-				lexStream.reset(lexStream.next(buffer[indx]));
+				ct = this.lexStream.kind(this.buffer[indx]);
+				this.lexStream.reset(this.lexStream.next(this.buffer[indx]));
 				if (act > ERROR_ACTION) {
 					act -= ERROR_ACTION;
-					
-					if(DEBUG_PARSECHECK) {
-						System.out.print(tempStackTop);
+
+					if(this.DEBUG_PARSECHECK) {
+						System.out.print(this.tempStackTop);
 						System.out.print("\tshift reduce"); //$NON-NLS-1$
 						System.out.println();
 					}
 				} else {
-					if(DEBUG_PARSECHECK) {
+					if(this.DEBUG_PARSECHECK) {
 						System.out.println("\tshift"); //$NON-NLS-1$
 					}
 					continue process_terminal;
@@ -2092,10 +2072,10 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			// same loop as first token initialization
 			// process_non_terminal:
 			do {
-				tempStackTop -= (Parser.rhs[act]-1);
-				
-				if(DEBUG_PARSECHECK) {
-					System.out.print(tempStackTop);
+				this.tempStackTop -= (Parser.rhs[act]-1);
+
+				if(this.DEBUG_PARSECHECK) {
+					System.out.print(this.tempStackTop);
 					System.out.print(" ("); //$NON-NLS-1$
 					System.out.print(-(Parser.rhs[act]-1));
 					System.out.print(") [max:"); //$NON-NLS-1$
@@ -2106,20 +2086,20 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 					System.out.print(Parser.name[Parser.non_terminal_index[Parser.lhs[act]]]);
 					System.out.println();
 				}
-				
+
 				if(act <= NUM_RULES) {
 					if(Parser.rules_compliance[act] > this.options.sourceLevel) {
 					 	return 0;
 					}
 				}
 				int lhs_symbol = Parser.lhs[act];
-				act = (tempStackTop > max_pos
-									  ? tempStack[tempStackTop]
-									  : stck[tempStackTop]);
+				act = (this.tempStackTop > max_pos
+									  ? this.tempStack[this.tempStackTop]
+									  : stck[this.tempStackTop]);
 				act = Parser.ntAction(act, lhs_symbol);
 			} while(act <= NUM_RULES);
 
-			max_pos = max_pos < tempStackTop ? max_pos : tempStackTop;
+			max_pos = max_pos < this.tempStackTop ? max_pos : this.tempStackTop;
 		} // process_terminal;
 	}
 	private void reportError(int msgCode, int nameIndex, int leftToken, int rightToken) {
@@ -2135,7 +2115,7 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			reportPrimaryError(msgCode, nameIndex, rightToken, scopeNameIndex);
 		}
 	}
-	
+
 	private void reportPrimaryError(int msgCode, int nameIndex, int token, int scopeNameIndex) {
 		String name;
 		if (nameIndex >= 0) {
@@ -2144,136 +2124,136 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 			name = Util.EMPTY_STRING;
 		}
 
-		int errorStart = lexStream.start(token);
-		int errorEnd = lexStream.end(token);
-		int currentKind = lexStream.kind(token);
-		String errorTokenName = Parser.name[Parser.terminal_index[lexStream.kind(token)]];
-		char[] errorTokenSource = lexStream.name(token);
+		int errorStart = this.lexStream.start(token);
+		int errorEnd = this.lexStream.end(token);
+		int currentKind = this.lexStream.kind(token);
+		String errorTokenName = Parser.name[Parser.terminal_index[this.lexStream.kind(token)]];
+		char[] errorTokenSource = this.lexStream.name(token);
 		if (currentKind == TerminalTokens.TokenNameStringLiteral) {
 			errorTokenSource = displayEscapeCharacters(errorTokenSource, 1, errorTokenSource.length - 1);
 		}
 
 		int addedToken = -1;
-		if(recoveryScanner != null) {
+		if(this.recoveryScanner != null) {
 			if (nameIndex >= 0) {
 				addedToken = Parser.reverse_index[nameIndex];
 			}
 		}
 		switch(msgCode) {
 			case BEFORE_CODE:
-				if(recoveryScanner != null) {
+				if(this.recoveryScanner != null) {
 					if(addedToken > -1) {
-						recoveryScanner.insertToken(addedToken, -1, errorStart);
+						this.recoveryScanner.insertToken(addedToken, -1, errorStart);
 					} else {
 						int[] template = getNTermTemplate(-addedToken);
 						if(template != null) {
-							recoveryScanner.insertTokens(template, -1, errorStart);
+							this.recoveryScanner.insertTokens(template, -1, errorStart);
 						}
 					}
 				}
 				if(this.reportProblem) problemReporter().parseErrorInsertBeforeToken(
-					errorStart, 
-					errorEnd, 
+					errorStart,
+					errorEnd,
 					currentKind,
-					errorTokenSource, 
-					errorTokenName, 
+					errorTokenSource,
+					errorTokenName,
 					name);
 				 break;
 			case INSERTION_CODE:
-				if(recoveryScanner != null) {
+				if(this.recoveryScanner != null) {
 					if(addedToken > -1) {
-						recoveryScanner.insertToken(addedToken, -1, errorEnd);
+						this.recoveryScanner.insertToken(addedToken, -1, errorEnd);
 					} else {
 						int[] template = getNTermTemplate(-addedToken);
 						if(template != null) {
-							recoveryScanner.insertTokens(template, -1, errorEnd);
+							this.recoveryScanner.insertTokens(template, -1, errorEnd);
 						}
 					}
 				}
 				if(this.reportProblem) problemReporter().parseErrorInsertAfterToken(
-					errorStart, 
-					errorEnd, 
+					errorStart,
+					errorEnd,
 					currentKind,
-					errorTokenSource, 
-					errorTokenName, 
-					name);  
+					errorTokenSource,
+					errorTokenName,
+					name);
 				 break;
 			case DELETION_CODE:
-				if(recoveryScanner != null) {
-					recoveryScanner.removeTokens(errorStart, errorEnd);
+				if(this.recoveryScanner != null) {
+					this.recoveryScanner.removeTokens(errorStart, errorEnd);
 				}
 				if(this.reportProblem) problemReporter().parseErrorDeleteToken(
-					errorStart, 
-					errorEnd, 
+					errorStart,
+					errorEnd,
 					currentKind,
-					errorTokenSource, 
+					errorTokenSource,
 					errorTokenName);
 				break;
 			case INVALID_CODE:
 				if (name.length() == 0) {
-					if(recoveryScanner != null) {
-						recoveryScanner.removeTokens(errorStart, errorEnd);
+					if(this.recoveryScanner != null) {
+						this.recoveryScanner.removeTokens(errorStart, errorEnd);
 					}
 					if(this.reportProblem) problemReporter().parseErrorReplaceToken(
-						errorStart, 
-						errorEnd, 
+						errorStart,
+						errorEnd,
 						currentKind,
-						errorTokenSource, 
-						errorTokenName, 
+						errorTokenSource,
+						errorTokenName,
 						name);
 				} else {
-					if(recoveryScanner != null) {
+					if(this.recoveryScanner != null) {
 						if(addedToken > -1) {
-							recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
+							this.recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
 						} else {
 							int[] template = getNTermTemplate(-addedToken);
 							if(template != null) {
-								recoveryScanner.replaceTokens(template, errorStart, errorEnd);
+								this.recoveryScanner.replaceTokens(template, errorStart, errorEnd);
 							}
 						}
 					}
 					if(this.reportProblem) problemReporter().parseErrorInvalidToken(
-						errorStart, 
-						errorEnd, 
+						errorStart,
+						errorEnd,
 						currentKind,
-						errorTokenSource, 
-						errorTokenName, 
+						errorTokenSource,
+						errorTokenName,
 						name);
 				}
 				break;
 			case SUBSTITUTION_CODE:
-				if(recoveryScanner != null) {
+				if(this.recoveryScanner != null) {
 					if(addedToken > -1) {
-						recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
+						this.recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
 					} else {
 						int[] template = getNTermTemplate(-addedToken);
 						if(template != null) {
-							recoveryScanner.replaceTokens(template, errorStart, errorEnd);
+							this.recoveryScanner.replaceTokens(template, errorStart, errorEnd);
 						}
 					}
 				}
 				if(this.reportProblem) problemReporter().parseErrorReplaceToken(
-					errorStart, 
-					errorEnd, 
+					errorStart,
+					errorEnd,
 					currentKind,
-					errorTokenSource, 
-					errorTokenName, 
-					name); 
+					errorTokenSource,
+					errorTokenName,
+					name);
 				 break;
 			case SCOPE_CODE:
 				StringBuffer buf = new StringBuffer();
-				
+
 				int[] addedTokens = null;
 	            int addedTokenCount = 0;
 	            if(this.recoveryScanner != null) {
 	            	addedTokens = new int[Parser.scope_rhs.length - Parser.scope_suffix[- nameIndex]];
 	            }
-	            
+
 				for (int i = Parser.scope_suffix[- nameIndex]; Parser.scope_rhs[i] != 0; i++) {
 					buf.append(Parser.readableName[Parser.scope_rhs[i]]);
 					if (Parser.scope_rhs[i + 1] != 0) // any more symbols to print?
 						buf.append(' ');
-					
+
 					if(addedTokens != null) {
 	                	int tmpAddedToken = Parser.reverse_index[Parser.scope_rhs[i]];
 		                if (tmpAddedToken > -1) {
@@ -2302,86 +2282,86 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 
 				if(addedTokenCount > 0) {
 	            	System.arraycopy(addedTokens, 0, addedTokens = new int[addedTokenCount], 0, addedTokenCount);
-	            	
+
 	            	int completedToken = -1;
 	            	if(scopeNameIndex != 0) {
 	            		completedToken = -Parser.reverse_index[scopeNameIndex];
 	            	}
 	            	this.recoveryScanner.insertTokens(addedTokens, completedToken, errorEnd);
 	            }
-				
+
 				if (scopeNameIndex != 0) {
 					if(this.reportProblem) problemReporter().parseErrorInsertToComplete(
-						errorStart, 
+						errorStart,
 						errorEnd,
 						buf.toString(),
 						Parser.readableName[scopeNameIndex]);
 				} else {
 					if(this.reportProblem) problemReporter().parseErrorInsertToCompleteScope(
-						errorStart, 
+						errorStart,
 						errorEnd,
-						buf.toString()); 
+						buf.toString());
 				}
-				
+
 				break;
 			case EOF_CODE:
 				if(this.reportProblem) problemReporter().parseErrorUnexpectedEnd(
-					errorStart, 
-					errorEnd); 
+					errorStart,
+					errorEnd);
 				break;
 			case MERGE_CODE:
-				if(recoveryScanner != null) {
+				if(this.recoveryScanner != null) {
 					if(addedToken > -1) {
-						recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
+						this.recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
 					} else {
 						int[] template = getNTermTemplate(-addedToken);
 						if(template != null) {
-							recoveryScanner.replaceTokens(template, errorStart, errorEnd);
+							this.recoveryScanner.replaceTokens(template, errorStart, errorEnd);
 						}
 					}
 				}
 				if(this.reportProblem) problemReporter().parseErrorMergeTokens(
-					errorStart, 
+					errorStart,
 					errorEnd,
 					name);
 				break;
 			case MISPLACED_CODE:
-				if(recoveryScanner != null) {
-					recoveryScanner.removeTokens(errorStart, errorEnd);
+				if(this.recoveryScanner != null) {
+					this.recoveryScanner.removeTokens(errorStart, errorEnd);
 				}
 				if(this.reportProblem) problemReporter().parseErrorMisplacedConstruct(
-					errorStart, 
+					errorStart,
 					errorEnd);
 				break;
 			default:
 				if (name.length() == 0) {
-					if(recoveryScanner != null) {
-						recoveryScanner.removeTokens(errorStart, errorEnd);
+					if(this.recoveryScanner != null) {
+						this.recoveryScanner.removeTokens(errorStart, errorEnd);
 					}
 					if(this.reportProblem) problemReporter().parseErrorNoSuggestion(
-						errorStart, 
-						errorEnd, 
+						errorStart,
+						errorEnd,
 						currentKind,
-						errorTokenSource, 
+						errorTokenSource,
 						errorTokenName);
 				} else {
-					if(recoveryScanner != null) {
+					if(this.recoveryScanner != null) {
 						if(addedToken > -1) {
-							recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
+							this.recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
 						} else {
 							int[] template = getNTermTemplate(-addedToken);
 							if(template != null) {
-								recoveryScanner.replaceTokens(template, errorStart, errorEnd);
+								this.recoveryScanner.replaceTokens(template, errorStart, errorEnd);
 							}
 						}
 					}
 					if(this.reportProblem) problemReporter().parseErrorReplaceToken(
-						errorStart, 
-						errorEnd, 
+						errorStart,
+						errorEnd,
 						currentKind,
-						errorTokenSource, 
-						errorTokenName, 
-						name); 
+						errorTokenSource,
+						errorTokenName,
+						name);
 				}
 				break;
 		}
@@ -2392,66 +2372,66 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 		if (nameIndex >= 0) {
 			name = Parser.readableName[nameIndex];
 		} else {
-			name = Util.EMPTY_STRING;	
+			name = Util.EMPTY_STRING;
 		}
 
 		int errorStart = -1;
-		if(lexStream.isInsideStream(leftToken)) {
+		if(this.lexStream.isInsideStream(leftToken)) {
 			if(leftToken == 0) {
-				errorStart = lexStream.start(leftToken + 1);
+				errorStart = this.lexStream.start(leftToken + 1);
 			} else {
-				errorStart = lexStream.start(leftToken);
+				errorStart = this.lexStream.start(leftToken);
 			}
 		} else {
-			if(leftToken == errorToken) {
-				errorStart = errorTokenStart;
+			if(leftToken == this.errorToken) {
+				errorStart = this.errorTokenStart;
 			} else {
-				for (int i = 0; i <= stateStackTop; i++) {
-					if(locationStack[i] == leftToken) {
-						errorStart = locationStartStack[i];
+				for (int i = 0; i <= this.stateStackTop; i++) {
+					if(this.locationStack[i] == leftToken) {
+						errorStart = this.locationStartStack[i];
 					}
 				}
 			}
 			if(errorStart == -1) {
-				errorStart = lexStream.start(rightToken);
+				errorStart = this.lexStream.start(rightToken);
 			}
 		}
-		int errorEnd = lexStream.end(rightToken);
-		
+		int errorEnd = this.lexStream.end(rightToken);
+
 		int addedToken = -1;
-		if(recoveryScanner != null) {
+		if(this.recoveryScanner != null) {
 			if (nameIndex >= 0) {
 				addedToken = Parser.reverse_index[nameIndex];
 			}
 		}
-		
+
 		switch(msgCode) {
 			case MISPLACED_CODE:
-				if(recoveryScanner != null) {
-					recoveryScanner.removeTokens(errorStart, errorEnd);
+				if(this.recoveryScanner != null) {
+					this.recoveryScanner.removeTokens(errorStart, errorEnd);
 				}
 				if(this.reportProblem) problemReporter().parseErrorMisplacedConstruct(
-					errorStart, 
-					errorEnd); 
+					errorStart,
+					errorEnd);
 				break;
 			case SCOPE_CODE:
 				// error start is on the last token start
-				errorStart = lexStream.start(rightToken);
-			
+				errorStart = this.lexStream.start(rightToken);
+
 	            StringBuffer buf = new StringBuffer();
-	            
+
 	            int[] addedTokens = null;
 	            int addedTokenCount = 0;
 	            if(this.recoveryScanner != null) {
 	            	addedTokens = new int[Parser.scope_rhs.length - Parser.scope_suffix[- nameIndex]];
 	            }
-	            
+
 	            for (int i = Parser.scope_suffix[- nameIndex]; Parser.scope_rhs[i] != 0; i++) {
-	                
+
 	                buf.append(Parser.readableName[Parser.scope_rhs[i]]);
 	                if (Parser.scope_rhs[i+1] != 0)
 	                     buf.append(' ');
-	                
+
 	                if(addedTokens != null) {
 	                	int tmpAddedToken = Parser.reverse_index[Parser.scope_rhs[i]];
 		                if (tmpAddedToken > -1) {
@@ -2487,62 +2467,62 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
 	            }
 	            if (scopeNameIndex != 0) {
 	                if(this.reportProblem) problemReporter().parseErrorInsertToComplete(
-						errorStart, 
+						errorStart,
 						errorEnd,
 						buf.toString(),
 						Parser.readableName[scopeNameIndex]);
 	            } else {
 	            	if(this.reportProblem) problemReporter().parseErrorInsertToCompletePhrase(
-						errorStart, 
+						errorStart,
 						errorEnd,
-						buf.toString()); 
+						buf.toString());
 	            }
 	            break;
 			case MERGE_CODE:
-				if(recoveryScanner != null) {
+				if(this.recoveryScanner != null) {
 					if(addedToken > -1) {
-						recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
+						this.recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
 					} else {
 						int[] template = getNTermTemplate(-addedToken);
 						if(template != null) {
-							recoveryScanner.replaceTokens(template, errorStart, errorEnd);
+							this.recoveryScanner.replaceTokens(template, errorStart, errorEnd);
 						}
 					}
 				}
 				if(this.reportProblem) problemReporter().parseErrorMergeTokens(
-					errorStart, 
+					errorStart,
 					errorEnd,
 					name);
 				break;
 			case DELETION_CODE:
-				if(recoveryScanner != null) {
-					recoveryScanner.removeTokens(errorStart, errorEnd);
+				if(this.recoveryScanner != null) {
+					this.recoveryScanner.removeTokens(errorStart, errorEnd);
 				}
 				if(this.reportProblem) problemReporter().parseErrorDeleteTokens(
-					errorStart, 
+					errorStart,
 					errorEnd);
 				break;
 			default:
 				if (name.length() == 0) {
-					if(recoveryScanner != null) {
-						recoveryScanner.removeTokens(errorStart, errorEnd);
+					if(this.recoveryScanner != null) {
+						this.recoveryScanner.removeTokens(errorStart, errorEnd);
 					}
 					if(this.reportProblem) problemReporter().parseErrorNoSuggestionForTokens(
-						errorStart, 
+						errorStart,
 						errorEnd);
 				} else {
-					if(recoveryScanner != null) {
+					if(this.recoveryScanner != null) {
 						if(addedToken > -1) {
-							recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
+							this.recoveryScanner.replaceTokens(addedToken, errorStart, errorEnd);
 						} else {
 							int[] template = getNTermTemplate(-addedToken);
 							if(template != null) {
-								recoveryScanner.replaceTokens(template, errorStart, errorEnd);
+								this.recoveryScanner.replaceTokens(template, errorStart, errorEnd);
 							}
 						}
 					}
 					if(this.reportProblem) problemReporter().parseErrorReplaceTokens(
-						errorStart, 
+						errorStart,
 						errorEnd,
 						name);
 				}
@@ -2564,12 +2544,12 @@ public class DiagnoseParser implements ParserBasicInformation, TerminalTokens {
         	return null;
     	}
 	}
-	
+
 	public String toString() {
 		StringBuffer res = new StringBuffer();
-		
-		res.append(lexStream.toString());
-		
+
+		res.append(this.lexStream.toString());
+
 		return res.toString();
 	}
 }

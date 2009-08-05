@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,28 +22,28 @@ public class SelectionScanner extends Scanner {
 
 	public char[] selectionIdentifier;
 	public int selectionStart, selectionEnd;
-/* 
+/*
  * Truncate the current identifier if it is containing the cursor location. Since completion is performed
  * on an identifier prefix.
  *
  */
- 
+
 public SelectionScanner(long sourceLevel) {
 	super(false /*comment*/, false /*whitespace*/, false /*nls*/, sourceLevel, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
 }
 
 public char[] getCurrentIdentifierSource() {
 
-	if (selectionIdentifier == null){
-		if (selectionStart == startPosition && selectionEnd == currentPosition-1){
-			if (withoutUnicodePtr != 0){			// check unicode scenario
-				System.arraycopy(withoutUnicodeBuffer, 1, selectionIdentifier = new char[withoutUnicodePtr], 0, withoutUnicodePtr);
+	if (this.selectionIdentifier == null){
+		if (this.selectionStart == this.startPosition && this.selectionEnd == this.currentPosition-1){
+			if (this.withoutUnicodePtr != 0){			// check unicode scenario
+				System.arraycopy(this.withoutUnicodeBuffer, 1, this.selectionIdentifier = new char[this.withoutUnicodePtr], 0, this.withoutUnicodePtr);
 			} else {
-				int length = currentPosition - startPosition;
-				// no char[] sharing around completionIdentifier, we want it to be unique so as to use identity checks	
-				System.arraycopy(source, startPosition, (selectionIdentifier = new char[length]), 0, length);
+				int length = this.currentPosition - this.startPosition;
+				// no char[] sharing around completionIdentifier, we want it to be unique so as to use identity checks
+				System.arraycopy(this.source, this.startPosition, (this.selectionIdentifier = new char[length]), 0, length);
 			}
-			return selectionIdentifier;
+			return this.selectionIdentifier;
 		}
 	}
 	return super.getCurrentIdentifierSource();
@@ -58,8 +58,8 @@ public int scanIdentifierOrKeyword() {
 
 	// convert completed keyword into an identifier
 	if (id != TokenNameIdentifier
-		&& startPosition == selectionStart 
-		&& currentPosition == selectionEnd+1){
+		&& this.startPosition == this.selectionStart
+		&& this.currentPosition == this.selectionEnd+1){
 		return TokenNameIdentifier;
 	}
 	return id;

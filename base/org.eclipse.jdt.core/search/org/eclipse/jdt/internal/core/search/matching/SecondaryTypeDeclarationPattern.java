@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.core.index.Index;
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 
 public class SecondaryTypeDeclarationPattern extends TypeDeclarationPattern {
-	
+
 	private final static char[] SECONDARY_PATTERN_KEY = "*/S".toCharArray(); //$NON-NLS-1$
 
 public SecondaryTypeDeclarationPattern() {
@@ -40,8 +40,8 @@ protected StringBuffer print(StringBuffer output) {
 /* (non-Javadoc)
  * @see org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern#queryIn(org.eclipse.jdt.internal.core.index.Index)
  */
-EntryResult[] queryIn(Index index) throws IOException {
+public EntryResult[] queryIn(Index index) throws IOException {
 	return index.query(CATEGORIES, SECONDARY_PATTERN_KEY, R_PATTERN_MATCH | R_CASE_SENSITIVE);
 }
-	
+
 }

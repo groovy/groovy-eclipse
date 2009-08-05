@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,7 +58,7 @@ protected abstract void addEvaluationResultForCompilationProblem(Map resultsByID
 /**
  * Returns the evaluation results that converts the given compilation result that has problems.
  * If the compilation result has more than one problem, then the problems are broken down so that
- * each evaluation result has the same evaluation id. 
+ * each evaluation result has the same evaluation id.
  */
 protected EvaluationResult[] evaluationResultsForCompilationProblems(CompilationResult result, char[] cuSource) {
 	// Break down the problems and group them by ids in evaluation results
@@ -106,8 +106,8 @@ ClassFile[] getClasses() {
 				ClassFile[] classFiles = result.getClassFiles();
 				for (int i = 0; i < classFiles.length; i++) {
 					ClassFile classFile = classFiles[i];
-/* 
-			
+/*
+
 					char[] filename = classFile.fileName();
 					int length = filename.length;
 					char[] relativeName = new char[length + 6];
@@ -116,8 +116,8 @@ ClassFile[] getClasses() {
 					CharOperation.replace(relativeName, '/', java.io.File.separatorChar);
 					ClassFile.writeToDisk("d:/test/snippet", new String(relativeName), classFile.getBytes());
 					String str = "d:/test/snippet" + "/" + new String(relativeName);
-					System.out.println(org.eclipse.jdt.core.tools.classfmt.disassembler.ClassFileDisassembler.disassemble(str));				
- */	
+					System.out.println(org.eclipse.jdt.core.tools.classfmt.disassembler.ClassFileDisassembler.disassemble(str));
+ */
 					classDefinitions.add(classFile);
 				}
 			}
@@ -163,10 +163,10 @@ Compiler getCompiler(ICompilerRequestor compilerRequestor) {
 	compilerOptions.performMethodsFullRecovery = true;
 	compilerOptions.performStatementsRecovery = true;
 	return new Compiler(
-		this.environment, 
-		DefaultErrorHandlingPolicies.exitAfterAllProblems(), 
-		compilerOptions, 
-		compilerRequestor, 
+		this.environment,
+		DefaultErrorHandlingPolicies.exitAfterAllProblems(),
+		compilerOptions,
+		compilerRequestor,
 		this.problemFactory);
 }
 /**

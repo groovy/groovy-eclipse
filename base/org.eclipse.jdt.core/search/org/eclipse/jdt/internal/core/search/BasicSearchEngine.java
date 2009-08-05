@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -45,22 +45,22 @@ public class BasicSearchEngine {
 	 */
 	private Parser parser;
 	private CompilerOptions compilerOptions;
-		
+
 	/*
-	 * A list of working copies that take precedence over their original 
+	 * A list of working copies that take precedence over their original
 	 * compilation units.
 	 */
 	private ICompilationUnit[] workingCopies;
-	
+
 	/*
-	 * A working copy owner whose working copies will take precedent over 
+	 * A working copy owner whose working copies will take precedent over
 	 * their original compilation units.
 	 */
 	private WorkingCopyOwner workingCopyOwner;
 
 	/**
 	 * For tracing purpose.
-	 */	
+	 */
 	public static boolean VERBOSE = false;
 
 	/*
@@ -69,7 +69,7 @@ public class BasicSearchEngine {
 	public BasicSearchEngine() {
 		// will use working copies of PRIMARY owner
 	}
-	
+
 	/**
 	 * @see SearchEngine#SearchEngine(ICompilationUnit[]) for detailed comment.
 	 */
@@ -99,7 +99,7 @@ public class BasicSearchEngine {
 	public static IJavaSearchScope createHierarchyScope(IType type) throws JavaModelException {
 		return createHierarchyScope(type, DefaultWorkingCopyOwner.PRIMARY);
 	}
-	
+
 	/**
 	 * @see SearchEngine#createHierarchyScope(IType,WorkingCopyOwner) for detailed comment.
 	 */
@@ -160,14 +160,14 @@ public class BasicSearchEngine {
 	public static TypeNameMatch createTypeNameMatch(IType type, int modifiers) {
 		return new JavaSearchTypeNameMatch(type, modifiers);
 	}
-	
+
 	/**
 	 * @see SearchEngine#createWorkspaceScope() for detailed comment.
 	 */
 	public static IJavaSearchScope createWorkspaceScope() {
 		return JavaModelManager.getJavaModelManager().getWorkspaceScope();
 	}
-	
+
 	/**
 	 * Searches for matches to a given query. Search queries can be created using helper
 	 * methods (from a String pattern or a Java element) and encapsulate the description of what is
@@ -187,19 +187,19 @@ public class BasicSearchEngine {
 				if (VERBOSE) Util.verbose("No participants => do nothing!"); //$NON-NLS-1$
 				return;
 			}
-	
+
 			/* initialize progress monitor */
 			int length = participants.length;
 			if (monitor != null)
-				monitor.beginTask(Messages.engine_searching, 100 * length); 
+				monitor.beginTask(Messages.engine_searching, 100 * length);
 			IndexManager indexManager = JavaModelManager.getIndexManager();
 			requestor.beginReporting();
 			for (int i = 0; i < length; i++) {
 				if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
-	
+
 				SearchParticipant participant = participants[i];
 				try {
-					if (monitor != null) monitor.subTask(Messages.bind(Messages.engine_searching_indexing, new String[] {participant.getDescription()})); 
+					if (monitor != null) monitor.subTask(Messages.bind(Messages.engine_searching_indexing, new String[] {participant.getDescription()}));
 					participant.beginSearching();
 					requestor.enterParticipant(participant);
 					PathCollector pathCollector = new PathCollector();
@@ -208,9 +208,9 @@ public class BasicSearchEngine {
 						IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
 						monitor==null ? null : new SubProgressMonitor(monitor, 50));
 					if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
-	
+
 					// locate index matches if any (note that all search matches could have been issued during index querying)
-					if (monitor != null) monitor.subTask(Messages.bind(Messages.engine_searching_matching, new String[] {participant.getDescription()})); 
+					if (monitor != null) monitor.subTask(Messages.bind(Messages.engine_searching_matching, new String[] {participant.getDescription()}));
 					String[] indexMatchPaths = pathCollector.getPaths();
 					if (indexMatchPaths != null) {
 						pathCollector = null; // release
@@ -222,7 +222,7 @@ public class BasicSearchEngine {
 						SearchDocument[] matches = MatchLocator.addWorkingCopies(pattern, indexMatches, getWorkingCopies(), participant);
 						participant.locateMatches(matches, pattern, scope, requestor, monitor==null ? null : new SubProgressMonitor(monitor, 50));
 					}
-				} finally {		
+				} finally {
 					requestor.exitParticipant(participant);
 					participant.doneSearching();
 				}
@@ -235,7 +235,7 @@ public class BasicSearchEngine {
 	}
 	/**
 	 * Returns a new default Java search participant.
-	 * 
+	 *
 	 * @return a new default Java search participant
 	 * @since 3.0
 	 */
@@ -289,7 +289,7 @@ public class BasicSearchEngine {
 
 	/**
 	 * Return kind of search corresponding to given value.
-	 * 
+	 *
 	 * @param searchFor
 	 */
 	public static String getSearchForString(final int searchFor) {
@@ -369,7 +369,7 @@ public class BasicSearchEngine {
 			copies = JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, false/*don't add primary WCs a second time*/);
 		}
 		if (copies == null) return null;
-		
+
 		// filter out primary working copies that are saved
 		ICompilationUnit[] result = null;
 		int length = copies.length;
@@ -394,7 +394,7 @@ public class BasicSearchEngine {
 		}
 		return result;
 	}
-	
+
 	/*
 	 * Returns the working copy to use to do the search on the given Java element.
 	 */
@@ -407,7 +407,7 @@ public class BasicSearchEngine {
 		} else if (element instanceof ICompilationUnit) {
 			return new ICompilationUnit[] { (ICompilationUnit) element };
 		}
-		
+
 		return null;
 	}
 
@@ -431,7 +431,7 @@ public class BasicSearchEngine {
 		return true;
 	}
 
-	boolean match(char patternTypeSuffix, char[] patternPkg, char[] patternTypeName, int matchRule, int typeKind, char[] pkg, char[] typeName) {
+	boolean match(char patternTypeSuffix, char[] patternPkg, int matchRulePkg, char[] patternTypeName, int matchRuleType, int typeKind, char[] pkg, char[] typeName) {
 		switch(patternTypeSuffix) {
 			case IIndexConstants.CLASS_SUFFIX :
 				if (typeKind != TypeDeclaration.CLASS_DECL) return false;
@@ -456,14 +456,15 @@ public class BasicSearchEngine {
 				break;
 			case IIndexConstants.TYPE_SUFFIX : // nothing
 		}
-	
-		boolean isCaseSensitive = (matchRule & SearchPattern.R_CASE_SENSITIVE) != 0;
-		if (patternPkg != null && !CharOperation.equals(patternPkg, pkg, isCaseSensitive))
-				return false;
+
+		boolean isPkgCaseSensitive = (matchRulePkg & SearchPattern.R_CASE_SENSITIVE) != 0;
+		if (patternPkg != null && !CharOperation.equals(patternPkg, pkg, isPkgCaseSensitive))
+			return false;
 		
+		boolean isCaseSensitive = (matchRuleType & SearchPattern.R_CASE_SENSITIVE) != 0;
 		if (patternTypeName != null) {
-			boolean isCamelCase = (matchRule & (SearchPattern.R_CAMELCASE_MATCH | SearchPattern.R_CAMELCASE_SAME_PART_COUNT_MATCH)) != 0;
-			int matchMode = matchRule & JavaSearchPattern.MATCH_MODE_MASK;
+			boolean isCamelCase = (matchRuleType & (SearchPattern.R_CAMELCASE_MATCH | SearchPattern.R_CAMELCASE_SAME_PART_COUNT_MATCH)) != 0;
+			int matchMode = matchRuleType & JavaSearchPattern.MATCH_MODE_MASK;
 			if (!isCaseSensitive && !isCamelCase) {
 				patternTypeName = CharOperation.toLowerCase(patternTypeName);
 			}
@@ -488,9 +489,9 @@ public class BasicSearchEngine {
 			}
 		}
 		return true;
-	
-	}	
-	
+
+	}
+
 	/**
 	 * Searches for matches of a given search pattern. Search patterns can be created using helper
 	 * methods (from a String pattern or a Java element) and encapsulate the description of what is
@@ -505,11 +506,342 @@ public class BasicSearchEngine {
 		}
 		findMatches(pattern, participants, scope, requestor, monitor);
 	}
+	
+	public void searchAllConstructorDeclarations(
+		final char[] packageName,
+		final char[] typeName,
+		final int typeMatchRule,
+		IJavaSearchScope scope,
+		final IRestrictedAccessConstructorRequestor nameRequestor,
+		int waitingPolicy,
+		IProgressMonitor progressMonitor)  throws JavaModelException {
+
+		// Validate match rule first
+		final int validatedTypeMatchRule = SearchPattern.validateMatchRule(typeName == null ? null : new String (typeName), typeMatchRule);
+		
+		final int pkgMatchRule = SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE;
+		final char NoSuffix = IIndexConstants.TYPE_SUFFIX; // Used as TYPE_SUFFIX has no effect in method #match(char, char[] , int, char[], int , int, char[], char[])
+
+		// Debug
+		if (VERBOSE) {
+			Util.verbose("BasicSearchEngine.searchAllConstructorDeclarations(char[], char[], int, IJavaSearchScope, IRestrictedAccessConstructorRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
+			Util.verbose("	- package name: "+(packageName==null?"null":new String(packageName))); //$NON-NLS-1$ //$NON-NLS-2$
+			Util.verbose("	- type name: "+(typeName==null?"null":new String(typeName))); //$NON-NLS-1$ //$NON-NLS-2$
+			Util.verbose("	- type match rule: "+getMatchRuleString(typeMatchRule)); //$NON-NLS-1$
+			if (validatedTypeMatchRule != typeMatchRule) {
+				Util.verbose("	- validated type match rule: "+getMatchRuleString(validatedTypeMatchRule)); //$NON-NLS-1$
+			}
+			Util.verbose("	- scope: "+scope); //$NON-NLS-1$
+		}
+		if (validatedTypeMatchRule == -1) return; // invalid match rule => return no results
+
+		// Create pattern
+		IndexManager indexManager = JavaModelManager.getIndexManager();
+		final ConstructorDeclarationPattern pattern = new ConstructorDeclarationPattern(
+				packageName,
+				typeName,
+				validatedTypeMatchRule);
+
+		// Get working copy path(s). Store in a single string in case of only one to optimize comparison in requestor
+		final HashSet workingCopyPaths = new HashSet();
+		String workingCopyPath = null;
+		ICompilationUnit[] copies = getWorkingCopies();
+		final int copiesLength = copies == null ? 0 : copies.length;
+		if (copies != null) {
+			if (copiesLength == 1) {
+				workingCopyPath = copies[0].getPath().toString();
+			} else {
+				for (int i = 0; i < copiesLength; i++) {
+					ICompilationUnit workingCopy = copies[i];
+					workingCopyPaths.add(workingCopy.getPath().toString());
+				}
+			}
+		}
+		final String singleWkcpPath = workingCopyPath;
+
+		// Index requestor
+		IndexQueryRequestor searchRequestor = new IndexQueryRequestor(){
+			public boolean acceptIndexMatch(String documentPath, SearchPattern indexRecord, SearchParticipant participant, AccessRuleSet access) {
+				// Filter unexpected types
+				ConstructorDeclarationPattern record = (ConstructorDeclarationPattern)indexRecord;
+				
+				if ((record.extraFlags & ExtraFlags.IsMemberType) != 0) {
+					return true; // filter out member classes
+				}
+				if ((record.extraFlags & ExtraFlags.IsLocalType) != 0) {
+					return true; // filter out local and anonymous classes
+				}
+				switch (copiesLength) {
+					case 0:
+						break;
+					case 1:
+						if (singleWkcpPath.equals(documentPath)) {
+							return true; // filter out *the* working copy
+						}
+						break;
+					default:
+						if (workingCopyPaths.contains(documentPath)) {
+							return true; // filter out working copies
+						}
+						break;
+				}
+
+				// Accept document path
+				AccessRestriction accessRestriction = null;
+				if (access != null) {
+					// Compute document relative path
+					int pkgLength = (record.declaringPackageName==null || record.declaringPackageName.length==0) ? 0 : record.declaringPackageName.length+1;
+					int nameLength = record.declaringSimpleName==null ? 0 : record.declaringSimpleName.length;
+					char[] path = new char[pkgLength+nameLength];
+					int pos = 0;
+					if (pkgLength > 0) {
+						System.arraycopy(record.declaringPackageName, 0, path, pos, pkgLength-1);
+						CharOperation.replace(path, '.', '/');
+						path[pkgLength-1] = '/';
+						pos += pkgLength;
+					}
+					if (nameLength > 0) {
+						System.arraycopy(record.declaringSimpleName, 0, path, pos, nameLength);
+						pos += nameLength;
+					}
+					// Update access restriction if path is not empty
+					if (pos > 0) {
+						accessRestriction = access.getViolatedRestriction(path);
+					}
+				}
+				nameRequestor.acceptConstructor(
+						record.modifiers,
+						record.declaringSimpleName,
+						record.parameterCount,
+						record.signature,
+						record.parameterTypes,
+						record.parameterNames,
+						record.declaringTypeModifiers,
+						record.declaringPackageName,
+						record.extraFlags,
+						documentPath,
+						accessRestriction);
+				return true;
+			}
+		};
+
+		try {
+			if (progressMonitor != null) {
+				progressMonitor.beginTask(Messages.engine_searching, 1000);
+			}
+			// add type names from indexes
+			indexManager.performConcurrentJob(
+				new PatternSearchJob(
+					pattern,
+					getDefaultSearchParticipant(), // Java search only
+					scope,
+					searchRequestor),
+				waitingPolicy,
+				progressMonitor == null ? null : new SubProgressMonitor(progressMonitor, 1000-copiesLength));
+
+			// add type names from working copies
+			if (copies != null) {
+				for (int i = 0; i < copiesLength; i++) {
+					final ICompilationUnit workingCopy = copies[i];
+					if (!scope.encloses(workingCopy)) continue;
+					final String path = workingCopy.getPath().toString();
+					if (workingCopy.isConsistent()) {
+						IPackageDeclaration[] packageDeclarations = workingCopy.getPackageDeclarations();
+						char[] packageDeclaration = packageDeclarations.length == 0 ? CharOperation.NO_CHAR : packageDeclarations[0].getElementName().toCharArray();
+						IType[] allTypes = workingCopy.getAllTypes();
+						for (int j = 0, allTypesLength = allTypes.length; j < allTypesLength; j++) {
+							IType type = allTypes[j];
+							char[] simpleName = type.getElementName().toCharArray();
+							if (match(NoSuffix, packageName, pkgMatchRule, typeName, validatedTypeMatchRule, 0/*no kind*/, packageDeclaration, simpleName) && !type.isMember()) {
+								
+								int extraFlags = ExtraFlags.getExtraFlags(type);
+								
+								boolean hasConstructor = false;
+								
+								IMethod[] methods = type.getMethods();
+								for (int k = 0; k < methods.length; k++) {
+									IMethod method = methods[k];
+									if (method.isConstructor()) {
+										hasConstructor = true;
+										
+										String[] stringParameterNames = method.getParameterNames();
+										String[] stringParameterTypes = method.getParameterTypes();
+										int length = stringParameterNames.length;
+										char[][] parameterNames = new char[length][];
+										char[][] parameterTypes = new char[length][];
+										for (int l = 0; l < length; l++) {
+											parameterNames[l] = stringParameterNames[l].toCharArray();
+											parameterTypes[l] = Signature.toCharArray(Signature.getTypeErasure(stringParameterTypes[l]).toCharArray());
+										}
+										
+										nameRequestor.acceptConstructor(
+												method.getFlags(),
+												simpleName,
+												parameterNames.length,
+												null,// signature is not used for source type
+												parameterTypes, 
+												parameterNames,
+												type.getFlags(),
+												packageDeclaration,
+												extraFlags,
+												path,
+												null);
+									}
+								}
+								
+								if (!hasConstructor) {
+									nameRequestor.acceptConstructor(
+											Flags.AccPublic,
+											simpleName,
+											-1,
+											null, // signature is not used for source type
+											CharOperation.NO_CHAR_CHAR,
+											CharOperation.NO_CHAR_CHAR,
+											type.getFlags(),
+											packageDeclaration,
+											extraFlags,
+											path,
+											null);
+								}
+							}
+						}
+					} else {
+						Parser basicParser = getParser();
+						org.eclipse.jdt.internal.compiler.env.ICompilationUnit unit = (org.eclipse.jdt.internal.compiler.env.ICompilationUnit) workingCopy;
+						CompilationResult compilationUnitResult = new CompilationResult(unit, 0, 0, this.compilerOptions.maxProblemsPerUnit);
+						CompilationUnitDeclaration parsedUnit = basicParser.dietParse(unit, compilationUnitResult);
+						if (parsedUnit != null) {
+							final char[] packageDeclaration = parsedUnit.currentPackage == null ? CharOperation.NO_CHAR : CharOperation.concatWith(parsedUnit.currentPackage.getImportName(), '.');
+							class AllConstructorDeclarationsVisitor extends ASTVisitor {
+								private TypeDeclaration[] declaringTypes = new TypeDeclaration[0];
+								private int declaringTypesPtr = -1;
+								
+								private void endVisit(TypeDeclaration typeDeclaration) {
+									if (!hasConstructor(typeDeclaration) && typeDeclaration.enclosingType == null) {
+									
+										if (match(NoSuffix, packageName, pkgMatchRule, typeName, validatedTypeMatchRule, 0/*no kind*/, packageDeclaration, typeDeclaration.name)) {
+											nameRequestor.acceptConstructor(
+													Flags.AccPublic,
+													typeName,
+													-1,
+													null, // signature is not used for source type
+													CharOperation.NO_CHAR_CHAR,
+													CharOperation.NO_CHAR_CHAR,
+													typeDeclaration.modifiers,
+													packageDeclaration,
+													ExtraFlags.getExtraFlags(typeDeclaration),
+													path,
+													null);
+										}
+									}
+									
+									this.declaringTypes[this.declaringTypesPtr] = null;
+									this.declaringTypesPtr--;
+								}
+								
+								public void endVisit(TypeDeclaration typeDeclaration, CompilationUnitScope s) {
+									endVisit(typeDeclaration);
+								}
+								
+								public void endVisit(TypeDeclaration memberTypeDeclaration, ClassScope s) {
+									endVisit(memberTypeDeclaration);
+								}
+								
+								private boolean hasConstructor(TypeDeclaration typeDeclaration) {
+									AbstractMethodDeclaration[] methods = typeDeclaration.methods;
+									int length = methods == null ? 0 : methods.length;
+									for (int j = 0; j < length; j++) {
+										if (methods[j].isConstructor()) {
+											return true;
+										}
+									}
+									
+									return false;
+								}
+								public boolean visit(ConstructorDeclaration constructorDeclaration, ClassScope classScope) {
+									TypeDeclaration typeDeclaration = this.declaringTypes[this.declaringTypesPtr];
+									if (match(NoSuffix, packageName, pkgMatchRule, typeName, validatedTypeMatchRule, 0/*no kind*/, packageDeclaration, typeDeclaration.name)) {
+										Argument[] arguments = constructorDeclaration.arguments;
+										int length = arguments == null ? 0 : arguments.length;
+										char[][] parameterNames = new char[length][];
+										char[][] parameterTypes = new char[length][];
+										for (int l = 0; l < length; l++) {
+											Argument argument = arguments[l];
+											parameterNames[l] = argument.name;
+											if (argument.type instanceof SingleTypeReference) {
+												parameterTypes[l] = ((SingleTypeReference)argument.type).token;
+											} else {
+												parameterTypes[l] = CharOperation.concatWith(((QualifiedTypeReference)argument.type).tokens, '.');
+											}
+										}
+										
+										TypeDeclaration enclosing = typeDeclaration.enclosingType;
+										char[][] enclosingTypeNames = CharOperation.NO_CHAR_CHAR;
+										while (enclosing != null) {
+											enclosingTypeNames = CharOperation.arrayConcat(new char[][] {enclosing.name}, enclosingTypeNames);
+											if ((enclosing.bits & ASTNode.IsMemberType) != 0) {
+												enclosing = enclosing.enclosingType;
+											} else {
+												enclosing = null;
+											}
+										}
+										
+										nameRequestor.acceptConstructor(
+												constructorDeclaration.modifiers,
+												typeName,
+												parameterNames.length,
+												null, // signature is not used for source type
+												parameterTypes,
+												parameterNames,
+												typeDeclaration.modifiers,
+												packageDeclaration,
+												ExtraFlags.getExtraFlags(typeDeclaration),
+												path,
+												null);
+									}
+									return false; // no need to find constructors from local/anonymous type
+								}
+								public boolean visit(TypeDeclaration typeDeclaration, BlockScope blockScope) {
+									return false; 
+								}
+								
+								private boolean visit(TypeDeclaration typeDeclaration) {
+									if(this.declaringTypes.length <= ++this.declaringTypesPtr) {
+										int length = this.declaringTypesPtr;
+										System.arraycopy(this.declaringTypes, 0, this.declaringTypes = new TypeDeclaration[length * 2 + 1], 0, length);
+									}
+									this.declaringTypes[this.declaringTypesPtr] = typeDeclaration;
+									return true;
+								}
+								
+								public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope s) {
+									return visit(typeDeclaration);
+								}
+								
+								public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope s) {
+									return visit(memberTypeDeclaration);
+								}
+							}
+							parsedUnit.traverse(new AllConstructorDeclarationsVisitor(), parsedUnit.scope);
+						}
+					}
+					if (progressMonitor != null) {
+						if (progressMonitor.isCanceled()) throw new OperationCanceledException();
+						progressMonitor.worked(1);
+					}
+				}
+			}
+		} finally {
+			if (progressMonitor != null) {
+				progressMonitor.done();
+			}
+		}
+	}
 
 	/**
 	 * Searches for all secondary types in the given scope.
 	 * The search can be selecting specific types (given a package or a type name
-	 * prefix and match modes). 
+	 * prefix and match modes).
 	 */
 	public void searchAllSecondaryTypeNames(
 			IPackageFragmentRoot[] sourceFolders,
@@ -611,13 +943,13 @@ public class BasicSearchEngine {
 		// add type names from indexes
 		try {
 			if (progressMonitor != null) {
-				progressMonitor.beginTask(Messages.engine_searching, 100); 
+				progressMonitor.beginTask(Messages.engine_searching, 100);
 			}
 			indexManager.performConcurrentJob(
 				new PatternSearchJob(
-					pattern, 
+					pattern,
 					getDefaultSearchParticipant(), // Java search only
-					createJavaSearchScope(sourceFolders), 
+					createJavaSearchScope(sourceFolders),
 					searchRequestor),
 				waitForIndexes
 					? IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH
@@ -635,25 +967,25 @@ public class BasicSearchEngine {
 	/**
 	 * Searches for all top-level types and member types in the given scope.
 	 * The search can be selecting specific types (given a package or a type name
-	 * prefix and match modes). 
-	 * 
+	 * prefix and match modes).
+	 *
 	 * @see SearchEngine#searchAllTypeNames(char[], int, char[], int, int, IJavaSearchScope, TypeNameRequestor, int, IProgressMonitor)
 	 * 	for detailed comment
 	 */
 	public void searchAllTypeNames(
-		final char[] packageName, 
-		final int packageMatchRule, 
+		final char[] packageName,
+		final int packageMatchRule,
 		final char[] typeName,
-		final int typeMatchRule, 
-		int searchFor, 
-		IJavaSearchScope scope, 
+		final int typeMatchRule,
+		int searchFor,
+		IJavaSearchScope scope,
 		final IRestrictedAccessTypeRequestor nameRequestor,
 		int waitingPolicy,
 		IProgressMonitor progressMonitor)  throws JavaModelException {
 
 		// Validate match rule first
 		final int validatedTypeMatchRule = SearchPattern.validateMatchRule(typeName == null ? null : new String (typeName), typeMatchRule);
-		
+
 		// Debug
 		if (VERBOSE) {
 			Util.verbose("BasicSearchEngine.searchAllTypeNames(char[], char[], int, int, IJavaSearchScope, IRestrictedAccessTypeRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
@@ -694,7 +1026,7 @@ public class BasicSearchEngine {
 			case IJavaSearchConstants.ANNOTATION_TYPE :
 				typeSuffix = IIndexConstants.ANNOTATION_TYPE_SUFFIX;
 				break;
-			default : 
+			default :
 				typeSuffix = IIndexConstants.TYPE_SUFFIX;
 				break;
 		}
@@ -781,21 +1113,21 @@ public class BasicSearchEngine {
 				return true;
 			}
 		};
-	
+
 		try {
 			if (progressMonitor != null) {
-				progressMonitor.beginTask(Messages.engine_searching, 1000); 
+				progressMonitor.beginTask(Messages.engine_searching, 1000);
 			}
 			// add type names from indexes
 			indexManager.performConcurrentJob(
 				new PatternSearchJob(
-					pattern, 
+					pattern,
 					getDefaultSearchParticipant(), // Java search only
-					scope, 
+					scope,
 					searchRequestor),
 				waitingPolicy,
-				progressMonitor == null ? null : new SubProgressMonitor(progressMonitor, 1000-copiesLength));	
-				
+				progressMonitor == null ? null : new SubProgressMonitor(progressMonitor, 1000-copiesLength));
+
 			// add type names from working copies
 			if (copies != null) {
 				for (int i = 0; i < copiesLength; i++) {
@@ -827,7 +1159,7 @@ public class BasicSearchEngine {
 							} else /*if (type.isInterface())*/ {
 								kind = TypeDeclaration.INTERFACE_DECL;
 							}
-							if (match(typeSuffix, packageName, typeName, validatedTypeMatchRule, kind, packageDeclaration, simpleName)) {
+							if (match(typeSuffix, packageName, packageMatchRule, typeName, validatedTypeMatchRule, kind, packageDeclaration, simpleName)) {
 								if (nameRequestor instanceof TypeNameMatchRequestorWrapper) {
 									((TypeNameMatchRequestorWrapper)nameRequestor).requestor.acceptTypeNameMatch(new JavaSearchTypeNameMatch(type, type.getFlags()));
 								} else {
@@ -847,7 +1179,7 @@ public class BasicSearchEngine {
 									return false; // no local/anonymous type
 								}
 								public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope compilationUnitScope) {
-									if (match(typeSuffix, packageName, typeName, validatedTypeMatchRule, TypeDeclaration.kind(typeDeclaration.modifiers), packageDeclaration, typeDeclaration.name)) {
+									if (match(typeSuffix, packageName, packageMatchRule, typeName, validatedTypeMatchRule, TypeDeclaration.kind(typeDeclaration.modifiers), packageDeclaration, typeDeclaration.name)) {
 										if (nameRequestor instanceof TypeNameMatchRequestorWrapper) {
 											IType type = workingCopy.getType(new String(typeName));
 											((TypeNameMatchRequestorWrapper)nameRequestor).requestor.acceptTypeNameMatch(new JavaSearchTypeNameMatch(type, typeDeclaration.modifiers));
@@ -858,7 +1190,7 @@ public class BasicSearchEngine {
 									return true;
 								}
 								public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope classScope) {
-									if (match(typeSuffix, packageName, typeName, validatedTypeMatchRule, TypeDeclaration.kind(memberTypeDeclaration.modifiers), packageDeclaration, memberTypeDeclaration.name)) {
+									if (match(typeSuffix, packageName, packageMatchRule, typeName, validatedTypeMatchRule, TypeDeclaration.kind(memberTypeDeclaration.modifiers), packageDeclaration, memberTypeDeclaration.name)) {
 										// compute enclosing type names
 										TypeDeclaration enclosing = memberTypeDeclaration.enclosingType;
 										char[][] enclosingTypeNames = CharOperation.NO_CHAR_CHAR;
@@ -892,7 +1224,7 @@ public class BasicSearchEngine {
 						progressMonitor.worked(1);
 					}
 				}
-			}	
+			}
 		} finally {
 			if (progressMonitor != null) {
 				progressMonitor.done();
@@ -903,36 +1235,26 @@ public class BasicSearchEngine {
 	/**
 	 * Searches for all top-level types and member types in the given scope using  a case sensitive exact match
 	 * with the given qualified names and type names.
-	 * 
+	 *
 	 * @see SearchEngine#searchAllTypeNames(char[][], char[][], IJavaSearchScope, TypeNameRequestor, int, IProgressMonitor)
 	 * 	for detailed comment
 	 */
 	public void searchAllTypeNames(
-		final char[][] qualifications, 
+		final char[][] qualifications,
 		final char[][] typeNames,
-		int matchRule, 
-		int searchFor, 
-		IJavaSearchScope scope, 
+		final int matchRule,
+		int searchFor,
+		IJavaSearchScope scope,
 		final IRestrictedAccessTypeRequestor nameRequestor,
 		int waitingPolicy,
 		IProgressMonitor progressMonitor)  throws JavaModelException {
 
-		// Validate match rule first
-		int namesLength = typeNames == null ? 0 : typeNames.length;
-		for (int i=0; i<namesLength; i++) {
-			matchRule &= SearchPattern.validateMatchRule(new String(typeNames[i]), matchRule);
-		}
-		final int validatedMatchRule = matchRule;
-		
 		// Debug
 		if (VERBOSE) {
 			Util.verbose("BasicSearchEngine.searchAllTypeNames(char[][], char[][], int, int, IJavaSearchScope, IRestrictedAccessTypeRequestor, int, IProgressMonitor)"); //$NON-NLS-1$
 			Util.verbose("	- package name: "+(qualifications==null?"null":new String(CharOperation.concatWith(qualifications, ',')))); //$NON-NLS-1$ //$NON-NLS-2$
 			Util.verbose("	- type name: "+(typeNames==null?"null":new String(CharOperation.concatWith(typeNames, ',')))); //$NON-NLS-1$ //$NON-NLS-2$
-			Util.verbose("	- match rule: "+matchRule); //$NON-NLS-1$
-			if (validatedMatchRule != matchRule) {
-				Util.verbose("	- validated match rule: "+getMatchRuleString(validatedMatchRule)); //$NON-NLS-1$
-			}
+			Util.verbose("	- match rule: "+getMatchRuleString(matchRule)); //$NON-NLS-1$
 			Util.verbose("	- search for: "+searchFor); //$NON-NLS-1$
 			Util.verbose("	- scope: "+scope); //$NON-NLS-1$
 		}
@@ -962,11 +1284,11 @@ public class BasicSearchEngine {
 			case IJavaSearchConstants.ANNOTATION_TYPE :
 				typeSuffix = IIndexConstants.ANNOTATION_TYPE_SUFFIX;
 				break;
-			default : 
+			default :
 				typeSuffix = IIndexConstants.TYPE_SUFFIX;
 				break;
 		}
-		final MultiTypeDeclarationPattern pattern = new MultiTypeDeclarationPattern(qualifications, typeNames, typeSuffix, validatedMatchRule);
+		final MultiTypeDeclarationPattern pattern = new MultiTypeDeclarationPattern(qualifications, typeNames, typeSuffix, matchRule);
 
 		// Get working copy path(s). Store in a single string in case of only one to optimize comparison in requestor
 		final HashSet workingCopyPaths = new HashSet();
@@ -1035,21 +1357,21 @@ public class BasicSearchEngine {
 				return true;
 			}
 		};
-	
+
 		try {
 			if (progressMonitor != null) {
-				progressMonitor.beginTask(Messages.engine_searching, 100); 
+				progressMonitor.beginTask(Messages.engine_searching, 100);
 			}
 			// add type names from indexes
 			indexManager.performConcurrentJob(
 				new PatternSearchJob(
-					pattern, 
+					pattern,
 					getDefaultSearchParticipant(), // Java search only
-					scope, 
+					scope,
 					searchRequestor),
 				waitingPolicy,
-				progressMonitor == null ? null : new SubProgressMonitor(progressMonitor, 100));	
-				
+				progressMonitor == null ? null : new SubProgressMonitor(progressMonitor, 100));
+
 			// add type names from working copies
 			if (copies != null) {
 				for (int i = 0, length = copies.length; i < length; i++) {
@@ -1101,7 +1423,7 @@ public class BasicSearchEngine {
 								}
 								public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope compilationUnitScope) {
 									SearchPattern decodedPattern =
-										new QualifiedTypeDeclarationPattern(packageDeclaration, typeDeclaration.name, convertTypeKind(TypeDeclaration.kind(typeDeclaration.modifiers)), validatedMatchRule);
+										new QualifiedTypeDeclarationPattern(packageDeclaration, typeDeclaration.name, convertTypeKind(TypeDeclaration.kind(typeDeclaration.modifiers)), matchRule);
 									if (pattern.matchesDecodedKey(decodedPattern)) {
 										nameRequestor.acceptType(typeDeclaration.modifiers, packageDeclaration, typeDeclaration.name, CharOperation.NO_CHAR_CHAR, path, null);
 									}
@@ -1122,7 +1444,7 @@ public class BasicSearchEngine {
 										}
 									}
 									SearchPattern decodedPattern =
-										new QualifiedTypeDeclarationPattern(qualification, memberTypeDeclaration.name, convertTypeKind(TypeDeclaration.kind(memberTypeDeclaration.modifiers)), validatedMatchRule);
+										new QualifiedTypeDeclarationPattern(qualification, memberTypeDeclaration.name, convertTypeKind(TypeDeclaration.kind(memberTypeDeclaration.modifiers)), matchRule);
 									if (pattern.matchesDecodedKey(decodedPattern)) {
 										nameRequestor.acceptType(memberTypeDeclaration.modifiers, packageDeclaration, memberTypeDeclaration.name, enclosingTypeNames, path, null);
 									}
@@ -1133,14 +1455,14 @@ public class BasicSearchEngine {
 						}
 					}
 				}
-			}	
+			}
 		} finally {
 			if (progressMonitor != null) {
 				progressMonitor.done();
 			}
 		}
 	}
-	
+
 	public void searchDeclarations(IJavaElement enclosingElement, SearchRequestor requestor, SearchPattern pattern, IProgressMonitor monitor) throws JavaModelException {
 		if (VERBOSE) {
 			Util.verbose("	- java element: "+enclosingElement); //$NON-NLS-1$
@@ -1172,20 +1494,20 @@ public class BasicSearchEngine {
 						getWorkingCopies(enclosingElement),
 						participant);
 					participant.locateMatches(
-						documents, 
-						pattern, 
-						scope, 
-						requestor, 
+						documents,
+						pattern,
+						scope,
+						requestor,
 						monitor);
 				} finally {
 					requestor.endReporting();
 				}
 			} else {
 				search(
-					pattern, 
-					new SearchParticipant[] {getDefaultSearchParticipant()}, 
-					scope, 
-					requestor, 
+					pattern,
+					new SearchParticipant[] {getDefaultSearchParticipant()},
+					scope,
+					requestor,
 					monitor);
 			}
 		} catch (CoreException e) {
@@ -1202,7 +1524,7 @@ public class BasicSearchEngine {
 	 *
 	 * @see SearchEngine#searchDeclarationsOfAccessedFields(IJavaElement, SearchRequestor, IProgressMonitor)
 	 * 	for detailed comment
-	 */	
+	 */
 	public void searchDeclarationsOfAccessedFields(IJavaElement enclosingElement, SearchRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
 		if (VERBOSE) {
 			Util.verbose("BasicSearchEngine.searchDeclarationsOfAccessedFields(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$
@@ -1221,15 +1543,15 @@ public class BasicSearchEngine {
 		SearchPattern pattern = new DeclarationOfAccessedFieldsPattern(enclosingElement);
 		searchDeclarations(enclosingElement, requestor, pattern, monitor);
 	}
-	
+
 	/**
 	 * Searches for all declarations of the types referenced in the given element.
 	 * The element can be a compilation unit or a source type/method/field.
 	 * Reports the type declarations using the given requestor.
-	 * 
+	 *
 	 * @see SearchEngine#searchDeclarationsOfReferencedTypes(IJavaElement, SearchRequestor, IProgressMonitor)
 	 * 	for detailed comment
-	 */	
+	 */
 	public void searchDeclarationsOfReferencedTypes(IJavaElement enclosingElement, SearchRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
 		if (VERBOSE) {
 			Util.verbose("BasicSearchEngine.searchDeclarationsOfReferencedTypes(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$
@@ -1248,15 +1570,15 @@ public class BasicSearchEngine {
 		SearchPattern pattern = new DeclarationOfReferencedTypesPattern(enclosingElement);
 		searchDeclarations(enclosingElement, requestor, pattern, monitor);
 	}
-	
+
 	/**
 	 * Searches for all declarations of the methods invoked in the given element.
 	 * The element can be a compilation unit or a source type/method/field.
 	 * Reports the method declarations using the given requestor.
-	 * 
+	 *
 	 * @see SearchEngine#searchDeclarationsOfSentMessages(IJavaElement, SearchRequestor, IProgressMonitor)
 	 * 	for detailed comment
-	 */	
+	 */
 	public void searchDeclarationsOfSentMessages(IJavaElement enclosingElement, SearchRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
 		if (VERBOSE) {
 			Util.verbose("BasicSearchEngine.searchDeclarationsOfSentMessages(IJavaElement, SearchRequestor, SearchPattern, IProgressMonitor)"); //$NON-NLS-1$

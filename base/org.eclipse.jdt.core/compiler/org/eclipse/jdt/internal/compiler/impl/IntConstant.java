@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,9 +11,10 @@
 package org.eclipse.jdt.internal.compiler.impl;
 
 public class IntConstant extends Constant {
-	
+
 	int value;
-	
+
+	private static final IntConstant MIN_VALUE = new IntConstant(Integer.MIN_VALUE);
 	private static final IntConstant MINUS_FOUR = new IntConstant(-4);
 	private static final IntConstant MINUS_THREE = new IntConstant(-3);
 	private static final IntConstant MINUS_TWO = new IntConstant(-2);
@@ -29,10 +30,10 @@ public class IntConstant extends Constant {
 	private static final IntConstant EIGHT= new IntConstant(8);
 	private static final IntConstant NINE = new IntConstant(9);
 	private static final IntConstant TEN = new IntConstant(10);
-	
-	public static Constant fromValue(int value) {
 
+	public static Constant fromValue(int value) {
 		switch (value) {
+			case Integer.MIN_VALUE : return IntConstant.MIN_VALUE;
 			case -4 : return IntConstant.MINUS_FOUR;
 			case -3 : return IntConstant.MINUS_THREE;
 			case -2 : return IntConstant.MINUS_TWO;
@@ -51,47 +52,47 @@ public class IntConstant extends Constant {
 		}
 		return new IntConstant(value);
 	}
-	
+
 	private IntConstant(int value) {
 		this.value = value;
 	}
-	
+
 	public byte byteValue() {
-		return (byte) value;
+		return (byte) this.value;
 	}
-	
+
 	public char charValue() {
-		return (char) value;
+		return (char) this.value;
 	}
-	
+
 	public double doubleValue() {
-		return value; // implicit cast to return type
+		return this.value; // implicit cast to return type
 	}
-	
+
 	public float floatValue() {
-		return value; // implicit cast to return type
+		return this.value; // implicit cast to return type
 	}
-	
+
 	public int intValue() {
-		return value;
+		return this.value;
 	}
-	
+
 	public long longValue() {
-		return value; // implicit cast to return type
+		return this.value; // implicit cast to return type
 	}
-	
+
 	public short shortValue() {
-		return (short) value;
+		return (short) this.value;
 	}
-	
+
 	public String stringValue() {
 		//spec 15.17.11
 		return String.valueOf(this.value);
 	}
 
 	public String toString() {
-		return "(int)" + value; //$NON-NLS-1$
-	} 
+		return "(int)" + this.value; //$NON-NLS-1$
+	}
 
 	public int typeID() {
 		return T_int;

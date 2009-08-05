@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 
 public class AnnotationMethodDeclaration extends MethodDeclaration {
-	
+
 	public Expression defaultValue;
 	public int extendedDimensions;
 
@@ -35,28 +35,28 @@ public class AnnotationMethodDeclaration extends MethodDeclaration {
 		int attributeNumber = classFile.generateMethodInfoAttribute(this.binding, this);
 		classFile.completeMethodInfo(methodAttributeOffset, attributeNumber);
 	}
-	
+
 	public boolean isAnnotationMethod() {
 
 		return true;
 	}
-	
+
 	public boolean isMethod() {
 
 		return false;
 	}
-	
+
 	public void parseStatements(Parser parser, CompilationUnitDeclaration unit) {
 		// nothing to do
 		// annotation type member declaration don't have any body
 	}
-	
+
 	public StringBuffer print(int tab, StringBuffer output) {
 
 		printIndent(tab, output);
 		printModifiers(this.modifiers, output);
 		if (this.annotations != null) printAnnotations(this.annotations, output);
-		
+
 		TypeParameter[] typeParams = typeParameters();
 		if (typeParams != null) {
 			output.append('<');
@@ -68,7 +68,7 @@ public class AnnotationMethodDeclaration extends MethodDeclaration {
 			typeParams[max].print(0, output);
 			output.append('>');
 		}
-		
+
 		printReturnType(0, output).append(this.selector).append('(');
 		if (this.arguments != null) {
 			for (int i = 0; i < this.arguments.length; i++) {
@@ -84,32 +84,32 @@ public class AnnotationMethodDeclaration extends MethodDeclaration {
 				this.thrownExceptions[i].print(0, output);
 			}
 		}
-		
+
 		if (this.defaultValue != null) {
 			output.append(" default "); //$NON-NLS-1$
 			this.defaultValue.print(0, output);
 		}
-		
+
 		printBody(tab + 1, output);
 		return output;
 	}
-	
+
 	public void resolveStatements() {
 
 		super.resolveStatements();
 		if (this.arguments != null) {
-			scope.problemReporter().annotationMembersCannotHaveParameters(this);
+			this.scope.problemReporter().annotationMembersCannotHaveParameters(this);
 		}
 		if (this.typeParameters != null) {
-			scope.problemReporter().annotationMembersCannotHaveTypeParameters(this);
+			this.scope.problemReporter().annotationMembersCannotHaveTypeParameters(this);
 		}
 		if (this.extendedDimensions != 0) {
-			scope.problemReporter().illegalExtendedDimensions(this);		
-		}		
+			this.scope.problemReporter().illegalExtendedDimensions(this);
+		}
 		if (this.binding == null) return;
 		TypeBinding returnTypeBinding = this.binding.returnType;
 		if (returnTypeBinding != null) {
-				
+
 			// annotation methods can only return base types, String, Class, enum type, annotation types and arrays of these
 			checkAnnotationMethodType: {
 				TypeBinding leafReturnType = returnTypeBinding.leafComponentType();
@@ -130,12 +130,12 @@ public class AnnotationMethodDeclaration extends MethodDeclaration {
 					if (leafReturnType.isEnum() || leafReturnType.isAnnotationType())
 						break checkAnnotationMethodType;
 				}
-				scope.problemReporter().invalidAnnotationMemberType(this);
+				this.scope.problemReporter().invalidAnnotationMemberType(this);
 			}
 			if (this.defaultValue != null) {
 				MemberValuePair pair = new MemberValuePair(this.selector, this.sourceStart, this.sourceEnd, this.defaultValue);
 				pair.binding = this.binding;
-				pair.resolveTypeExpecting(scope, returnTypeBinding);
+				pair.resolveTypeExpecting(this.scope, returnTypeBinding);
 				this.binding.setDefaultValue(org.eclipse.jdt.internal.compiler.lookup.ElementValuePair.getValue(this.defaultValue));
 			} else { // let it know it does not have a default value so it won't try to find it
 				this.binding.setDefaultValue(null);
@@ -151,13 +151,13 @@ public class AnnotationMethodDeclaration extends MethodDeclaration {
 			if (this.annotations != null) {
 				int annotationsLength = this.annotations.length;
 				for (int i = 0; i < annotationsLength; i++)
-					this.annotations[i].traverse(visitor, scope);
+					this.annotations[i].traverse(visitor, this.scope);
 			}
 			if (this.returnType != null) {
-				this.returnType.traverse(visitor, scope);
+				this.returnType.traverse(visitor, this.scope);
 			}
 			if (this.defaultValue != null) {
-				this.defaultValue.traverse(visitor, scope);
+				this.defaultValue.traverse(visitor, this.scope);
 			}
 		}
 		visitor.endVisit(this, classScope);

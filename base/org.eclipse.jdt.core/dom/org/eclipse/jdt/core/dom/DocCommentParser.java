@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2008 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 
 /**
  * Internal parser used for decoding doc comments.
- * 
+ *
  * @since 3.0
  */
 class DocCommentParser extends AbstractCommentParser {
@@ -42,7 +42,7 @@ class DocCommentParser extends AbstractCommentParser {
 
 	/* (non-Javadoc)
 	 * Returns true if tag @deprecated is present in annotation.
-	 * 
+	 *
 	 * If annotation checking is enabled, will also construct an Annotation node, which will be stored into Parser.annotation
 	 * slot for being consumed later on.
 	 */
@@ -55,7 +55,7 @@ class DocCommentParser extends AbstractCommentParser {
 		this.source = this.scanner.source;
 		this.lineEnds = this.scanner.lineEnds;
 		this.docComment = new Javadoc(this.ast);
-		
+
 		// Parse
 		if (this.checkDocComment) {
 			this.javadocStart = start;
@@ -333,7 +333,7 @@ class DocCommentParser extends AbstractCommentParser {
 	 * @see org.eclipse.jdt.internal.compiler.parser.AbstractCommentParser#parseTag(int)
 	 */
 	protected boolean parseTag(int previousPosition) throws InvalidInputException {
-		
+
 		// Read tag name
 		int currentPosition = this.index;
 		int token = readTokenAndConsume();
@@ -420,13 +420,8 @@ class DocCommentParser extends AbstractCommentParser {
 					break;
 					case 'i':
 						if (length == TAG_INHERITDOC_LENGTH && CharOperation.equals(TAG_INHERITDOC, tagName)) {
-							// inhibits inherited flag when tags have been already stored
-							// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=51606
-							// Note that for DOM_PARSER, nodes stack may be not empty even no '@' tag
-							// was encountered in comment. But it cannot be the case for COMPILER_PARSER
-							// and so is enough as it is only this parser which signals the missing tag warnings...
-							if (this.astPtr==-1) {
-								this.inheritedPositions = (((long) this.tagSourceStart) << 32) + this.tagSourceEnd;
+							if (this.reportProblems) {
+								recordInheritedPosition((((long) this.tagSourceStart) << 32) + this.tagSourceEnd);
 							}
 							this.tagValue = TAG_INHERITDOC_VALUE;
 						} else {

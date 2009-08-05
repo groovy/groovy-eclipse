@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ public class LineNumberAttribute
 	private static final int[][] NO_ENTRIES = new int[0][0];
 	private int lineNumberTableLength;
 	private int[][] lineNumberTable;
-	
+
 	/**
 	 * Constructor for LineNumberAttribute.
 	 * @param classFileBytes
@@ -38,7 +38,7 @@ public class LineNumberAttribute
 		int offset)
 		throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);
-		
+
 		final int length = u2At(classFileBytes, 6, offset);
 		this.lineNumberTableLength = length;
 		if (length != 0) {

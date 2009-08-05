@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ public class LocalVariableTypeAttribute
 	private static final ILocalVariableTypeTableEntry[] NO_ENTRIES = new ILocalVariableTypeTableEntry[0];
 	private int localVariableTypeTableLength;
 	private ILocalVariableTypeTableEntry[] localVariableTypeTableEntries;
-	
+
 	/**
 	 * Constructor for LocalVariableTypeAttribute.
 	 * @param classFileBytes

@@ -13,10 +13,10 @@ package org.eclipse.jdt.core;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
- * Common protocol for Java elements that must be opened before they can be 
+ * Common protocol for Java elements that must be opened before they can be
  * navigated or modified. Opening a textual element (such as a compilation unit)
  * involves opening a buffer on its contents.  While open, any changes to the buffer
- * can be reflected in the element's structure; 
+ * can be reflected in the element's structure;
  * see {@link #isConsistent} and {@link #makeConsistent(IProgressMonitor)}.
  * <p>
  * To reduce complexity in clients, elements are automatically opened
@@ -56,10 +56,10 @@ public void close() throws JavaModelException;
 /**
  * Finds and returns the recommended line separator for this element.
  * The element's buffer is first searched and the first line separator in this buffer is returned if any.
- * Otherwise the preference {@link org.eclipse.core.runtime.Platform#PREF_LINE_SEPARATOR} 
+ * Otherwise the preference {@link org.eclipse.core.runtime.Platform#PREF_LINE_SEPARATOR}
  * on this element's project or workspace is returned.
  * Finally if no such preference is set, the system line separator is returned.
- * 
+ *
  * @return the recommended line separator for this element
  * @exception JavaModelException if this element does not exist or if an
  *		exception occurs while accessing its corresponding resource.
@@ -118,7 +118,7 @@ boolean isConsistent() throws JavaModelException;
  */
 boolean isOpen();
 /**
- * Makes this element consistent with its underlying resource or buffer 
+ * Makes this element consistent with its underlying resource or buffer
  * by updating the element's structure and properties as necessary.
  *<p>
  * Note: Using this functionality on a working copy will interfere with any
@@ -163,16 +163,16 @@ public void open(IProgressMonitor progress) throws JavaModelException;
  * cases where the workbench is not completely in sync with the local file system.
  * If <code>false</code> is specified, this method will only attempt
  * to overwrite a corresponding file in the local file system provided
- * it is in sync with the workbench. This option ensures there is no 
+ * it is in sync with the workbench. This option ensures there is no
  * unintended data loss; it is the recommended setting.
  * However, if <code>true</code> is specified, an attempt will be made
- * to write a corresponding file in the local file system, 
+ * to write a corresponding file in the local file system,
  * overwriting any existing one if need be.
- * In either case, if this method succeeds, the resource will be marked 
+ * In either case, if this method succeeds, the resource will be marked
  * as being local (even if it wasn't before).
  * <p>
- * As a result of this operation, the element is consistent with its underlying 
- * resource or buffer. 
+ * As a result of this operation, the element is consistent with its underlying
+ * resource or buffer.
  *
  * @param progress the given progress monitor
  * @param force it controls how this method deals with

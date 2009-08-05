@@ -137,14 +137,14 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	public void enterConstructor(MethodInfo methodInfo) {
 		// default implementation: do nothing
 	}
-	
+
 	/**
 	 * @see ISourceElementRequestor#enterField(ISourceElementRequestor.FieldInfo)
 	 */
 	public void enterField(FieldInfo fieldInfo) {
 		// default implementation: do nothing
 	}
-	
+
 	/**
 	 * @see ISourceElementRequestor#enterInitializer(int, int)
 	 */
@@ -155,11 +155,11 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	public void enterMethod(MethodInfo methodInfo) {
 		// default implementation: do nothing
 	}
-	
+
 	public void enterType(TypeInfo typeInfo) {
 		// default implementation: do nothing
 	}
-	
+
 	/**
 	 * @see ISourceElementRequestor#exitCompilationUnit(int)
 	 */
@@ -194,7 +194,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	public void exitMethod(int declarationEnd, Expression defaultValue) {
 		// default implementation: do nothing
 	}
-	
+
 	/**
 	 * @see ISourceElementRequestor#exitType(int)
 	 */

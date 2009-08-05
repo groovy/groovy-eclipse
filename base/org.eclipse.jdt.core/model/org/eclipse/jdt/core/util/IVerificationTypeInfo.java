@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,9 +12,9 @@ package org.eclipse.jdt.core.util;
 
 /**
  * Description of a verification type info as described in the JVM specifications.
- * 
- * This interface may be implemented by clients. 
- * 
+ *
+ * This interface may be implemented by clients.
+ *
  * @since 3.0
  */
 public interface IVerificationTypeInfo {
@@ -63,7 +63,7 @@ public interface IVerificationTypeInfo {
 	 * @since 3.2
 	 */
 	public static final int ITEM_UNINITIALIZED = 8;
-	
+
 	/**
 	 * Answer back the tag of this verification type info as described in the JVM specifications.
 	 * <ul>
@@ -77,35 +77,35 @@ public interface IVerificationTypeInfo {
 	 * <li>7 for the object type</li>
 	 * <li>8 for the uninitialized offset type</li>
 	 * </ul>
-	 * 
+	 *
 	 * @return the tag of this verification type info as described in the JVM specifications
 	 * @since 3.0
 	 */
 	int getTag();
-	
+
 	/**
 	 * Answer back the offset of this verification type info as described in the JVM specifications.
 	 * This makes sense only if the tag is 8.
-	 * 
+	 *
 	 * @return the offset of this verification type info as described in the JVM specifications
 	 * @since 3.0
 	 */
 	int getOffset();
-	
+
 	/**
 	 * Answer back the constant pool index of this verification type info as described in the JVM specifications.
 	 * This makes sense only if the tag is 7.
-	 * 
+	 *
 	 * @return the constant pool index of this verification type info as described in the JVM specifications
 	 * @since 3.0
 	 */
 	int getConstantPoolIndex();
-	
+
 	/**
 	 * Answer back the name of the class type referenced by the index in the constant pool
 	 * as described in the JVM specifications.
 	 * This makes sense only if the tag is 7.
-	 * 
+	 *
 	 * @return the name of the class type referenced by the index in the constant pool
 	 * as described in the JVM specifications
 	 * @since 3.0

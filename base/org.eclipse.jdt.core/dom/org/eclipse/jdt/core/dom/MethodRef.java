@@ -20,44 +20,44 @@ import java.util.List;
  * tag elements, for references to method and constructor members.
  * <pre>
  * MethodRef:
- *     [ Name ] <b>#</b> Identifier  
+ *     [ Name ] <b>#</b> Identifier
  *         <b>(</b> [ MethodRefParameter | { <b>,</b> MethodRefParameter } ] <b>)</b>
  * </pre>
- * 
+ *
  * @see Javadoc
  * @since 3.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class MethodRef extends ASTNode implements IDocElement {
-	
+
 	/**
 	 * The "qualifier" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor QUALIFIER_PROPERTY = 
+	public static final ChildPropertyDescriptor QUALIFIER_PROPERTY =
 		new ChildPropertyDescriptor(MethodRef.class, "qualifier", Name.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "name" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor NAME_PROPERTY = 
+	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(MethodRef.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "parameters" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildListPropertyDescriptor PARAMETERS_PROPERTY = 
+	public static final ChildListPropertyDescriptor PARAMETERS_PROPERTY =
 		new ChildListPropertyDescriptor(MethodRef.class, "parameters", MethodRefParameter.class, NO_CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(4);
 		createPropertyList(MethodRef.class, properyList);
@@ -70,16 +70,16 @@ public class MethodRef extends ASTNode implements IDocElement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the AST.JLS* constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The optional qualifier; <code>null</code> for none; defaults to none.
 	 */
@@ -90,27 +90,27 @@ public class MethodRef extends ASTNode implements IDocElement {
 	 * legal Java method name.
 	 */
 	private SimpleName methodName = null;
-	
+
 	/**
-	 * The parameter declarations 
+	 * The parameter declarations
 	 * (element type: <code>MethodRefParameter</code>).
 	 * Defaults to an empty list.
 	 */
 	private ASTNode.NodeList parameters =
 		new ASTNode.NodeList(PARAMETERS_PROPERTY);
-	
-	
+
+
 	/**
-	 * Creates a new AST node for a method reference owned by the given 
+	 * Creates a new AST node for a method reference owned by the given
 	 * AST. By default, the method reference is for a method with an
 	 * unspecified, but legal, name; no qualifier; and an empty parameter
 	 * list.
 	 * <p>
-	 * N.B. This constructor is package-private; all subclasses must be 
-	 * declared in the same package; clients are unable to declare 
+	 * N.B. This constructor is package-private; all subclasses must be
+	 * declared in the same package; clients are unable to declare
 	 * additional subclasses.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	MethodRef(AST ast) {
@@ -123,7 +123,7 @@ public class MethodRef extends ASTNode implements IDocElement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -147,7 +147,7 @@ public class MethodRef extends ASTNode implements IDocElement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -171,7 +171,7 @@ public class MethodRef extends ASTNode implements IDocElement {
 	 */
 	ASTNode clone0(AST target) {
 		MethodRef result = new MethodRef(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setQualifier((Name) ASTNode.copySubtree(target, getQualifier()));
 		result.setName((SimpleName) ASTNode.copySubtree(target, getName()));
 		result.parameters().addAll(
@@ -186,7 +186,7 @@ public class MethodRef extends ASTNode implements IDocElement {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -200,28 +200,28 @@ public class MethodRef extends ASTNode implements IDocElement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
-	 * Returns the qualifier of this method reference, or 
+	 * Returns the qualifier of this method reference, or
 	 * <code>null</code> if there is none.
-	 * 
+	 *
 	 * @return the qualifier name node, or <code>null</code> if there is none
-	 */ 
+	 */
 	public Name getQualifier() {
 		return this.optionalQualifier;
 	}
-	
+
 	/**
 	 * Sets or clears the qualifier of this method reference.
-	 * 
-	 * @param name the qualifier name node, or <code>null</code> if 
+	 *
+	 * @param name the qualifier name node, or <code>null</code> if
 	 *    there is none
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setQualifier(Name name) {
 		ASTNode oldChild = this.optionalQualifier;
 		preReplaceChild(oldChild, name, QUALIFIER_PROPERTY);
@@ -231,9 +231,9 @@ public class MethodRef extends ASTNode implements IDocElement {
 
 	/**
 	 * Returns the name of the referenced method or constructor.
-	 * 
+	 *
 	 * @return the method or constructor name node
-	 */ 
+	 */
 	public SimpleName getName() {
 		if (this.methodName == null) {
 			// lazy init must be thread-safe for readers
@@ -247,11 +247,11 @@ public class MethodRef extends ASTNode implements IDocElement {
 		}
 		return this.methodName;
 	}
-	
+
 	/**
 	 * Sets the name of the referenced method or constructor to the
 	 * given name.
-	 * 
+	 *
 	 * @param name the new method or constructor name node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -259,7 +259,7 @@ public class MethodRef extends ASTNode implements IDocElement {
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setName(SimpleName name) {
 		if (name == null) {
 			throw new IllegalArgumentException();
@@ -273,14 +273,14 @@ public class MethodRef extends ASTNode implements IDocElement {
 	/**
 	 * Returns the live ordered list of method parameter references for this
 	 * method reference.
-	 * 
+	 *
 	 * @return the live list of method parameter references
 	 *    (element type: <code>MethodRefParameter</code>)
-	 */ 
+	 */
 	public List parameters() {
 		return this.parameters;
 	}
-	
+
 	/**
 	 * Resolves and returns the binding for the entity referred to by
 	 * this method reference.
@@ -288,10 +288,10 @@ public class MethodRef extends ASTNode implements IDocElement {
 	 * Note that bindings are generally unavailable unless requested when the
 	 * AST is being built.
 	 * </p>
-	 * 
-	 * @return the binding, or <code>null</code> if the binding cannot be 
+	 *
+	 * @return the binding, or <code>null</code> if the binding cannot be
 	 *    resolved
-	 */	
+	 */
 	public final IBinding resolveBinding() {
 		return this.ast.getBindingResolver().resolveReference(this);
 	}
@@ -302,7 +302,7 @@ public class MethodRef extends ASTNode implements IDocElement {
 	int memSize() {
 		return BASE_NODE_SIZE + 3 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

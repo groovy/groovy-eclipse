@@ -59,7 +59,7 @@ public class TypeParameterPattern extends JavaSearchPattern {
 		this.name = typeParameter.getElementName().toCharArray(); // store type parameter name
 		IMember member = typeParameter.getDeclaringMember();
 		this.declaringMemberName = member.getElementName().toCharArray(); // store type parameter declaring member name
-		
+
 		// For method type parameter, store also declaring class name and parameters type names
 		if (member instanceof IMethod) {
 			IMethod method = (IMethod) member;
@@ -89,18 +89,18 @@ public class TypeParameterPattern extends JavaSearchPattern {
 	        documentPath = path.toString();
 			relativePath = Util.relativePath(path, 1/*remove project segment*/);
 	    }
-	
+
 		if (scope instanceof JavaSearchScope) {
 			JavaSearchScope javaSearchScope = (JavaSearchScope) scope;
 			// Get document path access restriction from java search scope
 			// Note that requestor has to verify if needed whether the document violates the access restriction or not
 			AccessRuleSet access = javaSearchScope.getAccessRuleSet(relativePath, index.containerPath);
 			if (access != JavaSearchScope.NOT_ENCLOSED) { // scope encloses the path
-				if (!requestor.acceptIndexMatch(documentPath, this, participant, access)) 
+				if (!requestor.acceptIndexMatch(documentPath, this, participant, access))
 					throw new OperationCanceledException();
 			}
 		} else if (scope.encloses(documentPath)) {
-			if (!requestor.acceptIndexMatch(documentPath, this, participant, null)) 
+			if (!requestor.acceptIndexMatch(documentPath, this, participant, null))
 				throw new OperationCanceledException();
 		}
 	}
@@ -113,7 +113,7 @@ public class TypeParameterPattern extends JavaSearchPattern {
 		} else {
 			output.append("TypeParamReferencePattern: "); //$NON-NLS-1$
 		}
-		output.append(typeParameter.toString());
+		output.append(this.typeParameter.toString());
 		return super.print(output);
 	}
 

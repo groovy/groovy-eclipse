@@ -214,9 +214,9 @@ public final boolean canBeSeenByForCodeSnippet(ReferenceBinding referenceBinding
 	if (receiverType == referenceBinding) return true;
 
 	if (referenceBinding.isProtected()) {
-		// answer true if the receiver (or its enclosing type) is the superclass 
+		// answer true if the receiver (or its enclosing type) is the superclass
 		//	of the receiverType or in the same package
-		return receiverType.fPackage == referenceBinding.fPackage 
+		return receiverType.fPackage == referenceBinding.fPackage
 				|| referenceBinding.isSuperclassOf(receiverType)
 				|| referenceBinding.enclosingType().isSuperclassOf(receiverType); // protected types always have an enclosing one
 	}
@@ -273,7 +273,7 @@ public FieldBinding findFieldForCodeSnippet(TypeBinding receiverType, char[] fie
 		if (!((ReferenceBinding)leafType).canBeSeenBy(this)) {
 			return new ProblemFieldBinding((ReferenceBinding)leafType, fieldName, ProblemReasons.ReceiverTypeNotVisible);
 		}
-		if (CharOperation.equals(fieldName, LENGTH))
+		if (CharOperation.equals(fieldName, TypeConstants.LENGTH))
 			return ArrayBinding.ArrayLength;
 		return null;
 	}
@@ -373,8 +373,8 @@ public MethodBinding findMethodForArray(ArrayBinding receiverType, char[] select
 	MethodBinding methodBinding = object.getExactMethod(selector, argumentTypes, null);
 	if (methodBinding != null) {
 		// handle the method clone() specially... cannot be protected or throw exceptions
-		if (argumentTypes == Binding.NO_PARAMETERS && CharOperation.equals(selector, CLONE))
-			return new MethodBinding((methodBinding.modifiers & ~ClassFileConstants.AccProtected) | ClassFileConstants.AccPublic, CLONE, methodBinding.returnType, argumentTypes, null, object);
+		if (argumentTypes == Binding.NO_PARAMETERS && CharOperation.equals(selector, TypeConstants.CLONE))
+			return new MethodBinding((methodBinding.modifiers & ~ClassFileConstants.AccProtected) | ClassFileConstants.AccPublic, TypeConstants.CLONE, methodBinding.returnType, argumentTypes, null, object);
 		if (canBeSeenByForCodeSnippet(methodBinding, receiverType, invocationSite, this))
 			return methodBinding;
 	}
@@ -407,7 +407,7 @@ public MethodBinding findMethodForArray(ArrayBinding receiverType, char[] select
 		Only if all of the input is consumed is the type answered
 
 	All other conditions are errors, and a problem binding is returned.
-	
+
 	NOTE: If a problem binding is returned, senders should extract the compound name
 	from the binding & not assume the problem applies to the entire compoundName.
 
@@ -448,7 +448,7 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
  			if (binding instanceof ReferenceBinding) {
 	 			if (!binding.isValidBinding())
 					return new ProblemReferenceBinding(
-									CharOperation.subarray(compoundName, 0, currentIndex), 
+									CharOperation.subarray(compoundName, 0, currentIndex),
 									(ReferenceBinding)((ReferenceBinding)binding).closestMatch(),
 									binding.problemId());
 	 			if (!this.canBeSeenByForCodeSnippet((ReferenceBinding) binding, receiverType))
@@ -470,8 +470,8 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 		if ((binding = findFieldForCodeSnippet(typeBinding, nextName, invocationSite)) != null) {
 			if (!binding.isValidBinding()) {
 				return new ProblemFieldBinding(
-						(FieldBinding)binding, 
-						((FieldBinding)binding).declaringClass, 
+						(FieldBinding)binding,
+						((FieldBinding)binding).declaringClass,
 						CharOperation.concatWith(CharOperation.subarray(compoundName, 0, currentIndex), '.'),
 						binding.problemId());
 			}
@@ -481,7 +481,7 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 			return new ProblemBinding(CharOperation.subarray(compoundName, 0, currentIndex), typeBinding, ProblemReasons.NotFound);
 		 if (!binding.isValidBinding())
 			return new ProblemReferenceBinding(
-								CharOperation.subarray(compoundName, 0, currentIndex), 
+								CharOperation.subarray(compoundName, 0, currentIndex),
 								(ReferenceBinding)((ReferenceBinding)binding).closestMatch(),
 								binding.problemId());
 	}
@@ -490,7 +490,7 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 		FieldBinding field = (FieldBinding) binding;
 		if (!field.isStatic()) {
 			return new ProblemFieldBinding(
-					field, 
+					field,
 					field.declaringClass,
 					CharOperation.concatWith(CharOperation.subarray(compoundName, 0, currentIndex), '.'),
 					ProblemReasons.NonStaticReferenceInStaticContext);
@@ -508,7 +508,7 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 
 	Answer the constructor binding that corresponds to receiverType, argumentTypes.
 
-	InvocationSite implements 
+	InvocationSite implements
 		isSuperAccess(); this is used to determine if the discovered constructor is visible.
 
 	If no visible constructor is discovered, an error binding is answered.
@@ -574,7 +574,7 @@ public FieldBinding getFieldForCodeSnippet(TypeBinding receiverType, char[] fiel
 
 	Answer the method binding that corresponds to selector, argumentTypes.
 	Start the lookup at the enclosing type of the receiver.
-	InvocationSite implements 
+	InvocationSite implements
 		isSuperAccess(); this is used to determine if the discovered method is visible.
 		setDepth(int); this is used to record the depth of the discovered method
 			relative to the enclosing type of the receiver. (If the method is defined

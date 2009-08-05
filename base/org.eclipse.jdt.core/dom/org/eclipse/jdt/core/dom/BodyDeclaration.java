@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Abstract base class of all AST nodes that represent body declarations 
+ * Abstract base class of all AST nodes that represent body declarations
  * that may appear in the body of some kind of class or interface declaration,
  * including anonymous class declarations, enumeration declarations, and
  * enumeration constant declarations.
@@ -51,11 +51,11 @@ import java.util.List;
  * doc comment; Initializer is the only ones that does not. The source range
  * for body declarations always includes the doc comment if present.
  * </p>
- * 
+ *
  * @since 2.0
  */
 public abstract class BodyDeclaration extends ASTNode {
-	
+
 	/**
 	 * The doc comment, or <code>null</code> if none.
 	 * Defaults to none.
@@ -68,20 +68,20 @@ public abstract class BodyDeclaration extends ASTNode {
 	 * @since 3.0 - field was moved up from subclasses
 	 */
 	private int modifierFlags = Modifier.NONE;
-	
+
 	/**
-	 * The extended modifiers (element type: <code>IExtendedModifier</code>). 
+	 * The extended modifiers (element type: <code>IExtendedModifier</code>).
 	 * Null in JLS2. Added in JLS3; defaults to an empty list
 	 * (see constructor).
-	 * 
+	 *
 	 * @since 3.0
 	 */
 	ASTNode.NodeList modifiers = null;
-	
+
 	/**
 	 * Returns structural property descriptor for the "modifiers" property
 	 * of this node as used in JLS2.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	abstract SimplePropertyDescriptor internalModifiersProperty();
@@ -89,7 +89,7 @@ public abstract class BodyDeclaration extends ASTNode {
 	/**
 	 * Returns structural property descriptor for the "modifiers" property
 	 * of this node as used in JLS3.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	abstract ChildListPropertyDescriptor internalModifiers2Property();
@@ -97,7 +97,7 @@ public abstract class BodyDeclaration extends ASTNode {
 	/**
 	 * Returns structural property descriptor for the "modifiers" property
 	 * of this node as used in JLS3.
-	 * 
+	 *
 	 * @return the property descriptor
 	 * @since 3.1
 	 */
@@ -109,7 +109,7 @@ public abstract class BodyDeclaration extends ASTNode {
 	/**
 	 * Returns structural property descriptor for the "javadoc" property
 	 * of this node.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	abstract ChildPropertyDescriptor internalJavadocProperty();
@@ -117,7 +117,7 @@ public abstract class BodyDeclaration extends ASTNode {
 	/**
 	 * Returns structural property descriptor for the "javadoc" property
 	 * of this node.
-	 * 
+	 *
 	 * @return the property descriptor
 	 * @since 3.1
 	 */
@@ -128,40 +128,40 @@ public abstract class BodyDeclaration extends ASTNode {
 	/**
 	 * Creates and returns a structural property descriptor for the
 	 * "javadoc" property declared on the given concrete node type.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	static final ChildPropertyDescriptor internalJavadocPropertyFactory(Class nodeClass) {
 		return new ChildPropertyDescriptor(nodeClass, "javadoc", Javadoc.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * Creates and returns a structural property descriptor for the
 	 * "modifiers" property declared on the given concrete node type.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	static final SimplePropertyDescriptor internalModifiersPropertyFactory(Class nodeClass) {
 		return new SimplePropertyDescriptor(nodeClass, "modifiers", int.class, MANDATORY); //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * Creates and returns a structural property descriptor for the
 	 * "modifiers" property declared on the given concrete node type.
-	 * 
+	 *
 	 * @return the property descriptor
 	 */
 	static final ChildListPropertyDescriptor internalModifiers2PropertyFactory(Class nodeClass) {
 		return new ChildListPropertyDescriptor(nodeClass, "modifiers", IExtendedModifier.class, CYCLE_RISK); //$NON-NLS-1$
 	}
-	
+
 	/**
-	 * Creates a new AST node for a body declaration node owned by the 
+	 * Creates a new AST node for a body declaration node owned by the
 	 * given AST.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	BodyDeclaration(AST ast) {
@@ -170,10 +170,10 @@ public abstract class BodyDeclaration extends ASTNode {
 			this.modifiers = new ASTNode.NodeList(internalModifiers2Property());
 		}
 	}
-	
+
 	/**
 	 * Returns the doc comment node.
-	 * 
+	 *
 	 * @return the doc comment node, or <code>null</code> if none
 	 */
 	public Javadoc getJavadoc() {
@@ -182,7 +182,7 @@ public abstract class BodyDeclaration extends ASTNode {
 
 	/**
 	 * Sets or clears the doc comment node.
-	 * 
+	 *
 	 * @param docComment the doc comment node, or <code>null</code> if none
 	 * @exception IllegalArgumentException if the doc comment string is invalid
 	 */
@@ -200,10 +200,10 @@ public abstract class BodyDeclaration extends ASTNode {
 	 * In the JLS3 API, this method is a convenience method that
 	 * computes these flags from <code>modifiers()</code>.
 	 * </p>
-	 * 
+	 *
 	 * @return the bit-wise or of <code>Modifier</code> constants
 	 * @see Modifier
-	 */ 
+	 */
 	public int getModifiers() {
 		// more efficient than checking getAST().API_LEVEL
 		if (this.modifiers == null) {
@@ -226,18 +226,18 @@ public abstract class BodyDeclaration extends ASTNode {
 
 	/**
 	 * Sets the modifiers explicitly specified on this declaration (JLS2 API only).
-	 * 
+	 *
 	 * @param modifiers the given modifiers (bit-wise or of <code>Modifier</code> constants)
 	 * @exception UnsupportedOperationException if this operation is used in
 	 * an AST later than JLS2
 	 * @see Modifier
-	 * @deprecated In the JLS3 API, this method is replaced by 
+	 * @deprecated In the JLS3 API, this method is replaced by
 	 * {@link #modifiers()} which contains a list of a <code>Modifier</code> nodes.
-	 */ 
+	 */
 	public void setModifiers(int modifiers) {
 		internalSetModifiers(modifiers);
 	}
-	
+
 	/**
 	 * Internal synonym for deprecated method. Used to avoid
 	 * deprecation warnings.
@@ -257,13 +257,13 @@ public abstract class BodyDeclaration extends ASTNode {
 	/**
 	 * Returns the live ordered list of modifiers and annotations
 	 * of this declaration (added in JLS3 API).
-	 * 
+	 *
 	 * @return the live list of modifiers and annotations
 	 *    (element type: <code>IExtendedModifier</code>)
 	 * @exception UnsupportedOperationException if this operation is used in
 	 * a JLS2 AST
 	 * @since 3.1
-	 */ 
+	 */
 	public List modifiers() {
 		// more efficient than just calling unsupportedIn2() to check
 		if (this.modifiers == null) {
@@ -271,7 +271,7 @@ public abstract class BodyDeclaration extends ASTNode {
 		}
 		return this.modifiers;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

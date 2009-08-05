@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,25 +14,25 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 
 public class AccessRule {
-	
+
 	public static final int IgnoreIfBetter = 0x02000000; // value must be greater than IProblem#ForbiddenReference and DiscouragedReference
-	
+
 	public char[] pattern;
 	public int problemId;
-	
+
 	public AccessRule(char[] pattern, int problemId) {
 		this(pattern, problemId, false);
 	}
-	
+
 	public AccessRule(char[] pattern, int problemId, boolean keepLooking) {
 		this.pattern = pattern;
 		this.problemId = keepLooking ? problemId | IgnoreIfBetter : problemId;
 	}
-	
+
 	public int hashCode() {
 		return this.problemId * 17 + CharOperation.hashCode(this.pattern);
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (!(obj instanceof AccessRule)) return false;
 		AccessRule other = (AccessRule) obj;
@@ -43,7 +43,7 @@ public class AccessRule {
 	public int getProblemId() {
 		return this.problemId & ~IgnoreIfBetter;
 	}
-	
+
 	public boolean ignoreIfBetter() {
 		return (this.problemId & IgnoreIfBetter) != 0;
 	}

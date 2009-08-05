@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,9 +40,9 @@ public class CompletionOnExplicitConstructorCall extends ExplicitConstructorCall
 	public CompletionOnExplicitConstructorCall(int accessMode) {
 		super(accessMode);
 	}
-	
+
 	public StringBuffer printStatement(int tab, StringBuffer output) {
-		
+
 		printIndent(tab, output);
 		output.append("<CompleteOnExplicitConstructorCall:"); //$NON-NLS-1$
 		if (this.qualification != null) this.qualification.printExpression(0, output).append('.');
@@ -63,13 +63,13 @@ public class CompletionOnExplicitConstructorCall extends ExplicitConstructorCall
 	public void resolve(BlockScope scope) {
 
 		ReferenceBinding receiverType = scope.enclosingSourceType();
-		
+
 		if (this.arguments != null) {
 			int argsLength = this.arguments.length;
 			for (int a = argsLength; --a >= 0;)
 				this.arguments[a].resolveType(scope);
 		}
-	
+
 		if (this.accessMode != This && receiverType != null) {
 			if (receiverType.isHierarchyInconsistent())
 				throw new CompletionNodeFound();

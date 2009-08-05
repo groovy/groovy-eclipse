@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
 
 /**
  * Default implementation of IConstantPoolEntry
- * 
+ *
  * @since 2.0
  */
 public class ConstantPoolEntry implements IConstantPoolEntry {
@@ -39,7 +39,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	private char[] utf8Value;
 	private int utf8Length;
 	private char[] classInfoName;
-	
+
 	public ConstantPoolEntry() {
 		this.classInfoNameIndex = -1;
 		this.classIndex = -1;
@@ -61,7 +61,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 		this.utf8Length = -1;
 		this.classInfoName = null;
 	}
-	
+
 	/**
 	 * @see IConstantPoolEntry#getKind()
 	 */
@@ -280,7 +280,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	 * @return Returns a int
 	 */
 	public int getNameAndTypeDescriptorIndex() {
-		return nameAndTypeDescriptorIndex;
+		return this.nameAndTypeDescriptorIndex;
 	}
 
 	/**
@@ -296,7 +296,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	 * @return Returns a int
 	 */
 	public int getNameAndTypeNameIndex() {
-		return nameAndTypeNameIndex;
+		return this.nameAndTypeNameIndex;
 	}
 
 	/**

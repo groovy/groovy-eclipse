@@ -41,14 +41,14 @@ FormatJavadocNode getLastNode() {
 }
 
 public int getLength() {
-	return this.sourceEnd - this.sourceStart + 1;	
+	return this.sourceEnd - this.sourceStart + 1;
 }
 
 /**
  * Returns whether the node is a text (see {@link FormatJavadocText} or not.
  * In case not, that means that the node is an block (see
  * {@link FormatJavadocBlock}).
- * 
+ *
  * @return <code>true</code> if the node is a text <code>false</code>
  * 	otherwise.
  */

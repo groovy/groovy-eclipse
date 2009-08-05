@@ -34,10 +34,10 @@ public class FileSystem implements INameEnvironment, SuffixConstants {
 		/**
 		 * Return a list of the jar file names defined in the Class-Path section
 		 * of the jar file manifest if any, null else. Only ClasspathJar (and
-		 * extending classes) instances may return a non-null result. 
-		 * @param  problemReporter problem reporter with which potential 
+		 * extending classes) instances may return a non-null result.
+		 * @param  problemReporter problem reporter with which potential
 		 *         misconfiguration issues are raised
-		 * @return a list of the jar file names defined in the Class-Path 
+		 * @return a list of the jar file names defined in the Class-Path
 		 *         section of the jar file manifest if any
 		 */
 		List fetchLinkedJars(ClasspathSectionProblemReporter problemReporter);
@@ -49,9 +49,9 @@ public class FileSystem implements INameEnvironment, SuffixConstants {
 		/**
 		 * Return a normalized path for file based classpath entries. This is an
 		 * absolute path in which file separators are transformed to the
-		 * platform-agnostic '/', ending with a '/' for directories. This is an 
+		 * platform-agnostic '/', ending with a '/' for directories. This is an
 		 * absolute path in which file separators are transformed to the
-		 * platform-agnostic '/', deprived from the '.jar' (resp. '.zip') 
+		 * platform-agnostic '/', deprived from the '.jar' (resp. '.zip')
 		 * extension for jar (resp. zip) files.
 		 * @return a normalized path for file based classpath entries
 		 */
@@ -194,7 +194,7 @@ private void initializeKnownFileNames(String[] initialFileNames) {
 			fileName = CharOperation.subarray(fileName, 0, lastIndexOf);
 		}
 		CharOperation.replace(fileName, '\\', '/');
-		for (int j = 0; j < classpaths.length; j++){
+		for (int j = 0; j < this.classpaths.length; j++){
 			char[] matchCandidate = this.classpaths[j].normalizedPath();
 			if (this.classpaths[j] instanceof  ClasspathDirectory &&
 					CharOperation.prefixEquals(matchCandidate, fileName) &&

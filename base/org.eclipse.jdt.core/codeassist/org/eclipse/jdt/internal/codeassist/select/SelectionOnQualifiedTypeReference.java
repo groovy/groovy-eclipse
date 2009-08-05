@@ -21,7 +21,7 @@ package org.eclipse.jdt.internal.codeassist.select;
  *	---> class X extends <SelectOnType:java.lang.Object>
  *
  */
- 
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -42,20 +42,20 @@ public void aboutToResolve(Scope scope) {
 }
 protected TypeBinding getTypeBinding(Scope scope) {
 	// it can be a package, type or member type
-	Binding binding = scope.getTypeOrPackage(tokens);
+	Binding binding = scope.getTypeOrPackage(this.tokens);
 	if (!binding.isValidBinding()) {
 		// tolerate some error cases
 		if (binding.problemId() == ProblemReasons.NotVisible){
 			throw new SelectionNodeFound(binding);
 		}
-		
+
 		if (binding instanceof TypeBinding) {
 			scope.problemReporter().invalidType(this, (TypeBinding) binding);
 		} else if (binding instanceof PackageBinding) {
 			ProblemReferenceBinding problemBinding = new ProblemReferenceBinding(((PackageBinding)binding).compoundName, null, binding.problemId());
 			scope.problemReporter().invalidType(this, problemBinding);
 		}
-		
+
 		throw new SelectionNodeFound();
 	}
 
@@ -64,10 +64,10 @@ protected TypeBinding getTypeBinding(Scope scope) {
 public StringBuffer printExpression(int indent, StringBuffer output) {
 
 	output.append("<SelectOnType:"); //$NON-NLS-1$
-	for (int i = 0, length = tokens.length; i < length; i++) {
+	for (int i = 0, length = this.tokens.length; i < length; i++) {
 		if (i > 0) output.append('.');
-		output.append(tokens[i]);
+		output.append(this.tokens[i]);
 	}
-	return output.append('>'); 
+	return output.append('>');
 }
 }

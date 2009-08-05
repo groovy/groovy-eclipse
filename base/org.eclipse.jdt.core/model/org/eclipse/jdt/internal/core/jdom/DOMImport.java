@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,28 +24,28 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @see IDOMImport
  * @see DOMNode
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 // TODO (jerome) - add implementation support for 1.5 features
 class DOMImport extends DOMNode implements IDOMImport {
-	
+
 	/**
 	 * Indicates if this import is an on demand type import
 	 */
 	protected boolean fOnDemand;
-	
+
 	/**
 	 * Modifiers for this import.
 	 * @since 3.0
 	 */
 	protected int fFlags = Flags.AccDefault;
-	
+
 /**
  * Creates a new empty IMPORT node.
  */
 DOMImport() {
-	fName = "java.lang.*"; //$NON-NLS-1$
+	this.fName = "java.lang.*"; //$NON-NLS-1$
 	setMask(MASK_DETAILED_SOURCE_INDEXES, true);
 }
 /**
@@ -68,8 +68,8 @@ DOMImport() {
  */
 DOMImport(char[] document, int[] sourceRange, String name, int[] nameRange, boolean onDemand, int modifiers) {
 	super(document, sourceRange, name, nameRange);
-	fOnDemand = onDemand;
-	fFlags = modifiers;
+	this.fOnDemand = onDemand;
+	this.fFlags = modifiers;
 	setMask(MASK_DETAILED_SOURCE_INDEXES, true);
 }
 /**
@@ -88,31 +88,31 @@ DOMImport(char[] document, int[] sourceRange, String name, int[] nameRange, bool
  */
 DOMImport(char[] document, int[] sourceRange, String name, boolean onDemand, int modifiers) {
 	this(document, sourceRange, name, new int[] {-1, -1}, onDemand, modifiers);
-	fOnDemand = onDemand;
+	this.fOnDemand = onDemand;
 	setMask(MASK_DETAILED_SOURCE_INDEXES, false);
 }
 /**
  * @see DOMNode#appendFragmentedContents(CharArrayBuffer)
  */
 protected void appendFragmentedContents(CharArrayBuffer buffer) {
-	if (fNameRange[0] < 0) {
+	if (this.fNameRange[0] < 0) {
 		buffer
 			.append("import ") //$NON-NLS-1$
-			.append(fName)
+			.append(this.fName)
 			.append(';')
 			.append(Util.getLineSeparator(buffer.toString(), null));
 	} else {
-		buffer.append(fDocument, fSourceRange[0], fNameRange[0] - fSourceRange[0]);
+		buffer.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0]);
 		//buffer.append(fDocument, fNameRange[0], fNameRange[1] - fNameRange[0] + 1);
-		buffer.append(fName);
-		buffer.append(fDocument, fNameRange[1] + 1, fSourceRange[1] - fNameRange[1]);
+		buffer.append(this.fName);
+		buffer.append(this.fDocument, this.fNameRange[1] + 1, this.fSourceRange[1] - this.fNameRange[1]);
 	}
 }
-/** 
+/**
  * @see IDOMNode#getContents()
  */
 public String getContents() {
-	if (fName == null) {
+	if (this.fName == null) {
 		return null;
 	} else {
 		return super.getContents();
@@ -131,7 +131,7 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 	if (parent.getElementType() == IJavaElement.COMPILATION_UNIT) {
 		return ((ICompilationUnit)parent).getImport(getName());
 	} else {
-		throw new IllegalArgumentException(Messages.element_illegalParent); 
+		throw new IllegalArgumentException(Messages.element_illegalParent);
 	}
 }
 /**
@@ -144,7 +144,7 @@ public int getNodeType() {
  * @see IDOMImport#isOnDemand()
  */
 public boolean isOnDemand() {
-	return fOnDemand;	
+	return this.fOnDemand;
 }
 /**
  * @see DOMNode
@@ -157,11 +157,11 @@ protected DOMNode newDOMNode() {
  */
 public void setName(String name) {
 	if (name == null) {
-		throw new IllegalArgumentException(Messages.element_nullName); 
+		throw new IllegalArgumentException(Messages.element_nullName);
 	}
 	becomeDetailed();
 	super.setName(name);
-	fOnDemand = name.endsWith(".*"); //$NON-NLS-1$
+	this.fOnDemand = name.endsWith(".*"); //$NON-NLS-1$
 }
 /**
  * @see IDOMNode#toString()

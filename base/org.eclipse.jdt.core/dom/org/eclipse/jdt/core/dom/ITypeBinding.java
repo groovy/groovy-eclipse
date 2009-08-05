@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -89,7 +89,28 @@ public interface ITypeBinding extends IBinding {
 	 * @since 3.1
 	 */
 	public ITypeBinding getBound();
+	
+	/**
+	 * Returns the generic type associated with this wildcard type, if it has one.
+	 * Returns <code>null</code> if this is not a wildcard type.
+	 *
+	 * @return the generic type associated with this wildcard type, or <code>null</code> if none
+	 * @see #isWildcardType()
+	 * @since 3.5
+	 */
+	public ITypeBinding getGenericTypeOfWildcardType();
 
+	/**
+	 * Returns the rank associated with this wildcard type. The rank of this wild card type is the relative
+	 * position of the wild card type in the parameterization of the associated generic type.
+	 * Returns <code>-1</code> if this is not a wildcard type.
+	 *
+	 * @return the rank associated with this wildcard type, or <code>-1</code> if none
+	 * @see #isWildcardType()
+	 * @since 3.5
+	 */
+	public int getRank();
+	
 	/**
 	 * Returns the binding representing the component type of this array type,
 	 * or <code>null</code> if this is not an array type binding. The component
@@ -105,7 +126,7 @@ public interface ITypeBinding extends IBinding {
 	/**
 	 * Returns a list of bindings representing all the fields declared
 	 * as members of this class, interface, or enum type.
-	 * 
+	 *
 	 * <p>These include public, protected, default (package-private) access,
 	 * and private fields declared by the class, but excludes inherited fields.
 	 * Synthetic fields may or may not be included. Fields from binary types that
@@ -373,7 +394,7 @@ public interface ITypeBinding extends IBinding {
 	 * the package of the enclosing type, or, if the type name is the name of a
 	 * {@linkplain AST#resolveWellKnownType(String) well-known type},
 	 * the package of the matching well-known type.</p>
-	 * 
+	 *
 	 * @return the binding for the package in which this class, interface,
 	 * enum, or annotation type is declared, or <code>null</code> if this type
 	 * binding represents a primitive type, an array type, the null type,

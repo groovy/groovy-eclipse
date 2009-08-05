@@ -14,7 +14,7 @@ import org.eclipse.jdt.internal.compiler.ast.Annotation;
 
 /**
  * Represents JSR 175 Annotation instances in the type-system.
- */ 
+ */
 public class AnnotationBinding {
 	// do not access directly - use getters instead (UnresolvedAnnotationBinding
 	// resolves types for type and pair contents just in time)
@@ -23,7 +23,7 @@ public class AnnotationBinding {
 
 /**
  * Add the standard annotations encoded in the tag bits to the recorded annotations.
- * 
+ *
  * @param recordedAnnotations existing annotations already created
  * @param annotationTagBits
  * @param env
@@ -76,8 +76,8 @@ private static AnnotationBinding buildMarkerAnnotation(char[][] compoundName, Lo
 }
 
 private static AnnotationBinding buildRetentionAnnotation(long bits, LookupEnvironment env) {
-	ReferenceBinding retentionPolicy = 
-		env.getResolvedType(TypeConstants.JAVA_LANG_ANNOTATION_RETENTIONPOLICY, 
+	ReferenceBinding retentionPolicy =
+		env.getResolvedType(TypeConstants.JAVA_LANG_ANNOTATION_RETENTIONPOLICY,
 			null);
 	Object value = null;
 	if ((bits & TagBits.AnnotationRuntimeRetention) != 0)
@@ -88,7 +88,7 @@ private static AnnotationBinding buildRetentionAnnotation(long bits, LookupEnvir
 		value = retentionPolicy.getField(TypeConstants.UPPER_SOURCE, true);
 	return env.createAnnotation(
 		env.getResolvedType(TypeConstants.JAVA_LANG_ANNOTATION_RETENTION, null),
-		new ElementValuePair[] { 
+		new ElementValuePair[] {
 			new ElementValuePair(TypeConstants.VALUE, value, null)
 		});
 }

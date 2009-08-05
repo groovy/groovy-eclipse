@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
  * 	will behave as X<Exception>
  */
 public class RawTypeBinding extends ParameterizedTypeBinding {
-    
+
     /**
      * Raw type arguments are erasure of respective parameter bounds. But we may not have resolved
      * these bounds yet if creating raw types while supertype hierarchies are being connected.
@@ -28,8 +28,8 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 		super(type, null, enclosingType, environment);
 		if (enclosingType == null || (enclosingType.modifiers & ExtraCompilerModifiers.AccGenericSignature) == 0)
 			this.modifiers &= ~ExtraCompilerModifiers.AccGenericSignature; // only need signature if enclosing needs one
-	}    
-	
+	}
+
 	public char[] computeUniqueKey(boolean isLeaf) {
 	    StringBuffer sig = new StringBuffer(10);
 		if (isMemberType() && enclosingType().isParameterizedType()) {
@@ -43,10 +43,10 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 
 		int sigLength = sig.length();
 		char[] uniqueKey = new char[sigLength];
-		sig.getChars(0, sigLength, uniqueKey, 0);						    
+		sig.getChars(0, sigLength, uniqueKey, 0);
 		return uniqueKey;
    	}
-	
+
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding#createParameterizedMethod(org.eclipse.jdt.internal.compiler.lookup.MethodBinding)
 	 */
@@ -56,19 +56,19 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 		}
 		return this.environment.createParameterizedGenericMethod(originalMethod, this);
 	}
-	
+
 	public int kind() {
 		return RAW_TYPE;
-	}	
-	
+	}
+
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#debugName()
 	 */
 	public String debugName() {
 	    StringBuffer nameBuffer = new StringBuffer(10);
 		nameBuffer.append(actualType().sourceName()).append("#RAW"); //$NON-NLS-1$
-	    return nameBuffer.toString();		
-	}	
+	    return nameBuffer.toString();
+	}
 
 	/**
 	 * Ltype<param1 ... paramN>;
@@ -80,7 +80,7 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 		    	this.genericTypeSignature = genericType().signature();
 			} else {
 			    StringBuffer sig = new StringBuffer(10);
-			    if (this.isMemberType()) {
+			    if (isMemberType()) {
 			    	ReferenceBinding enclosing = enclosingType();
 					char[] typeSig = enclosing.genericTypeSignature();
 					sig.append(typeSig, 0, typeSig.length-1);// copy all but trailing semicolon
@@ -89,7 +89,7 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 			    	} else {
 			    		sig.append('$');
 			    	}
-			    	sig.append(this.sourceName());
+			    	sig.append(sourceName());
 			    } else {
 			    	char[] typeSig = genericType().signature();
 					sig.append(typeSig, 0, typeSig.length-1);// copy all but trailing semicolon
@@ -97,23 +97,23 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 				sig.append(';');
 				int sigLength = sig.length();
 				this.genericTypeSignature = new char[sigLength];
-				sig.getChars(0, sigLength, this.genericTypeSignature, 0);						
+				sig.getChars(0, sigLength, this.genericTypeSignature, 0);
 			}
 		}
 		return this.genericTypeSignature;
-	}		
-	
+	}
+
     public boolean isEquivalentTo(TypeBinding otherType) {
-		if (this == otherType) 
+		if (this == otherType)
 		    return true;
-	    if (otherType == null) 
+	    if (otherType == null)
 	        return false;
 	    switch(otherType.kind()) {
-	
+
 	    	case Binding.WILDCARD_TYPE :
 			case Binding.INTERSECTION_TYPE:
 	        	return ((WildcardBinding) otherType).boundCheck(this);
-	    		
+
 	    	case Binding.GENERIC_TYPE :
 	    	case Binding.PARAMETERIZED_TYPE :
 	    	case Binding.RAW_TYPE :
@@ -121,14 +121,14 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 	    }
         return false;
 	}
-    
+
     public boolean isProvablyDistinct(TypeBinding otherType) {
-		if (this == otherType) 
+		if (this == otherType)
 		    return false;
-	    if (otherType == null) 
+	    if (otherType == null)
 	        return true;
 	    switch(otherType.kind()) {
-	
+
 	    	case Binding.GENERIC_TYPE :
 	    	case Binding.PARAMETERIZED_TYPE :
 	    	case Binding.RAW_TYPE :
@@ -136,18 +136,7 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 	    }
         return true;
 	}
-    
-	/**
-	 * Raw type is not treated as a standard parameterized type
-	 * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#isParameterizedType()
-	 */
-	public boolean isParameterizedType() {
-	    return false;
-	}	
-	public boolean isRawType() {
-	    return true;
-	}	
-	
+
 	protected void initializeArguments() {
 		TypeVariableBinding[] typeVariables = genericType().typeVariables();
 		int length = typeVariables.length;
@@ -164,7 +153,7 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 	public char[] readableName() /*java.lang.Object,  p.X<T> */ {
 	    char[] readableName;
 		if (isMemberType()) {
-			readableName = CharOperation.concat(enclosingType().readableName(), sourceName, '.');
+			readableName = CharOperation.concat(enclosingType().readableName(), this.sourceName, '.');
 		} else {
 			readableName = CharOperation.concatWith(actualType().compoundName, '.');
 		}
@@ -177,7 +166,7 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 	public char[] shortReadableName() /*Object*/ {
 	    char[] shortReadableName;
 		if (isMemberType()) {
-			shortReadableName = CharOperation.concat(enclosingType().shortReadableName(), sourceName, '.');
+			shortReadableName = CharOperation.concat(enclosingType().shortReadableName(), this.sourceName, '.');
 		} else {
 			shortReadableName = actualType().sourceName;
 		}

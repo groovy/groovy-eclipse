@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ package org.eclipse.jdt.core.search;
 import org.eclipse.core.runtime.CoreException;
 
 /**
- * Collects the results from a search engine query. 
+ * Collects the results from a search engine query.
  * Clients implement a subclass to pass to <code>SearchEngine.search</code>
  * and implement the {@link #acceptSearchMatch(SearchMatch)} method, and
  * possibly override other life cycle methods.
@@ -72,7 +72,7 @@ public abstract class SearchRequestor {
 	 * The default implementation of this method does nothing. Subclasses
 	 * may override.
 	 * </p>
-	 * 
+	 *
 	 * @param participant the participant that is starting to contribute
 	 */
 	public void enterParticipant(SearchParticipant participant) {
@@ -86,7 +86,7 @@ public abstract class SearchRequestor {
 	 * The default implementation of this method does nothing. Subclasses
 	 * may override.
 	 * </p>
-	 * 
+	 *
 	 * @param participant the participant that finished contributing
 	 */
 	public void exitParticipant(SearchParticipant participant) {

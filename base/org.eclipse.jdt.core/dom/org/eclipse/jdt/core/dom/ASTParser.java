@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2008 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -538,7 +538,7 @@ public class ASTParser {
      *
      * @param offset the index of the first character to parse
      * @param length the number of characters to parse, or -1 if
-     * the remainder of the source string is
+     * the remainder of the source string is to be parsed
      */
 	public void setSourceRange(int offset, int length) {
 		if (offset < 0 || length < -1) {
@@ -592,9 +592,10 @@ public class ASTParser {
 	 * and match the name of the main (public) class or interface declared in the source.</p>
 	 *
 	 * <p>This name must represent the full path of the unit inside the given project. For example, if the source
-	 * declares a public class named "Foo" in a project "P", the name of the compilation unit must be
-	 * "/P/Foo.java". If the source declares a public class name "Bar" in a package "p1.p2" in a project "P",
-	 * the name of the compilation unit must be "/P/p1/p2/Bar.java".</p>
+	 * declares a public class named "Foo" in a project "P" where the source folder is the project itself, the name
+	 * of the compilation unit must be "/P/Foo.java".
+	 * If the source declares a public class name "Bar" in a package "p1.p2" in a project "P" in a source folder "src",
+	 * the name of the compilation unit must be "/P/src/p1/p2/Bar.java".</p>
      *
 	 * @param unitName the name of the compilation unit that would contain the source
 	 *    string, or <code>null</code> if none
@@ -718,8 +719,8 @@ public class ASTParser {
      *
      * @param compilationUnits the compilation units to create ASTs for
      * @param bindingKeys the binding keys to create bindings for
-     * @param requestor the AST requestor that collects abtract syntax trees and bindings
-	 * @param monitor the progress monitor used to report progress and request cancelation,
+     * @param requestor the AST requestor that collects abstract syntax trees and bindings
+	 * @param monitor the progress monitor used to report progress and request cancellation,
 	 *   or <code>null</code> if none
 	 * @exception IllegalStateException if the settings provided
 	 * are insufficient, contradictory, or otherwise unsupported
@@ -744,22 +745,22 @@ public class ASTParser {
 	}
 
 	/**
-     * Creates bindings for a batch of Java elements. These elements are either
-     * enclosed in {@link ICompilationUnit}s or in {@link IClassFile}s.
-     * <p>
-     * All enclosing compilation units and class files must
-     * come from the same Java project, which must be set beforehand
-     * with <code>setProject</code>.
-     * </p>
-     * <p>
-     * All elements must exist. If one doesn't exist, an <code>IllegalStateException</code>
-     * is thrown.
-     * </p>
-     * <p>
-     * The returned array has the same size as the given elements array. At a given position
-     * it contains the binding of the corresponding Java element, or <code>null</code>
-     * if no binding could be created.
-     * </p>
+	 * Creates bindings for a batch of Java elements. These elements are either
+	 * enclosed in {@link ICompilationUnit}s or in {@link IClassFile}s.
+	 * <p>
+	 * All enclosing compilation units and class files must
+	 * come from the same Java project, which must be set beforehand
+	 * with <code>setProject</code>.
+	 * </p>
+	 * <p>
+	 * All elements must exist. If one doesn't exist, an <code>IllegalStateException</code>
+	 * is thrown.
+	 * </p>
+	 * <p>
+	 * The returned array has the same size as the given elements array. At a given position
+	 * it contains the binding of the corresponding Java element, or <code>null</code>
+	 * if no binding could be created.
+	 * </p>
 	 * <p>
 	 * Note also the following parser parameters are used, regardless of what
 	 * may have been specified:
@@ -770,18 +771,18 @@ public class ASTParser {
 	 * <li>The {@linkplain #setFocalPosition(int) focal position} is not set</li>
 	 * </ul>
 	 * </p>
-     * <p>
-     * A successful call to this method returns all settings to their
-     * default values so the object is ready to be reused.
-     * </p>
-     *
-     * @param elements the Java elements to create bindings for
-     * @return the bindings for the given Java elements, possibly containing <code>null</code>s
-     *              if some bindings could not be created
+	 * <p>
+	 * A successful call to this method returns all settings to their
+	 * default values so the object is ready to be reused.
+	 * </p>
+	 *
+	 * @param elements the Java elements to create bindings for
+	 * @return the bindings for the given Java elements, possibly containing <code>null</code>s
+	 *              if some bindings could not be created
 	 * @exception IllegalStateException if the settings provided
 	 * are insufficient, contradictory, or otherwise unsupported
 	 * @since 3.1
-     */
+	 */
 	public IBinding[] createBindings(IJavaElement[] elements, IProgressMonitor monitor) {
 		try {
 			if (this.project == null)
@@ -802,9 +803,36 @@ public class ASTParser {
 			case K_CLASS_BODY_DECLARATIONS :
 			case K_EXPRESSION :
 			case K_STATEMENTS :
+				if (this.rawSource == null) {
+					if (this.typeRoot != null) {
+						// get the source from the type root
+						if (this.typeRoot instanceof ICompilationUnit) {
+							org.eclipse.jdt.internal.compiler.env.ICompilationUnit sourceUnit = (org.eclipse.jdt.internal.compiler.env.ICompilationUnit) this.typeRoot;
+							this.rawSource = sourceUnit.getContents();
+						} else if (this.typeRoot instanceof IClassFile) {
+							try {
+								String sourceString = this.typeRoot.getSource();
+								if (sourceString != null) {
+									this.rawSource = sourceString.toCharArray();
+								}
+							} catch(JavaModelException e) {
+								// an error occured accessing the java element
+								StringWriter stringWriter = new StringWriter();
+								PrintWriter writer = null;
+								try {
+									writer = new PrintWriter(stringWriter);
+									e.printStackTrace(writer);
+								} finally {
+									if (writer != null) writer.close();
+								}
+								throw new IllegalStateException(String.valueOf(stringWriter.getBuffer()));
+							}
+						}
+					}
+				}
 				if (this.rawSource != null) {
 					if (this.sourceOffset + this.sourceLength > this.rawSource.length) {
-					    throw new IllegalStateException();
+						throw new IllegalStateException();
 					}
 					return internalCreateASTForKind();
 				}
@@ -1020,6 +1048,8 @@ public class ASTParser {
 					converter.scanner = new RecoveryScanner(scanner, data.removeUnused());
 					converter.docParser.scanner = converter.scanner;
 					converter.scanner.setSource(scanner.source);
+					
+					compilationUnit.setStatementsRecoveryData(data);
 				}
 				RecordedParsingInformation recordedParsingInformation = codeSnippetParsingUtil.recordedParsingInformation;
 				int[][] comments = recordedParsingInformation.commentPositions;
@@ -1071,7 +1101,7 @@ public class ASTParser {
 					return compilationUnit;
 				}
 			case K_CLASS_BODY_DECLARATIONS :
-				final org.eclipse.jdt.internal.compiler.ast.ASTNode[] nodes = codeSnippetParsingUtil.parseClassBodyDeclarations(this.rawSource, this.sourceOffset, this.sourceLength, this.compilerOptions, true);
+				final org.eclipse.jdt.internal.compiler.ast.ASTNode[] nodes = codeSnippetParsingUtil.parseClassBodyDeclarations(this.rawSource, this.sourceOffset, this.sourceLength, this.compilerOptions, true, this.statementsRecovery);
 				recordedParsingInformation = codeSnippetParsingUtil.recordedParsingInformation;
 				comments = recordedParsingInformation.commentPositions;
 				if (comments != null) {
@@ -1079,6 +1109,7 @@ public class ASTParser {
 				}
 				compilationUnit.setLineEndTable(recordedParsingInformation.lineEnds);
 				if (nodes != null) {
+					// source has no syntax error or the statement recovery is enabled
 					TypeDeclaration typeDeclaration = converter.convert(nodes);
 					typeDeclaration.setSourceRange(this.sourceOffset, this.sourceOffset + this.sourceLength);
 					rootNodeToCompilationUnit(typeDeclaration.getAST(), compilationUnit, typeDeclaration, codeSnippetParsingUtil.recordedParsingInformation, null);
@@ -1086,6 +1117,7 @@ public class ASTParser {
 					ast.setOriginalModificationCount(ast.modificationCount());
 					return typeDeclaration;
 				} else {
+					// source has syntax error and the statement recovery is disabled
 					CategorizedProblem[] problems = recordedParsingInformation.problems;
 					if (problems != null) {
 						compilationUnit.setProblems(problems);

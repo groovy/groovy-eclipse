@@ -36,7 +36,7 @@ import org.eclipse.jdt.internal.core.JavaModelStatus;
 public class JavaModelException extends CoreException {
 
 	private static final long serialVersionUID = -760398656505871287L; // backward compatible
-	
+
 	CoreException nestedCoreException;
 /**
  * Creates a Java model exception that wrappers the given <code>Throwable</code>.
@@ -50,11 +50,11 @@ public class JavaModelException extends CoreException {
  * @see org.eclipse.core.runtime.IStatus#ERROR
  */
 public JavaModelException(Throwable e, int code) {
-	this(new JavaModelStatus(code, e)); 
+	this(new JavaModelStatus(code, e));
 }
 /**
  * Creates a Java model exception for the given <code>CoreException</code>.
- * Equivalent to 
+ * Equivalent to
  * <code>JavaModelException(exception,IJavaModelStatusConstants.CORE_EXCEPTION</code>.
  *
  * @param exception the <code>CoreException</code>
@@ -91,12 +91,12 @@ public Throwable getException() {
  * @return a status object
  */
 public IJavaModelStatus getJavaModelStatus() {
-	IStatus status = this.getStatus();
+	IStatus status = getStatus();
 	if (status instanceof IJavaModelStatus) {
 		return (IJavaModelStatus)status;
 	} else {
 		// A regular IStatus is created only in the case of a CoreException.
-		// See bug 13492 Should handle JavaModelExceptions that contains CoreException more gracefully  
+		// See bug 13492 Should handle JavaModelExceptions that contains CoreException more gracefully
 		return new JavaModelStatus(this.nestedCoreException);
 	}
 }
@@ -120,7 +120,7 @@ public boolean isDoesNotExist() {
 
 /**
  * Prints this exception's stack trace to the given print stream.
- * 
+ *
  * @param output the print stream
  * @since 3.0
  */
@@ -137,7 +137,7 @@ public void printStackTrace(PrintStream output) {
 
 /**
  * Prints this exception's stack trace to the given print writer.
- * 
+ *
  * @param output the print writer
  * @since 3.0
  */

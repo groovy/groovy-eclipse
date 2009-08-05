@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,36 +11,32 @@
 package org.eclipse.jdt.internal.compiler.impl;
 
 public class StringConstant extends Constant {
-private String value;
-    
 
-public static Constant fromValue(String value) {
-	return new StringConstant(value);
-}
+	private String value;
 
-private StringConstant(String value) {
-	this.value = value ;
-}
+	public static Constant fromValue(String value) {
+		return new StringConstant(value);
+	}
 
-public String stringValue() {
-	//spec 15.17.11
+	private StringConstant(String value) {
+		this.value = value;
+	}
 
-	//the next line do not go into the toString() send....!
-	return value ;
+	public String stringValue() {
+		// spec 15.17.11
 
-	/*
-	String s = value.toString() ;
-	if (s == null)
-		return "null";
-	else
-		return s;
-	*/
-	
-}
-public String toString(){
+		// the next line do not go into the toString() send....!
+		return this.value;
+		/*
+		 * String s = value.toString() ; if (s == null) return "null"; else return s;
+		 */
+	}
 
-	return "(String)\"" + value +"\""; } //$NON-NLS-2$ //$NON-NLS-1$
-public int typeID() {
-	return T_JavaLangString;
-}
+	public String toString() {
+		return "(String)\"" + this.value + "\""; //$NON-NLS-2$ //$NON-NLS-1$
+	}
+
+	public int typeID() {
+		return T_JavaLangString;
+	}
 }

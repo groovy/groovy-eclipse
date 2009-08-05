@@ -86,7 +86,7 @@ protected IJavaElement generateResultHandle() {
  * @see CreateElementInCUOperation#getMainTaskName()
  */
 public String getMainTaskName(){
-	return Messages.operation_createInitializerProgress; 
+	return Messages.operation_createInitializerProgress;
 }
 protected SimpleName rename(ASTNode node, SimpleName newName) {
 	return null; // intializer cannot be renamed

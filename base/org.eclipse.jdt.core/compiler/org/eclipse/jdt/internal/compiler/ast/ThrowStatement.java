@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 public class ThrowStatement extends Statement {
-	
+
 	public Expression exception;
 	public TypeBinding exceptionType;
 
@@ -67,7 +67,7 @@ public void resolve(BlockScope scope) {
 				// if compliant with 1.4, this problem will not be reported
 				scope.problemReporter().cannotThrowNull(this.exception);
 			}
-	 	} else if (exceptionType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangThrowable, true) == null) {
+	 	} else if (this.exceptionType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangThrowable, true) == null) {
 			scope.problemReporter().cannotThrowType(this.exception, this.exceptionType);
 		}
 		this.exception.computeConversion(scope, this.exceptionType, this.exceptionType);

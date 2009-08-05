@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,78 +19,78 @@ import java.util.List;
  * Local variable declaration statement AST node type.
  * <p>
  * This kind of node collects several variable declaration fragments
- * (<code>VariableDeclarationFragment</code>) into a statement 
+ * (<code>VariableDeclarationFragment</code>) into a statement
  * (<code>Statement</code>), all sharing the same modifiers and base type.
  * </p>
  * For JLS2:
  * <pre>
  * VariableDeclarationStatement:
- *    { Modifier } Type VariableDeclarationFragment 
+ *    { Modifier } Type VariableDeclarationFragment
  *        { <b>,</b> VariableDeclarationFragment } <b>;</b>
  * </pre>
  * For JLS3, the modifier flags were replaced by
  * a list of modifier nodes (intermixed with annotations):
  * <pre>
  * VariableDeclarationStatement:
- *    { ExtendedModifier } Type VariableDeclarationFragment 
+ *    { ExtendedModifier } Type VariableDeclarationFragment
  *        { <b>,</b> VariableDeclarationFragment } <b>;</b>
  * </pre>
  * <p>
- * Note: This type of node is a convenience of sorts. 
+ * Note: This type of node is a convenience of sorts.
  * An equivalent way to represent the same statement is to use
  * a <code>VariableDeclarationExpression</code>
  * wrapped in an <code>ExpressionStatement</code>.
  * </p>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class VariableDeclarationStatement extends Statement {
-	
+
 	/**
 	 * The "modifiers" structural property of this node type (JLS2 API only).
 	 * @since 3.0
 	 */
-	public static final SimplePropertyDescriptor MODIFIERS_PROPERTY = 
+	public static final SimplePropertyDescriptor MODIFIERS_PROPERTY =
 		new SimplePropertyDescriptor(VariableDeclarationStatement.class, "modifiers", int.class, MANDATORY); //$NON-NLS-1$
-	
+
 	/**
 	 * The "modifiers" structural property of this node type (added in JLS3 API).
 	 * @since 3.1
 	 */
-	public static final ChildListPropertyDescriptor MODIFIERS2_PROPERTY = 
+	public static final ChildListPropertyDescriptor MODIFIERS2_PROPERTY =
 		new ChildListPropertyDescriptor(VariableDeclarationStatement.class, "modifiers", IExtendedModifier.class, CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * The "type" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor TYPE_PROPERTY = 
+	public static final ChildPropertyDescriptor TYPE_PROPERTY =
 		new ChildPropertyDescriptor(VariableDeclarationStatement.class, "type", Type.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "fragments" structural property of this node type).
 	 * @since 3.0
 	 */
-	public static final ChildListPropertyDescriptor FRAGMENTS_PROPERTY = 
+	public static final ChildListPropertyDescriptor FRAGMENTS_PROPERTY =
 		new ChildListPropertyDescriptor(VariableDeclarationStatement.class, "fragments", VariableDeclarationFragment.class, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 * @since 3.0
 	 */
 	private static final List PROPERTY_DESCRIPTORS_2_0;
-	
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 * @since 3.1
 	 */
 	private static final List PROPERTY_DESCRIPTORS_3_0;
-	
+
 	static {
 		List propertyList = new ArrayList(4);
 		createPropertyList(VariableDeclarationStatement.class, propertyList);
@@ -98,7 +98,7 @@ public class VariableDeclarationStatement extends Statement {
 		addProperty(TYPE_PROPERTY, propertyList);
 		addProperty(FRAGMENTS_PROPERTY, propertyList);
 		PROPERTY_DESCRIPTORS_2_0 = reapPropertyList(propertyList);
-		
+
 		propertyList = new ArrayList(4);
 		createPropertyList(VariableDeclarationStatement.class, propertyList);
 		addProperty(MODIFIERS2_PROPERTY, propertyList);
@@ -110,11 +110,11 @@ public class VariableDeclarationStatement extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
@@ -125,21 +125,21 @@ public class VariableDeclarationStatement extends Statement {
 			return PROPERTY_DESCRIPTORS_3_0;
 		}
 	}
-			
+
 	/**
-	 * The extended modifiers (element type: <code>IExtendedModifier</code>). 
+	 * The extended modifiers (element type: <code>IExtendedModifier</code>).
 	 * Null in JLS2. Added in JLS3; defaults to an empty list
 	 * (see constructor).
 	 * @since 3.1
 	 */
 	private ASTNode.NodeList modifiers = null;
-	
+
 	/**
 	 * The modifier flagss; bit-wise or of Modifier flags.
 	 * Defaults to none. Not used in JLS3.
 	 */
 	private int modifierFlags = Modifier.NONE;
-		
+
 	/**
 	 * The base type; lazily initialized; defaults to an unspecified,
 	 * legal type.
@@ -147,21 +147,21 @@ public class VariableDeclarationStatement extends Statement {
 	private Type baseType = null;
 
 	/**
-	 * The list of variable variable declaration fragments (element type: 
-	 * <code VariableDeclarationFragment</code>).  Defaults to an empty list.
+	 * The list of variable variable declaration fragments (element type:
+	 * {@link VariableDeclarationFragment}).  Defaults to an empty list.
 	 */
-	private ASTNode.NodeList variableDeclarationFragments = 
+	private ASTNode.NodeList variableDeclarationFragments =
 		new ASTNode.NodeList(FRAGMENTS_PROPERTY);
 
 	/**
-	 * Creates a new unparented local variable declaration statement node owned 
+	 * Creates a new unparented local variable declaration statement node owned
 	 * by the given AST.  By default, the variable declaration has: no modifiers,
-	 * an unspecified (but legal) type, and an empty list of variable 
+	 * an unspecified (but legal) type, and an empty list of variable
 	 * declaration fragments (which is syntactically illegal).
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	VariableDeclarationStatement(AST ast) {
@@ -177,7 +177,7 @@ public class VariableDeclarationStatement extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -193,7 +193,7 @@ public class VariableDeclarationStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetIntProperty(property, get, value);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -209,7 +209,7 @@ public class VariableDeclarationStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -223,7 +223,7 @@ public class VariableDeclarationStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetChildListProperty(property);
 	}
-		
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -235,9 +235,9 @@ public class VariableDeclarationStatement extends Statement {
 	 * Method declared on ASTNode.
 	 */
 	ASTNode clone0(AST target) {
-		VariableDeclarationStatement result = 
+		VariableDeclarationStatement result =
 			new VariableDeclarationStatement(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		if (this.ast.apiLevel == AST.JLS2_INTERNAL) {
 			result.setModifiers(getModifiers());
@@ -250,7 +250,7 @@ public class VariableDeclarationStatement extends Statement {
 			ASTNode.copySubtrees(target, fragments()));
 		return result;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -274,7 +274,7 @@ public class VariableDeclarationStatement extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the live ordered list of modifiers and annotations
 	 * of this declaration (added in JLS3 API).
@@ -282,13 +282,13 @@ public class VariableDeclarationStatement extends Statement {
 	 * Note that the final modifier is the only meaningful modifier for local
 	 * variable declarations.
 	 * </p>
-	 * 
+	 *
 	 * @return the live list of modifiers and annotations
 	 *    (element type: <code>IExtendedModifier</code>)
 	 * @exception UnsupportedOperationException if this operation is used in
 	 * a JLS2 AST
 	 * @since 3.1
-	 */ 
+	 */
 	public List modifiers() {
 		// more efficient than just calling unsupportedIn2() to check
 		if (this.modifiers == null) {
@@ -296,17 +296,17 @@ public class VariableDeclarationStatement extends Statement {
 		}
 		return this.modifiers;
 	}
-	
+
 	/**
 	 * Returns the modifiers explicitly specified on this declaration.
 	 * <p>
 	 * In the JLS3 API, this method is a convenience method that
 	 * computes these flags from <code>modifiers()</code>.
 	 * </p>
-	 * 
+	 *
 	 * @return the bit-wise or of <code>Modifier</code> constants
 	 * @see Modifier
-	 */ 
+	 */
 	public int getModifiers() {
 		// more efficient than checking getAST().API_LEVEL
 		if (this.modifiers == null) {
@@ -333,18 +333,18 @@ public class VariableDeclarationStatement extends Statement {
 	 * Note that the final modifier is the only meaningful modifier for local
 	 * variable declarations.
 	 * </p>
-	 * 
+	 *
 	 * @param modifiers the given modifiers (bit-wise or of <code>Modifier</code> constants)
 	 * @exception UnsupportedOperationException if this operation is used in
 	 * an AST later than JLS2
 	 * @see Modifier
-	 * @deprecated In the JLS3 API, this method is replaced by 
+	 * @deprecated In the JLS3 API, this method is replaced by
 	 * {@link  #modifiers()} which contains a list of a <code>Modifier</code> nodes.
-	 */ 
+	 */
 	public void setModifiers(int modifiers) {
 		internalSetModifiers(modifiers);
 	}
-	
+
 	/**
 	 * Internal synonym for deprecated method. Used to avoid
 	 * deprecation warnings.
@@ -361,12 +361,12 @@ public class VariableDeclarationStatement extends Statement {
 	 * Returns the base type declared in this variable declaration statement.
 	 * <p>
 	 * N.B. The individual child variable declaration fragments may specify
-	 * additional array dimensions. So the type of the variable are not 
+	 * additional array dimensions. So the type of the variable are not
 	 * necessarily exactly this type.
 	 * </p>
-	 * 
+	 *
 	 * @return the base type
-	 */ 
+	 */
 	public Type getType() {
 		if (this.baseType == null) {
 			// lazy init must be thread-safe for readers
@@ -382,16 +382,16 @@ public class VariableDeclarationStatement extends Statement {
 	}
 
 	/**
-	 * Sets the base type declared in this variable declaration statement to 
+	 * Sets the base type declared in this variable declaration statement to
 	 * the given type.
-	 * 
+	 *
 	 * @param type the new base type
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setType(Type type) {
 		if (type == null) {
 			throw new IllegalArgumentException();
@@ -408,21 +408,21 @@ public class VariableDeclarationStatement extends Statement {
 	 * All nodes in this list must be <code>VariableDeclarationFragment</code>s;
 	 * attempts to add any other type of node will trigger an
 	 * exception.
-	 * 
-	 * @return the live list of variable declaration fragments in this 
+	 *
+	 * @return the live list of variable declaration fragments in this
 	 *    statement (element type: <code>VariableDeclarationFragment</code>)
-	 */ 
+	 */
 	public List fragments() {
 		return this.variableDeclarationFragments;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 4 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

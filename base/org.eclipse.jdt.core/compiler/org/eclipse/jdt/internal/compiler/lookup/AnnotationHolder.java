@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
 public class AnnotationHolder {
 	AnnotationBinding[] annotations;
 
-static AnnotationHolder storeAnnotations(AnnotationBinding[] annotations, AnnotationBinding[][] parameterAnnotations, Object defaultValue) {
+static AnnotationHolder storeAnnotations(AnnotationBinding[] annotations, AnnotationBinding[][] parameterAnnotations, Object defaultValue, LookupEnvironment optionalEnv) {
 	if (parameterAnnotations != null) {
 		boolean isEmpty = true;
 		for (int i = parameterAnnotations.length; isEmpty && --i >= 0;)
@@ -24,7 +24,7 @@ static AnnotationHolder storeAnnotations(AnnotationBinding[] annotations, Annota
 	}
 
 	if (defaultValue != null)
-		return new AnnotationMethodHolder(annotations, parameterAnnotations, defaultValue);
+		return new AnnotationMethodHolder(annotations, parameterAnnotations, defaultValue, optionalEnv);
 	if (parameterAnnotations != null)
 		return new MethodHolder(annotations, parameterAnnotations);
 	return new AnnotationHolder().setAnnotations(annotations);
@@ -73,12 +73,19 @@ AnnotationHolder setAnnotations(AnnotationBinding[] annotations) {
 
 static class AnnotationMethodHolder extends MethodHolder {
 	Object defaultValue;
+	LookupEnvironment env;
 
-AnnotationMethodHolder(AnnotationBinding[] annotations, AnnotationBinding[][] parameterAnnotations, Object defaultValue) {
+AnnotationMethodHolder(AnnotationBinding[] annotations, AnnotationBinding[][] parameterAnnotations, Object defaultValue, LookupEnvironment optionalEnv) {
 	super(annotations, parameterAnnotations);
 	this.defaultValue = defaultValue;
+	this.env = optionalEnv;
 }
 Object getDefaultValue() {
+	if (this.defaultValue instanceof UnresolvedReferenceBinding) {
+		if (this.env == null)
+			throw new IllegalStateException();
+		this.defaultValue = ((UnresolvedReferenceBinding) this.defaultValue).resolve(this.env, false);
+	}
 	return this.defaultValue;
 }
 }

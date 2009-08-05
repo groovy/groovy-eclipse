@@ -28,15 +28,15 @@ public class ArrayTypeReference extends SingleTypeReference {
 	 * @param pos int
 	 */
 	public ArrayTypeReference(char[] source, int dimensions, long pos) {
-		
+
 		super(source, pos);
 		this.originalSourceEnd = this.sourceEnd;
 		this.dimensions = dimensions ;
 	}
-	
+
 	public int dimensions() {
-		
-		return dimensions;
+
+		return this.dimensions;
 	}
 	/**
 	 * @return char[][]
@@ -49,45 +49,45 @@ public class ArrayTypeReference extends SingleTypeReference {
 			dimChars[index] = '[';
 			dimChars[index+1] = ']';
 		}
-		return new char[][]{ CharOperation.concat(token, dimChars) };
-	}	
+		return new char[][]{ CharOperation.concat(this.token, dimChars) };
+	}
 	protected TypeBinding getTypeBinding(Scope scope) {
-		
+
 		if (this.resolvedType != null) {
 			return this.resolvedType;
 		}
-		if (dimensions > 255) {
+		if (this.dimensions > 255) {
 			scope.problemReporter().tooManyDimensions(this);
 		}
-		TypeBinding leafComponentType = scope.getType(token);
-		return scope.createArrayType(leafComponentType, dimensions);
-	
+		TypeBinding leafComponentType = scope.getType(this.token);
+		return scope.createArrayType(leafComponentType, this.dimensions);
+
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output){
-	
+
 		super.printExpression(indent, output);
 		if ((this.bits & IsVarArgs) != 0) {
-			for (int i= 0 ; i < dimensions - 1; i++) {
+			for (int i= 0 ; i < this.dimensions - 1; i++) {
 				output.append("[]"); //$NON-NLS-1$
 			}
 			output.append("..."); //$NON-NLS-1$
 		} else {
-			for (int i= 0 ; i < dimensions; i++) {
+			for (int i= 0 ; i < this.dimensions; i++) {
 				output.append("[]"); //$NON-NLS-1$
 			}
 		}
 		return output;
 	}
-	
+
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
-		
+
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
 	}
-	
+
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
-		
+
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
 	}

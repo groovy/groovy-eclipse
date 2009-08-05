@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ package org.eclipse.jdt.internal.formatter.comment;
 
 /**
  * Javadoc comment line in a comment region.
- * 
+ *
  * @since 3.0
  */
 public class JavaDocLine extends MultiCommentLine {
@@ -23,7 +23,7 @@ public class JavaDocLine extends MultiCommentLine {
 
 	/**
 	 * Creates a new javadoc line.
-	 * 
+	 *
 	 * @param region comment region to create the line for
 	 */
 	protected JavaDocLine(final CommentRegion region) {

@@ -36,10 +36,10 @@ public Index[] getIndexes(IProgressMonitor progressMonitor) {
 	Index[] values = new Index[this.indexes.elementSize];
 	this.indexes.asArray(values);
 	return values;
-}	
+}
 public boolean search(Index index, IProgressMonitor progressMonitor) {
 	if (index == null) return COMPLETE;
-	if (indexes.addIfNotIncluded(index) == index)
+	if (this.indexes.addIfNotIncluded(index) == index)
 		index.startQuery();
 	return super.search(index, progressMonitor);
 }

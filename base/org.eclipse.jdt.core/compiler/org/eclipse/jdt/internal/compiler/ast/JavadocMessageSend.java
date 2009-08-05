@@ -49,11 +49,11 @@ public class JavadocMessageSend extends MessageSend {
 		}
 
 		// will check for null after args are resolved
-		
+
 		TypeBinding[] argumentTypes = Binding.NO_PARAMETERS;
 		boolean hasArgsTypeVar = false;
 		if (this.arguments != null) {
-			boolean argHasError = false; // typeChecks all arguments 
+			boolean argHasError = false; // typeChecks all arguments
 			int length = this.arguments.length;
 			argumentTypes = new TypeBinding[length];
 			for (int i = 0; i < length; i++){
@@ -120,8 +120,8 @@ public class JavadocMessageSend extends MessageSend {
 			switch (this.binding.problemId()) {
 				case ProblemReasons.NonStaticReferenceInConstructorInvocation:
 				case ProblemReasons.NonStaticReferenceInStaticContext:
-				case ProblemReasons.InheritedNameHidesEnclosingName : 
-				case ProblemReasons.Ambiguous: 
+				case ProblemReasons.InheritedNameHidesEnclosingName :
+				case ProblemReasons.Ambiguous:
 					MethodBinding closestMatch = ((ProblemMethodBinding)this.binding).closestMatch;
 					if (closestMatch != null) {
 						this.binding = closestMatch; // ignore problem if can reach target method through it
@@ -132,11 +132,11 @@ public class JavadocMessageSend extends MessageSend {
 			if (this.receiver.resolvedType instanceof ProblemReferenceBinding) {
 				// problem already got signaled on receiver, do not report secondary problem
 				return null;
-			}					
+			}
 			if (this.binding.declaringClass == null) {
 				if (this.actualReceiverType instanceof ReferenceBinding) {
 					this.binding.declaringClass = (ReferenceBinding) this.actualReceiverType;
-				} else { 
+				} else {
 					scope.problemReporter().javadocErrorNoMethodFor(this, this.actualReceiverType, argumentTypes, scope.getDeclarationModifiers());
 					return null;
 				}
@@ -151,9 +151,9 @@ public class JavadocMessageSend extends MessageSend {
 		} else if (hasArgsTypeVar) {
 			MethodBinding problem = new ProblemMethodBinding(this.binding, this.selector, argumentTypes, ProblemReasons.NotFound);
 			scope.problemReporter().javadocInvalidMethod(this, problem, scope.getDeclarationModifiers());
-		} else if (binding.isVarargs()) {
+		} else if (this.binding.isVarargs()) {
 			int length = argumentTypes.length;
-			if (!(binding.parameters.length == length && argumentTypes[length-1].isArrayType())) {
+			if (!(this.binding.parameters.length == length && argumentTypes[length-1].isArrayType())) {
 				MethodBinding problem = new ProblemMethodBinding(this.binding, this.selector, argumentTypes, ProblemReasons.NotFound);
 				scope.problemReporter().javadocInvalidMethod(this, problem, scope.getDeclarationModifiers());
 			}
@@ -173,7 +173,7 @@ public class JavadocMessageSend extends MessageSend {
 
 		return this.resolvedType = this.binding.returnType;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#isSuperAccess()
 	 */
@@ -182,13 +182,13 @@ public class JavadocMessageSend extends MessageSend {
 	}
 
 	public StringBuffer printExpression(int indent, StringBuffer output){
-	
+
 		if (this.receiver != null) {
 			this.receiver.printExpression(0, output);
 		}
 		output.append('#').append(this.selector).append('(');
 		if (this.arguments != null) {
-			for (int i = 0; i < this.arguments.length ; i ++) {	
+			for (int i = 0; i < this.arguments.length ; i ++) {
 				if (i > 0) output.append(", "); //$NON-NLS-1$
 				this.arguments[i].printExpression(0, output);
 			}

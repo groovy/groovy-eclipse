@@ -25,27 +25,27 @@ import java.util.List;
  * See <code>FieldAccess</code> for guidelines on handling other expressions
  * that resemble qualified names.
  * </p>
- * 
+ *
  * @see FieldAccess
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class ThisExpression extends Expression {
-			
+
 	/**
 	 * The "qualifier" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor QUALIFIER_PROPERTY = 
+	public static final ChildPropertyDescriptor QUALIFIER_PROPERTY =
 		new ChildPropertyDescriptor(ThisExpression.class, "qualifier", Name.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(2);
 		createPropertyList(ThisExpression.class, propertyList);
@@ -56,26 +56,26 @@ public class ThisExpression extends Expression {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The optional qualifier; <code>null</code> for none; defaults to none.
 	 */
 	private Name optionalQualifier = null;
 
 	/**
-	 * Creates a new AST node for a "this" expression owned by the 
+	 * Creates a new AST node for a "this" expression owned by the
 	 * given AST. By default, there is no qualifier.
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	ThisExpression(AST ast) {
@@ -88,7 +88,7 @@ public class ThisExpression extends Expression {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -104,7 +104,7 @@ public class ThisExpression extends Expression {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -117,7 +117,7 @@ public class ThisExpression extends Expression {
 	 */
 	ASTNode clone0(AST target) {
 		ThisExpression result = new ThisExpression(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setQualifier((Name) ASTNode.copySubtree(target, getQualifier()));
 		return result;
 	}
@@ -140,28 +140,28 @@ public class ThisExpression extends Expression {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
-	 * Returns the qualifier of this "this" expression, or 
+	 * Returns the qualifier of this "this" expression, or
 	 * <code>null</code> if there is none.
-	 * 
+	 *
 	 * @return the qualifier name node, or <code>null</code> if there is none
-	 */ 
+	 */
 	public Name getQualifier() {
 		return this.optionalQualifier;
 	}
-	
+
 	/**
 	 * Sets or clears the qualifier of this "this" expression.
-	 * 
-	 * @param name the qualifier name node, or <code>null</code> if 
+	 *
+	 * @param name the qualifier name node, or <code>null</code> if
 	 *    there is none
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setQualifier(Name name) {
 		ASTNode oldChild = this.optionalQualifier;
 		preReplaceChild(oldChild, name, QUALIFIER_PROPERTY);
@@ -176,12 +176,12 @@ public class ThisExpression extends Expression {
 		// treat Operator as free
 		return BASE_NODE_SIZE + 1 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
-		return 
+		return
 			memSize()
 			+ (this.optionalQualifier == null ? 0 : getQualifier().treeSize());
 	}

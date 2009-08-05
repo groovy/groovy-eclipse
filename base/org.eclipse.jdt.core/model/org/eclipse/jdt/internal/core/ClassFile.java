@@ -43,7 +43,7 @@ public class ClassFile extends Openable implements IClassFile, SuffixConstants {
 
 	protected String name;
 	protected BinaryType binaryType = null;
-	
+
 /*
  * Creates a handle to a class file.
  */
@@ -65,7 +65,7 @@ public ICompilationUnit becomeWorkingCopy(IProblemRequestor problemRequestor, Wo
 
 		BecomeWorkingCopyOperation operation = new BecomeWorkingCopyOperation(workingCopy, problemRequestor);
 		operation.runOperation(monitor);
-		
+
 		return workingCopy;
 	}
 	return perWorkingCopyInfo.workingCopy;
@@ -75,7 +75,7 @@ public ICompilationUnit becomeWorkingCopy(IProblemRequestor problemRequestor, Wo
  * Creates the children elements for this class file adding the resulting
  * new handles and info objects to the newElements table. Returns true
  * if successful, or false if an error is encountered parsing the class file.
- * 
+ *
  * @see Openable
  * @see Signature
  */
@@ -92,10 +92,10 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 	IType type = getType();
 	info.setChildren(new IJavaElement[] {type});
 	newElements.put(type, typeInfo);
-	
+
 	// Read children
 	((ClassFileInfo) info).readBinaryChildren(this, (HashMap) newElements, typeInfo);
-	
+
 	return true;
 }
 /**
@@ -122,21 +122,32 @@ public void codeComplete(int offset, ICompletionRequestor requestor, WorkingCopy
 public void codeComplete(int offset, CompletionRequestor requestor) throws JavaModelException {
 	codeComplete(offset, requestor, DefaultWorkingCopyOwner.PRIMARY);
 }
-
+/* (non-Javadoc)
+ * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.core.runtime.IProgressMonitor)
+ */
+public void codeComplete(int offset, CompletionRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
+	codeComplete(offset, requestor, DefaultWorkingCopyOwner.PRIMARY, monitor);
+}
 /* (non-Javadoc)
  * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.jdt.core.WorkingCopyOwner)
  */
 public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyOwner owner) throws JavaModelException {
+	codeComplete(offset, requestor, owner, null);
+}
+/* (non-Javadoc)
+ * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.jdt.core.WorkingCopyOwner, org.eclipse.core.runtime.IProgressMonitor)
+ */
+public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException {
 	String source = getSource();
 	if (source != null) {
 		BinaryType type = (BinaryType) getType();
-		BasicCompilationUnit cu = 
+		BasicCompilationUnit cu =
 			new BasicCompilationUnit(
-				getSource().toCharArray(), 
+				getSource().toCharArray(),
 				null,
 				type.sourceFileName((IBinaryType) type.getElementInfo()),
 				getJavaProject()); // use project to retrieve corresponding .java IFile
-		codeComplete(cu, cu, offset, requestor, owner, null/*extended context isn't computed*/);
+		codeComplete(cu, cu, offset, requestor, owner, null/*extended context isn't computed*/, monitor);
 	}
 }
 
@@ -244,7 +255,7 @@ public IType findPrimaryType() {
 	return null;
 }
 public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelException {
-	return this.getType().getAttachedJavadoc(monitor);
+	return getType().getAttachedJavadoc(monitor);
 }
 /**
  * Returns the <code>ClassFileReader</code>specific for this IClassFile, based
@@ -355,7 +366,7 @@ public IBuffer getBuffer() throws JavaModelException {
 		switch (status.getCode()) {
 		case IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH: // don't throw a JavaModelException to be able to open .class file outside the classpath (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=138507 )
 		case IJavaModelStatusConstants.INVALID_ELEMENT_TYPES: // don't throw a JavaModelException to be able to open .class file in proj==src case without source (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=221904 )
-			return null; 
+			return null;
 		default:
 			throw new JavaModelException((IJavaModelStatus) status);
 		}
@@ -413,27 +424,27 @@ public IJavaElement getElementAtConsideringSibling(int position) throws JavaMode
 	SourceMapper mapper = root.getSourceMapper();
 	if (mapper == null) {
 		return null;
-	} else {		
+	} else {
 		int index = this.name.indexOf('$');
 		int prefixLength = index < 0 ? this.name.length() : index;
-		
+
 		IType type = null;
 		int start = -1;
 		int end = Integer.MAX_VALUE;
 		IJavaElement[] children = fragment.getChildren();
 		for (int i = 0; i < children.length; i++) {
 			String childName = children[i].getElementName();
-			
+
 			int childIndex = childName.indexOf('$');
 			int childPrefixLength = childIndex < 0 ? childName.indexOf('.') : childIndex;
 			if (prefixLength == childPrefixLength && this.name.regionMatches(0, childName, 0, prefixLength)) {
 				IClassFile classFile = (IClassFile) children[i];
-				
+
 				// ensure this class file's buffer is open so that source ranges are computed
 				classFile.getBuffer();
-				
+
 				SourceRange range = mapper.getSourceRange(classFile.getType());
-				if (range == SourceMapper.UNKNOWN_RANGE) continue; 
+				if (range == SourceMapper.UNKNOWN_RANGE) continue;
 				int newStart = range.offset;
 				int newEnd = newStart + range.length - 1;
 				if(newStart > start && newEnd < end
@@ -493,7 +504,7 @@ public IPath getPath() {
  * @see IJavaElement
  */
 public IResource resource(PackageFragmentRoot root) {
-	return ((IContainer) ((Openable) this.parent).resource(root)).getFile(new Path(this.getElementName()));
+	return ((IContainer) ((Openable) this.parent).resource(root)).getFile(new Path(getElementName()));
 }
 /**
  * @see ISourceReference
@@ -551,7 +562,7 @@ public String getTypeName() {
 public ICompilationUnit getWorkingCopy(WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException {
 	CompilationUnit workingCopy = new ClassFileWorkingCopy(this, owner == null ? DefaultWorkingCopyOwner.PRIMARY : owner);
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
-	JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo = 
+	JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo =
 		manager.getPerWorkingCopyInfo(workingCopy, false/*don't create*/, true/*record usage*/, null/*not used since don't create*/);
 	if (perWorkingCopyInfo != null) {
 		return perWorkingCopyInfo.getWorkingCopy(); // return existing handle instead of the one created above
@@ -597,7 +608,7 @@ public boolean isReadOnly() {
 private IStatus validateClassFile() {
 	IPackageFragmentRoot root = getPackageFragmentRoot();
 	try {
-		if (root.getKind() != IPackageFragmentRoot.K_BINARY) 
+		if (root.getKind() != IPackageFragmentRoot.K_BINARY)
 			return new JavaModelStatus(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, root);
 	} catch (JavaModelException e) {
 		return e.getJavaModelStatus();
@@ -608,9 +619,9 @@ private IStatus validateClassFile() {
 /**
  * Opens and returns buffer on the source code associated with this class file.
  * Maps the source code to the children elements of this class file.
- * If no source code is associated with this class file, 
+ * If no source code is associated with this class file,
  * <code>null</code> is returned.
- * 
+ *
  * @see Openable
  */
 protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelException {
@@ -658,7 +669,7 @@ private IBuffer mapSource(SourceMapper mapper, IBinaryType info) {
 		return null;
 	String simpleName = new String(unqualifiedName(className));
 	int lastDollar = simpleName.lastIndexOf('$');
-	if (lastDollar != -1) 
+	if (lastDollar != -1)
 		return Util.localTypeName(simpleName, lastDollar, simpleName.length());
 	else
 		return simpleName;
@@ -735,7 +746,7 @@ public static char[] translatedName(char[] name) {
  * @deprecated - should use codeComplete(int, ICompletionRequestor) instead
  */
 public void codeComplete(int offset, final org.eclipse.jdt.core.ICodeCompletionRequestor requestor) throws JavaModelException {
-	
+
 	if (requestor == null){
 		codeComplete(offset, (ICompletionRequestor)null);
 		return;
@@ -792,10 +803,10 @@ public void codeComplete(int offset, final org.eclipse.jdt.core.ICodeCompletionR
 protected IStatus validateExistence(IResource underlyingResource) {
 	// check whether the class file can be opened
 	IStatus status = validateClassFile();
-	if (!status.isOK()) 
+	if (!status.isOK())
 		return status;
 	if (underlyingResource != null) {
-		if (!underlyingResource.isAccessible()) 
+		if (!underlyingResource.isAccessible())
 			return newDoesNotExistStatus();
 		PackageFragmentRoot root;
 		if ((underlyingResource instanceof IFolder) && (root = getPackageFragmentRoot()).isArchive()) { // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=204652

@@ -32,7 +32,7 @@ public class BufferManager {
 	 * in the table is the identical buffer.
 	 */
 	private BufferCache openBuffers = new BufferCache(60);
-	
+
 	/**
 	 * @deprecated
 	 */
@@ -54,7 +54,7 @@ protected void addBuffer(IBuffer buffer) {
 		System.out.println("Adding buffer for " + owner); //$NON-NLS-1$
 	}
 	synchronized (this.openBuffers) {
-		this.openBuffers.put(buffer.getOwner(), buffer);	
+		this.openBuffers.put(buffer.getOwner(), buffer);
 	}
 	// close buffers that were removed from the cache if space was needed
 	this.openBuffers.closeBuffers();
@@ -65,19 +65,19 @@ protected void addBuffer(IBuffer buffer) {
 public static IBuffer createBuffer(IOpenable owner) {
 	JavaElement element = (JavaElement) owner;
 	IResource resource = element.resource();
-	return 
+	return
 		new Buffer(
-			resource instanceof IFile ? (IFile)resource : null, 
-			owner, 
+			resource instanceof IFile ? (IFile)resource : null,
+			owner,
 			element.isReadOnly());
 }
 public static IBuffer createNullBuffer(IOpenable owner) {
 	JavaElement element = (JavaElement) owner;
 	IResource resource = element.resource();
-	return 
+	return
 		new NullBuffer(
-			resource instanceof IFile ? (IFile)resource : null, 
-			owner, 
+			resource instanceof IFile ? (IFile)resource : null,
+			owner,
 			element.isReadOnly());
 }
 /**
@@ -108,7 +108,7 @@ public org.eclipse.jdt.core.IBufferFactory getDefaultBufferFactory() {
 }
 /**
  * Returns an enumeration of all open buffers.
- * <p> 
+ * <p>
  * The <code>Enumeration</code> answered is thread safe.
  *
  * @see OverflowingLRUCache
@@ -137,7 +137,7 @@ protected void removeBuffer(IBuffer buffer) {
 		this.openBuffers.remove(buffer.getOwner());
 	}
 	// close buffers that were removed from the cache (should be only one)
-	this.openBuffers.closeBuffers();	
+	this.openBuffers.closeBuffers();
 	if (VERBOSE) {
 		System.out.println("-> Buffer cache filling ratio = " + NumberFormat.getInstance().format(this.openBuffers.fillingRatio()) + "%"); //$NON-NLS-1$//$NON-NLS-2$
 	}

@@ -13,7 +13,7 @@ package org.eclipse.jdt.internal.compiler.classfmt;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 
 public interface ClassFileConstants {
-	
+
 	int AccDefault = 0;
 	/*
 	 * Modifiers
@@ -58,7 +58,7 @@ public interface ClassFileConstants {
 	int MethodRefTag = 10;
 	int InterfaceMethodRefTag = 11;
 	int NameAndTypeTag = 12;
-	
+
 	int ConstantMethodRefFixedSize = 5;
 	int ConstantClassFixedSize = 3;
 	int ConstantDoubleFixedSize = 9;
@@ -70,15 +70,15 @@ public interface ClassFileConstants {
 	int ConstantStringFixedSize = 3;
 	int ConstantUtf8FixedSize = 3;
 	int ConstantNameAndTypeFixedSize = 5;
-	
+
 	int MAJOR_VERSION_1_1 = 45;
 	int MAJOR_VERSION_1_2 = 46;
 	int MAJOR_VERSION_1_3 = 47;
 	int MAJOR_VERSION_1_4 = 48;
-	int MAJOR_VERSION_1_5 = 49; 
-	int MAJOR_VERSION_1_6 = 50; 
-	int MAJOR_VERSION_1_7 = 51; 
-	
+	int MAJOR_VERSION_1_5 = 49;
+	int MAJOR_VERSION_1_6 = 50;
+	int MAJOR_VERSION_1_7 = 51;
+
 	int MINOR_VERSION_0 = 0;
 	int MINOR_VERSION_1 = 1;
 	int MINOR_VERSION_2 = 2;
@@ -91,14 +91,14 @@ public interface ClassFileConstants {
 	long JDK1_2 =  ((long)ClassFileConstants.MAJOR_VERSION_1_2 << 16) + ClassFileConstants.MINOR_VERSION_0;
 	long JDK1_3 =  ((long)ClassFileConstants.MAJOR_VERSION_1_3 << 16) + ClassFileConstants.MINOR_VERSION_0;
 	long JDK1_4 = ((long)ClassFileConstants.MAJOR_VERSION_1_4 << 16) + ClassFileConstants.MINOR_VERSION_0;
-	long JDK1_5 = ((long)ClassFileConstants.MAJOR_VERSION_1_5 << 16) + ClassFileConstants.MINOR_VERSION_0;	
-	long JDK1_6 = ((long)ClassFileConstants.MAJOR_VERSION_1_6 << 16) + ClassFileConstants.MINOR_VERSION_0;	
-	long JDK1_7 = ((long)ClassFileConstants.MAJOR_VERSION_1_7 << 16) + ClassFileConstants.MINOR_VERSION_0;	
+	long JDK1_5 = ((long)ClassFileConstants.MAJOR_VERSION_1_5 << 16) + ClassFileConstants.MINOR_VERSION_0;
+	long JDK1_6 = ((long)ClassFileConstants.MAJOR_VERSION_1_6 << 16) + ClassFileConstants.MINOR_VERSION_0;
+	long JDK1_7 = ((long)ClassFileConstants.MAJOR_VERSION_1_7 << 16) + ClassFileConstants.MINOR_VERSION_0;
 
 	/*
 	 * cldc1.1 is 45.3, but we modify it to be different from JDK1_1.
 	 * In the code gen, we will generate the same target value as JDK1_1
-	 */ 
+	 */
 	long CLDC_1_1 = ((long)ClassFileConstants.MAJOR_VERSION_1_1 << 16) + ClassFileConstants.MINOR_VERSION_4;
 
 	// jdk level used to denote future releases: optional behavior is not enabled for now, but may become so. In order to enable these,

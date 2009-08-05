@@ -38,43 +38,43 @@ import org.eclipse.jdt.internal.compiler.lookup.ProblemFieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
- 
+
 public class SelectionOnSingleNameReference extends SingleNameReference {
 public SelectionOnSingleNameReference(char[] source, long pos) {
 	super(source, pos);
 }
 public TypeBinding resolveType(BlockScope scope) {
 	if (this.actualReceiverType != null) {
-		this.binding = scope.getField(this.actualReceiverType, token, this);
+		this.binding = scope.getField(this.actualReceiverType, this.token, this);
 		if (this.binding != null && this.binding.isValidBinding()) {
-			throw new SelectionNodeFound(binding);
+			throw new SelectionNodeFound(this.binding);
 		}
-	} 
+	}
 	// it can be a package, type, member type, local variable or field
-	binding = scope.getBinding(token, Binding.VARIABLE | Binding.TYPE | Binding.PACKAGE, this, true /*resolve*/);
-	if (!binding.isValidBinding()) {
-		if (binding instanceof ProblemFieldBinding) {
+	this.binding = scope.getBinding(this.token, Binding.VARIABLE | Binding.TYPE | Binding.PACKAGE, this, true /*resolve*/);
+	if (!this.binding.isValidBinding()) {
+		if (this.binding instanceof ProblemFieldBinding) {
 			// tolerate some error cases
-			if (binding.problemId() == ProblemReasons.NotVisible
-					|| binding.problemId() == ProblemReasons.InheritedNameHidesEnclosingName
-					|| binding.problemId() == ProblemReasons.NonStaticReferenceInConstructorInvocation
-					|| binding.problemId() == ProblemReasons.NonStaticReferenceInStaticContext){
-				throw new SelectionNodeFound(binding);
+			if (this.binding.problemId() == ProblemReasons.NotVisible
+					|| this.binding.problemId() == ProblemReasons.InheritedNameHidesEnclosingName
+					|| this.binding.problemId() == ProblemReasons.NonStaticReferenceInConstructorInvocation
+					|| this.binding.problemId() == ProblemReasons.NonStaticReferenceInStaticContext){
+				throw new SelectionNodeFound(this.binding);
 			}
-			scope.problemReporter().invalidField(this, (FieldBinding) binding);
-		} else if (binding instanceof ProblemReferenceBinding || binding instanceof MissingTypeBinding) {
+			scope.problemReporter().invalidField(this, (FieldBinding) this.binding);
+		} else if (this.binding instanceof ProblemReferenceBinding || this.binding instanceof MissingTypeBinding) {
 			// tolerate some error cases
-			if (binding.problemId() == ProblemReasons.NotVisible){
-				throw new SelectionNodeFound(binding);
-			}			
-			scope.problemReporter().invalidType(this, (TypeBinding) binding);
+			if (this.binding.problemId() == ProblemReasons.NotVisible){
+				throw new SelectionNodeFound(this.binding);
+			}
+			scope.problemReporter().invalidType(this, (TypeBinding) this.binding);
 		} else {
-			scope.problemReporter().unresolvableReference(this, binding);
+			scope.problemReporter().unresolvableReference(this, this.binding);
 		}
 		throw new SelectionNodeFound();
 	}
 
-	throw new SelectionNodeFound(binding);
+	throw new SelectionNodeFound(this.binding);
 }
 public StringBuffer printExpression(int indent, StringBuffer output) {
 	output.append("<SelectOnName:"); //$NON-NLS-1$

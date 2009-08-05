@@ -48,7 +48,7 @@ public class UserLibrary {
 	private static final String TAG_PATH= "path"; //$NON-NLS-1$
 	private static final String TAG_ARCHIVE= "archive"; //$NON-NLS-1$
 	private static final String TAG_SYSTEMLIBRARY= "systemlibrary"; //$NON-NLS-1$
-	
+
 	private boolean isSystemLibrary;
 	private IClasspathEntry[] entries;
 
@@ -57,11 +57,11 @@ public class UserLibrary {
 		this.entries= entries;
 		this.isSystemLibrary= isSystemLibrary;
 	}
-	
+
 	public IClasspathEntry[] getEntries() {
 		return this.entries;
 	}
-	
+
 	public boolean isSystemLibrary() {
 		return this.isSystemLibrary;
 	}
@@ -83,7 +83,7 @@ public class UserLibrary {
 		}
 		return false;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -97,20 +97,20 @@ public class UserLibrary {
 		}
 		return hashCode;
 	}
-	
+
 	public static String serialize(IClasspathEntry[] entries, boolean isSystemLibrary) throws IOException {
 		ByteArrayOutputStream s = new ByteArrayOutputStream();
 		OutputStreamWriter writer = new OutputStreamWriter(s, "UTF8"); //$NON-NLS-1$
 		XMLWriter xmlWriter = new XMLWriter(writer, null/*use the workspace line delimiter*/, true/*print XML version*/);
-		
+
 		HashMap library = new HashMap();
 		library.put(TAG_VERSION, String.valueOf(CURRENT_VERSION));
 		library.put(TAG_SYSTEMLIBRARY, String.valueOf(isSystemLibrary));
 		xmlWriter.printTag(TAG_USERLIBRARY, library, true, true, false);
-		
+
 		for (int i = 0, length = entries.length; i < length; ++i) {
 			ClasspathEntry cpEntry = (ClasspathEntry) entries[i];
-		
+
 			HashMap archive = new HashMap();
 			archive.put(TAG_PATH, cpEntry.getPath().toString());
 			IPath sourceAttach= cpEntry.getSourceAttachmentPath();
@@ -118,7 +118,7 @@ public class UserLibrary {
 				archive.put(TAG_SOURCEATTACHMENT, sourceAttach);
 			IPath sourceAttachRoot= cpEntry.getSourceAttachmentRootPath();
 			if (sourceAttachRoot != null)
-				archive.put(TAG_SOURCEATTACHMENTROOT, sourceAttachRoot);				
+				archive.put(TAG_SOURCEATTACHMENTROOT, sourceAttachRoot);
 
 			boolean hasExtraAttributes = cpEntry.extraAttributes != null && cpEntry.extraAttributes.length != 0;
 			boolean hasRestrictions = cpEntry.getAccessRuleSet() != null; // access rule set is null if no access rules
@@ -138,41 +138,41 @@ public class UserLibrary {
 			if (hasExtraAttributes || hasRestrictions) {
 				xmlWriter.endTag(TAG_ARCHIVE, true/*insert tab*/, true/*insert new line*/);
 			}
-		}	
+		}
 		xmlWriter.endTag(TAG_USERLIBRARY, true/*insert tab*/, true/*insert new line*/);
 		writer.flush();
 		writer.close();
 		return s.toString("UTF8");//$NON-NLS-1$
 	}
-	
+
 	public static UserLibrary createFromString(Reader reader) throws IOException {
 		Element cpElement;
 		try {
 			DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			cpElement = parser.parse(new InputSource(reader)).getDocumentElement();
 		} catch (SAXException e) {
-			throw new IOException(Messages.file_badFormat); 
+			throw new IOException(Messages.file_badFormat);
 		} catch (ParserConfigurationException e) {
-			throw new IOException(Messages.file_badFormat); 
+			throw new IOException(Messages.file_badFormat);
 		} finally {
 			reader.close();
 		}
-		
+
 		if (!cpElement.getNodeName().equalsIgnoreCase(TAG_USERLIBRARY)) {
-			throw new IOException(Messages.file_badFormat); 
+			throw new IOException(Messages.file_badFormat);
 		}
 		// String version= cpElement.getAttribute(TAG_VERSION);
 		// in case we update the format: add code to read older versions
-		
+
 		boolean isSystem= Boolean.valueOf(cpElement.getAttribute(TAG_SYSTEMLIBRARY)).booleanValue();
-		
+
 		NodeList list= cpElement.getChildNodes();
 		int length = list.getLength();
-		
+
 		ArrayList res= new ArrayList(length);
 		for (int i = 0; i < length; ++i) {
 			Node node = list.item(i);
-			
+
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				Element element= (Element) node;
 				if (element.getNodeName().equals(TAG_ARCHIVE)) {
@@ -190,12 +190,12 @@ public class UserLibrary {
 				}
 			}
 		}
-		
+
 		IClasspathEntry[] entries= (IClasspathEntry[]) res.toArray(new IClasspathEntry[res.size()]);
-		
+
 		return new UserLibrary(entries, isSystem);
 	}
-	
+
 	public String toString() {
 		if (this.entries == null)
 			return "null"; //$NON-NLS-1$

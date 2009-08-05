@@ -20,20 +20,20 @@ import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class MarkerAnnotation extends Annotation {
-	
+
 	public MarkerAnnotation(TypeReference type, int sourceStart) {
 		this.type = type;
 		this.sourceStart = sourceStart;
 		this.sourceEnd = type.sourceEnd;
 	}
-	
+
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.ast.Annotation#memberValuePairs()
 	 */
 	public MemberValuePair[] memberValuePairs() {
 		return NoValuePairs;
 	}
-	
+
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {

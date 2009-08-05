@@ -31,23 +31,23 @@ public class AssistCompilationUnit extends CompilationUnit {
 		this.bindingCache = bindingCache;
 		this.infoCache = infoCache;
 	}
-	
+
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
-		return infoCache.get(this);
+		return this.infoCache.get(this);
 	}
-	
+
 	public IImportContainer getImportContainer() {
 		return new AssistImportContainer(this, this.infoCache);
 	}
-	
+
 	public IPackageDeclaration getPackageDeclaration(String pkg) {
 		return new AssistPackageDeclaration(this, pkg, this.infoCache);
 	}
-	
+
 	public IType getType(String typeName) {
 		return new AssistSourceType(this, typeName, this.bindingCache, this.infoCache);
 	}
-	
+
 	public boolean hasChildren() throws JavaModelException {
 		JavaElementInfo info = (JavaElementInfo)this.infoCache.get(this);
 		return info.getChildren().length > 0;

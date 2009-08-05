@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,7 @@ import java.lang.ref.WeakReference;
  * A hashset whose values can be garbage collected.
  */
 public class WeakHashSet {
-	
+
 	public static class HashableWeakReference extends WeakReference {
 		public int hashCode;
 		public HashableWeakReference(Object referent, ReferenceQueue queue) {
@@ -39,16 +39,16 @@ public class WeakHashSet {
 			return "[hashCode=" + this.hashCode + "] " + referent.toString(); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
-	
+
 	HashableWeakReference[] values;
 	public int elementSize; // number of elements in the table
 	int threshold;
-	ReferenceQueue referenceQueue = new ReferenceQueue();	
-	
+	ReferenceQueue referenceQueue = new ReferenceQueue();
+
 	public WeakHashSet() {
 		this(5);
 	}
-	
+
 	public WeakHashSet(int size) {
 		this.elementSize = 0;
 		this.threshold = size; // size represents the expected number of elements
@@ -57,7 +57,7 @@ public class WeakHashSet {
 			extraRoom++;
 		this.values = new HashableWeakReference[extraRoom];
 	}
-	
+
 	/*
 	 * Adds the given object to this set.
 	 * If an object that is equals to the given object already exists, do nothing.
@@ -82,10 +82,10 @@ public class WeakHashSet {
 		// assumes the threshold is never equal to the size of the table
 		if (++this.elementSize > this.threshold)
 			rehash();
-		
+
 		return obj;
 	}
-		
+
 	private void addValue(HashableWeakReference value) {
 		Object obj = value.get();
 		if (obj == null) return;
@@ -106,7 +106,7 @@ public class WeakHashSet {
 		if (++this.elementSize > this.threshold)
 			rehash();
 	}
-	
+
 	private void cleanupGarbageCollectedValues() {
 		HashableWeakReference toBeRemoved;
 		while ((toBeRemoved = (HashableWeakReference) this.referenceQueue.poll()) != null) {
@@ -132,11 +132,11 @@ public class WeakHashSet {
 			}
 		}
 	}
-	
+
 	public boolean contains(Object obj) {
 		return get(obj) != null;
 	}
-	
+
 	/*
 	 * Return the object that is in this set and that is equals to the given object.
 	 * Return null if not found.
@@ -157,7 +157,7 @@ public class WeakHashSet {
 		}
 		return null;
 	}
-		
+
 	private void rehash() {
 		WeakHashSet newHashSet = new WeakHashSet(this.elementSize * 2);		// double the number of expected elements
 		newHashSet.referenceQueue = this.referenceQueue;

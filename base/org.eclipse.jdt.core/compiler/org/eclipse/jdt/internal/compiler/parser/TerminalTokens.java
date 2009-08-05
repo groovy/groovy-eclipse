@@ -11,18 +11,18 @@
 package org.eclipse.jdt.internal.compiler.parser;
 
 /**
- * IMPORTANT NOTE: These constants are dedicated to the internal Scanner implementation. 
- * It is mirrored in org.eclipse.jdt.core.compiler public package where it is API. 
- * The mirror implementation is using the backward compatible ITerminalSymbols constant 
- * definitions (stable with 2.0), whereas the internal implementation uses TerminalTokens 
+ * IMPORTANT NOTE: These constants are dedicated to the internal Scanner implementation.
+ * It is mirrored in org.eclipse.jdt.core.compiler public package where it is API.
+ * The mirror implementation is using the backward compatible ITerminalSymbols constant
+ * definitions (stable with 2.0), whereas the internal implementation uses TerminalTokens
  * which constant values reflect the latest parser generation state.
  */
 /**
- * Maps each terminal symbol in the java-grammar into a unique integer. 
- * This integer is used to represent the terminal when computing a parsing action. 
- * 
- * Disclaimer : These constant values are generated automatically using a Java 
- * grammar, therefore their actual values are subject to change if new keywords 
+ * Maps each terminal symbol in the java-grammar into a unique integer.
+ * This integer is used to represent the terminal when computing a parsing action.
+ *
+ * Disclaimer : These constant values are generated automatically using a Java
+ * grammar, therefore their actual values are subject to change if new keywords
  * were added to the language (for instance, 'assert' is a keyword in 1.4).
  */
 public interface TerminalTokens {

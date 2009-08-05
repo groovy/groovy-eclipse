@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,7 +33,7 @@ public class CodeSnippetSkeleton implements IBinaryType, EvaluationConstants {
 		char[] methodDescriptor;
 		char[] selector;
 		boolean isConstructor;
-		
+
 		public BinaryMethodSkeleton(char[] selector, char[] methodDescriptor, char[][] exceptionTypeNames, boolean isConstructor) {
 			this.selector = selector;
 			this.methodDescriptor = methodDescriptor;
@@ -98,7 +98,7 @@ public class CodeSnippetSkeleton implements IBinaryType, EvaluationConstants {
 			false
 		)
 	};
-	
+
 /**
  * CodeSnippetSkeleton constructor comment.
  */
@@ -106,6 +106,9 @@ public CodeSnippetSkeleton() {
 	super();
 }
 public IBinaryAnnotation[] getAnnotations() {
+	return null;
+}
+public char[] getEnclosingMethod() {
 	return null;
 }
 public char[] getEnclosingTypeName() {

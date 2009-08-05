@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,7 +19,7 @@ public class ImportBinding extends Binding {
 	public ImportReference reference;
 
 	public Binding resolvedImport; // must ensure the import is resolved
-	
+
 public ImportBinding(char[][] compoundName, boolean isOnDemand, Binding binding, ImportReference reference) {
 	this.compoundName = compoundName;
 	this.onDemand = isOnDemand;
@@ -37,10 +37,10 @@ public boolean isStatic() {
 	return this.reference != null && this.reference.isStatic();
 }
 public char[] readableName() {
-	if (onDemand)
-		return CharOperation.concat(CharOperation.concatWith(compoundName, '.'), ".*".toCharArray()); //$NON-NLS-1$
+	if (this.onDemand)
+		return CharOperation.concat(CharOperation.concatWith(this.compoundName, '.'), ".*".toCharArray()); //$NON-NLS-1$
 	else
-		return CharOperation.concatWith(compoundName, '.');
+		return CharOperation.concatWith(this.compoundName, '.');
 }
 public String toString() {
 	return "import : " + new String(readableName()); //$NON-NLS-1$

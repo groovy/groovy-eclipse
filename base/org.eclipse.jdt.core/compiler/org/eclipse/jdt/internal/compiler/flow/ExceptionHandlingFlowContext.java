@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,9 +30,9 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
  *	try statements, exception handlers, etc...
  */
 public class ExceptionHandlingFlowContext extends FlowContext {
-	
+
 	public final static int BitCacheSize = 32; // 32 bits per int
-	
+
 	public ReferenceBinding[] handledExceptions;
 	int[] isReached;
 	int[] isNeeded;
@@ -41,14 +41,16 @@ public class ExceptionHandlingFlowContext extends FlowContext {
 	boolean isMethodContext;
 
 	public UnconditionalFlowInfo initsOnReturn;
-
+	public FlowContext initializationParent; // special parent relationship only for initialization purpose
+	
 	// for dealing with anonymous constructor thrown exceptions
 	public ArrayList extendedExceptions;
-	
+
 public ExceptionHandlingFlowContext(
 		FlowContext parent,
 		ASTNode associatedNode,
 		ReferenceBinding[] handledExceptions,
+		FlowContext initializationParent,
 		BlockScope scope,
 		UnconditionalFlowInfo flowInfo) {
 
@@ -59,13 +61,13 @@ public ExceptionHandlingFlowContext(
 	this.isReached = new int[cacheSize]; // none is reached by default
 	this.isNeeded = new int[cacheSize]; // none is needed by default
 	this.initsOnExceptions = new UnconditionalFlowInfo[count];
-	boolean markExceptionsAndThrowableAsReached = 
+	boolean markExceptionsAndThrowableAsReached =
 		!this.isMethodContext || scope.compilerOptions().reportUnusedDeclaredThrownExceptionExemptExceptionAndThrowable;
 	for (int i = 0; i < count; i++) {
-		ReferenceBinding handledException = handledExceptions[i]; 
+		ReferenceBinding handledException = handledExceptions[i];
 		this.indexes.put(handledException, i); // key type  -> value index
 		if (handledException.isUncheckedException(true)) {
-			if (markExceptionsAndThrowableAsReached || 
+			if (markExceptionsAndThrowableAsReached ||
 					handledException.id != TypeIds.T_JavaLangThrowable &&
 					handledException.id != TypeIds.T_JavaLangException) {
 				this.isReached[i / ExceptionHandlingFlowContext.BitCacheSize] |= 1 << (i % ExceptionHandlingFlowContext.BitCacheSize);
@@ -78,7 +80,8 @@ public ExceptionHandlingFlowContext(
 	if (!this.isMethodContext) {
 		System.arraycopy(this.isReached, 0, this.isNeeded, 0, cacheSize);
 	}
-	this.initsOnReturn = FlowInfo.DEAD_END;	
+	this.initsOnReturn = FlowInfo.DEAD_END;
+	this.	initializationParent = initializationParent;
 }
 
 public void complainIfUnusedExceptionHandlers(AbstractMethodDeclaration method) {
@@ -88,7 +91,7 @@ public void complainIfUnusedExceptionHandlers(AbstractMethodDeclaration method) 
 	        && !scope.compilerOptions().reportUnusedDeclaredThrownExceptionWhenOverriding) {
 	    return;
 	}
-	    
+
 	// report errors for unreachable exception handlers
 	TypeBinding[] docCommentReferences = null;
 	int docCommentReferencesLength = 0;
@@ -171,7 +174,7 @@ public UnconditionalFlowInfo initsOnException(ReferenceBinding exceptionType) {
 public UnconditionalFlowInfo initsOnReturn(){
 	return this.initsOnReturn;
 }
-	
+
 /*
  * Compute a merged list of unhandled exception types (keeping only the most generic ones).
  * This is necessary to add synthetic thrown exceptions for anonymous type constructors (JLS 8.6).
@@ -184,7 +187,7 @@ public void mergeUnhandledException(TypeBinding newException){
 		}
 	}
 	boolean isRedundant = false;
-	
+
 	for(int i = this.extendedExceptions.size()-1; i >= 0; i--){
 		switch(Scope.compareTypes(newException, (TypeBinding)this.extendedExceptions.get(i))){
 			case Scope.MORE_GENERIC :
@@ -201,14 +204,14 @@ public void mergeUnhandledException(TypeBinding newException){
 		this.extendedExceptions.add(newException);
 	}
 }
-	
+
 public void recordHandlingException(
 		ReferenceBinding exceptionType,
 		UnconditionalFlowInfo flowInfo,
 		TypeBinding raisedException,
 		ASTNode invocationSite,
 		boolean wasAlreadyDefinitelyCaught) {
-		
+
 	int index = this.indexes.get(exceptionType);
 	int cacheIndex = index / ExceptionHandlingFlowContext.BitCacheSize;
 	int bitMask = 1 << (index % ExceptionHandlingFlowContext.BitCacheSize);
@@ -216,7 +219,7 @@ public void recordHandlingException(
 		this.isNeeded[cacheIndex] |= bitMask;
 	}
 	this.isReached[cacheIndex] |= bitMask;
-	
+
 	this.initsOnExceptions[index] =
 		(this.initsOnExceptions[index].tagBits & FlowInfo.UNREACHABLE) == 0 ?
 			this.initsOnExceptions[index].mergedWith(flowInfo):
@@ -227,7 +230,7 @@ public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
 		if ((this.initsOnReturn.tagBits & FlowInfo.UNREACHABLE) == 0) {
 			this.initsOnReturn = this.initsOnReturn.mergedWith(flowInfo);
-		} 
+		}
 		else {
 			this.initsOnReturn = (UnconditionalFlowInfo) flowInfo.copy();
 		}
@@ -244,8 +247,8 @@ public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
 public SubRoutineStatement subroutine() {
 	if (this.associatedNode instanceof SubRoutineStatement) {
 		// exception handler context may be child of InsideSubRoutineFlowContext, which maps to same handler
-		if (this.parent.subroutine() == this.associatedNode) 
-			return null;		
+		if (this.parent.subroutine() == this.associatedNode)
+			return null;
 		return (SubRoutineStatement) this.associatedNode;
 	}
 	return null;

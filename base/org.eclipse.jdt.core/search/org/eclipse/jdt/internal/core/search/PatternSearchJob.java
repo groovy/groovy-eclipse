@@ -43,7 +43,7 @@ public boolean belongsTo(String jobFamily) {
 	return true;
 }
 public void cancel() {
-	// search job is cancelled through progress 
+	// search job is cancelled through progress
 }
 public void ensureReadyToRun() {
 	if (!this.areIndexesReady)
@@ -53,7 +53,7 @@ public boolean execute(IProgressMonitor progressMonitor) {
 	if (progressMonitor != null && progressMonitor.isCanceled()) throw new OperationCanceledException();
 
 	boolean isComplete = COMPLETE;
-	executionTime = 0;
+	this.executionTime = 0;
 	Index[] indexes = getIndexes(progressMonitor);
 	try {
 		int max = indexes.length;
@@ -67,7 +67,7 @@ public boolean execute(IProgressMonitor progressMonitor) {
 			}
 		}
 		if (JobManager.VERBOSE)
-			Util.verbose("-> execution time: " + executionTime + "ms - " + this);//$NON-NLS-1$//$NON-NLS-2$
+			Util.verbose("-> execution time: " + this.executionTime + "ms - " + this);//$NON-NLS-1$//$NON-NLS-2$
 		return isComplete;
 	} finally {
 		if (progressMonitor != null)
@@ -81,7 +81,7 @@ public Index[] getIndexes(IProgressMonitor progressMonitor) {
 	Index[] indexes = JavaModelManager.getIndexManager().getIndexes(indexLocations, progressMonitor);
 	this.areIndexesReady = indexes.length == length;
 	return indexes;
-}	
+}
 public String getJobFamily() {
 	return ""; //$NON-NLS-1$
 }
@@ -94,8 +94,8 @@ public boolean search(Index index, IProgressMonitor progressMonitor) {
 	try {
 		monitor.enterRead(); // ask permission to read
 		long start = System.currentTimeMillis();
-		MatchLocator.findIndexMatches(this.pattern, index, requestor, this.participant, this.scope, progressMonitor);
-		executionTime += System.currentTimeMillis() - start;
+		MatchLocator.findIndexMatches(this.pattern, index, this.requestor, this.participant, this.scope, progressMonitor);
+		this.executionTime += System.currentTimeMillis() - start;
 		return COMPLETE;
 	} catch (IOException e) {
 		if (e instanceof java.io.EOFException)
@@ -106,6 +106,6 @@ public boolean search(Index index, IProgressMonitor progressMonitor) {
 	}
 }
 public String toString() {
-	return "searching " + pattern.toString(); //$NON-NLS-1$
+	return "searching " + this.pattern.toString(); //$NON-NLS-1$
 }
 }

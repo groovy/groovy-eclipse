@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,35 +27,35 @@ private int status = 0;
  * Blocking only when already writing.
  */
 public synchronized void enterRead() {
-	while (status < 0) {
+	while (this.status < 0) {
 		try {
 			wait();
 		} catch(InterruptedException e) {
 			// ignore
 		}
 	}
-	status++;
+	this.status++;
 }
 /**
  * Only one writer at a time is allowed to perform
  * Blocking only when already writing or reading.
  */
 public synchronized void enterWrite() {
-	while (status != 0) {
+	while (this.status != 0) {
 		try {
 			wait();
 		} catch(InterruptedException e) {
 			// ignore
 		}
 	}
-	status--;
+	this.status--;
 }
 /**
  * Only notify waiting writer(s) if last reader
  */
 public synchronized void exitRead() {
 
-	if (--status == 0) notifyAll();
+	if (--this.status == 0) notifyAll();
 }
 /**
  * When writing is over, all readers and possible
@@ -63,7 +63,7 @@ public synchronized void exitRead() {
  */
 public synchronized void exitWrite() {
 
-	if (++status == 0) notifyAll();
+	if (++this.status == 0) notifyAll();
 }
 /**
  * Atomic exitRead/enterWrite: Allows to keep monitor in between
@@ -72,9 +72,9 @@ public synchronized void exitWrite() {
  * Returns false if multiple readers are accessing the index.
  */
 public synchronized boolean exitReadEnterWrite() {
-	if (status != 1) return false; // only continue if this is the only reader
+	if (this.status != 1) return false; // only continue if this is the only reader
 
-	status = -1;
+	this.status = -1;
 	return true;
 }
 /**
@@ -91,16 +91,16 @@ public synchronized boolean exitReadEnterWrite() {
  * </pre>
  */
 public synchronized void exitWriteEnterRead() {
-	this.exitWrite();
-	this.enterRead();
+	exitWrite();
+	enterRead();
 }
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
-	if (status == 0) {
+	if (this.status == 0) {
 		buffer.append("Monitor idle "); //$NON-NLS-1$
-	} else if (status < 0) {
+	} else if (this.status < 0) {
 		buffer.append("Monitor writing "); //$NON-NLS-1$
-	} else if (status > 0) {
+	} else if (this.status > 0) {
 		buffer.append("Monitor reading "); //$NON-NLS-1$
 	}
 	buffer.append("(status = "); //$NON-NLS-1$

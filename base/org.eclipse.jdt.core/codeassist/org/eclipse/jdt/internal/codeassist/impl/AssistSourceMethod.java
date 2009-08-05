@@ -24,20 +24,20 @@ import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
 public class AssistSourceMethod extends ResolvedSourceMethod {
 	private Map bindingCache;
 	private Map infoCache;
-	
+
 	private String uniqueKey;
 	private boolean isResolved;
-	
+
 	public AssistSourceMethod(JavaElement parent, String name, String[] parameterTypes, Map bindingCache, Map infoCache) {
 		super(parent, name, parameterTypes, null);
 		this.bindingCache = bindingCache;
 		this.infoCache = infoCache;
 	}
-	
+
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
-		return infoCache.get(this);
+		return this.infoCache.get(this);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.core.SourceMethod#getKey()
 	 */
@@ -59,26 +59,26 @@ public class AssistSourceMethod extends ResolvedSourceMethod {
 		}
 		return this.uniqueKey;
 	}
-	
+
 	public boolean isResolved() {
 		getKey();
 		return this.isResolved;
 	}
-	
+
 	protected void toStringInfo(int tab, StringBuffer buffer, Object info,boolean showResolvedInfo) {
-		super.toStringInfo(tab, buffer, info, showResolvedInfo && this.isResolved());
+		super.toStringInfo(tab, buffer, info, showResolvedInfo && isResolved());
 	}
-	
+
 	public IAnnotation getAnnotation(String annotationName) {
 		return new AssistAnnotation(this, annotationName, this.infoCache);
 	}
-	
+
 	public IType getType(String typeName, int count) {
 		AssistSourceType type = new AssistSourceType(this, typeName, this.bindingCache, this.infoCache);
 		type.occurrenceCount = count;
 		return type;
 	}
-	
+
 	public ITypeParameter getTypeParameter(String typeParameterName) {
 		return new AssistTypeParameter(this, typeParameterName, this.infoCache);
 	}

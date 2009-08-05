@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -44,7 +44,7 @@ protected void addEvaluationResultForCompilationProblem(Map resultsByIDs, Catego
 	int pbLine = problem.getSourceLineNumber();
 	int currentLine = 1;
 
-	// check package declaration	
+	// check package declaration
 	char[] packageName = getPackageName();
 	if (packageName.length > 0) {
 		if (pbLine == 1) {
@@ -78,7 +78,7 @@ protected void addEvaluationResultForCompilationProblem(Map resultsByIDs, Catego
 	int varCount = this.context.variableCount;
 	if ((currentLine <= pbLine) && (pbLine < currentLine + varCount)) {
 		GlobalVariable var = this.context.variables[pbLine - currentLine];
-		
+
 		// set evaluation id and type
 		evaluationID = var.getName();
 		evaluationType = EvaluationResult.T_VARIABLE;
@@ -144,7 +144,7 @@ protected char[] getClassName() {
  */
 Compiler getCompiler(ICompilerRequestor compilerRequestor) {
 	Compiler compiler = super.getCompiler(compilerRequestor);
-	
+
 	// Initialize the compiler's lookup environment with the already compiled super class
 	IBinaryType binaryType = this.context.getRootCodeSnippetBinary();
 	if (binaryType != null) {
@@ -166,8 +166,8 @@ Compiler getCompiler(ICompilerRequestor compilerRequestor) {
 			compiler.lookupEnvironment.cacheBinaryType(binary, null /*no access restriction*/);
 		}
 	}
-	
-	return compiler;	
+
+	return compiler;
 }
 /**
  * Returns the name of package of the current compilation unit.
@@ -181,7 +181,7 @@ protected char[] getPackageName() {
 protected char[] getSource() {
 	StringBuffer buffer = new StringBuffer();
 	int lineNumberOffset = 1;
-	
+
 	// package declaration
 	char[] packageName = getPackageName();
 	if (packageName.length != 0) {
@@ -270,7 +270,7 @@ protected char[] getSource() {
 		}
 	}
 	buffer.append("\t}").append(this.context.lineSeparator); //$NON-NLS-1$
-	
+
 	// end of class declaration
 	buffer.append('}').append(this.context.lineSeparator);
 

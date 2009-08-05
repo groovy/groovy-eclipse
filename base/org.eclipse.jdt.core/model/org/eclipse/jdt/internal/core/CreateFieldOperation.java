@@ -63,7 +63,7 @@ protected IJavaElement generateResultHandle() {
  * @see CreateElementInCUOperation#getMainTaskName()
  */
 public String getMainTaskName(){
-	return Messages.operation_createFieldProgress; 
+	return Messages.operation_createFieldProgress;
 }
 private VariableDeclarationFragment getFragment(ASTNode node) {
 	Iterator fragments =  ((FieldDeclaration) node).fragments().iterator();
@@ -119,8 +119,8 @@ protected IJavaModelStatus verifyNameCollision() {
 		String fieldName = getASTNodeName();
 		if (type.getField(fieldName).exists()) {
 			return new JavaModelStatus(
-				IJavaModelStatusConstants.NAME_COLLISION, 
-				Messages.bind(Messages.status_nameCollision, fieldName)); 
+				IJavaModelStatusConstants.NAME_COLLISION,
+				Messages.bind(Messages.status_nameCollision, fieldName));
 		}
 	}
 	return JavaModelStatus.VERIFIED_OK;

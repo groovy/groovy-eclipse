@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,7 @@ public WorkQueue() {
 }
 
 public void add(SourceFile element) {
-	needsCompileList.add(element);
+	this.needsCompileList.add(element);
 }
 
 public void addAll(SourceFile[] elements) {
@@ -34,22 +34,22 @@ public void addAll(SourceFile[] elements) {
 public void clear() {
 	this.needsCompileList.clear();
 	this.compiledList.clear();
-}	
+}
 
 public void finished(SourceFile element) {
-	needsCompileList.remove(element);
-	compiledList.add(element);
+	this.needsCompileList.remove(element);
+	this.compiledList.add(element);
 }
 
 public boolean isCompiled(SourceFile element) {
-	return compiledList.includes(element);
+	return this.compiledList.includes(element);
 }
 
 public boolean isWaiting(SourceFile element) {
-	return needsCompileList.includes(element);
+	return this.needsCompileList.includes(element);
 }
 
 public String toString() {
-	return "WorkQueue: " + needsCompileList; //$NON-NLS-1$
+	return "WorkQueue: " + this.needsCompileList; //$NON-NLS-1$
 }
 }

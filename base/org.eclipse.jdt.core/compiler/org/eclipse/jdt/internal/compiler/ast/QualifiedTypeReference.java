@@ -21,17 +21,17 @@ public class QualifiedTypeReference extends TypeReference {
 	public long[] sourcePositions;
 
 	public QualifiedTypeReference(char[][] sources , long[] poss) {
-		
-		tokens = sources ;
-		sourcePositions = poss ;
-		sourceStart = (int) (sourcePositions[0]>>>32) ;
-		sourceEnd = (int)(sourcePositions[sourcePositions.length-1] & 0x00000000FFFFFFFFL ) ;
+
+		this.tokens = sources ;
+		this.sourcePositions = poss ;
+		this.sourceStart = (int) (this.sourcePositions[0]>>>32) ;
+		this.sourceEnd = (int)(this.sourcePositions[this.sourcePositions.length-1] & 0x00000000FFFFFFFFL ) ;
 	}
-		
+
 	public TypeReference copyDims(int dim){
 		//return a type reference copy of me with some dimensions
 		//warning : the new type ref has a null binding
-		return new ArrayQualifiedTypeReference(tokens, dim, sourcePositions);
+		return new ArrayQualifiedTypeReference(this.tokens, dim, this.sourcePositions);
 	}
 
 	protected TypeBinding findNextTypeBinding(int tokenIndex, Scope scope, PackageBinding packageBinding) {
@@ -62,7 +62,7 @@ public class QualifiedTypeReference extends TypeReference {
 		return this.tokens[this.tokens.length-1];
 	}
 	protected TypeBinding getTypeBinding(Scope scope) {
-		
+
 		if (this.resolvedType != null) {
 			return this.resolvedType;
 		}
@@ -87,7 +87,7 @@ public class QualifiedTypeReference extends TypeReference {
 				return null;
 			}
 			if (i < last && isTypeUseDeprecated(this.resolvedType, scope)) {
-				reportDeprecatedType(this.resolvedType, scope);			
+				reportDeprecatedType(this.resolvedType, scope);
 			}
 			if (isClassScope)
 				if (((ClassScope) scope).detectHierarchyCycle(this.resolvedType, this)) // must connect hierarchy to find inherited member types
@@ -110,34 +110,34 @@ public class QualifiedTypeReference extends TypeReference {
 				}
 			} else {
 				qualifiedType = currentType.isGenericType() ? (ReferenceBinding)scope.environment().convertToRawType(currentType, false /*do not force conversion of enclosing types*/) : currentType;
-			}			
+			}
 		}
 		this.resolvedType = qualifiedType;
 		return this.resolvedType;
 	}
-	
+
 	public char[][] getTypeName(){
-	
-		return tokens;
+
+		return this.tokens;
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
-		
-		for (int i = 0; i < tokens.length; i++) {
+
+		for (int i = 0; i < this.tokens.length; i++) {
 			if (i > 0) output.append('.');
-			output.append(tokens[i]);
+			output.append(this.tokens[i]);
 		}
 		return output;
 	}
-	
+
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
-		
+
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
 	}
-	
+
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
-		
+
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
 	}

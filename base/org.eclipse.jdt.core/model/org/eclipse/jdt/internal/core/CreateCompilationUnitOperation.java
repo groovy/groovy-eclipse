@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,7 +46,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  *
  * <p>Required Attributes:<ul>
  *  <li>The package fragment in which to create the compilation unit.
- *  <li>The name of the compilation unit.  
+ *  <li>The name of the compilation unit.
  *      Do not include the <code>".java"</code> suffix (ex. <code>"Object"</code> -
  * 		the <code>".java"</code> will be added for the name of the compilation unit.)
  *  <li>
@@ -57,19 +57,19 @@ public class CreateCompilationUnitOperation extends JavaModelOperation {
 	/**
 	 * The name of the compilation unit being created.
 	 */
-	protected String fName;
+	protected String name;
 	/**
 	 * The source code to use when creating the element.
 	 */
-	protected String fSource= null;
+	protected String source= null;
 /**
  * When executed, this operation will create a compilation unit with the given name.
  * The name should have the ".java" suffix.
  */
 public CreateCompilationUnitOperation(IPackageFragment parentElement, String name, String source, boolean force) {
 	super(null, new IJavaElement[] {parentElement}, force);
-	fName = name;
-	fSource = source;
+	this.name = name;
+	this.source = source;
 }
 /**
  * Creates a compilation unit.
@@ -78,32 +78,32 @@ public CreateCompilationUnitOperation(IPackageFragment parentElement, String nam
  */
 protected void executeOperation() throws JavaModelException {
 	try {
-		beginTask(Messages.operation_createUnitProgress, 2); 
+		beginTask(Messages.operation_createUnitProgress, 2);
 		JavaElementDelta delta = newJavaElementDelta();
 		ICompilationUnit unit = getCompilationUnit();
 		IPackageFragment pkg = (IPackageFragment) getParentElement();
 		IContainer folder = (IContainer) pkg.getResource();
 		worked(1);
-		IFile compilationUnitFile = folder.getFile(new Path(fName));
+		IFile compilationUnitFile = folder.getFile(new Path(this.name));
 		if (compilationUnitFile.exists()) {
 			// update the contents of the existing unit if fForce is true
-			if (force) {
+			if (this.force) {
 				IBuffer buffer = unit.getBuffer();
 				if (buffer == null) return;
-				buffer.setContents(fSource);
+				buffer.setContents(this.source);
 				unit.save(new NullProgressMonitor(), false);
-				resultElements = new IJavaElement[] {unit};
+				this.resultElements = new IJavaElement[] {unit};
 				if (!Util.isExcluded(unit)
 						&& unit.getParent().exists()) {
-					for (int i = 0; i < resultElements.length; i++) {
-						delta.changed(resultElements[i], IJavaElementDelta.F_CONTENT);
+					for (int i = 0; i < this.resultElements.length; i++) {
+						delta.changed(this.resultElements[i], IJavaElementDelta.F_CONTENT);
 					}
 					addDelta(delta);
 				}
 			} else {
 				throw new JavaModelException(new JavaModelStatus(
-					IJavaModelStatusConstants.NAME_COLLISION, 
-					Messages.bind(Messages.status_nameCollision, compilationUnitFile.getFullPath().toString()))); 
+					IJavaModelStatusConstants.NAME_COLLISION,
+					Messages.bind(Messages.status_nameCollision, compilationUnitFile.getFullPath().toString())));
 			}
 		} else {
 			try {
@@ -114,20 +114,20 @@ protected void executeOperation() throws JavaModelException {
 				catch (CoreException ce) {
 					// use no encoding
 				}
-				InputStream stream = new ByteArrayInputStream(encoding == null ? fSource.getBytes() : fSource.getBytes(encoding));
-				createFile(folder, unit.getElementName(), stream, force);
-				resultElements = new IJavaElement[] {unit};
+				InputStream stream = new ByteArrayInputStream(encoding == null ? this.source.getBytes() : this.source.getBytes(encoding));
+				createFile(folder, unit.getElementName(), stream, this.force);
+				this.resultElements = new IJavaElement[] {unit};
 				if (!Util.isExcluded(unit)
 						&& unit.getParent().exists()) {
-					for (int i = 0; i < resultElements.length; i++) {
-						delta.added(resultElements[i]);
+					for (int i = 0; i < this.resultElements.length; i++) {
+						delta.added(this.resultElements[i]);
 					}
 					addDelta(delta);
 				}
 			} catch (IOException e) {
 				throw new JavaModelException(e, IJavaModelStatusConstants.IO_EXCEPTION);
 			}
-		} 
+		}
 		worked(1);
 	} finally {
 		done();
@@ -137,7 +137,7 @@ protected void executeOperation() throws JavaModelException {
  * @see CreateElementInCUOperation#getCompilationUnit()
  */
 protected ICompilationUnit getCompilationUnit() {
-	return ((IPackageFragment)getParentElement()).getCompilationUnit(fName);
+	return ((IPackageFragment)getParentElement()).getCompilationUnit(this.name);
 }
 protected ISchedulingRule getSchedulingRule() {
 	IResource resource  = getCompilationUnit().getResource();
@@ -152,7 +152,7 @@ protected ISchedulingRule getSchedulingRule() {
  * Possible failures: <ul>
  *  <li>NO_ELEMENTS_TO_PROCESS - the package fragment supplied to the operation is
  * 		<code>null</code>.
- *	<li>INVALID_NAME - the compilation unit name provided to the operation 
+ *	<li>INVALID_NAME - the compilation unit name provided to the operation
  * 		is <code>null</code> or has an invalid syntax
  *  <li>INVALID_CONTENTS - the source specified for the compiliation unit is null
  * </ul>
@@ -162,10 +162,10 @@ public IJavaModelStatus verify() {
 		return new JavaModelStatus(IJavaModelStatusConstants.NO_ELEMENTS_TO_PROCESS);
 	}
 	IJavaProject project = getParentElement().getJavaProject();
-	if (JavaConventions.validateCompilationUnitName(fName, project.getOption(JavaCore.COMPILER_SOURCE, true), project.getOption(JavaCore.COMPILER_COMPLIANCE, true)).getSeverity() == IStatus.ERROR) {
-		return new JavaModelStatus(IJavaModelStatusConstants.INVALID_NAME, fName);
+	if (JavaConventions.validateCompilationUnitName(this.name, project.getOption(JavaCore.COMPILER_SOURCE, true), project.getOption(JavaCore.COMPILER_COMPLIANCE, true)).getSeverity() == IStatus.ERROR) {
+		return new JavaModelStatus(IJavaModelStatusConstants.INVALID_NAME, this.name);
 	}
-	if (fSource == null) {
+	if (this.source == null) {
 		return new JavaModelStatus(IJavaModelStatusConstants.INVALID_CONTENTS);
 	}
 	return JavaModelStatus.VERIFIED_OK;

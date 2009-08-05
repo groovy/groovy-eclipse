@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,13 +29,13 @@ import org.eclipse.jdt.internal.compiler.util.Util;
  */
 public class BasicCompilationUnit implements ICompilationUnit {
 	protected char[] contents;
-	
+
 	// Note that if this compiler ICompilationUnit's content is known in advance, the fileName is not used to retrieve this content.
 	// Instead it is used to keep enough information to recreate the IJavaElement corresponding to this compiler ICompilationUnit.
 	// Thus the fileName can be a path to a .class file, or even a path in a .jar to a .class file.
 	// (e.g. /P/lib/mylib.jar|org/eclipse/test/X.class)
-	protected char[] fileName; 
-	
+	protected char[] fileName;
+
 	protected char[][] packageName;
 	protected char[] mainTypeName;
 	protected String encoding;
@@ -76,6 +76,7 @@ private void initEncoding(IJavaElement javaElement) {
 						break;
 					}
 					// if no file, then get project encoding
+					// $FALL-THROUGH$
 				default:
 					IProject project = (IProject) javaProject.getResource();
 					if (project != null) {
@@ -117,14 +118,14 @@ public char[] getMainTypeName() {
 		int separator = CharOperation.indexOf('|', this.fileName) + 1;
 		if (separator > start) // case of a .class file in a default package in a jar
 			start = separator;
-	
+
 		int end = CharOperation.lastIndexOf('$', this.fileName);
 		if (end == -1 || !Util.isClassFileName(this.fileName)) {
 			end = CharOperation.lastIndexOf('.', this.fileName);
 			if (end == -1)
 				end = this.fileName.length;
 		}
-	
+
 		this.mainTypeName = CharOperation.subarray(this.fileName, start, end);
 	}
 	return this.mainTypeName;

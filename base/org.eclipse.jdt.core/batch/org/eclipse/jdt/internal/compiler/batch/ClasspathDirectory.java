@@ -30,7 +30,7 @@ private String[] missingPackageHolder = new String[1];
 private int mode; // ability to only consider one kind of files (source vs. binaries), by default use both
 private String encoding; // only useful if referenced in the source path
 
-ClasspathDirectory(File directory, String encoding, int mode, 
+ClasspathDirectory(File directory, String encoding, int mode,
 		AccessRuleSet accessRuleSet, String destinationPath) {
 	super(accessRuleSet, destinationPath);
 	this.mode = mode;
@@ -96,14 +96,14 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 		String fullSourcePath = this.path + qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length() - 6)  + SUFFIX_STRING_java;
 		if (!binaryExists)
 			return new NameEnvironmentAnswer(new CompilationUnit(null,
-					fullSourcePath, this.encoding, destinationPath),
+					fullSourcePath, this.encoding, this.destinationPath),
 					fetchAccessRestriction(qualifiedBinaryFileName));
 		String fullBinaryPath = this.path + qualifiedBinaryFileName;
 		long binaryModified = new File(fullBinaryPath).lastModified();
 		long sourceModified = new File(fullSourcePath).lastModified();
 		if (sourceModified > binaryModified)
 			return new NameEnvironmentAnswer(new CompilationUnit(null,
-					fullSourcePath, this.encoding, destinationPath),
+					fullSourcePath, this.encoding, this.destinationPath),
 					fetchAccessRestriction(qualifiedBinaryFileName));
 	}
 	if (binaryExists) {

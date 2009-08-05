@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -34,14 +34,14 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 		this.parent = parent;
 		this.resource = resource;
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (! (obj instanceof NonJavaResource))
 			return false;
 		NonJavaResource other = (NonJavaResource) obj;
 		return this.parent.equals(other.parent) && this.resource.equals(other.resource);
 	}
-	
+
 	public IJarEntryResource[] getChildren() {
 		if (this.resource instanceof IContainer) {
 			IResource[] members;
@@ -62,13 +62,13 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 		}
 		return NO_CHILDREN;
 	}
-	
+
 	public InputStream getContents() throws CoreException {
 		if (this.resource instanceof IFile)
 			return ((IFile) this.resource).getContents();
 		return null;
 	}
-	
+
 	protected String getEntryName() {
 		String parentEntryName;
 		if (this.parent instanceof IPackageFragment) {
@@ -81,15 +81,15 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 		}
 		return parentEntryName + getName();
 	}
-	
+
 	public IPath getFullPath() {
 		return new Path(getEntryName()).makeAbsolute();
 	}
-	
+
 	public String getName() {
 		return this.resource.getName();
 	}
-	
+
 	public IPackageFragmentRoot getPackageFragmentRoot() {
 		if (this.parent instanceof IPackageFragment) {
 			return (IPackageFragmentRoot) ((IPackageFragment) this.parent).getParent();
@@ -99,7 +99,7 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 			return ((NonJavaResource) this.parent).getPackageFragmentRoot();
 		}
 	}
-	
+
 	public Object getParent() {
 		return this.parent;
 	}
@@ -115,8 +115,8 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 	public boolean isReadOnly() {
 		return true;
 	}
-	
+
 	public String toString() {
-		return "NonJavaResource["+getEntryName()+"]"; //$NON-NLS-1$ //$NON-NLS-2$ 
+		return "NonJavaResource["+getEntryName()+"]"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

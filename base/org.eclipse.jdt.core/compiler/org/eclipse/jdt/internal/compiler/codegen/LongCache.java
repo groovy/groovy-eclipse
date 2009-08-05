@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,12 +12,12 @@ package org.eclipse.jdt.internal.compiler.codegen;
 
 public class LongCache {
 	public long keyTable[];
-	public int valueTable[]; 
+	public int valueTable[];
 	int elementSize;
 	int threshold;
 /**
  * Constructs a new, empty hashtable. A default capacity and
- * load factor is used. Note that the hashtable will automatically 
+ * load factor is used. Note that the hashtable will automatically
  * grow when it gets full.
  */
 public LongCache() {
@@ -57,7 +57,7 @@ public boolean containsKey(long key) {
 			return true;
 		if (++index == length) {
 			index = 0;
-		}	
+		}
 	}
 	return false;
 }
@@ -72,7 +72,7 @@ public int hash(long key) {
 /**
  * Puts the specified element into the hashtable, using the specified
  * key.  The element may be retrieved by doing a get() with the same key.
- * 
+ *
  * @param key <CODE>long</CODE> the specified key in the hashtable
  * @param value <CODE>int</CODE> the specified element
  * @return int value
@@ -98,7 +98,7 @@ public int put(long key, int value) {
 /**
  * Puts the specified element into the hashtable, using the specified
  * key.  The element may be retrieved by doing a get() with the same key.
- * 
+ *
  * @param key <CODE>long</CODE> the specified key in the hashtable
  * @param value <CODE>int</CODE> the specified element
  * @return int value
@@ -110,7 +110,7 @@ public int putIfAbsent(long key, int value) {
 			return this.valueTable[index];
 		if (++index == length) {
 			index = 0;
-		}	
+		}
 	}
 	this.keyTable[index] = key;
 	this.valueTable[index] = value;

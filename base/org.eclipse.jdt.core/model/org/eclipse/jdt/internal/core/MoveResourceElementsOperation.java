@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,7 +34,7 @@ public MoveResourceElementsOperation(IJavaElement[] elementsToMove, IJavaElement
  * @see MultiOperation
  */
 protected String getMainTaskName() {
-	return Messages.operation_moveResourceProgress; 
+	return Messages.operation_moveResourceProgress;
 }
 /**
  * @see CopyResourceElementsOperation#isMove()

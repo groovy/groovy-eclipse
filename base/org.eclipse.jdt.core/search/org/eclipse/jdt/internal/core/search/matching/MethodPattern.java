@@ -73,12 +73,12 @@ MethodPattern(int matchRule) {
 	super(METHOD_PATTERN, matchRule);
 }
 public MethodPattern(
-	char[] selector, 
+	char[] selector,
 	char[] declaringQualification,
-	char[] declaringSimpleName,	
-	char[] returnQualification, 
+	char[] declaringSimpleName,
+	char[] returnQualification,
 	char[] returnSimpleName,
-	char[][] parameterQualifications, 
+	char[][] parameterQualifications,
 	char[][] parameterSimpleNames,
 	IType declaringType,
 	int limitTo,
@@ -119,36 +119,36 @@ public MethodPattern(
 		this.parameterCount = -1;
 	}
 	this.declaringType = declaringType;
-	((InternalSearchPattern)this).mustResolve = mustResolve();
+	this.mustResolve = mustResolve();
 }
 /*
  * Instanciate a method pattern with signatures for generics search
  */
 public MethodPattern(
-	char[] selector, 
+	char[] selector,
 	char[] declaringQualification,
-	char[] declaringSimpleName,	
-	char[] returnQualification, 
+	char[] declaringSimpleName,
+	char[] returnQualification,
 	char[] returnSimpleName,
 	String returnSignature,
-	char[][] parameterQualifications, 
+	char[][] parameterQualifications,
 	char[][] parameterSimpleNames,
 	String[] parameterSignatures,
 	IMethod method,
 	int limitTo,
 	int matchRule) {
 
-	this(selector, 
+	this(selector,
 		declaringQualification,
-		declaringSimpleName,	
-		returnQualification, 
+		declaringSimpleName,
+		returnQualification,
 		returnSimpleName,
-		parameterQualifications, 
+		parameterQualifications,
 		parameterSimpleNames,
 		method.getDeclaringType(),
 		limitTo,
 		matchRule);
-	
+
 	// Set flags
 	try {
 		this.varargs = (method.getFlags() & Flags.AccVarargs) != 0;
@@ -170,57 +170,57 @@ public MethodPattern(
 			}
 		}
 	} else {
-		methodParameters = true;
-		storeTypeSignaturesAndArguments(declaringType);
+		this.methodParameters = true;
+		storeTypeSignaturesAndArguments(this.declaringType);
 	}
 
 	// Store type signatures and arguments for return type
 	if (returnSignature != null) {
-		returnTypeSignatures = Util.splitTypeLevelsSignature(returnSignature);
-		returnTypeArguments = Util.getAllTypeArguments(returnTypeSignatures);
+		this.returnTypeSignatures = Util.splitTypeLevelsSignature(returnSignature);
+		this.returnTypeArguments = Util.getAllTypeArguments(this.returnTypeSignatures);
 	}
 
 	// Store type signatures and arguments for method parameters type
 	if (parameterSignatures != null) {
 		int length = parameterSignatures.length;
 		if (length > 0) {
-			parametersTypeSignatures = new char[length][][];
-			parametersTypeArguments = new char[length][][][];
+			this.parametersTypeSignatures = new char[length][][];
+			this.parametersTypeArguments = new char[length][][][];
 			for (int i=0; i<length; i++) {
-				parametersTypeSignatures[i] = Util.splitTypeLevelsSignature(parameterSignatures[i]);
-				parametersTypeArguments[i] = Util.getAllTypeArguments(parametersTypeSignatures[i]);
+				this.parametersTypeSignatures[i] = Util.splitTypeLevelsSignature(parameterSignatures[i]);
+				this.parametersTypeArguments[i] = Util.getAllTypeArguments(this.parametersTypeSignatures[i]);
 			}
 		}
 	}
 
 	// Store type signatures and arguments for method
-	methodArguments = extractMethodArguments(method);
-	if (hasMethodArguments())  ((InternalSearchPattern)this).mustResolve = true;
+	this.methodArguments = extractMethodArguments(method);
+	if (hasMethodArguments())  this.mustResolve = true;
 }
 /*
  * Instanciate a method pattern with signatures for generics search
  */
 public MethodPattern(
-	char[] selector, 
+	char[] selector,
 	char[] declaringQualification,
-	char[] declaringSimpleName,	
+	char[] declaringSimpleName,
 	String declaringSignature,
-	char[] returnQualification, 
+	char[] returnQualification,
 	char[] returnSimpleName,
 	String returnSignature,
-	char[][] parameterQualifications, 
+	char[][] parameterQualifications,
 	char[][] parameterSimpleNames,
 	String[] parameterSignatures,
 	char[][] arguments,
 	int limitTo,
 	int matchRule) {
 
-	this(selector, 
+	this(selector,
 		declaringQualification,
-		declaringSimpleName,	
-		returnQualification, 
+		declaringSimpleName,
+		returnQualification,
 		returnSimpleName,
-		parameterQualifications, 
+		parameterQualifications,
 		parameterSimpleNames,
 		null,
 		limitTo,
@@ -228,32 +228,32 @@ public MethodPattern(
 
 	// Store type signature and arguments for declaring type
 	if (declaringSignature != null) {
-		typeSignatures = Util.splitTypeLevelsSignature(declaringSignature);
-		setTypeArguments(Util.getAllTypeArguments(typeSignatures));
+		this.typeSignatures = Util.splitTypeLevelsSignature(declaringSignature);
+		setTypeArguments(Util.getAllTypeArguments(this.typeSignatures));
 	}
 
 	// Store type signatures and arguments for return type
 	if (returnSignature != null) {
-		returnTypeSignatures = Util.splitTypeLevelsSignature(returnSignature);
-		returnTypeArguments = Util.getAllTypeArguments(returnTypeSignatures);
+		this.returnTypeSignatures = Util.splitTypeLevelsSignature(returnSignature);
+		this.returnTypeArguments = Util.getAllTypeArguments(this.returnTypeSignatures);
 	}
 
 	// Store type signatures and arguments for method parameters type
 	if (parameterSignatures != null) {
 		int length = parameterSignatures.length;
 		if (length > 0) {
-			parametersTypeSignatures = new char[length][][];
-			parametersTypeArguments = new char[length][][][];
+			this.parametersTypeSignatures = new char[length][][];
+			this.parametersTypeArguments = new char[length][][][];
 			for (int i=0; i<length; i++) {
-				parametersTypeSignatures[i] = Util.splitTypeLevelsSignature(parameterSignatures[i]);
-				parametersTypeArguments[i] = Util.getAllTypeArguments(parametersTypeSignatures[i]);
+				this.parametersTypeSignatures[i] = Util.splitTypeLevelsSignature(parameterSignatures[i]);
+				this.parametersTypeArguments[i] = Util.getAllTypeArguments(this.parametersTypeSignatures[i]);
 			}
 		}
 	}
 
 	// Store type signatures and arguments for method
-	methodArguments = arguments;
-	if (hasMethodArguments())  ((InternalSearchPattern)this).mustResolve = true;
+	this.methodArguments = arguments;
+	if (hasMethodArguments())  this.mustResolve = true;
 }
 public void decodeIndexKey(char[] key) {
 	int last = key.length - 1;
@@ -284,12 +284,12 @@ public char[][] getIndexCategories() {
 	return CharOperation.NO_CHAR_CHAR;
 }
 boolean hasMethodArguments() {
-	return methodArguments != null && methodArguments.length > 0;
+	return this.methodArguments != null && this.methodArguments.length > 0;
 }
 boolean hasMethodParameters() {
-	return methodParameters;
+	return this.methodParameters;
 }
-boolean isPolymorphicSearch() {
+public boolean isPolymorphicSearch() {
 	return this.findReferences;
 }
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
@@ -299,25 +299,25 @@ public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 		&& matchesName(this.selector, pattern.selector);
 }
 /**
- * Returns whether a method declaration or message send must be resolved to 
+ * Returns whether a method declaration or message send must be resolved to
  * find out if this method pattern matches it.
  */
 protected boolean mustResolve() {
 	// declaring type
 	// If declaring type is specified - even with simple name - always resolves
-	if (declaringSimpleName != null || declaringQualification != null) return true;
+	if (this.declaringSimpleName != null || this.declaringQualification != null) return true;
 
 	// return type
 	// If return type is specified - even with simple name - always resolves
-	if (returnSimpleName != null || returnQualification != null) return true;
+	if (this.returnSimpleName != null || this.returnQualification != null) return true;
 
 	// parameter types
-	if (parameterSimpleNames != null)
-		for (int i = 0, max = parameterSimpleNames.length; i < max; i++)
-			if (parameterQualifications[i] != null) return true;
+	if (this.parameterSimpleNames != null)
+		for (int i = 0, max = this.parameterSimpleNames.length; i < max; i++)
+			if (this.parameterQualifications[i] != null) return true;
 	return false;
 }
-EntryResult[] queryIn(Index index) throws IOException {
+public EntryResult[] queryIn(Index index) throws IOException {
 	char[] key = this.selector; // can be null
 	int matchRule = getMatchRule();
 
@@ -359,35 +359,35 @@ protected StringBuffer print(StringBuffer output) {
 	} else {
 		output.append("MethodReferencePattern: "); //$NON-NLS-1$
 	}
-	if (declaringQualification != null)
-		output.append(declaringQualification).append('.');
-	if (declaringSimpleName != null) 
-		output.append(declaringSimpleName).append('.');
-	else if (declaringQualification != null)
+	if (this.declaringQualification != null)
+		output.append(this.declaringQualification).append('.');
+	if (this.declaringSimpleName != null)
+		output.append(this.declaringSimpleName).append('.');
+	else if (this.declaringQualification != null)
 		output.append("*."); //$NON-NLS-1$
 
-	if (selector != null)
-		output.append(selector);
+	if (this.selector != null)
+		output.append(this.selector);
 	else
 		output.append("*"); //$NON-NLS-1$
 	output.append('(');
-	if (parameterSimpleNames == null) {
+	if (this.parameterSimpleNames == null) {
 		output.append("..."); //$NON-NLS-1$
 	} else {
-		for (int i = 0, max = parameterSimpleNames.length; i < max; i++) {
+		for (int i = 0, max = this.parameterSimpleNames.length; i < max; i++) {
 			if (i > 0) output.append(", "); //$NON-NLS-1$
-			if (parameterQualifications[i] != null) output.append(parameterQualifications[i]).append('.');
-			if (parameterSimpleNames[i] == null) output.append('*'); else output.append(parameterSimpleNames[i]);
+			if (this.parameterQualifications[i] != null) output.append(this.parameterQualifications[i]).append('.');
+			if (this.parameterSimpleNames[i] == null) output.append('*'); else output.append(this.parameterSimpleNames[i]);
 		}
 	}
 	output.append(')');
-	if (returnQualification != null) 
-		output.append(" --> ").append(returnQualification).append('.'); //$NON-NLS-1$
-	else if (returnSimpleName != null)
+	if (this.returnQualification != null)
+		output.append(" --> ").append(this.returnQualification).append('.'); //$NON-NLS-1$
+	else if (this.returnSimpleName != null)
 		output.append(" --> "); //$NON-NLS-1$
-	if (returnSimpleName != null) 
-		output.append(returnSimpleName);
-	else if (returnQualification != null)
+	if (this.returnSimpleName != null)
+		output.append(this.returnSimpleName);
+	else if (this.returnQualification != null)
 		output.append("*"); //$NON-NLS-1$
 	return super.print(output);
 }

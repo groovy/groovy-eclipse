@@ -32,55 +32,55 @@ import org.eclipse.jdt.internal.formatter.CodeFormatterVisitor;
 
 /**
  * Javadoc region in a source code document.
- * 
+ *
  * @since 3.0
  */
 public class JavaDocRegion extends MultiCommentRegion {
 
 	/** The positions of code ranges */
 	private final ArrayList fCodePositions= new ArrayList();
-	 
+
 	/** Should HTML tags be formatted? */
 	private final boolean fFormatHtml;
 
 	/** Should source code regions be formatted? */
 	private final boolean fFormatSource;
-	
+
  	/**
 	 * Creates a new Javadoc region.
-	 * 
+	 *
 	 * @param document the document which contains the comment region
 	 * @param position the position of this comment region in the document
 	 * @param formatter the given formatter
-	 */	
+	 */
 	public JavaDocRegion(final IDocument document, final Position position, final CodeFormatterVisitor formatter) {
 		super(document, position, formatter);
 
-		fFormatSource = this.preferences.comment_format_source;
-		fFormatHtml = this.preferences.comment_format_html;
-		fClear = this.preferences.comment_clear_blank_lines_in_javadoc_comment;
+		this.fFormatSource = this.preferences.comment_format_source;
+		this.fFormatHtml = this.preferences.comment_format_html;
+		this.fClear = this.preferences.comment_clear_blank_lines_in_javadoc_comment;
 	}
 
 	/*
 	 * @see org.eclipse.jdt.internal.corext.text.comment.CommentRegion#canFormat(org.eclipse.jdt.internal.corext.text.comment.CommentRange, org.eclipse.jdt.internal.corext.text.comment.CommentRange)
 	 */
 	protected boolean canFormat(final CommentRange previous, final CommentRange next) {
-		
+
 		if (previous != null) {
-			
+
 			final boolean isCurrentCode= next.hasAttribute(COMMENT_CODE);
 			final boolean isLastCode= previous.hasAttribute(COMMENT_CODE);
-			
+
 			final int base= getOffset();
-			
+
 			if (!isLastCode && isCurrentCode)
-				fCodePositions.add(new Position(base + previous.getOffset()));
+				this.fCodePositions.add(new Position(base + previous.getOffset()));
 			else if (isLastCode && !isCurrentCode)
-				fCodePositions.add(new Position(base + next.getOffset() + next.getLength()));
-			
+				this.fCodePositions.add(new Position(base + next.getOffset() + next.getLength()));
+
 			if (previous.hasAttribute(COMMENT_IMMUTABLE) && next.hasAttribute(COMMENT_IMMUTABLE))
 				return false;
-			
+
 			return true;
 		}
 		return false;
@@ -90,32 +90,32 @@ public class JavaDocRegion extends MultiCommentRegion {
 	 * @see org.eclipse.jdt.internal.corext.text.comment.CommentRegion#formatRegion(java.lang.String, int)
 	 */
 	protected final void formatRegion(final String indentation, final int width) {
-	
+
 		super.formatRegion(indentation, width);
-		
-		if (fFormatSource) {
-			
+
+		if (this.fFormatSource) {
+
 			try {
-				
-				if (fCodePositions.size() > 0) {
-					
+
+				if (this.fCodePositions.size() > 0) {
+
 					int begin= 0;
 					int end= 0;
-					
+
 					Position position= null;
-					
+
 					final IDocument document= getDocument();
-					
-					for (int index= fCodePositions.size() - 1; index >= 0;) {
-						
-						position= (Position)fCodePositions.get(index--);
+
+					for (int index= this.fCodePositions.size() - 1; index >= 0;) {
+
+						position= (Position)this.fCodePositions.get(index--);
 						begin= position.getOffset();
-						
+
 						if (index >= 0) {
-							position= (Position)fCodePositions.get(index--);
+							position= (Position)this.fCodePositions.get(index--);
 							end= position.getOffset();
 						} else {
-							/* 
+							/*
 							 * Handle missing closing tag
 							 * see: https://bugs.eclipse.org/bugs/show_bug.cgi?id=57011
 							 */
@@ -124,12 +124,12 @@ public class JavaDocRegion extends MultiCommentRegion {
 							while (end > begin && ScannerHelper.isWhitespace(document.getChar(end - 1)))
 								end--;
 						}
-						
+
 						String snippet= document.get(begin, end - begin);
 						snippet= preprocessCodeSnippet(snippet);
 						snippet= formatCodeSnippet(snippet);
 						snippet= postprocessCodeSnippet(snippet, indentation);
-						
+
 						logEdit(snippet, begin - getOffset(), end - begin);
 					}
 				}
@@ -142,7 +142,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 
 	/**
 	 * Preprocess a given code snippet.
-	 * 
+	 *
 	 * @param snippet the code snippet
 	 * @return the preprocessed code snippet
 	 */
@@ -151,7 +151,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 		StringBuffer buffer= new StringBuffer();
 		ILineTracker tracker= new DefaultLineTracker();
 		String contentPrefix= MultiCommentLine.MULTI_COMMENT_CONTENT_PREFIX.trim();
-		
+
 		buffer.setLength(0);
 		buffer.append(snippet);
 		tracker.set(snippet);
@@ -168,13 +168,13 @@ public class JavaDocRegion extends MultiCommentRegion {
 			if (prefixOffset >= 0 && buffer.substring(lineOffset, prefixOffset).trim().length() == 0)
 				buffer.delete(lineOffset, prefixOffset + contentPrefix.length() + 1);
 		}
-		
+
 		return convertHtml2Java(buffer.toString());
 	}
 
 	/**
 	 * Format the given code snippet
-	 * 
+	 *
 	 * @param snippet the code snippet
 	 * @return the formatted code snippet
 	 */
@@ -188,7 +188,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 
 	/**
 	 * Postprocesses the given code snippet with the given indentation.
-	 * 
+	 *
 	 * @param snippet the code snippet
 	 * @param indentation the indentation
 	 * @return the postprocessed code snippet
@@ -204,7 +204,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 		while (i > 0 && ' ' == snippet.charAt(i-1))
 			i--;
 		snippet= snippet.substring(0, i);
-		
+
 		buffer.setLength(0);
 		String lineDelimiter= getDelimiter();
 		if (lineDelimiter != null && snippet.indexOf(lineDelimiter) != 0)
@@ -213,7 +213,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 		if (lineDelimiter != null && snippet.lastIndexOf(lineDelimiter) != snippet.length() - lineDelimiter.length())
 			buffer.append(lineDelimiter);
 		tracker.set(buffer.toString());
-		
+
 		for (int line= tracker.getNumberOfLines() - 1; line > 0; line--)
 			try {
 				buffer.insert(tracker.getLineOffset(line), patch);
@@ -222,7 +222,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 				CommentFormatterUtil.log(e);
 				return snippet;
 			}
-		
+
 		return buffer.toString();
 	}
 
@@ -233,7 +233,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 
 		markTagRanges(JAVADOC_IMMUTABLE_TAGS, COMMENT_IMMUTABLE, true);
 
-		if (fFormatSource)
+		if (this.fFormatSource)
 			markTagRanges(JAVADOC_CODE_TAGS, COMMENT_CODE, false);
 	}
 
@@ -245,7 +245,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 		if (range.hasAttribute(COMMENT_HTML)) {
 
 			range.markHtmlTag(JAVADOC_IMMUTABLE_TAGS, token, COMMENT_IMMUTABLE, true, true);
-			if (fFormatHtml) {
+			if (this.fFormatHtml) {
 
 				range.markHtmlTag(JAVADOC_SEPARATOR_TAGS, token, COMMENT_SEPARATOR, true, true);
 				range.markHtmlTag(JAVADOC_BREAK_TAGS, token, COMMENT_BREAK, false, true);
@@ -270,7 +270,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 
 	/**
 	 * Marks the comment region with the HTML range tag.
-	 * 
+	 *
 	 * @param tags the HTML tag which confines the HTML range
 	 * @param attribute the attribute to set if the comment range is in the
 	 *                HTML range
@@ -278,22 +278,22 @@ public class JavaDocRegion extends MultiCommentRegion {
 	 *                should be marked too, <code>false</code> otherwise
 	 */
 	protected final void markTagRanges(final char[][] tags, final int attribute, final boolean html) {
-		
+
 		int level= 0;
 		int count= 0;
 		char[] token= null;
 		CommentRange current= null;
-		
+
 		for (int index= 0; index < tags.length; index++) {
-			
+
 			level= 0;
 			for (final Iterator iterator= getRanges().iterator(); iterator.hasNext();) {
-				
+
 				current= (CommentRange)iterator.next();
 				count= current.getLength();
-				
+
 				if (count > 0 || level > 0) { // PR44035: when inside a tag, mark blank lines as well to get proper snippet formatting
-					
+
 					token= getText(current.getOffset(), current.getLength()).toCharArray();
 					level= current.markTagRange(token, tags[index], level, attribute, html);
 				}
@@ -315,7 +315,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 	 * Converts <code>formatted</code> into valid html code suitable to be
 	 * put inside &lt;pre&gt;&lt;/pre&gt; tags by replacing any html symbols
 	 * by the relevant entities.
-	 * 
+	 *
 	 * @param formatted the formatted java code
 	 * @return html version of the formatted code
 	 */
@@ -339,14 +339,14 @@ public class JavaDocRegion extends MultiCommentRegion {
 	/**
 	 * Converts <code>html</code> into java code suitable for formatting
 	 * by replacing any html entities by their plain text representation.
-	 * 
+	 *
 	 * @param html html code, may contain html entities
 	 * @return plain textified version of <code>html</code>
 	 */
 	private String convertHtml2Java(String html) {
 		HTMLEntity2JavaReader reader= new HTMLEntity2JavaReader(new StringReader(html));
 		char[] buf= new char[html.length()]; // html2text never gets longer, only shorter!
-		
+
 		try {
 			int read= reader.read(buf);
 			return new String(buf, 0, read);
@@ -354,7 +354,7 @@ public class JavaDocRegion extends MultiCommentRegion {
 			return html;
 		}
 	}
-	
+
 	/*
 	 * @see org.eclipse.jdt.internal.corext.text.comment.CommentRegion#createLine()
 	 * @since 3.1

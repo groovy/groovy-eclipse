@@ -12,7 +12,7 @@ package org.eclipse.jdt.core;
 
 /**
  * Common protocol for Java elements that contain other Java elements.
- * 
+ *
  * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface IParent {

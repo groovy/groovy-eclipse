@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,8 +17,8 @@ package org.eclipse.jdt.internal.compiler;
  *	to be a real error (that is, not a warning),
  * 2. should it proceed once it has gathered all problems
  *
- * The intent is that one can supply its own policy to implement 
- * some interactive error handling strategy where some UI would 
+ * The intent is that one can supply its own policy to implement
+ * some interactive error handling strategy where some UI would
  * display problems and ask user if he wants to proceed or not.
  */
 

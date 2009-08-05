@@ -49,13 +49,13 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 	if (entries == null)
 		throw newNotPresentException();
 	JarPackageFragmentInfo fragInfo = (JarPackageFragmentInfo) info;
-	
+
 	// compute children
 	fragInfo.setChildren(computeChildren(entries[0/*class files*/]));
 
 	// compute non-Java resources
 	fragInfo.setNonJavaResources(computeNonJavaResources(entries[1/*non Java resources*/]));
-	
+
 	newElements.put(this, fragInfo);
 	return true;
 }
@@ -90,7 +90,7 @@ private Object[] computeNonJavaResources(ArrayList entryNames) {
 		if (!Util.isJavaLikeFileName(resName)) {
 			IPath filePath = new Path(resName);
 			IPath childPath = filePath.removeFirstSegments(this.names.length);
-			if (jarEntries.containsKey(childPath)) { 
+			if (jarEntries.containsKey(childPath)) {
 				// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=222665
 				continue;
 			}
@@ -189,11 +189,11 @@ public IResource getCorrespondingResource() {
  * Returns an array of non-java resources contained in the receiver.
  */
 public Object[] getNonJavaResources() throws JavaModelException {
-	if (this.isDefaultPackage()) {
+	if (isDefaultPackage()) {
 		// We don't want to show non java resources of the default package (see PR #1G58NB8)
 		return JavaElementInfo.NO_NON_JAVA_RESOURCES;
 	} else {
-		return this.storedNonJavaResources();
+		return storedNonJavaResources();
 	}
 }
 /**

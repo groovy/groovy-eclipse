@@ -12,7 +12,7 @@ package org.eclipse.jdt.core.util;
 
 /**
  * Description of constant pool constants as described in the JVM specifications.
- * 
+ *
  * @since 2.0
  * @noimplement This interface is not intended to be implemented by clients.
  */
@@ -29,7 +29,7 @@ public interface IConstantPoolConstant {
 	int CONSTANT_Double = 6;
 	int CONSTANT_NameAndType = 12;
 	int CONSTANT_Utf8 = 1;
-	
+
 	int CONSTANT_Methodref_SIZE = 5;
 	int CONSTANT_Class_SIZE = 3;
 	int CONSTANT_Double_SIZE = 9;

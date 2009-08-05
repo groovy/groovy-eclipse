@@ -23,12 +23,12 @@ public char[] simpleName;
 public char[] pkg;
 public char[][] enclosingTypeNames;
 
-// set to CLASS_SUFFIX for only matching classes 
+// set to CLASS_SUFFIX for only matching classes
 // set to INTERFACE_SUFFIX for only matching interfaces
 // set to ENUM_SUFFIX for only matching enums
 // set to ANNOTATION_TYPE_SUFFIX for only matching annotation types
 // set to TYPE_SUFFIX for matching both classes and interfaces
-public char typeSuffix; 
+public char typeSuffix;
 public int modifiers;
 public boolean secondary = false;
 
@@ -52,25 +52,25 @@ PackageNameSet(int size) {
 }
 
 char[] add(char[] name) {
-	int length = names.length;
+	int length = this.names.length;
 	int index = CharOperation.hashCode(name) % length;
 	char[] current;
-	while ((current = names[index]) != null) {
+	while ((current = this.names[index]) != null) {
 		if (CharOperation.equals(current, name)) return current;
 		if (++index == length) index = 0;
 	}
-	names[index] = name;
+	this.names[index] = name;
 
 	// assumes the threshold is never equal to the size of the table
-	if (++elementSize > threshold) rehash();
+	if (++this.elementSize > this.threshold) rehash();
 	return name;
 }
 
 void rehash() {
-	PackageNameSet newSet = new PackageNameSet(elementSize * 2); // double the number of expected elements
+	PackageNameSet newSet = new PackageNameSet(this.elementSize * 2); // double the number of expected elements
 	char[] current;
-	for (int i = names.length; --i >= 0;)
-		if ((current = names[i]) != null)
+	for (int i = this.names.length; --i >= 0;)
+		if ((current = this.names[i]) != null)
 			newSet.add(current);
 
 	this.names = newSet.names;
@@ -152,7 +152,7 @@ public TypeDeclarationPattern(
 	this.simpleName = (this.isCaseSensitive || this.isCamelCase) ? simpleName : CharOperation.toLowerCase(simpleName);
 	this.typeSuffix = typeSuffix;
 
-	((InternalSearchPattern)this).mustResolve = (this.pkg != null && this.enclosingTypeNames != null) || typeSuffix != TYPE_SUFFIX;
+	this.mustResolve = (this.pkg != null && this.enclosingTypeNames != null) || typeSuffix != TYPE_SUFFIX;
 }
 TypeDeclarationPattern(int matchRule) {
 	super(TYPE_DECL_PATTERN, matchRule);
@@ -227,9 +227,9 @@ public char[][] getIndexCategories() {
 }
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	TypeDeclarationPattern pattern = (TypeDeclarationPattern) decodedPattern;
-	
+
 	// check type suffix
-	if (this.typeSuffix != pattern.typeSuffix && typeSuffix != TYPE_SUFFIX) {
+	if (this.typeSuffix != pattern.typeSuffix && this.typeSuffix != TYPE_SUFFIX) {
 		if (!matchDifferentTypeSuffixes(this.typeSuffix, pattern.typeSuffix)) {
 			return false;
 		}
@@ -255,7 +255,7 @@ public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	}
 	return true;
 }
-EntryResult[] queryIn(Index index) throws IOException {
+public EntryResult[] queryIn(Index index) throws IOException {
 	char[] key = this.simpleName; // can be null
 	int matchRule = getMatchRule();
 
@@ -273,7 +273,7 @@ EntryResult[] queryIn(Index index) throws IOException {
 				break; // do a prefix query with the simpleName and possibly the pkg
 			}
 			matchRule |= R_PATTERN_MATCH;
-			// fall thru to encode the key and do a pattern query
+			// $FALL-THROUGH$ - fall thru to encode the key and do a pattern query
 		case R_PATTERN_MATCH :
 			if (this.pkg == null) {
 				if (this.simpleName == null) {
@@ -336,23 +336,23 @@ protected StringBuffer print(StringBuffer output) {
 			output.append("TypeDeclarationPattern: pkg<"); //$NON-NLS-1$
 			break;
 	}
-	if (pkg != null) 
-		output.append(pkg);
+	if (this.pkg != null)
+		output.append(this.pkg);
 	else
 		output.append("*"); //$NON-NLS-1$
 	output.append(">, enclosing<"); //$NON-NLS-1$
-	if (enclosingTypeNames != null) {
-		for (int i = 0; i < enclosingTypeNames.length; i++){
-			output.append(enclosingTypeNames[i]);
-			if (i < enclosingTypeNames.length - 1)
+	if (this.enclosingTypeNames != null) {
+		for (int i = 0; i < this.enclosingTypeNames.length; i++){
+			output.append(this.enclosingTypeNames[i]);
+			if (i < this.enclosingTypeNames.length - 1)
 				output.append('.');
 		}
 	} else {
 		output.append("*"); //$NON-NLS-1$
 	}
 	output.append(">, type<"); //$NON-NLS-1$
-	if (simpleName != null) 
-		output.append(simpleName);
+	if (this.simpleName != null)
+		output.append(this.simpleName);
 	else
 		output.append("*"); //$NON-NLS-1$
 	output.append(">"); //$NON-NLS-1$

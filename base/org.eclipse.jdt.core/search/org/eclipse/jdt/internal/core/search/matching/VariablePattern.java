@@ -59,11 +59,11 @@ public VariablePattern(int patternKind, char[] name, int limitTo, int matchRule)
 	this.name = (this.isCaseSensitive || this.isCamelCase) ? name : CharOperation.toLowerCase(name);
 }
 /*
- * Returns whether a method declaration or message send will need to be resolved to 
+ * Returns whether a method declaration or message send will need to be resolved to
  * find out if this method pattern matches it.
  */
 protected boolean mustResolve() {
 	// would like to change this so that we only do it if generic references are found
 	return this.findReferences || this.fineGrain != 0; // always resolve (in case of a simple name reference being a potential match)
-}	
+}
 }

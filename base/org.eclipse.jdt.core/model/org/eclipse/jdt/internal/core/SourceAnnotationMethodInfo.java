@@ -24,11 +24,11 @@ public class SourceAnnotationMethodInfo extends SourceMethodInfo {
 	 */
 	public int defaultValueStart = -1;
 	public int defaultValueEnd = -1;
-	
+
 	public IMemberValuePair defaultValue;
 
 	public boolean isAnnotationMethod() {
 		return true;
 	}
-	
+
 }

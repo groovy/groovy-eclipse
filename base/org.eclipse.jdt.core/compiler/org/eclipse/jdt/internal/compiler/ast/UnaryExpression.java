@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,7 +32,7 @@ public FlowInfo analyseCode(
 		FlowContext flowContext,
 		FlowInfo flowInfo) {
 	this.expression.checkNPE(currentScope, flowContext, flowInfo);
-	if (((bits & OperatorMASK) >> OperatorSHIFT) == NOT) {
+	if (((this.bits & OperatorMASK) >> OperatorSHIFT) == NOT) {
 		return this.expression.
 			analyseCode(currentScope, flowContext, flowInfo).
 			asNegatedCondition();
@@ -71,7 +71,7 @@ public FlowInfo analyseCode(
 			codeStream.recordPositionsFrom(pc, this.sourceStart);
 			return;
 		}
-		switch ((bits & OperatorMASK) >> OperatorSHIFT) {
+		switch ((this.bits & OperatorMASK) >> OperatorSHIFT) {
 			case NOT :
 				switch ((this.expression.implicitConversion & IMPLICIT_CONVERSION_MASK) >> 4) /* runtime type */ {
 					case T_boolean :
@@ -137,7 +137,7 @@ public FlowInfo analyseCode(
 				} else {
 					this.expression.generateCode(currentScope, codeStream, valueRequired);
 					if (valueRequired) {
-						switch ((expression.implicitConversion & IMPLICIT_CONVERSION_MASK) >> 4){ /* runtime type */
+						switch ((this.expression.implicitConversion & IMPLICIT_CONVERSION_MASK) >> 4){ /* runtime type */
 							case T_int :
 								codeStream.ineg();
 								break;
@@ -206,7 +206,6 @@ public FlowInfo analyseCode(
 	}
 
 	public TypeBinding resolveType(BlockScope scope) {
-
 		boolean expressionIsCast;
 		if ((expressionIsCast = this.expression instanceof CastExpression) == true) this.expression.bits |= DisableUnnecessaryCastCheck; // will check later on
 		TypeBinding expressionType = this.expression.resolveType(scope);
@@ -229,7 +228,7 @@ public FlowInfo analyseCode(
 		}
 
 		int tableId;
-		switch ((bits & OperatorMASK) >> OperatorSHIFT) {
+		switch ((this.bits & OperatorMASK) >> OperatorSHIFT) {
 			case NOT :
 				tableId = AND_AND;
 				break;
@@ -281,11 +280,11 @@ public FlowInfo analyseCode(
 				Constant.computeConstantOperation(
 					this.expression.constant,
 					expressionTypeID,
-					(bits & OperatorMASK) >> OperatorSHIFT);
+					(this.bits & OperatorMASK) >> OperatorSHIFT);
 		} else {
 			this.constant = Constant.NotAConstant;
-			if (((bits & OperatorMASK) >> OperatorSHIFT) == NOT) {
-				Constant cst = expression.optimizedBooleanConstant();
+			if (((this.bits & OperatorMASK) >> OperatorSHIFT) == NOT) {
+				Constant cst = this.expression.optimizedBooleanConstant();
 				if (cst != Constant.NotAConstant)
 					this.optimizedBooleanConstant = BooleanConstant.fromValue(!cst.booleanValue());
 			}

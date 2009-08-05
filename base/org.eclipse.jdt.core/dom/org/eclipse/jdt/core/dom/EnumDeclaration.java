@@ -37,55 +37,55 @@ import java.util.List;
  * modifiers or annotations). The source range extends through the last
  * character of the "}" token following the body declarations.
  * </p>
- * 
+ *
  * @since 3.1
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class EnumDeclaration extends AbstractTypeDeclaration {
-	
+
 	/**
 	 * The "javadoc" structural property of this node type.
 	 */
-	public static final ChildPropertyDescriptor JAVADOC_PROPERTY = 
+	public static final ChildPropertyDescriptor JAVADOC_PROPERTY =
 		internalJavadocPropertyFactory(EnumDeclaration.class);
 
 	/**
 	 * The "modifiers" structural property of this node type (added in JLS3 API).
 	 */
-	public static final ChildListPropertyDescriptor MODIFIERS2_PROPERTY = 
+	public static final ChildListPropertyDescriptor MODIFIERS2_PROPERTY =
 		internalModifiers2PropertyFactory(EnumDeclaration.class);
-	
+
 	/**
 	 * The "name" structural property of this node type.
 	 */
-	public static final ChildPropertyDescriptor NAME_PROPERTY = 
+	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		internalNamePropertyFactory(EnumDeclaration.class);
 
 	/**
 	 * The "superInterfaceTypes" structural property of this node type.
 	 */
-	public static final ChildListPropertyDescriptor SUPER_INTERFACE_TYPES_PROPERTY = 
+	public static final ChildListPropertyDescriptor SUPER_INTERFACE_TYPES_PROPERTY =
 		new ChildListPropertyDescriptor(EnumDeclaration.class, "superInterfaceTypes", Type.class, NO_CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * The "enumConstants" structural property of this node type.
 	 */
-	public static final ChildListPropertyDescriptor ENUM_CONSTANTS_PROPERTY = 
+	public static final ChildListPropertyDescriptor ENUM_CONSTANTS_PROPERTY =
 		new ChildListPropertyDescriptor(EnumDeclaration.class, "enumConstants", EnumConstantDeclaration.class, CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * The "bodyDeclarations" structural property of this node type.
 	 */
-	public static final ChildListPropertyDescriptor BODY_DECLARATIONS_PROPERTY = 
+	public static final ChildListPropertyDescriptor BODY_DECLARATIONS_PROPERTY =
 		internalBodyDeclarationPropertyFactory(EnumDeclaration.class);
-	
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(6);
 		createPropertyList(EnumDeclaration.class, properyList);
@@ -101,19 +101,19 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
-	 * The superinterface types (element type: <code>Type</code>). 
+	 * The superinterface types (element type: <code>Type</code>).
 	 * Defaults to an empty list.
 	 */
 	private ASTNode.NodeList superInterfaceTypes =
@@ -124,20 +124,20 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 	 * (element type: <code>EnumConstantDeclaration</code>).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList enumConstants = 
+	private ASTNode.NodeList enumConstants =
 		new ASTNode.NodeList(ENUM_CONSTANTS_PROPERTY);
 
 	/**
-	 * Creates a new AST node for an enum declaration owned by the given 
+	 * Creates a new AST node for an enum declaration owned by the given
 	 * AST. By default, the enum declaration has an unspecified, but legal,
-	 * name; no modifiers; no javadoc; no superinterfaces; 
+	 * name; no modifiers; no javadoc; no superinterfaces;
 	 * and empty lists of enum constants and body declarations.
 	 * <p>
-	 * N.B. This constructor is package-private; all subclasses must be 
-	 * declared in the same package; clients are unable to declare 
+	 * N.B. This constructor is package-private; all subclasses must be
+	 * declared in the same package; clients are unable to declare
 	 * additional subclasses.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	EnumDeclaration(AST ast) {
@@ -151,7 +151,7 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -175,7 +175,7 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -195,7 +195,7 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 		// allow default implementation to flag the error
 		return super.internalGetChildListProperty(property);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on BodyDeclaration.
 	 */
@@ -244,7 +244,7 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 	 */
 	ASTNode clone0(AST target) {
 		EnumDeclaration result = new EnumDeclaration(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setJavadoc(
 			(Javadoc) ASTNode.copySubtree(target, getJavadoc()));
 		result.modifiers().addAll(ASTNode.copySubtrees(target, modifiers()));
@@ -265,7 +265,7 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -282,27 +282,27 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the live ordered list of superinterfaces of this enum
 	 * declaration.
-	 * 
+	 *
 	 * @return the live list of super interface types
 	 *    (element type: <code>Type</code>)
-	 */ 
+	 */
 	public List superInterfaceTypes() {
 		return this.superInterfaceTypes;
 	}
-	
+
 	/**
 	 * Returns the live ordered list of enum constant declarations
 	 * of this enum declaration.
-	 * 
+	 *
 	 * @return the live list of enum constant declarations
 	 *    (element type: {@link EnumConstantDeclaration})
-	 */ 
+	 */
 	public List enumConstants() {
-		return enumConstants;
+		return this.enumConstants;
 	}
 
 	/* (omit javadoc for this method)
@@ -311,14 +311,14 @@ public class EnumDeclaration extends AbstractTypeDeclaration {
 	ITypeBinding internalResolveBinding() {
 		return this.ast.getBindingResolver().resolveType(this);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 2 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

@@ -12,7 +12,7 @@ package org.eclipse.jdt.internal.codeassist.impl;
 
 public interface Keywords {
 	int COUNT = 41;
-	
+
 	char[] ABSTRACT = "abstract".toCharArray(); //$NON-NLS-1$
 	char[] ASSERT = "assert".toCharArray(); //$NON-NLS-1$
 	char[] BREAK = "break".toCharArray(); //$NON-NLS-1$

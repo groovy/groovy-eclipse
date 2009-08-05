@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -120,7 +120,7 @@ public class StackMapFrameCodeStream extends CodeStream {
 			return String.valueOf(buffer);
 		}
 	}
-	
+
 	static class FramePosition {
 		int counter;
 	}
@@ -138,8 +138,8 @@ public StackMapFrameCodeStream(ClassFile givenClassFile) {
 }
 public void addDefinitelyAssignedVariables(Scope scope, int initStateIndex) {
 	// Required to fix 1PR0XVS: LFRE:WINNT - Compiler: variable table for method appears incorrect
-	loop: for (int i = 0; i < visibleLocalsCount; i++) {
-		LocalVariableBinding localBinding = visibleLocals[i];
+	loop: for (int i = 0; i < this.visibleLocalsCount; i++) {
+		LocalVariableBinding localBinding = this.visibleLocals[i];
 		if (localBinding != null) {
 			// Check if the local is definitely assigned
 			boolean isDefinitelyAssigned = isDefinitelyAssigned(scope, initStateIndex, localBinding);
@@ -157,7 +157,7 @@ public void addDefinitelyAssignedVariables(Scope scope, int initStateIndex) {
 								 * 	first value is the startPC and second value is the endPC. -1 one for the last value means that the interval
 								 * 	is not closed yet.
 								 */
-								localBinding.recordInitializationStartPC(position);
+								localBinding.recordInitializationStartPC(this.position);
 							}
 							continue loop;
 						}
@@ -174,7 +174,7 @@ public void addDefinitelyAssignedVariables(Scope scope, int initStateIndex) {
 					 * 	first value is the startPC and second value is the endPC. -1 one for the last value means that the interval
 					 * 	is not closed yet.
 					 */
-					localBinding.recordInitializationStartPC(position);
+					localBinding.recordInitializationStartPC(this.position);
 				}
 			}
 		}
@@ -210,7 +210,7 @@ public void addFramePosition(int pc) {
 }
 public void optimizeBranch(int oldPosition, BranchLabel lbl) {
 	super.optimizeBranch(oldPosition, lbl);
-	this.removeFramePosition(oldPosition);
+	removeFramePosition(oldPosition);
 }
 public void removeFramePosition(int pc) {
 	Integer entry = new Integer(pc);
@@ -226,7 +226,7 @@ public void addVariable(LocalVariableBinding localBinding) {
 	if (localBinding.initializationPCs == null) {
 		record(localBinding);
 	}
-	localBinding.recordInitializationStartPC(position);
+	localBinding.recordInitializationStartPC(this.position);
 }
 private void addStackMarker(int pc, int destinationPC) {
 	if (this.stackMarkers == null) {
@@ -252,17 +252,17 @@ private void addStackDepthMarker(int pc, int delta, TypeBinding typeBinding) {
 }
 public void decrStackSize(int offset) {
 	super.decrStackSize(offset);
-	this.addStackDepthMarker(this.position, -1, null);
+	addStackDepthMarker(this.position, -1, null);
 }
 public void recordExpressionType(TypeBinding typeBinding) {
-	this.addStackDepthMarker(this.position, 0, typeBinding);
+	addStackDepthMarker(this.position, 0, typeBinding);
 }
 /**
  * Macro for building a class descriptor object
  */
 public void generateClassLiteralAccessForType(TypeBinding accessedType, FieldBinding syntheticFieldBinding) {
 	if (accessedType.isBaseType() && accessedType != TypeBinding.NULL) {
-		this.getTYPE(accessedType.id);
+		getTYPE(accessedType.id);
 		return;
 	}
 
@@ -273,28 +273,28 @@ public void generateClassLiteralAccessForType(TypeBinding accessedType, FieldBin
 		// use in CLDC mode
 		BranchLabel endLabel = new BranchLabel(this);
 		if (syntheticFieldBinding != null) { // non interface case
-			this.getstatic(syntheticFieldBinding);
-			this.dup();
-			this.ifnonnull(endLabel);
-			this.pop();
+			fieldAccess(Opcodes.OPC_getstatic, syntheticFieldBinding, null /* default declaringClass */);
+			dup();
+			ifnonnull(endLabel);
+			pop();
 		}
 
 		/* Macro for building a class descriptor object... using or not a field cache to store it into...
 		this sequence is responsible for building the actual class descriptor.
-		
+
 		If the fieldCache is set, then it is supposed to be the body of a synthetic access method
 		factoring the actual descriptor creation out of the invocation site (saving space).
 		If the fieldCache is nil, then we are dumping the bytecode on the invocation site, since
 		we have no way to get a hand on the field cache to do better. */
-	
-	
+
+
 		// Wrap the code in an exception handler to convert a ClassNotFoundException into a NoClassDefError
-	
+
 		ExceptionLabel classNotFoundExceptionHandler = new ExceptionLabel(this, TypeBinding.NULL /*represents ClassNotFoundException*/);
 		classNotFoundExceptionHandler.placeStart();
 		this.ldc(accessedType == TypeBinding.NULL ? "java.lang.Object" : String.valueOf(accessedType.constantPoolName()).replace('/', '.')); //$NON-NLS-1$
-		this.invokeClassForName();
-	
+		invokeClassForName();
+
 		/* See https://bugs.eclipse.org/bugs/show_bug.cgi?id=37565
 		if (accessedType == BaseTypes.NullBinding) {
 			this.ldc("java.lang.Object"); //$NON-NLS-1$
@@ -307,43 +307,43 @@ public void generateClassLiteralAccessForType(TypeBinding accessedType, FieldBin
 		this.invokeClassForName();
 		if (!accessedType.isArrayType()) { // extract the component type, which doesn't initialize the class
 			this.invokeJavaLangClassGetComponentType();
-		}	
+		}
 		*/
 		/* We need to protect the runtime code from binary inconsistencies
 		in case the accessedType is missing, the ClassNotFoundException has to be converted
 		into a NoClassDefError(old ex message), we thus need to build an exception handler for this one. */
 		classNotFoundExceptionHandler.placeEnd();
-	
+
 		if (syntheticFieldBinding != null) { // non interface case
-			this.dup();
-			this.putstatic(syntheticFieldBinding);
+			dup();
+			fieldAccess(Opcodes.OPC_putstatic, syntheticFieldBinding, null /* default declaringClass */);
 		}
 		int fromPC = this.position;
-		this.goto_(endLabel);
+		goto_(endLabel);
 		int savedStackDepth = this.stackDepth;
 		// Generate the body of the exception handler
 		/* ClassNotFoundException on stack -- the class literal could be doing more things
 		on the stack, which means that the stack may not be empty at this point in the
 		above code gen. So we save its state and restart it from 1. */
-	
-		this.pushExceptionOnStack(TypeBinding.NULL);/*represents ClassNotFoundException*/
+
+		pushExceptionOnStack(TypeBinding.NULL);/*represents ClassNotFoundException*/
 		classNotFoundExceptionHandler.place();
 
-		// Transform the current exception, and repush and throw a 
+		// Transform the current exception, and repush and throw a
 		// NoClassDefFoundError(ClassNotFound.getMessage())
-	
-		this.newNoClassDefFoundError();
-		this.dup_x1();
-		this.swap();
-	
+
+		newNoClassDefFoundError();
+		dup_x1();
+		swap();
+
 		// Retrieve the message from the old exception
-		this.invokeThrowableGetMessage();
-	
+		invokeThrowableGetMessage();
+
 		// Send the constructor taking a message string as an argument
-		this.invokeNoClassDefFoundErrorStringConstructor();
-		this.athrow();
+		invokeNoClassDefFoundErrorStringConstructor();
+		athrow();
 		endLabel.place();
-		this.addStackMarker(fromPC, this.position);
+		addStackMarker(fromPC, this.position);
 		this.stackDepth = savedStackDepth;
 	}
 }
@@ -443,7 +443,7 @@ public void pushStateIndex(int naturalExitMergeInitStateIndex) {
 public void removeNotDefinitelyAssignedVariables(Scope scope, int initStateIndex) {
 	int index = this.visibleLocalsCount;
 	loop : for (int i = 0; i < index; i++) {
-		LocalVariableBinding localBinding = visibleLocals[i];
+		LocalVariableBinding localBinding = this.visibleLocals[i];
 		if (localBinding != null && localBinding.initializationCount > 0) {
 			boolean isDefinitelyAssigned = isDefinitelyAssigned(scope, initStateIndex, localBinding);
 			if (!isDefinitelyAssigned) {
@@ -454,7 +454,7 @@ public void removeNotDefinitelyAssignedVariables(Scope scope, int initStateIndex
 						}
 					}
 				}
-				localBinding.recordInitializationEndPC(position);
+				localBinding.recordInitializationEndPC(this.position);
 			}
 		}
 	}
@@ -493,47 +493,47 @@ protected void writeWidePosition(BranchLabel label) {
 }
 public void areturn() {
 	super.areturn();
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void ireturn() {
 	super.ireturn();
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void lreturn() {
 	super.lreturn();
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void freturn() {
 	super.freturn();
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void dreturn() {
 	super.dreturn();
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void return_() {
 	super.return_();
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void athrow() {
 	super.athrow();
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void pushOnStack(TypeBinding binding) {
 	super.pushOnStack(binding);
-	this.addStackDepthMarker(this.position, 1, binding);
+	addStackDepthMarker(this.position, 1, binding);
 }
 public void pushExceptionOnStack(TypeBinding binding) {
 	super.pushExceptionOnStack(binding);
-	this.addExceptionMarker(this.position, binding);
+	addExceptionMarker(this.position, binding);
 }
 public void goto_(BranchLabel label) {
 	super.goto_(label);
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void goto_w(BranchLabel label) {
 	super.goto_w(label);
-	this.addFramePosition(this.position);
+	addFramePosition(this.position);
 }
 public void resetInWideMode() {
 	this.resetSecretLocals();

@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -32,7 +32,7 @@ public class IndexingParser extends SourceElementParser {
 		super(requestor, problemFactory, options, reportLocalDeclarations,
 				optimizeStringLiterals, useSourceJavadocParser);
 	}
-	
+
 	protected ImportReference newImportReference(char[][] tokens, long[] sourcePositions, boolean onDemand, int mod) {
 		ImportReference ref = this.importReference;
 		ref.tokens = tokens;
@@ -42,7 +42,7 @@ public class IndexingParser extends SourceElementParser {
 		}
 		ref.sourceEnd = (int) (sourcePositions[sourcePositions.length-1] & 0x00000000FFFFFFFF);
 		ref.sourceStart = (int) (sourcePositions[0] >>> 32);
-		ref.modifiers = modifiers;
+		ref.modifiers = this.modifiers;
 		return ref;
 	}
 
@@ -53,7 +53,7 @@ public class IndexingParser extends SourceElementParser {
 		ref.sourceEnd = (int) positions;
 		return ref;
 	}
-	
+
 	protected QualifiedNameReference newQualifiedNameReference(char[][] tokens, long[] positions, int sourceStart, int sourceEnd) {
 		QualifiedNameReference ref = this.qualifiedNameReference;
 		ref.tokens = tokens;

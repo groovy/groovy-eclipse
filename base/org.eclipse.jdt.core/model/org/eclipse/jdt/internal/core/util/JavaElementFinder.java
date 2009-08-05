@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -28,19 +28,19 @@ import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.*;
 
 public class JavaElementFinder extends BindingKeyParser {
-	
+
 	private JavaProject project;
 	private WorkingCopyOwner owner;
 	public IJavaElement element;
 	public JavaModelException exception;
 	private ArrayList types = new ArrayList();
-	
+
 	public JavaElementFinder(String key, JavaProject project, WorkingCopyOwner owner) {
 		super(key);
 		this.project = project;
 		this.owner = owner;
 	}
-	
+
 	private JavaElementFinder(BindingKeyParser parser, JavaProject project, WorkingCopyOwner owner) {
 		super(parser);
 		this.project = project;
@@ -62,7 +62,7 @@ public class JavaElementFinder extends BindingKeyParser {
 
 	public void consumeFullyQualifiedName(char[] fullyQualifiedName) {
 		try {
-			this.element = this.project.findType(new String(CharOperation.replaceOnCopy(fullyQualifiedName, '/', '.')), owner);
+			this.element = this.project.findType(new String(CharOperation.replaceOnCopy(fullyQualifiedName, '/', '.')), this.owner);
 		} catch (JavaModelException e) {
 			this.exception = e;
 		}
@@ -141,5 +141,5 @@ public class JavaElementFinder extends BindingKeyParser {
 	public BindingKeyParser newParser() {
 		return new JavaElementFinder(this, this.project, this.owner);
 	}
-	
+
 }

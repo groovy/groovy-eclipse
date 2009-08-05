@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,10 @@ import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortType;
+import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class CodeSnippetTypeDeclaration extends TypeDeclaration {
 
@@ -28,7 +31,7 @@ public CodeSnippetTypeDeclaration(CompilationResult compilationResult){
 public void generateCode(ClassFile enclosingClassFile) {
 	if ((this.bits & ASTNode.HasBeenGenerated) != 0) return;
 	this.bits |= ASTNode.HasBeenGenerated;
-	
+
 	if (this.ignoreFurtherInvestigation) {
 		if (this.binding == null)
 			return;
@@ -46,7 +49,13 @@ public void generateCode(ClassFile enclosingClassFile) {
 			enclosingClassFile.recordInnerClasses(this.binding);
 			classFile.recordInnerClasses(this.binding);
 		}
-
+		TypeVariableBinding[] typeVariables = this.binding.typeVariables();
+		for (int i = 0, max = typeVariables.length; i < max; i++) {
+			TypeVariableBinding typeVariableBinding = typeVariables[i];
+			if ((typeVariableBinding.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
+				Util.recordNestedType(classFile, typeVariableBinding);
+			}
+		}
 		if (this.memberTypes != null) {
 			for (int i = 0, max = this.memberTypes.length; i < max; i++) {
 				TypeDeclaration memberType = this.memberTypes[i];
@@ -61,7 +70,7 @@ public void generateCode(ClassFile enclosingClassFile) {
 				this.methods[i].generateCode(this.scope, classFile);
 			}
 		}
-		
+
 		// generate all methods
 		classFile.addSpecialMethods();
 

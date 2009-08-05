@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,16 +43,16 @@ public class SelectionOnExplicitConstructorCall extends ExplicitConstructorCall 
 
 		printIndent(tab, output);
 		output.append("<SelectOnExplicitConstructorCall:"); //$NON-NLS-1$
-		if (qualification != null) qualification.printExpression(0, output).append('.');
-		if (accessMode == This) {
+		if (this.qualification != null) this.qualification.printExpression(0, output).append('.');
+		if (this.accessMode == This) {
 			output.append("this("); //$NON-NLS-1$
 		} else {
 			output.append("super("); //$NON-NLS-1$
 		}
-		if (arguments != null) {
-			for (int i = 0; i < arguments.length; i++) {
+		if (this.arguments != null) {
+			for (int i = 0; i < this.arguments.length; i++) {
 				if (i > 0) output.append(", "); //$NON-NLS-1$
-				arguments[i].printExpression(0, output);
+				this.arguments[i].printExpression(0, output);
 			}
 		}
 		return output.append(")>;"); //$NON-NLS-1$
@@ -61,13 +61,13 @@ public class SelectionOnExplicitConstructorCall extends ExplicitConstructorCall 
 	public void resolve(BlockScope scope) {
 
 		super.resolve(scope);
-	
+
 		// tolerate some error cases
-		if (binding == null || 
-				!(binding.isValidBinding() ||
-					binding.problemId() == ProblemReasons.NotVisible))
+		if (this.binding == null ||
+				!(this.binding.isValidBinding() ||
+					this.binding.problemId() == ProblemReasons.NotVisible))
 			throw new SelectionNodeFound();
 		else
-			throw new SelectionNodeFound(binding);
+			throw new SelectionNodeFound(this.binding);
 	}
 }

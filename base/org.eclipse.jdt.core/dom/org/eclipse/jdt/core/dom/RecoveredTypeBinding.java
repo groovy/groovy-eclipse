@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2008 IBM Corporation and others.
+ * Copyright (c) 2007, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -88,6 +88,20 @@ class RecoveredTypeBinding implements ITypeBinding {
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jdt.core.dom.ITypeBinding#getGenericTypeOfWildcardType()
+	 */
+	public ITypeBinding getGenericTypeOfWildcardType() {
+		return null;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jdt.core.dom.ITypeBinding#getRank()
+	 */
+	public int getRank() {
+		return -1;
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.core.dom.ITypeBinding#getComponentType()
 	 */
@@ -199,7 +213,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 			brackets[i] = ']';
 			brackets[i - 1] = '[';
 		}
-		StringBuffer buffer = new StringBuffer(this.getInternalName());
+		StringBuffer buffer = new StringBuffer(getInternalName());
 		buffer.append(brackets);
 		return String.valueOf(buffer);
 	}
@@ -212,7 +226,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 		if (referenceBinding != null) {
 			return new String(referenceBinding.compoundName[referenceBinding.compoundName.length - 1]);
 		}
-		return this.getTypeNameFrom(getType());
+		return getTypeNameFrom(getType());
 	}
 
 	/* (non-Javadoc)
@@ -256,7 +270,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 			buffer.append(CharOperation.toString(referenceBinding.compoundName));
 			buffer.append(brackets);
 			return String.valueOf(buffer);
-		} else { 
+		} else {
 			return getName();
 		}
 	}
@@ -295,7 +309,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 			return this.typeArguments = TypeBinding.NO_TYPE_BINDINGS;
 		}
 		if (this.typeArguments != null) {
-			return typeArguments;
+			return this.typeArguments;
 		}
 
 		if (this.innerTypeBinding != null) {
@@ -376,7 +390,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 			return true;
 		}
 		// since recovered binding are not unique isEqualTo is required
-		return this.isEqualTo(typeBinding);
+		return isEqualTo(typeBinding);
 	}
 
 	/* (non-Javadoc)
@@ -394,7 +408,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 			return true;
 		}
 		// since recovered binding are not unique isEqualTo is required
-		return this.isEqualTo(typeBinding);
+		return isEqualTo(typeBinding);
 	}
 
 	/* (non-Javadoc)
@@ -495,7 +509,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 			return true;
 		}
 		// since recovered binding are not unique isEqualTo is required
-		return this.isEqualTo(typeBinding);
+		return isEqualTo(typeBinding);
 	}
 
 	/* (non-Javadoc)
@@ -563,14 +577,14 @@ class RecoveredTypeBinding implements ITypeBinding {
 		} else if (this.binding != null) {
 			buffer.append("typeBinding") //$NON-NLS-1$
 				  .append(this.binding.computeUniqueKey());
-		} else if (variableDeclaration != null) {
+		} else if (this.variableDeclaration != null) {
 			buffer
 				.append("variableDeclaration") //$NON-NLS-1$
 				.append(this.variableDeclaration.getClass())
 				.append(this.variableDeclaration.getName().getIdentifier())
 				.append(this.variableDeclaration.getExtraDimensions());
 		}
-		buffer.append(this.getDimensions());
+		buffer.append(getDimensions());
 		if (this.typeArguments != null) {
 			buffer.append('<');
 			for (int i = 0, max = this.typeArguments.length; i < max; i++) {
@@ -603,7 +617,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 	 */
 	public boolean isEqualTo(IBinding other) {
 		if (!other.isRecovered() || other.getKind() != IBinding.TYPE) return false;
-		return this.getKey().equals(other.getKey());
+		return getKey().equals(other.getKey());
 	}
 
 	/* (non-Javadoc)

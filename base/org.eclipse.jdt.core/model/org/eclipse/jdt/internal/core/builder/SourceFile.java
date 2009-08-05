@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -45,7 +45,7 @@ public boolean equals(Object o) {
 
 	SourceFile f = (SourceFile) o;
 	return this.sourceLocation == f.sourceLocation && this.resource.getFullPath().equals(f.resource.getFullPath());
-} 
+}
 
 String extractTypeName() {
 	// answer a String with the qualified type name for the source file in the form: 'p1/p2/A'
@@ -75,7 +75,7 @@ String extractTypeName() {
 
 public char[] getContents() {
 
-	try {	
+	try {
 		return Util.getResourceContentsAsCharArray(this.resource);
 	} catch (CoreException e) {
 		throw new AbortCompilation(true, new MissingSourceFileException(this.resource.getFullPath().toString()));

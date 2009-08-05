@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,10 +26,10 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
  * null is NOT a valid value for a non-public field... it just means the field is not initialized.
  */
 abstract public class TypeBinding extends Binding {
-	
+
 	public int id = TypeIds.NoId;
 	public long tagBits = 0; // See values in the interface TagBits below
-	
+
 
 	/** Base type definitions */
 	public final static BaseTypeBinding INT = new BaseTypeBinding(
@@ -110,7 +110,7 @@ public TypeBinding capture(Scope scope, int position) {
  * result of a best effort to improve fault-tolerance.
  */
 public TypeBinding closestMatch() {
-	return this; // by default no better type	
+	return this; // by default no better type
 }
 
 /**
@@ -119,7 +119,7 @@ public TypeBinding closestMatch() {
  * @return missing types
  */
 public List collectMissingTypes(List missingTypes) {
-	return missingTypes;	
+	return missingTypes;
 }
 
 /**
@@ -137,7 +137,7 @@ public void collectSubstitutes(Scope scope, TypeBinding actualType, InferenceCon
 /**
  *  Answer the receiver's constant pool name.
  *  NOTE: This method should only be used during/after code gen.
- *  e.g. 'java/lang/Object' 
+ *  e.g. 'java/lang/Object'
  */
 public abstract char[] constantPoolName();
 
@@ -167,25 +167,25 @@ public TypeBinding erasure() {
  * (using id avoids triggering the load of well-known type: 73740)
  * NOTE: only works for erasures of well-known types, as random other types may share
  * same id though being distincts.
- *
+ * @see TypeIds
  */
 public ReferenceBinding findSuperTypeOriginatingFrom(int wellKnownOriginalID, boolean originalIsClass) {
 
 	if (!(this instanceof ReferenceBinding)) return null;
 	ReferenceBinding reference = (ReferenceBinding) this;
-	
+
     // do not allow type variables to match with erasures for free
     if (reference.id == wellKnownOriginalID || (original().id == wellKnownOriginalID)) return reference;
 
     ReferenceBinding currentType = reference;
     // iterate superclass to avoid recording interfaces if searched supertype is class
     if (originalIsClass) {
-		while ((currentType = currentType.superclass()) != null) { 
+		while ((currentType = currentType.superclass()) != null) {
 			if (currentType.id == wellKnownOriginalID)
 				return currentType;
-			if (currentType.original().id == wellKnownOriginalID) 
+			if (currentType.original().id == wellKnownOriginalID)
 				return currentType;
-		}    
+		}
 		return null;
     }
 	ReferenceBinding[] interfacesToVisit = null;
@@ -209,12 +209,12 @@ public ReferenceBinding findSuperTypeOriginatingFrom(int wellKnownOriginalID, bo
 			}
 		}
 	} while ((currentType = currentType.superclass()) != null);
-			
+
 	for (int i = 0; i < nextPosition; i++) {
 		currentType = interfacesToVisit[i];
 		if (currentType.id == wellKnownOriginalID)
 			return currentType;
-		if (currentType.original().id == wellKnownOriginalID) 
+		if (currentType.original().id == wellKnownOriginalID)
 			return currentType;
 		ReferenceBinding[] itsInterfaces = currentType.superInterfaces();
 		if (itsInterfaces != null && itsInterfaces != Binding.NO_SUPERINTERFACES) {
@@ -257,8 +257,8 @@ public TypeBinding findSuperTypeOriginatingFrom(TypeBinding otherType) {
 			if (!(arrayType.leafComponentType instanceof ReferenceBinding)) return null;
 			TypeBinding leafSuperType = arrayType.leafComponentType.findSuperTypeOriginatingFrom(otherType.leafComponentType());
 			if (leafSuperType == null) return null;
-			return arrayType.environment().createArrayType(leafSuperType, arrayType.dimensions);	
-			
+			return arrayType.environment().createArrayType(leafSuperType, arrayType.dimensions);
+
 		case Binding.TYPE_PARAMETER :
 		    if (isCapture()) {
 		    	CaptureBinding capture = (CaptureBinding) this;
@@ -268,7 +268,7 @@ public TypeBinding findSuperTypeOriginatingFrom(TypeBinding otherType) {
 		    		if (match != null) return match;
 		    	}
 		    }
-			// fall-through
+			//$FALL-THROUGH$
 		case Binding.TYPE :
 		case Binding.PARAMETERIZED_TYPE :
 		case Binding.GENERIC_TYPE :
@@ -312,7 +312,7 @@ public TypeBinding findSuperTypeOriginatingFrom(TypeBinding otherType) {
 					}
 				}
 			} while ((currentType = currentType.superclass()) != null);
-					
+
 			for (int i = 0; i < nextPosition; i++) {
 				currentType = interfacesToVisit[i];
 				if (currentType == otherType)
@@ -356,6 +356,51 @@ public TypeBinding genericCast(TypeBinding targetType) {
  */
 public char[] genericTypeSignature() {
 	return signature();
+}
+
+/**
+ * Return the supertype which would erase as a subtype of a given declaring class.
+ * If the receiver is already erasure compatible, then it will returned. If not, then will return the alternate lowest
+ * upper bound compatible with declaring class.
+ * NOTE: the declaringClass is already know to be compatible with the receiver
+ * @param declaringClass to look for
+ * @return the lowest erasure compatible type (considering alternate bounds)
+ */
+public TypeBinding getErasureCompatibleType(TypeBinding declaringClass) {
+	switch(kind()) {
+		case Binding.TYPE_PARAMETER :
+			TypeVariableBinding variable = (TypeVariableBinding) this;
+			if (variable.erasure().findSuperTypeOriginatingFrom(declaringClass) != null) {
+				return this; // no need for alternate receiver type
+			}
+			if (variable.superclass != null && variable.superclass.findSuperTypeOriginatingFrom(declaringClass) != null) {
+				return variable.superclass.getErasureCompatibleType(declaringClass);
+			}
+			for (int i = 0, otherLength = variable.superInterfaces.length; i < otherLength; i++) {
+				ReferenceBinding superInterface = variable.superInterfaces[i];
+				if (superInterface.findSuperTypeOriginatingFrom(declaringClass) != null) {
+					return superInterface.getErasureCompatibleType(declaringClass);
+				}
+			}
+			return this; // only occur if passed null declaringClass for arraylength
+		case Binding.INTERSECTION_TYPE :
+			WildcardBinding intersection = (WildcardBinding) this;
+			if (intersection.erasure().findSuperTypeOriginatingFrom(declaringClass) != null) {
+				return this; // no need for alternate receiver type
+			}
+			if (intersection.superclass != null && intersection.superclass.findSuperTypeOriginatingFrom(declaringClass) != null) {
+				return intersection.superclass.getErasureCompatibleType(declaringClass);
+			}
+			for (int i = 0, otherLength = intersection.superInterfaces.length; i < otherLength; i++) {
+				ReferenceBinding superInterface = intersection.superInterfaces[i];
+				if (superInterface.findSuperTypeOriginatingFrom(declaringClass) != null) {
+					return superInterface.getErasureCompatibleType(declaringClass);
+				}
+			}
+			return this; // only occur if passed null declaringClass for arraylength
+		default :
+			return this;
+	}
 }
 
 public abstract PackageBinding getPackage();
@@ -461,7 +506,7 @@ public final boolean isNestedType() {
 }
 
 public final boolean isNumericType() {
-	switch (id) {
+	switch (this.id) {
 	case TypeIds.T_int:
 	case TypeIds.T_float:
 	case TypeIds.T_double:
@@ -476,10 +521,12 @@ public final boolean isNumericType() {
 }
 
 /**
- * Returns true if the type is parameterized, e.g. List<String>
+ * Returns true if the type is parameterized, e.g. List<String>.
+ * Note that some instances of ParameterizedTypeBinding have no arguments, like for non-generic members 
+ * of a parameterized type. Use {@link #isParameterizedTypeWithActualArguments()} instead to find out.
  */
-public boolean isParameterizedType() {
-	return false;
+public final boolean isParameterizedType() {
+	return kind() == Binding.PARAMETERIZED_TYPE;
 }
 
 /**
@@ -497,12 +544,12 @@ public final boolean isParameterizedTypeWithActualArguments() {
  * Returns true if the type is parameterized using its own type variables as arguments
  */
 public boolean isParameterizedWithOwnVariables() {
-	if (this.kind() != Binding.PARAMETERIZED_TYPE)
+	if (kind() != Binding.PARAMETERIZED_TYPE)
 		return false;
 	ParameterizedTypeBinding paramType = (ParameterizedTypeBinding) this;
 	if (paramType.arguments == null)
 		return false;
-	TypeVariableBinding[] variables = this.erasure().typeVariables();
+	TypeVariableBinding[] variables = erasure().typeVariables();
 	for (int i = 0, length = variables.length; i < length; i++) {
 		if (variables[i] != paramType.arguments[i])
 			return false;
@@ -517,24 +564,24 @@ public boolean isParameterizedWithOwnVariables() {
 
 private boolean isProvableDistinctSubType(TypeBinding otherType) {
 	if (otherType.isInterface()) {
-		if (this.isInterface())
+		if (isInterface())
 			return false;
-		if (this.isArrayType()
+		if (isArrayType()
 				|| ((this instanceof ReferenceBinding) && ((ReferenceBinding) this).isFinal())
-				|| (this.isTypeVariable() && ((TypeVariableBinding)this).superclass().isFinal())) {
-			return !this.isCompatibleWith(otherType);
+				|| (isTypeVariable() && ((TypeVariableBinding)this).superclass().isFinal())) {
+			return !isCompatibleWith(otherType);
 		}
 		return false;
 	} else {
-		if (this.isInterface()) {
+		if (isInterface()) {
 			if (otherType.isArrayType()
 					|| ((otherType instanceof ReferenceBinding) && ((ReferenceBinding) otherType).isFinal())
 					|| (otherType.isTypeVariable() && ((TypeVariableBinding)otherType).superclass().isFinal())) {
-				return !this.isCompatibleWith(otherType);
+				return !isCompatibleWith(otherType);
 			}
 		} else {
-			if (!this.isTypeVariable() && !otherType.isTypeVariable()) {
-				return !this.isCompatibleWith(otherType);
+			if (!isTypeVariable() && !otherType.isTypeVariable()) {
+				return !isCompatibleWith(otherType);
 			}
 		}
 	}
@@ -545,11 +592,11 @@ private boolean isProvableDistinctSubType(TypeBinding otherType) {
  * Returns true if a type is provably distinct from another one,
  */
 public boolean isProvablyDistinct(TypeBinding otherType) {
-	if (this == otherType) 
+	if (this == otherType)
 	    return false;
-    if (otherType == null) 
+    if (otherType == null)
         return true;
-	
+
     switch (kind()) {
 
 		case Binding.PARAMETERIZED_TYPE :
@@ -557,7 +604,7 @@ public boolean isProvablyDistinct(TypeBinding otherType) {
 		    switch(otherType.kind()) {
 		    	case Binding.PARAMETERIZED_TYPE :
 		            ParameterizedTypeBinding otherParamType = (ParameterizedTypeBinding) otherType;
-		            if (paramType.genericType() != otherParamType.genericType()) 
+		            if (paramType.genericType() != otherParamType.genericType())
 		                return true;
 		            if (!paramType.isStatic()) { // static member types do not compare their enclosing
 		            	ReferenceBinding enclosing = enclosingType();
@@ -574,7 +621,7 @@ public boolean isProvablyDistinct(TypeBinding otherType) {
 		            int length = paramType.arguments == null ? 0 : paramType.arguments.length;
 		            TypeBinding[] otherArguments = otherParamType.arguments;
 		            int otherLength = otherArguments == null ? 0 : otherArguments.length;
-		            if (otherLength != length) 
+		            if (otherLength != length)
 		                return true;
 		            for (int i = 0; i < length; i++) {
 		            	if (paramType.arguments[i].isProvablyDistinctTypeArgument(otherArguments[i], paramType, i))
@@ -584,7 +631,7 @@ public boolean isProvablyDistinct(TypeBinding otherType) {
 
 		    	case Binding.GENERIC_TYPE :
 		            SourceTypeBinding otherGenericType = (SourceTypeBinding) otherType;
-		            if (paramType.genericType() != otherGenericType) 
+		            if (paramType.genericType() != otherGenericType)
 		                return true;
 		            if (!paramType.isStatic()) { // static member types do not compare their enclosing
 		            	ReferenceBinding enclosing = enclosingType();
@@ -601,30 +648,30 @@ public boolean isProvablyDistinct(TypeBinding otherType) {
 		            length = paramType.arguments == null ? 0 : paramType.arguments.length;
 		            otherArguments = otherGenericType.typeVariables();
 		            otherLength = otherArguments == null ? 0 : otherArguments.length;
-		            if (otherLength != length) 
+		            if (otherLength != length)
 		                return true;
 		            for (int i = 0; i < length; i++) {
 		            	if (paramType.arguments[i].isProvablyDistinctTypeArgument(otherArguments[i], paramType, i))
 		            		return true;
 		            }
 		            return false;
-		            
+
 		    	case Binding.RAW_TYPE :
 		            return erasure() != otherType.erasure();
 		    }
 	        return true;
-					
+
 		case Binding.RAW_TYPE :
 
 		    switch(otherType.kind()) {
-		
+
 		    	case Binding.GENERIC_TYPE :
 		    	case Binding.PARAMETERIZED_TYPE :
 		    	case Binding.RAW_TYPE :
 		            return erasure() != otherType.erasure();
 		    }
 	        return true;
-					
+
 		default :
 			break;
 	}
@@ -640,7 +687,7 @@ public boolean isProvablyDistinct(TypeBinding otherType) {
 private boolean isProvablyDistinctTypeArgument(TypeBinding otherArgument, final ParameterizedTypeBinding paramType, final int rank) {
 	if (this == otherArgument)
 		return false;
-	
+
 	TypeBinding upperBound1 = null;
 	TypeBinding lowerBound1 = null;
 	switch (kind()) {
@@ -677,7 +724,7 @@ private boolean isProvablyDistinctTypeArgument(TypeBinding otherArgument, final 
 			}
 			if (variable.firstBound == null) // unbound variable
 				return false;
-			TypeBinding eliminatedType = (paramType.environment.convertEliminatingTypeVariables(variable, paramType.genericType(), rank, null));
+			TypeBinding eliminatedType = Scope.convertEliminatingTypeVariables(variable, paramType.genericType(), rank, null);
 			switch (eliminatedType.kind()) {
 				case Binding.WILDCARD_TYPE :
 				case Binding.INTERSECTION_TYPE :
@@ -732,7 +779,7 @@ private boolean isProvablyDistinctTypeArgument(TypeBinding otherArgument, final 
 			}
 			if (otherVariable.firstBound == null) // unbound variable
 				return false;
-			TypeBinding otherEliminatedType = (paramType.environment.convertEliminatingTypeVariables(otherVariable, paramType.genericType(), rank, null));
+			TypeBinding otherEliminatedType = Scope.convertEliminatingTypeVariables(otherVariable, paramType.genericType(), rank, null);
 			switch (otherEliminatedType.kind()) {
 				case Binding.WILDCARD_TYPE :
 				case Binding.INTERSECTION_TYPE :
@@ -769,34 +816,33 @@ private boolean isProvablyDistinctTypeArgument(TypeBinding otherArgument, final 
 		if (lowerBound2 != null) {
 			return !lowerBound2.isCompatibleWith(upperBound1);
 		} else if (upperBound2 != null) {
-			return upperBound1.isProvableDistinctSubType(upperBound2) 
+			return upperBound1.isProvableDistinctSubType(upperBound2)
 							&& upperBound2.isProvableDistinctSubType(upperBound1);
 		} else {
 			return otherArgument.isProvableDistinctSubType(upperBound1);
 		}
 	} else {
 		if (lowerBound2 != null) {
-			if (lowerBound2.isTypeVariable() || this.isTypeVariable()) {
+			if (lowerBound2.isTypeVariable() || isTypeVariable()) {
 				return false;
 			}
 			return !lowerBound2.isCompatibleWith(this);
 		} else if (upperBound2 != null) {
-			return this.isProvableDistinctSubType(upperBound2);
+			return isProvableDistinctSubType(upperBound2);
 		} else {
 			return true; // ground types should have been the same
 		}
 	}
 }
 
-public boolean isRawType() {
-	return false;
+public final boolean isRawType() {
+	return kind() == Binding.RAW_TYPE;
 }
 /**
- * JLS(3) 4.7. 
+ * JLS(3) 4.7.
  * Note: Foo<?>.Bar is also reifiable
  */
 public boolean isReifiable() {
-
 	TypeBinding leafType = leafComponentType();
 	if (!(leafType instanceof ReferenceBinding))
 		return true;
@@ -839,10 +885,10 @@ public boolean isTypeArgumentContainedBy(TypeBinding otherType) {
 		// allow wildcard containment
 		case Binding.WILDCARD_TYPE:
 		case Binding.INTERSECTION_TYPE:
-			
+
 			TypeBinding lowerBound = this;
 			TypeBinding upperBound = this;
-			switch (this.kind()) {
+			switch (kind()) {
 				case Binding.WILDCARD_TYPE:
 				case Binding.INTERSECTION_TYPE:
 					WildcardBinding wildcard = (WildcardBinding) this;
@@ -863,7 +909,7 @@ public boolean isTypeArgumentContainedBy(TypeBinding otherType) {
 					}
 					break;
 				case Binding.TYPE_PARAMETER:
-					if (this.isCapture()) {
+					if (isCapture()) {
 						CaptureBinding capture = (CaptureBinding) this;
 						if (capture.lowerBound != null)
 							lowerBound = capture.lowerBound;
@@ -885,7 +931,7 @@ public boolean isTypeArgumentContainedBy(TypeBinding otherType) {
 																												// forbide: Collection[] <=  ? extends Collection<?>[]
 					}
 					return upperBound.isCompatibleWith(otherBound);
-		
+
 				case Wildcard.SUPER:
 					if (otherBound == this)
 						return true; // ? super T  <=  ? super ? super T
@@ -897,14 +943,14 @@ public boolean isTypeArgumentContainedBy(TypeBinding otherType) {
 																												// forbide: Collection[] <=  ? super Collection<?>[]
 					}
 					return otherBound.isCompatibleWith(lowerBound);
-		
+
 				case Wildcard.UNBOUND:
 				default:
 					return true;
 			}
 			// allow List<?> to match List<? extends Object> (and reciprocally)
 		case Binding.PARAMETERIZED_TYPE:
-			if (!this.isParameterizedType())
+			if (!isParameterizedType())
 				return false;
 			ParameterizedTypeBinding paramType = (ParameterizedTypeBinding) this;
 			ParameterizedTypeBinding otherParamType = (ParameterizedTypeBinding) otherType;
@@ -971,7 +1017,7 @@ public boolean isTypeArgumentContainedBy(TypeBinding otherType) {
 	}
 	// (? super Object) <= Object
 	if (otherType.id == TypeIds.T_JavaLangObject) {
-		switch (this.kind()) {
+		switch (kind()) {
 			case Binding.WILDCARD_TYPE:
 				WildcardBinding wildcard = (WildcardBinding) this;
 				if (wildcard.boundKind == Wildcard.SUPER && wildcard.bound.id == TypeIds.T_JavaLangObject) {
@@ -1033,7 +1079,7 @@ public boolean needsUncheckedConversion(TypeBinding targetType) {
 	if (!(targetType instanceof ReferenceBinding))
 		return false;
 
-	TypeBinding currentType = this.leafComponentType();
+	TypeBinding currentType = leafComponentType();
 	TypeBinding match = currentType.findSuperTypeOriginatingFrom(targetType);
 	if (!(match instanceof ReferenceBinding))
 		return false;
@@ -1059,11 +1105,11 @@ public TypeBinding original() {
 	switch(kind()) {
 		case Binding.PARAMETERIZED_TYPE :
 		case Binding.RAW_TYPE :
-		case Binding.ARRAY_TYPE : 
+		case Binding.ARRAY_TYPE :
 			return erasure();
 		default :
 			return this;
-	}	
+	}
 }
 
 /**

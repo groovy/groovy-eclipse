@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -55,12 +55,12 @@ public abstract class HierarchyBuilder {
 	 * The dot-separated fully qualified name of the focus type, or null of none.
 	 */
 	protected String focusQualifiedName;
-	
+
 	public HierarchyBuilder(TypeHierarchy hierarchy) throws JavaModelException {
-		
+
 		this.hierarchy = hierarchy;
 		JavaProject project = (JavaProject) hierarchy.javaProject();
-		
+
 		IType focusType = hierarchy.getType();
 		org.eclipse.jdt.core.ICompilationUnit unitToLookInside = focusType == null ? null : focusType.getCompilationUnit();
 		org.eclipse.jdt.core.ICompilationUnit[] workingCopies = this.hierarchy.workingCopies;
@@ -90,14 +90,14 @@ public abstract class HierarchyBuilder {
 		this.infoToHandle = new HashMap(5);
 		this.focusQualifiedName = focusType == null ? null : focusType.getFullyQualifiedName();
 	}
-	
+
 	public abstract void build(boolean computeSubtypes)
 		throws JavaModelException, CoreException;
 	/**
 	 * Configure this type hierarchy by computing the supertypes only.
 	 */
 	protected void buildSupertypes() {
-		IType focusType = this.getType();
+		IType focusType = getType();
 		if (focusType == null)
 			return;
 		// get generic type from focus type
@@ -110,7 +110,7 @@ public abstract class HierarchyBuilder {
 			return;
 		}
 		//NB: no need to set focus type on hierarchy resolver since no other type is injected
-		//    in the hierarchy resolver, thus there is no need to check that a type is 
+		//    in the hierarchy resolver, thus there is no need to check that a type is
 		//    a sub or super type of the focus type.
 		this.hierarchyResolver.resolve(type);
 
@@ -169,12 +169,12 @@ public abstract class HierarchyBuilder {
 			case TypeDeclaration.ANNOTATION_TYPE_DECL :
 				this.hierarchy.addInterface(typeHandle);
 				break;
-		}		
+		}
 		if (superinterfaceHandles == null) {
 			superinterfaceHandles = TypeHierarchy.NO_TYPE;
 		}
 		this.hierarchy.cacheSuperInterfaces(typeHandle, superinterfaceHandles);
-		 
+
 		// record flags
 		this.hierarchy.cacheFlags(typeHandle, type.getModifiers());
 	}
@@ -203,7 +203,7 @@ public abstract class HierarchyBuilder {
 				// optimization: remember the handle for next call (case of java.io.Serializable that a lot of classes implement)
 				classFile = (ClassFile) handle.getParent();
 				this.infoToHandle.put(genericType, classFile);
-			} 
+			}
 			return new ResolvedBinaryType(classFile, classFile.getTypeName(), new String(binding.computeUniqueKey()));
 		} else if (genericType instanceof SourceTypeElementInfo) {
 			IType handle = ((SourceTypeElementInfo) genericType).getHandle();
@@ -234,7 +234,7 @@ public abstract class HierarchyBuilder {
 				//case IGenericType.ANNOTATION :
 				flag = NameLookup.ACCEPT_ANNOTATIONS;
 				break;
-		}			
+		}
 		char[] bName = typeInfo.getName();
 		qualifiedName = new String(ClassFile.translatedName(bName));
 		if (qualifiedName.equals(this.focusQualifiedName)) return getType();
@@ -246,7 +246,7 @@ public abstract class HierarchyBuilder {
 			false/*don't check restrictions*/,
 			null);
 		return answer == null || answer.type == null || !answer.type.isBinary() ? null : answer.type;
-		
+
 	}
 	protected void worked(IProgressMonitor monitor, int work) {
 		if (monitor != null) {
@@ -291,7 +291,7 @@ protected IBinaryType createInfoFromClassFile(Openable handle, IResource file) {
 			e.printStackTrace();
 		}
 		return null;
-	}						
+	}
 	this.infoToHandle.put(info, handle);
 	return info;
 }

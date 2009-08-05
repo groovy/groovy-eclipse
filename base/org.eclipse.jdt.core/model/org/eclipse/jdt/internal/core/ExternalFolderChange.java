@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -20,15 +20,15 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaModelException;
 
 public class ExternalFolderChange {
-	
+
 	private JavaProject project;
 	private IClasspathEntry[] oldResolvedClasspath;
-	
+
 	public ExternalFolderChange(JavaProject project, IClasspathEntry[] oldResolvedClasspath) {
 		this.project = project;
 		this.oldResolvedClasspath = oldResolvedClasspath;
 	}
-	
+
 	/*
 	 * Update external folders
 	 */

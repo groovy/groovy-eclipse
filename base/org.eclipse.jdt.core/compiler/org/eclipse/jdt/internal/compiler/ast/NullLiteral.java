@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,8 +26,8 @@ public class NullLiteral extends MagicLiteral {
 	}
 
 	public void computeConstant() {
-	
-		constant = Constant.NotAConstant; 
+
+		this.constant = Constant.NotAConstant;
 	}
 
 	/**
@@ -36,7 +36,7 @@ public class NullLiteral extends MagicLiteral {
 	 * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 * @param valueRequired boolean
-	 */ 
+	 */
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 		int pc = codeStream.position;
 		if (valueRequired) {
@@ -56,7 +56,7 @@ public class NullLiteral extends MagicLiteral {
 	public Object reusableJSRTarget() {
 		return TypeBinding.NULL;
 	}
-	
+
 	public char[] source() {
 		return source;
 	}

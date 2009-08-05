@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ class NodeSearcher extends ASTVisitor {
 	public org.eclipse.jdt.internal.compiler.ast.ASTNode found;
 	public TypeDeclaration enclosingType;
 	public int position;
-	
+
 	NodeSearcher(int position) {
 		this.position = position;
 	}
@@ -33,9 +33,9 @@ class NodeSearcher extends ASTVisitor {
 		ConstructorDeclaration constructorDeclaration,
 		ClassScope scope) {
 
-		if (constructorDeclaration.declarationSourceStart <= position
-			&& position <= constructorDeclaration.declarationSourceEnd) {
-				found = constructorDeclaration;
+		if (constructorDeclaration.declarationSourceStart <= this.position
+			&& this.position <= constructorDeclaration.declarationSourceEnd) {
+				this.found = constructorDeclaration;
 				return false;
 		}
 		return true;
@@ -44,18 +44,18 @@ class NodeSearcher extends ASTVisitor {
 	public boolean visit(
 		FieldDeclaration fieldDeclaration,
 		MethodScope scope) {
-			if (fieldDeclaration.declarationSourceStart <= position
-				&& position <= fieldDeclaration.declarationSourceEnd) {
-					found = fieldDeclaration;
+			if (fieldDeclaration.declarationSourceStart <= this.position
+				&& this.position <= fieldDeclaration.declarationSourceEnd) {
+					this.found = fieldDeclaration;
 					return false;
 			}
 			return true;
 	}
 
 	public boolean visit(Initializer initializer, MethodScope scope) {
-		if (initializer.declarationSourceStart <= position
-			&& position <= initializer.declarationSourceEnd) {
-				found = initializer;
+		if (initializer.declarationSourceStart <= this.position
+			&& this.position <= initializer.declarationSourceEnd) {
+				this.found = initializer;
 				return false;
 		}
 		return true;
@@ -64,22 +64,22 @@ class NodeSearcher extends ASTVisitor {
 	public boolean visit(
 		TypeDeclaration memberTypeDeclaration,
 		ClassScope scope) {
-			if (memberTypeDeclaration.declarationSourceStart <= position
-				&& position <= memberTypeDeclaration.declarationSourceEnd) {
-					enclosingType = memberTypeDeclaration;
+			if (memberTypeDeclaration.declarationSourceStart <= this.position
+				&& this.position <= memberTypeDeclaration.declarationSourceEnd) {
+					this.enclosingType = memberTypeDeclaration;
 					return true;
 
 			}
-			return false;		
+			return false;
 	}
 
 	public boolean visit(
 		MethodDeclaration methodDeclaration,
 		ClassScope scope) {
 
-		if (methodDeclaration.declarationSourceStart <= position
-			&& position <= methodDeclaration.declarationSourceEnd) {
-				found = methodDeclaration;
+		if (methodDeclaration.declarationSourceStart <= this.position
+			&& this.position <= methodDeclaration.declarationSourceEnd) {
+				this.found = methodDeclaration;
 				return false;
 		}
 		return true;
@@ -88,12 +88,12 @@ class NodeSearcher extends ASTVisitor {
 	public boolean visit(
 		TypeDeclaration typeDeclaration,
 		CompilationUnitScope scope) {
-			if (typeDeclaration.declarationSourceStart <= position
-				&& position <= typeDeclaration.declarationSourceEnd) {
-					enclosingType = typeDeclaration;
+			if (typeDeclaration.declarationSourceStart <= this.position
+				&& this.position <= typeDeclaration.declarationSourceEnd) {
+					this.enclosingType = typeDeclaration;
 					return true;
 			}
-			return false;		
+			return false;
 	}
 
 }

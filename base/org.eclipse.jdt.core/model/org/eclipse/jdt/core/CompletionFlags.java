@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007 IBM Corporation and others.
+ * Copyright (c) 2007, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ package org.eclipse.jdt.core;
  * </p>
  *
  * @see CompletionProposal#getAdditionalFlags()
- * 
+ *
  * @since 3.3
  */
 public final class CompletionFlags {
@@ -26,7 +26,7 @@ public final class CompletionFlags {
 	 * Constant representing the absence of any flag
 	 */
 	public static final int Default = 0x0000;
-	
+
 	/**
 	 * Constant representing a static import
 	 */
@@ -38,7 +38,7 @@ public final class CompletionFlags {
 	private CompletionFlags() {
 		// Not instantiable
 	}
-	
+
 	/**
 	 * Returns whether the given integer includes the {@link #StaticImport} flag.
 	 *

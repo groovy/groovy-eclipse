@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,33 +17,33 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class TypeReferencePattern extends IntersectingPattern {
-	
+
 	protected char[] qualification;
 	protected char[] simpleName;
-		
+
 	protected char[] currentCategory;
-	
+
 	/* Optimization: case where simpleName == null */
 	public int segmentsSize;
 	protected char[][] segments;
 	protected int currentSegment;
-	
+
 	private final static char[][]
 		CATEGORIES = { REF, ANNOTATION_REF },
 		CATEGORIES_ANNOT_REF = { ANNOTATION_REF };
 	private char[][] categories;
-	
+
 	public TypeReferencePattern(char[] qualification, char[] simpleName, int matchRule) {
 		this(matchRule);
-	
+
 		this.qualification = this.isCaseSensitive ? qualification : CharOperation.toLowerCase(qualification);
 		this.simpleName = (this.isCaseSensitive || this.isCamelCase) ? simpleName : CharOperation.toLowerCase(simpleName);
-	
+
 		if (simpleName == null)
 			this.segments = this.qualification == null ? ONE_STAR_CHAR : CharOperation.splitOn('.', this.qualification);
 		else
 			this.segments = null;
-		
+
 		if (this.segments == null)
 			if (this.qualification == null)
 				this.segmentsSize =  0;
@@ -51,8 +51,8 @@ public class TypeReferencePattern extends IntersectingPattern {
 				this.segmentsSize =  CharOperation.occurencesOf('.', this.qualification) + 1;
 		else
 			this.segmentsSize = this.segments.length;
-	
-		((InternalSearchPattern)this).mustResolve = true; // always resolve (in case of a simple name reference being a potential match)
+
+		this.mustResolve = true; // always resolve (in case of a simple name reference being a potential match)
 	}
 	/*
 	 * Instantiate a type reference pattern with additional information for generics search
@@ -76,7 +76,7 @@ public class TypeReferencePattern extends IntersectingPattern {
 		}
 	    this.fineGrain = limitTo & 0xFFFFFFF0;
 	    if (this.fineGrain == IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE) {
-	    	categories = CATEGORIES_ANNOT_REF;
+	    	this.categories = CATEGORIES_ANNOT_REF;
 	    }
 	}
 
@@ -109,9 +109,9 @@ public class TypeReferencePattern extends IntersectingPattern {
 	public char[] getIndexKey() {
 		if (this.simpleName != null)
 			return this.simpleName;
-	
+
 		// Optimization, e.g. type reference is 'org.eclipse.jdt.core.*'
-		if (this.currentSegment >= 0) 
+		if (this.currentSegment >= 0)
 			return this.segments[this.currentSegment];
 		return null;
 	}
@@ -120,7 +120,7 @@ public class TypeReferencePattern extends IntersectingPattern {
 	}
 	protected boolean hasNextQuery() {
 		if (this.segments == null) return false;
-	
+
 		// Optimization, e.g. type reference is 'org.eclipse.jdt.core.*'
 		// if package has at least 4 segments, don't look at the first 2 since they are mostly
 		// redundant (e.g. in 'org.eclipse.jdt.core.*' 'org.eclipse' is used all the time)
@@ -140,13 +140,13 @@ public class TypeReferencePattern extends IntersectingPattern {
 		String patternClassName = getClass().getName();
 		output.append(patternClassName.substring(patternClassName.lastIndexOf('.')+1));
 		output.append(": qualification<"); //$NON-NLS-1$
-		if (qualification != null) 
-			output.append(qualification);
+		if (this.qualification != null)
+			output.append(this.qualification);
 		else
 			output.append("*"); //$NON-NLS-1$
 		output.append(">, type<"); //$NON-NLS-1$
-		if (simpleName != null) 
-			output.append(simpleName);
+		if (this.simpleName != null)
+			output.append(this.simpleName);
 		else
 			output.append("*"); //$NON-NLS-1$
 		output.append(">"); //$NON-NLS-1$

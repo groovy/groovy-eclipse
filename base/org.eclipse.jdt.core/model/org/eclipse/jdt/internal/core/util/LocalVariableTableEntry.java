@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,10 +28,10 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 	private char[] name;
 	private char[] descriptor;
 	private int index;
-	
+
 	/**
 	 * Constructor for LocalVariableTableEntry.
-	 * 
+	 *
 	 * @param classFileBytes
 	 * @param constantPool
 	 * @param offset
@@ -57,7 +57,7 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 			}
 			this.descriptor = constantPoolEntry.getUtf8Value();
 		}
-		
+
 	/**
 	 * @see ILocalVariableTableEntry#getStartPC()
 	 */

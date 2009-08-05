@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,9 +15,9 @@ package org.eclipse.jdt.internal.core;
  * The uniqueKey contains the genericSignature of the resolved field. Use BindingKey to decode it.
  */
 public class ResolvedBinaryField extends BinaryField {
-	
+
 	private String uniqueKey;
-	
+
 	/*
 	 * See class comments.
 	 */
@@ -25,14 +25,14 @@ public class ResolvedBinaryField extends BinaryField {
 		super(parent, name);
 		this.uniqueKey = uniqueKey;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.core.BinaryField#getKey()
 	 */
 	public String getKey() {
 		return this.uniqueKey;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.core.IField#isResolved()
 	 */

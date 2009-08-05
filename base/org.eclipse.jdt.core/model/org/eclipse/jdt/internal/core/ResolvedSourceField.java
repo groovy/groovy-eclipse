@@ -15,9 +15,9 @@ package org.eclipse.jdt.internal.core;
  * The uniqueKey contains the genericSignature of the resolved field. Use BindingKey to decode it.
  */
 public class ResolvedSourceField extends SourceField {
-	
+
 	private String uniqueKey;
-	
+
 	/*
 	 * See class comments.
 	 */
@@ -25,21 +25,21 @@ public class ResolvedSourceField extends SourceField {
 		super(parent, name);
 		this.uniqueKey = uniqueKey;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.core.SourceField#getKey()
 	 */
 	public String getKey() {
 		return this.uniqueKey;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.core.IField#isResolved()
 	 */
 	public boolean isResolved() {
 		return true;
 	}
-	
+
 	/**
 	 * @private Debugging purposes
 	 */
@@ -51,7 +51,7 @@ public class ResolvedSourceField extends SourceField {
 			buffer.append("}"); //$NON-NLS-1$
 		}
 	}
-	
+
 	public JavaElement unresolved() {
 		SourceRefElement handle = new SourceField(this.parent, this.name);
 		handle.occurrenceCount = this.occurrenceCount;

@@ -11,7 +11,7 @@
 package org.eclipse.jdt.internal.formatter;
 
 /**
- * Represents a reference in a javadoc comment block (see 
+ * Represents a reference in a javadoc comment block (see
  * {@link FormatJavadocBlock}.
  * <p>
  * A specific class is used as intermediate positions need to be stored for further

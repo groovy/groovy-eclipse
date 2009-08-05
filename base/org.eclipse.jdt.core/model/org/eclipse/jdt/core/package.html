@@ -13,7 +13,15 @@ objects associated with creating, editing, and building a Java program.
 Package Specification</h2>
 
 <p><br>This package contains the Java model classes, which implement Java
-specific behaviour for resources and further decompose java resources into
+specific behaviour for resources and further decompose Java resources into
 model elements.
+</p><p>
+Note that a lot of Java model operations require a Java project's classpath resolution.
+For example IJavaProject#getResolvedClasspath(boolean) or JavaCore#setClasspathContainer()
+will require to resolve the classpath of one or more projects. Client should be aware that
+this resolution may require to take project modification rule 
+(see IResourceRuleFactory#modifyRule(IResource)).
+</p>
+
 </body>
 </html>

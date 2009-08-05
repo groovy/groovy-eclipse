@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchDocument;
+import org.eclipse.jdt.internal.compiler.ExtraFlags;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
@@ -238,32 +239,32 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 					if (arrayDim > 0)
 						return convertToArrayType(BYTE, arrayDim);
 					return BYTE;
-					
+
 				case 'C':
 					if (arrayDim > 0)
 						return convertToArrayType(CHAR, arrayDim);
 					return CHAR;
-					
+
 				case 'D':
 					if (arrayDim > 0)
 						return convertToArrayType(DOUBLE, arrayDim);
 					return DOUBLE;
-					
+
 				case 'F':
 					if (arrayDim > 0)
 						return convertToArrayType(FLOAT, arrayDim);
 					return FLOAT;
-					
+
 				case 'I':
 					if (arrayDim > 0)
 					return convertToArrayType(INT, arrayDim);
 					return INT;
-					
+
 				case 'J':
 					if (arrayDim > 0)
 						return convertToArrayType(LONG, arrayDim);
 					return LONG;
-					
+
 				case 'L':
 					int indexOfSemiColon = CharOperation.indexOf(';', signature, i+1);
 					if (indexOfSemiColon == -1) throw new ClassFormatException(ClassFormatException.ErrInvalidMethodSignature);
@@ -271,24 +272,24 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 						return convertToArrayType(replace('/','.',CharOperation.subarray(signature, i + 1, indexOfSemiColon)), arrayDim);
 					}
 					return replace('/','.',CharOperation.subarray(signature, i + 1, indexOfSemiColon));
-					
+
 				case 'S':
 					if (arrayDim > 0)
 						return convertToArrayType(SHORT, arrayDim);
 					return SHORT;
-					
+
 				case 'Z':
 					if (arrayDim > 0)
 						return convertToArrayType(BOOLEAN, arrayDim);
 					return BOOLEAN;
-					
+
 				case 'V':
 					return VOID;
-					
+
 				case '[':
 					arrayDim++;
 					break;
-					
+
 				default:
 					throw new ClassFormatException(ClassFormatException.ErrInvalidMethodSignature);
 			}
@@ -325,7 +326,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 						convertToArrayType(parameterTypes, parameterTypesCounter-1, arrayDim);
 					arrayDim = 0;
 					break;
-					
+
 				case 'C':
 					parameterTypes[parameterTypesCounter++] = CHAR;
 					if (arrayDim > 0)
@@ -346,14 +347,14 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 						convertToArrayType(parameterTypes, parameterTypesCounter-1, arrayDim);
 					arrayDim = 0;
 					break;
-					
+
 				case 'I':
 					parameterTypes[parameterTypesCounter++] = INT;
 					if (arrayDim > 0)
 						convertToArrayType(parameterTypes, parameterTypesCounter-1, arrayDim);
 					arrayDim = 0;
 					break;
-					
+
 				case 'J':
 					parameterTypes[parameterTypesCounter++] = LONG;
 					if (arrayDim > 0)
@@ -393,7 +394,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 				case '[':
 					arrayDim++;
 					break;
-					
+
 				default:
 					throw new ClassFormatException(ClassFormatException.ErrInvalidMethodSignature);
 			}
@@ -414,12 +415,12 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 					if (arrayDim > 0)
 						return convertToArrayType(BYTE, arrayDim);
 					return BYTE;
-					
+
 				case 'C':
 					if (arrayDim > 0)
 						return convertToArrayType(CHAR, arrayDim);
 					return CHAR;
-					
+
 				case 'D':
 					if (arrayDim > 0)
 						return convertToArrayType(DOUBLE, arrayDim);
@@ -464,7 +465,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 				case '[':
 					arrayDim++;
 					break;
-					
+
 				default:
 					throw new ClassFormatException(ClassFormatException.ErrInvalidMethodSignature);
 			}
@@ -598,7 +599,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 						break; // skip over array references
 					name = replace('/', '.', name); // so that it looks like java.lang.String
 					addTypeReference(name);
-					
+
 					// also add a simple reference on each segment of the qualification (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=24741)
 					char[][] qualification = CharOperation.splitOn('.', name);
 					for (int j = 0, length = qualification.length; j < length; j++) {
@@ -621,7 +622,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			if (contents == null) return;
 			final String path = this.document.getPath();
 			ClassFileReader reader = new ClassFileReader(contents, path == null ? null : path.toCharArray());
-	
+
 			// first add type references
 			char[] className = replace('/', '.', reader.getName()); // looks like java/lang/String
 			// need to extract the package name and the simple name
@@ -653,7 +654,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 						// See PR 1GIR345: ITPJCORE:ALL - Indexer: NegativeArraySizeException
 						return;
 					}
-					enclosingTypeName = new char[nameLength]; 
+					enclosingTypeName = new char[nameLength];
 					System.arraycopy(fullEnclosingName, packageNameIndex + 1, enclosingTypeName, 0, nameLength);
 				}
 			}
@@ -664,10 +665,10 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 				CharOperation.replace(genericSignature, '/', '.');
 				typeParameterSignatures = Signature.getTypeParameters(genericSignature);
 			}
-			
+
 			// eliminate invalid innerclasses (1G4KCF7)
 			if (name == null) return;
-			
+
 			char[][] superinterfaces = replace('/', '.', reader.getInterfaceNames());
 			char[][] enclosingTypeNames = enclosingTypeName == null ? null : new char[][] {enclosingTypeName};
 			int modifiers = reader.getModifiers();
@@ -686,7 +687,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 				case TypeDeclaration.ANNOTATION_TYPE_DECL :
 					addAnnotationTypeDeclaration(modifiers, packageName, name, enclosingTypeNames, false);
 					break;
-			}			
+			}
 
 			// Look for references in class annotations
 			IBinaryAnnotation[] annotations = reader.getAnnotations();
@@ -700,9 +701,12 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			if (tagBits != 0) {
 				addBinaryStandardAnnotations(tagBits);
 			}
+			
+			int extraFlags = ExtraFlags.getExtraFlags(reader);
 
 			// first reference all methods declarations and field declarations
 			MethodInfo[] methods = (MethodInfo[]) reader.getMethods();
+			boolean noConstructor = true;
 			if (methods != null) {
 				for (int i = 0, max = methods.length; i < max; i++) {
 					MethodInfo method = methods[i];
@@ -712,7 +716,26 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 					char[] returnType = decodeReturnType(descriptor);
 					char[][] exceptionTypes = replace('/', '.', method.getExceptionTypeNames());
 					if (isConstructor) {
-						addConstructorDeclaration(className, parameterTypes, exceptionTypes);
+						noConstructor = false;
+						char[] signature = method.getGenericSignature();
+						if (signature == null) {
+							if (reader.isNestedType() && ((modifiers & ClassFileConstants.AccStatic) == 0)) {
+								signature = removeFirstSyntheticParameter(descriptor);
+							} else {
+								signature = descriptor;
+							}
+						}
+						addConstructorDeclaration(
+								name,
+								parameterTypes == null ? 0 : parameterTypes.length,
+								signature,	
+								parameterTypes,
+								method.getArgumentNames(),
+								method.getModifiers(),
+								packageName,
+								modifiers,
+								exceptionTypes,
+								extraFlags);
 					} else {
 						if (!method.isClinit()) {
 							addMethodDeclaration(method.getSelector(), parameterTypes, returnType, exceptionTypes);
@@ -731,6 +754,9 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 						addBinaryStandardAnnotations(tagBits);
 					}
 				}
+			}
+			if (noConstructor) {
+				addDefaultConstructorDeclaration(className, packageName, modifiers, extraFlags);
 			}
 			FieldInfo[] fields = (FieldInfo[]) reader.getFields();
 			if (fields != null) {
@@ -765,6 +791,23 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			// we remove all entries relative to the boggus document
 			this.document.removeAllIndexEntries();
 			Util.log(IStatus.WARNING, "The Java indexing could not index " + this.document.getPath() + ". This .class file doesn't follow the class file format specification. Please report this issue against the .class file vendor"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+	
+	private char[] removeFirstSyntheticParameter(char[] descriptor) {
+		if (descriptor == null) return null;
+		if (descriptor.length < 3) return descriptor;
+		if (descriptor[0] != '(') return descriptor;
+		if (descriptor[1] != ')') {
+			// remove the first synthetic parameter
+			int start = Util.scanTypeSignature(descriptor, 1) + 1;
+			int length = descriptor.length - start;
+			char[] signature = new char[length + 1];
+			signature[0] = descriptor[0];
+			System.arraycopy(descriptor, start, signature, 1, length);
+			return signature;
+		} else {
+			return descriptor;
 		}
 	}
 	/*

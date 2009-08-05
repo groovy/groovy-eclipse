@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,7 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
 import org.eclipse.jdt.core.util.IVerificationTypeInfo;
 
 public class VerificationInfo extends ClassFileStruct implements IVerificationTypeInfo {
-	
+
 	private int tag;
 	private int offset;
 	private int constantPoolIndex;
@@ -44,12 +44,12 @@ public class VerificationInfo extends ClassFileStruct implements IVerificationTy
 				}
 				this.readOffset += 2;
 				break;
-			case IVerificationTypeInfo.ITEM_UNINITIALIZED : 
+			case IVerificationTypeInfo.ITEM_UNINITIALIZED :
 				this.offset = u2At(classFileBytes, 1, offset);
 				this.readOffset += 2;
 		}
 	}
-	
+
 	public int getTag() {
 		return this.tag;
 	}
@@ -65,7 +65,7 @@ public class VerificationInfo extends ClassFileStruct implements IVerificationTy
 	public char[] getClassTypeName() {
 		return this.classTypeName;
 	}
-	
+
 	public int sizeInBytes() {
 		return this.readOffset;
 	}

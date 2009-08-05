@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2007 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,13 +18,13 @@ import org.eclipse.jdt.internal.compiler.util.Util;
 
 /**
  * Internal class for associating comments with AST nodes.
- * 
+ *
  * @since 3.0
  */
 class DefaultCommentMapper {
 	Comment[] comments;
 	Scanner scanner;
-	
+
 	// extended nodes storage
 	int leadingPtr;
 	ASTNode[] leadingNodes;
@@ -47,7 +47,7 @@ class DefaultCommentMapper {
 
 	/**
 	 * Get comment of the list which includes a given position
-	 * 
+	 *
 	 * @param position The position belonging to the looked up comment
 	 * @return comment which includes the given position or null if none was found
 	 */
@@ -113,7 +113,7 @@ class DefaultCommentMapper {
 	 * {@link ASTNode#getStartPosition()} and {@link ASTNode#getLength()},
 	 * the extended source range may include comments and whitespace
 	 * immediately before or after the normal source range for the node.
-	 * 
+	 *
 	 * @param node the node
 	 * @return the 0-based character index, or <code>-1</code>
 	 *    if no source position information is recorded for this node
@@ -169,7 +169,7 @@ class DefaultCommentMapper {
 	 * {@link ASTNode#getStartPosition()} and {@link ASTNode#getLength()},
 	 * the extended source range may include comments and whitespace
 	 * immediately before or after the normal source range for the node.
-	 * 
+	 *
 	 * @param node the node
 	 * @return a (possibly 0) length, or <code>0</code>
 	 *    if no source position information is recorded for this node
@@ -183,7 +183,7 @@ class DefaultCommentMapper {
 
 	/**
 	 * Return index of first leading comment of a given node.
-	 * 
+	 *
 	 * @param node
 	 * @return index of first leading comment or -1 if node has no leading comment
 	 */
@@ -200,7 +200,7 @@ class DefaultCommentMapper {
 
 	/**
 	 * Return index of last trailing comment of a given node.
-	 * 
+	 *
 	 * @param node
 	 * @return index of last trailing comment or -1 if node has no trailing comment
 	 */
@@ -226,7 +226,7 @@ class DefaultCommentMapper {
 		// Init array pointers
 		this.leadingPtr = -1;
 		this.trailingPtr = -1;
-	
+
 		// Init comments
 		this.comments = unit.optionalCommentTable;
 		if (this.comments == null) {
@@ -244,14 +244,14 @@ class DefaultCommentMapper {
 		// Start unit visit
 		DefaultASTVisitor commentVisitor = new CommentMapperVisitor();
 		unit.accept(commentVisitor);
-		
+
 		// Reduce leading arrays if necessary
 		int leadingCount = this.leadingPtr + 1;
 		if (leadingCount > 0 && leadingCount < this.leadingIndexes.length) {
 			System.arraycopy(this.leadingNodes, 0, this.leadingNodes = new ASTNode[leadingCount], 0, leadingCount);
 			System.arraycopy(this.leadingIndexes, 0, this.leadingIndexes= new long[leadingCount], 0, leadingCount);
 		}
-		
+
 		// Reduce trailing arrays if necessary
 		if (this.trailingPtr >= 0) {
 			// remove last remaining unresolved nodes
@@ -301,17 +301,17 @@ class DefaultCommentMapper {
 		// Init extended position
 		int nodeStart = node.getStartPosition();
 		int extended = nodeStart;
-		
+
 		// Get line of node start position
 		int previousEndLine = getLineNumber(previousEnd, parentLineRange);
 		int nodeStartLine = getLineNumber(nodeStart, parentLineRange);
-		
+
 		// Find first comment index
 		int idx = getCommentIndex(0, nodeStart, -1);
 		if (idx == -1) {
 			return nodeStart;
 		}
-		
+
 		// Look after potential comments
 		int startIdx = -1;
 		int endIdx = idx;
@@ -437,10 +437,10 @@ class DefaultCommentMapper {
 			return nodeEnd;
 		}
 		int extended = nodeEnd;
-		
+
 		// Get line number
 		int nodeEndLine = getLineNumber(nodeEnd, parentLineRange);
-		
+
 		// Find comments range index
 		int idx = getCommentIndex(0, nodeEnd, 1);
 		if (idx == -1) {
@@ -563,7 +563,7 @@ class DefaultCommentMapper {
 			// Get default previous end
 			ASTNode parent = node.getParent();
 			int previousEnd = parent.getStartPosition();
-			
+
 			// Look for sibling node
  			ASTNode sibling = parent == this.topSiblingParent ? (ASTNode) this.siblings[this.siblingPtr] : null;
 			if (sibling != null) {
@@ -587,7 +587,7 @@ class DefaultCommentMapper {
 			} catch (Exception ex) {
 				// Give up extended ranges at this level if unexpected exception happens...
 			}
-			
+
 			// Store current node as waiting sibling for its parent
 			if (this.topSiblingParent != parent) {
 				if (this.siblings.length == ++this.siblingPtr) {
@@ -616,7 +616,7 @@ class DefaultCommentMapper {
 			// We're always ok to visit sub-levels
 			return true;
 		}
-		
+
 		protected void endVisitNode(ASTNode node) {
 
 			// Look if a child node is waiting for trailing comments computing

@@ -21,9 +21,9 @@ public interface IImportContainer extends IJavaElement, IParent, ISourceReferenc
 /**
  * Returns the first import declaration in this import container with the given name.
  * This is a handle-only method. The import declaration may or may not exist.
- * 
+ *
  * @param name the given name
- * 
+ *
  * @return the first import declaration in this import container with the given name
  */
 IImportDeclaration getImport(String name);

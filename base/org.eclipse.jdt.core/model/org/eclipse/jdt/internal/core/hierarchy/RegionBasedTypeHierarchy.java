@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,7 +26,7 @@ public class RegionBasedTypeHierarchy extends TypeHierarchy {
 	 * The region of types for which to build the hierarchy
 	 */
 	protected IRegion region;
-	
+
 /**
  * Creates a TypeHierarchy on the types in the specified region,
  * considering first the given working copies,
@@ -36,35 +36,35 @@ public class RegionBasedTypeHierarchy extends TypeHierarchy {
  */
 public RegionBasedTypeHierarchy(IRegion region, ICompilationUnit[] workingCopies, IType type, boolean computeSubtypes) {
 	super(type, workingCopies, (IJavaSearchScope)null, computeSubtypes);
-	
+
 	Region newRegion = new Region() {
 		public void add(IJavaElement element) {
 			if (!contains(element)) {
 				//"new" element added to region
 				removeAllChildren(element);
-				fRootElements.add(element);
+				this.rootElements.add(element);
 				if (element.getElementType() == IJavaElement.JAVA_PROJECT) {
-					// add jar roots as well so that jars don't rely on their parent to know 
+					// add jar roots as well so that jars don't rely on their parent to know
 					// if they are contained in the region
 					// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=146615)
 					try {
 						IPackageFragmentRoot[] roots = ((IJavaProject) element).getPackageFragmentRoots();
 						for (int i = 0, length = roots.length; i < length; i++) {
-							if (roots[i].isArchive() && !fRootElements.contains(roots[i]))
-								fRootElements.add(roots[i]);
+							if (roots[i].isArchive() && !this.rootElements.contains(roots[i]))
+								this.rootElements.add(roots[i]);
 						}
 					} catch (JavaModelException e) {
 						// project doesn't exist
 					}
 				}
-				fRootElements.trimToSize();
+				this.rootElements.trimToSize();
 			}
 		}
 	};
 	IJavaElement[] elements = region.getElements();
 	for (int i = 0, length = elements.length; i < length; i++) {
 		newRegion.add(elements[i]);
-		
+
 	}
 	this.region = newRegion;
 	if (elements.length > 0)
@@ -142,11 +142,11 @@ private void pruneDeadBranches(IType[] types) {
  * removes its superclass entry and removes the references from its super types.
  */
 protected void removeType(IType type) {
-	IType[] subtypes = this.getSubtypes(type);
+	IType[] subtypes = getSubtypes(type);
 	this.typeToSubtypes.remove(type);
 	if (subtypes != null) {
 		for (int i= 0; i < subtypes.length; i++) {
-			this.removeType(subtypes[i]);
+			removeType(subtypes[i]);
 		}
 	}
 	IType superclass = (IType)this.classToSuperclass.remove(type);

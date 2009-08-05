@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ package org.eclipse.jdt.internal.formatter.comment;
 
 /**
  * Javadoc tag constants.
- * 
+ *
  * @since 3.0
  */
 public interface IJavaDocTagConstants {
@@ -67,8 +67,8 @@ public interface IJavaDocTagConstants {
 	};
 
 	/** Javadoc parameter tags */
-	// TODO (eric) should have another name than 'param' for the following tags
-	// TODO (eric) investigate how and why this list was created
+	// TODO (frederic) should have another name than 'param' for the following tags
+	// TODO (frederic) investigate how and why this list was created
 	public static final char[][] JAVADOC_PARAM_TAGS= new char[][] {
 			"@exception".toCharArray(), //$NON-NLS-1$
 			"@param".toCharArray(), //$NON-NLS-1$
@@ -89,16 +89,6 @@ public interface IJavaDocTagConstants {
 			"tr".toCharArray(), //$NON-NLS-1$
 	};
 
-	/**
-	 * Following table is used to identify special tags which may have more complex
-	 * opening than just &lt;name&gt;
-	 */
-	public static final char[][] JAVADOC_SPECIAL_TAGS= new char[][] {
-			"table".toCharArray(), //$NON-NLS-1$
-			"tr".toCharArray(), //$NON-NLS-1$
-			"td".toCharArray(), //$NON-NLS-1$
-	};
-
 	/** Javadoc tag prefix */
 	public static final char JAVADOC_TAG_PREFIX= '@';
 
@@ -110,7 +100,7 @@ public interface IJavaDocTagConstants {
 
 	public static final char[] LINK_TAG_PREFIX= LINK_TAG_PREFIX_STRING.toCharArray();
 
-	
+
 	/** Comment root tags */
 	public static final char[][] COMMENT_ROOT_TAGS= new char[][] {
 			"@deprecated".toCharArray(), //$NON-NLS-1$
@@ -121,7 +111,7 @@ public interface IJavaDocTagConstants {
 
 	/** Tag prefix of comment tags */
 	public static final char COMMENT_TAG_PREFIX= '@';
-	
+
 	/** BLOCK COMMENTS */
 	public static final String BLOCK_HEADER = "/*"; //$NON-NLS-1$
 	public static final int BLOCK_HEADER_LENGTH = BLOCK_HEADER.length();
@@ -135,10 +125,10 @@ public interface IJavaDocTagConstants {
 	/** LINE COMMENTS */
 	public static final String LINE_COMMENT_PREFIX = "// "; //$NON-NLS-1$
 	public static final int LINE_COMMENT_PREFIX_LENGTH = LINE_COMMENT_PREFIX.length();
-	
+
 	/** JAVADOC STAR */
 	public static final String JAVADOC_STAR = "*"; //$NON-NLS-1$
-	
+
 	/*
 	 *  Tags IDs
 	 */
@@ -151,5 +141,4 @@ public interface IJavaDocTagConstants {
 	static final int JAVADOC_SEPARATOR_TAGS_ID = 0x1000;
 	static final int JAVADOC_SINGLE_TAGS_ID = JAVADOC_SINGLE_BREAK_TAG_ID; // ID max for tags ID with no opening/closing (e.g. <bla>....</bla>)
 	static final int JAVADOC_CLOSED_TAG = 0x10000;
-	static final int JAVADOC_SPECIAL_TAGS_ID = 0x20000;
 }

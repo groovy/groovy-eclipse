@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,10 +34,10 @@ public static char[] createIndexKey(char[] fieldName) {
 }
 
 public FieldPattern(
-	char[] name, 
+	char[] name,
 	char[] declaringQualification,
-	char[] declaringSimpleName,	
-	char[] typeQualification, 
+	char[] declaringSimpleName,
+	char[] typeQualification,
 	char[] typeSimpleName,
 	int limitTo,
 	int matchRule) {
@@ -49,16 +49,16 @@ public FieldPattern(
 	this.typeQualification = this.isCaseSensitive ? typeQualification : CharOperation.toLowerCase(typeQualification);
 	this.typeSimpleName = (this.isCaseSensitive || this.isCamelCase) ? typeSimpleName : CharOperation.toLowerCase(typeSimpleName);
 
-	((InternalSearchPattern)this).mustResolve = mustResolve();
+	this.mustResolve = mustResolve();
 }
 /*
  * Instantiate a field pattern with additional information for generic search
  */
 public FieldPattern(
-	char[] name, 
+	char[] name,
 	char[] declaringQualification,
-	char[] declaringSimpleName,	
-	char[] typeQualification, 
+	char[] declaringSimpleName,
+	char[] typeQualification,
 	char[] typeSimpleName,
 	String typeSignature,
 	int limitTo,
@@ -105,21 +105,21 @@ protected StringBuffer print(StringBuffer output) {
 	} else {
 		output.append("FieldReferencePattern: "); //$NON-NLS-1$
 	}
-	if (declaringQualification != null) output.append(declaringQualification).append('.');
-	if (declaringSimpleName != null) 
-		output.append(declaringSimpleName).append('.');
-	else if (declaringQualification != null) output.append("*."); //$NON-NLS-1$
-	if (name == null) {
+	if (this.declaringQualification != null) output.append(this.declaringQualification).append('.');
+	if (this.declaringSimpleName != null)
+		output.append(this.declaringSimpleName).append('.');
+	else if (this.declaringQualification != null) output.append("*."); //$NON-NLS-1$
+	if (this.name == null) {
 		output.append("*"); //$NON-NLS-1$
 	} else {
-		output.append(name);
+		output.append(this.name);
 	}
-	if (typeQualification != null) 
-		output.append(" --> ").append(typeQualification).append('.'); //$NON-NLS-1$
-	else if (typeSimpleName != null) output.append(" --> "); //$NON-NLS-1$
-	if (typeSimpleName != null) 
-		output.append(typeSimpleName);
-	else if (typeQualification != null) output.append("*"); //$NON-NLS-1$
+	if (this.typeQualification != null)
+		output.append(" --> ").append(this.typeQualification).append('.'); //$NON-NLS-1$
+	else if (this.typeSimpleName != null) output.append(" --> "); //$NON-NLS-1$
+	if (this.typeSimpleName != null)
+		output.append(this.typeSimpleName);
+	else if (this.typeQualification != null) output.append("*"); //$NON-NLS-1$
 	return super.print(output);
 }
 }

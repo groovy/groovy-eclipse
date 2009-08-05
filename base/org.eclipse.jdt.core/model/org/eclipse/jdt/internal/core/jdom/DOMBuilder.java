@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,24 +27,24 @@ import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
  * for the DOMFactory. The DOMBuilder has been separated from the
  * DOMFactory to hide the implmentation of node creation and the
  * public Requestor API methods.
- * 
+ *
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 public class DOMBuilder extends AbstractDOMBuilder implements IDocumentElementRequestor {
-	
+
 	/**
 	 * True when parsing a single member - ignore any problems
 	 * encountered after the member.
 	 */
 	protected boolean fBuildingSingleMember= false;
-	
+
 	/**
 	 * True when the single member being built has been
 	 * exited.
 	 */
-	protected boolean fFinishedSingleMember = false;		
+	protected boolean fFinishedSingleMember = false;
 
 	/**
 	 * Collection of multiple fields in one declaration
@@ -62,24 +62,24 @@ public DOMBuilder() {
 /**
  * @see IDocumentElementRequestor#acceptImport(int, int, int[], char[], int, boolean, int)
  */
-public void acceptImport(int declarationStart, int declarationEnd, int[] javaDocPositions, char[] name, 
+public void acceptImport(int declarationStart, int declarationEnd, int[] javaDocPositions, char[] name,
 	int nameStart, boolean onDemand, int modifiers) {
 	int[] sourceRange = {declarationStart, declarationEnd};
 	int[] nameRange = {nameStart, declarationEnd - 1};
-	
-	/* See 1FVII1P */
-	String importName = new String(fDocument, nameRange[0], nameRange[1] + 1 - nameRange[0]);
 
-	fNode= new DOMImport(fDocument, sourceRange, importName, nameRange, onDemand, modifiers);
-	addChild(fNode);
-	if (fBuildingSingleMember) {
-		fFinishedSingleMember= true;
+	/* See 1FVII1P */
+	String importName = new String(this.fDocument, nameRange[0], nameRange[1] + 1 - nameRange[0]);
+
+	this.fNode= new DOMImport(this.fDocument, sourceRange, importName, nameRange, onDemand, modifiers);
+	addChild(this.fNode);
+	if (this.fBuildingSingleMember) {
+		this.fFinishedSingleMember= true;
 	}
 }
 /**
  * @see IDocumentElementRequestor#acceptInitializer(int declarationStart, int declarationEnd, int[] javaDocPositions, int modifiers, int modifiersStart, int bodyStart, int bodyEnd)
  */
-public void acceptInitializer(int declarationStart, int declarationEnd, int[] javaDocPositions, int modifiers, 
+public void acceptInitializer(int declarationStart, int declarationEnd, int[] javaDocPositions, int modifiers,
 	int modifiersStart, int bodyStart, int bodyEnd) {
 	int[] sourceRange = {declarationStart, declarationEnd};
 	int[] commentRange = {-1, -1};
@@ -94,24 +94,31 @@ public void acceptInitializer(int declarationStart, int declarationEnd, int[] ja
 		modifiersRange[0] = modifiersStart;
 		modifiersRange[1] = bodyStart - 1;
 	}
-	fNode = new DOMInitializer(fDocument, sourceRange, commentRange, modifiers, 
+	this.fNode = new DOMInitializer(this.fDocument, sourceRange, commentRange, modifiers,
 		modifiersRange, bodyStart);
-	addChild(fNode);
-	if (fBuildingSingleMember) {
-		fFinishedSingleMember= true;
+	addChild(this.fNode);
+	if (this.fBuildingSingleMember) {
+		this.fFinishedSingleMember= true;
 	}
 }
 /**
  * @see IDocumentElementRequestor#acceptPackage(int declarationStart, int declarationEnd, int[] javaDocPositions, char[] name, int nameStartPosition)
  */
-public void acceptPackage(int declarationStart, int declarationEnd, int[] javaDocPositions, char[] name, 
+public void acceptPackage(int declarationStart, int declarationEnd, int[] javaDocPositions, char[] name,
 	int nameStartPosition) {
-	int[] sourceRange = {declarationStart, declarationEnd};
+	int[] sourceRange = null;
+	if (javaDocPositions != null) {
+		int length = javaDocPositions.length;
+		// get last javadoc comment (see bug 68772)
+		sourceRange = new int[] {javaDocPositions[length - 2], declarationEnd};
+	} else {
+		sourceRange = new int[] {declarationStart, declarationEnd};
+	}
 	int[] nameRange = {nameStartPosition, declarationEnd - 1};
-	fNode= new DOMPackage(fDocument, sourceRange, CharOperation.charToString(name), nameRange);
-	addChild(fNode);
-	if (fBuildingSingleMember) {
-		fFinishedSingleMember= true;
+	this.fNode= new DOMPackage(this.fDocument, sourceRange, CharOperation.charToString(name), nameRange);
+	addChild(this.fNode);
+	if (this.fBuildingSingleMember) {
+		this.fFinishedSingleMember= true;
 	}
 }
 /**
@@ -122,10 +129,10 @@ public void acceptPackage(int declarationStart, int declarationEnd, int[] javaDo
  * @see IDocumentElementRequestor
  */
 public void acceptProblem(CategorizedProblem problem){
-	if (fBuildingSingleMember && fFinishedSingleMember) {
+	if (this.fBuildingSingleMember && this.fFinishedSingleMember) {
 		return;
 	}
-	fAbort= true;
+	this.fAbort= true;
 }
 /**
  * Adds the given node to the current enclosing scope, building the JDOM
@@ -133,12 +140,12 @@ public void acceptProblem(CategorizedProblem problem){
  * is being built (since those are the only nodes that have children).
  *
  * <p>NOTE: nodes are added to the JDOM via the method #basicAddChild such that
- * the nodes in the newly created JDOM are not fragmented. 
+ * the nodes in the newly created JDOM are not fragmented.
  */
 protected void addChild(IDOMNode child) {
 	super.addChild(child);
-	if (fStack.isEmpty() && fFields != null) {
-		fFields.add(child);
+	if (this.fStack.isEmpty() && this.fFields != null) {
+		this.fFields.add(child);
 	}
 }
 /**
@@ -152,7 +159,7 @@ public IDOMCompilationUnit createCompilationUnit() {
  */
 public IDOMCompilationUnit createCompilationUnit(ICompilationUnit compilationUnit) {
 	initializeBuild(compilationUnit.getContents(), true, true, false);
-	getParser(options).parseCompilationUnit(compilationUnit);
+	getParser(this.options).parseCompilationUnit(compilationUnit);
 	return super.createCompilationUnit(compilationUnit);
 }
 /**
@@ -160,31 +167,31 @@ public IDOMCompilationUnit createCompilationUnit(ICompilationUnit compilationUni
  */
 public IDOMField createField(char[] sourceCode) {
 	initializeBuild(sourceCode, false, false, true);
-	getParser(options).parseField(sourceCode);
-	if (fAbort || fNode == null) {
+	getParser(this.options).parseField(sourceCode);
+	if (this.fAbort || this.fNode == null) {
 		return null;
 	}
 
 	// we only accept field declarations with one field
-	if (fFieldCount > 1) {
+	if (this.fFieldCount > 1) {
 		return null;
 	}
-	
-	fNode.normalize(this);
-	return (IDOMField)fNode;
+
+	this.fNode.normalize(this);
+	return (IDOMField)this.fNode;
 }
 /**
- * 
+ *
  */
 public IDOMField[] createFields(char[] sourceCode) {
 	initializeBuild(sourceCode, false, false, false);
-	fFields= new ArrayList();
-	getParser(options).parseField(sourceCode);
-	if (fAbort) {
+	this.fFields= new ArrayList();
+	getParser(this.options).parseField(sourceCode);
+	if (this.fAbort) {
 		return null;
 	}
-	IDOMField[] fields= new IDOMField[fFields.size()];
-	fFields.toArray(fields);
+	IDOMField[] fields= new IDOMField[this.fFields.size()];
+	this.fFields.toArray(fields);
 	for (int i= 0; i < fields.length; i++) {
 		DOMNode node= (DOMNode)fields[i];
 		if (i < (fields.length - 1)) {
@@ -207,12 +214,12 @@ public IDOMImport createImport() {
  */
 public IDOMImport createImport(char[] sourceCode) {
 	initializeBuild(sourceCode, false, false, true);
-	getParser(options).parseImport(sourceCode);
-	if (fAbort || fNode == null) {
+	getParser(this.options).parseImport(sourceCode);
+	if (this.fAbort || this.fNode == null) {
 		return null;
 	}
-	fNode.normalize(this);
-	return (IDOMImport)fNode;
+	this.fNode.normalize(this);
+	return (IDOMImport)this.fNode;
 }
 /**
  * Creates an INITIALIZER document fragment from the given source.
@@ -221,24 +228,24 @@ public IDOMImport createImport(char[] sourceCode) {
  */
 public IDOMInitializer createInitializer(char[] sourceCode) {
 	initializeBuild(sourceCode, false, false, true);
-	getParser(options).parseInitializer(sourceCode);
-	if (fAbort || fNode == null || !(fNode instanceof IDOMInitializer)) {
+	getParser(this.options).parseInitializer(sourceCode);
+	if (this.fAbort || this.fNode == null || !(this.fNode instanceof IDOMInitializer)) {
 		return null;
 	}
-	fNode.normalize(this);
-	return (IDOMInitializer)fNode;
+	this.fNode.normalize(this);
+	return (IDOMInitializer)this.fNode;
 }
 /**
  * @see IDOMFactory#createMethod(String)
  */
 public IDOMMethod createMethod(char[] sourceCode) {
 	initializeBuild(sourceCode, false, false, true);
-	getParser(options).parseMethod(sourceCode);
-	if (fAbort || fNode == null) {
+	getParser(this.options).parseMethod(sourceCode);
+	if (this.fAbort || this.fNode == null) {
 		return null;
 	}
-	fNode.normalize(this);
-	return (IDOMMethod)fNode;
+	this.fNode.normalize(this);
+	return (IDOMMethod)this.fNode;
 }
 /**
  * @see IDOMFactory#createPackage()
@@ -251,32 +258,32 @@ public IDOMPackage createPackage() {
  */
 public IDOMPackage createPackage(char[] sourceCode) {
 	initializeBuild(sourceCode, false, false, true);
-	getParser(options).parsePackage(sourceCode);
-	if (fAbort || fNode == null) {
+	getParser(this.options).parsePackage(sourceCode);
+	if (this.fAbort || this.fNode == null) {
 		return null;
 	}
-	fNode.normalize(this);
-	return (IDOMPackage)fNode;
+	this.fNode.normalize(this);
+	return (IDOMPackage)this.fNode;
 }
 /**
  * @see IDOMFactory#createType(String)
  */
 public IDOMType createType(char[] sourceCode) {
 	initializeBuild(sourceCode, false, true, false);
-	getParser(options).parseType(sourceCode);
-	if (fAbort) {
+	getParser(this.options).parseType(sourceCode);
+	if (this.fAbort) {
 		return null;
 	}
-	if (fNode != null) fNode.normalize(this);
-	if (fNode instanceof IDOMType) {
-		return (IDOMType) fNode;
+	if (this.fNode != null) this.fNode.normalize(this);
+	if (this.fNode instanceof IDOMType) {
+		return (IDOMType) this.fNode;
 	}
 	return null;
 }
 /**
  * Creates a new DOMMethod and inizializes.
  *
- * @param declarationStart - a source position corresponding to the first character 
+ * @param declarationStart - a source position corresponding to the first character
  *		of this constructor declaration
  * @param modifiers - the modifiers for this constructor converted to a flag
  * @param modifiersStart - a source position corresponding to the first character of the
@@ -308,15 +315,15 @@ public IDOMType createType(char[] sourceCode) {
  *		character of the respective exception types
  * @param exceptionTypeEnds - a list of source positions corresponding to the last
  *		character of the respective exception types
- * @param bodyStart - a source position corresponding to the start of this 
+ * @param bodyStart - a source position corresponding to the start of this
  *		constructor's body
  */
-protected void enterAbstractMethod(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, 
-	char[] returnType, int returnTypeStart, int returnTypeEnd, int returnTypeDimensionCount, 
-	char[] name, int nameStart, int nameEnd, char[][] parameterTypes, int[] parameterTypeStarts, 
-	int[] parameterTypeEnds, char[][] parameterNames, int[] parameterNameStarts, 
-	int[] parameterNameEnds, int parametersEnd, int extendedReturnTypeDimensionCount, 
-	int extendedReturnTypeDimensionEnd, char[][] exceptionTypes, int[] exceptionTypeStarts, 
+protected void enterAbstractMethod(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart,
+	char[] returnType, int returnTypeStart, int returnTypeEnd, int returnTypeDimensionCount,
+	char[] name, int nameStart, int nameEnd, char[][] parameterTypes, int[] parameterTypeStarts,
+	int[] parameterTypeEnds, char[][] parameterNames, int[] parameterNameStarts,
+	int[] parameterNameEnds, int parametersEnd, int extendedReturnTypeDimensionCount,
+	int extendedReturnTypeDimensionEnd, char[][] exceptionTypes, int[] exceptionTypeStarts,
 	int[] exceptionTypeEnds, int bodyStart, boolean isConstructor) {
 	int[] sourceRange = {declarationStart, -1}; // will be fixed up on exit
 	int[] nameRange = {nameStart, nameEnd};
@@ -336,9 +343,9 @@ protected void enterAbstractMethod(int declarationStart, int[] javaDocPositions,
 		}
 	}
 	int[] returnTypeRange = null;
-	
+
 	if (extendedReturnTypeDimensionCount > 0)
-		returnTypeRange = new int[] {returnTypeStart, returnTypeEnd, 
+		returnTypeRange = new int[] {returnTypeStart, returnTypeEnd,
 			parametersEnd + 1, extendedReturnTypeDimensionEnd};
 	else
 		returnTypeRange = new int[] {returnTypeStart, returnTypeEnd};
@@ -355,13 +362,13 @@ protected void enterAbstractMethod(int declarationStart, int[] javaDocPositions,
 	} else {
 		bodyRange = new int[] {parametersEnd + 1, -1};
 	}
-	fNode = new DOMMethod(fDocument, sourceRange, CharOperation.charToString(name), nameRange, commentRange, modifiers, 
+	this.fNode = new DOMMethod(this.fDocument, sourceRange, CharOperation.charToString(name), nameRange, commentRange, modifiers,
 		modifiersRange, isConstructor, CharOperation.charToString(returnType), returnTypeRange,
 		CharOperation.charArrayToStringArray(parameterTypes),
-		CharOperation.charArrayToStringArray(parameterNames), 
+		CharOperation.charArrayToStringArray(parameterNames),
 		parameterRange, CharOperation.charArrayToStringArray(exceptionTypes), exceptionRange, bodyRange);
-	addChild(fNode);
-	fStack.push(fNode);
+	addChild(this.fNode);
+	this.fStack.push(this.fNode);
 }
 /**
  * @see IDocumentElementRequestor#enterClass(
@@ -369,7 +376,7 @@ protected void enterAbstractMethod(int declarationStart, int[] javaDocPositions,
 	int[] javaDocPositions,
 	int modifiers,
 	int modifiersStart,
-	int classStart, 
+	int classStart,
 	char[] name,
 	int nameStart,
 	int nameEnd,
@@ -381,62 +388,62 @@ protected void enterAbstractMethod(int declarationStart, int[] javaDocPositions,
 	int[] superinterfaceEnds,
 	int bodyStart)
  */
-public void enterClass(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, int keywordStart, 
-	char[] name, int nameStart, int nameEnd, char[] superclass, int superclassStart, 
-	int superclassEnd, char[][] superinterfaces, int[] superinterfaceStarts, 
+public void enterClass(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, int keywordStart,
+	char[] name, int nameStart, int nameEnd, char[] superclass, int superclassStart,
+	int superclassEnd, char[][] superinterfaces, int[] superinterfaceStarts,
 	int[] superinterfaceEnds, int bodyStart) {
 
 	enterType(declarationStart, javaDocPositions, modifiers, modifiersStart, keywordStart,
-		name, nameStart, nameEnd, superclass, superclassStart, 
-		superclassEnd, superinterfaces, superinterfaceStarts, 
+		name, nameStart, nameEnd, superclass, superclassStart,
+		superclassEnd, superinterfaces, superinterfaceStarts,
 		superinterfaceEnds, bodyStart, true);
 }
 /**
  * @see IDocumentElementRequestor#enterConstructor(
 	int declarationStart,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
-	int modifiersStart, 
+	int modifiersStart,
 	char[] name,
 	int nameStart,
 	int nameEnd,
 	char[][] parameterTypes,
 	int [] parameterTypeStarts,
-	int [] parameterTypeEnds,			
+	int [] parameterTypeEnds,
 	char[][] parameterNames,
 	int [] parameterNameStarts,
 	int [] parameterNameEnds,
-	int parametersEnd,	
+	int parametersEnd,
 	char[][] exceptionTypes,
 	int [] exceptionTypeStarts,
 	int [] exceptionTypeEnds,
 	int bodyStart)
  */
-public void enterConstructor(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, 
-	char[] name, int nameStart, int nameEnd, char[][] parameterTypes, 
-	int[] parameterTypeStarts, int[] parameterTypeEnds, char[][] parameterNames, 
-	int[] parameterNameStarts, int[] parameterNameEnds, int parametersEnd, 
-	char[][] exceptionTypes, int[] exceptionTypeStarts, int[] exceptionTypeEnds, 
+public void enterConstructor(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart,
+	char[] name, int nameStart, int nameEnd, char[][] parameterTypes,
+	int[] parameterTypeStarts, int[] parameterTypeEnds, char[][] parameterNames,
+	int[] parameterNameStarts, int[] parameterNameEnds, int parametersEnd,
+	char[][] exceptionTypes, int[] exceptionTypeStarts, int[] exceptionTypeEnds,
 	int bodyStart) {
-		
+
 	/* see 1FVIIQZ */
-	String nameString = new String(fDocument, nameStart, nameEnd - nameStart);
+	String nameString = new String(this.fDocument, nameStart, nameEnd - nameStart);
 	int openParenPosition = nameString.indexOf('(');
 	if (openParenPosition > -1)
 		nameEnd = nameStart + openParenPosition - 1;
-		
-	enterAbstractMethod(declarationStart, javaDocPositions, modifiers, modifiersStart, 
-		null, -1, -1, 0, 
-		name, nameStart, nameEnd, parameterTypes, parameterTypeStarts, 
-		parameterTypeEnds, parameterNames, parameterNameStarts, 
-		parameterNameEnds, parametersEnd, 0, 
-		-1, exceptionTypes, exceptionTypeStarts, 
+
+	enterAbstractMethod(declarationStart, javaDocPositions, modifiers, modifiersStart,
+		null, -1, -1, 0,
+		name, nameStart, nameEnd, parameterTypes, parameterTypeStarts,
+		parameterTypeEnds, parameterNames, parameterNameStarts,
+		parameterNameEnds, parametersEnd, 0,
+		-1, exceptionTypes, exceptionTypeStarts,
 		exceptionTypeEnds, bodyStart,true);
 }
 /**
  * @see IDocumentElementRequestor#enterField(
 	int declarationStart,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
 	int modifiersStart,
 	char[] type,
@@ -449,19 +456,19 @@ public void enterConstructor(int declarationStart, int[] javaDocPositions, int m
 	int extendedTypeDimensionCount,
 	int extendedTypeDimensionEnd)
  */
-public void enterField(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, 
-	char[] type, int typeStart, int typeEnd, int typeDimensionCount, char[] name, 
-	int nameStart, int nameEnd, int extendedTypeDimensionCount, 
+public void enterField(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart,
+	char[] type, int typeStart, int typeEnd, int typeDimensionCount, char[] name,
+	int nameStart, int nameEnd, int extendedTypeDimensionCount,
 	int extendedTypeDimensionEnd) {
-	int[] sourceRange = {declarationStart, 
+	int[] sourceRange = {declarationStart,
 		(extendedTypeDimensionEnd > nameEnd) ? extendedTypeDimensionEnd : nameEnd};
 	int[] nameRange = {nameStart, nameEnd};
 	int[] commentRange = {-1, -1};
-		if (javaDocPositions != null) {
-			int length = javaDocPositions.length;
-			commentRange[0] = javaDocPositions[length - 2]; // get last javadoc comment (see bug 68772)
-			commentRange[1] = javaDocPositions[length - 1];
-		}
+	if (javaDocPositions != null) {
+		int length = javaDocPositions.length;
+		commentRange[0] = javaDocPositions[length - 2]; // get last javadoc comment (see bug 68772)
+		commentRange[1] = javaDocPositions[length - 1];
+	}
 	int[] modifiersRange = {-1, -1};
 	if (modifiersStart > -1) {
 		modifiersRange[0] = modifiersStart;
@@ -471,21 +478,21 @@ public void enterField(int declarationStart, int[] javaDocPositions, int modifie
 	boolean hasInitializer = false; // fixed on exitField
 	int[] initializerRange = {-1, -1}; // fixed on exitField
 	boolean isVariableDeclarator = false;
-	if (fNode instanceof DOMField) {
-		DOMField field = (DOMField)fNode;
+	if (this.fNode instanceof DOMField) {
+		DOMField field = (DOMField)this.fNode;
 		if (field.fTypeRange[0] == typeStart)
 			isVariableDeclarator = true;
-	}	
-	fNode = new DOMField(fDocument, sourceRange, CharOperation.charToString(name), nameRange, commentRange, 
-		modifiers, modifiersRange, typeRange, CharOperation.charToString(type), hasInitializer, 
+	}
+	this.fNode = new DOMField(this.fDocument, sourceRange, CharOperation.charToString(name), nameRange, commentRange,
+		modifiers, modifiersRange, typeRange, CharOperation.charToString(type), hasInitializer,
 		initializerRange, isVariableDeclarator);
-	addChild(fNode);
-	fStack.push(fNode);
+	addChild(this.fNode);
+	this.fStack.push(this.fNode);
 }
 /**
  * @see IDocumentElementRequestor#enterInterface(
 	int declarationStart,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
 	int modifiersStart,
 	int interfaceStart,
@@ -498,19 +505,19 @@ public void enterField(int declarationStart, int[] javaDocPositions, int modifie
 	int bodyStart)
  */
 public void enterInterface(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, int keywordStart,
-	char[] name, int nameStart, int nameEnd, char[][] superinterfaces, 
+	char[] name, int nameStart, int nameEnd, char[][] superinterfaces,
 	int[] superinterfaceStarts, int[] superinterfaceEnds, int bodyStart) {
 
 	enterType(declarationStart, javaDocPositions, modifiers, modifiersStart, keywordStart,
-		name, nameStart, nameEnd, null, -1, -1, superinterfaces, 
+		name, nameStart, nameEnd, null, -1, -1, superinterfaces,
 		superinterfaceStarts, superinterfaceEnds, bodyStart, false);
 }
 /**
  * @see IDocumentElementRequestor#enterMethod(
 	int declarationStart,
-	int[] javaDocPositions,	
+	int[] javaDocPositions,
 	int modifiers,
-	int modifiersStart, 
+	int modifiersStart,
 	char[] returnType,
 	int returnTypeStart,
 	int returnTypeEnd,
@@ -520,40 +527,40 @@ public void enterInterface(int declarationStart, int[] javaDocPositions, int mod
 	int nameEnd,
 	char[][] parameterTypes,
 	int [] parameterTypeStarts,
-	int [] parameterTypeEnds,			
+	int [] parameterTypeEnds,
 	char[][] parameterNames,
 	int [] parameterNameStarts,
 	int [] parameterNameEnds,
 	int parametersEnd,
 	int extendedReturnTypeDimensionCount,
-	int extendedReturnTypeDimensionEnd,	
+	int extendedReturnTypeDimensionEnd,
 	char[][] exceptionTypes,
 	int [] exceptionTypeStarts,
 	int [] exceptionTypeEnds,
 	int bodyStart)
  */
-public void enterMethod(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, 
-	char[] returnType, int returnTypeStart, int returnTypeEnd, int returnTypeDimensionCount, 
-	char[] name, int nameStart, int nameEnd, char[][] parameterTypes, int[] parameterTypeStarts, 
-	int[] parameterTypeEnds, char[][] parameterNames, int[] parameterNameStarts, 
-	int[] parameterNameEnds, int parametersEnd, int extendedReturnTypeDimensionCount, 
-	int extendedReturnTypeDimensionEnd, char[][] exceptionTypes, int[] exceptionTypeStarts, 
+public void enterMethod(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart,
+	char[] returnType, int returnTypeStart, int returnTypeEnd, int returnTypeDimensionCount,
+	char[] name, int nameStart, int nameEnd, char[][] parameterTypes, int[] parameterTypeStarts,
+	int[] parameterTypeEnds, char[][] parameterNames, int[] parameterNameStarts,
+	int[] parameterNameEnds, int parametersEnd, int extendedReturnTypeDimensionCount,
+	int extendedReturnTypeDimensionEnd, char[][] exceptionTypes, int[] exceptionTypeStarts,
 	int[] exceptionTypeEnds, int bodyStart) {
-	enterAbstractMethod(declarationStart, javaDocPositions, modifiers, modifiersStart, 
-		returnType, returnTypeStart, returnTypeEnd, returnTypeDimensionCount, 
-		name, nameStart, nameEnd, parameterTypes, parameterTypeStarts, 
-		parameterTypeEnds, parameterNames, parameterNameStarts, 
-		parameterNameEnds, parametersEnd, extendedReturnTypeDimensionCount, 
-		extendedReturnTypeDimensionEnd, exceptionTypes, exceptionTypeStarts, 
+	enterAbstractMethod(declarationStart, javaDocPositions, modifiers, modifiersStart,
+		returnType, returnTypeStart, returnTypeEnd, returnTypeDimensionCount,
+		name, nameStart, nameEnd, parameterTypes, parameterTypeStarts,
+		parameterTypeEnds, parameterNames, parameterNameStarts,
+		parameterNameEnds, parametersEnd, extendedReturnTypeDimensionCount,
+		extendedReturnTypeDimensionEnd, exceptionTypes, exceptionTypeStarts,
 		exceptionTypeEnds, bodyStart,false);
 }
 
-protected void enterType(int declarationStart, int[] javaDocPositions, 
-	int modifiers, int modifiersStart, int keywordStart, char[] name, 
-	int nameStart, int nameEnd, char[] superclass, int superclassStart, 
-	int superclassEnd, char[][] superinterfaces, int[] superinterfaceStarts, 
+protected void enterType(int declarationStart, int[] javaDocPositions,
+	int modifiers, int modifiersStart, int keywordStart, char[] name,
+	int nameStart, int nameEnd, char[] superclass, int superclassStart,
+	int superclassEnd, char[][] superinterfaces, int[] superinterfaceStarts,
 	int[] superinterfaceEnds, int bodyStart, boolean isClass) {
-	if (fBuildingType) {
+	if (this.fBuildingType) {
 		int[] sourceRange = {declarationStart, -1}; // will be fixed in the exit
 		int[] commentRange = {-1, -1};
 		if (javaDocPositions != null) {
@@ -599,14 +606,14 @@ protected void enterType(int declarationStart, int[] javaDocPositions,
 			}
 		}
 		int[] openBodyRange = {bodyStart, -1}; // fixed by setTypeRanges(DOMNode)
-		int[] closeBodyRange = {-1, -1}; // will be fixed in exit		
-		fNode = new DOMType(fDocument, sourceRange, new String(name), nameRange, commentRange, 
-			modifiers, modifiersRange, typeKeywordRange, superclassRange, extendsKeywordRange, 
+		int[] closeBodyRange = {-1, -1}; // will be fixed in exit
+		this.fNode = new DOMType(this.fDocument, sourceRange, new String(name), nameRange, commentRange,
+			modifiers, modifiersRange, typeKeywordRange, superclassRange, extendsKeywordRange,
 			CharOperation.charArrayToStringArray(superinterfaces), interfacesRange,
-			implementsKeywordRange, openBodyRange, 
+			implementsKeywordRange, openBodyRange,
 			closeBodyRange, isClass);
-		addChild(fNode);
-		fStack.push(fNode);
+		addChild(this.fNode);
+		this.fStack.push(this.fNode);
 	}
 }
 /**
@@ -617,12 +624,12 @@ protected void enterType(int declarationStart, int[] javaDocPositions,
  *		declaration.  This can include whitespace and comments following the closing bracket.
  */
 protected void exitAbstractMethod(int bodyEnd, int declarationEnd) {
-	DOMMethod method = (DOMMethod) fStack.pop();
+	DOMMethod method = (DOMMethod) this.fStack.pop();
 	method.setSourceRangeEnd(declarationEnd);
 	method.setBodyRangeEnd(bodyEnd + 1);
-	fNode = method;
-	if (fBuildingSingleMember) {
-		fFinishedSingleMember= true;
+	this.fNode = method;
+	if (this.fBuildingSingleMember) {
+		this.fFinishedSingleMember= true;
 	}
 }
 /**
@@ -650,13 +657,13 @@ public void exitConstructor(int bodyEnd, int declarationEnd) {
  * @see IDocumentElementRequestor#exitField(int, int)
  */
 public void exitField(int bodyEnd, int declarationEnd) {
-	DOMField field = (DOMField)fStack.pop();
+	DOMField field = (DOMField)this.fStack.pop();
 	if (field.getEndPosition() < declarationEnd) {
 		field.setSourceRangeEnd(declarationEnd);
 		int nameEnd = field.fNameRange[1];
 		if (nameEnd < bodyEnd) {
 			/* see 1FVIIV8 - obtain initializer range */
-			String initializer = new String(fDocument, nameEnd + 1, bodyEnd - nameEnd);
+			String initializer = new String(this.fDocument, nameEnd + 1, bodyEnd - nameEnd);
 			int index = initializer.indexOf('=');
 			if (index > -1) {
 				field.setHasInitializer(true);
@@ -664,10 +671,10 @@ public void exitField(int bodyEnd, int declarationEnd) {
 			}
 		}
 	}
-	fFieldCount++;
-	fNode = field;
-	if (fBuildingSingleMember) {
-		fFinishedSingleMember= true;
+	this.fFieldCount++;
+	this.fNode = field;
+	if (this.fBuildingSingleMember) {
+		this.fFinishedSingleMember= true;
 	}
 }
 /**
@@ -706,8 +713,8 @@ protected DocumentElementParser getParser(Map settings) {
  */
 protected void initializeBuild(char[] sourceCode, boolean buildingCompilationUnit, boolean buildingType, boolean singleMember) {
 	super.initializeBuild(sourceCode, buildingCompilationUnit, buildingType);
-	fBuildingSingleMember= singleMember;
-	fFinishedSingleMember= false;
+	this.fBuildingSingleMember= singleMember;
+	this.fFinishedSingleMember= false;
 
 }
 }

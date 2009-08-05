@@ -31,7 +31,7 @@ public class FormatJavadocBlock extends FormatJavadocNode implements IJavaDocTag
 	final static int PARAM_TAG = 0x0020;
 	final static int IN_PARAM_TAG = 0x0040;
 	final static int IN_DESCRIPTION = 0x0080;
-	
+
 	// constants
 	final static int MAX_TAG_HIERARCHY = 10;
 
@@ -52,7 +52,7 @@ public FormatJavadocBlock(int start, int end, int line, int value) {
 		case TAG_SERIAL_FIELD_VALUE:
 		case TAG_THROWS_VALUE:
 		case TAG_EXCEPTION_VALUE:
-			flags |= PARAM_TAG;
+			this.flags |= PARAM_TAG;
 	}
 }
 
@@ -62,13 +62,13 @@ private void addNode(FormatJavadocNode node) {
 		this.nodes = new FormatJavadocNode[DEFAULT_ARRAY_SIZE];
 	} else if (this.nodesPtr >= this.nodes.length) {
 		System.arraycopy(
-			this.nodes, 0, 
+			this.nodes, 0,
 			this.nodes = new FormatJavadocNode[this.nodes.length+INCREMENT_ARRAY_SIZE], 0,
 			this.nodesPtr);
 	}
 
 	// Store the node
-	this.nodes[nodesPtr] = node;
+	this.nodes[this.nodesPtr] = node;
 	this.sourceEnd = node.sourceEnd;
 }
 
@@ -227,7 +227,7 @@ FormatJavadocText[] getTextHierarchy(FormatJavadocNode node, int htmlDepth) {
 
 /**
  * Returns whether the text is on the same line of the tag or not.
- * 
+ *
  * @return <code>true</code> if the text is on the same line than the tag,
  * 	<code>false</code> otherwise.
  */
@@ -239,7 +239,7 @@ public boolean hasTextOnTagLine() {
  * Returns whether the block is the javadoc comment description or not.
  * The description begins after the starting delimiter and continues until the tag
  * section.
- * 
+ *
  * @return <code>true</code> if the block is the javadoc description,
  * 	<code>false</code> otherwise.
  */
@@ -250,7 +250,7 @@ public boolean isDescription() {
 /**
  * Returns whether the block is the first block of the javadoc comment or not
  * (independently of the fact it's a description or not).
- * 
+ *
  * @return <code>true</code> if the block is the first of the javadoc
  * 	comment, <code>false</code> otherwise.
  */
@@ -261,7 +261,7 @@ public boolean isFirst() {
 /**
  * Returns whether the first block starts on the same line than the javadoc
  * starting delimiter or not.
- * 
+ *
  * @return <code>true</code> if the the first block starts on the same line
  * 	than the javadoc starting delimiter, <code>false</code> otherwise.
  */
@@ -270,9 +270,9 @@ public boolean isHeaderLine() {
 }
 
 /**
- * Returns whether the block is a description or inlined in a description. 
+ * Returns whether the block is a description or inlined in a description.
  * @see #isParamTag()
- * 
+ *
  * @return <code>true</code> if the block is a description or inlined in a
  * 	description, <code>false</code> otherwise.
  */
@@ -282,7 +282,7 @@ public boolean isInDescription() {
 
 /**
  * Returns whether the text is on the same line of the tag.
- * 
+ *
  * @return <code>true</code> if the text is on the same line than the tag,
  * 	<code>false</code> otherwise.
  */
@@ -291,9 +291,9 @@ public boolean isInlined() {
 }
 
 /**
- * Returns whether the block is a param tag or inlined in a param tag. 
+ * Returns whether the block is a param tag or inlined in a param tag.
  * @see #isParamTag()
- * 
+ *
  * @return <code>true</code> if the block is a param tag or inlined in a param
  * 	tag, <code>false</code> otherwise.
  */
@@ -303,7 +303,7 @@ public boolean isInParamTag() {
 
 /**
  * Returns whether the text is on the same line of the tag.
- * 
+ *
  * @return <code>true</code> if the text is on the same line than the tag,
  * 	<code>false</code> otherwise.
  */
@@ -314,7 +314,7 @@ public boolean isOneLineTag() {
 /**
  * Returns whether the block is a param tag or not.  Note that this also includes
  * &#064;serialField, &#064;throws and &#064;exception tags.
- * 
+ *
  * @return <code>true</code> if the block is a param tag,
  * 	<code>false</code> otherwise.
  */

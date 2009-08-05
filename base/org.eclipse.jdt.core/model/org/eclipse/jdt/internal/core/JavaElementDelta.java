@@ -25,7 +25,7 @@ public class JavaElementDelta extends SimpleDelta implements IJavaElementDelta {
 	 * @see #getAffectedChildren()
 	 */
 	IJavaElementDelta[] affectedChildren = EMPTY_DELTA;
-	
+
 	/*
 	 * The AST created during the last reconcile operation.
 	 * Non-null only iff:
@@ -39,7 +39,7 @@ public class JavaElementDelta extends SimpleDelta implements IJavaElementDelta {
 	 * The element that this delta describes the change to.
 	 */
 	IJavaElement changedElement;
-	
+
 	/**
 	 * Collection of resource deltas that correspond to non java resources deltas.
 	 */
@@ -49,19 +49,19 @@ public class JavaElementDelta extends SimpleDelta implements IJavaElementDelta {
 	 * Counter of resource deltas
 	 */
 	int resourceDeltasCounter;
-	
+
 	/**
 	 * @see #getMovedFromElement()
 	 */
 	IJavaElement movedFromHandle = null;
-	
+
 	/**
 	 * @see #getMovedToElement()
 	 */
 	IJavaElement movedToHandle = null;
-	
+
 	IJavaElementDelta[] annotationDeltas = EMPTY_DELTA;
-	
+
 	/**
 	 * Empty array of IJavaElementDelta
 	 */
@@ -100,12 +100,12 @@ protected void addAffectedChild(JavaElementDelta child) {
 			this.changeFlags |= F_CHILDREN;
 	}
 
-	// if a child delta is added to a compilation unit delta or below, 
+	// if a child delta is added to a compilation unit delta or below,
 	// it's a fine grained delta
 	if (this.changedElement.getElementType() >= IJavaElement.COMPILATION_UNIT) {
-		this.fineGrained();
+		fineGrained();
 	}
-	
+
 	if (this.affectedChildren.length == 0) {
 		this.affectedChildren = new IJavaElementDelta[] {child};
 		return;
@@ -114,7 +114,7 @@ protected void addAffectedChild(JavaElementDelta child) {
 	int existingChildIndex = -1;
 	if (this.affectedChildren != null) {
 		for (int i = 0; i < this.affectedChildren.length; i++) {
-			if (this.equalsAndSameParent(this.affectedChildren[i].getElement(), child.getElement())) { // handle case of two jars that can be equals but not in the same project
+			if (equalsAndSameParent(this.affectedChildren[i].getElement(), child.getElement())) { // handle case of two jars that can be equals but not in the same project
 				existingChild = (JavaElementDelta)this.affectedChildren[i];
 				existingChildIndex = i;
 				break;
@@ -131,7 +131,7 @@ protected void addAffectedChild(JavaElementDelta child) {
 					case CHANGED: // child was added then changed -> it is added
 						return;
 					case REMOVED: // child was added then removed -> noop
-						this.affectedChildren = this.removeAndShrinkArray(this.affectedChildren, existingChildIndex);
+						this.affectedChildren = removeAndShrinkArray(this.affectedChildren, existingChildIndex);
 						return;
 				}
 				break;
@@ -158,19 +158,19 @@ protected void addAffectedChild(JavaElementDelta child) {
 							JavaElementDelta childsChild = (JavaElementDelta) children[i];
 							existingChild.addAffectedChild(childsChild);
 						}
-						
+
 						// update flags
 						boolean childHadContentFlag = (child.changeFlags & F_CONTENT) != 0;
 						boolean existingChildHadChildrenFlag = (existingChild.changeFlags & F_CHILDREN) != 0;
 						existingChild.changeFlags |= child.changeFlags;
-						
-						// remove F_CONTENT flag if existing child had F_CHILDREN flag set 
-						// (case of fine grained delta (existing child) and delta coming from 
+
+						// remove F_CONTENT flag if existing child had F_CHILDREN flag set
+						// (case of fine grained delta (existing child) and delta coming from
 						// DeltaProcessor (child))
 						if (childHadContentFlag && existingChildHadChildrenFlag) {
 							existingChild.changeFlags &= ~F_CONTENT;
 						}
-						
+
 						// add the non-java resource deltas if needed
 						// note that the child delta always takes precedence over this existing child delta
 						// as non-java resource deltas are always created last (by the DeltaProcessor)
@@ -179,11 +179,11 @@ protected void addAffectedChild(JavaElementDelta child) {
 							existingChild.resourceDeltas = resDeltas;
 							existingChild.resourceDeltasCounter = child.resourceDeltasCounter;
 						}
-						
+
 						return;
 				}
 				break;
-			default: 
+			default:
 				// unknown -> existing child becomes the child with the existing child's flags
 				int flags = existingChild.getFlags();
 				this.affectedChildren[existingChildIndex] = child;
@@ -194,7 +194,7 @@ protected void addAffectedChild(JavaElementDelta child) {
 /**
  * Creates the nested deltas resulting from an add operation.
  * Convenience method for creating add deltas.
- * The constructor should be used to create the root delta 
+ * The constructor should be used to create the root delta
  * and then an add operation should call this method.
  */
 public void added(IJavaElement element) {
@@ -223,21 +223,21 @@ protected void addResourceDelta(IResourceDelta child) {
 			this.kind = CHANGED;
 			this.changeFlags |= F_CONTENT;
 	}
-	if (resourceDeltas == null) {
-		resourceDeltas = new IResourceDelta[5];
-		resourceDeltas[resourceDeltasCounter++] = child;
+	if (this.resourceDeltas == null) {
+		this.resourceDeltas = new IResourceDelta[5];
+		this.resourceDeltas[this.resourceDeltasCounter++] = child;
 		return;
 	}
-	if (resourceDeltas.length == resourceDeltasCounter) {
+	if (this.resourceDeltas.length == this.resourceDeltasCounter) {
 		// need a resize
-		System.arraycopy(resourceDeltas, 0, (resourceDeltas = new IResourceDelta[resourceDeltasCounter * 2]), 0, resourceDeltasCounter);
+		System.arraycopy(this.resourceDeltas, 0, (this.resourceDeltas = new IResourceDelta[this.resourceDeltasCounter * 2]), 0, this.resourceDeltasCounter);
 	}
-	resourceDeltas[resourceDeltasCounter++] = child;
+	this.resourceDeltas[this.resourceDeltasCounter++] = child;
 }
 /**
  * Creates the nested deltas resulting from a change operation.
  * Convenience method for creating change deltas.
- * The constructor should be used to create the root delta 
+ * The constructor should be used to create the root delta
  * and then a change operation should call this method.
  */
 public JavaElementDelta changed(IJavaElement element, int changeFlag) {
@@ -276,7 +276,7 @@ protected JavaElementDelta createDeltaTree(IJavaElement element, JavaElementDelt
 	JavaElementDelta childDelta = delta;
 	ArrayList ancestors= getAncestors(element);
 	if (ancestors == null) {
-		if (this.equalsAndSameParent(delta.getElement(), getElement())) { // handle case of two jars that can be equals but not in the same project
+		if (equalsAndSameParent(delta.getElement(), getElement())) { // handle case of two jars that can be equals but not in the same project
 			// the element being changed is the root element
 			this.kind= delta.kind;
 			this.changeFlags = delta.changeFlags;
@@ -305,7 +305,7 @@ protected boolean equalsAndSameParent(IJavaElement e1, IJavaElement e2) {
  * in the delta tree, or null, if no delta for the given element is found.
  */
 protected JavaElementDelta find(IJavaElement e) {
-	if (this.equalsAndSameParent(this.changedElement, e)) { // handle case of two jars that can be equals but not in the same project
+	if (equalsAndSameParent(this.changedElement, e)) { // handle case of two jars that can be equals but not in the same project
 		return this;
 	} else {
 		for (int i = 0; i < this.affectedChildren.length; i++) {
@@ -386,7 +386,7 @@ protected IJavaElementDelta[] getChildrenOfType(int type) {
 
 	IJavaElementDelta[] childrenOfType = new IJavaElementDelta[children.size()];
 	children.toArray(childrenOfType);
-	
+
 	return childrenOfType;
 }
 /**
@@ -394,14 +394,14 @@ protected IJavaElementDelta[] getChildrenOfType(int type) {
  * delta.
  */
 protected JavaElementDelta getDeltaFor(IJavaElement element) {
-	if (this.equalsAndSameParent(getElement(), element)) // handle case of two jars that can be equals but not in the same project
+	if (equalsAndSameParent(getElement(), element)) // handle case of two jars that can be equals but not in the same project
 		return this;
 	if (this.affectedChildren.length == 0)
 		return null;
 	int childrenCount = this.affectedChildren.length;
 	for (int i = 0; i < childrenCount; i++) {
 		JavaElementDelta delta = (JavaElementDelta)this.affectedChildren[i];
-		if (this.equalsAndSameParent(delta.getElement(), element)) { // handle case of two jars that can be equals but not in the same project
+		if (equalsAndSameParent(delta.getElement(), element)) { // handle case of two jars that can be equals but not in the same project
 			return delta;
 		} else {
 			delta = delta.getDeltaFor(element);
@@ -427,7 +427,7 @@ public IJavaElement getMovedFromElement() {
  * @see IJavaElementDelta
  */
 public IJavaElement getMovedToElement() {
-	return movedToHandle;
+	return this.movedToHandle;
 }
 /**
  * @see IJavaElementDelta
@@ -439,11 +439,11 @@ public IJavaElementDelta[] getRemovedChildren() {
  * Return the collection of resource deltas. Return null if none.
  */
 public IResourceDelta[] getResourceDeltas() {
-	if (resourceDeltas == null) return null;
-	if (resourceDeltas.length != resourceDeltasCounter) {
-		System.arraycopy(resourceDeltas, 0, resourceDeltas = new IResourceDelta[resourceDeltasCounter], 0, resourceDeltasCounter);
+	if (this.resourceDeltas == null) return null;
+	if (this.resourceDeltas.length != this.resourceDeltasCounter) {
+		System.arraycopy(this.resourceDeltas, 0, this.resourceDeltas = new IResourceDelta[this.resourceDeltasCounter], 0, this.resourceDeltasCounter);
 	}
-	return resourceDeltas;
+	return this.resourceDeltas;
 }
 /**
  * Adds the new element to a new array that contains all of the elements of the old array.
@@ -462,14 +462,14 @@ protected IJavaElementDelta[] growAndAddToArray(IJavaElementDelta[] array, IJava
  */
 protected void insertDeltaTree(IJavaElement element, JavaElementDelta delta) {
 	JavaElementDelta childDelta= createDeltaTree(element, delta);
-	if (!this.equalsAndSameParent(element, getElement())) { // handle case of two jars that can be equals but not in the same project
+	if (!equalsAndSameParent(element, getElement())) { // handle case of two jars that can be equals but not in the same project
 		addAffectedChild(childDelta);
 	}
 }
 /**
  * Creates the nested deltas resulting from an move operation.
  * Convenience method for creating the "move from" delta.
- * The constructor should be used to create the root delta 
+ * The constructor should be used to create the root delta
  * and then the move operation should call this method.
  */
 public void movedFrom(IJavaElement movedFromElement, IJavaElement movedToElement) {
@@ -482,7 +482,7 @@ public void movedFrom(IJavaElement movedFromElement, IJavaElement movedToElement
 /**
  * Creates the nested deltas resulting from an move operation.
  * Convenience method for creating the "move to" delta.
- * The constructor should be used to create the root delta 
+ * The constructor should be used to create the root delta
  * and then the move operation should call this method.
  */
 public void movedTo(IJavaElement movedToElement, IJavaElement movedFromElement) {
@@ -507,7 +507,7 @@ protected void removeAffectedChild(JavaElementDelta child) {
 	int index = -1;
 	if (this.affectedChildren != null) {
 		for (int i = 0; i < this.affectedChildren.length; i++) {
-			if (this.equalsAndSameParent(this.affectedChildren[i].getElement(), child.getElement())) { // handle case of two jars that can be equals but not in the same project
+			if (equalsAndSameParent(this.affectedChildren[i].getElement(), child.getElement())) { // handle case of two jars that can be equals but not in the same project
 				index = i;
 				break;
 			}
@@ -533,7 +533,7 @@ protected IJavaElementDelta[] removeAndShrinkArray(IJavaElementDelta[] old, int 
 /**
  * Creates the nested deltas resulting from an delete operation.
  * Convenience method for creating removed deltas.
- * The constructor should be used to create the root delta 
+ * The constructor should be used to create the root delta
  * and then the delete operation should call this method.
  */
 public void removed(IJavaElement element) {
@@ -552,7 +552,7 @@ public void removed(IJavaElement element, int flags) {
 /**
  * Creates the nested deltas resulting from a change operation.
  * Convenience method for creating change deltas.
- * The constructor should be used to create the root delta 
+ * The constructor should be used to create the root delta
  * and then a change operation should call this method.
  */
 public void sourceAttached(IJavaElement element) {
@@ -563,7 +563,7 @@ public void sourceAttached(IJavaElement element) {
 /**
  * Creates the nested deltas resulting from a change operation.
  * Convenience method for creating change deltas.
- * The constructor should be used to create the root delta 
+ * The constructor should be used to create the root delta
  * and then a change operation should call this method.
  */
 public void sourceDetached(IJavaElement element) {
@@ -571,7 +571,7 @@ public void sourceDetached(IJavaElement element) {
 	detachedDelta.changed(F_SOURCEDETACHED);
 	insertDeltaTree(element, detachedDelta);
 }
-/** 
+/**
  * Returns a string representation of this delta's
  * structure suitable for debug purposes.
  *
@@ -591,12 +591,12 @@ public String toDebugString(int depth) {
 			buffer.append(((JavaElementDelta) children[i]).toDebugString(depth + 1));
 		}
 	}
-	for (int i = 0; i < resourceDeltasCounter; i++) {
+	for (int i = 0; i < this.resourceDeltasCounter; i++) {
 		buffer.append("\n");//$NON-NLS-1$
 		for (int j = 0; j < depth+1; j++) {
 			buffer.append('\t');
 		}
-		IResourceDelta resourceDelta = resourceDeltas[i];
+		IResourceDelta resourceDelta = this.resourceDeltas[i];
 		buffer.append(resourceDelta.toString());
 		buffer.append("["); //$NON-NLS-1$
 		switch (resourceDelta.getKind()) {
@@ -749,7 +749,7 @@ protected boolean toDebugString(StringBuffer buffer, int flags) {
 	}
 	return prev;
 }
-/** 
+/**
  * Returns a string representation of this delta's
  * structure suitable for debug purposes.
  */

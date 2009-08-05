@@ -1,25 +1,21 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
-import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.eclipse.core.filesystem.EFS;
-import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
@@ -37,28 +33,28 @@ import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class ClasspathChange {
-	public static int NO_DELTA = 0x00;
-	public static int HAS_DELTA = 0x01;
-	public static int HAS_PROJECT_CHANGE = 0x02;
-	public static int HAS_LIBRARY_CHANGE = 0x04;
-	
+	public static final int NO_DELTA = 0x00;
+	public static final int HAS_DELTA = 0x01;
+	public static final int HAS_PROJECT_CHANGE = 0x02;
+	public static final int HAS_LIBRARY_CHANGE = 0x04;
+
 	JavaProject project;
 	IClasspathEntry[] oldRawClasspath;
 	IPath oldOutputLocation;
 	IClasspathEntry[] oldResolvedClasspath;
-	
+
 	public ClasspathChange(JavaProject project, IClasspathEntry[] oldRawClasspath, IPath oldOutputLocation, IClasspathEntry[] oldResolvedClasspath) {
 		this.project = project;
 		this.oldRawClasspath = oldRawClasspath;
 		this.oldOutputLocation = oldOutputLocation;
 		this.oldResolvedClasspath = oldResolvedClasspath;
 	}
-	
+
 	private void addClasspathDeltas(JavaElementDelta delta, IPackageFragmentRoot[] roots, int flag) {
 		for (int i = 0; i < roots.length; i++) {
 			IPackageFragmentRoot root = roots[i];
 			delta.changed(root, flag);
-			if ((flag & IJavaElementDelta.F_REMOVED_FROM_CLASSPATH) != 0 
+			if ((flag & IJavaElementDelta.F_REMOVED_FROM_CLASSPATH) != 0
 					|| (flag & IJavaElementDelta.F_SOURCEATTACHED) != 0
 					|| (flag & IJavaElementDelta.F_SOURCEDETACHED) != 0){
 				try {
@@ -93,7 +89,7 @@ public class ClasspathChange {
 						if (!entryOutput.equals(otherOutput))
 							continue;
 					}
-					
+
 					// check inclusion patterns
 					IPath[] otherIncludes = other.getInclusionPatterns();
 					if (inclusionPatterns != otherIncludes) {
@@ -102,7 +98,7 @@ public class ClasspathChange {
 						if (otherIncludes == null || otherIncludes.length != includeLength)
 							continue;
 						for (int j = 0; j < includeLength; j++) {
-							// compare toStrings instead of IPaths 
+							// compare toStrings instead of IPaths
 							// since IPath.equals is specified to ignore trailing separators
 							if (!inclusionPatterns[j].toString().equals(otherIncludes[j].toString()))
 								continue nextEntry;
@@ -116,7 +112,7 @@ public class ClasspathChange {
 						if (otherExcludes == null || otherExcludes.length != excludeLength)
 							continue;
 						for (int j = 0; j < excludeLength; j++) {
-							// compare toStrings instead of IPaths 
+							// compare toStrings instead of IPaths
 							// since IPath.equals is specified to ignore trailing separators
 							if (!exclusionPatterns[j].toString().equals(otherExcludes[j].toString()))
 								continue nextEntry;
@@ -140,7 +136,7 @@ public class ClasspathChange {
 					collection.add(r);
 					collectAllSubfolders((IFolder)r, collection);
 				}
-			}	
+			}
 		} catch (CoreException e) {
 			throw new JavaModelException(e);
 		}
@@ -154,7 +150,7 @@ public class ClasspathChange {
 	 */
 	private ArrayList determineAffectedPackageFragments(IPath location) throws JavaModelException {
 		ArrayList fragments = new ArrayList();
-	
+
 		// see if this will cause any package fragments to be affected
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IResource resource = null;
@@ -190,7 +186,7 @@ public class ClasspathChange {
 		}
 		return fragments;
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (!(obj instanceof ClasspathChange))
 			return false;
@@ -201,7 +197,7 @@ public class ClasspathChange {
 	 * Generates a classpath change delta for this classpath change.
 	 * Returns whether a delta was generated, and whether project reference have changed.
 	 */
-	public int generateDelta(JavaElementDelta delta) {
+	public int generateDelta(JavaElementDelta delta, boolean addClasspathChange) {
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		DeltaProcessingState state = manager.deltaState;
 		if (state.findJavaProject(this.project.getElementName()) == null)
@@ -216,32 +212,32 @@ public class ClasspathChange {
 		int result = NO_DELTA;
 		try {
 			PerProjectInfo perProjectInfo = this.project.getPerProjectInfo();
-			
+
 			// get new info
-			this.project.resolveClasspath(perProjectInfo, false/*don't use previous session values*/);
+			this.project.resolveClasspath(perProjectInfo, false/*don't use previous session values*/, addClasspathChange);
 			IClasspathEntry[] newRawClasspath;
-			
+
 			// use synchronized block to ensure consistency
 			synchronized (perProjectInfo) {
 				newRawClasspath = perProjectInfo.rawClasspath;
 				newResolvedClasspath = perProjectInfo.getResolvedClasspath();
-				newOutputLocation = perProjectInfo.outputLocation;				
+				newOutputLocation = perProjectInfo.outputLocation;
 			}
-			
+
 			if (newResolvedClasspath == null) {
 				// another thread reset the resolved classpath, use a temporary PerProjectInfo
-				PerProjectInfo temporaryInfo = new PerProjectInfo(this.project.getProject());
-				this.project.resolveClasspath(temporaryInfo, false/*don't use previous session values*/);
+				PerProjectInfo temporaryInfo = this.project.newTemporaryInfo();
+				this.project.resolveClasspath(temporaryInfo, false/*don't use previous session values*/, addClasspathChange);
 				newRawClasspath = temporaryInfo.rawClasspath;
 				newResolvedClasspath = temporaryInfo.getResolvedClasspath();
-				newOutputLocation = temporaryInfo.outputLocation;				
+				newOutputLocation = temporaryInfo.outputLocation;
 			}
-			
+
 			// check if raw classpath has changed
 			if (this.oldRawClasspath != null && !JavaProject.areClasspathsEqual(this.oldRawClasspath, newRawClasspath, this.oldOutputLocation, newOutputLocation)) {
 				delta.changed(this.project, IJavaElementDelta.F_CLASSPATH_CHANGED);
 				result |= HAS_DELTA;
-				
+
 				// reset containers that are no longer on the classpath
 				// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=139446)
 				for (int i = 0, length = this.oldRawClasspath.length; i < length; i++) {
@@ -252,32 +248,32 @@ public class ClasspathChange {
 					}
 				}
 			}
-					
+
 			// if no changes to resolved classpath, nothing more to do
 			if (this.oldResolvedClasspath != null && JavaProject.areClasspathsEqual(this.oldResolvedClasspath, newResolvedClasspath, this.oldOutputLocation, newOutputLocation))
 				return result;
-			
+
 			// close cached info
 			this.project.close();
-			
+
 			// ensure caches of dependent projects are reset as well (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=207890)
 			deltaProcessor.projectCachesToReset.add(this.project);
-		} catch (JavaModelException e) {	
+		} catch (JavaModelException e) {
 			if (DeltaProcessor.VERBOSE) {
 				e.printStackTrace();
 			}
 			// project no longer exist
 			return result;
 		}
-		
+
 		if (this.oldResolvedClasspath == null)
 			return result;
-		
+
 		delta.changed(this.project, IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED);
 		result |= HAS_DELTA;
 
 		state.addForRefresh(this.project); // ensure external jars are refreshed for this project (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=212769 )
-		
+
 		Map removedRoots = null;
 		IPackageFragmentRoot[] roots = null;
 		Map allOldRoots ;
@@ -293,7 +289,7 @@ public class ClasspathChange {
 		}
 
 		int newLength = newResolvedClasspath.length;
-		int oldLength = this.oldResolvedClasspath.length;		
+		int oldLength = this.oldResolvedClasspath.length;
 		for (int i = 0; i < oldLength; i++) {
 			int index = classpathContains(newResolvedClasspath, this.oldResolvedClasspath[i]);
 			if (index == -1) {
@@ -301,7 +297,7 @@ public class ClasspathChange {
 				int entryKind = this.oldResolvedClasspath[i].getEntryKind();
 				if (entryKind == IClasspathEntry.CPE_PROJECT) {
 					result |= HAS_PROJECT_CHANGE;
-					continue; 
+					continue;
 				}
 				if (entryKind == IClasspathEntry.CPE_LIBRARY) {
 					result |= HAS_LIBRARY_CHANGE;
@@ -320,8 +316,8 @@ public class ClasspathChange {
 						HashSet rootIDs = new HashSet(5);
 						rootIDs.add(this.project.rootID());
 						this.project.computePackageFragmentRoots(
-							this.oldResolvedClasspath[i], 
-							accumulatedRoots, 
+							this.oldResolvedClasspath[i],
+							accumulatedRoots,
 							rootIDs,
 							null, // inside original project
 							false, // don't retrieve exported roots
@@ -333,36 +329,16 @@ public class ClasspathChange {
 					}
 				}
 				addClasspathDeltas(delta, pkgFragmentRoots, IJavaElementDelta.F_REMOVED_FROM_CLASSPATH);
-				
-				// remember timestamp of jars that were removed (in case they are added as external jar in the same operation)
-				for (int j = 0, length = pkgFragmentRoots.length; j < length; j++) {
-					PackageFragmentRoot root = pkgFragmentRoots[j];
-					if (root.isArchive() && !root.isExternal()) {
-						URI location = root.resource().getLocationURI();
-						File file = null;
-						try {
-							IFileStore fileStore = EFS.getStore(location);
-							file = fileStore.toLocalFile(EFS.NONE, null);
-						} catch (CoreException e) {
-							// continue
-						}
-						if (file == null)
-							continue;
-						long timeStamp = DeltaProcessor.getTimeStamp(file);
-						IPath externalPath = new org.eclipse.core.runtime.Path(file.getAbsolutePath());
-						state.getExternalLibTimeStamps().put(externalPath, new Long(timeStamp));
-					}
-				}
 			} else {
 				// remote project changes
 				if (this.oldResolvedClasspath[i].getEntryKind() == IClasspathEntry.CPE_PROJECT) {
 					result |= HAS_PROJECT_CHANGE;
-					continue; 
-				}				
+					continue;
+				}
 				if (index != i) { //reordering of the classpath
 					addClasspathDeltas(delta, this.project.computePackageFragmentRoots(this.oldResolvedClasspath[i]),	IJavaElementDelta.F_REORDER);
 				}
-				
+
 				// check source attachment
 				IPath newSourcePath = newResolvedClasspath[index].getSourceAttachmentPath();
 				int sourceAttachmentFlags = getSourceAttachmentDeltaFlag(this.oldResolvedClasspath[i].getSourceAttachmentPath(), newSourcePath);
@@ -398,7 +374,7 @@ public class ClasspathChange {
 				int entryKind = newResolvedClasspath[i].getEntryKind();
 				if (entryKind == IClasspathEntry.CPE_PROJECT) {
 					result |= HAS_PROJECT_CHANGE;
-					continue; 
+					continue;
 				}
 				if (entryKind == IClasspathEntry.CPE_LIBRARY) {
 					result |= HAS_LIBRARY_CHANGE;
@@ -408,7 +384,7 @@ public class ClasspathChange {
 		}
 
 		// see if a change in output location will cause any package fragments to be added/removed
-		if ((newOutputLocation == null && this.oldOutputLocation != null) 
+		if ((newOutputLocation == null && this.oldOutputLocation != null)
 				|| (newOutputLocation != null && !newOutputLocation.equals(this.oldOutputLocation))) {
 			try {
 				ArrayList added = determineAffectedPackageFragments(this.oldOutputLocation);
@@ -418,13 +394,13 @@ public class ClasspathChange {
 					((IPackageFragmentRoot)frag.getParent()).close();
 					delta.added(frag);
 				}
-			
+
 				// see if this will cause any package fragments to be removed
 				ArrayList removed = determineAffectedPackageFragments(newOutputLocation);
 				iter = removed.iterator();
 				while (iter.hasNext()) {
 					IPackageFragment frag= (IPackageFragment)iter.next();
-					((IPackageFragmentRoot)frag.getParent()).close(); 
+					((IPackageFragmentRoot)frag.getParent()).close();
 					delta.removed(frag);
 				}
 			} catch (JavaModelException e) {
@@ -435,7 +411,7 @@ public class ClasspathChange {
 
 		return result;
 	}
-	
+
 	/*
 	 * Returns the source attachment flag for the delta between the 2 give source paths.
 	 * Returns either F_SOURCEATTACHED, F_SOURCEDETACHED, F_SOURCEATTACHED | F_SOURCEDETACHED
@@ -456,7 +432,7 @@ public class ClasspathChange {
 			return 0;
 		}
 	}
-	
+
 	public int hashCode() {
 		return this.project.hashCode();
 	}
@@ -468,11 +444,11 @@ public class ClasspathChange {
 		IClasspathEntry[] newResolvedClasspath = null;
 		try {
 			newResolvedClasspath = this.project.getResolvedClasspath();
-		} catch (JavaModelException e) {	
+		} catch (JavaModelException e) {
 			// project doesn't exist
 			return;
 		}
-		
+
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		IndexManager indexManager = manager.indexManager;
 		if (indexManager == null)
@@ -480,13 +456,13 @@ public class ClasspathChange {
 		DeltaProcessingState state = manager.deltaState;
 
 		int newLength = newResolvedClasspath.length;
-		int oldLength = this.oldResolvedClasspath.length;		
+		int oldLength = this.oldResolvedClasspath.length;
 		for (int i = 0; i < oldLength; i++) {
 			int index = classpathContains(newResolvedClasspath, this.oldResolvedClasspath[i]);
 			if (index == -1) {
 				// remote projects are not indexed in this project
 				if (this.oldResolvedClasspath[i].getEntryKind() == IClasspathEntry.CPE_PROJECT){
-					continue; 
+					continue;
 				}
 
 				// Remove the .java files from the index for a source folder
@@ -516,9 +492,9 @@ public class ClasspathChange {
 			if (index == -1) {
 				// remote projects are not indexed in this project
 				if (newResolvedClasspath[i].getEntryKind() == IClasspathEntry.CPE_PROJECT){
-					continue; 
+					continue;
 				}
-				
+
 				// Request indexing
 				int entryKind = newResolvedClasspath[i].getEntryKind();
 				switch (entryKind) {
@@ -547,7 +523,7 @@ public class ClasspathChange {
 			}
 		}
 	}
-	
+
 	public String toString() {
 		return "ClasspathChange: " + this.project.getElementName(); //$NON-NLS-1$
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,11 +16,11 @@ package org.eclipse.jdt.internal.core.util;
 public abstract class ClassFileStruct {
 
 	protected double doubleAt(byte[] reference, int relativeOffset, int structOffset) {
-		return (Double.longBitsToDouble(this.i8At(reference, relativeOffset, structOffset)));
+		return (Double.longBitsToDouble(i8At(reference, relativeOffset, structOffset)));
 	}
 
 	protected float floatAt(byte[] reference, int relativeOffset, int structOffset) {
-		return (Float.intBitsToFloat(this.i4At(reference, relativeOffset, structOffset)));
+		return (Float.intBitsToFloat(i4At(reference, relativeOffset, structOffset)));
 	}
 	protected int i1At(byte[] reference, int relativeOffset, int structOffset) {
 		return reference[relativeOffset + structOffset];
@@ -97,7 +97,7 @@ public abstract class ClassFileStruct {
 			return false;
 		if (first.length != second.length)
 			return false;
-	
+
 		for (int i = first.length; --i >= 0;)
 			if (first[i] != second[i])
 				return false;

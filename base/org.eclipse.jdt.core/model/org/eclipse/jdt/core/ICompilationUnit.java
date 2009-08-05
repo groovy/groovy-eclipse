@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -63,17 +63,25 @@ public static final int ENABLE_STATEMENTS_RECOVERY = 0x02;
 public static final int ENABLE_BINDINGS_RECOVERY = 0x04;
 
 /**
- * Applies a text edit to the compilation unit's buffer. 
- * 
+ * Applies a text edit to the compilation unit's buffer.
+ * <p>
+ * Note that the edit is simply applied to the compilation unit's buffer.
+ * In particular the undo edit is not grouped with previous undo edits
+ * if the buffer doesn't implement {@link IBuffer.ITextEditCapability}.
+ * If it does, the exact semantics for grouping undo edit depends
+ * on how {@link IBuffer.ITextEditCapability#applyTextEdit(TextEdit, IProgressMonitor)}
+ * is implemented.
+ * </p>
+ *
  * @param edit the edit to apply
  * @param monitor the progress monitor to use or <code>null</code> if no progress should be reported
- * @return the undo edit 
+ * @return the undo edit
  * @throws JavaModelException if this edit can not be applied to the compilation unit's buffer. Reasons include:
  * <ul>
  * <li>This compilation unit does not exist ({@link IJavaModelStatusConstants#ELEMENT_DOES_NOT_EXIST}).</li>
  * <li>The provided edit can not be applied as there is a problem with the text edit locations ({@link IJavaModelStatusConstants#BAD_TEXT_EDIT_LOCATION}).</li>
  * </ul>
- * 
+ *
  * @since 3.4
  */
 public UndoEdit applyTextEdit(TextEdit edit, IProgressMonitor monitor) throws JavaModelException;

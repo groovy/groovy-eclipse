@@ -21,26 +21,26 @@ import java.util.List;
  * ReturnStatement:
  *    <b>return</b> [ Expression ] <b>;</b>
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class ReturnStatement extends Statement {
-			
+
 	/**
 	 * The "expression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(ReturnStatement.class, "expression", Expression.class, OPTIONAL, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(2);
 		createPropertyList(ReturnStatement.class, propertyList);
@@ -51,26 +51,26 @@ public class ReturnStatement extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The expression; <code>null</code> for none; defaults to none.
 	 */
 	private Expression optionalExpression = null;
-	
+
 	/**
-	 * Creates a new AST node for a return statement owned by the 
+	 * Creates a new AST node for a return statement owned by the
 	 * given AST. By default, the statement has no expression.
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	ReturnStatement(AST ast) {
@@ -83,7 +83,7 @@ public class ReturnStatement extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -99,7 +99,7 @@ public class ReturnStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -112,7 +112,7 @@ public class ReturnStatement extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		ReturnStatement result = new ReturnStatement(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.setExpression(
 			(Expression) ASTNode.copySubtree(target, getExpression()));
@@ -137,21 +137,21 @@ public class ReturnStatement extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
-	 * Returns the expression of this return statement, or 
+	 * Returns the expression of this return statement, or
 	 * <code>null</code> if there is none.
-	 * 
+	 *
 	 * @return the expression node, or <code>null</code> if there is none
-	 */ 
+	 */
 	public Expression getExpression() {
 		return this.optionalExpression;
 	}
-	
+
 	/**
 	 * Sets or clears the expression of this return statement.
-	 * 
-	 * @param expression the expression node, or <code>null</code> if 
+	 *
+	 * @param expression the expression node, or <code>null</code> if
 	 *    there is none
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -159,21 +159,21 @@ public class ReturnStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setExpression(Expression expression) {
 		ASTNode oldChild = this.optionalExpression;
 		preReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
 		this.optionalExpression = expression;
 		postReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 1 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

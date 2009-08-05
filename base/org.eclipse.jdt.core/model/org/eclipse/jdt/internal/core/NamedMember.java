@@ -34,12 +34,12 @@ public abstract class NamedMember extends Member {
 	 * element does not have a name.
 	 */
 	protected String name;
-	
+
 	public NamedMember(JavaElement parent, String name) {
 		super(parent);
 		this.name = name;
 	}
-	
+
 	private void appendTypeParameters(StringBuffer buffer) throws JavaModelException {
 		ITypeParameter[] typeParameters = getTypeParameters();
 		int length = typeParameters.length;
@@ -67,33 +67,33 @@ public abstract class NamedMember extends Member {
 	public String getElementName() {
 		return this.name;
 	}
-	
+
 	protected String getKey(IField field, boolean forceOpen) throws JavaModelException {
 		StringBuffer key = new StringBuffer();
-		
-		// declaring class 
+
+		// declaring class
 		String declaringKey = getKey((IType) field.getParent(), forceOpen);
 		key.append(declaringKey);
-		
+
 		// field name
 		key.append('.');
 		key.append(field.getElementName());
 
 		return key.toString();
 	}
-	
+
 	protected String getKey(IMethod method, boolean forceOpen) throws JavaModelException {
 		StringBuffer key = new StringBuffer();
-		
-		// declaring class 
+
+		// declaring class
 		String declaringKey = getKey((IType) method.getParent(), forceOpen);
 		key.append(declaringKey);
-		
+
 		// selector
 		key.append('.');
 		String selector = method.getElementName();
 		key.append(selector);
-		
+
 		// type parameters
 		if (forceOpen) {
 			ITypeParameter[] typeParameters = method.getTypeParameters();
@@ -115,23 +115,23 @@ public abstract class NamedMember extends Member {
 				key.append('>');
 			}
 		}
-		
+
 		// parameters
 		key.append('(');
 		String[] parameters = method.getParameterTypes();
 		for (int i = 0, length = parameters.length; i < length; i++)
 			key.append(parameters[i].replace('.', '/'));
 		key.append(')');
-		
+
 		// return type
 		if (forceOpen)
 			key.append(method.getReturnType().replace('.', '/'));
 		else
 			key.append('V');
-		
+
 		return key.toString();
 	}
-	
+
 	protected String getKey(IType type, boolean forceOpen) throws JavaModelException {
 		StringBuffer key = new StringBuffer();
 		key.append('L');
@@ -174,11 +174,11 @@ public abstract class NamedMember extends Member {
 		buffer.append('>');
 		return buffer.toString();
 	}
-	
+
 	protected IPackageFragment getPackageFragment() {
 		return null;
 	}
-	
+
 	public String getFullyQualifiedName(char enclosingTypeSeparator, boolean showParameters) throws JavaModelException {
 		String packageName = getPackageFragment().getElementName();
 		if (packageName.equals(IPackageFragment.DEFAULT_PACKAGE_NAME)) {
@@ -233,25 +233,25 @@ public abstract class NamedMember extends Member {
 		}
 		return buffer.toString();
 	}
-	
+
 	protected ITypeParameter[] getTypeParameters() throws JavaModelException {
 		return null;
 	}
-	
+
 	/**
 	 * @see IType#resolveType(String)
 	 */
 	public String[][] resolveType(String typeName) throws JavaModelException {
 		return resolveType(typeName, DefaultWorkingCopyOwner.PRIMARY);
 	}
-	
+
 	/**
 	 * @see IType#resolveType(String, WorkingCopyOwner)
 	 */
 	public String[][] resolveType(String typeName, WorkingCopyOwner owner) throws JavaModelException {
 		JavaProject project = (JavaProject) getJavaProject();
 		SearchableEnvironment environment = project.newSearchableNameEnvironment(owner);
-	
+
 		class TypeResolveRequestor implements ISelectionRequestor {
 			String[][] answers = null;
 			public void acceptType(char[] packageName, char[] tName, int modifiers, boolean isDeclaration, char[] uniqueKey, int start, int end) {
@@ -283,12 +283,12 @@ public abstract class NamedMember extends Member {
 			public void acceptMethodTypeParameter(char[] declaringTypePackageName, char[] declaringTypeName, char[] selector, int selectorStart, int selcetorEnd, char[] typeParameterName, boolean isDeclaration, int start, int end) {
 				// ignore
 			}
-	
+
 		}
 		TypeResolveRequestor requestor = new TypeResolveRequestor();
-		SelectionEngine engine = 
-			new SelectionEngine(environment, requestor, project.getOptions(true));
-			
+		SelectionEngine engine =
+			new SelectionEngine(environment, requestor, project.getOptions(true), owner);
+
 		engine.selectType(typeName.toCharArray(), (IType) this);
 		if (NameLookup.VERBOSE) {
 			System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInSourcePackage: " + environment.nameLookup.timeSpentInSeekTypesInSourcePackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$

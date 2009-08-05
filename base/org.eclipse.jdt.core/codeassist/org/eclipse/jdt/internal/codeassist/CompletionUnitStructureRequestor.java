@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,11 +56,11 @@ import org.eclipse.jdt.internal.core.TypeParameter;
 
 public class CompletionUnitStructureRequestor extends CompilationUnitStructureRequestor {
 	private ASTNode assistNode;
-	
+
 	private Map bindingCache;
 	private Map elementCache;
 	private Map elementWithProblemCache;
-	
+
 	public CompletionUnitStructureRequestor(
 			ICompilationUnit unit,
 			CompilationUnitElementInfo unitInfo,
@@ -77,7 +77,7 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		this.elementCache = elementCache;
 		this.elementWithProblemCache = elementWithProblemCache;
 	}
-	
+
 	protected Annotation createAnnotation(JavaElement parent, String name) {
 		return new AssistAnnotation(parent, name, this.newElements);
 	}
@@ -106,7 +106,7 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		return new AssistInitializer(parent, 1, this.bindingCache, this.newElements);
 	}
 
-	protected SourceMethod createMethod(JavaElement parent, MethodInfo methodInfo) {
+	protected SourceMethod createMethodHandle(JavaElement parent, MethodInfo methodInfo) {
 		String selector = JavaModelManager.getJavaModelManager().intern(new String(methodInfo.name));
 		String[] parameterTypeSigs = convertTypeNamesToSigs(methodInfo.parameterTypes);
 		AssistSourceMethod method = new AssistSourceMethod(parent, selector, parameterTypeSigs, this.bindingCache, this.newElements);
@@ -122,8 +122,8 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 	protected PackageDeclaration createPackageDeclaration(JavaElement parent, String name) {
 		return new AssistPackageDeclaration((CompilationUnit) parent, name, this.newElements);
 	}
-	
-	protected SourceType createType(JavaElement parent, TypeInfo typeInfo) {
+
+	protected SourceType createTypeHandle(JavaElement parent, TypeInfo typeInfo) {
 		String nameString= new String(typeInfo.name);
 		AssistSourceType type = new AssistSourceType(parent, nameString, this.bindingCache, this.newElements);
 		if (typeInfo.node.binding != null) {
@@ -134,24 +134,24 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		}
 		return type;
 	}
-	
+
 	protected TypeParameter createTypeParameter(JavaElement parent, String name) {
 		return new AssistTypeParameter(parent, name, this.newElements);
 	}
-	
-	protected IAnnotation enterAnnotation(
+
+	protected IAnnotation acceptAnnotation(
 			org.eclipse.jdt.internal.compiler.ast.Annotation annotation,
 			AnnotatableInfo parentInfo,
 			JavaElement parentHandle) {
 		if (annotation instanceof CompletionOnMarkerAnnotationName) {
-			if (hasEmptyName(annotation.type, assistNode)) {
-				super.enterAnnotation(annotation, null, parentHandle);
+			if (hasEmptyName(annotation.type, this.assistNode)) {
+				super.acceptAnnotation(annotation, null, parentHandle);
 				return null;
 			}
 		}
-		return super.enterAnnotation(annotation, parentInfo, parentHandle);
+		return super.acceptAnnotation(annotation, parentInfo, parentHandle);
 	}
-	
+
 	protected Object getMemberValue(
 			org.eclipse.jdt.internal.core.MemberValuePair memberValuePair,
 			Expression expression) {
@@ -170,10 +170,10 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		IMemberValuePair[] members = new IMemberValuePair[membersLength];
 		next : for (int j = 0; j < membersLength; j++) {
 			if (memberValuePairs[j] instanceof CompletionOnMemberValueName) continue next;
-			
+
 			members[membersCount++] = getMemberValuePair(memberValuePairs[j]);
 		}
-		
+
 		if (membersCount > membersLength) {
 			System.arraycopy(members, 0, members, 0, membersCount);
 		}
@@ -182,9 +182,9 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 
 	protected static boolean hasEmptyName(TypeReference reference, ASTNode assistNode) {
 		if (reference == null) return false;
-		
+
 		if (reference.sourceStart <= assistNode.sourceStart && assistNode.sourceEnd <= reference.sourceEnd) return false;
-		
+
 		if (reference instanceof CompletionOnSingleTypeReference ||
 				reference instanceof CompletionOnQualifiedTypeReference ||
 				reference instanceof CompletionOnParameterizedQualifiedTypeReference) {

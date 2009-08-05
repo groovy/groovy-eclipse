@@ -56,7 +56,7 @@ public int match(Reference node, MatchingNodeSet nodeSet) { // interested in Nam
 protected int matchReference(Reference node, MatchingNodeSet nodeSet, boolean writeOnlyAccess) {
 	if (node instanceof NameReference) {
 		if (this.pattern.name == null) {
-			return nodeSet.addMatch(node, ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
+			return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 		} else if (node instanceof SingleNameReference) {
 			if (matchesName(this.pattern.name, ((SingleNameReference) node).token))
 				return nodeSet.addMatch(node, POSSIBLE_MATCH);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @see IDOMMethod
  * @see DOMNode
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 // TODO (jerome) - add implementation support for 1.5 features
@@ -79,7 +79,7 @@ class DOMMethod extends DOMMember implements IDOMMethod {
 	 * method's exception list in the document.
 	 */
 	protected int[]  fExceptionRange;
-	
+
 	/**
 	 * Contains the method's body when the body has
 	 * been altered from the contents in the document,
@@ -126,7 +126,7 @@ class DOMMethod extends DOMMember implements IDOMMethod {
 	 * @since 3.0
 	 */
 	protected String fDefaultValue = null;
-	
+
 /**
  * Constructs an empty method node.
  */
@@ -198,17 +198,17 @@ DOMMethod(char[] document, int[] sourceRange, String name, int[] nameRange, int[
 	super(document, sourceRange, name, nameRange, commentRange, flags, modifierRange);
 
 	setMask(MASK_IS_CONSTRUCTOR, isConstructor);
-	fReturnType= returnType;
-	fReturnTypeRange= returnTypeRange;
-	fParameterTypes= parameterTypes;
-	fParameterNames= parameterNames;
-	fParameterRange= parameterRange;
-	fExceptionRange= exceptionRange;
-	fExceptions= exceptions;
+	this.fReturnType= returnType;
+	this.fReturnTypeRange= returnTypeRange;
+	this.fParameterTypes= parameterTypes;
+	this.fParameterNames= parameterNames;
+	this.fParameterRange= parameterRange;
+	this.fExceptionRange= exceptionRange;
+	this.fExceptions= exceptions;
 	setHasBody(true);
-	fBodyRange= bodyRange;
+	this.fBodyRange= bodyRange;
 	setMask(MASK_DETAILED_SOURCE_INDEXES, true);
-	
+
 }
 /**
  * Creates a new simple METHOD document fragment on the given range of the document.
@@ -246,48 +246,48 @@ DOMMethod(char[] document, int[] sourceRange, String name, int[] nameRange, int 
  */
 public void addException(String name) throws IllegalArgumentException {
 	if (name == null) {
-		throw new IllegalArgumentException(Messages.dom_nullExceptionType); 
+		throw new IllegalArgumentException(Messages.dom_nullExceptionType);
 	}
-	if (fExceptions == null) {
-		fExceptions= new String[1];
-		fExceptions[0]= name;
+	if (this.fExceptions == null) {
+		this.fExceptions= new String[1];
+		this.fExceptions[0]= name;
 	} else {
-		fExceptions= appendString(fExceptions, name);
+		this.fExceptions= appendString(this.fExceptions, name);
 	}
-	setExceptions(fExceptions);
+	setExceptions(this.fExceptions);
 }
 /**
  * @see IDOMMethod#addParameter(String, String)
  */
 public void addParameter(String type, String name) throws IllegalArgumentException {
 	if (type == null) {
-		throw new IllegalArgumentException(Messages.dom_nullTypeParameter); 
+		throw new IllegalArgumentException(Messages.dom_nullTypeParameter);
 	}
 	if (name == null) {
-		throw new IllegalArgumentException(Messages.dom_nullNameParameter); 
+		throw new IllegalArgumentException(Messages.dom_nullNameParameter);
 	}
-	if (fParameterNames == null) {
-		fParameterNames= new String[1];
-		fParameterNames[0]= name;
+	if (this.fParameterNames == null) {
+		this.fParameterNames= new String[1];
+		this.fParameterNames[0]= name;
 	} else {
-		fParameterNames= appendString(fParameterNames, name);
+		this.fParameterNames= appendString(this.fParameterNames, name);
 	}
-	if (fParameterTypes == null) {
-		fParameterTypes= new String[1];
-		fParameterTypes[0]= type;
+	if (this.fParameterTypes == null) {
+		this.fParameterTypes= new String[1];
+		this.fParameterTypes[0]= type;
 	} else {
-		fParameterTypes= appendString(fParameterTypes, type);
+		this.fParameterTypes= appendString(this.fParameterTypes, type);
 	}
-	setParameters(fParameterTypes, fParameterNames);
+	setParameters(this.fParameterTypes, this.fParameterNames);
 }
 /**
  * @see DOMMember#appendMemberBodyContents(CharArrayBuffer)
  */
 protected void appendMemberBodyContents(CharArrayBuffer buffer) {
-	if (fBody != null) {
-		buffer.append(fBody);
+	if (this.fBody != null) {
+		buffer.append(this.fBody);
 	} else {
-		buffer.append(fDocument, fBodyRange[0], fBodyRange[1] + 1 - fBodyRange[0]);
+		buffer.append(this.fDocument, this.fBodyRange[0], this.fBodyRange[1] + 1 - this.fBodyRange[0]);
 	}
 }
 /**
@@ -298,73 +298,73 @@ protected void appendMemberDeclarationContents(CharArrayBuffer buffer) {
 	if (isConstructor()) {
 		buffer
 			.append(getConstructorName())
-			.append(fDocument, fNameRange[1] + 1, fParameterRange[0] - fNameRange[1] - 1);
+			.append(this.fDocument, this.fNameRange[1] + 1, this.fParameterRange[0] - this.fNameRange[1] - 1);
 	} else {
 		buffer.append(getReturnTypeContents());
-		if (fReturnTypeRange[0] >= 0) {
-			buffer.append(fDocument, fReturnTypeRange[1] + 1, fNameRange[0] - fReturnTypeRange[1] - 1);
+		if (this.fReturnTypeRange[0] >= 0) {
+			buffer.append(this.fDocument, this.fReturnTypeRange[1] + 1, this.fNameRange[0] - this.fReturnTypeRange[1] - 1);
 		} else {
 			buffer.append(' ');
 		}
 		buffer
 			.append(getNameContents())
-			.append(fDocument, fNameRange[1] + 1, fParameterRange[0] - fNameRange[1] - 1);
+			.append(this.fDocument, this.fNameRange[1] + 1, this.fParameterRange[0] - this.fNameRange[1] - 1);
 	}
-	if (fParameterList != null) {
-		buffer.append(fParameterList);
+	if (this.fParameterList != null) {
+		buffer.append(this.fParameterList);
 	} else {
-		buffer.append(fDocument, fParameterRange[0], fParameterRange[1] + 1 - fParameterRange[0]);
+		buffer.append(this.fDocument, this.fParameterRange[0], this.fParameterRange[1] + 1 - this.fParameterRange[0]);
 	}
 	int start;
 	if (hasTrailingArrayQualifier() && isReturnTypeAltered()) {
-		start= fReturnTypeRange[3] + 1;
+		start= this.fReturnTypeRange[3] + 1;
 	} else {
-		start= fParameterRange[1] + 1;
+		start= this.fParameterRange[1] + 1;
 	}
-	if (fExceptions != null) {
+	if (this.fExceptions != null) {
 		// add 'throws' keyword
-		if (fExceptionRange[0] >= 0) {
-			buffer.append(fDocument, start, fExceptionRange[0] - start);
+		if (this.fExceptionRange[0] >= 0) {
+			buffer.append(this.fDocument, start, this.fExceptionRange[0] - start);
 		} else {
 			buffer.append(" throws "); //$NON-NLS-1$
 		}
 		// add exception list
-		if (fExceptionList != null) {
-			buffer.append(fExceptionList);
+		if (this.fExceptionList != null) {
+			buffer.append(this.fExceptionList);
 			// add space before body
-			if (fExceptionRange[0] >= 0) {
-				buffer.append(fDocument, fExceptionRange[1] + 1, fBodyRange[0] - fExceptionRange[1] - 1);
+			if (this.fExceptionRange[0] >= 0) {
+				buffer.append(this.fDocument, this.fExceptionRange[1] + 1, this.fBodyRange[0] - this.fExceptionRange[1] - 1);
 			} else {
-				buffer.append(fDocument, fParameterRange[1] + 1, fBodyRange[0] - fParameterRange[1] - 1);
+				buffer.append(this.fDocument, this.fParameterRange[1] + 1, this.fBodyRange[0] - this.fParameterRange[1] - 1);
 			}
 		} else {
 			// add list and space before body
-			buffer.append(fDocument, fExceptionRange[0], fBodyRange[0] - fExceptionRange[0]);
+			buffer.append(this.fDocument, this.fExceptionRange[0], this.fBodyRange[0] - this.fExceptionRange[0]);
 		}
 	} else {
 		// add space before body
-		if (fExceptionRange[0] >= 0) {
-			buffer.append(fDocument, fExceptionRange[1] + 1, fBodyRange[0] - fExceptionRange[1] - 1);
+		if (this.fExceptionRange[0] >= 0) {
+			buffer.append(this.fDocument, this.fExceptionRange[1] + 1, this.fBodyRange[0] - this.fExceptionRange[1] - 1);
 		} else {
-			buffer.append(fDocument, start, fBodyRange[0] - start);
+			buffer.append(this.fDocument, start, this.fBodyRange[0] - start);
 		}
 	}
-	
+
 }
 /**
  * @see DOMMember#appendSimpleContents(CharArrayBuffer)
  */
 protected void appendSimpleContents(CharArrayBuffer buffer) {
 	// append eveything before my name
-	buffer.append(fDocument, fSourceRange[0], fNameRange[0] - fSourceRange[0]);
+	buffer.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0]);
 	// append my name
 	if (isConstructor()) {
 		buffer.append(getConstructorName());
 	} else {
-		buffer.append(fName);
+		buffer.append(this.fName);
 	}
 	// append everything after my name
-	buffer.append(fDocument, fNameRange[1] + 1, fSourceRange[1] - fNameRange[1]);
+	buffer.append(this.fDocument, this.fNameRange[1] + 1, this.fSourceRange[1] - this.fNameRange[1]);
 }
 /**
  * @see IDOMMethod#getBody()
@@ -372,10 +372,10 @@ protected void appendSimpleContents(CharArrayBuffer buffer) {
 public String getBody() {
 	becomeDetailed();
 	if (hasBody()) {
-		if (fBody != null) {
-			return fBody;
+		if (this.fBody != null) {
+			return this.fBody;
 		} else {
-			return new String(fDocument, fBodyRange[0], fBodyRange[1] + 1 - fBodyRange[0]);
+			return new String(this.fDocument, this.fBodyRange[0], this.fBodyRange[1] + 1 - this.fBodyRange[0]);
 		}
 	} else {
 		return null;
@@ -398,7 +398,7 @@ protected String getConstructorName() {
 	} else {
 		return null;
 	}
-	
+
 }
 /**
  * @see DOMNode#getDetailedNode()
@@ -410,7 +410,7 @@ protected DOMNode getDetailedNode() {
  * @see IDOMMethod#getExceptions()
  */
 public String[] getExceptions() {
-	return fExceptions;
+	return this.fExceptions;
 }
 protected char[] generateFlags() {
 	char[] flags= Flags.toString(getFlags() & ~Flags.AccVarargs).toCharArray();
@@ -426,11 +426,11 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 	if (parent.getElementType() == IJavaElement.TYPE) {
 		// translate parameter types to signatures
 		String[] sigs= null;
-		if (fParameterTypes != null) {
-			sigs= new String[fParameterTypes.length];
+		if (this.fParameterTypes != null) {
+			sigs= new String[this.fParameterTypes.length];
 			int i;
-			for (i= 0; i < fParameterTypes.length; i++) {
-				sigs[i]= Signature.createTypeSignature(fParameterTypes[i].toCharArray(), false);
+			for (i= 0; i < this.fParameterTypes.length; i++) {
+				sigs[i]= Signature.createTypeSignature(this.fParameterTypes[i].toCharArray(), false);
 			}
 		}
 		String name= null;
@@ -441,17 +441,17 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 		}
 		return ((IType)parent).getMethod(name, sigs);
 	} else {
-		throw new IllegalArgumentException(Messages.element_illegalParent); 
+		throw new IllegalArgumentException(Messages.element_illegalParent);
 	}
 }
 /**
  * @see DOMMember#getMemberDeclarationStartPosition()
  */
 protected int getMemberDeclarationStartPosition() {
-	if (fReturnTypeRange[0] >= 0) {
-		return fReturnTypeRange[0];
+	if (this.fReturnTypeRange[0] >= 0) {
+		return this.fReturnTypeRange[0];
 	} else {
-		return fNameRange[0];
+		return this.fNameRange[0];
 	}
 }
 /**
@@ -474,13 +474,13 @@ public int getNodeType() {
  * @see IDOMMethod#getParameterNames()
  */
 public String[] getParameterNames() {
-	return fParameterNames;
+	return this.fParameterNames;
 }
 /**
  * @see IDOMMethod#getParameterTypes()
  */
 public String[] getParameterTypes() {
-	return fParameterTypes;
+	return this.fParameterTypes;
 }
 /**
  * @see IDOMMethod#getReturnType()
@@ -489,7 +489,7 @@ public String getReturnType() {
 	if (isConstructor()) {
 		return null;
 	} else {
-		return fReturnType;
+		return this.fReturnType;
 	}
 }
 /**
@@ -500,9 +500,9 @@ protected char[] getReturnTypeContents() {
 		return null;
 	} else {
 		if (isReturnTypeAltered()) {
-			return fReturnType.toCharArray();
+			return this.fReturnType.toCharArray();
 		} else {
-			return CharOperation.subarray(fDocument, fReturnTypeRange[0], fReturnTypeRange[1] + 1);
+			return CharOperation.subarray(this.fDocument, this.fReturnTypeRange[0], this.fReturnTypeRange[1] + 1);
 		}
 
 	}
@@ -512,7 +512,7 @@ protected char[] getReturnTypeContents() {
  * array qualifiers ('[]') following the parameter list.
  */
 protected boolean hasTrailingArrayQualifier() {
-	return fReturnTypeRange.length > 2;
+	return this.fReturnTypeRange.length > 2;
 }
 /**
  * @see IDOMMethod#isConstructor()
@@ -537,7 +537,7 @@ public boolean isSignatureEqual(IDOMNode node) {
 	boolean ok= node.getNodeType() == getNodeType();
 	if (ok) {
 		IDOMMethod method= (IDOMMethod)node;
-		ok = (isConstructor() && method.isConstructor()) ||  
+		ok = (isConstructor() && method.isConstructor()) ||
 			(!isConstructor() && !method.isConstructor());
 		if (ok && !isConstructor()) {
 			ok= getName().equals(method.getName());
@@ -545,9 +545,9 @@ public boolean isSignatureEqual(IDOMNode node) {
 		if (!ok) {
 			return false;
 		}
-		
+
 		String[] types= method.getParameterTypes();
-		if (fParameterTypes == null || fParameterTypes.length == 0) {
+		if (this.fParameterTypes == null || this.fParameterTypes.length == 0) {
 			// this method has no parameters
 			if (types == null || types.length == 0) {
 				// the other method has no parameters either
@@ -559,13 +559,13 @@ public boolean isSignatureEqual(IDOMNode node) {
 				// the other method has no parameters
 				return false;
 			}
-			if (fParameterTypes.length != types.length) {
+			if (this.fParameterTypes.length != types.length) {
 				// the methods have a different number of parameters
 				return false;
 			}
 			int i;
 			for (i= 0; i < types.length; i++) {
-				if (!fParameterTypes[i].equals(types[i])) {
+				if (!this.fParameterTypes[i].equals(types[i])) {
 					return false;
 				}
 			}
@@ -573,7 +573,7 @@ public boolean isSignatureEqual(IDOMNode node) {
 		}
 	}
 	return false;
-	
+
 }
 /**
  * @see DOMNode
@@ -586,10 +586,10 @@ protected DOMNode newDOMNode() {
  */
 protected void offset(int offset) {
 	super.offset(offset);
-	offsetRange(fBodyRange, offset);
-	offsetRange(fExceptionRange, offset);
-	offsetRange(fParameterRange, offset);
-	offsetRange(fReturnTypeRange, offset);
+	offsetRange(this.fBodyRange, offset);
+	offsetRange(this.fExceptionRange, offset);
+	offsetRange(this.fParameterRange, offset);
+	offsetRange(this.fReturnTypeRange, offset);
 }
 /**
  * @see IDOMMethod#setBody
@@ -597,17 +597,17 @@ protected void offset(int offset) {
 public void setBody(String body) {
 	becomeDetailed();
 	fragment();
-	fBody= body;
+	this.fBody= body;
 	setHasBody(body != null);
 	if (!hasBody()) {
-		fBody= ";" + Util.getLineSeparator(body, null); //$NON-NLS-1$
+		this.fBody= ";" + Util.getLineSeparator(body, null); //$NON-NLS-1$
 	}
 }
 /**
  * Sets the end of the body range
  */
 void setBodyRangeEnd(int end) {
-	fBodyRange[1] = end;
+	this.fBodyRange[1] = end;
 }
 /**
  * @see IDOMMethod#setConstructor(boolean)
@@ -623,9 +623,9 @@ public void setConstructor(boolean b) {
 public void setExceptions(String[] names) {
 	becomeDetailed();
 	if (names == null || names.length == 0) {
-		fExceptions= null;
+		this.fExceptions= null;
 	} else {
-		fExceptions= names;
+		this.fExceptions= names;
 		CharArrayBuffer buffer = new CharArrayBuffer();
 		char[] comma = new char[] {',', ' '};
 		for (int i = 0, length = names.length; i < length; i++) {
@@ -633,7 +633,7 @@ public void setExceptions(String[] names) {
 				buffer.append(comma);
 			buffer.append(names[i]);
 		}
-		fExceptionList= buffer.getContents();		
+		this.fExceptionList= buffer.getContents();
 	}
 	fragment();
 }
@@ -642,7 +642,7 @@ public void setExceptions(String[] names) {
  */
 public void setName(String name) {
 	if (name == null) {
-		throw new IllegalArgumentException(Messages.element_nullName); 
+		throw new IllegalArgumentException(Messages.element_nullName);
 	} else {
 		super.setName(name);
 	}
@@ -654,19 +654,19 @@ public void setParameters(String[] types, String[] names) throws IllegalArgument
 	becomeDetailed();
 	if (types== null || names == null) {
 		if (types == null && names == null) {
-			fParameterTypes= null;
-			fParameterNames= null;
-			fParameterList= new char[] {'(',')'};
+			this.fParameterTypes= null;
+			this.fParameterNames= null;
+			this.fParameterList= new char[] {'(',')'};
 		} else {
-			throw new IllegalArgumentException(Messages.dom_mismatchArgNamesAndTypes); 
+			throw new IllegalArgumentException(Messages.dom_mismatchArgNamesAndTypes);
 		}
 	} else if (names.length != types.length) {
-		throw new IllegalArgumentException(Messages.dom_mismatchArgNamesAndTypes); 
+		throw new IllegalArgumentException(Messages.dom_mismatchArgNamesAndTypes);
 	} else if (names.length == 0) {
 		setParameters(null, null);
 	} else {
-		fParameterNames= names;
-		fParameterTypes= types;
+		this.fParameterNames= names;
+		this.fParameterTypes= types;
 		CharArrayBuffer parametersBuffer = new CharArrayBuffer();
 		parametersBuffer.append("("); //$NON-NLS-1$
 		char[] comma = new char[] {',', ' '};
@@ -680,7 +680,7 @@ public void setParameters(String[] types, String[] names) throws IllegalArgument
 				.append(names[i]);
 		}
 		parametersBuffer.append(')');
-		fParameterList= parametersBuffer.getContents();		
+		this.fParameterList= parametersBuffer.getContents();
 	}
 	fragment();
 }
@@ -689,12 +689,12 @@ public void setParameters(String[] types, String[] names) throws IllegalArgument
  */
 public void setReturnType(String name) throws IllegalArgumentException {
 	if (name == null) {
-		throw new IllegalArgumentException(Messages.dom_nullReturnType); 
+		throw new IllegalArgumentException(Messages.dom_nullReturnType);
 	}
 	becomeDetailed();
 	fragment();
 	setReturnTypeAltered(true);
-	fReturnType= name;
+	this.fReturnType= name;
 }
 /**
  * Sets the state of this method declaration as having
@@ -707,7 +707,7 @@ protected void setReturnTypeAltered(boolean typeAltered) {
  */
 protected void setSourceRangeEnd(int end) {
 	super.setSourceRangeEnd(end);
-	fBodyRange[1]= end;
+	this.fBodyRange[1]= end;
 }
 /**
  * @see DOMNode#shareContents(DOMNode)
@@ -715,17 +715,17 @@ protected void setSourceRangeEnd(int end) {
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMMethod method= (DOMMethod)node;
-	fBody= method.fBody;
-	fBodyRange= rangeCopy(method.fBodyRange);
-	fExceptionList= method.fExceptionList;
-	fExceptionRange= rangeCopy(method.fExceptionRange);
-	fExceptions= method.fExceptions;
-	fParameterList= method.fParameterList;
-	fParameterNames= method.fParameterNames;
-	fParameterRange= rangeCopy(method.fParameterRange);
-	fParameterTypes= method.fParameterTypes;
-	fReturnType= method.fReturnType;
-	fReturnTypeRange= rangeCopy(method.fReturnTypeRange);
+	this.fBody= method.fBody;
+	this.fBodyRange= rangeCopy(method.fBodyRange);
+	this.fExceptionList= method.fExceptionList;
+	this.fExceptionRange= rangeCopy(method.fExceptionRange);
+	this.fExceptions= method.fExceptions;
+	this.fParameterList= method.fParameterList;
+	this.fParameterNames= method.fParameterNames;
+	this.fParameterRange= rangeCopy(method.fParameterRange);
+	this.fParameterTypes= method.fParameterTypes;
+	this.fReturnType= method.fReturnType;
+	this.fReturnTypeRange= rangeCopy(method.fReturnTypeRange);
 }
 /**
  * @see IDOMNode#toString()

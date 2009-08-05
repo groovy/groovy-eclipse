@@ -31,7 +31,7 @@ import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * This operation creates a new package fragment under a given package fragment root. 
+ * This operation creates a new package fragment under a given package fragment root.
  * The following must be specified: <ul>
  * <li>the package fragment root
  * <li>the package name
@@ -73,9 +73,9 @@ protected void executeOperation() throws JavaModelException {
 	try {
 		JavaElementDelta delta = null;
 		PackageFragmentRoot root = (PackageFragmentRoot) getParentElement();
-		beginTask(Messages.operation_createPackageFragmentProgress, this.pkgName.length); 
+		beginTask(Messages.operation_createPackageFragmentProgress, this.pkgName.length);
 		IContainer parentFolder = (IContainer) root.resource();
-		String[] sideEffectPackageName = CharOperation.NO_STRINGS; 
+		String[] sideEffectPackageName = CharOperation.NO_STRINGS;
 		ArrayList results = new ArrayList(this.pkgName.length);
 		char[][] inclusionPatterns = root.fullInclusionPatternChars();
 		char[][] exclusionPatterns = root.fullExclusionPatternChars();
@@ -85,7 +85,7 @@ protected void executeOperation() throws JavaModelException {
 			sideEffectPackageName = Util.arrayConcat(sideEffectPackageName, subFolderName);
 			IResource subFolder = parentFolder.findMember(subFolderName);
 			if (subFolder == null) {
-				createFolder(parentFolder, subFolderName, force);
+				createFolder(parentFolder, subFolderName, this.force);
 				parentFolder = parentFolder.getFolder(new Path(subFolderName));
 				IPackageFragment addedFrag = root.getPackageFragment(sideEffectPackageName);
 				if (!Util.isExcluded(parentFolder, inclusionPatterns, exclusionPatterns)) {
@@ -122,7 +122,7 @@ protected ISchedulingRule getSchedulingRule() {
  * Possible failures: <ul>
  *  <li>NO_ELEMENTS_TO_PROCESS - the root supplied to the operation is
  * 		<code>null</code>.
- *	<li>INVALID_NAME - the name provided to the operation 
+ *	<li>INVALID_NAME - the name provided to the operation
  * 		is <code>null</code> or is not a valid package fragment name.
  *	<li>READ_ONLY - the root provided to this operation is read only.
  *	<li>NAME_COLLISION - there is a pre-existing resource (file)
@@ -137,7 +137,7 @@ public IJavaModelStatus verify() {
 	if (parentElement == null) {
 		return new JavaModelStatus(IJavaModelStatusConstants.NO_ELEMENTS_TO_PROCESS);
 	}
-	
+
 	String packageName = this.pkgName == null ? null : Util.concatWith(this.pkgName, '.');
 	IJavaProject project = parentElement.getJavaProject();
 	if (this.pkgName == null || (this.pkgName.length > 0 && JavaConventions.validatePackageName(packageName, project.getOption(JavaCore.COMPILER_SOURCE, true), project.getOption(JavaCore.COMPILER_COMPLIANCE, true)).getSeverity() == IStatus.ERROR)) {
@@ -154,8 +154,8 @@ public IJavaModelStatus verify() {
 		if (subFolder != null) {
 			if (subFolder.getType() != IResource.FOLDER) {
 				return new JavaModelStatus(
-					IJavaModelStatusConstants.NAME_COLLISION, 
-					Messages.bind(Messages.status_nameCollision, subFolder.getFullPath().toString())); 
+					IJavaModelStatusConstants.NAME_COLLISION,
+					Messages.bind(Messages.status_nameCollision, subFolder.getFullPath().toString()));
 			}
 			parentFolder = (IContainer) subFolder;
 		}

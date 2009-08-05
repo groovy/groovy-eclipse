@@ -31,10 +31,10 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.batch.ClasspathJar;
-import org.eclipse.jdt.internal.compiler.batch.ClasspathJar.ManifestAnalyzer;
 import org.eclipse.jdt.internal.compiler.batch.ClasspathLocation;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.util.ManifestAnalyzer;
 
 public class BatchCompilerTest extends AbstractRegressionTest {
 	public static final String OUTPUT_DIR_PLACEHOLDER = "---OUTPUT_DIR_PLACEHOLDER---";
@@ -751,19 +751,19 @@ private void runClasspathTest(String classpathInput, String[] expectedClasspathE
 		outputDirectory.mkdirs();
 	}
 	ArrayList paths = new ArrayList(Main.DEFAULT_SIZE_CLASSPATH);
-	try {
+//	try {
 		(new Main(new PrintWriter(System.out), new PrintWriter(System.err), true/*systemExit*/, null/*options*/, null/*progress*/)).
 			processPathEntries(Main.DEFAULT_SIZE_CLASSPATH, paths, classpathInput, null /* customEncoding */, true /* isSourceOnly */, false /* rejectDestinationPathOnJars*/);
-	} catch (InvalidInputException e) {
-		// e.printStackTrace();
-		if (expectedError == null) {
-			fail("unexpected invalid input exception: " + e.getMessage());
-		} else if (! expectedError.equals(e.getMessage())) {
-			System.out.println("\"" + e.getMessage() + "\"");
-			assertEquals(expectedError, e.getMessage());
-		}
-		return;
-	}
+//	} catch (InvalidInputException e) {
+//		// e.printStackTrace();
+//		if (expectedError == null) {
+//			fail("unexpected invalid input exception: " + e.getMessage());
+//		} else if (! expectedError.equals(e.getMessage())) {
+//			System.out.println("\"" + e.getMessage() + "\"");
+//			assertEquals(expectedError, e.getMessage());
+//		}
+//		return;
+//	}
 	if (expectedError == null) {
 		int l = paths.size();
 		assertEquals("unexpected classpaths entries number: ",
@@ -10515,173 +10515,173 @@ public void test267_jar_ref_in_jar(){
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
 // white-box test for duplicate classpath lines variant (empty line between the
 // entries)
-public void test268_jar_ref_in_jar(){
-	try {
-		ManifestAnalyzer analyzer = new ManifestAnalyzer();
-		assertTrue(analyzer.analyzeManifestContents(
-			new StringReader(
-				"Manifest-Version: 1.0\n" +
-				"Created-By: Eclipse JDT Test Harness\n" +
-				"Class-Path: lib1.jar\n" +
-				"\n" +
-				"Class-Path: lib3.jar\n")));
-		assertEquals(2, analyzer.getClasspathSectionsCount());
-		assertEquals(2, analyzer.getCalledFileNames().size());
-	} catch (IOException e) {
-		e.printStackTrace();
-		fail();
-	}
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
-// white-box test for duplicate classpath lines variant (other header between the
-// entries - note that since we are not doing a full-fledged manifest analysis,
-// a dummy header passes)
-public void test269_jar_ref_in_jar(){
-	try {
-		ManifestAnalyzer analyzer = new ManifestAnalyzer();
-		assertTrue(analyzer.analyzeManifestContents(
-			new StringReader(
-				"Manifest-Version: 1.0\n" +
-				"Created-By: Eclipse JDT Test Harness\n" +
-				"Class-Path: lib1.jar\n" +
-				"Dummy:\n" +
-				"Class-Path: lib3.jar\n")));
-		assertEquals(2, analyzer.getClasspathSectionsCount());
-		assertEquals(2, analyzer.getCalledFileNames().size());
-	} catch (IOException e) {
-		e.printStackTrace();
-		fail();
-	}
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
-// white-box test: tabs are not seen as URI separator, but as parts of URI instead
-// will trigger downstream errors if the jars are really needed
-public void test270_jar_ref_in_jar(){
-	try {
-		ManifestAnalyzer analyzer = new ManifestAnalyzer();
-		assertTrue(analyzer.analyzeManifestContents(
-			new StringReader(
-				"Manifest-Version: 1.0\n" +
-				"Created-By: Eclipse JDT Test Harness\n" +
-				"Class-Path: lib1.jar\tlib2.jar\n")));
-		assertEquals(1, analyzer.getClasspathSectionsCount());
-		assertEquals(1, analyzer.getCalledFileNames().size());
-	} catch (IOException e) {
-		e.printStackTrace();
-		fail();
-	}
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
-// managing continuations properly
-public void test271_jar_ref_in_jar(){
-	createCascadedJars();
-	this.runConformTest(
-		new String[] {
-			"src/p/X.java",
-			"package p;\n" +
-			"/** */\n" +
-			"public class X {\n" +
-			"  A a;\n" +
-			"  B b;\n" +
-			"}",
-		},
-		"\"" + OUTPUT_DIR +  File.separator + "src/p/X.java\""
-				+ " -cp \"" + LIB_DIR + File.separator + "lib16.jar\""
-				+ " -sourcepath \"" + OUTPUT_DIR +  File.separator + "src\""
-		+ " -1.5 -g -preserveAllLocals"
-		+ " -proceedOnError -referenceInfo"
-		+ " -d \"" + OUTPUT_DIR + File.separator + "bin\" ",
-		"",
-		"",
-		true);
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
-// white-box test: variants on continuations
-public void test272_jar_ref_in_jar(){
-	try {
-		ManifestAnalyzer analyzer = new ManifestAnalyzer();
-		assertTrue(analyzer.analyzeManifestContents(
-			new StringReader(
-				"Manifest-Version: 1.0\n" +
-				"Created-By: Eclipse JDT Test Harness\n" +
-				"Class-Path: \n" +
-				"            lib1.jar       \n" +
-				"\n")));
-		assertEquals(1, analyzer.getClasspathSectionsCount());
-		assertEquals(1, analyzer.getCalledFileNames().size());
-	} catch (IOException e) {
-		e.printStackTrace();
-		fail();
-	}
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
-// white-box test: variants on continuations
-public void test273_jar_ref_in_jar(){
-	try {
-		ManifestAnalyzer analyzer = new ManifestAnalyzer();
-		assertTrue(analyzer.analyzeManifestContents(
-			new StringReader(
-				"Manifest-Version: 1.0\n" +
-				"Created-By: Eclipse JDT Test Harness\n" +
-				"Class-Path: \n" +
-				" \n" +
-				"            lib1.jar       \n" +
-				" \n" +
-				"            lib1.jar       \n" +
-				"\n")));
-		assertEquals(1, analyzer.getClasspathSectionsCount());
-		assertEquals(2, analyzer.getCalledFileNames().size());
-	} catch (IOException e) {
-		e.printStackTrace();
-		fail();
-	}
-}
+//public void test268_jar_ref_in_jar(){
+//	try {
+//		ManifestAnalyzer analyzer = new ManifestAnalyzer();
+//		assertTrue(analyzer.analyzeManifestContents(
+//			new StringReader(
+//				"Manifest-Version: 1.0\n" +
+//				"Created-By: Eclipse JDT Test Harness\n" +
+//				"Class-Path: lib1.jar\n" +
+//				"\n" +
+//				"Class-Path: lib3.jar\n")));
+//		assertEquals(2, analyzer.getClasspathSectionsCount());
+//		assertEquals(2, analyzer.getCalledFileNames().size());
+//	} catch (IOException e) {
+//		e.printStackTrace();
+//		fail();
+//	}
+//}
+//// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
+//// white-box test for duplicate classpath lines variant (other header between the
+//// entries - note that since we are not doing a full-fledged manifest analysis,
+//// a dummy header passes)
+//public void test269_jar_ref_in_jar(){
+//	try {
+//		ManifestAnalyzer analyzer = new ManifestAnalyzer();
+//		assertTrue(analyzer.analyzeManifestContents(
+//			new StringReader(
+//				"Manifest-Version: 1.0\n" +
+//				"Created-By: Eclipse JDT Test Harness\n" +
+//				"Class-Path: lib1.jar\n" +
+//				"Dummy:\n" +
+//				"Class-Path: lib3.jar\n")));
+//		assertEquals(2, analyzer.getClasspathSectionsCount());
+//		assertEquals(2, analyzer.getCalledFileNames().size());
+//	} catch (IOException e) {
+//		e.printStackTrace();
+//		fail();
+//	}
+//}
+//// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
+//// white-box test: tabs are not seen as URI separator, but as parts of URI instead
+//// will trigger downstream errors if the jars are really needed
+//public void test270_jar_ref_in_jar(){
+//	try {
+//		ManifestAnalyzer analyzer = new ManifestAnalyzer();
+//		assertTrue(analyzer.analyzeManifestContents(
+//			new StringReader(
+//				"Manifest-Version: 1.0\n" +
+//				"Created-By: Eclipse JDT Test Harness\n" +
+//				"Class-Path: lib1.jar\tlib2.jar\n")));
+//		assertEquals(1, analyzer.getClasspathSectionsCount());
+//		assertEquals(1, analyzer.getCalledFileNames().size());
+//	} catch (IOException e) {
+//		e.printStackTrace();
+//		fail();
+//	}
+//}
+//// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
+//// managing continuations properly
+//public void test271_jar_ref_in_jar(){
+//	createCascadedJars();
+//	this.runConformTest(
+//		new String[] {
+//			"src/p/X.java",
+//			"package p;\n" +
+//			"/** */\n" +
+//			"public class X {\n" +
+//			"  A a;\n" +
+//			"  B b;\n" +
+//			"}",
+//		},
+//		"\"" + OUTPUT_DIR +  File.separator + "src/p/X.java\""
+//				+ " -cp \"" + LIB_DIR + File.separator + "lib16.jar\""
+//				+ " -sourcepath \"" + OUTPUT_DIR +  File.separator + "src\""
+//		+ " -1.5 -g -preserveAllLocals"
+//		+ " -proceedOnError -referenceInfo"
+//		+ " -d \"" + OUTPUT_DIR + File.separator + "bin\" ",
+//		"",
+//		"",
+//		true);
+//}
+//// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
+//// white-box test: variants on continuations
+//public void test272_jar_ref_in_jar(){
+//	try {
+//		ManifestAnalyzer analyzer = new ManifestAnalyzer();
+//		assertTrue(analyzer.analyzeManifestContents(
+//			new StringReader(
+//				"Manifest-Version: 1.0\n" +
+//				"Created-By: Eclipse JDT Test Harness\n" +
+//				"Class-Path: \n" +
+//				"            lib1.jar       \n" +
+//				"\n")));
+//		assertEquals(1, analyzer.getClasspathSectionsCount());
+//		assertEquals(1, analyzer.getCalledFileNames().size());
+//	} catch (IOException e) {
+//		e.printStackTrace();
+//		fail();
+//	}
+//}
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
 // white-box test: variants on continuations
-public void test274_jar_ref_in_jar(){
-	try {
-		assertFalse(new ManifestAnalyzer().analyzeManifestContents(
-			new StringReader(
-				"Manifest-Version: 1.0\n" +
-				"Created-By: Eclipse JDT Test Harness\n" +
-				"Class-Path: \n" +
-				"            lib1.jar")));
-	} catch (IOException e) {
-		e.printStackTrace();
-		fail();
-	}
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
-// white-box test: variants on continuations
-public void test275_jar_ref_in_jar(){
-	try {
-		assertFalse(new ManifestAnalyzer().analyzeManifestContents(
-			new StringReader(
-				"Manifest-Version: 1.0\n" +
-				"Created-By: Eclipse JDT Test Harness\n" +
-				"Class-Path: \n" +
-				" \n" +
-				"            lib1.jar")));
-	} catch (IOException e) {
-		e.printStackTrace();
-		fail();
-	}
-}
-// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
-// white-box test: variants on continuations
-public void test276_jar_ref_in_jar(){
-	try {
-		assertFalse(new ManifestAnalyzer().analyzeManifestContents(
-			new StringReader(
-				"Manifest-Version: 1.0\n" +
-				"Created-By: Eclipse JDT Test Harness\n" +
-				"Class-Path:      \n" +
-				"lib1.jar")));
-	} catch (IOException e) {
-		e.printStackTrace();
-		fail();
-	}
-}
+//public void test273_jar_ref_in_jar(){
+//	try {
+//		ManifestAnalyzer analyzer = new ManifestAnalyzer();
+//		assertTrue(analyzer.analyzeManifestContents(
+//			new StringReader(
+//				"Manifest-Version: 1.0\n" +
+//				"Created-By: Eclipse JDT Test Harness\n" +
+//				"Class-Path: \n" +
+//				" \n" +
+//				"            lib1.jar       \n" +
+//				" \n" +
+//				"            lib1.jar       \n" +
+//				"\n")));
+//		assertEquals(1, analyzer.getClasspathSectionsCount());
+//		assertEquals(2, analyzer.getCalledFileNames().size());
+//	} catch (IOException e) {
+//		e.printStackTrace();
+//		fail();
+//	}
+//}
+//// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
+//// white-box test: variants on continuations
+//public void test274_jar_ref_in_jar(){
+//	try {
+//		assertFalse(new ManifestAnalyzer().analyzeManifestContents(
+//			new StringReader(
+//				"Manifest-Version: 1.0\n" +
+//				"Created-By: Eclipse JDT Test Harness\n" +
+//				"Class-Path: \n" +
+//				"            lib1.jar")));
+//	} catch (IOException e) {
+//		e.printStackTrace();
+//		fail();
+//	}
+//}
+//// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
+//// white-box test: variants on continuations
+//public void test275_jar_ref_in_jar(){
+//	try {
+//		assertFalse(new ManifestAnalyzer().analyzeManifestContents(
+//			new StringReader(
+//				"Manifest-Version: 1.0\n" +
+//				"Created-By: Eclipse JDT Test Harness\n" +
+//				"Class-Path: \n" +
+//				" \n" +
+//				"            lib1.jar")));
+//	} catch (IOException e) {
+//		e.printStackTrace();
+//		fail();
+//	}
+//}
+//// https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
+//// white-box test: variants on continuations
+//public void test276_jar_ref_in_jar(){
+//	try {
+//		assertFalse(new ManifestAnalyzer().analyzeManifestContents(
+//			new StringReader(
+//				"Manifest-Version: 1.0\n" +
+//				"Created-By: Eclipse JDT Test Harness\n" +
+//				"Class-Path:      \n" +
+//				"lib1.jar")));
+//	} catch (IOException e) {
+//		e.printStackTrace();
+//		fail();
+//	}
+//}
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=97332 - jars pointed by jars
 // extdirs jars do not follow links
 public void test277_jar_ref_in_jar(){

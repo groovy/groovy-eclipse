@@ -24,7 +24,7 @@ import org.eclipse.jdt.internal.core.search.JavaSearchScope;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class LocalVariablePattern extends VariablePattern {
-	
+
 LocalVariable localVariable;
 
 public LocalVariablePattern(LocalVariable localVariable, int limitTo, int matchRule) {
@@ -51,11 +51,11 @@ public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchP
 		// Note that requestor has to verify if needed whether the document violates the access restriction or not
 		AccessRuleSet access = javaSearchScope.getAccessRuleSet(relativePath, index.containerPath);
 		if (access != JavaSearchScope.NOT_ENCLOSED) { // scope encloses the path
-			if (!requestor.acceptIndexMatch(documentPath, this, participant, access)) 
+			if (!requestor.acceptIndexMatch(documentPath, this, participant, access))
 				throw new OperationCanceledException();
 		}
 	} else if (scope.encloses(documentPath)) {
-		if (!requestor.acceptIndexMatch(documentPath, this, participant, null)) 
+		if (!requestor.acceptIndexMatch(documentPath, this, participant, null))
 			throw new OperationCanceledException();
 	}
 }

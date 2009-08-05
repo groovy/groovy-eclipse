@@ -16,14 +16,14 @@ package org.eclipse.jdt.core.jdom;
  * Enumeration types and annotation types, added in J2SE 1.5, are represented as
  * classes and interfaces, respectively.
  * <p>
- * Allowable child types for a type are <code>IDOMType</code>, <code>IDOMField</code>, 
+ * Allowable child types for a type are <code>IDOMType</code>, <code>IDOMField</code>,
  * <code>IDOMMethod</code>, and <code>IDOMInitializer</code>.
  * Children are listed in the order in which they appear in the source. The parent of a type
  * is a type (in the case of a member type) or a compilation unit (in the case of a top-level type).
  * </p>
  *
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  * @noimplement This interface is not intended to be implemented by clients.
  */
@@ -48,7 +48,7 @@ public void addSuperInterface(String interfaceName) throws IllegalArgumentExcept
  * Returns the formal type parameters for this type.
  * Returns an empty array if this method has no formal type parameters.
  * <p>Formal type parameters are as they appear in the source
- * code; for example: 
+ * code; for example:
  * <code>"X extends List&lt;String&gt; & Serializable"</code>.
  * </p>
  *
@@ -60,17 +60,17 @@ String[] getTypeParameters();
 
 /**
  * The <code>IDOMType</code> refinement of this <code>IDOMNode</code>
- * method returns the name of this type. The name of a class is defined by 
+ * method returns the name of this type. The name of a class is defined by
  * ClassDeclaration (JLS2 8.1); the name of an interface is defined by
  * InterfaceDeclaration (JLS2 9.1).
- * 
+ *
  * @return the name of this type
  */
 public String getName();
 /**
  * Returns the name of this type's superclass. The syntax for a superclass name
  * is specified by Super in ClassDeclaration (JLS2 8.1). Type names must be
- * specified as they would appear in source code. For example: 
+ * specified as they would appear in source code. For example:
  * <code>"Object"</code>, or <code>"java.io.File"</code>.
  * As of J2SE 1.5, the superclass may also include parameterized
  * types like <code>"ArrayList&lt;String&gt;"</code>.
@@ -92,7 +92,7 @@ public String getSuperclass();
  * For classes, this method returns the interfaces that this class implements.
  * For interfaces, this method returns the interfaces that this interface extends.
  * </p>
- * 
+ *
  * @return the list of interface names
  */
 public String[] getSuperInterfaces();
@@ -135,7 +135,7 @@ public void setClass(boolean b);
  * Sets whether this type represents an enumeration class.
  * If this type is a class and is changed to an enum,
  * this type's superclass becomes <code>null</code>.
- * If this type is an interface (including an annotation type), 
+ * If this type is an interface (including an annotation type),
  * and is changed to an enum, this type is also changed to a class.
  *
  * @param b <code>true</code> for enum classes, and <code>false</code> otherwise
@@ -147,7 +147,7 @@ public void setEnum(boolean b);
  * Sets whether this type represents an annotation type ("@interface" instead of "interface").
  * If this type is a interface and is changed to an enum,
  * this type's superclass becomes <code>null</code> and its superinterface list
- * becomes empty. If this type is an class (including an enum), 
+ * becomes empty. If this type is an class (including an enum),
  * and is changed to an annotation type, this type is also changed to an interface.
  *
  * @param b <code>true</code> for an annotation type, and <code>false</code> otherwise
@@ -158,7 +158,7 @@ public void setAnnotation(boolean b);
 /**
  * Sets the formal type parameters for this type.
  * <p>Formal type parameters are given as they appear in the source
- * code; for example: 
+ * code; for example:
  * <code>"X extends List&lt;String&gt; & Serializable"</code>.
  * </p>
  *
@@ -170,7 +170,7 @@ void setTypeParameters(String[] typeParameters);
 
 /**
  * The <code>IDOMType</code> refinement of this <code>IDOMNode</code>
- * method sets the name of this type. The name of a class is defined by 
+ * method sets the name of this type. The name of a class is defined by
  * ClassDeclaration (JLS2 8.1); the name of an interface is defined by
  * InterfaceDeclaration (JLS2 9.1).
  *
@@ -180,7 +180,7 @@ void setTypeParameters(String[] typeParameters);
 public void setName(String name) throws IllegalArgumentException;
 /**
  * Sets the name of this type's superclass. Has no effect if this type
- * represents an interface. A <code>null</code> name indicates that no 
+ * represents an interface. A <code>null</code> name indicates that no
  * superclass name (extends clause) should appear in the source code.
  * The syntax for a superclass name is specified by Super in ClassDeclaration
  * (JLS2 8.1). Type names must be specified as they would appear in source code.
@@ -197,7 +197,7 @@ public void setSuperclass(String superclassName);
  * in the order in which they are to be listed in the source. An empty array
  * parameter indicates that no superinterfaces are present. The syntax for
  * interface names is defined by Interfaces in ClassDeclaration (JLS2 8.1).
- * Type names appear as they would in source code. For example: 
+ * Type names appear as they would in source code. For example:
  * <code>"Cloneable"</code>, or <code>"java.io.Serializable"</code>.
  * As of J2SE 1.5, superinterfaces may also include parameterized
  * types like <code>"List&lt;String&gt;"</code>.
@@ -205,7 +205,7 @@ public void setSuperclass(String superclassName);
  * For classes, this method sets the interfaces that this class implements.
  * For interfaces, this method sets the interfaces that this interface extends.
  * </p>
- * 
+ *
  * @param interfaceNames the list of interface names
  */
 public void setSuperInterfaces(String[] interfaceNames);

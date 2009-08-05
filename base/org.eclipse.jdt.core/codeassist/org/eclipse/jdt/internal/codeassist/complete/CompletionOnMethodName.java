@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,33 +20,33 @@ public class CompletionOnMethodName extends MethodDeclaration {
 	public CompletionOnMethodName(CompilationResult compilationResult){
 		super(compilationResult);
 	}
-	
+
 	public StringBuffer print(int indent, StringBuffer output) {
 
 		printIndent(indent, output);
 		output.append("<CompletionOnMethodName:"); //$NON-NLS-1$
 		printModifiers(this.modifiers, output);
 		printReturnType(0, output);
-		output.append(selector).append('(');
-		if (arguments != null) {
-			for (int i = 0; i < arguments.length; i++) {
+		output.append(this.selector).append('(');
+		if (this.arguments != null) {
+			for (int i = 0; i < this.arguments.length; i++) {
 				if (i > 0) output.append(", "); //$NON-NLS-1$
-				arguments[i].print(0, output);
+				this.arguments[i].print(0, output);
 			}
 		}
 		output.append(')');
-		if (thrownExceptions != null) {
+		if (this.thrownExceptions != null) {
 			output.append(" throws "); //$NON-NLS-1$
-			for (int i = 0; i < thrownExceptions.length; i++) {
+			for (int i = 0; i < this.thrownExceptions.length; i++) {
 				if (i > 0) output.append(", "); //$NON-NLS-1$
-				thrownExceptions[i].print(0, output);
+				this.thrownExceptions[i].print(0, output);
 			}
 		}
 		return output.append('>');
 	}
-	
+
 	public void resolve(ClassScope upperScope) {
-		
+
 		super.resolve(upperScope);
 		throw new CompletionNodeFound(this, upperScope);
 	}

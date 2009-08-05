@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,7 +38,7 @@ public int match(ASTNode node, MatchingNodeSet nodeSet) { // interested in Expli
 
 	if (!matchParametersCount(node, ((ExplicitConstructorCall) node).arguments)) return IMPOSSIBLE_MATCH;
 
-	return nodeSet.addMatch(node, ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
+	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
 public int match(ConstructorDeclaration node, MatchingNodeSet nodeSet) {
 	int referencesLevel = this.pattern.findReferences ? matchLevelForReferences(node) : IMPOSSIBLE_MATCH;
@@ -58,7 +58,7 @@ public int match(Expression node, MatchingNodeSet nodeSet) { // interested in Al
 
 	if (!matchParametersCount(node, allocation.arguments)) return IMPOSSIBLE_MATCH;
 
-	return nodeSet.addMatch(node, ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
+	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
 public int match(FieldDeclaration field, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
@@ -73,7 +73,7 @@ public int match(FieldDeclaration field, MatchingNodeSet nodeSet) {
 
 	if (!matchParametersCount(field, allocation.arguments)) return IMPOSSIBLE_MATCH;
 
-	return nodeSet.addMatch(field, ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
+	return nodeSet.addMatch(field, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
 //public int match(MethodDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 /**
@@ -83,7 +83,7 @@ public int match(FieldDeclaration field, MatchingNodeSet nodeSet) {
 public int match(MessageSend msgSend, MatchingNodeSet nodeSet)  {
 	if ((msgSend.bits & ASTNode.InsideJavadoc) == 0) return IMPOSSIBLE_MATCH;
 	if (this.pattern.declaringSimpleName == null || CharOperation.equals(msgSend.selector, this.pattern.declaringSimpleName)) {
-		return nodeSet.addMatch(msgSend, ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
+		return nodeSet.addMatch(msgSend, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 	}
 	return IMPOSSIBLE_MATCH;
 }
@@ -92,7 +92,7 @@ public int match(TypeDeclaration node, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 
 	// need to look for a generated default constructor
-	return nodeSet.addMatch(node, ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
+	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
 //public int match(TypeReference node, MatchingNodeSet nodeSet) - SKIP IT
 
@@ -146,7 +146,7 @@ protected int matchLevelForReferences(ConstructorDeclaration constructor) {
 		int argsLength = args == null ? 0 : args.length;
 		if (length != argsLength) return IMPOSSIBLE_MATCH;
 	}
-	return ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH;
+	return this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH;
 }
 protected int matchLevelForDeclarations(ConstructorDeclaration constructor) {
 	// constructor name is stored in selector field
@@ -165,7 +165,7 @@ protected int matchLevelForDeclarations(ConstructorDeclaration constructor) {
 		if (constructor.typeParameters == null || constructor.typeParameters.length != this.pattern.constructorArguments.length) return IMPOSSIBLE_MATCH;
 	}
 
-	return ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH;
+	return this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH;
 }
 boolean matchParametersCount(ASTNode node, Expression[] args) {
 	if (this.pattern.parameterSimpleNames != null && (!this.pattern.varargs || ((node.bits & ASTNode.InsideJavadoc) != 0))) {
@@ -191,17 +191,17 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, Bin
 		constructorBinding = alloc.binding;
 	} else if (reference instanceof TypeDeclaration || reference instanceof FieldDeclaration) {
 		super.matchReportReference(reference, element, elementBinding, accuracy, locator);
-		if (match != null) return;
+		if (this.match != null) return;
 	}
 
 	// Create search match
-	match = locator.newMethodReferenceMatch(element, elementBinding, accuracy, -1, -1, true, isSynthetic, reference);
+	this.match = locator.newMethodReferenceMatch(element, elementBinding, accuracy, -1, -1, true, isSynthetic, reference);
 
 	// Look to refine accuracy
 	if (constructorBinding instanceof ParameterizedGenericMethodBinding) { // parameterized generic method
 		// Update match regarding constructor type arguments
 		ParameterizedGenericMethodBinding parameterizedMethodBinding = (ParameterizedGenericMethodBinding) constructorBinding;
-		match.setRaw(parameterizedMethodBinding.isRaw);
+		this.match.setRaw(parameterizedMethodBinding.isRaw);
 		TypeBinding[] typeBindings = parameterizedMethodBinding.isRaw ? null : parameterizedMethodBinding.typeArguments;
 		updateMatch(typeBindings, locator, this.pattern.constructorArguments, this.pattern.hasConstructorParameters());
 
@@ -219,7 +219,7 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, Bin
 				updateMatch(parameterizedBinding, this.pattern.getTypeArguments(), this.pattern.hasTypeParameters(), 0, locator);
 			}
 		} else if (this.pattern.hasTypeArguments()) {
-			match.setRule(SearchPattern.R_ERASURE_MATCH);
+			this.match.setRule(SearchPattern.R_ERASURE_MATCH);
 		}
 
 		// Update match regarding constructor parameters
@@ -235,35 +235,35 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, Bin
 				updateMatch(parameterizedBinding, this.pattern.getTypeArguments(), this.pattern.hasTypeParameters(), 0, locator);
 			}
 		} else if (this.pattern.hasTypeArguments()) {
-			match.setRule(SearchPattern.R_ERASURE_MATCH);
+			this.match.setRule(SearchPattern.R_ERASURE_MATCH);
 		}
 
 		// Update match regarding constructor parameters
 		// TODO ? (frederic)
 	} else if (this.pattern.hasConstructorArguments()) { // binding has no type params, compatible erasure if pattern does
-		match.setRule(SearchPattern.R_ERASURE_MATCH);
+		this.match.setRule(SearchPattern.R_ERASURE_MATCH);
 	}
 
 	// See whether it is necessary to report or not
-	if (match.getRule() == 0) return; // impossible match
-	boolean report = (this.isErasureMatch && match.isErasure()) || (this.isEquivalentMatch && match.isEquivalent()) || match.isExact();
+	if (this.match.getRule() == 0) return; // impossible match
+	boolean report = (this.isErasureMatch && this.match.isErasure()) || (this.isEquivalentMatch && this.match.isEquivalent()) || this.match.isExact();
 	if (!report) return;
 
 	// Report match
 	int offset = reference.sourceStart;
-	match.setOffset(offset);
-	match.setLength(reference.sourceEnd - offset + 1);
+	this.match.setOffset(offset);
+	this.match.setLength(reference.sourceEnd - offset + 1);
 	if (reference instanceof FieldDeclaration) { // enum declaration
 		FieldDeclaration enumConstant  = (FieldDeclaration) reference;
 		if (enumConstant.initialization instanceof QualifiedAllocationExpression) {
-			locator.reportAccurateEnumConstructorReference(match, enumConstant, (QualifiedAllocationExpression) enumConstant.initialization);
+			locator.reportAccurateEnumConstructorReference(this.match, enumConstant, (QualifiedAllocationExpression) enumConstant.initialization);
 			return;
 		}
 	}
-	locator.report(match);
+	locator.report(this.match);
 }
 public SearchMatch newDeclarationMatch(ASTNode reference, IJavaElement element, Binding binding, int accuracy, int length, MatchLocator locator) {
-	match = null;
+	this.match = null;
 	int offset = reference.sourceStart;
 	if (this.pattern.findReferences) {
 		if (reference instanceof TypeDeclaration) {
@@ -273,18 +273,18 @@ public SearchMatch newDeclarationMatch(ASTNode reference, IJavaElement element, 
 				for (int i = 0, max = methods.length; i < max; i++) {
 					AbstractMethodDeclaration method = methods[i];
 					boolean synthetic = method.isDefaultConstructor() && method.sourceStart < type.bodyStart;
-					match = locator.newMethodReferenceMatch(element, binding, accuracy, offset, length, method.isConstructor(), synthetic, method);
+					this.match = locator.newMethodReferenceMatch(element, binding, accuracy, offset, length, method.isConstructor(), synthetic, method);
 				}
 			}
 		} else if (reference instanceof ConstructorDeclaration) {
 			ConstructorDeclaration constructor = (ConstructorDeclaration) reference;
 			ExplicitConstructorCall call = constructor.constructorCall;
 			boolean synthetic = call != null && call.isImplicitSuper();
-			match = locator.newMethodReferenceMatch(element, binding, accuracy, offset, length, constructor.isConstructor(), synthetic, constructor);
+			this.match = locator.newMethodReferenceMatch(element, binding, accuracy, offset, length, constructor.isConstructor(), synthetic, constructor);
 		}
 	}
-	if (match != null) {
-		return match;
+	if (this.match != null) {
+		return this.match;
 	}
 	// super implementation...
     return locator.newDeclarationMatch(element, binding, accuracy, reference.sourceStart, length);

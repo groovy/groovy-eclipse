@@ -228,6 +228,9 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, IJa
 	}
 	weakestPattern.matchReportReference(reference, element, localElement, otherElements, elementBinding, accuracy, locator);
 }
+protected void matchReportReference(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
+	matchReportReference(reference, element, null, null, elementBinding, accuracy, locator);
+}
 public int resolveLevel(ASTNode node) {
 	int level = ACCURATE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,7 @@ import org.eclipse.jface.text.Region;
 
 /**
  * Multi-line comment line in a comment region.
- * 
+ *
  * @since 3.0
  */
 public class MultiCommentLine extends CommentLine implements ICommentAttributes, IHtmlTagDelimiters, IJavaDocTagConstants {
@@ -36,10 +36,10 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 
 	/** The indentation reference of this line */
 	private String fReferenceIndentation= ""; //$NON-NLS-1$
-	
+
 	/** The javadoc tag lookup. */
 	private static final Set fgTagLookup;
-	
+
 	static {
 		fgTagLookup= new HashSet();
 		for (int i= 0; i < JAVADOC_BREAK_TAGS.length; i++) {
@@ -64,7 +64,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 
 	/**
 	 * Creates a new multi-line comment line.
-	 * 
+	 *
 	 * @param region comment region to create the line for
 	 */
 	protected MultiCommentLine(final CommentRegion region) {
@@ -77,7 +77,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 	protected void adapt(final CommentLine previous) {
 
 		if (!hasAttribute(COMMENT_ROOT) && !hasAttribute(COMMENT_PARAMETER) && !previous.hasAttribute(COMMENT_BLANKLINE))
-			fReferenceIndentation= previous.getIndentationReference();
+			this.fReferenceIndentation= previous.getIndentationReference();
 	}
 
 	/*
@@ -103,12 +103,12 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 				final String common= parent.getText(first.getOffset(), first.getLength()) + CommentRegion.COMMENT_RANGE_DELIMITER;
 
 				if (hasAttribute(COMMENT_ROOT))
-					fReferenceIndentation= common;
+					this.fReferenceIndentation= common;
 				else if (hasAttribute(COMMENT_PARAMETER)) {
 					if (parent.isIndentDescriptions())
-						fReferenceIndentation= "\t" + common; //$NON-NLS-1$
+						this.fReferenceIndentation= "\t" + common; //$NON-NLS-1$
 					else
-						fReferenceIndentation= common;
+						this.fReferenceIndentation= common;
 				}
 			}
 		}
@@ -131,11 +131,11 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 
 	/**
 	 * Returns the reference indentation to use for this line.
-	 * 
+	 *
 	 * @return the reference indentation for this line
 	 */
 	protected final String getIndentationReference() {
-		return fReferenceIndentation;
+		return this.fReferenceIndentation;
 	}
 
 	/*
@@ -167,7 +167,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 			offset= text.indexOf(start);
 			if (offset >= 0 && text.substring(0, offset).trim().length() != 0)
 				offset= -1;
-			
+
 			if (offset >= 0) {
 
 				offset += start.length();
@@ -176,7 +176,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 				postfix= text.lastIndexOf(end);
 				if (postfix >= 0 && text.substring(postfix + end.length()).trim().length() != 0)
 					postfix= -1;
-				
+
 				if (postfix >= offset)
 					// comment ends on same line
 					range.setLength(postfix - offset);
@@ -184,7 +184,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 					postfix= text.lastIndexOf(content);
 					if (postfix >= 0 && text.substring(postfix + content.length()).trim().length() != 0)
 						postfix= -1;
-					
+
 					if (postfix >= offset) {
 
 						range.setLength(postfix - offset);
@@ -209,7 +209,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 			postfix= text.lastIndexOf(end);
 			if (postfix >= 0 && text.substring(postfix + end.length()).trim().length() != 0)
 				postfix= -1;
-			
+
 			if (offset >= 0 && offset == postfix)
 				// no content on line, only the comment postfix
 				range.setLength(0);
@@ -217,11 +217,11 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 				if (offset >= 0)
 					// omit the content prefix
 					range.trimBegin(offset + content.length());
-				
+
 				if (postfix >= 0)
 					// omit the comment postfix
 					range.trimEnd(-end.length());
-				
+
 				text= parent.getText(range.getOffset(), range.getLength());
 				final IRegion region= trimLine(text, content);
 				if (region.getOffset() != 0 || region.getLength() != text.length()) {
@@ -238,7 +238,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 			offset= text.indexOf(content);
 			if (offset >= 0 && text.substring(0, offset).trim().length() != 0)
 				offset= -1;
-			
+
 			if (offset >= 0) {
 
 				offset += content.length();
@@ -304,7 +304,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 						index= tag;
 						while (index < length
 								&& !ScannerHelper.isWhitespace(content.charAt(index))
-								&& content.charAt(index) != HTML_TAG_PREFIX 
+								&& content.charAt(index) != HTML_TAG_PREFIX
 								&& !content.startsWith(LINK_TAG_PREFIX_STRING, index))
 							index++;
 					}
@@ -338,7 +338,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 				parent.append(result);
 				offset= index;
 			}
-			
+
 			attribute= 0;
 		}
 	}
@@ -349,7 +349,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 	 * <p>
 	 * The algorithm is to see if the tag trimmed of whitespace and an
 	 * optional slash starts with one of our recognized tags.
-	 * 
+	 *
 	 * @param tag the tag to check
 	 * @return <code>true</code> if <code>tag</code> is a valid tag
 	 *         content
@@ -358,23 +358,23 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 		// strip the slash
 		if (tag.startsWith("/")) //$NON-NLS-1$
 			tag= tag.substring(1, tag.length());
-		
+
 		// strip ws
 		tag= tag.trim();
-		
+
 		// extract first token
 		int i= 0;
 		while (i < tag.length() && !ScannerHelper.isWhitespace(tag.charAt(i)))
 			i++;
 		tag= tag.substring(0, i);
-		
+
 		// see if it's a tag
 		return isTagName(tag.toLowerCase());
 	}
 
 	/**
 	 * Checks whether <code>tag</code> is one of the configured tags.
-	 * 
+	 *
 	 * @param tag the tag to check
 	 * @return <code>true</code> if <code>tag</code> is a configured tag
 	 *         name
@@ -385,7 +385,7 @@ public class MultiCommentLine extends CommentLine implements ICommentAttributes,
 
 	/**
 	 * Removes all leading and trailing occurrences from <code>line</code>.
-	 * 
+	 *
 	 * @param line the string to remove the occurrences of
 	 *                <code>trimmable</code>
 	 * @param trimmable the string to remove from <code>line</code>

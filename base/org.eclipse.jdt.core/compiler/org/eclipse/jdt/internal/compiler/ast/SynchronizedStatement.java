@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -37,8 +37,8 @@ public SynchronizedStatement(
 
 	this.expression = expression;
 	this.block = statement;
-	sourceEnd = e;
-	sourceStart = s;
+	this.sourceEnd = e;
+	this.sourceStart = s;
 }
 
 public FlowInfo analyseCode(
@@ -49,16 +49,16 @@ public FlowInfo analyseCode(
 	this.preSynchronizedInitStateIndex =
 		currentScope.methodScope().recordInitializationStates(flowInfo);
     // TODO (philippe) shouldn't it be protected by a check whether reachable statement ?
-    
+
 	// mark the synthetic variable as being used
-	synchroVariable.useFlag = LocalVariableBinding.USED;
+	this.synchroVariable.useFlag = LocalVariableBinding.USED;
 
 	// simple propagation to subnodes
 	flowInfo =
-		block.analyseCode(
-			scope,
+		this.block.analyseCode(
+			this.scope,
 			new InsideSubRoutineFlowContext(flowContext, this),
-			expression.analyseCode(scope, flowContext, flowInfo));
+			this.expression.analyseCode(this.scope, flowContext, flowInfo));
 
 	this.mergedSynchronizedInitStateIndex =
 		currentScope.methodScope().recordInitializationStates(flowInfo);
@@ -82,7 +82,7 @@ public boolean isSubRoutineEscaping() {
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  */
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
-	if ((bits & IsReachable) == 0) {
+	if ((this.bits & IsReachable) == 0) {
 		return;
 	}
 	// in case the labels needs to be reinitialized
@@ -92,58 +92,61 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	int pc = codeStream.position;
 
 	// generate the synchronization expression
-	expression.generateCode(scope, codeStream, true);
-	if (block.isEmptyBlock()) {
-		if ((synchroVariable.type == TypeBinding.LONG)
-			|| (synchroVariable.type == TypeBinding.DOUBLE)) {
-			codeStream.dup2();
-		} else {
-			codeStream.dup();
-		}
+	this.expression.generateCode(this.scope, codeStream, true);
+	if (this.block.isEmptyBlock()) {
+		switch(this.synchroVariable.type.id) {
+			case TypeIds.T_long :
+			case TypeIds.T_double :
+				codeStream.dup2();
+				break;
+			default :
+				codeStream.dup();
+				break;
+		}		
 		// only take the lock
 		codeStream.monitorenter();
 		codeStream.monitorexit();
-		if (scope != currentScope) {
-			codeStream.exitUserScope(scope);
+		if (this.scope != currentScope) {
+			codeStream.exitUserScope(this.scope);
 		}
 	} else {
 		// enter the monitor
-		codeStream.store(synchroVariable, true);
-		codeStream.addVariable(synchroVariable);
+		codeStream.store(this.synchroVariable, true);
+		codeStream.addVariable(this.synchroVariable);
 		codeStream.monitorenter();
 
 		// generate  the body of the synchronized block
-		this.enterAnyExceptionHandler(codeStream);
-		block.generateCode(scope, codeStream);
-		if (scope != currentScope) {
+		enterAnyExceptionHandler(codeStream);
+		this.block.generateCode(this.scope, codeStream);
+		if (this.scope != currentScope) {
 			// close all locals defined in the synchronized block except the secret local
-			codeStream.exitUserScope(scope, synchroVariable);
+			codeStream.exitUserScope(this.scope, this.synchroVariable);
 		}
 
 		BranchLabel endLabel = new BranchLabel(codeStream);
 		if ((this.bits & ASTNode.BlockExit) == 0) {
-			codeStream.load(synchroVariable);
+			codeStream.load(this.synchroVariable);
 			codeStream.monitorexit();
-			this.exitAnyExceptionHandler();
+			exitAnyExceptionHandler();
 			codeStream.goto_(endLabel);
-			this.enterAnyExceptionHandler(codeStream);
+			enterAnyExceptionHandler(codeStream);
 		}
 		// generate the body of the exception handler
-		codeStream.pushExceptionOnStack(scope.getJavaLangThrowable());
+		codeStream.pushExceptionOnStack(this.scope.getJavaLangThrowable());
 		if (this.preSynchronizedInitStateIndex != -1) {
 			codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.preSynchronizedInitStateIndex);
 		}
-		this.placeAllAnyExceptionHandler();
-		codeStream.load(synchroVariable);
+		placeAllAnyExceptionHandler();
+		codeStream.load(this.synchroVariable);
 		codeStream.monitorexit();
-		this.exitAnyExceptionHandler();
+		exitAnyExceptionHandler();
 		codeStream.athrow();
 		// May loose some local variable initializations : affecting the local variable attributes
 		if (this.mergedSynchronizedInitStateIndex != -1) {
 			codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.mergedSynchronizedInitStateIndex);
 			codeStream.addDefinitelyAssignedVariables(currentScope, this.mergedSynchronizedInitStateIndex);
 		}
-		if (scope != currentScope) {
+		if (this.scope != currentScope) {
 			codeStream.removeVariable(this.synchroVariable);
 		}
 		if ((this.bits & ASTNode.BlockExit) == 0) {
@@ -165,8 +168,8 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 
 public void resolve(BlockScope upperScope) {
 	// special scope for secret locals optimization.
-	scope = new BlockScope(upperScope);
-	TypeBinding type = expression.resolveType(scope);
+	this.scope = new BlockScope(upperScope);
+	TypeBinding type = this.expression.resolveType(this.scope);
 	if (type == null)
 		return;
 	switch (type.id) {
@@ -178,35 +181,35 @@ public void resolve(BlockScope upperScope) {
 		case T_short :
 		case T_int :
 		case T_long :
-			scope.problemReporter().invalidTypeToSynchronize(expression, type);
+			this.scope.problemReporter().invalidTypeToSynchronize(this.expression, type);
 			break;
 		case T_void :
-			scope.problemReporter().illegalVoidExpression(expression);
+			this.scope.problemReporter().illegalVoidExpression(this.expression);
 			break;
 		case T_null :
-			scope.problemReporter().invalidNullToSynchronize(expression);
-			break; 
+			this.scope.problemReporter().invalidNullToSynchronize(this.expression);
+			break;
 	}
 	//continue even on errors in order to have the TC done into the statements
-	synchroVariable = new LocalVariableBinding(SecretLocalDeclarationName, type, ClassFileConstants.AccDefault, false);
-	scope.addLocalVariable(synchroVariable);
-	synchroVariable.setConstant(Constant.NotAConstant); // not inlinable
-	expression.computeConversion(scope, type, type);
-	block.resolveUsing(scope);
+	this.synchroVariable = new LocalVariableBinding(SecretLocalDeclarationName, type, ClassFileConstants.AccDefault, false);
+	this.scope.addLocalVariable(this.synchroVariable);
+	this.synchroVariable.setConstant(Constant.NotAConstant); // not inlinable
+	this.expression.computeConversion(this.scope, type, type);
+	this.block.resolveUsing(this.scope);
 }
 
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	printIndent(indent, output);
 	output.append("synchronized ("); //$NON-NLS-1$
-	expression.printExpression(0, output).append(')');
+	this.expression.printExpression(0, output).append(')');
 	output.append('\n');
-	return block.printStatement(indent + 1, output); 
+	return this.block.printStatement(indent + 1, output);
 }
 
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	if (visitor.visit(this, blockScope)) {
-		expression.traverse(visitor, scope);
-		block.traverse(visitor, scope);
+		this.expression.traverse(visitor, this.scope);
+		this.block.traverse(visitor, this.scope);
 	}
 	visitor.endVisit(this, blockScope);
 }

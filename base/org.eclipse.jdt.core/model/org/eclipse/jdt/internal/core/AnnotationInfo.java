@@ -13,10 +13,10 @@ package org.eclipse.jdt.internal.core;
 import org.eclipse.jdt.core.IMemberValuePair;
 
 /*
- * Element info for an IAnnotation element that originated from source. 
+ * Element info for an IAnnotation element that originated from source.
  */
 public class AnnotationInfo extends SourceRefElementInfo {
-	
+
 	/*
 	 * The start position of this annotation's name in the its
 	 * openable's buffer.

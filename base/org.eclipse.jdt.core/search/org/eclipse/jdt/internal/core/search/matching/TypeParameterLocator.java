@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,10 +34,10 @@ public class TypeParameterLocator extends PatternLocator {
 	 * Type parameter references (ie. type arguments) are compiler type reference nodes
 	 */
 	public int match(TypeReference node, MatchingNodeSet nodeSet) {
-		if (pattern.findReferences) {
+		if (this.pattern.findReferences) {
 			if (node instanceof SingleTypeReference) { // Type parameter cannot be qualified
 				if (matchesName(this.pattern.name, ((SingleTypeReference) node).token)) {
-					int level = ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH;
+					int level = this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH;
 					return nodeSet.addMatch(node, level);
 				}
 			}
@@ -50,9 +50,9 @@ public class TypeParameterLocator extends PatternLocator {
 	 * Verify whether a type parameter matches name pattern.
 	 */
 	public int match(TypeParameter node, MatchingNodeSet nodeSet) {
-		if (pattern.findDeclarations) {
+		if (this.pattern.findDeclarations) {
 			if (matchesName(this.pattern.name, node.name)) {
-				int level = ((InternalSearchPattern)this.pattern).mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH;
+				int level = this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH;
 				return nodeSet.addMatch(node, level);
 			}
 		}
@@ -64,7 +64,7 @@ public class TypeParameterLocator extends PatternLocator {
 	 * Otherwise, only class or method container can declare type parameters.
 	 */
 	protected int matchContainer() {
-		if (pattern.findReferences) {
+		if (this.pattern.findReferences) {
 			return ALL_CONTAINER;
 		}
 		return CLASS_CONTAINER | METHOD_CONTAINER;
@@ -79,19 +79,19 @@ public class TypeParameterLocator extends PatternLocator {
 		if (variable == null || variable.declaringElement == null) return INACCURATE_MATCH;
 		if (variable.declaringElement instanceof ReferenceBinding) {
 			ReferenceBinding refBinding  = (ReferenceBinding) variable.declaringElement;
-			if (matchesName(refBinding.sourceName, pattern.declaringMemberName)) {
+			if (matchesName(refBinding.sourceName, this.pattern.declaringMemberName)) {
 				return ACCURATE_MATCH;
 			}
 		} else if (variable.declaringElement instanceof MethodBinding) {
 			MethodBinding methBinding  = (MethodBinding) variable.declaringElement;
-			if (matchesName(methBinding.declaringClass.sourceName, pattern.methodDeclaringClassName) &&
-				(methBinding.isConstructor() || matchesName(methBinding.selector, pattern.declaringMemberName))) {
-				int length = pattern.methodArgumentTypes==null ? 0 : pattern.methodArgumentTypes.length;
+			if (matchesName(methBinding.declaringClass.sourceName, this.pattern.methodDeclaringClassName) &&
+				(methBinding.isConstructor() || matchesName(methBinding.selector, this.pattern.declaringMemberName))) {
+				int length = this.pattern.methodArgumentTypes==null ? 0 : this.pattern.methodArgumentTypes.length;
 				if (methBinding.parameters == null) {
 					if (length == 0) return ACCURATE_MATCH;
 				} else if (methBinding.parameters.length == length){
 					for (int i=0; i<length; i++) {
-						if (!matchesName(methBinding.parameters[i].shortReadableName(), pattern.methodArgumentTypes[i])) {
+						if (!matchesName(methBinding.parameters[i].shortReadableName(), this.pattern.methodArgumentTypes[i])) {
 							return IMPOSSIBLE_MATCH;
 						}
 					}
@@ -132,7 +132,7 @@ public class TypeParameterLocator extends PatternLocator {
 	public int resolveLevel(Binding binding) {
 		if (binding == null) return INACCURATE_MATCH;
 		if (!(binding instanceof TypeVariableBinding)) return IMPOSSIBLE_MATCH;
-	
+
 		return matchTypeParameter((TypeVariableBinding) binding, true);
 	}
 

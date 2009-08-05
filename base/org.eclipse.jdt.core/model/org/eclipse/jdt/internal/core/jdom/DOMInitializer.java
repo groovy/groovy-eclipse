@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @see IDOMInitializer
  * @see DOMNode
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 class DOMInitializer extends DOMMember implements IDOMInitializer {
@@ -75,9 +75,9 @@ DOMInitializer() {
  */
 DOMInitializer(char[] document, int[] sourceRange, int[] commentRange, int flags, int[] modifierRange, int bodyStartPosition) {
 	super(document, sourceRange, null, new int[]{-1, -1}, commentRange, flags, modifierRange);
-	fBodyRange= new int[2];
-	fBodyRange[0]= bodyStartPosition;
-	fBodyRange[1]= sourceRange[1];
+	this.fBodyRange= new int[2];
+	this.fBodyRange[0]= bodyStartPosition;
+	this.fBodyRange[1]= sourceRange[1];
 	setHasBody(true);
 	setMask(MASK_DETAILED_SOURCE_INDEXES, true);
 }
@@ -97,7 +97,7 @@ DOMInitializer(char[] document, int[] sourceRange, int[] commentRange, int flags
 DOMInitializer(char[] document, int[] sourceRange, int flags) {
 	this(document, sourceRange, new int[] {-1, -1}, flags, new int[] {-1, -1}, -1);
 	setMask(MASK_DETAILED_SOURCE_INDEXES, false);
-	
+
 }
 /**
  * @see DOMMember#appendMemberBodyContents(CharArrayBuffer)
@@ -106,7 +106,7 @@ protected void appendMemberBodyContents(CharArrayBuffer buffer) {
 	if (hasBody()) {
 		buffer
 			.append(getBody())
-			.append(fDocument, fBodyRange[1] + 1, fSourceRange[1] - fBodyRange[1]);
+			.append(this.fDocument, this.fBodyRange[1] + 1, this.fSourceRange[1] - this.fBodyRange[1]);
 	} else {
 		buffer.append("{}").append(Util.getLineSeparator(buffer.toString(), null)); //$NON-NLS-1$
 	}
@@ -122,11 +122,11 @@ protected void appendMemberDeclarationContents(CharArrayBuffer buffer) {
  */
 protected void appendSimpleContents(CharArrayBuffer buffer) {
 	// append eveything before my name
-	buffer.append(fDocument, fSourceRange[0], fNameRange[0] - fSourceRange[0]);
+	buffer.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0]);
 	// append my name
-	buffer.append(fName);
+	buffer.append(this.fName);
 	// append everything after my name
-	buffer.append(fDocument, fNameRange[1] + 1, fSourceRange[1] - fNameRange[1]);
+	buffer.append(this.fDocument, this.fNameRange[1] + 1, this.fSourceRange[1] - this.fNameRange[1]);
 }
 /**
  * @see IDOMInitializer#getBody()
@@ -134,10 +134,10 @@ protected void appendSimpleContents(CharArrayBuffer buffer) {
 public String getBody() {
 	becomeDetailed();
 	if (hasBody()) {
-		if (fBody != null) {
-			return fBody;
+		if (this.fBody != null) {
+			return this.fBody;
 		} else {
-			return new String(fDocument, fBodyRange[0], fBodyRange[1] + 1 - fBodyRange[0]);
+			return new String(this.fDocument, this.fBodyRange[0], this.fBodyRange[1] + 1 - this.fBodyRange[0]);
 		}
 	} else {
 		return null;
@@ -164,14 +164,14 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 		}
 		return ((IType) parent).getInitializer(count);
 	} else {
-		throw new IllegalArgumentException(Messages.element_illegalParent); 
+		throw new IllegalArgumentException(Messages.element_illegalParent);
 	}
 }
 /**
  * @see DOMMember#getMemberDeclarationStartPosition()
  */
 protected int getMemberDeclarationStartPosition() {
-	return fBodyRange[0];
+	return this.fBodyRange[0];
 }
 /**
  * @see IDOMNode#getNodeType()
@@ -199,14 +199,14 @@ protected DOMNode newDOMNode() {
  */
 protected void offset(int offset) {
 	super.offset(offset);
-	offsetRange(fBodyRange, offset);
+	offsetRange(this.fBodyRange, offset);
 }
 /**
  * @see IDOMInitializer#setBody(String)
  */
 public void setBody(String body) {
 	becomeDetailed();
-	fBody= body;
+	this.fBody= body;
 	setHasBody(body != null);
 	fragment();
 }
@@ -222,8 +222,8 @@ public void setName(String name) {
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMInitializer init= (DOMInitializer)node;
-	fBody= init.fBody;
-	fBodyRange= rangeCopy(init.fBodyRange);
+	this.fBody= init.fBody;
+	this.fBodyRange= rangeCopy(init.fBodyRange);
 }
 /**
  * @see IDOMNode#toString()

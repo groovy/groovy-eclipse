@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,45 +27,45 @@ public class CompoundAssignment extends Assignment implements OperatorIds {
 	public CompoundAssignment(Expression lhs, Expression expression,int operator, int sourceEnd) {
 		//lhs is always a reference by construction ,
 		//but is build as an expression ==> the checkcast cannot fail
-	
+
 		super(lhs, expression, sourceEnd);
 		lhs.bits &= ~IsStrictlyAssigned; // tag lhs as NON assigned - it is also a read access
 		lhs.bits |= IsCompoundAssigned; // tag lhs as assigned by compound
 		this.operator = operator ;
 	}
-	
-public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, 
+
+public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo flowInfo) {
-	// record setting a variable: various scenarii are possible, setting an array reference, 
-	// a field reference, a blank final field reference, a field of an enclosing instance or 
+	// record setting a variable: various scenarii are possible, setting an array reference,
+	// a field reference, a blank final field reference, a field of an enclosing instance or
 	// just a local variable.
 	if (this.resolvedType.id != T_JavaLangString) {
-		lhs.checkNPE(currentScope, flowContext, flowInfo);
+		this.lhs.checkNPE(currentScope, flowContext, flowInfo);
 	}
-	return  ((Reference) lhs).analyseAssignment(currentScope, flowContext, flowInfo, this, true).unconditionalInits();
+	return  ((Reference) this.lhs).analyseAssignment(currentScope, flowContext, flowInfo, this, true).unconditionalInits();
 }
-	
+
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
-	
-		// various scenarii are possible, setting an array reference, 
-		// a field reference, a blank final field reference, a field of an enclosing instance or 
+
+		// various scenarii are possible, setting an array reference,
+		// a field reference, a blank final field reference, a field of an enclosing instance or
 		// just a local variable.
-	
+
 		int pc = codeStream.position;
-		 ((Reference) lhs).generateCompoundAssignment(currentScope, codeStream, this.expression, this.operator, this.preAssignImplicitConversion, valueRequired);
+		 ((Reference) this.lhs).generateCompoundAssignment(currentScope, codeStream, this.expression, this.operator, this.preAssignImplicitConversion, valueRequired);
 		if (valueRequired) {
 			codeStream.generateImplicitConversion(this.implicitConversion);
 		}
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
-	
+
 public int nullStatus(FlowInfo flowInfo) {
 	return FlowInfo.NON_NULL;
-	// we may have complained on checkNPE, but we avoid duplicate error 
+	// we may have complained on checkNPE, but we avoid duplicate error
 }
-	
+
 	public String operatorToString() {
-		switch (operator) {
+		switch (this.operator) {
 			case PLUS :
 				return "+="; //$NON-NLS-1$
 			case MINUS :
@@ -91,24 +91,24 @@ public int nullStatus(FlowInfo flowInfo) {
 		}
 		return "unknown operator"; //$NON-NLS-1$
 	}
-	
+
 	public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
-	
-		lhs.printExpression(indent, output).append(' ').append(operatorToString()).append(' ');
-		return expression.printExpression(0, output) ; 
+
+		this.lhs.printExpression(indent, output).append(' ').append(operatorToString()).append(' ');
+		return this.expression.printExpression(0, output) ;
 	}
-	
+
 	public TypeBinding resolveType(BlockScope scope) {
-		constant = Constant.NotAConstant;
+		this.constant = Constant.NotAConstant;
 		if (!(this.lhs instanceof Reference) || this.lhs.isThis()) {
 			scope.problemReporter().expressionShouldBeAVariable(this.lhs);
 			return null;
 		}
-		TypeBinding originalLhsType = lhs.resolveType(scope);
-		TypeBinding originalExpressionType = expression.resolveType(scope);
+		TypeBinding originalLhsType = this.lhs.resolveType(scope);
+		TypeBinding originalExpressionType = this.expression.resolveType(scope);
 		if (originalLhsType == null || originalExpressionType == null)
 			return null;
-	
+
 		// autoboxing support
 		LookupEnvironment env = scope.environment();
 		TypeBinding lhsType = originalLhsType, expressionType = originalExpressionType;
@@ -126,7 +126,7 @@ public int nullStatus(FlowInfo flowInfo) {
 				expressionType = env.computeBoxingType(expressionType);
 			}
 		}
-		
+
 		if (restrainUsageToNumericTypes() && !lhsType.isNumericType()) {
 			scope.problemReporter().operatorOnlyValidOnNumericType(this, lhsType, expressionType);
 			return null;
@@ -140,21 +140,21 @@ public int nullStatus(FlowInfo flowInfo) {
 			}
 			expressionID = T_JavaLangObject; // use the Object has tag table
 		}
-	
+
 		// the code is an int
-		// (cast)  left   Op (cast)  rigth --> result 
+		// (cast)  left   Op (cast)  rigth --> result
 		//  0000   0000       0000   0000      0000
 		//  <<16   <<12       <<8     <<4        <<0
-	
+
 		// the conversion is stored INTO the reference (info needed for the code gen)
-		int result = OperatorExpression.OperatorSignatures[operator][ (lhsID << 4) + expressionID];
+		int result = OperatorExpression.OperatorSignatures[this.operator][ (lhsID << 4) + expressionID];
 		if (result == T_undefined) {
 			scope.problemReporter().invalidOperator(this, lhsType, expressionType);
 			return null;
 		}
-		if (operator == PLUS){
-			if(lhsID == T_JavaLangObject) {
-				// <Object> += <String> is illegal (39248)
+		if (this.operator == PLUS){
+			if(lhsID == T_JavaLangObject && (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK1_7)) {
+				// <Object> += <String> is illegal (39248) for compliance < 1.7
 				scope.problemReporter().invalidOperator(this, lhsType, expressionType);
 				return null;
 			} else {
@@ -171,15 +171,15 @@ public int nullStatus(FlowInfo flowInfo) {
 		if (unboxedLhs) scope.problemReporter().autoboxing(this, lhsType, originalLhsType);
 		return this.resolvedType = originalLhsType;
 	}
-	
+
 	public boolean restrainUsageToNumericTypes(){
 		return false ;
 	}
-	
+
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
-			lhs.traverse(visitor, scope);
-			expression.traverse(visitor, scope);
+			this.lhs.traverse(visitor, scope);
+			this.expression.traverse(visitor, scope);
 		}
 		visitor.endVisit(this, scope);
 	}

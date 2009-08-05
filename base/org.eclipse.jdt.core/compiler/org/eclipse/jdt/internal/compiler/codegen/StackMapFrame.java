@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,10 +40,10 @@ public StackMapFrame(int initialLocalSize) {
 	this.numberOfDifferentLocals = -1;
 }
 public int getFrameType(StackMapFrame prevFrame) {
-	final int offsetDelta = this.getOffsetDelta(prevFrame);
+	final int offsetDelta = getOffsetDelta(prevFrame);
 	switch(this.numberOfStackItems) {
 		case 0 :
-			switch(this.numberOfDifferentLocals(prevFrame)) {
+			switch(numberOfDifferentLocals(prevFrame)) {
 				case 0 :
 					return offsetDelta <= 63 ? SAME_FRAME : SAME_FRAME_EXTENDED;
 				case 1 :
@@ -57,7 +57,7 @@ public int getFrameType(StackMapFrame prevFrame) {
 			}
 			break;
 		case 1 :
-			switch(this.numberOfDifferentLocals(prevFrame)) {
+			switch(numberOfDifferentLocals(prevFrame)) {
 				case 0 :
 					return offsetDelta <= 63 ? SAME_LOCALS_1_STACK_ITEMS : SAME_LOCALS_1_STACK_ITEMS_EXTENDED;
 			}
@@ -106,13 +106,13 @@ public void addStackItem(TypeBinding binding) {
 	}
 }
 public StackMapFrame duplicate() {
-	StackMapFrame result = new StackMapFrame(this.locals.length);
+	int length = this.locals.length;
+	StackMapFrame result = new StackMapFrame(length);
 	result.numberOfLocals = -1;
 	result.numberOfDifferentLocals = -1;
 	result.pc = this.pc;
 	result.numberOfStackItems = this.numberOfStackItems;
 
-	int length = this.locals == null ? 0 : this.locals.length;
 	if (length != 0) {
 		result.locals = new VerificationTypeInfo[length];
 		for (int i = 0; i < length; i++) {
@@ -142,7 +142,7 @@ public int numberOfDifferentLocals(StackMapFrame prevFrame) {
 	int prevLocalsLength = prevLocals == null ? 0 : prevLocals.length;
 	int currentLocalsLength = currentLocals == null ? 0 : currentLocals.length;
 	int prevNumberOfLocals = prevFrame.getNumberOfLocals();
-	int currentNumberOfLocals = this.getNumberOfLocals();
+	int currentNumberOfLocals = getNumberOfLocals();
 
 	int result = 0;
 	if (prevNumberOfLocals == 0) {
@@ -199,7 +199,7 @@ public int numberOfDifferentLocals(StackMapFrame prevFrame) {
 						indexInCurrentLocals++; // next entry  is null
 				}
 			}
-			for (;indexInPrevLocals < prevLocalsLength && prevLocalsCounter < prevNumberOfLocals; indexInPrevLocals++) {
+			if (indexInPrevLocals < prevLocalsLength && prevLocalsCounter < prevNumberOfLocals) {
 				VerificationTypeInfo prevLocal = prevLocals[indexInPrevLocals];
 				if (prevLocal != null) {
 					prevLocalsCounter++;

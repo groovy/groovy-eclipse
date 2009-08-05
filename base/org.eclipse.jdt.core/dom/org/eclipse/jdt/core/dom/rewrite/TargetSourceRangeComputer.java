@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
  * comments preceding or following them.
  * </p>
  * <p>
- * Clients should subclass if they need to influence the 
+ * Clients should subclass if they need to influence the
  * the source range to be affected when replacing or deleting a particular node.
  * An instance of the subclass should be registered with
  * {@link ASTRewrite#setTargetSourceRangeComputer(TargetSourceRangeComputer)}.
@@ -32,15 +32,15 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
  * the {@link #computeSourceRange(ASTNode)} method on this object will be
  * used to compute the source range for a node being deleted or replaced.
  * </p>
- * 
+ *
  * @since 3.1
  */
 public class TargetSourceRangeComputer {
-	
+
 	/**
 	 * Reified source range. Instances are &quot;value&quot; object
 	 * (cannot be modified).
-	 * 
+	 *
 	 * @since 3.1
 	 */
 	public static final class SourceRange {
@@ -49,16 +49,16 @@ public class TargetSourceRangeComputer {
 		 * if no source position information is known.
 		 */
 		private int startPosition;
-		
+
 		/**
 		 * (possibly 0) length, or <code>0</code>
 		 * if no source position information is known.
 		 */
 		private int length;
-		
+
 		/**
 		 * Creates a new source range.
-		 * 
+		 *
 		 * @param startPosition the 0-based character index, or <code>-1</code>
 		 *    if no source position information is known
 		 * @param length the (possibly 0) length, or <code>0</code>
@@ -68,10 +68,10 @@ public class TargetSourceRangeComputer {
 			this.startPosition = startPosition;
 			this.length = length;
 		}
-		
+
 		/**
 		 * Returns the start position.
-		 * 
+		 *
 		 * @return the 0-based character index, or <code>-1</code>
 		 *    if no source position information is known
 		 */
@@ -81,7 +81,7 @@ public class TargetSourceRangeComputer {
 
 		/**
 		 * Returns the source length.
-		 * 
+		 *
 		 * @return a (possibly 0) length, or <code>0</code>
 		 *    if no source position information is known
 		 */
@@ -118,7 +118,7 @@ public class TargetSourceRangeComputer {
 	 * given node. The resulting source range must cover at least the
 	 * original source range of the node.
 	 * </p>
-	 * 
+	 *
 	 * @param node the node with a known source range in the compilation unit
 	 * being rewritten
 	 * @return the exact source range in the compilation unit being rewritten

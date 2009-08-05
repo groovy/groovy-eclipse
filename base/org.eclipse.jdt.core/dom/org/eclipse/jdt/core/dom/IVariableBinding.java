@@ -12,8 +12,8 @@
 package org.eclipse.jdt.core.dom;
 
 /**
- * A variable binding represents either a field of a class or interface, or 
- * a local variable declaration (including formal parameters, local variables, 
+ * A variable binding represents either a field of a class or interface, or
+ * a local variable declaration (including formal parameters, local variables,
  * and exception variables).
  *
  * @see ITypeBinding#getDeclaredFields()
@@ -21,32 +21,32 @@ package org.eclipse.jdt.core.dom;
  * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface IVariableBinding extends IBinding {
-	
+
 	/**
 	 * Returns whether this binding is for a field.
 	 * Note that this method returns <code>true</code> for constants,
 	 * including enum constants. This method returns <code>false</code>
 	 * for local variables.
-	 * 
+	 *
 	 * @return <code>true</code> if this is the binding for a field,
 	 *    and <code>false</code> otherwise
-	 */ 
+	 */
 	public boolean isField();
-	
+
 	/**
 	 * Returns whether this binding is for an enum constant.
 	 * Note that this method returns <code>false</code> for local variables
 	 * and for fields other than enum constants.
-	 * 
+	 *
 	 * @return <code>true</code> if this is the binding for an enum constant,
 	 *    and <code>false</code> otherwise
 	 * @since 3.1
-	 */ 
+	 */
 	public boolean isEnumConstant();
-	
+
 	/**
-	 * Returns whether this binding corresponds to a parameter. 
-	 * 
+	 * Returns whether this binding corresponds to a parameter.
+	 *
 	 * @return <code>true</code> if this is the binding for a parameter,
 	 *    and <code>false</code> otherwise
 	 * @since 3.2
@@ -56,20 +56,20 @@ public interface IVariableBinding extends IBinding {
 	/**
 	 * Returns the name of the field or local variable declared in this binding.
 	 * The name is always a simple identifier.
-	 * 
+	 *
 	 * @return the name of this field or local variable
 	 */
 	public String getName();
-	
+
 	/**
 	 * Returns the type binding representing the class or interface
 	 * that declares this field.
 	 * <p>
 	 * The declaring class of a field is the class or interface of which it is
-	 * a member. Local variables have no declaring class. The field length of an 
+	 * a member. Local variables have no declaring class. The field length of an
 	 * array type has no declaring class.
 	 * </p>
-	 * 
+	 *
 	 * @return the binding of the class or interface that declares this field,
 	 *   or <code>null</code> if none
 	 */
@@ -77,11 +77,11 @@ public interface IVariableBinding extends IBinding {
 
 	/**
 	 * Returns the binding for the type of this field or local variable.
-	 * 
+	 *
 	 * @return the binding for the type of this field or local variable
 	 */
 	public ITypeBinding getType();
-	
+
 	/**
 	 * Returns a small integer variable id for this variable binding.
 	 * <p>
@@ -97,20 +97,20 @@ public interface IVariableBinding extends IBinding {
 	 * declared in a type's instance initializers (or initializer expressions
 	 * of non-static fields) are assigned ascending ids in normal code reading
 	 * order. These ids are useful when checking definite assignment for
-	 * static initializers (JLS 16.7) and instance initializers (JLS 16.8), 
+	 * static initializers (JLS 16.7) and instance initializers (JLS 16.8),
 	 * respectively.
 	 * </p>
 	 * <p>
-	 * <b>Fields:</b> Fields declared as members of a type are assigned 
-	 * ascending ids in normal code reading order; 
+	 * <b>Fields:</b> Fields declared as members of a type are assigned
+	 * ascending ids in normal code reading order;
 	 * field1.getVariableId()&lt;field2.getVariableId() means that field1 is declared before
 	 * field2.
 	 * </p>
-	 * 
+	 *
 	 * @return a small non-negative variable id
 	 */
 	public int getVariableId();
-	
+
 	/**
 	 * Returns this binding's constant value if it has one.
 	 * Some variables may have a value computed at compile-time. If the type of
@@ -120,12 +120,12 @@ public interface IVariableBinding extends IBinding {
 	 * no compile-time computed value, the result is <code>null</code>.
 	 * (Note: compile-time constant expressions cannot denote <code>null</code>;
 	 * JLS2 15.28.). The result is always <code>null</code> for enum constants.
-	 * 
+	 *
 	 * @return the constant value, or <code>null</code> if none
 	 * @since 3.0
 	 */
 	public Object getConstantValue();
-	
+
 	/**
 	 * Returns the method binding representing the method containing the scope
 	 * in which this local variable is declared.
@@ -138,13 +138,13 @@ public interface IVariableBinding extends IBinding {
 	 * declared in a static or instance initializer; this method returns
 	 * <code>null</code> in those cases.
 	 * </p>
-	 * 
+	 *
 	 * @return the binding of the method or constructor that declares this
 	 * local variable, or <code>null</code> if none
 	 * @since 3.1
 	 */
 	public IMethodBinding getDeclaringMethod();
-	
+
 	/**
 	 * Returns the binding for the variable declaration corresponding to this
 	 * variable binding. For a binding for a field declaration in an instance

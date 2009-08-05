@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 BEA Systems, Inc.
+ * Copyright (c) 2005, 2009 BEA Systems, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ char[] getName();
  * Return {@link EnumConstantSignature} if value is an enum constant.
  * Return {@link IBinaryAnnotation} for annotation type.
  * Return {@link Object}[] for array type.
- * 
+ *
  * @return the value of this member value pair
  */
 Object getValue();

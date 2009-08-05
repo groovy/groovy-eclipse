@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
  * @see IDOMMember
  * @see DOMNode
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 abstract class DOMMember extends DOMNode implements IDOMMember {
@@ -48,7 +48,7 @@ abstract class DOMMember extends DOMNode implements IDOMMember {
 
 
 	/**
-	 * The member's modifiers textual representation when 
+	 * The member's modifiers textual representation when
 	 * the modifiers (flags) have been altered from
 	 * their original contents, otherwise <code>null</code>.
 	 */
@@ -100,10 +100,10 @@ DOMMember() {
  */
 DOMMember(char[] document, int[] sourceRange, String name, int[] nameRange, int[] commentRange, int flags, int[] modifierRange) {
 	super(document, sourceRange, name, nameRange);
-	fFlags= flags;
-	fComment= null;
-	fCommentRange= commentRange;
-	fModifierRange= modifierRange;
+	this.fFlags= flags;
+	this.fComment= null;
+	this.fCommentRange= commentRange;
+	this.fModifierRange= modifierRange;
 	setHasComment(commentRange[0] >= 0);
 }
 /**
@@ -151,31 +151,31 @@ protected void appendMemberHeaderFragment(CharArrayBuffer buffer) {
 
 	// space before comment
 	if (hasComment()) {
-		spaceStart= fSourceRange[0];
-		spaceEnd= fCommentRange[0];
+		spaceStart= this.fSourceRange[0];
+		spaceEnd= this.fCommentRange[0];
 		if (spaceEnd > 0) {
-			buffer.append(fDocument, spaceStart, spaceEnd - spaceStart);
+			buffer.append(this.fDocument, spaceStart, spaceEnd - spaceStart);
 		}
 	}
-	
+
 	String fragment= getComment();
 	if (fragment != null) {
 		buffer.append(fragment);
 	}
 
-	if (fCommentRange[1] >= 0) {
-		spaceStart= fCommentRange[1] + 1;
+	if (this.fCommentRange[1] >= 0) {
+		spaceStart= this.fCommentRange[1] + 1;
 	} else {
-		spaceStart= fSourceRange[0];
+		spaceStart= this.fSourceRange[0];
 	}
-	if (fModifierRange[0] >= 0) {
-		spaceEnd= fModifierRange[0] - 1;
+	if (this.fModifierRange[0] >= 0) {
+		spaceEnd= this.fModifierRange[0] - 1;
 	} else {
 		spaceEnd= getMemberDeclarationStartPosition() - 1;
 	}
 
 	if (spaceEnd >= spaceStart) {
-		buffer.append(fDocument, spaceStart, spaceEnd + 1 - spaceStart);
+		buffer.append(this.fDocument, spaceStart, spaceEnd + 1 - spaceStart);
 	}
 	buffer.append(getModifiersText());
 
@@ -217,10 +217,10 @@ protected char[] generateFlags() {
 public String getComment() {
 	becomeDetailed();
 	if (hasComment()) {
-		if (fComment != null) {
-			return fComment;
+		if (this.fComment != null) {
+			return this.fComment;
 		} else {
-			return new String(fDocument, fCommentRange[0], fCommentRange[1] + 1 - fCommentRange[0]);
+			return new String(this.fDocument, this.fCommentRange[0], this.fCommentRange[1] + 1 - this.fCommentRange[0]);
 		}
 	} else {
 		return null;
@@ -230,7 +230,7 @@ public String getComment() {
  * @see IDOMMember#getFlags()
  */
 public int getFlags() {
-	return fFlags;
+	return this.fFlags;
 }
 /**
  * Returns the location of the first character in the member's declaration
@@ -243,14 +243,14 @@ protected abstract int getMemberDeclarationStartPosition();
  * or the replacement value.
  */
 protected char[] getModifiersText() {
-	if (fModifiers == null) {
-		if (fModifierRange[0] < 0) {
+	if (this.fModifiers == null) {
+		if (this.fModifierRange[0] < 0) {
 			return null;
 		} else {
-			return CharOperation.subarray(fDocument, fModifierRange[0], fModifierRange[1] + 1);
+			return CharOperation.subarray(this.fDocument, this.fModifierRange[0], this.fModifierRange[1] + 1);
 		}
 	} else {
-		return fModifiers;
+		return this.fModifiers;
 	}
 }
 /**
@@ -270,36 +270,36 @@ protected boolean hasComment() {
  */
 protected void offset(int offset) {
 	super.offset(offset);
-	offsetRange(fCommentRange, offset);
-	offsetRange(fModifierRange, offset);
+	offsetRange(this.fCommentRange, offset);
+	offsetRange(this.fModifierRange, offset);
 }
 /**
  * @see IDOMMember#setComment(String)
  */
 public void setComment(String comment) {
 	becomeDetailed();
-	fComment= comment;
+	this.fComment= comment;
 	fragment();
 	setHasComment(comment != null);
 	/* see 1FVIJAH */
 	if (comment != null && comment.indexOf("@deprecated") >= 0) { //$NON-NLS-1$
-		fFlags= fFlags | ClassFileConstants.AccDeprecated;
+		this.fFlags= this.fFlags | ClassFileConstants.AccDeprecated;
 		return;
 	}
-	fFlags= fFlags & (~ClassFileConstants.AccDeprecated);
+	this.fFlags= this.fFlags & (~ClassFileConstants.AccDeprecated);
 }
 /**
  * @see IDOMMember#setFlags(int)
  */
 public void setFlags(int flags) {
 	becomeDetailed();
-	if (Flags.isDeprecated(fFlags)) {
-		fFlags= flags | ClassFileConstants.AccDeprecated;
+	if (Flags.isDeprecated(this.fFlags)) {
+		this.fFlags= flags | ClassFileConstants.AccDeprecated;
 	} else {
-		fFlags= flags & (~ClassFileConstants.AccDeprecated);
+		this.fFlags= flags & (~ClassFileConstants.AccDeprecated);
 	}
 	fragment();
-	fModifiers= generateFlags();
+	this.fModifiers= generateFlags();
 }
 /**
  * Sets the state of this member declaration as having
@@ -324,8 +324,8 @@ protected void setHasComment(boolean hasComment) {
  * node.
  */
 protected void setStartPosition(int start) {
-	if (fCommentRange[0] >= 0) {
-		fCommentRange[0]= start;
+	if (this.fCommentRange[0] >= 0) {
+		this.fCommentRange[0]= start;
 	}
 	super.setStartPosition(start);
 }
@@ -335,10 +335,10 @@ protected void setStartPosition(int start) {
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMMember member= (DOMMember)node;
-	fComment= member.fComment;
-	fCommentRange= rangeCopy(member.fCommentRange);
-	fFlags= member.fFlags;
-	fModifiers= member.fModifiers;
-	fModifierRange= rangeCopy(member.fModifierRange);
+	this.fComment= member.fComment;
+	this.fCommentRange= rangeCopy(member.fCommentRange);
+	this.fFlags= member.fFlags;
+	this.fModifiers= member.fModifiers;
+	this.fModifierRange= rangeCopy(member.fModifierRange);
 }
 }

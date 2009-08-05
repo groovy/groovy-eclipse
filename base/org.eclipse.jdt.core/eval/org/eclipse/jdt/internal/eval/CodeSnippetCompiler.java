@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,14 +18,14 @@ import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 /**
- * A compiler that compiles code snippets. 
+ * A compiler that compiles code snippets.
  */
 public class CodeSnippetCompiler extends Compiler {
-	
+
 	EvaluationContext evaluationContext;
 	int codeSnippetStart;
 	int codeSnippetEnd;
-	
+
 	/**
 	 * Creates a new code snippet compiler initialized with a code snippet parser.
 	 */
@@ -52,7 +52,7 @@ public class CodeSnippetCompiler extends Compiler {
 		this.parseThreshold = 1;
 		// fully parse only the code snippet compilation unit
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.compiler.Compiler#initializeParser()
 	 */

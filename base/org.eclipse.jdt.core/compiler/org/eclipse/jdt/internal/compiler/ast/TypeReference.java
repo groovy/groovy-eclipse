@@ -33,7 +33,7 @@ public abstract class TypeReference extends Expression {
  * Answer a base type reference (can be an array of base type).
  */
 public static final TypeReference baseTypeReference(int baseType, int dim) {
-	
+
 	if (dim == 0) {
 		switch (baseType) {
 			case (TypeIds.T_void) :
@@ -52,7 +52,7 @@ public static final TypeReference baseTypeReference(int baseType, int dim) {
 				return new SingleTypeReference(TypeBinding.SHORT.simpleName, 0);
 			case (TypeIds.T_int) :
 				return new SingleTypeReference(TypeBinding.INT.simpleName, 0);
-			default : //T_long	
+			default : //T_long
 				return new SingleTypeReference(TypeBinding.LONG.simpleName, 0);
 		}
 	}
@@ -73,7 +73,7 @@ public static final TypeReference baseTypeReference(int baseType, int dim) {
 			return new ArrayTypeReference(TypeBinding.SHORT.simpleName, dim, 0);
 		case (TypeIds.T_int) :
 			return new ArrayTypeReference(TypeBinding.INT.simpleName, dim, 0);
-		default : //T_long	
+		default : //T_long
 			return new ArrayTypeReference(TypeBinding.LONG.simpleName, dim, 0);
 	}
 }
@@ -121,16 +121,16 @@ protected TypeBinding internalResolveType(Scope scope) {
 				case ProblemReasons.InheritedNameHidesEnclosingName :
 					TypeBinding type = this.resolvedType.closestMatch();
 					if (type == null) return null;
-					return scope.environment().convertToRawType(type, false /*do not force conversion of enclosing types*/);					
+					return scope.environment().convertToRawType(type, false /*do not force conversion of enclosing types*/);
 				default :
 					return null;
-			}			
+			}
 		}
 	}
 	boolean hasError;
 	TypeBinding type = this.resolvedType = getTypeBinding(scope);
 	if (type == null) {
-		return null; // detected cycle while resolving hierarchy	
+		return null; // detected cycle while resolving hierarchy
 	} else if ((hasError = !type.isValidBinding()) == true) {
 		reportInvalidType(scope);
 		switch (type.problemId()) {
@@ -151,9 +151,9 @@ protected TypeBinding internalResolveType(Scope scope) {
 	if (isTypeUseDeprecated(type, scope)) {
 		reportDeprecatedType(type, scope);
 	}
-	type = scope.environment().convertToRawType(type, false /*do not force conversion of enclosing types*/);	
-	if (type.leafComponentType().isRawType() 
-			&& (this.bits & ASTNode.IgnoreRawTypeCheck) == 0 
+	type = scope.environment().convertToRawType(type, false /*do not force conversion of enclosing types*/);
+	if (type.leafComponentType().isRawType()
+			&& (this.bits & ASTNode.IgnoreRawTypeCheck) == 0
 			&& scope.compilerOptions().getSeverity(CompilerOptions.RawTypeReference) != ProblemSeverities.Ignore) {
 		scope.problemReporter().rawTypeReference(this, type);
 	}
@@ -201,7 +201,7 @@ public TypeBinding resolveSuperType(ClassScope scope) {
 public final TypeBinding resolveType(BlockScope blockScope) {
 	return resolveType(blockScope, true /* checkbounds if any */);
 }
-	
+
 public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
 	return internalResolveType(scope);
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -45,17 +45,17 @@ package org.eclipse.jdt.core.dom;
  *    VariableDeclarationExpression
  * </pre>
  * </p>
- * 
+ *
  * @since 2.0
  */
 public abstract class Expression extends ASTNode {
-	
+
 	/**
 	 * Creates a new AST node for an expression owned by the given AST.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	Expression(AST ast) {
@@ -63,7 +63,7 @@ public abstract class Expression extends ASTNode {
 	}
 
 	/**
-	 * Resolves and returns the compile-time constant expression value as 
+	 * Resolves and returns the compile-time constant expression value as
 	 * specified in JLS2 15.28, if this expression has one. Constant expression
 	 * values are unavailable unless bindings are requested when the AST is
 	 * being built. If the type of the value is a primitive type, the result
@@ -84,7 +84,7 @@ public abstract class Expression extends ASTNode {
 	 * So technically {@link NullLiteral} nodes are not constant expressions.
 	 * The result is <code>null</code> for these nonetheless.
 	 * </p>
-	 * 
+	 *
 	 * @return the constant expression value, or <code>null</code> if this
 	 * expression has no constant expression value or if bindings were not
 	 * requested when the AST was created
@@ -100,10 +100,10 @@ public abstract class Expression extends ASTNode {
 	 * Note that bindings are generally unavailable unless requested when the
 	 * AST is being built.
 	 * </p>
-	 * 
+	 *
 	 * @return the binding for the type of this expression, or
 	 *    <code>null</code> if the type cannot be resolved
-	 */	
+	 */
 	public final ITypeBinding resolveTypeBinding() {
 		return this.ast.getBindingResolver().resolveExpressionType(this);
 	}
@@ -112,7 +112,7 @@ public abstract class Expression extends ASTNode {
 	 * Returns whether this expression node is the site of a boxing
 	 * conversion (JLS3 5.1.7). This information is available only
 	 * when bindings are requested when the AST is being built.
-	 * 
+	 *
 	 * @return <code>true</code> if this expression is the site of a
 	 * boxing conversion, or <code>false</code> if either no boxing conversion
 	 * is involved or if bindings were not requested when the AST was created
@@ -121,12 +121,12 @@ public abstract class Expression extends ASTNode {
 	public final boolean resolveBoxing() {
 		return this.ast.getBindingResolver().resolveBoxing(this);
 	}
-	
+
 	/**
 	 * Returns whether this expression node is the site of an unboxing
 	 * conversion (JLS3 5.1.8). This information is available only
 	 * when bindings are requested when the AST is being built.
-	 * 
+	 *
 	 * @return <code>true</code> if this expression is the site of an
 	 * unboxing conversion, or <code>false</code> if either no unboxing
 	 * conversion is involved or if bindings were not requested when the

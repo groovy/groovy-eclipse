@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
 public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 
 	public TypeReference[] typeArguments;
-	
+
 	public ParameterizedSingleTypeReference(char[] name, TypeReference[] typeArguments, int dim, long pos){
 		super(name, dim, pos);
 		this.originalSourceEnd = this.sourceEnd;
@@ -46,7 +46,7 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 	 * @see org.eclipse.jdt.internal.compiler.ast.TypeReference#copyDims(int)
 	 */
 	public TypeReference copyDims(int dim) {
-		return new ParameterizedSingleTypeReference(token, typeArguments, dim, (((long)sourceStart)<<32)+sourceEnd);
+		return new ParameterizedSingleTypeReference(this.token, this.typeArguments, dim, (((long)this.sourceStart)<<32)+this.sourceEnd);
 	}
 
 	/**
@@ -72,15 +72,15 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 				dimChars[index+1] = ']';
 			}
 			name = CharOperation.concat(name, dimChars);
-		}		
+		}
 		return new char[][]{ name };
-	}	
+	}
 	/**
      * @see org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference#getTypeBinding(org.eclipse.jdt.internal.compiler.lookup.Scope)
      */
     protected TypeBinding getTypeBinding(Scope scope) {
         return null; // not supported here - combined with resolveType(...)
-    }	
+    }
 
     /*
      * No need to check for reference to raw type per construction
@@ -231,9 +231,10 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 
     	ParameterizedTypeBinding parameterizedType = scope.environment().createParameterizedType(currentOriginal, argTypes, enclosingType);
 		// check argument type compatibility
-		if (checkBounds) { // otherwise will do it in Scope.connectTypeVariables() or generic method resolution
+		if (checkBounds) // otherwise will do it in Scope.connectTypeVariables() or generic method resolution
 			parameterizedType.boundCheck(scope, this.typeArguments);
-		}
+		else
+			scope.deferBoundCheck(this);
 		if (isTypeUseDeprecated(parameterizedType, scope))
 			reportDeprecatedType(parameterizedType, scope);
 
@@ -248,43 +249,43 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 			return type;
 		}
 		return this.resolvedType = type;
-	}	
-	
+	}
+
 	public StringBuffer printExpression(int indent, StringBuffer output){
-		output.append(token);
+		output.append(this.token);
 		output.append("<"); //$NON-NLS-1$
-		int max = typeArguments.length - 1;
+		int max = this.typeArguments.length - 1;
 		for (int i= 0; i < max; i++) {
-			typeArguments[i].print(0, output);
+			this.typeArguments[i].print(0, output);
 			output.append(", ");//$NON-NLS-1$
 		}
-		typeArguments[max].print(0, output);
+		this.typeArguments[max].print(0, output);
 		output.append(">"); //$NON-NLS-1$
 		if ((this.bits & IsVarArgs) != 0) {
-			for (int i= 0 ; i < dimensions - 1; i++) {
+			for (int i= 0 ; i < this.dimensions - 1; i++) {
 				output.append("[]"); //$NON-NLS-1$
 			}
 			output.append("..."); //$NON-NLS-1$
 		} else {
-			for (int i= 0 ; i < dimensions; i++) {
+			for (int i= 0 ; i < this.dimensions; i++) {
 				output.append("[]"); //$NON-NLS-1$
 			}
 		}
 		return output;
 	}
-	
+
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
 	    return internalResolveType(scope, null, checkBounds);
-	}	
+	}
 
 	public TypeBinding resolveType(ClassScope scope) {
 	    return internalResolveType(scope, null, false /*no bounds check in classScope*/);
-	}	
-	
+	}
+
 	public TypeBinding resolveTypeEnclosing(BlockScope scope, ReferenceBinding enclosingType) {
 	    return internalResolveType(scope, enclosingType, true/*check bounds*/);
 	}
-	
+
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			for (int i = 0, max = this.typeArguments.length; i < max; i++) {
@@ -293,7 +294,7 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 		}
 		visitor.endVisit(this, scope);
 	}
-	
+
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			for (int i = 0, max = this.typeArguments.length; i < max; i++) {

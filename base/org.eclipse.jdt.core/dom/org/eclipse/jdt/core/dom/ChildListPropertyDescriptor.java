@@ -14,13 +14,13 @@ package org.eclipse.jdt.core.dom;
  * Descriptor for a child list property of an AST node.
  * A child list property is one whose value is a list of
  * {@link ASTNode}.
- * 
+ *
  * @see org.eclipse.jdt.core.dom.ASTNode#getStructuralProperty(StructuralPropertyDescriptor)
  * @since 3.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class ChildListPropertyDescriptor extends StructuralPropertyDescriptor {
-	
+
 	/**
 	 * Element type. For example, for a node type like
 	 * CompilationUnit, the "imports" property is ImportDeclaration.class.
@@ -30,7 +30,7 @@ public final class ChildListPropertyDescriptor extends StructuralPropertyDescrip
 	 * </p>
 	 */
 	final Class elementType;
-	
+
 	/**
 	 * Indicates whether a cycle is possible.
 	 * <p>
@@ -38,14 +38,14 @@ public final class ChildListPropertyDescriptor extends StructuralPropertyDescrip
 	 * access from ASTNode.
 	 * </p>
 	 */
-	final boolean cycleRisk;	
-	
+	final boolean cycleRisk;
+
 	/**
 	 * Creates a new child list property descriptor with the given property id.
 	 * Note that this constructor is declared package-private so that
 	 * property descriptors can only be created by the AST
 	 * implementation.
-	 * 
+	 *
 	 * @param nodeClass concrete AST node type that owns this property
 	 * @param propertyId the property id
 	 * @param elementType the element type of this property
@@ -60,20 +60,20 @@ public final class ChildListPropertyDescriptor extends StructuralPropertyDescrip
 		this.elementType = elementType;
 		this.cycleRisk = cycleRisk;
 	}
-	
+
 	/**
 	 * Returns the element type of this list property.
 	 * <p>
 	 * For example, for a node type like CompilationUnit,
 	 * the "imports" property returns <code>ImportDeclaration.class</code>.
 	 * </p>
-	 * 
+	 *
 	 * @return the element type of the property
 	 */
 	public final Class getElementType() {
 		return this.elementType;
 	}
-	
+
 	/**
 	 * Returns whether this property is vulnerable to cycles.
 	 * <p>
@@ -82,13 +82,13 @@ public final class ChildListPropertyDescriptor extends StructuralPropertyDescrip
 	 * appear in the AST subtree below this property. For example,
 	 * the body property of a
 	 * {@link MethodDeclaration} node
-	 * admits a body which might include statement that embeds 
+	 * admits a body which might include statement that embeds
 	 * another {@link MethodDeclaration} node.
 	 * On the other hand, the name property of a
 	 * MethodDeclaration node admits only names, and thereby excludes
 	 * another MethodDeclaration node.
 	 * </p>
-	 * 
+	 *
 	 * @return <code>true</code> if cycles are possible,
 	 * and <code>false</code> if cycles are impossible
 	 */

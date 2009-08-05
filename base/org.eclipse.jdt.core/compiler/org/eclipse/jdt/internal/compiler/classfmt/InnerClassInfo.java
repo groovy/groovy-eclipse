@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,19 +43,19 @@ public InnerClassInfo(byte classFileBytes[], int offsets[], int offset) {
  * @return char[]
  */
 public char[] getEnclosingTypeName() {
-	if (!readOuterClassName) {
+	if (!this.readOuterClassName) {
 		// read outer class name
-		readOuterClassName = true;
-		if (outerClassNameIndex != 0) {
-			int utf8Offset = 
-				constantPoolOffsets[u2At(
-					constantPoolOffsets[outerClassNameIndex] - structOffset + 1)]
-					- structOffset; 
-			outerClassName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+		this.readOuterClassName = true;
+		if (this.outerClassNameIndex != 0) {
+			int utf8Offset =
+				this.constantPoolOffsets[u2At(
+					this.constantPoolOffsets[this.outerClassNameIndex] - this.structOffset + 1)]
+					- this.structOffset;
+			this.outerClassName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 		}
 
 	}
-	return outerClassName;
+	return this.outerClassName;
 }
 /**
  * Answer an int whose bits are set according the access constants
@@ -63,11 +63,11 @@ public char[] getEnclosingTypeName() {
  * @return int
  */
 public int getModifiers() {
-	if (accessFlags == -1) {
+	if (this.accessFlags == -1) {
 		// read access flag
-		accessFlags = u2At(6);
+		this.accessFlags = u2At(6);
 	}
-	return accessFlags;
+	return this.accessFlags;
 }
 /**
  * Answer the resolved name of the member type in the
@@ -77,16 +77,16 @@ public int getModifiers() {
  * @return char[]
  */
 public char[] getName() {
-	if (!readInnerClassName) {
+	if (!this.readInnerClassName) {
 		// read the inner class name
-		readInnerClassName = true;
-		if (innerClassNameIndex != 0) {
-			int  classOffset = constantPoolOffsets[innerClassNameIndex] - structOffset;
-			int utf8Offset = constantPoolOffsets[u2At(classOffset + 1)] - structOffset;
-			innerClassName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+		this.readInnerClassName = true;
+		if (this.innerClassNameIndex != 0) {
+			int  classOffset = this.constantPoolOffsets[this.innerClassNameIndex] - this.structOffset;
+			int utf8Offset = this.constantPoolOffsets[u2At(classOffset + 1)] - this.structOffset;
+			this.innerClassName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 		}
 	}
-	return innerClassName;
+	return this.innerClassName;
 }
 /**
  * Answer the source name of the member type.
@@ -97,12 +97,12 @@ public char[] getName() {
 public char[] getSourceName() {
 	if (!this.readInnerName) {
 		this.readInnerName = true;
-		if (innerNameIndex != 0) {
-			int utf8Offset = constantPoolOffsets[innerNameIndex] - structOffset;
-			innerName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+		if (this.innerNameIndex != 0) {
+			int utf8Offset = this.constantPoolOffsets[this.innerNameIndex] - this.structOffset;
+			this.innerName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 		}
 	}
-	return innerName;
+	return this.innerName;
 }
 /**
  * Answer the string representation of the receiver
@@ -121,7 +121,7 @@ public String toString() {
 	if (getSourceName() != null) {
 		buffer.append(getSourceName());
 	}
-	return buffer.toString();   
+	return buffer.toString();
 }
 /**
  * This method is used to fully initialize the contents of the receiver. All methodinfos, fields infos

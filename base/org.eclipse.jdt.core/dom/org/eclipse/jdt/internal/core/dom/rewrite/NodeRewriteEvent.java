@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,29 +16,29 @@ package org.eclipse.jdt.internal.core.dom.rewrite;
  *
  */
 public class NodeRewriteEvent extends RewriteEvent {
-	
+
 	private Object originalValue;
 	private Object newValue;
-		
+
 	public NodeRewriteEvent(Object originalValue, Object newValue) {
 		this.originalValue= originalValue;
 		this.newValue= newValue;
 	}
-			
+
 	/**
 	 * @return Returns the new value.
 	 */
 	public Object getNewValue() {
 		return this.newValue;
 	}
-	
+
 	/**
 	 * @return Returns the original value.
 	 */
 	public Object getOriginalValue() {
 		return this.originalValue;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.corext.dom.RewriteEvent#getChangeKind()
 	 */
@@ -57,7 +57,7 @@ public class NodeRewriteEvent extends RewriteEvent {
 		}
 		return REPLACED;
 	}
-		
+
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.corext.dom.RewriteEvent#isListRewrite()
@@ -80,7 +80,7 @@ public class NodeRewriteEvent extends RewriteEvent {
 	public RewriteEvent[] getChildren() {
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -109,6 +109,6 @@ public class NodeRewriteEvent extends RewriteEvent {
 		}
 		return buf.toString();
 	}
-	
+
 
 }

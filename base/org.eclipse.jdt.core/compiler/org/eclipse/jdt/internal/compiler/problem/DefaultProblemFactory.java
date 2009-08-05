@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,48 +62,48 @@ public DefaultProblemFactory(Locale loc) {
  * @return CategorizedProblem
  */
 public CategorizedProblem createProblem(
-	char[] originatingFileName, 
-	int problemId, 
-	String[] problemArguments, 
-	String[] messageArguments, 
-	int severity, 
-	int startPosition, 
-	int endPosition, 
+	char[] originatingFileName,
+	int problemId,
+	String[] problemArguments,
+	String[] messageArguments,
+	int severity,
+	int startPosition,
+	int endPosition,
 	int lineNumber,
 	int columnNumber) {
 
 	return new DefaultProblem(
-		originatingFileName, 
+		originatingFileName,
 		this.getLocalizedMessage(problemId, messageArguments),
-		problemId, 
-		problemArguments, 
-		severity, 
-		startPosition, 
-		endPosition, 
+		problemId,
+		problemArguments,
+		severity,
+		startPosition,
+		endPosition,
 		lineNumber,
-		columnNumber); 
+		columnNumber);
 }
 public CategorizedProblem createProblem(
-	char[] originatingFileName, 
-	int problemId, 
+	char[] originatingFileName,
+	int problemId,
 	String[] problemArguments,
 	int elaborationId,
-	String[] messageArguments, 
-	int severity, 
-	int startPosition, 
-	int endPosition, 
+	String[] messageArguments,
+	int severity,
+	int startPosition,
+	int endPosition,
 	int lineNumber,
 	int columnNumber) {
 	return new DefaultProblem(
-		originatingFileName, 
+		originatingFileName,
 		this.getLocalizedMessage(problemId, elaborationId, messageArguments),
-		problemId, 
-		problemArguments, 
-		severity, 
-		startPosition, 
-		endPosition, 
+		problemId,
+		problemArguments,
+		severity,
+		startPosition,
+		endPosition,
 		lineNumber,
-		columnNumber); 
+		columnNumber);
 }
 private final static int keyFromID(int id) {
     return id + 1; // keys are offsetted by one in table, since it cannot handle 0 key
@@ -214,7 +214,7 @@ public static HashtableOfInt loadMessageTemplates(Locale loc) {
 	ResourceBundle bundle = null;
 	String bundleName = "org.eclipse.jdt.internal.compiler.problem.messages"; //$NON-NLS-1$
 	try {
-		bundle = ResourceBundle.getBundle(bundleName, loc); 
+		bundle = ResourceBundle.getBundle(bundleName, loc);
 	} catch(MissingResourceException e) {
 		System.out.println("Missing resource : " + bundleName.replace('.', '/') + ".properties for locale " + loc); //$NON-NLS-1$//$NON-NLS-2$
 		throw e;

@@ -93,7 +93,7 @@ public IJavaElement getPrimaryElement(boolean checkOwner) {
  * @private Debugging purposes
  */
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
-	buffer.append(this.tabString(tab));
+	buffer.append(tabString(tab));
 	if (info == null) {
 		buffer.append("<initializer #"); //$NON-NLS-1$
 		buffer.append(this.occurrenceCount);
@@ -105,7 +105,7 @@ protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean s
 	} else {
 		try {
 			buffer.append("<"); //$NON-NLS-1$
-			if (Flags.isStatic(this.getFlags())) {
+			if (Flags.isStatic(getFlags())) {
 				buffer.append("static "); //$NON-NLS-1$
 			}
 		buffer.append("initializer #"); //$NON-NLS-1$

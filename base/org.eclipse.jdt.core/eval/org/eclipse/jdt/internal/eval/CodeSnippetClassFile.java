@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,9 @@ import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
+import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class CodeSnippetClassFile extends ClassFile {
 /**
@@ -66,7 +69,7 @@ public CodeSnippetClassFile(
 	this.headerOffset += 2;
 	this.constantPool = new ConstantPool(this);
 	int accessFlags = aType.getAccessFlags();
-	
+
 	if (!aType.isInterface()) { // class or enum
 		accessFlags |= ClassFileConstants.AccSuper;
 	}
@@ -127,12 +130,7 @@ public CodeSnippetClassFile(
 	}
 	// retrieve the enclosing one guaranteed to be the one matching the propagated flow info
 	// 1FF9ZBU: LFCOM:ALL - Local variable attributes busted (Sanity check)
-	if (this.enclosingClassFile == null) {
-		this.codeStream.maxFieldCount = aType.scope.referenceType().maxFieldCount;
-	} else {
-		ClassFile outermostClassFile = this.outerMostEnclosingClassFile();
-		this.codeStream.maxFieldCount = outermostClassFile.codeStream.maxFieldCount;
-	}
+	this.codeStream.maxFieldCount = aType.scope.outerMostClassScope().referenceType().maxFieldCount;
 }
 /**
  * INTERNAL USE-ONLY
@@ -148,6 +146,13 @@ public static void createProblemType(TypeDeclaration typeDeclaration, Compilatio
 	// inner attributes
 	if (typeBinding.isNestedType()) {
 		classFile.recordInnerClasses(typeBinding);
+	}
+	TypeVariableBinding[] typeVariables = typeBinding.typeVariables();
+	for (int i = 0, max = typeVariables.length; i < max; i++) {
+		TypeVariableBinding typeVariableBinding = typeVariables[i];
+		if ((typeVariableBinding.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
+			Util.recordNestedType(classFile, typeVariableBinding);
+		}
 	}
 
 	// add its fields
@@ -180,7 +185,7 @@ public static void createProblemType(TypeDeclaration typeDeclaration, Compilatio
 				MethodBinding method = methodDecl.binding;
 				if (method == null || method.isConstructor()) continue;
 				classFile.addAbstractMethod(methodDecl, method);
-			}		
+			}
 		} else {
 			for (int i = 0, length = methodDecls.length; i < length; i++) {
 				AbstractMethodDeclaration methodDecl = methodDecls[i];

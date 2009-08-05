@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,9 +30,9 @@ import org.eclipse.jdt.internal.core.dom.rewrite.RewriteEventStore.CopySourceInf
 /**
  *
  */
-public final class NodeInfoStore {	
+public final class NodeInfoStore {
 	private AST ast;
-	
+
 	private Map placeholderNodes;
 	private Set collapsedNodes;
 
@@ -54,7 +54,7 @@ public final class NodeInfoStore {
 		data.code= code;
 		setPlaceholderData(placeholder, data);
 	}
-	
+
 	/**
 	 * Marks a node as a copy or move target. The copy target represents a copied node at the target (copied) site.
 	 * @param target The node at the target site. Can be a placeholder node but also the source node itself.
@@ -65,7 +65,7 @@ public final class NodeInfoStore {
 		data.copySource= copySource;
 		setPlaceholderData(target, data);
 	}
-	
+
 	/**
 	 * Creates a placeholder node of the given type. <code>null</code> if the type is not supported
 	 * @param nodeType Type of the node to create. Use the type constants in {@link NodeInfoStore}.
@@ -99,12 +99,12 @@ public final class NodeInfoStore {
 	        return null;
 	    }
  	}
-	
-	
+
+
 	// collapsed nodes: in source: use one node that represents many; to be used as
 	// copy/move source or to replace at once.
 	// in the target: one block node that is not flattened.
-	
+
 	public Block createCollapsePlaceholder() {
 		Block placeHolder= this.ast.newBlock();
 		if (this.collapsedNodes == null) {
@@ -113,39 +113,39 @@ public final class NodeInfoStore {
 		this.collapsedNodes.add(placeHolder);
 		return placeHolder;
 	}
-	
+
 	public boolean isCollapsed(ASTNode node) {
 		if (this.collapsedNodes != null) {
 			return this.collapsedNodes.contains(node);
 		}
-		return false;	
+		return false;
 	}
-	
+
 	public Object getPlaceholderData(ASTNode node) {
 		if (this.placeholderNodes != null) {
 			return this.placeholderNodes.get(node);
 		}
-		return null;	
+		return null;
 	}
-	
+
 	private void setPlaceholderData(ASTNode node, PlaceholderData data) {
 		if (this.placeholderNodes == null) {
 			this.placeholderNodes= new IdentityHashMap();
 		}
-		this.placeholderNodes.put(node, data);		
+		this.placeholderNodes.put(node, data);
 	}
-	
+
 	static class PlaceholderData {
 		// base class
 	}
-			
+
 	protected static final class CopyPlaceholderData extends PlaceholderData {
 		public CopySourceInfo copySource;
 		public String toString() {
 			return "[placeholder " + this.copySource +"]";  //$NON-NLS-1$//$NON-NLS-2$
 		}
-	}	
-	
+	}
+
 	protected static final class StringPlaceholderData extends PlaceholderData {
 		public String code;
 		public String toString() {
@@ -154,7 +154,7 @@ public final class NodeInfoStore {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public void clear() {
 		this.placeholderNodes= null;

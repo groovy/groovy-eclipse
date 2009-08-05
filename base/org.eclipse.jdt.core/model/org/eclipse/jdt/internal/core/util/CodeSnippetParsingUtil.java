@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2008 IBM Corporation and others.
+ * Copyright (c) 2002, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,7 +33,7 @@ public class CodeSnippetParsingUtil {
 
 	public RecordedParsingInformation recordedParsingInformation;
 
-	private RecordedParsingInformation getRecordedParsingInformation(CompilationResult compilationResult, CommentRecorderParser parser) {
+	private RecordedParsingInformation getRecordedParsingInformation(CompilationResult compilationResult, int[][] commentPositions) {
 		int problemsCount = compilationResult.problemCount;
 		CategorizedProblem[] problems = null;
 		if (problemsCount != 0) {
@@ -44,39 +44,45 @@ public class CodeSnippetParsingUtil {
 				System.arraycopy(compilationResultProblems, 0, (problems = new CategorizedProblem[problemsCount]), 0, problemsCount);
 			}
 		}
-		return new RecordedParsingInformation(problems, compilationResult.getLineSeparatorPositions(), parser.getCommentsPositions());
+		return new RecordedParsingInformation(problems, compilationResult.getLineSeparatorPositions(), commentPositions);
 	}
 
 	public ASTNode[] parseClassBodyDeclarations(char[] source, Map settings, boolean recordParsingInformation) {
-		return parseClassBodyDeclarations(source, 0, source.length, settings, recordParsingInformation);
-	}	
+		return parseClassBodyDeclarations(source, 0, source.length, settings, recordParsingInformation, false);
+	}
 
-	public ASTNode[] parseClassBodyDeclarations(char[] source, int offset, int length, Map settings, boolean recordParsingInformation) {
+	public ASTNode[] parseClassBodyDeclarations(
+			char[] source,
+			int offset,
+			int length,
+			Map settings,
+			boolean recordParsingInformation,
+			boolean enabledStatementRecovery) {
 		if (source == null) {
 			throw new IllegalArgumentException();
 		}
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
 		final ProblemReporter problemReporter = new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-					compilerOptions, 
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					compilerOptions,
 					new DefaultProblemFactory(Locale.getDefault()));
-					
+
 		CommentRecorderParser parser = new CommentRecorderParser(problemReporter, false);
 		parser.setMethodsFullRecovery(false);
-		parser.setStatementsRecovery(false);
-		
-		ICompilationUnit sourceUnit = 
+		parser.setStatementsRecovery(enabledStatementRecovery);
+
+		ICompilationUnit sourceUnit =
 			new CompilationUnit(
-				source, 
+				source,
 				"", //$NON-NLS-1$
 				compilerOptions.defaultEncoding);
 
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		final CompilationUnitDeclaration compilationUnitDeclaration = new CompilationUnitDeclaration(problemReporter, compilationResult, source.length);
 		ASTNode[] result = parser.parseClassBodyDeclarations(source, offset, length, compilationUnitDeclaration);
-		
+
 		if (recordParsingInformation) {
-			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, parser);
+			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, compilationUnitDeclaration.comments);
 		}
 		return result;
 	}
@@ -89,29 +95,29 @@ public class CodeSnippetParsingUtil {
 		CommentRecorderParser parser =
 			new CommentRecorderParser(
 				new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-					compilerOptions, 
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					compilerOptions,
 					new DefaultProblemFactory(Locale.getDefault())),
 			false);
-		
-		ICompilationUnit sourceUnit = 
+
+		ICompilationUnit sourceUnit =
 			new CompilationUnit(
-				source, 
+				source,
 				"", //$NON-NLS-1$
 				compilerOptions.defaultEncoding);
 		final CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		CompilationUnitDeclaration compilationUnitDeclaration = parser.dietParse(sourceUnit, compilationResult);
 
 		if (recordParsingInformation) {
-			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, parser);
+			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, compilationUnitDeclaration.comments);
 		}
-		
+
 		if (compilationUnitDeclaration.ignoreMethodBodies) {
 			compilationUnitDeclaration.ignoreFurtherInvestigation = true;
 			// if initial diet parse did not work, no need to dig into method bodies.
-			return compilationUnitDeclaration; 
+			return compilationUnitDeclaration;
 		}
-		
+
 		//fill the methods bodies in order for the code to be generated
 		//real parse of the method....
 		parser.scanner.setSource(compilationResult);
@@ -121,7 +127,7 @@ public class CodeSnippetParsingUtil {
 				types[i].parseMethods(parser, compilationUnitDeclaration);
 			}
 		}
-		
+
 		if (recordParsingInformation) {
 			this.recordedParsingInformation.updateRecordedParsingInformation(compilationResult);
 		}
@@ -131,31 +137,32 @@ public class CodeSnippetParsingUtil {
 	public Expression parseExpression(char[] source, Map settings, boolean recordParsingInformation) {
 		return parseExpression(source, 0, source.length, settings, recordParsingInformation);
 	}
-	
+
 	public Expression parseExpression(char[] source, int offset, int length, Map settings, boolean recordParsingInformation) {
-		
+
 		if (source == null) {
 			throw new IllegalArgumentException();
 		}
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
 		final ProblemReporter problemReporter = new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-					compilerOptions, 
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					compilerOptions,
 					new DefaultProblemFactory(Locale.getDefault()));
-					
+
 		CommentRecorderParser parser = new CommentRecorderParser(problemReporter, false);
 
-		ICompilationUnit sourceUnit = 
+		ICompilationUnit sourceUnit =
 			new CompilationUnit(
-				source, 
+				source,
 				"", //$NON-NLS-1$
 				compilerOptions.defaultEncoding);
 
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
-		Expression result = parser.parseExpression(source, offset, length, new CompilationUnitDeclaration(problemReporter, compilationResult, source.length));
-		
+		CompilationUnitDeclaration unit = new CompilationUnitDeclaration(problemReporter, compilationResult, source.length);
+		Expression result = parser.parseExpression(source, offset, length, unit);
+
 		if (recordParsingInformation) {
-			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, parser);
+			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, unit.comments);
 		}
 		return result;
 	}
@@ -163,41 +170,47 @@ public class CodeSnippetParsingUtil {
 	public ConstructorDeclaration parseStatements(char[] source, Map settings, boolean recordParsingInformation, boolean enabledStatementRecovery) {
 		return parseStatements(source, 0, source.length, settings, recordParsingInformation, enabledStatementRecovery);
 	}
-	
-	public ConstructorDeclaration parseStatements(char[] source, int offset, int length, Map settings, boolean recordParsingInformation, boolean enabledStatementRecovery) {
+
+	public ConstructorDeclaration parseStatements(
+			char[] source,
+			int offset,
+			int length,
+			Map settings,
+			boolean recordParsingInformation,
+			boolean enabledStatementRecovery) {
 		if (source == null) {
 			throw new IllegalArgumentException();
 		}
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
 		final ProblemReporter problemReporter = new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-					compilerOptions, 
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					compilerOptions,
 					new DefaultProblemFactory(Locale.getDefault()));
 		CommentRecorderParser parser = new CommentRecorderParser(problemReporter, false);
 		parser.setMethodsFullRecovery(false);
 		parser.setStatementsRecovery(enabledStatementRecovery);
-		
-		ICompilationUnit sourceUnit = 
+
+		ICompilationUnit sourceUnit =
 			new CompilationUnit(
-				source, 
+				source,
 				"", //$NON-NLS-1$
 				compilerOptions.defaultEncoding);
 
 		final CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
-		CompilationUnitDeclaration compilationUnitDeclaration = new CompilationUnitDeclaration(problemReporter, compilationResult, length);		
+		CompilationUnitDeclaration compilationUnitDeclaration = new CompilationUnitDeclaration(problemReporter, compilationResult, length);
 
 		ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(compilationResult);
 		constructorDeclaration.sourceEnd  = -1;
 		constructorDeclaration.declarationSourceEnd = offset + length - 1;
 		constructorDeclaration.bodyStart = offset;
 		constructorDeclaration.bodyEnd = offset + length - 1;
-		
+
 		parser.scanner.setSource(compilationResult);
 		parser.scanner.resetTo(offset, offset + length);
 		parser.parse(constructorDeclaration, compilationUnitDeclaration, true);
-		
+
 		if (recordParsingInformation) {
-			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, parser);
+			this.recordedParsingInformation = getRecordedParsingInformation(compilationResult, compilationUnitDeclaration.comments);
 		}
 		return constructorDeclaration;
 	}

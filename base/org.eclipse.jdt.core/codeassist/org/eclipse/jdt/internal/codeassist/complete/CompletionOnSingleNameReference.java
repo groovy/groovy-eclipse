@@ -33,7 +33,7 @@ package org.eclipse.jdt.internal.codeassist.complete;
 
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
- 
+
 public class CompletionOnSingleNameReference extends SingleNameReference {
 
 	public char[][] possibleKeywords;
@@ -53,7 +53,7 @@ public class CompletionOnSingleNameReference extends SingleNameReference {
 	}
 
 	public StringBuffer printExpression(int indent, StringBuffer output) {
-		
+
 		output.append("<CompleteOnName:"); //$NON-NLS-1$
 		return super.printExpression(0, output).append('>');
 	}

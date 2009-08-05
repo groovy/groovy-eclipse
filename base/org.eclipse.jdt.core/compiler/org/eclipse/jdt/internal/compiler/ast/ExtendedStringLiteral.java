@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,7 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 
 public class ExtendedStringLiteral extends StringLiteral {
 
-	/** 
+	/**
 	 *  Build a string+char literal
 	 */
 	public ExtendedStringLiteral(StringLiteral str, CharLiteral character) {
@@ -24,7 +24,7 @@ public class ExtendedStringLiteral extends StringLiteral {
 		extendWith(character);
 	}
 
-	/**	
+	/**
 	 * Build a two-strings literal
 	 * */
 	public ExtendedStringLiteral(StringLiteral str1, StringLiteral str2) {
@@ -39,11 +39,11 @@ public class ExtendedStringLiteral extends StringLiteral {
 	public ExtendedStringLiteral extendWith(CharLiteral lit) {
 
 		//update the source
-		int length = source.length;
-		System.arraycopy(source, 0, (source = new char[length + 1]), 0, length);
-		source[length] = lit.value;
+		int length = this.source.length;
+		System.arraycopy(this.source, 0, (this.source = new char[length + 1]), 0, length);
+		this.source[length] = lit.value;
 		//position at the end of all literals
-		sourceEnd = lit.sourceEnd;
+		this.sourceEnd = lit.sourceEnd;
 		return this;
 	}
 
@@ -53,22 +53,22 @@ public class ExtendedStringLiteral extends StringLiteral {
 	public ExtendedStringLiteral extendWith(StringLiteral lit) {
 
 		//uddate the source
-		int length = source.length;
+		int length = this.source.length;
 		System.arraycopy(
-			source,
+			this.source,
 			0,
-			source = new char[length + lit.source.length],
+			this.source = new char[length + lit.source.length],
 			0,
 			length);
-		System.arraycopy(lit.source, 0, source, length, lit.source.length);
+		System.arraycopy(lit.source, 0, this.source, length, lit.source.length);
 		//position at the end of all literals
-		sourceEnd = lit.sourceEnd;
+		this.sourceEnd = lit.sourceEnd;
 		return this;
 	}
 
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
-		return output.append("ExtendedStringLiteral{").append(source).append('}'); //$NON-NLS-1$
+		return output.append("ExtendedStringLiteral{").append(this.source).append('}'); //$NON-NLS-1$
 	}
 
 	public void traverse(ASTVisitor visitor, BlockScope scope) {

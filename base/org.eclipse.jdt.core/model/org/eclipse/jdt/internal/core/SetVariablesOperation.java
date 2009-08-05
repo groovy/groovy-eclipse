@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -24,11 +24,11 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class SetVariablesOperation extends ChangeClasspathOperation {
-	
+
 	String[] variableNames;
 	IPath[] variablePaths;
 	boolean updatePreferences;
-		
+
 	/*
 	 * Creates a new SetVariablesOperation for the given variable values (null path meaning removal), allowing to change multiple variable values at once.
 	 */
@@ -45,22 +45,22 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 			beginTask("", 1); //$NON-NLS-1$
 			if (JavaModelManager.CP_RESOLVE_VERBOSE)
 				verbose_set_variables();
-			
+
 			JavaModelManager manager = JavaModelManager.getJavaModelManager();
 			if (manager.variablePutIfInitializingWithSameValue(this.variableNames, this.variablePaths))
 				return;
-	
+
 			int varLength = this.variableNames.length;
-			
+
 			// gather classpath information for updating
 			final HashMap affectedProjectClasspaths = new HashMap(5);
 			IJavaModel model = getJavaModel();
-		
+
 			// filter out unmodified variables
 			int discardCount = 0;
 			for (int i = 0; i < varLength; i++){
 				String variableName = this.variableNames[i];
-				IPath oldPath = manager.variableGet(variableName); // if reentering will provide previous session value 
+				IPath oldPath = manager.variableGet(variableName); // if reentering will provide previous session value
 				if (oldPath == JavaModelManager.VARIABLE_INITIALIZATION_IN_PROGRESS) {
 					oldPath = null;  //33695 - cannot filter out restored variable, must update affected project to reset cached CP
 				}
@@ -85,24 +85,24 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 				this.variablePaths = changedVariablePaths;
 				varLength = changedLength;
 			}
-			
-			if (isCanceled()) 
+
+			if (isCanceled())
 				return;
-	
+
 			IJavaProject[] projects = model.getJavaProjects();
 			nextProject : for (int i = 0, projectLength = projects.length; i < projectLength; i++){
 				JavaProject project = (JavaProject) projects[i];
-						
+
 				// check to see if any of the modified variables is present on the classpath
 				IClasspathEntry[] classpath = project.getRawClasspath();
 				for (int j = 0, cpLength = classpath.length; j < cpLength; j++){
-					
+
 					IClasspathEntry entry = classpath[j];
 					for (int k = 0; k < varLength; k++){
-	
-						String variableName = this.variableNames[k];						
+
+						String variableName = this.variableNames[k];
 						if (entry.getEntryKind() ==  IClasspathEntry.CPE_VARIABLE){
-	
+
 							if (variableName.equals(entry.getPath().segment(0))){
 								affectedProjectClasspaths.put(project, project.getResolvedClasspath());
 								continue nextProject;
@@ -110,11 +110,11 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 							IPath sourcePath, sourceRootPath;
 							if (((sourcePath = entry.getSourceAttachmentPath()) != null	&& variableName.equals(sourcePath.segment(0)))
 								|| ((sourceRootPath = entry.getSourceAttachmentRootPath()) != null	&& variableName.equals(sourceRootPath.segment(0)))) {
-	
+
 								affectedProjectClasspaths.put(project, project.getResolvedClasspath());
 								continue nextProject;
 							}
-						}												
+						}
 					}
 				}
 			}
@@ -125,7 +125,7 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 				if (this.updatePreferences)
 					manager.variablePreferencesPut(this.variableNames[i], this.variablePaths[i]);
 			}
-					
+
 			// update affected project classpaths
 			if (!affectedProjectClasspaths.isEmpty()) {
 				String[] dbgVariableNames = this.variableNames;
@@ -133,16 +133,16 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 					// propagate classpath change
 					Iterator projectsToUpdate = affectedProjectClasspaths.keySet().iterator();
 					while (projectsToUpdate.hasNext()) {
-	
+
 						if (this.progressMonitor != null && this.progressMonitor.isCanceled()) return;
-	
+
 						JavaProject affectedProject = (JavaProject) projectsToUpdate.next();
-	
+
 						// force resolved classpath to be recomputed
 						if (JavaModelManager.CP_RESOLVE_VERBOSE_ADVANCED)
 							verbose_update_project(dbgVariableNames, affectedProject);
 						ClasspathChange classpathChange = affectedProject.getPerProjectInfo().resetResolvedClasspath();
-						
+
 						// if needed, generate delta, update project ref, create markers, ...
 						classpathChanged(classpathChange);
 
@@ -153,7 +153,7 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 					}
 				} catch (CoreException e) {
 					if (JavaModelManager.CP_RESOLVE_VERBOSE || JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE){
-						verbose_failure(dbgVariableNames); 
+						verbose_failure(dbgVariableNames);
 						e.printStackTrace();
 					}
 					if (e instanceof JavaModelException) {
@@ -163,7 +163,7 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 					}
 				}
 			}
-		} finally {		
+		} finally {
 			done();
 		}
 	}

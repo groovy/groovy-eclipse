@@ -27,7 +27,7 @@ import org.eclipse.jdt.core.JavaModelException;
  * @see org.eclipse.jdt.internal.core.PackageFragmentRootInfo
  */
 public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
-	
+
 	/**
 	 * The path to the external folder
 	 * (an OS path)
@@ -35,7 +35,7 @@ public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
 	protected final IPath externalPath;
 
 	/**
-	 * Constructs a package fragment root which is the root of the Java package directory hierarchy 
+	 * Constructs a package fragment root which is the root of the Java package directory hierarchy
 	 * based on an external folder that is not contained in a <code>IJavaProject</code> and
 	 * does not have an associated <code>IResource</code>.
 	 */
@@ -48,7 +48,7 @@ public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
 		super(linkedFolder, project);
 		this.externalPath = externalPath == null ? linkedFolder.getLocation() : externalPath;
 	}
-	
+
 	/**
 	 * An external class folder is always K_BINARY.
 	 */
@@ -104,13 +104,13 @@ public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
 	public boolean isExternal() {
 		return true;
 	}
-	
+
 	public IResource resource(PackageFragmentRoot root) {
 		if (this.resource == null)
 			return this.resource = JavaModelManager.getExternalManager().getFolder(this.externalPath);
 		return super.resource(root);
 	}
-	
+
 	protected boolean resourceExists(IResource underlyingResource) {
 		if (underlyingResource == null)
 			return false;

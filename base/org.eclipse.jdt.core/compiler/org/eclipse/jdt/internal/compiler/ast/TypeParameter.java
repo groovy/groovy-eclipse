@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,7 @@ public class TypeParameter extends AbstractVariableDeclaration {
 	}
 
 	public void checkBounds(Scope scope) {
-		
+
 		if (this.type != null) {
 			this.type.checkBounds(scope);
 		}
@@ -41,24 +41,24 @@ public class TypeParameter extends AbstractVariableDeclaration {
 			}
 		}
 	}
-	
+
 	private void internalResolve(Scope scope, boolean staticContext) {
 	    // detect variable/type name collisions
 		if (this.binding != null) {
 			Binding existingType = scope.parent.getBinding(this.name, Binding.TYPE, this, false/*do not resolve hidden field*/);
-			if (existingType != null 
-					&& this.binding != existingType 
+			if (existingType != null
+					&& this.binding != existingType
 					&& existingType.isValidBinding()
 					&& (existingType.kind() != Binding.TYPE_PARAMETER || !staticContext)) {
 				scope.problemReporter().typeHiding(this, existingType);
 			}
 		}
 	}
-	
+
 	public void resolve(BlockScope scope) {
 		internalResolve(scope, scope.methodScope().isStatic);
 	}
-	
+
 	public void resolve(ClassScope scope) {
 		internalResolve(scope, scope.enclosingSourceType().isStatic());
 	}
@@ -80,17 +80,17 @@ public class TypeParameter extends AbstractVariableDeclaration {
 		}
 		return output;
 	}
-	
+
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	    // nothing to do
 	}
-	
+
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
-			if (type != null) {
-				type.traverse(visitor, scope);
+			if (this.type != null) {
+				this.type.traverse(visitor, scope);
 			}
-			if (bounds != null) {
+			if (this.bounds != null) {
 				int boundsLength = this.bounds.length;
 				for (int i = 0; i < boundsLength; i++) {
 					this.bounds[i].traverse(visitor, scope);
@@ -102,10 +102,10 @@ public class TypeParameter extends AbstractVariableDeclaration {
 
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
-			if (type != null) {
-				type.traverse(visitor, scope);
+			if (this.type != null) {
+				this.type.traverse(visitor, scope);
 			}
-			if (bounds != null) {
+			if (this.bounds != null) {
 				int boundsLength = this.bounds.length;
 				for (int i = 0; i < boundsLength; i++) {
 					this.bounds[i].traverse(visitor, scope);
@@ -113,5 +113,5 @@ public class TypeParameter extends AbstractVariableDeclaration {
 			}
 		}
 		visitor.endVisit(this, scope);
-	}	
+	}
 }

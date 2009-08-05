@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,13 +12,13 @@ package org.eclipse.jdt.core;
 
 /**
  * A callback interface for receiving java problem correction.
- * 
+ *
  * @since 2.0
  */
 public interface ICorrectionRequestor {
 /**
  * Notification of a class correction.
- * 
+ *
  * @param packageName Declaring package name of the class.
  * @param className Name of the class.
  * @param correctionName The correction for the class.

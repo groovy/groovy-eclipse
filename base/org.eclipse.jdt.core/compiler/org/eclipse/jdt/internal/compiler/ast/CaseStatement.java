@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,10 +25,10 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class CaseStatement extends Statement {
-	
+
 	public Expression constantExpression;
 	public CaseLabel targetLabel;
-	
+
 public CaseStatement(Expression constantExpression, int sourceEnd, int sourceStart) {
 	this.constantExpression = constantExpression;
 	this.sourceEnd = sourceEnd;
@@ -41,7 +41,7 @@ public FlowInfo analyseCode(
 	FlowInfo flowInfo) {
 
 	if (this.constantExpression != null) {
-		if (this.constantExpression.constant == Constant.NotAConstant 
+		if (this.constantExpression.constant == Constant.NotAConstant
 				&& !this.constantExpression.resolvedType.isEnum()) {
 			currentScope.problemReporter().caseExpressionMustBeConstant(this.constantExpression);
 		}
@@ -88,13 +88,13 @@ public void resolve(BlockScope scope) {
 public Constant resolveCase(BlockScope scope, TypeBinding switchExpressionType, SwitchStatement switchStatement) {
 	// switchExpressionType maybe null in error case
     scope.enclosingCase = this; // record entering in a switch case block
-    
+
 	if (this.constantExpression == null) {
 		// remember the default case into the associated switch statement
 		if (switchStatement.defaultCase != null)
 			scope.problemReporter().duplicateDefaultCase(this);
 
-		// on error the last default will be the selected one ...	
+		// on error the last default will be the selected one ...
 		switchStatement.defaultCase = this;
 		return Constant.NotAConstant;
 	}
@@ -127,11 +127,7 @@ public Constant resolveCase(BlockScope scope, TypeBinding switchExpressionType, 
 		} else {
 			return this.constantExpression.constant;
 		}
-	} else if (scope.isBoxingCompatibleWith(caseType, switchExpressionType)
-					|| (caseType.isBaseType()  // narrowing then boxing ?
-							&& scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5 // autoboxing
-							&& !switchExpressionType.isBaseType()
-							&& this.constantExpression.isConstantValueOfTypeAssignableToType(caseType, scope.environment().computeBoxingType(switchExpressionType)))) {
+	} else if (isBoxingCompatible(caseType, switchExpressionType, this.constantExpression, scope)) {
 		// constantExpression.computeConversion(scope, caseType, switchExpressionType); - do not report boxing/unboxing conversion
 		return this.constantExpression.constant;
 	}

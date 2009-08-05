@@ -31,7 +31,7 @@ public class JavadocAllocationExpression extends AllocationExpression {
 	}
 
 	TypeBinding internalResolveType(Scope scope) {
-	
+
 		// Propagate the type checking to the arguments, and check if the constructor is defined.
 		this.constant = Constant.NotAConstant;
 		if (this.type == null) {
@@ -41,7 +41,7 @@ public class JavadocAllocationExpression extends AllocationExpression {
 		} else {
 			this.resolvedType = this.type.resolveType((BlockScope)scope, true /* check bounds*/);
 		}
-	
+
 		// buffering the arguments' types
 		TypeBinding[] argumentTypes = Binding.NO_PARAMETERS;
 		boolean hasTypeVarArgs = false;
@@ -66,7 +66,7 @@ public class JavadocAllocationExpression extends AllocationExpression {
 				return null;
 			}
 		}
-	
+
 		// check resolved type
 		if (this.resolvedType == null) {
 			return null;
@@ -76,7 +76,7 @@ public class JavadocAllocationExpression extends AllocationExpression {
 		if (enclosingType == null ? false : enclosingType.isCompatibleWith(this.resolvedType)) {
 			this.bits |= ASTNode.SuperAccess;
 		}
-	
+
 		ReferenceBinding allocationType = (ReferenceBinding) this.resolvedType;
 		this.binding = scope.getConstructor(allocationType, argumentTypes, this);
 		if (!this.binding.isValidBinding()) {
@@ -102,9 +102,9 @@ public class JavadocAllocationExpression extends AllocationExpression {
 				scope.problemReporter().javadocInvalidConstructor(this, this.binding, scope.getDeclarationModifiers());
 			}
 			return this.resolvedType;
-		} else if (binding.isVarargs()) {
+		} else if (this.binding.isVarargs()) {
 			int length = argumentTypes.length;
-			if (!(binding.parameters.length == length && argumentTypes[length-1].isArrayType())) {
+			if (!(this.binding.parameters.length == length && argumentTypes[length-1].isArrayType())) {
 				MethodBinding problem = new ProblemMethodBinding(this.binding, this.binding.selector, argumentTypes, ProblemReasons.NotFound);
 				scope.problemReporter().javadocInvalidConstructor(this, problem, scope.getDeclarationModifiers());
 			}
@@ -125,14 +125,14 @@ public class JavadocAllocationExpression extends AllocationExpression {
 				}
 			}
 		} else if (this.resolvedType.isMemberType()) {
-			int length = qualification.length;
+			int length = this.qualification.length;
 			if (length > 1) { // accept qualified member class constructor reference => see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=103304
 				ReferenceBinding enclosingTypeBinding = allocationType;
-				if (type instanceof JavadocQualifiedTypeReference && ((JavadocQualifiedTypeReference)type).tokens.length != length) {
+				if (this.type instanceof JavadocQualifiedTypeReference && ((JavadocQualifiedTypeReference)this.type).tokens.length != length) {
 					scope.problemReporter().javadocInvalidMemberTypeQualification(this.memberStart+1, this.sourceEnd, scope.getDeclarationModifiers());
 				} else {
 					int idx = length;
-					while (idx > 0 && CharOperation.equals(qualification[--idx], enclosingTypeBinding.sourceName) && (enclosingTypeBinding = enclosingTypeBinding.enclosingType()) != null) {
+					while (idx > 0 && CharOperation.equals(this.qualification[--idx], enclosingTypeBinding.sourceName) && (enclosingTypeBinding = enclosingTypeBinding.enclosingType()) != null) {
 						// verify that each qualification token matches enclosing types
 					}
 					if (idx > 0 || enclosingTypeBinding != null) {
@@ -191,5 +191,5 @@ public class JavadocAllocationExpression extends AllocationExpression {
 			}
 		}
 		visitor.endVisit(this, scope);
-	}	
+	}
 }

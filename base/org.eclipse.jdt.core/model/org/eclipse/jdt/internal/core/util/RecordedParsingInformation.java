@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2006 IBM Corporation and others.
+ * Copyright (c) 2002, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,14 +22,14 @@ public class RecordedParsingInformation {
 	public int problemsCount;
 	public int[] lineEnds;
 	public int[][] commentPositions;
-	
+
 	public RecordedParsingInformation(CategorizedProblem[] problems, int[] lineEnds, int[][] commentPositions) {
 		this.problems = problems;
 		this.lineEnds = lineEnds;
 		this.commentPositions = commentPositions;
 		this.problemsCount = problems != null ? problems.length : 0;
 	}
-	
+
 	void updateRecordedParsingInformation(CompilationResult compilationResult) {
 		if (compilationResult.problems != null) {
 			this.problems = compilationResult.problems;

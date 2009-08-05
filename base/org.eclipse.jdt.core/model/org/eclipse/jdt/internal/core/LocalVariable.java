@@ -36,17 +36,17 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	public int nameStart, nameEnd;
 	String typeSignature;
 	public IAnnotation[] annotations;
-	
+
 	public LocalVariable(
-			JavaElement parent, 
-			String name, 
-			int declarationSourceStart, 
+			JavaElement parent,
+			String name,
+			int declarationSourceStart,
 			int declarationSourceEnd,
-			int nameStart, 
+			int nameStart,
 			int nameEnd,
 			String typeSignature,
 			org.eclipse.jdt.internal.compiler.ast.Annotation[] astAnnotations) {
-		
+
 		super(parent);
 		this.name = name;
 		this.declarationSourceStart = declarationSourceStart;
@@ -69,14 +69,14 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	public boolean equals(Object o) {
 		if (!(o instanceof LocalVariable)) return false;
 		LocalVariable other = (LocalVariable)o;
-		return 
-			this.declarationSourceStart == other.declarationSourceStart 
+		return
+			this.declarationSourceStart == other.declarationSourceStart
 			&& this.declarationSourceEnd == other.declarationSourceEnd
 			&& this.nameStart == other.nameStart
 			&& this.nameEnd == other.nameEnd
 			&& super.equals(o);
 	}
-	
+
 	public boolean exists() {
 		return this.parent.exists(); // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=46192
 	}
@@ -84,7 +84,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	protected void generateInfos(Object info, HashMap newElements, IProgressMonitor pm) {
 		// a local variable has no info
 	}
-	
+
 	public IAnnotation getAnnotation(String annotationName) {
 		for (int i = 0, length = this.annotations.length; i < length; i++) {
 			IAnnotation annotation = this.annotations[i];
@@ -97,7 +97,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	public IAnnotation[] getAnnotations() throws JavaModelException {
 		return this.annotations;
 	}
-	
+
 	private IAnnotation[] getAnnotations(org.eclipse.jdt.internal.compiler.ast.Annotation[] astAnnotations) {
 		int length;
 		if (astAnnotations == null || (length = astAnnotations.length) == 0)
@@ -108,7 +108,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		}
 		return result;
 	}
-	
+
 	private IAnnotation getAnnotation(final org.eclipse.jdt.internal.compiler.ast.Annotation annotation, JavaElement parentElement) {
 		final int typeStart = annotation.type.sourceStart();
 		final int typeEnd = annotation.type.sourceEnd();
@@ -151,7 +151,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		localVarAnnotation.memberValuePairs = memberValuePairs;
 		return localVarAnnotation;
 	}
-	
+
 	/*
 	 * Creates the value wrapper from the given expression, and sets the valueKind on the given memberValuePair
 	 */
@@ -172,7 +172,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		} else if (expression instanceof QualifiedNameReference) {
 			char[] qualifiedName = CharOperation.concatWith(((QualifiedNameReference) expression).tokens, '.');
 			memberValuePair.valueKind = IMemberValuePair.K_QUALIFIED_NAME;
-			return new String(qualifiedName);		
+			return new String(qualifiedName);
 		} else if (expression instanceof SingleNameReference) {
 			char[] simpleName = ((SingleNameReference) expression).token;
 			if (simpleName == RecoveryScanner.FAKE_IDENTIFIER) {
@@ -180,7 +180,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 				return null;
 			}
 			memberValuePair.valueKind = IMemberValuePair.K_SIMPLE_NAME;
-			return new String(simpleName);		
+			return new String(simpleName);
 		} else if (expression instanceof ArrayInitializer) {
 			memberValuePair.valueKind = -1; // modified below by the first call to getMemberValue(...)
 			Expression[] expressions = ((ArrayInitializer) expression).expressions;
@@ -228,7 +228,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		buff.append(JEM_COUNT);
 		buff.append(this.nameEnd);
 		buff.append(JEM_COUNT);
-		buff.append(this.typeSignature);
+		escapeMementoName(buff, this.typeSignature);
 		if (this.occurrenceCount > 1) {
 			buff.append(JEM_COUNT);
 			buff.append(this.occurrenceCount);
@@ -242,7 +242,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	public IResource getCorrespondingResource() {
 		return null;
 	}
-	
+
 	public String getElementName() {
 		return this.name;
 	}
@@ -254,7 +254,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	public ISourceRange getNameRange() {
 		return new SourceRange(this.nameStart, this.nameEnd-this.nameStart+1);
 	}
-	
+
 	public IPath getPath() {
 		return this.parent.getPath();
 	}
@@ -284,14 +284,14 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * @see ISourceReference
 	 */
 	public ISourceRange getSourceRange() {
 		return new SourceRange(this.declarationSourceStart, this.declarationSourceEnd-this.declarationSourceStart+1);
 	}
-	
+
 	public String getTypeSignature() {
 		return this.typeSignature;
 	}
@@ -303,18 +303,18 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	public int hashCode() {
 		return Util.combineHashCodes(this.parent.hashCode(), this.nameStart);
 	}
-	
+
 	public boolean isStructureKnown() throws JavaModelException {
         return true;
     }
-	
+
 	protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
-		buffer.append(this.tabString(tab));
+		buffer.append(tabString(tab));
 		if (info != NO_INFO) {
-			buffer.append(Signature.toString(this.getTypeSignature()));
+			buffer.append(Signature.toString(getTypeSignature()));
 			buffer.append(" "); //$NON-NLS-1$
 		}
 		toStringName(buffer);
 	}
-	
+
 }

@@ -17,7 +17,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 public class ProblemReferenceBinding extends ReferenceBinding {
 	ReferenceBinding closestMatch;
 	private int problemReason;
-	
+
 // NOTE: must only answer the subset of the name related to the problem
 
 public ProblemReferenceBinding(char[][] compoundName, ReferenceBinding closestMatch, int problemReason) {
@@ -63,7 +63,7 @@ public static String problemReasonString(int problemReason) {
 			if (field.getInt(reasons) == problemReason) {
 				return simpleName + '.' + field.getName();
 			}
-		} 
+		}
 	} catch (IllegalAccessException e) {
 		// do nothing
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -80,6 +80,7 @@
  *     IBM Corporation - added the following constant:
  *                                 COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION_EXEMPT_EXCEPTION_AND_THROWABLE
  *     IBM Corporation - added getOptionForConfigurableSeverity(int)
+ *     Benjamin Muskalla - added COMPILER_PB_MISSING_SYNCHRONIZED_ON_INHERITED_METHOD
  *******************************************************************************/
 package org.eclipse.jdt.core;
 
@@ -88,6 +89,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -102,20 +117,7 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Plugin;
-import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -123,6 +125,7 @@ import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
+
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -305,12 +308,12 @@ public final class JavaCore extends Plugin {
 	public static final String COMPILER_PB_INVALID_IMPORT = PLUGIN_ID + ".compiler.problem.invalidImport"; //$NON-NLS-1$
 	/**
 	 * Compiler option ID: Reporting Attempt to Override Package Visible Method.
-	 * <p>A package visible method, which is any method that is not explicitly 
-	 *    declared as public, protected or private, is not visible from other 
-	 *    packages, and thus cannot be overridden from another package. 
-	 *    Attempting to override a package visible method from another package 
-	 *    introduces a new method that is unrelated to the original one. When 
-	 *    enabling this option, the compiler will signal such situations as an 
+	 * <p>A package visible method, which is any method that is not explicitly
+	 *    declared as public, protected or private, is not visible from other
+	 *    packages, and thus cannot be overridden from another package.
+	 *    Attempting to override a package visible method from another package
+	 *    introduces a new method that is unrelated to the original one. When
+	 *    enabling this option, the compiler will signal such situations as an
 	 *    error or a warning.
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.overridingPackageDefaultMethod"</code></dd>
@@ -444,7 +447,7 @@ public final class JavaCore extends Plugin {
 	 * <p>When enabled, the compiler will consider doc comment references to parameters (i.e. <code>@param</code> clauses) for the unused
 	 *    parameter check. Thus, documented parameters will be considered as mandated as per doc contract.
 	 * <p>The severity of the unused parameter problem is controlled with option {@link #COMPILER_PB_UNUSED_PARAMETER}.
-	 * <p>Note: this option has no effect until the doc comment support is enabled according to the 
+	 * <p>Note: this option has no effect until the doc comment support is enabled according to the
 	 *    option {@link #COMPILER_DOC_COMMENT_SUPPORT}.
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.unusedParameterIncludeDocCommentReference"</code></dd>
@@ -709,6 +712,7 @@ public final class JavaCore extends Plugin {
 	 * </dl>
 	 * @since 3.0
 	 * @category CompilerOptionID
+	 * @deprecated - this option has no effect
 	 */
 	public static final String COMPILER_PB_BOOLEAN_METHOD_THROWING_EXCEPTION = PLUGIN_ID + ".compiler.problem.booleanMethodThrowingException"; //$NON-NLS-1$
 	/**
@@ -764,9 +768,9 @@ public final class JavaCore extends Plugin {
 	public static final String COMPILER_PB_FINALLY_BLOCK_NOT_COMPLETING = PLUGIN_ID + ".compiler.problem.finallyBlockNotCompletingNormally"; //$NON-NLS-1$
 	/**
 	 * Compiler option ID: Reporting Unused Declared Thrown Exception.
-	 * <p>When enabled, the compiler will issue an error or a warning when a 
+	 * <p>When enabled, the compiler will issue an error or a warning when a
 	 *    method or a constructor is declaring a checked exception as thrown,
-	 *    but its body actually raises neither that exception, nor any other 
+	 *    but its body actually raises neither that exception, nor any other
 	 *    exception extending it.
 	 * <p>This diagnostic is further tuned by options
 	 *    {@link #COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION_INCLUDE_DOC_COMMENT_REFERENCE},
@@ -785,7 +789,7 @@ public final class JavaCore extends Plugin {
 	 * Compiler option ID: Reporting Unused Declared Thrown Exception in Overriding Method.
 	 * <p>When disabled, the compiler will report unused declared thrown
 	 *    exceptions neither on overriding methods nor on implementing methods.
-	 * <p>The severity of the unused declared thrown exception problem is 
+	 * <p>The severity of the unused declared thrown exception problem is
 	 *    controlled with option {@link #COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION}.
 	 * <p>This diagnostic is further tuned by options
 	 *    {@link #COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION_INCLUDE_DOC_COMMENT_REFERENCE} and
@@ -801,12 +805,12 @@ public final class JavaCore extends Plugin {
 	public static final String COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION_WHEN_OVERRIDING = PLUGIN_ID + ".compiler.problem.unusedDeclaredThrownExceptionWhenOverriding"; //$NON-NLS-1$
 	/**
 	 * Compiler option ID: Consider Reference in Doc Comment for Unused Declared Thrown Exception Check.
-	 * <p>When enabled, the compiler will consider doc comment references to 
+	 * <p>When enabled, the compiler will consider doc comment references to
 	 *    exceptions (i.e. <code>@throws</code> clauses) for the unused
-	 *    declared thrown exception check. Thus, documented exceptions will be 
+	 *    declared thrown exception check. Thus, documented exceptions will be
 	 *    considered as mandated as per doc contract.
 	 * <p>The severity of the unused declared thrown exception problem is controlled with option {@link #COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION}.
-	 * <p>Note: this option has no effect until the doc comment support is enabled according to the 
+	 * <p>Note: this option has no effect until the doc comment support is enabled according to the
 	 *    option {@link #COMPILER_DOC_COMMENT_SUPPORT}.
 	 * <p>This diagnostic is further tuned by options
 	 *    {@link #COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION_EXEMPT_EXCEPTION_AND_THROWABLE}
@@ -822,17 +826,17 @@ public final class JavaCore extends Plugin {
 	public static final String COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION_INCLUDE_DOC_COMMENT_REFERENCE = PLUGIN_ID + ".compiler.problem.unusedDeclaredThrownExceptionIncludeDocCommentReference"; //$NON-NLS-1$
 	/**
 	 * Compiler option ID: Reporting Unused Declared Thrown Exception Exempts Exception And Throwable.
-	 * <p>When enabled, the compiler will issue an error or a warning when a 
+	 * <p>When enabled, the compiler will issue an error or a warning when a
 	 *    method or a constructor is declaring a checked exception else than
 	 *    {@link java.lang.Throwable} or {@link java.lang.Exception} as thrown,
-	 *    but its body actually raises neither that exception, nor any other 
-	 *    exception extending it. When disabled, the compiler will issue an 
-	 *    error or a warning when a method or a constructor is declaring a 
-	 *    checked exception (including {@link java.lang.Throwable} and 
-	 *    {@link java.lang.Exception}) as thrown, but its body actually raises 
-	 *    neither that exception, nor any other exception extending it. 
-	 * <p>The severity of the unused declared thrown exception problem is 
-	 *    controlled with option 
+	 *    but its body actually raises neither that exception, nor any other
+	 *    exception extending it. When disabled, the compiler will issue an
+	 *    error or a warning when a method or a constructor is declaring a
+	 *    checked exception (including {@link java.lang.Throwable} and
+	 *    {@link java.lang.Exception}) as thrown, but its body actually raises
+	 *    neither that exception, nor any other exception extending it.
+	 * <p>The severity of the unused declared thrown exception problem is
+	 *    controlled with option
 	 *    {@link #COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION}.
 	 * <p>This diagnostic is further tuned by options
 	 *    {@link #COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION_INCLUDE_DOC_COMMENT_REFERENCE}
@@ -985,6 +989,46 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String COMPILER_PB_MISSING_DEPRECATED_ANNOTATION = PLUGIN_ID + ".compiler.problem.missingDeprecatedAnnotation"; //$NON-NLS-1$
 	/**
+	 * Compiler option ID: Reporting Missing HashCode Method.
+	 * <p>When enabled, the compiler will issue an error or a warning if a type
+	 * overrides Object.equals(Object) but does not override hashCode().
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.missingHashCodeMethod"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"ignore"</code></dd>
+	 * </dl>
+	 * @since 3.5
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_MISSING_HASHCODE_METHOD = PLUGIN_ID + ".compiler.problem.missingHashCodeMethod"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Dead Code.
+	 * <p>When enabled, the compiler will issue an error or a warning if some non fatal dead code is detected. For instance, <code>if (false) foo();</code>
+	 * is not reported as truly unreachable code by the Java Language Specification. If this diagnostic is enabled, then the invocation of <code>foo()</code> is
+	 * going to be signaled as being dead code.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.deadCode"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 * @since 3.5
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_DEAD_CODE = PLUGIN_ID + ".compiler.problem.deadCode"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Dead Code Inside Trivial If Statement.
+	 * <p>When enabled, the compiler will signal presence of dead code inside trivial IF statement, e.g. <code>if (DEBUG)...</code>..
+	 * <p>The severity of the problem is controlled with option {@link #COMPILER_PB_DEAD_CODE}.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.deadCodeInTrivialIfStatement"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "enabled", "disabled" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"disabled"</code></dd>	
+	 * </dl>
+	 * @since 3.5
+	 * @category CompilerOptionID
+	 */	
+	public static final String COMPILER_PB_DEAD_CODE_IN_TRIVIAL_IF_STATEMENT = PLUGIN_ID + ".compiler.problem.deadCodeInTrivialIfStatement"; //$NON-NLS-1$
+	/**
 	 * Compiler option ID: Reporting Incomplete Enum Switch.
 	 * <p>When enabled, the compiler will issue an error or a warning whenever
 	 *    an enum constant has no corresponding case label in an enum switch
@@ -1091,9 +1135,10 @@ public final class JavaCore extends Plugin {
 	 * Compiler option ID: Reporting missing tag description.
 	 * <p>When enabled, the compiler will report a warning or an error for any Javadoc tag missing a required description.
 	 * <p>The severity of the problem is controlled with option {@link #COMPILER_PB_INVALID_JAVADOC}.
-	 * <p>This option is NOT dependent from the Report errors in tags option.
-	 * <p>The initial set of standard tags is a subset of the <a href="http://java.sun.com/javase/6/docs/technotes/tools/windows/javadoc.html#javadoctags">Javadoc tags</a>
-	 *       that have a description, text or label. This set may grow in the future. User defined tags are thus not included in the standard tags.
+	 * <p>It does not depend on option {@link #COMPILER_PB_INVALID_JAVADOC_TAGS}.
+	 * <p>When this option is valued to {@link #COMPILER_PB_MISSING_JAVADOC_TAG_DESCRIPTION_ALL_STANDARD_TAGS},
+	 *       a subset of the standard <a href="http://java.sun.com/javase/6/docs/technotes/tools/windows/javadoc.html#javadoctags">Javadoc tags</a>
+	 *       that have a description, text or label are checked. While this set may grow in the future, note that user-defined tags are not and will not be checked.
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.missingJavadocTagDescription"</code></dd>
 	 * <dt>Possible values:</dt><dd><code>{ "return_tag", "all_standard_tags", "no_tag" }</code></dd>
@@ -1371,9 +1416,9 @@ public final class JavaCore extends Plugin {
 	public static final String COMPILER_PB_UNHANDLED_WARNING_TOKEN = PLUGIN_ID + ".compiler.problem.unhandledWarningToken"; //$NON-NLS-1$
 	/**
 	 * Compiler option ID: Reporting Unnecessary <code>@SuppressWarnings</code>.
-	 * <p>When enabled, the compiler will issue an error or a warning when encountering <code>@SuppressWarnings</code> annotation 
+	 * <p>When enabled, the compiler will issue an error or a warning when encountering <code>@SuppressWarnings</code> annotation
 	 *    for which no corresponding warning got detected in the code. This diagnostic is provided to help developers to get
-	 *    rid of transient <code>@SuppressWarnings</code> no longer needed. Note that <code>@SuppressWarnings("all")</code> is still 
+	 *    rid of transient <code>@SuppressWarnings</code> no longer needed. Note that <code>@SuppressWarnings("all")</code> is still
 	 *    silencing the warning for unnecessary <code>@SuppressWarnings</code>, as it is the master switch to silence ALL warnings.
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.unusedWarningToken"</code></dd>
@@ -1443,7 +1488,7 @@ public final class JavaCore extends Plugin {
 	/**
 	 * Compiler option ID: Reporting Redundant Superinterface.
 	 * <p>When enabled, the compiler will issue an error or a warning if a type
-	 *    explicitly implements an interface that is already implemented by any 
+	 *    explicitly implements an interface that is already implemented by any
 	 *    of its supertypes.
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.redundantSuperinterface"</code></dd>
@@ -1454,6 +1499,32 @@ public final class JavaCore extends Plugin {
 	 * @category CompilerOptionID
 	 */
 	public static final String COMPILER_PB_REDUNDANT_SUPERINTERFACE = PLUGIN_ID + ".compiler.problem.redundantSuperinterface"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Comparison of Identical Expressions.
+	 * <p>When enabled, the compiler will issue an error or a warning if a comparison
+	 * is involving identical operands (e.g <code>'x == x'</code>).
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.comparingIdentical"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 * @since 3.5
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_COMPARING_IDENTICAL = PLUGIN_ID + ".compiler.problem.comparingIdentical"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Missing Synchronized Modifier On Inherited Method.
+	 * <p>When enabled, the compiler will issue an error or a warning if a method
+	 * overrides a synchronized method without having a synchronized modifier.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.missingSynchronizedOnInheritedMethod"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"ignore"</code></dd>
+	 * </dl>
+	 * @since 3.5
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_MISSING_SYNCHRONIZED_ON_INHERITED_METHOD = PLUGIN_ID + ".compiler.problem.missingSynchronizedOnInheritedMethod"; //$NON-NLS-1$
 	/**
 	 * Core option ID: Computing Project Build Order.
 	 * <p>Indicate whether JavaCore should enforce the project build order to be based on
@@ -1771,6 +1842,19 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String CODEASSIST_STATIC_FIELD_PREFIXES = PLUGIN_ID + ".codeComplete.staticFieldPrefixes"; //$NON-NLS-1$
 	/**
+	 * Code assist option ID: Define the Prefixes for Static Final Field Name.
+	 * <p>When the prefixes is non empty, completion for static final field name will begin with
+	 *    one of the proposed prefixes.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.codeComplete.staticFinalFieldPrefixes"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "&lt;prefix&gt;[,&lt;prefix&gt;]*" }</code> where <code>&lt;prefix&gt;</code> is a String without any wild-card</dd>
+	 * <dt>Default:</dt><dd><code>""</code></dd>
+	 * </dl>
+	 * @since 3.5
+	 * @category CodeAssistOptionID
+	 */
+	public static final String CODEASSIST_STATIC_FINAL_FIELD_PREFIXES = PLUGIN_ID + ".codeComplete.staticFinalFieldPrefixes"; //$NON-NLS-1$
+	/**
 	 * Code assist option ID: Define the Prefixes for Local Variable Name.
 	 * <p>When the prefixes is non empty, completion for local variable name will begin with
 	 *    one of the proposed prefixes.
@@ -1822,6 +1906,19 @@ public final class JavaCore extends Plugin {
 	 * @category CodeAssistOptionID
 	 */
 	public static final String CODEASSIST_STATIC_FIELD_SUFFIXES = PLUGIN_ID + ".codeComplete.staticFieldSuffixes"; //$NON-NLS-1$
+	/**
+	 * Code assist option ID: Define the Suffixes for Static Final Field Name.
+	 * <p>When the suffixes is non empty, completion for static final field name will end with
+	 *    one of the proposed suffixes.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.codeComplete.staticFinalFieldSuffixes"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "&lt;suffix&gt;[,&lt;suffix&gt;]*" }</code>< where <code>&lt;suffix&gt;</code> is a String without any wild-card</dd>
+	 * <dt>Default:</dt><dd><code>""</code></dd>
+	 * </dl>
+	 * @since 3.5
+	 * @category CodeAssistOptionID
+	 */
+	public static final String CODEASSIST_STATIC_FINAL_FIELD_SUFFIXES = PLUGIN_ID + ".codeComplete.staticFinalFieldSuffixes"; //$NON-NLS-1$
 	/**
 	 * Code assist option ID: Define the Suffixes for Local Variable Name.
 	 * <p>When the suffixes is non empty, completion for local variable name will end with
@@ -2334,13 +2431,13 @@ public final class JavaCore extends Plugin {
 	 * Returns the Java model element corresponding to the given handle identifier
 	 * generated by <code>IJavaElement.getHandleIdentifier()</code>, or
 	 * <code>null</code> if unable to create the associated element.
-	 * If the returned Java element is an <code>ICompilationUnit</code>, its owner
-	 * is the given owner if such a working copy exists, otherwise the compilation unit
-	 * is a primary compilation unit.
+	 * If the returned Java element is an <code>ICompilationUnit</code> or an element
+	 * inside a compilation unit, the compilation unit's owner is the given owner if such a
+	 * working copy exists, otherwise the compilation unit is a primary compilation unit.
 	 *
 	 * @param handleIdentifier the given handle identifier
 	 * @param owner the owner of the returned compilation unit, ignored if the returned
-	 *   element is not a compilation unit
+	 *   element is not a compilation unit, or an element inside a compilation unit
 	 * @return the Java element corresponding to the handle identifier
 	 * @since 3.0
 	 */
@@ -2348,6 +2445,8 @@ public final class JavaCore extends Plugin {
 		if (handleIdentifier == null) {
 			return null;
 		}
+		if (owner == null)
+			owner = DefaultWorkingCopyOwner.PRIMARY;
 		MementoTokenizer memento = new MementoTokenizer(handleIdentifier);
 		JavaModel model = JavaModelManager.getJavaModelManager().getJavaModel();
 		return model.getHandleFromMemento(memento, owner);
@@ -2741,7 +2840,7 @@ public final class JavaCore extends Plugin {
 		if (message != null) {
 		    return message;
 		}
-	    
+
 	    // If the variable has been already initialized, then there's no deprecation message
 		IPath variablePath = manager.variableGet(variableName);
 		if (variablePath != null && variablePath != JavaModelManager.VARIABLE_INITIALIZATION_IN_PROGRESS) {
@@ -2862,12 +2961,12 @@ public final class JavaCore extends Plugin {
 	 * then pass to <code>setOptions</code>.
 	 * <p>
 	 * Helper constants have been defined on JavaCore for each of the option IDs
-	 * (categorized in Code assist option ID, Compiler option ID and Core option ID) 
+	 * (categorized in Code assist option ID, Compiler option ID and Core option ID)
 	 * and some of their acceptable values (categorized in Option value). Some
 	 * options accept open value sets beyond the documented constant values.
 	 * <p>
 	 * Note: each release may add new options.
-	 * 
+	 *
 	 * @return a table of all known configurable options with their default values
 	 */
  	public static Hashtable getDefaultOptions(){
@@ -3116,7 +3215,7 @@ public final class JavaCore extends Plugin {
 	 * Note that it may answer <code>null</code> if this option does not exist.
 	 * <p>
 	 * Helper constants have been defined on JavaCore for each of the option IDs
-	 * (categorized in Code assist option ID, Compiler option ID and Core option ID) 
+	 * (categorized in Code assist option ID, Compiler option ID and Core option ID)
 	 * and some of their acceptable values (categorized in Option value). Some
 	 * options accept open value sets beyond the documented constant values.
 	 * <p>
@@ -3133,30 +3232,30 @@ public final class JavaCore extends Plugin {
 	}
 
 	/**
-	 * Returns the option that can be used to configure the severity of the 
-	 * compiler problem identified by <code>problemID</code> if any, 
-	 * <code>null</code> otherwise. Non-null return values are taken from the 
-	 * constants defined by this class whose names start with 
-	 * <code>COMPILER_PB</code> and for which the possible values of the 
-	 * option are defined by <code>{ "error", "warning", "ignore" }</code>. A 
-	 * null return value means that the provided problem ID is unknown or that 
+	 * Returns the option that can be used to configure the severity of the
+	 * compiler problem identified by <code>problemID</code> if any,
+	 * <code>null</code> otherwise. Non-null return values are taken from the
+	 * constants defined by this class whose names start with
+	 * <code>COMPILER_PB</code> and for which the possible values of the
+	 * option are defined by <code>{ "error", "warning", "ignore" }</code>. A
+	 * null return value means that the provided problem ID is unknown or that
 	 * it matches a problem whose severity cannot be configured.
 	 * @param problemID one of the problem IDs defined by {@link IProblem}
-	 * @return the option that can be used to configure the severity of the 
-	 *         compiler problem identified by <code>problemID</code> if any, 
+	 * @return the option that can be used to configure the severity of the
+	 *         compiler problem identified by <code>problemID</code> if any,
 	 *         <code>null</code> otherwise
 	 * @since 3.4
 	 */
 	public static String getOptionForConfigurableSeverity(int problemID) {
 		return CompilerOptions.optionKeyFromIrritant(ProblemReporter.getIrritant(problemID));
 	}
-	
+
 	/**
 	 * Returns the table of the current options. Initially, all options have their default values,
 	 * and this method returns a table that includes all known options.
 	 * <p>
 	 * Helper constants have been defined on JavaCore for each of the option IDs
-	 * (categorized in Code assist option ID, Compiler option ID and Core option ID) 
+	 * (categorized in Code assist option ID, Compiler option ID and Core option ID)
 	 * and some of their acceptable values (categorized in Option value). Some
 	 * options accept open value sets beyond the documented constant values.
 	 * <p>
@@ -3204,7 +3303,7 @@ public final class JavaCore extends Plugin {
 	 *   if the given variable entry could not be resolved to a valid classpath entry
 	 */
 	public static IClasspathEntry getResolvedClasspathEntry(IClasspathEntry entry) {
-		return JavaModelManager.getJavaModelManager().getResolvedClasspathEntry(entry, false/*don't use previous session value*/);
+		return JavaModelManager.getJavaModelManager().resolveVariableEntry(entry, false/*don't use previous session value*/);
 	}
 
 
@@ -3329,7 +3428,7 @@ public final class JavaCore extends Plugin {
 					subMonitor.done();
 				manager.batchContainerInitializationsProgress.initializeAfterLoadMonitor.set(null);
 			}
-			
+
 			// avoid leaking source attachment properties (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=183413 )
 			// and recreate links for external folders if needed
 			if (monitor != null)
@@ -3368,13 +3467,13 @@ public final class JavaCore extends Plugin {
 						manager.deltaState.addExternalFolderChange(javaProject, null/*act as if all external folders were new*/);
 				}
 			}
-			
+
 			// initialize delta state
 			if (monitor != null)
 				monitor.subTask(Messages.javamodel_initializing_delta_state);
 			manager.deltaState.rootsAreStale = true; // in case it was already initialized before we cleaned up the source attachment proprties
 			manager.deltaState.initializeRoots(true/*initAfteLoad*/);
-			
+
 			// dummy query for waiting until the indexes are ready
 			if (monitor != null)
 				monitor.subTask(Messages.javamodel_configuring_searchengine);
@@ -3468,7 +3567,7 @@ public final class JavaCore extends Plugin {
 			} catch (JavaModelException e) {
 				// refreshing failed: ignore
 			}
-			
+
 		} finally {
 			if (monitor != null) monitor.done();
 		}
@@ -3735,11 +3834,15 @@ public final class JavaCore extends Plugin {
 			boolean isExported) {
 
 		if (containerPath == null) {
-			Assert.isTrue(false, "Container path cannot be null"); //$NON-NLS-1$
+			throw new ClasspathEntry.AssertionFailedException("Container path cannot be null"); //$NON-NLS-1$
 		} else if (containerPath.segmentCount() < 1) {
-			Assert.isTrue(
-				false,
-				"Illegal classpath container path: \'" + containerPath.makeRelative().toString() + "\', must have at least one segment (containerID+hints)"); //$NON-NLS-1$//$NON-NLS-2$
+			throw new ClasspathEntry.AssertionFailedException("Illegal classpath container path: \'" + containerPath.makeRelative().toString() + "\', must have at least one segment (containerID+hints)"); //$NON-NLS-1$//$NON-NLS-2$
+		}
+		if (accessRules == null) {
+			accessRules = ClasspathEntry.NO_ACCESS_RULES;
+		}
+		if (extraAttributes == null) {
+			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
 		}
 		return new ClasspathEntry(
 			IPackageFragmentRoot.K_SOURCE,
@@ -3797,7 +3900,7 @@ public final class JavaCore extends Plugin {
 	 * {@link #newLibraryEntry(IPath, IPath, IPath, IAccessRule[], IClasspathAttribute[], boolean)
 	 * newLibraryEntry(path, sourceAttachmentPath, sourceAttachmentRootPath, new IAccessRule[0], new IClasspathAttribute[0], false)}.
 	 *
-	 * @param path the absolute path of the binary archive
+	 * @param path the path to the library
 	 * @param sourceAttachmentPath the absolute path of the corresponding source archive or folder,
 	 *    or <code>null</code> if none. Note, since 3.0, an empty path is allowed to denote no source attachment.
 	 *    Since 3.4, this path can also denote a path external to the workspace.
@@ -3828,7 +3931,7 @@ public final class JavaCore extends Plugin {
 	 * {@link #newLibraryEntry(IPath, IPath, IPath, IAccessRule[], IClasspathAttribute[], boolean)
 	 * newLibraryEntry(path, sourceAttachmentPath, sourceAttachmentRootPath, new IAccessRule[0], new IClasspathAttribute[0], isExported)}.
 	 *
-	 * @param path the absolute path of the binary archive
+	 * @param path the path to the library
 	 * @param sourceAttachmentPath the absolute path of the corresponding source archive or folder,
 	 *    or <code>null</code> if none. Note, since 3.0, an empty path is allowed to denote no source attachment.
 	 *   and will be automatically converted to <code>null</code>. Since 3.4, this path can also denote a path external
@@ -3864,13 +3967,15 @@ public final class JavaCore extends Plugin {
 	 * The target JAR can either be defined internally to the workspace (absolute path relative
 	 * to the workspace root), or externally to the workspace (absolute path in the file system).
 	 * The target root folder can also be defined internally to the workspace (absolute path relative
-	 * to the workspace root), or - since 3.4 - externally to the workspace (absolute path in the file system). 
+	 * to the workspace root), or - since 3.4 - externally to the workspace (absolute path in the file system).
+	 * Since 3.5, the path to the library can also be relative to the project using ".." as the first segment. 
 	 * <p>
 	 * e.g. Here are some examples of binary path usage<ul>
 	 *	<li><code> "c:\jdk1.2.2\jre\lib\rt.jar" </code> - reference to an external JAR on Windows</li>
 	 *	<li><code> "/Project/someLib.jar" </code> - reference to an internal JAR on Windows or Linux</li>
 	 *	<li><code> "/Project/classes/" </code> - reference to an internal binary folder on Windows or Linux</li>
 	 *	<li><code> "/home/usr/classes" </code> - reference to an external binary folder on Linux</li>
+	 *	<li><code> "../../lib/someLib.jar" </code> - reference to an external JAR that is a sibbling of the workspace on either platform</li>
 	 * </ul>
 	 * Note that on non-Windows platform, a path <code>"/some/lib.jar"</code> is ambiguous.
 	 * It can be a path to an external JAR (its file system path being <code>"/some/lib.jar"</code>)
@@ -3899,8 +4004,12 @@ public final class JavaCore extends Plugin {
 	 * accessible files patterns of the projects, and they will concatenate the non accessible files patterns of this entry
 	 * with the non accessible files patterns of the project.
 	 * </p>
+	 * <p>
+	 * Since 3.5, if the libray is a ZIP archive, the "Class-Path" clause (if any) in the "META-INF/MANIFEST.MF" is read
+	 * and referenced ZIP archives are added to the {@link IJavaProject#getResolvedClasspath(boolean) resolved classpath}.
+	 * </p>
 	 *
-	 * @param path the absolute path of the binary archive
+	 * @param path the path to the library
 	 * @param sourceAttachmentPath the absolute path of the corresponding source archive or folder,
 	 *    or <code>null</code> if none. Note, since 3.0, an empty path is allowed to denote no source attachment.
 	 *   and will be automatically converted to <code>null</code>. Since 3.4, this path can also denote a path external
@@ -3922,13 +4031,20 @@ public final class JavaCore extends Plugin {
 			IClasspathAttribute[] extraAttributes,
 			boolean isExported) {
 
-		if (path == null) Assert.isTrue(false, "Library path cannot be null"); //$NON-NLS-1$
-		if (!path.isAbsolute()) Assert.isTrue(false, "Path for IClasspathEntry must be absolute: " + path); //$NON-NLS-1$
+		if (path == null) throw new ClasspathEntry.AssertionFailedException("Library path cannot be null"); //$NON-NLS-1$
+		if (accessRules == null) {
+			accessRules = ClasspathEntry.NO_ACCESS_RULES;
+		}
+		if (extraAttributes == null) {
+			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
+		}
+		boolean hasDotDot = ClasspathEntry.hasDotDot(path);
+		if (!hasDotDot && !path.isAbsolute()) throw new ClasspathEntry.AssertionFailedException("Path for IClasspathEntry must be absolute: " + path); //$NON-NLS-1$
 		if (sourceAttachmentPath != null) {
 			if (sourceAttachmentPath.isEmpty()) {
 				sourceAttachmentPath = null; // treat empty path as none
 			} else if (!sourceAttachmentPath.isAbsolute()) {
-				Assert.isTrue(false, "Source attachment path '" //$NON-NLS-1$
+				throw new ClasspathEntry.AssertionFailedException("Source attachment path '" //$NON-NLS-1$
 						+ sourceAttachmentPath
 						+ "' for IClasspathEntry must be absolute"); //$NON-NLS-1$
 			}
@@ -3936,7 +4052,7 @@ public final class JavaCore extends Plugin {
 		return new ClasspathEntry(
 			IPackageFragmentRoot.K_BINARY,
 			IClasspathEntry.CPE_LIBRARY,
-			JavaProject.canonicalizedPath(path),
+			hasDotDot ? path : JavaProject.canonicalizedPath(path),
 			ClasspathEntry.INCLUDE_ALL, // inclusion patterns
 			ClasspathEntry.EXCLUDE_NONE, // exclusion patterns
 			sourceAttachmentPath,
@@ -3977,7 +4093,7 @@ public final class JavaCore extends Plugin {
 	 */
 	public static IClasspathEntry newProjectEntry(IPath path, boolean isExported) {
 
-		if (!path.isAbsolute()) Assert.isTrue(false, "Path for IClasspathEntry must be absolute"); //$NON-NLS-1$
+		if (!path.isAbsolute()) throw new ClasspathEntry.AssertionFailedException("Path for IClasspathEntry must be absolute"); //$NON-NLS-1$
 
 		return newProjectEntry(
 			path,
@@ -4042,8 +4158,13 @@ public final class JavaCore extends Plugin {
 			IClasspathAttribute[] extraAttributes,
 			boolean isExported) {
 
-		if (!path.isAbsolute()) Assert.isTrue(false, "Path for IClasspathEntry must be absolute"); //$NON-NLS-1$
-
+		if (!path.isAbsolute()) throw new ClasspathEntry.AssertionFailedException("Path for IClasspathEntry must be absolute"); //$NON-NLS-1$
+		if (accessRules == null) {
+			accessRules = ClasspathEntry.NO_ACCESS_RULES;
+		}
+		if (extraAttributes == null) {
+			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
+		}
 		return new ClasspathEntry(
 			IPackageFragmentRoot.K_SOURCE,
 			IClasspathEntry.CPE_PROJECT,
@@ -4244,11 +4365,17 @@ public final class JavaCore extends Plugin {
 	 */
 	public static IClasspathEntry newSourceEntry(IPath path, IPath[] inclusionPatterns, IPath[] exclusionPatterns, IPath specificOutputLocation, IClasspathAttribute[] extraAttributes) {
 
-		if (path == null) Assert.isTrue(false, "Source path cannot be null"); //$NON-NLS-1$
-		if (!path.isAbsolute()) Assert.isTrue(false, "Path for IClasspathEntry must be absolute"); //$NON-NLS-1$
-		if (exclusionPatterns == null) Assert.isTrue(false, "Exclusion pattern set cannot be null"); //$NON-NLS-1$
-		if (inclusionPatterns == null) Assert.isTrue(false, "Inclusion pattern set cannot be null"); //$NON-NLS-1$
-
+		if (path == null) throw new ClasspathEntry.AssertionFailedException("Source path cannot be null"); //$NON-NLS-1$
+		if (!path.isAbsolute()) throw new ClasspathEntry.AssertionFailedException("Path for IClasspathEntry must be absolute"); //$NON-NLS-1$
+		if (exclusionPatterns == null) {
+			exclusionPatterns = ClasspathEntry.EXCLUDE_NONE;
+		}
+		if (inclusionPatterns == null) {
+			inclusionPatterns = ClasspathEntry.INCLUDE_ALL;
+		}
+		if (extraAttributes == null) {
+			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
+		}
 		return new ClasspathEntry(
 			IPackageFragmentRoot.K_SOURCE,
 			IClasspathEntry.CPE_SOURCE,
@@ -4388,11 +4515,15 @@ public final class JavaCore extends Plugin {
 			IClasspathAttribute[] extraAttributes,
 			boolean isExported) {
 
-		if (variablePath == null) Assert.isTrue(false, "Variable path cannot be null"); //$NON-NLS-1$
+		if (variablePath == null) throw new ClasspathEntry.AssertionFailedException("Variable path cannot be null"); //$NON-NLS-1$
 		if (variablePath.segmentCount() < 1) {
-			Assert.isTrue(
-				false,
-				"Illegal classpath variable path: \'" + variablePath.makeRelative().toString() + "\', must have at least one segment"); //$NON-NLS-1$//$NON-NLS-2$
+			throw new ClasspathEntry.AssertionFailedException("Illegal classpath variable path: \'" + variablePath.makeRelative().toString() + "\', must have at least one segment"); //$NON-NLS-1$//$NON-NLS-2$
+		}
+		if (accessRules == null) {
+			accessRules = ClasspathEntry.NO_ACCESS_RULES;
+		}
+		if (extraAttributes == null) {
+			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
 		}
 
 		return new ClasspathEntry(
@@ -4611,7 +4742,19 @@ public final class JavaCore extends Plugin {
 	 */
 	public static void setClasspathContainer(IPath containerPath, IJavaProject[] affectedProjects, IClasspathContainer[] respectiveContainers, IProgressMonitor monitor) throws JavaModelException {
 		if (affectedProjects.length != respectiveContainers.length)
-			Assert.isTrue(false, "Projects and containers collections should have the same size"); //$NON-NLS-1$
+			throw new ClasspathEntry.AssertionFailedException("Projects and containers collections should have the same size"); //$NON-NLS-1$
+		if (affectedProjects.length == 1) {
+			IClasspathContainer container = respectiveContainers[0];
+			if (container != null) {
+				JavaModelManager manager = JavaModelManager.getJavaModelManager();
+				IJavaProject project = affectedProjects[0];
+				IClasspathContainer existingCointainer = manager.containerGet(project, containerPath);
+				if (existingCointainer == JavaModelManager.CONTAINER_INITIALIZATION_IN_PROGRESS) {
+					manager.containerBeingInitializedPut(project, containerPath, container);
+					return;
+				}
+			}
+		}
 		SetContainerOperation operation = new SetContainerOperation(containerPath, affectedProjects, respectiveContainers);
 		operation.runOperation(monitor);
 	}
@@ -4642,6 +4785,7 @@ public final class JavaCore extends Plugin {
 	/**
 	 * Sets the value of the given classpath variable.
 	 * The path must not be null.
+	 * Since 3.5, the path to a library can also be relative to the project using ".." as the first segment. 
 	 * <p>
 	 * This functionality cannot be used while the resource tree is locked.
 	 * <p>
@@ -4662,13 +4806,14 @@ public final class JavaCore extends Plugin {
 		IProgressMonitor monitor)
 		throws JavaModelException {
 
-		if (path == null) Assert.isTrue(false, "Variable path cannot be null"); //$NON-NLS-1$
+		if (path == null) throw new ClasspathEntry.AssertionFailedException("Variable path cannot be null"); //$NON-NLS-1$
 		setClasspathVariables(new String[]{variableName}, new IPath[]{ path }, monitor);
 	}
 
 	/**
 	 * Sets the values of all the given classpath variables at once.
 	 * Null paths can be used to request corresponding variable removal.
+	 * Since 3.5, the path to a library can also be relative to the project using ".." as the first segment.
 	 * <p>
 	 * A combined Java element delta will be notified to describe the corresponding
 	 * classpath changes resulting from the variables update. This operation is batched,
@@ -4697,25 +4842,26 @@ public final class JavaCore extends Plugin {
 		IProgressMonitor monitor)
 		throws JavaModelException {
 
-		if (variableNames.length != paths.length)	Assert.isTrue(false, "Variable names and paths collections should have the same size"); //$NON-NLS-1$
+		if (variableNames.length != paths.length)	throw new ClasspathEntry.AssertionFailedException("Variable names and paths collections should have the same size"); //$NON-NLS-1$
 		SetVariablesOperation operation = new SetVariablesOperation(variableNames, paths, true/*update preferences*/);
 		operation.runOperation(monitor);
 	}
 
 	/**
-	 * Sets the default's compiler options inside the given options map according
+	 * Sets the default compiler options inside the given options map according
 	 * to the given compliance.
 	 *
-	 * <p>The given compliance must be one of those supported by the compiler, 
+	 * <p>The given compliance must be one of those supported by the compiler,
 	 * that is one of the acceptable values for option {@link #COMPILER_COMPLIANCE}.
 	 *
-	 * <p>The list of modified options is:</p>
+	 * <p>The list of modified options is currently:</p>
 	 * <ul>
-	 * <li>{@link #COMPILER_CODEGEN_TARGET_PLATFORM}</li>
-	 * <li>{@link #COMPILER_SOURCE}</li>
 	 * <li>{@link #COMPILER_COMPLIANCE}</li>
+	 * <li>{@link #COMPILER_SOURCE}</li>
+	 * <li>{@link #COMPILER_CODEGEN_TARGET_PLATFORM}</li>
 	 * <li>{@link #COMPILER_PB_ASSERT_IDENTIFIER}</li>
 	 * <li>{@link #COMPILER_PB_ENUM_IDENTIFIER}</li>
+	 * <li>{@link #COMPILER_CODEGEN_INLINE_JSR_BYTECODE} for compliance levels 1.5 and greater</li>
 	 * </ul>
 	 *
 	 * <p>If the given compliance is unknown, the given map is unmodified.</p>
@@ -4772,7 +4918,7 @@ public final class JavaCore extends Plugin {
 	 * are forgotten, including ones not explicitly mentioned.
 	 * <p>
 	 * Helper constants have been defined on JavaCore for each of the option IDs
-	 * (categorized in Code assist option ID, Compiler option ID and Core option ID) 
+	 * (categorized in Code assist option ID, Compiler option ID and Core option ID)
 	 * and some of their acceptable values (categorized in Option value). Some
 	 * options accept open value sets beyond the documented constant values.
 	 * <p>

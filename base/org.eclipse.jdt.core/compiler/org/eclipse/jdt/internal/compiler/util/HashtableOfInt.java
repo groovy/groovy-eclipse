@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,11 +9,11 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.util;
- 
+
  /**
   *	Hashtable for non-zero int keys.
   */
-  
+
 public final class HashtableOfInt {
 	// to avoid using Enumerations, walk the individual tables skipping nulls
 	public int[] keyTable;
@@ -34,9 +34,9 @@ public HashtableOfInt(int size) {
 	this.valueTable = new Object[extraRoom];
 }
 public boolean containsKey(int key) {
-	int length = keyTable.length, index = key % length;
+	int length = this.keyTable.length, index = key % length;
 	int currentKey;
-	while ((currentKey = keyTable[index]) != 0) {
+	while ((currentKey = this.keyTable[index]) != 0) {
 		if (currentKey == key)
 			return true;
 		if (++index == length) {
@@ -46,10 +46,10 @@ public boolean containsKey(int key) {
 	return false;
 }
 public Object get(int key) {
-	int length = keyTable.length, index = key % length;
+	int length = this.keyTable.length, index = key % length;
 	int currentKey;
-	while ((currentKey = keyTable[index]) != 0) {
-		if (currentKey == key)  return valueTable[index];
+	while ((currentKey = this.keyTable[index]) != 0) {
+		if (currentKey == key)  return this.valueTable[index];
 		if (++index == length) {
 			index = 0;
 		}
@@ -57,42 +57,42 @@ public Object get(int key) {
 	return null;
 }
 public Object put(int key, Object value) {
-	int length = keyTable.length, index = key % length;
+	int length = this.keyTable.length, index = key % length;
 	int currentKey;
-	while ((currentKey = keyTable[index]) != 0) {
-		if (currentKey == key)  return valueTable[index] = value;
+	while ((currentKey = this.keyTable[index]) != 0) {
+		if (currentKey == key)  return this.valueTable[index] = value;
 		if (++index == length) {
 			index = 0;
 		}
 	}
-	keyTable[index] = key;
-	valueTable[index] = value;
+	this.keyTable[index] = key;
+	this.valueTable[index] = value;
 
 	// assumes the threshold is never equal to the size of the table
-	if (++elementSize > threshold)
+	if (++this.elementSize > this.threshold)
 		rehash();
 	return value;
 }
 private void rehash() {
-	HashtableOfInt newHashtable = new HashtableOfInt(elementSize * 2); // double the number of expected elements
+	HashtableOfInt newHashtable = new HashtableOfInt(this.elementSize * 2); // double the number of expected elements
 	int currentKey;
-	for (int i = keyTable.length; --i >= 0;)
-		if ((currentKey = keyTable[i]) != 0)
-			newHashtable.put(currentKey, valueTable[i]);
+	for (int i = this.keyTable.length; --i >= 0;)
+		if ((currentKey = this.keyTable[i]) != 0)
+			newHashtable.put(currentKey, this.valueTable[i]);
 
 	this.keyTable = newHashtable.keyTable;
 	this.valueTable = newHashtable.valueTable;
 	this.threshold = newHashtable.threshold;
 }
 public int size() {
-	return elementSize;
+	return this.elementSize;
 }
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	Object object;
-	for (int i = 0, length = valueTable.length; i < length; i++)
-		if ((object = valueTable[i]) != null)
-			s += keyTable[i] + " -> " + object.toString() + "\n"; //$NON-NLS-2$ //$NON-NLS-1$
+	for (int i = 0, length = this.valueTable.length; i < length; i++)
+		if ((object = this.valueTable[i]) != null)
+			s += this.keyTable[i] + " -> " + object.toString() + "\n"; //$NON-NLS-2$ //$NON-NLS-1$
 	return s;
 }
 }

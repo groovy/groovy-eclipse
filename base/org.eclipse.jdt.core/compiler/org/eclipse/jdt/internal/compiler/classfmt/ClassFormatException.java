@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@ package org.eclipse.jdt.internal.compiler.classfmt;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 public class ClassFormatException extends Exception {
-	
+
 	public static final int ErrBadMagic = 1;
 	public static final int ErrBadMinorVersion = 2;
 	public static final int ErrBadMajorVersion = 3;
@@ -55,27 +55,27 @@ public class ClassFormatException extends Exception {
 		this.fileName = fileName;
 	}
 	public ClassFormatException(int code) {
-		errorCode = code;
+		this.errorCode = code;
 	}
 	public ClassFormatException(int code, int bufPos) {
-		errorCode = code;
-		bufferPosition = bufPos;
+		this.errorCode = code;
+		this.bufferPosition = bufPos;
 	}
 	/**
 	 * @return int
 	 */
 	public int getErrorCode() {
-		return errorCode;
+		return this.errorCode;
 	}
 	/**
 	 * @return int
 	 */
 	public int getBufferPosition() {
-		return bufferPosition;
+		return this.bufferPosition;
 	}
 	/**
 	 * Returns the underlying <code>Throwable</code> that caused the failure.
-	 * 
+	 *
 	 * @return the wrappered <code>Throwable</code>, or <code>null</code>
 	 *         if the direct case of the failure was at the Java model layer
 	 */
@@ -87,7 +87,7 @@ public class ClassFormatException extends Exception {
 	}
 	/**
 	 * Prints this exception's stack trace to the given print stream.
-	 * 
+	 *
 	 * @param output
 	 *            the print stream
 	 * @since 3.0
@@ -110,7 +110,7 @@ public class ClassFormatException extends Exception {
 	}
 	/**
 	 * Prints this exception's stack trace to the given print writer.
-	 * 
+	 *
 	 * @param output
 	 *            the print writer
 	 * @since 3.0

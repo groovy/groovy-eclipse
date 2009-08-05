@@ -22,7 +22,7 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
  */
 public class AnnotationComponentValue extends ClassFileStruct implements IAnnotationComponentValue {
 	private static final IAnnotationComponentValue[] NO_VALUES = new AnnotationComponentValue[0];
-	
+
 	private IAnnotationComponentValue[] annotationComponentValues;
 	private IAnnotation annotationValue;
 	private IConstantPoolEntry classInfo;
@@ -37,7 +37,7 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 	private int readOffset;
 	private int tag;
 	private int valuesNumber;
-	
+
 	public AnnotationComponentValue(
 			byte[] classFileBytes,
 			IConstantPool constantPool,
@@ -59,7 +59,7 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 			case 'S' :
 			case 'Z' :
 			case 's' :
-				final int constantIndex = this.u2At(classFileBytes, this.readOffset, offset);
+				final int constantIndex = u2At(classFileBytes, this.readOffset, offset);
 				this.constantValueIndex = constantIndex;
 				if (constantIndex != 0) {
 					IConstantPoolEntry constantPoolEntry = constantPool.decodeEntry(constantIndex);
@@ -78,7 +78,7 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 				this.readOffset += 2;
 				break;
 			case 'e' :
-				int index = this.u2At(classFileBytes, this.readOffset, offset);
+				int index = u2At(classFileBytes, this.readOffset, offset);
 				this.enumConstantTypeNameIndex = index;
 				if (index != 0) {
 					IConstantPoolEntry constantPoolEntry = constantPool.decodeEntry(index);
@@ -88,7 +88,7 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 					this.enumConstantTypeName = constantPoolEntry.getUtf8Value();
 				}
 				this.readOffset += 2;
-				index = this.u2At(classFileBytes, this.readOffset, offset);
+				index = u2At(classFileBytes, this.readOffset, offset);
 				this.enumConstantNameIndex = index;
 				if (index != 0) {
 					IConstantPoolEntry constantPoolEntry = constantPool.decodeEntry(index);
@@ -100,7 +100,7 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 				this.readOffset += 2;
 				break;
 			case 'c' :
-				final int classFileIndex = this.u2At(classFileBytes, this.readOffset, offset);
+				final int classFileIndex = u2At(classFileBytes, this.readOffset, offset);
 				this.classFileInfoIndex = classFileIndex;
 				if (classFileIndex != 0) {
 					IConstantPoolEntry constantPoolEntry = constantPool.decodeEntry(classFileIndex);
@@ -117,13 +117,13 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 				this.readOffset += annotation.sizeInBytes();
 				break;
 			case '[' :
-				final int numberOfValues = this.u2At(classFileBytes, this.readOffset, offset);
+				final int numberOfValues = u2At(classFileBytes, this.readOffset, offset);
 				this.valuesNumber = numberOfValues;
 				this.readOffset += 2;
 				if (numberOfValues != 0) {
 					this.annotationComponentValues = new IAnnotationComponentValue[numberOfValues];
 					for (int i = 0; i < numberOfValues; i++) {
-						AnnotationComponentValue value = new AnnotationComponentValue(classFileBytes, constantPool, offset + readOffset);
+						AnnotationComponentValue value = new AnnotationComponentValue(classFileBytes, constantPool, offset + this.readOffset);
 						this.annotationComponentValues[i] = value;
 						this.readOffset += value.sizeInBytes();
 					}
@@ -191,7 +191,7 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getEnumConstantTypeNameIndex()
 	 */
 	public int getEnumConstantTypeNameIndex() {
-		return enumConstantTypeNameIndex;
+		return this.enumConstantTypeNameIndex;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getTag()
@@ -205,7 +205,7 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 	public int getValuesNumber() {
 		return this.valuesNumber;
 	}
-	
+
 	int sizeInBytes() {
 		return this.readOffset;
 	}

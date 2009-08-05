@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Benjamin Muskalla - Contribution for bug 239066
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.impl;
 
@@ -119,6 +120,11 @@ public class CompilerOptions {
 	public static final String OPTION_GenerateClassFiles = "org.eclipse.jdt.core.compiler.generateClassFiles"; //$NON-NLS-1$
 	public static final String OPTION_Process_Annotations = "org.eclipse.jdt.core.compiler.processAnnotations"; //$NON-NLS-1$
 	public static final String OPTION_ReportRedundantSuperinterface =  "org.eclipse.jdt.core.compiler.problem.redundantSuperinterface"; //$NON-NLS-1$
+	public static final String OPTION_ReportComparingIdentical =  "org.eclipse.jdt.core.compiler.problem.comparingIdentical"; //$NON-NLS-1$
+	public static final String OPTION_ReportMissingSynchronizedOnInheritedMethod =  "org.eclipse.jdt.core.compiler.problem.missingSynchronizedOnInheritedMethod"; //$NON-NLS-1$
+	public static final String OPTION_ReportMissingHashCodeMethod =  "org.eclipse.jdt.core.compiler.problem.missingHashCodeMethod"; //$NON-NLS-1$
+	public static final String OPTION_ReportDeadCode =  "org.eclipse.jdt.core.compiler.problem.deadCode"; //$NON-NLS-1$
+	public static final String OPTION_ReportDeadCodeInTrivialIfStatement =  "org.eclipse.jdt.core.compiler.problem.deadCodeInTrivialIfStatement"; //$NON-NLS-1$
 
 	
 	// GROOVY start
@@ -164,200 +170,210 @@ public class CompilerOptions {
 
 	/**
 	 * Bit mask for configurable problems (error/warning threshold)
+	 * Note: bitmask assumes 3 highest bits to denote irritant group (to allow storing 8 groups of 29 bits each
 	 */
-	public static final long MethodWithConstructorName = ASTNode.Bit1;
-	public static final long OverriddenPackageDefaultMethod = ASTNode.Bit2;
-	public static final long UsingDeprecatedAPI = ASTNode.Bit3;
-	public static final long MaskedCatchBlock = ASTNode.Bit4;
-	public static final long UnusedLocalVariable = ASTNode.Bit5;
-	public static final long UnusedArgument = ASTNode.Bit6;
-	public static final long NoImplicitStringConversion = ASTNode.Bit7;
-	public static final long AccessEmulation = ASTNode.Bit8;
-	public static final long NonExternalizedString = ASTNode.Bit9;
-	public static final long AssertUsedAsAnIdentifier = ASTNode.Bit10;
-	public static final long UnusedImport = ASTNode.Bit11;
-	public static final long NonStaticAccessToStatic = ASTNode.Bit12;
-	public static final long Task = ASTNode.Bit13;
-	public static final long NoEffectAssignment = ASTNode.Bit14;
-	public static final long IncompatibleNonInheritedInterfaceMethod = ASTNode.Bit15;
-	public static final long UnusedPrivateMember = ASTNode.Bit16;
-	public static final long LocalVariableHiding = ASTNode.Bit17;
-	public static final long FieldHiding = ASTNode.Bit18;
-	public static final long AccidentalBooleanAssign = ASTNode.Bit19;
-	public static final long EmptyStatement = ASTNode.Bit20;
-	public static final long MissingJavadocComments  = ASTNode.Bit21;
-	public static final long MissingJavadocTags = ASTNode.Bit22;
-	public static final long UnqualifiedFieldAccess = ASTNode.Bit23;
-	public static final long UnusedDeclaredThrownException = ASTNode.Bit24;
-	public static final long FinallyBlockNotCompleting = ASTNode.Bit25;
-	public static final long InvalidJavadoc = ASTNode.Bit26;
-	public static final long UnnecessaryTypeCheck = ASTNode.Bit27;
-	public static final long UndocumentedEmptyBlock = ASTNode.Bit28;
-	public static final long IndirectStaticAccess = ASTNode.Bit29;
-	public static final long UnnecessaryElse  = ASTNode.Bit30;
-	public static final long UncheckedTypeOperation = ASTNode.Bit31;
-	public static final long FinalParameterBound = ASTNode.Bit32L;
-	public static final long MissingSerialVersion = ASTNode.Bit33L;
-	public static final long EnumUsedAsAnIdentifier = ASTNode.Bit34L;
-	public static final long ForbiddenReference = ASTNode.Bit35L;
-	public static final long VarargsArgumentNeedCast = ASTNode.Bit36L;
-	public static final long NullReference = ASTNode.Bit37L;
-	public static final long AutoBoxing = ASTNode.Bit38L;
-	public static final long AnnotationSuperInterface = ASTNode.Bit39L;
-	public static final long TypeHiding = ASTNode.Bit40L;
-	public static final long MissingOverrideAnnotation = ASTNode.Bit41L;
-	public static final long IncompleteEnumSwitch = ASTNode.Bit42L;
-	public static final long MissingDeprecatedAnnotation = ASTNode.Bit43L;
-	public static final long DiscouragedReference = ASTNode.Bit44L;
-	public static final long UnhandledWarningToken = ASTNode.Bit45L;
-	public static final long RawTypeReference = ASTNode.Bit46L;
-	public static final long UnusedLabel = ASTNode.Bit47L;
-	public static final long ParameterAssignment = ASTNode.Bit48L;
-	public static final long FallthroughCase = ASTNode.Bit49L;
-	public static final long OverridingMethodWithoutSuperInvocation = ASTNode.Bit50L;
-	public static final long PotentialNullReference = ASTNode.Bit51L;
-	public static final long RedundantNullCheck = ASTNode.Bit52L;
-	public static final long MissingJavadocTagDescription = ASTNode.Bit53L;
-	public static final long UnusedTypeArguments = ASTNode.Bit54L;
-	public static final long UnusedWarningToken = ASTNode.Bit55L;
-	public static final long RedundantSuperinterface = ASTNode.Bit56L;
+	// group 0
+	public static final int MethodWithConstructorName = IrritantSet.GROUP0 | ASTNode.Bit1;
+	public static final int OverriddenPackageDefaultMethod = IrritantSet.GROUP0 | ASTNode.Bit2;
+	public static final int UsingDeprecatedAPI = IrritantSet.GROUP0 | ASTNode.Bit3;
+	public static final int MaskedCatchBlock = IrritantSet.GROUP0 | ASTNode.Bit4;
+	public static final int UnusedLocalVariable = IrritantSet.GROUP0 | ASTNode.Bit5;
+	public static final int UnusedArgument = IrritantSet.GROUP0 | ASTNode.Bit6;
+	public static final int NoImplicitStringConversion = IrritantSet.GROUP0 | ASTNode.Bit7;
+	public static final int AccessEmulation = IrritantSet.GROUP0 | ASTNode.Bit8;
+	public static final int NonExternalizedString = IrritantSet.GROUP0 | ASTNode.Bit9;
+	public static final int AssertUsedAsAnIdentifier = IrritantSet.GROUP0 | ASTNode.Bit10;
+	public static final int UnusedImport = IrritantSet.GROUP0 | ASTNode.Bit11;
+	public static final int NonStaticAccessToStatic = IrritantSet.GROUP0 | ASTNode.Bit12;
+	public static final int Task = IrritantSet.GROUP0 | ASTNode.Bit13;
+	public static final int NoEffectAssignment = IrritantSet.GROUP0 | ASTNode.Bit14;
+	public static final int IncompatibleNonInheritedInterfaceMethod = IrritantSet.GROUP0 | ASTNode.Bit15;
+	public static final int UnusedPrivateMember = IrritantSet.GROUP0 | ASTNode.Bit16;
+	public static final int LocalVariableHiding = IrritantSet.GROUP0 | ASTNode.Bit17;
+	public static final int FieldHiding = IrritantSet.GROUP0 | ASTNode.Bit18;
+	public static final int AccidentalBooleanAssign = IrritantSet.GROUP0 | ASTNode.Bit19;
+	public static final int EmptyStatement = IrritantSet.GROUP0 | ASTNode.Bit20;
+	public static final int MissingJavadocComments  = IrritantSet.GROUP0 | ASTNode.Bit21;
+	public static final int MissingJavadocTags = IrritantSet.GROUP0 | ASTNode.Bit22;
+	public static final int UnqualifiedFieldAccess = IrritantSet.GROUP0 | ASTNode.Bit23;
+	public static final int UnusedDeclaredThrownException = IrritantSet.GROUP0 | ASTNode.Bit24;
+	public static final int FinallyBlockNotCompleting = IrritantSet.GROUP0 | ASTNode.Bit25;
+	public static final int InvalidJavadoc = IrritantSet.GROUP0 | ASTNode.Bit26;
+	public static final int UnnecessaryTypeCheck = IrritantSet.GROUP0 | ASTNode.Bit27;
+	public static final int UndocumentedEmptyBlock = IrritantSet.GROUP0 | ASTNode.Bit28;
+	public static final int IndirectStaticAccess = IrritantSet.GROUP0 | ASTNode.Bit29;
+	
+	// group 1
+	public static final int UnnecessaryElse  = IrritantSet.GROUP1 | ASTNode.Bit1;
+	public static final int UncheckedTypeOperation = IrritantSet.GROUP1 | ASTNode.Bit2;
+	public static final int FinalParameterBound = IrritantSet.GROUP1 | ASTNode.Bit3;
+	public static final int MissingSerialVersion = IrritantSet.GROUP1 | ASTNode.Bit4;
+	public static final int EnumUsedAsAnIdentifier = IrritantSet.GROUP1 | ASTNode.Bit5;
+	public static final int ForbiddenReference = IrritantSet.GROUP1 | ASTNode.Bit6;
+	public static final int VarargsArgumentNeedCast = IrritantSet.GROUP1 | ASTNode.Bit7;
+	public static final int NullReference = IrritantSet.GROUP1 | ASTNode.Bit8;
+	public static final int AutoBoxing = IrritantSet.GROUP1 | ASTNode.Bit9;
+	public static final int AnnotationSuperInterface = IrritantSet.GROUP1 | ASTNode.Bit10;
+	public static final int TypeHiding = IrritantSet.GROUP1 | ASTNode.Bit11;
+	public static final int MissingOverrideAnnotation = IrritantSet.GROUP1 | ASTNode.Bit12;
+	public static final int IncompleteEnumSwitch = IrritantSet.GROUP1 | ASTNode.Bit13;
+	public static final int MissingDeprecatedAnnotation = IrritantSet.GROUP1 | ASTNode.Bit14;
+	public static final int DiscouragedReference = IrritantSet.GROUP1 | ASTNode.Bit15;
+	public static final int UnhandledWarningToken = IrritantSet.GROUP1 | ASTNode.Bit16;
+	public static final int RawTypeReference = IrritantSet.GROUP1 | ASTNode.Bit17;
+	public static final int UnusedLabel = IrritantSet.GROUP1 | ASTNode.Bit18;
+	public static final int ParameterAssignment = IrritantSet.GROUP1 | ASTNode.Bit19;
+	public static final int FallthroughCase = IrritantSet.GROUP1 | ASTNode.Bit20;
+	public static final int OverridingMethodWithoutSuperInvocation = IrritantSet.GROUP1 | ASTNode.Bit21;
+	public static final int PotentialNullReference = IrritantSet.GROUP1 | ASTNode.Bit22;
+	public static final int RedundantNullCheck = IrritantSet.GROUP1 | ASTNode.Bit23;
+	public static final int MissingJavadocTagDescription = IrritantSet.GROUP1 | ASTNode.Bit24;
+	public static final int UnusedTypeArguments = IrritantSet.GROUP1 | ASTNode.Bit25;
+	public static final int UnusedWarningToken = IrritantSet.GROUP1 | ASTNode.Bit26;
+	public static final int RedundantSuperinterface = IrritantSet.GROUP1 | ASTNode.Bit27;
+	public static final int ComparingIdentical = IrritantSet.GROUP1 | ASTNode.Bit28;
+	public static final int MissingSynchronizedModifierInInheritedMethod= IrritantSet.GROUP1 | ASTNode.Bit29;
 
+	// group 2
+	public static final int ShouldImplementHashcode = IrritantSet.GROUP2 | ASTNode.Bit1;
+	public static final int DeadCode = IrritantSet.GROUP2 | ASTNode.Bit2;
+	
 	// Map: String optionKey --> Long irritant>
 	private static Map OptionToIrritants;
 
-	// Default severity level for handlers
-	public long errorThreshold = 0;
-
-	public long warningThreshold =
-		MethodWithConstructorName
-		| UsingDeprecatedAPI
-		| MaskedCatchBlock
-		| OverriddenPackageDefaultMethod
-		| UnusedImport
-		| NonStaticAccessToStatic
-		| NoEffectAssignment
-		| IncompatibleNonInheritedInterfaceMethod
-		| NoImplicitStringConversion
-		| FinallyBlockNotCompleting
-		| AssertUsedAsAnIdentifier
-		| EnumUsedAsAnIdentifier
-		| UncheckedTypeOperation
-		| RawTypeReference
-		| MissingSerialVersion
-		| VarargsArgumentNeedCast
-		| ForbiddenReference
-		| DiscouragedReference
-		| AnnotationSuperInterface
-		| TypeHiding
-		| FinalParameterBound
-		| UnhandledWarningToken
-		| UnusedLocalVariable
-		| UnusedPrivateMember
-		| UnusedLabel
-		| UnusedTypeArguments
-		| NullReference
-		| UnusedWarningToken;
-
-	// By default only lines and source attributes are generated.
-	public int produceDebugAttributes = ClassFileConstants.ATTR_SOURCE | ClassFileConstants.ATTR_LINES;
-
-	public long complianceLevel = ClassFileConstants.JDK1_4; // by default be compliant with 1.4
-	public long sourceLevel = ClassFileConstants.JDK1_3; //1.3 source behavior by default
-	public long targetJDK = ClassFileConstants.JDK1_2; // default generates for JVM1.2
-
-	// source encoding format
-	public String defaultEncoding = null; // will use the platform default encoding
-
-	// print what unit is being processed
-	public boolean verbose = Compiler.DEBUG;
-
-	// indicates if reference info is desired
-	public boolean produceReferenceInfo = false;
-
-	// indicates if unused/optimizable local variables need to be preserved (debugging purpose)
-	public boolean preserveAllLocalVariables = false;
-
-	// indicates whether literal expressions are inlined at parse-time or not
-	public boolean parseLiteralExpressionsAsConstants = true;
-
-	// max problems per compilation unit
-	public int maxProblemsPerUnit = 100; // no more than 100 problems per default
-
-	// tags used to recognize tasks in comments
-	public char[][] taskTags = null;
-	public char[][] taskPriorites = null;
-	public boolean isTaskCaseSensitive = true;
-
-	// deprecation report
-	public boolean reportDeprecationInsideDeprecatedCode = false;
-	public boolean reportDeprecationWhenOverridingDeprecatedMethod = false;
-
-	// unused parameters report
-	public boolean reportUnusedParameterWhenImplementingAbstract = false;
-	public boolean reportUnusedParameterWhenOverridingConcrete = false;
-	public boolean reportUnusedParameterIncludeDocCommentReference = true;
-
-	// unused declaration of thrown exception
-	public boolean reportUnusedDeclaredThrownExceptionWhenOverriding = false;
-	public boolean reportUnusedDeclaredThrownExceptionIncludeDocCommentReference = true;
-	public boolean reportUnusedDeclaredThrownExceptionExemptExceptionAndThrowable = true;
-
-	// constructor/setter parameter hiding
-	public boolean reportSpecialParameterHidingField = false;
-
-	// check javadoc comments tags
-	public int reportInvalidJavadocTagsVisibility = ClassFileConstants.AccPublic;
-	public boolean reportInvalidJavadocTags = false;
-	public boolean reportInvalidJavadocTagsDeprecatedRef = false;
-	public boolean reportInvalidJavadocTagsNotVisibleRef = false;
-	public String reportMissingJavadocTagDescription = RETURN_TAG;
-
-	// check missing javadoc tags
-	public int reportMissingJavadocTagsVisibility = ClassFileConstants.AccPublic;
-	public boolean reportMissingJavadocTagsOverriding = false;
-
-	// check missing javadoc comments
-	public int reportMissingJavadocCommentsVisibility = ClassFileConstants.AccPublic;
-	public boolean reportMissingJavadocCommentsOverriding = false;
-
-	// JSR bytecode inlining
-	public boolean inlineJsrBytecode = false;
-
-	// javadoc comment support
-	public boolean docCommentSupport = false;
-
-	// suppress warning annotation
-	public boolean suppressWarnings = true;
-
-	// treat optional error as fatal or just like warning?
-	public boolean treatOptionalErrorAsFatal = true;
-
-	// parser perform statements recovery
-	public boolean performMethodsFullRecovery = true;
-
-	// parser perform statements recovery
-	public boolean performStatementsRecovery = true;
-
-	// store annotations
-	public boolean storeAnnotations = false;
-
-	// annotation processing
-	public boolean generateClassFiles = true;
-
-	// Enable annotation processing by default only in batch mode
-	public boolean processAnnotations = false;
+	// Severity level for handlers
+	/** 
+	 * Defaults defined at {@link IrritantSet#COMPILER_DEFAULT_ERRORS} 
+	 * @see #resetDefaults()
+	 */
+	protected IrritantSet errorThreshold;
+	/** 
+	 * Defaults defined at {@link IrritantSet#COMPILER_DEFAULT_WARNINGS}
+	 * @see #resetDefaults()
+	 */
+	protected IrritantSet warningThreshold;
 	
+	/**
+	 * Default settings are to be defined in {@lnk CompilerOptions#resetDefaults()}
+	 */
+	
+	/** Classfile debug information, may contain source file name, line numbers, local variable tables, etc... */
+	public int produceDebugAttributes; 
+	/** Compliance level for the compiler, refers to a JDK version, e.g. {lnk {@link ClassFileConstants#JDK1_4} */
+	public long complianceLevel;
+	/** Java source level, refers to a JDK version, e.g. {lnk {@link ClassFileConstants#JDK1_4} */
+	public long sourceLevel;
+	/** VM target level, refers to a JDK version, e.g. {lnk {@link ClassFileConstants#JDK1_4} */
+	public long targetJDK;
+	/** Source encoding format */
+	public String defaultEncoding;
+	/** Compiler trace verbosity */
+	public boolean verbose;
+	/** Indicates whether reference info is desired */
+	public boolean produceReferenceInfo;	
+	/** Indicates if unused/optimizable local variables need to be preserved (debugging purpose) */
+	public boolean preserveAllLocalVariables;
+	/** Indicates whether literal expressions are inlined at parse-time or not */
+	public boolean parseLiteralExpressionsAsConstants;
+	/** Max problems per compilation unit */
+	public int maxProblemsPerUnit;
+	/** Tags used to recognize tasks in comments */
+	public char[][] taskTags;
+	/** Respective priorities of recognized task tags */
+	public char[][] taskPriorites;
+	/** Indicate whether tag detection is case sensitive or not */
+	public boolean isTaskCaseSensitive;
+	/** Specify whether deprecation inside deprecated code is to be reported */
+	public boolean reportDeprecationInsideDeprecatedCode;
+	/** Specify whether override of deprecated method is to be reported */
+	public boolean reportDeprecationWhenOverridingDeprecatedMethod;
+	/** Specify if should report unused parameter when implementing abstract method */
+	public boolean reportUnusedParameterWhenImplementingAbstract;
+	/** Specify if should report unused parameter when overriding concrete method */
+	public boolean reportUnusedParameterWhenOverridingConcrete;
+	/** Specify if should report documented unused parameter (in javadoc) */
+	public boolean reportUnusedParameterIncludeDocCommentReference;
+	/** Specify if should reported unused declared thrown exception when overriding method */
+	public boolean reportUnusedDeclaredThrownExceptionWhenOverriding;
+	/** Specify if should reported unused declared thrown exception when documented in javadoc */
+	public boolean reportUnusedDeclaredThrownExceptionIncludeDocCommentReference;
+	/** Specify if should reported unused declared thrown exception when Exception or Throwable */
+	public boolean reportUnusedDeclaredThrownExceptionExemptExceptionAndThrowable;
+	/** Specify whether should report constructor/setter method parameter hiding */
+	public boolean reportSpecialParameterHidingField;
+	/** Specify whether trivial deadcode pattern is to be reported (e.g. if (DEBUG) ...) */
+	public boolean reportDeadCodeInTrivialIfStatement;
+	/** Master flag controlling whether doc comment should be processed */
+	public boolean docCommentSupport;
+	/** Specify if invalid javadoc shall be reported */
+	public boolean reportInvalidJavadocTags;
+	/** Only report invalid javadoc above a given level of visibility of associated construct */
+	public int reportInvalidJavadocTagsVisibility;
+	/** Specify if deprecated javadoc ref is allowed */
+	public boolean reportInvalidJavadocTagsDeprecatedRef;
+	/** Specify if non visible javadoc ref is allowed */
+	public boolean reportInvalidJavadocTagsNotVisibleRef;
+	/** Specify when to report missing javadoc tag description */
+	public String reportMissingJavadocTagDescription;
+	/** Only report missing javadoc tags above a given level of visibility of associated construct */
+	public int reportMissingJavadocTagsVisibility;
+	/** Specify if need to flag missing javadoc tags for overriding method */
+	public boolean reportMissingJavadocTagsOverriding;
+	/** Only report missing javadoc comment above a given level of visibility of associated construct */
+	public int reportMissingJavadocCommentsVisibility;
+	/** Specify if need to flag missing javadoc comment for overriding method */
+	public boolean reportMissingJavadocCommentsOverriding;
+	/** Indicate whether the JSR bytecode should be inlined to avoid its presence in classfile */
+	public boolean inlineJsrBytecode;
+	/** Indicate if @SuppressWarning annotation are activated */
+	public boolean suppressWarnings;
+	/** Specify if should treat optional error as fatal or just like warning */
+	public boolean treatOptionalErrorAsFatal;
+	/** Specify if parser should perform structural recovery in methods */
+	public boolean performMethodsFullRecovery;
+	/** Specify if parser perform statements recovery */
+	public boolean performStatementsRecovery;
+	/** Control whether annotation processing is enabled */
+	public boolean processAnnotations;
+	/** Store annotations */
+	public boolean storeAnnotations;
+	/** Indicate if annotation processing generates classfiles */
+	public boolean generateClassFiles;
 	// GROOVY start
 	public int buildGroovyFiles = 0; // 0=dontknow 1=no 2=yes
 	
 	public String groovyClassLoaderPath = null;
 	// GROOVY end
 
+
+	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
+	public final static String[] warningTokens = {
+		"all", //$NON-NLS-1$
+		"boxing", //$NON-NLS-1$
+		"cast", //$NON-NLS-1$
+		"dep-ann", //$NON-NLS-1$
+		"deprecation", //$NON-NLS-1$
+		"fallthrough", //$NON-NLS-1$
+		"finally", //$NON-NLS-1$
+		"hiding", //$NON-NLS-1$
+		"incomplete-switch", //$NON-NLS-1$
+		"nls", //$NON-NLS-1$
+		"null", //$NON-NLS-1$
+		"restriction", //$NON-NLS-1$
+		"serial", //$NON-NLS-1$
+		"static-access", //$NON-NLS-1$
+		"super", //$NON-NLS-1$
+		"synthetic-access", //$NON-NLS-1$
+		"unchecked", //$NON-NLS-1$
+		"unqualified-field-access", //$NON-NLS-1$
+		"unused", //$NON-NLS-1$
+	};
+
 	/**
 	 * Initializing the compiler options with defaults
 	 */
 	public CompilerOptions(){
-		// use default options
+		this(null); // use default options
 	}
 
 	/**
@@ -365,9 +381,10 @@ public class CompilerOptions {
 	 * @param settings
 	 */
 	public CompilerOptions(Map settings){
-
-		if (settings == null) return;
-		set(settings);
+		resetDefaults();
+		if (settings != null) {
+			set(settings);
+		}
 	}
 
 	/**
@@ -378,6 +395,428 @@ public class CompilerOptions {
 		this.parseLiteralExpressionsAsConstants = parseLiteralExpressionsAsConstants;
 	}
 
+	/**
+	 * Return the most specific option key controlling this irritant. Note that in some case, some irritant is controlled by
+	 * other master options (e.g. javadoc, deprecation, etc.).
+	 * This information is intended for grouping purpose (several problems governed by a rule)
+	 */
+	public static String optionKeyFromIrritant(int irritant) {
+		// keep in sync with warningTokens and warningTokenToIrritant
+		switch (irritant) {
+			case MethodWithConstructorName :
+				return OPTION_ReportMethodWithConstructorName;
+			case OverriddenPackageDefaultMethod  :
+				return OPTION_ReportOverridingPackageDefaultMethod;
+			case UsingDeprecatedAPI :
+			case (InvalidJavadoc | UsingDeprecatedAPI) :
+				return OPTION_ReportDeprecation;
+			case MaskedCatchBlock  :
+				return OPTION_ReportHiddenCatchBlock;
+			case UnusedLocalVariable :
+				return OPTION_ReportUnusedLocal;
+			case UnusedArgument :
+				return OPTION_ReportUnusedParameter;
+			case NoImplicitStringConversion :
+				return OPTION_ReportNoImplicitStringConversion;
+			case AccessEmulation :
+				return OPTION_ReportSyntheticAccessEmulation;
+			case NonExternalizedString :
+				return OPTION_ReportNonExternalizedStringLiteral;
+			case AssertUsedAsAnIdentifier :
+				return OPTION_ReportAssertIdentifier;
+			case UnusedImport :
+				return OPTION_ReportUnusedImport;
+			case NonStaticAccessToStatic :
+				return OPTION_ReportNonStaticAccessToStatic;
+			case Task :
+				return OPTION_TaskTags;
+			case NoEffectAssignment :
+				return OPTION_ReportNoEffectAssignment;
+			case IncompatibleNonInheritedInterfaceMethod :
+				return OPTION_ReportIncompatibleNonInheritedInterfaceMethod;
+			case UnusedPrivateMember :
+				return OPTION_ReportUnusedPrivateMember;
+			case LocalVariableHiding :
+				return OPTION_ReportLocalVariableHiding;
+			case FieldHiding :
+				return OPTION_ReportFieldHiding;
+			case AccidentalBooleanAssign :
+				return OPTION_ReportPossibleAccidentalBooleanAssignment;
+			case EmptyStatement :
+				return OPTION_ReportEmptyStatement;
+			case MissingJavadocComments  :
+				return OPTION_ReportMissingJavadocComments;
+			case MissingJavadocTags :
+				return OPTION_ReportMissingJavadocTags;
+			case UnqualifiedFieldAccess :
+				return OPTION_ReportUnqualifiedFieldAccess;
+			case UnusedDeclaredThrownException :
+				return OPTION_ReportUnusedDeclaredThrownExceptionWhenOverriding;
+			case FinallyBlockNotCompleting :
+				return OPTION_ReportFinallyBlockNotCompletingNormally;
+			case InvalidJavadoc :
+				return OPTION_ReportInvalidJavadoc;
+			case UnnecessaryTypeCheck :
+				return OPTION_ReportUnnecessaryTypeCheck;
+			case UndocumentedEmptyBlock :
+				return OPTION_ReportUndocumentedEmptyBlock;
+			case IndirectStaticAccess :
+				return OPTION_ReportIndirectStaticAccess;
+			case UnnecessaryElse  :
+				return OPTION_ReportUnnecessaryElse;
+			case UncheckedTypeOperation :
+				return OPTION_ReportUncheckedTypeOperation;
+			case FinalParameterBound :
+				return OPTION_ReportFinalParameterBound;
+			case MissingSerialVersion :
+				return OPTION_ReportMissingSerialVersion ;
+			case EnumUsedAsAnIdentifier :
+				return OPTION_ReportEnumIdentifier;
+			case ForbiddenReference :
+				return OPTION_ReportForbiddenReference;
+			case VarargsArgumentNeedCast :
+				return OPTION_ReportVarargsArgumentNeedCast;
+			case NullReference :
+				return OPTION_ReportNullReference;
+			case PotentialNullReference :
+				return OPTION_ReportPotentialNullReference;
+			case RedundantNullCheck :
+				return OPTION_ReportRedundantNullCheck;
+			case AutoBoxing :
+				return OPTION_ReportAutoboxing;
+			case AnnotationSuperInterface :
+				return OPTION_ReportAnnotationSuperInterface;
+			case TypeHiding :
+				return OPTION_ReportTypeParameterHiding;
+			case MissingOverrideAnnotation :
+				return OPTION_ReportMissingOverrideAnnotation;
+			case IncompleteEnumSwitch :
+				return OPTION_ReportIncompleteEnumSwitch;
+			case MissingDeprecatedAnnotation :
+				return OPTION_ReportMissingDeprecatedAnnotation;
+			case DiscouragedReference :
+				return OPTION_ReportDiscouragedReference;
+			case UnhandledWarningToken :
+				return OPTION_ReportUnhandledWarningToken;
+			case RawTypeReference :
+				return OPTION_ReportRawTypeReference;
+			case UnusedLabel :
+				return OPTION_ReportUnusedLabel;
+			case ParameterAssignment :
+				return OPTION_ReportParameterAssignment;
+			case FallthroughCase :
+				return OPTION_ReportFallthroughCase;
+			case OverridingMethodWithoutSuperInvocation :
+				return OPTION_ReportOverridingMethodWithoutSuperInvocation;
+			case MissingJavadocTagDescription :
+				return OPTION_ReportMissingJavadocTagDescription;
+			case UnusedTypeArguments :
+				return OPTION_ReportUnusedTypeArgumentsForMethodInvocation;
+			case UnusedWarningToken :
+				return OPTION_ReportUnusedWarningToken;
+			case RedundantSuperinterface :
+				return OPTION_ReportRedundantSuperinterface;
+			case ComparingIdentical :
+				return OPTION_ReportComparingIdentical;
+			case MissingSynchronizedModifierInInheritedMethod :
+				return OPTION_ReportMissingSynchronizedOnInheritedMethod;
+			case ShouldImplementHashcode :
+				return OPTION_ReportMissingHashCodeMethod;
+			case DeadCode :
+				return OPTION_ReportDeadCode;
+		}
+		return null;
+	}
+
+	public static long optionKeyToIrritant(String optionName) {
+		if (OptionToIrritants == null) {
+			Map temp = new HashMap();
+			int group = 0;
+			for (int g = 0; g < 8; g++) {
+				group <<= 1;
+				int index = 0;
+				for (int i = 0; i < 30; i++) {
+					index <<= 1;
+					int irritant = (group<<IrritantSet.GROUP_SHIFT)+index;
+					String optionKey = optionKeyFromIrritant(irritant);
+					if (optionKey == null) continue;
+					temp.put(optionKey, new Integer(irritant));
+				}
+			}
+			OptionToIrritants = temp;
+		}
+		Long irritant = (Long)OptionToIrritants.get(optionName);
+		return irritant == null ? 0 : irritant.longValue();
+	}
+
+	public static String versionFromJdkLevel(long jdkLevel) {
+		switch ((int)(jdkLevel>>16)) {
+			case ClassFileConstants.MAJOR_VERSION_1_1 :
+				if (jdkLevel == ClassFileConstants.JDK1_1)
+					return VERSION_1_1;
+				break;
+			case ClassFileConstants.MAJOR_VERSION_1_2 :
+				if (jdkLevel == ClassFileConstants.JDK1_2)
+					return VERSION_1_2;
+				break;
+			case ClassFileConstants.MAJOR_VERSION_1_3 :
+				if (jdkLevel == ClassFileConstants.JDK1_3)
+					return VERSION_1_3;
+				break;
+			case ClassFileConstants.MAJOR_VERSION_1_4 :
+				if (jdkLevel == ClassFileConstants.JDK1_4)
+					return VERSION_1_4;
+				break;
+			case ClassFileConstants.MAJOR_VERSION_1_5 :
+				if (jdkLevel == ClassFileConstants.JDK1_5)
+					return VERSION_1_5;
+				break;
+			case ClassFileConstants.MAJOR_VERSION_1_6 :
+				if (jdkLevel == ClassFileConstants.JDK1_6)
+					return VERSION_1_6;
+				break;
+			case ClassFileConstants.MAJOR_VERSION_1_7 :
+				if (jdkLevel == ClassFileConstants.JDK1_7)
+					return VERSION_1_7;
+				break;
+		}
+		return Util.EMPTY_STRING; // unknown version
+	}
+
+	public static long versionToJdkLevel(Object versionID) {
+		if (versionID instanceof String) {
+			String version = (String) versionID;
+			// verification is optimized for all versions with same length and same "1." prefix
+			if (version.length() == 3 && version.charAt(0) == '1' && version.charAt(1) == '.') {
+				switch (version.charAt(2)) {
+					case '1':
+						return ClassFileConstants.JDK1_1;
+					case '2':
+						return ClassFileConstants.JDK1_2;
+					case '3':
+						return ClassFileConstants.JDK1_3;
+					case '4':
+						return ClassFileConstants.JDK1_4;
+					case '5':
+						return ClassFileConstants.JDK1_5;
+					case '6':
+						return ClassFileConstants.JDK1_6;
+					case '7':
+						return ClassFileConstants.JDK1_7;
+					default:
+						return 0; // unknown
+				}
+			}
+			if (VERSION_JSR14.equals(versionID)) {
+				return ClassFileConstants.JDK1_4;
+			}
+			if (VERSION_CLDC1_1.equals(versionID)) {
+				return ClassFileConstants.CLDC_1_1;
+			}
+		}
+		return 0; // unknown
+	}
+
+	/**
+	 * Return all warning option names for use as keys in compiler options maps.
+	 * @return all warning option names
+	 * TODO (maxime) revise for ensuring completeness
+	 */
+	public static String[] warningOptionNames() {
+		String[] result = {
+			OPTION_ReportAnnotationSuperInterface,
+			OPTION_ReportAssertIdentifier,
+			OPTION_ReportAutoboxing,
+			OPTION_ReportDeadCode,
+			OPTION_ReportDeprecation,
+			OPTION_ReportDiscouragedReference,
+			OPTION_ReportEmptyStatement,
+			OPTION_ReportEnumIdentifier,
+			OPTION_ReportFallthroughCase,
+			OPTION_ReportFieldHiding,
+			OPTION_ReportFinalParameterBound,
+			OPTION_ReportFinallyBlockNotCompletingNormally,
+			OPTION_ReportForbiddenReference,
+			OPTION_ReportHiddenCatchBlock,
+			OPTION_ReportIncompatibleNonInheritedInterfaceMethod,
+			OPTION_ReportIncompleteEnumSwitch,
+			OPTION_ReportIndirectStaticAccess,
+			OPTION_ReportInvalidJavadoc,
+			OPTION_ReportLocalVariableHiding,
+			OPTION_ReportMethodWithConstructorName,
+			OPTION_ReportMissingDeprecatedAnnotation,
+			OPTION_ReportMissingJavadocComments,
+			OPTION_ReportMissingJavadocTagDescription,
+			OPTION_ReportMissingJavadocTags,
+			OPTION_ReportMissingOverrideAnnotation,
+			OPTION_ReportMissingSerialVersion,
+			OPTION_ReportNoEffectAssignment,
+			OPTION_ReportNoImplicitStringConversion,
+			OPTION_ReportNonExternalizedStringLiteral,
+			OPTION_ReportNonStaticAccessToStatic,
+			OPTION_ReportNullReference,
+			OPTION_ReportPotentialNullReference,
+			OPTION_ReportRedundantNullCheck,
+			OPTION_ReportRedundantSuperinterface,
+			OPTION_ReportOverridingPackageDefaultMethod,
+			OPTION_ReportParameterAssignment,
+			OPTION_ReportPossibleAccidentalBooleanAssignment,
+			OPTION_ReportSyntheticAccessEmulation,
+			OPTION_ReportTypeParameterHiding,
+			OPTION_ReportUncheckedTypeOperation,
+			OPTION_ReportUndocumentedEmptyBlock,
+			OPTION_ReportUnnecessaryElse,
+			OPTION_ReportUnnecessaryTypeCheck,
+			OPTION_ReportUnqualifiedFieldAccess,
+			OPTION_ReportUnusedDeclaredThrownException,
+			OPTION_ReportUnusedImport,
+			OPTION_ReportUnusedLocal,
+			OPTION_ReportUnusedParameter,
+			OPTION_ReportUnusedPrivateMember,
+			OPTION_ReportVarargsArgumentNeedCast,
+			OPTION_ReportUnhandledWarningToken,
+			OPTION_ReportUnusedWarningToken,
+			OPTION_ReportOverridingMethodWithoutSuperInvocation,
+			OPTION_ReportUnusedTypeArgumentsForMethodInvocation,
+		};
+		return result;
+	}
+
+	/**
+	 * For suppressable warnings
+	 */
+	public static String warningTokenFromIrritant(int irritant) {
+		// keep in sync with warningTokens and warningTokenToIrritant
+		switch (irritant) {
+			case (InvalidJavadoc | UsingDeprecatedAPI) :
+			case UsingDeprecatedAPI :
+				return "deprecation"; //$NON-NLS-1$
+			case FinallyBlockNotCompleting :
+				return "finally"; //$NON-NLS-1$
+			case FieldHiding :
+			case LocalVariableHiding :
+			case MaskedCatchBlock :
+				return "hiding"; //$NON-NLS-1$
+			case NonExternalizedString :
+				return "nls"; //$NON-NLS-1$
+			case UnnecessaryTypeCheck :
+				return "cast"; //$NON-NLS-1$
+			case UnusedLocalVariable :
+			case UnusedArgument :
+			case UnusedImport :
+			case UnusedPrivateMember :
+			case UnusedDeclaredThrownException :
+				return "unused"; //$NON-NLS-1$
+			case IndirectStaticAccess :
+			case NonStaticAccessToStatic :
+				return "static-access"; //$NON-NLS-1$
+			case AccessEmulation :
+				return "synthetic-access"; //$NON-NLS-1$
+			case UnqualifiedFieldAccess :
+				return "unqualified-field-access"; //$NON-NLS-1$
+			case UncheckedTypeOperation :
+				return "unchecked"; //$NON-NLS-1$
+			case MissingSerialVersion :
+				return "serial"; //$NON-NLS-1$
+			case AutoBoxing :
+				return "boxing"; //$NON-NLS-1$
+			case TypeHiding :
+				return "hiding"; //$NON-NLS-1$
+			case IncompleteEnumSwitch :
+				return "incomplete-switch"; //$NON-NLS-1$
+			case MissingDeprecatedAnnotation :
+				return "dep-ann"; //$NON-NLS-1$
+			case RawTypeReference :
+				return "unchecked"; //$NON-NLS-1$
+			case UnusedLabel :
+			case UnusedTypeArguments :
+			case RedundantSuperinterface :
+				return "unused"; //$NON-NLS-1$
+			case DiscouragedReference :
+			case ForbiddenReference :
+				return "restriction"; //$NON-NLS-1$
+			case NullReference :
+			case PotentialNullReference :
+			case RedundantNullCheck :
+				return "null"; //$NON-NLS-1$
+			case FallthroughCase :
+				return "fallthrough"; //$NON-NLS-1$
+			case OverridingMethodWithoutSuperInvocation :
+				return "super"; //$NON-NLS-1$
+		}
+		return null;
+	}
+
+	public static IrritantSet warningTokenToIrritants(String warningToken) {
+		// keep in sync with warningTokens and warningTokenFromIrritant
+		if (warningToken == null || warningToken.length() == 0) return null;
+		switch (warningToken.charAt(0)) {
+			case 'a' :
+				if ("all".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.ALL;
+				break;
+			case 'b' :
+				if ("boxing".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.BOXING;
+				break;
+			case 'c' :
+				if ("cast".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.CAST;
+				break;
+			case 'd' :
+				if ("deprecation".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.DEPRECATION;
+				if ("dep-ann".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.DEP_ANN;
+				break;
+			case 'f' :
+				if ("fallthrough".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.FALLTHROUGH;
+				if ("finally".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.FINALLY;
+				break;
+			case 'h' :
+				if ("hiding".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.HIDING;
+				break;
+			case 'i' :
+				if ("incomplete-switch".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.INCOMPLETE_SWITCH;
+				break;
+			case 'n' :
+				if ("nls".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.NLS;
+				if ("null".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.NULL;
+				break;
+			case 'r' :
+				if ("restriction".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.RESTRICTION;
+				break;
+			case 's' :
+				if ("serial".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.SERIAL;
+				if ("static-access".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.STATIC_ACCESS;
+				if ("synthetic-access".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.SYNTHETIC_ACCESS;
+				if ("super".equals(warningToken)) { //$NON-NLS-1$
+					return IrritantSet.SUPER;
+				}
+				break;
+			case 'u' :
+				if ("unused".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.UNUSED;
+				if ("unchecked".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.UNCHECKED;
+				if ("unqualified-field-access".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.UNQUALIFIED_FIELD_ACCESS;
+				break;
+		}
+		return null;
+	}
+
+	
 	public Map getMap() {
 		Map optionsMap = new HashMap(30);
 		optionsMap.put(OPTION_LocalVariableAttribute, (this.produceDebugAttributes & ClassFileConstants.ATTR_VARS) != 0 ? GENERATE : DO_NOT_GENERATE);
@@ -473,177 +912,36 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_GenerateClassFiles, this.generateClassFiles ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_Process_Annotations, this.processAnnotations ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportRedundantSuperinterface, getSeverityString(RedundantSuperinterface));
+		optionsMap.put(OPTION_ReportComparingIdentical, getSeverityString(ComparingIdentical));
+		optionsMap.put(OPTION_ReportMissingSynchronizedOnInheritedMethod, getSeverityString(MissingSynchronizedModifierInInheritedMethod));
+		optionsMap.put(OPTION_ReportMissingHashCodeMethod, getSeverityString(ShouldImplementHashcode));
+		optionsMap.put(OPTION_ReportDeadCode, getSeverityString(DeadCode));
+		optionsMap.put(OPTION_ReportDeadCodeInTrivialIfStatement, this.reportDeadCodeInTrivialIfStatement ? ENABLED : DISABLED);
 		return optionsMap;
 	}
 
-	/**
-	 * Return the most specific option key controlling this irritant. Note that in some case, some irritant is controlled by
-	 * other master options (e.g. javadoc, deprecation, etc.).
-	 * This information is intended for grouping purpose (several problems governed by a rule)
-	 */
-	public static String optionKeyFromIrritant(long irritant) {
-		// keep in sync with warningTokens and warningTokenToIrritant
-		int irritantInt = (int) irritant;
-		if (irritantInt == irritant) {
-			switch (irritantInt) {
-				case (int) MethodWithConstructorName :
-					return OPTION_ReportMethodWithConstructorName;
-				case (int) OverriddenPackageDefaultMethod  :
-					return OPTION_ReportOverridingPackageDefaultMethod;
-				case (int) UsingDeprecatedAPI :
-				case (int) (InvalidJavadoc | UsingDeprecatedAPI) :
-					return OPTION_ReportDeprecation;
-				case (int) MaskedCatchBlock  :
-					return OPTION_ReportHiddenCatchBlock;
-				case (int) UnusedLocalVariable :
-					return OPTION_ReportUnusedLocal;
-				case (int) UnusedArgument :
-					return OPTION_ReportUnusedParameter;
-				case (int) NoImplicitStringConversion :
-					return OPTION_ReportNoImplicitStringConversion;
-				case (int) AccessEmulation :
-					return OPTION_ReportSyntheticAccessEmulation;
-				case (int) NonExternalizedString :
-					return OPTION_ReportNonExternalizedStringLiteral;
-				case (int) AssertUsedAsAnIdentifier :
-					return OPTION_ReportAssertIdentifier;
-				case (int) UnusedImport :
-					return OPTION_ReportUnusedImport;
-				case (int) NonStaticAccessToStatic :
-					return OPTION_ReportNonStaticAccessToStatic;
-				case (int) Task :
-					return OPTION_TaskTags;
-				case (int) NoEffectAssignment :
-					return OPTION_ReportNoEffectAssignment;
-				case (int) IncompatibleNonInheritedInterfaceMethod :
-					return OPTION_ReportIncompatibleNonInheritedInterfaceMethod;
-				case (int) UnusedPrivateMember :
-					return OPTION_ReportUnusedPrivateMember;
-				case (int) LocalVariableHiding :
-					return OPTION_ReportLocalVariableHiding;
-				case (int) FieldHiding :
-					return OPTION_ReportFieldHiding;
-				case (int) AccidentalBooleanAssign :
-					return OPTION_ReportPossibleAccidentalBooleanAssignment;
-				case (int) EmptyStatement :
-					return OPTION_ReportEmptyStatement;
-				case (int) MissingJavadocComments  :
-					return OPTION_ReportMissingJavadocComments;
-				case (int) MissingJavadocTags :
-					return OPTION_ReportMissingJavadocTags;
-				case (int) UnqualifiedFieldAccess :
-					return OPTION_ReportUnqualifiedFieldAccess;
-				case (int) UnusedDeclaredThrownException :
-					return OPTION_ReportUnusedDeclaredThrownExceptionWhenOverriding;
-				case (int) FinallyBlockNotCompleting :
-					return OPTION_ReportFinallyBlockNotCompletingNormally;
-				case (int) InvalidJavadoc :
-					return OPTION_ReportInvalidJavadoc;
-				case (int) UnnecessaryTypeCheck :
-					return OPTION_ReportUnnecessaryTypeCheck;
-				case (int) UndocumentedEmptyBlock :
-					return OPTION_ReportUndocumentedEmptyBlock;
-				case (int) IndirectStaticAccess :
-					return OPTION_ReportIndirectStaticAccess;
-				case (int) UnnecessaryElse  :
-					return OPTION_ReportUnnecessaryElse;
-				case (int) UncheckedTypeOperation :
-					return OPTION_ReportUncheckedTypeOperation;
-				case (int) FinalParameterBound :
-					return OPTION_ReportFinalParameterBound;
-			}
-		} else {
-			irritantInt = (int)(irritant >>> 32);
-			switch (irritantInt) {
-				case (int)(MissingSerialVersion >>> 32) :
-					return OPTION_ReportMissingSerialVersion ;
-				case (int)(EnumUsedAsAnIdentifier >>> 32) :
-					return OPTION_ReportEnumIdentifier;
-				case (int)(ForbiddenReference >>> 32) :
-					return OPTION_ReportForbiddenReference;
-				case (int)(VarargsArgumentNeedCast >>> 32) :
-					return OPTION_ReportVarargsArgumentNeedCast;
-				case (int)(NullReference >>> 32) :
-					return OPTION_ReportNullReference;
-				case (int)(PotentialNullReference >>> 32) :
-					return OPTION_ReportPotentialNullReference;
-				case (int)(RedundantNullCheck >>> 32) :
-					return OPTION_ReportRedundantNullCheck;
-				case (int)(AutoBoxing >>> 32) :
-					return OPTION_ReportAutoboxing;
-				case (int)(AnnotationSuperInterface >>> 32) :
-					return OPTION_ReportAnnotationSuperInterface;
-				case (int)(TypeHiding >>> 32) :
-					return OPTION_ReportTypeParameterHiding;
-				case (int)(MissingOverrideAnnotation >>> 32) :
-					return OPTION_ReportMissingOverrideAnnotation;
-				case (int)(IncompleteEnumSwitch >>> 32) :
-					return OPTION_ReportIncompleteEnumSwitch;
-				case (int)(MissingDeprecatedAnnotation >>> 32) :
-					return OPTION_ReportMissingDeprecatedAnnotation;
-				case (int)(DiscouragedReference >>> 32) :
-					return OPTION_ReportDiscouragedReference;
-				case (int)(UnhandledWarningToken >>> 32) :
-					return OPTION_ReportUnhandledWarningToken;
-				case (int)(RawTypeReference >>> 32) :
-					return OPTION_ReportRawTypeReference;
-				case (int)(UnusedLabel >>> 32) :
-					return OPTION_ReportUnusedLabel;
-				case (int)(ParameterAssignment>>> 32) :
-					return OPTION_ReportParameterAssignment;
-				case (int)(FallthroughCase >>> 32) :
-					return OPTION_ReportFallthroughCase;
-				case (int)(OverridingMethodWithoutSuperInvocation >>> 32) :
-					return OPTION_ReportOverridingMethodWithoutSuperInvocation;
-				case (int)(MissingJavadocTagDescription >>> 32):
-					return OPTION_ReportMissingJavadocTagDescription;
-				case (int)(UnusedTypeArguments >>> 32):
-					return OPTION_ReportUnusedTypeArgumentsForMethodInvocation;
-				case (int)(UnusedWarningToken >>> 32) :
-					return OPTION_ReportUnusedWarningToken;
-				case (int)(RedundantSuperinterface >>> 32) :
-					return OPTION_ReportRedundantSuperinterface;
-			}
-		}
-		return null;
-	}
-
-	public static long optionKeyToIrritant(String optionName) {
-		if (OptionToIrritants == null) {
-			long irritant = 0;
-			for (int i = 0; i < 64; i++) {
-				irritant <<= 1;
-				String optionKey = optionKeyFromIrritant(irritant);
-				if (optionKey == null) continue;
-				OptionToIrritants.put(optionKey, new Long(irritant));
-			}
-		}
-		Long irritant = (Long)OptionToIrritants.get(optionName);
-		return irritant == null ? 0 : irritant.longValue();
-	}
-
-	public int getSeverity(long irritant) {
-		if((this.errorThreshold & irritant) != 0) {
-			if ((irritant & UnusedWarningToken) != 0) {
+	public int getSeverity(int irritant) {
+		if (this.errorThreshold.isSet(irritant)) {
+			if ((irritant & (IrritantSet.GROUP_MASK | UnusedWarningToken)) == UnusedWarningToken) {
 				return ProblemSeverities.Error | ProblemSeverities.Optional; // cannot be treated as fatal - codegen already occurred
 			}
 			return this.treatOptionalErrorAsFatal
 				? ProblemSeverities.Error | ProblemSeverities.Optional | ProblemSeverities.Fatal
 				: ProblemSeverities.Error | ProblemSeverities.Optional;
 		}
-		if((this.warningThreshold & irritant) != 0)
+		if (this.warningThreshold.isSet(irritant)) {
 			return ProblemSeverities.Warning | ProblemSeverities.Optional;
+		}
 		return ProblemSeverities.Ignore;
 	}
 
-	public String getSeverityString(long irritant) {
-		if((this.errorThreshold & irritant) != 0)
+	public String getSeverityString(int irritant) {
+		if(this.errorThreshold.isSet(irritant))
 			return ERROR;
-		if((this.warningThreshold & irritant) != 0)
+		if(this.warningThreshold.isSet(irritant))
 			return WARNING;
 		return IGNORE;
 	}
-
 	public String getVisibilityString(int level) {
 		switch (level & ExtraCompilerModifiers.AccVisibilityMASK) {
 			case ClassFileConstants.AccPublic:
@@ -655,6 +953,106 @@ public class CompilerOptions {
 			default:
 				return DEFAULT;
 		}
+	}
+
+	public boolean isAnyEnabled(IrritantSet irritants) {
+		return this.warningThreshold.isAnySet(irritants) || this.errorThreshold.isAnySet(irritants);
+	}
+
+	protected void resetDefaults() {
+		// problem default severities defined on IrritantSet
+		this.errorThreshold = new IrritantSet(IrritantSet.COMPILER_DEFAULT_ERRORS);
+		this.warningThreshold = new IrritantSet(IrritantSet.COMPILER_DEFAULT_WARNINGS);
+		
+		// by default only lines and source attributes are generated.
+		this.produceDebugAttributes = ClassFileConstants.ATTR_SOURCE | ClassFileConstants.ATTR_LINES;
+		this.complianceLevel = ClassFileConstants.JDK1_4; // by default be compliant with 1.4
+		this.sourceLevel = ClassFileConstants.JDK1_3; //1.3 source behavior by default
+		this.targetJDK = ClassFileConstants.JDK1_2; // default generates for JVM1.2
+
+		this.defaultEncoding = null; // will use the platform default encoding
+
+		// print what unit is being processed
+		this.verbose = Compiler.DEBUG;
+
+		this.produceReferenceInfo = false; // no reference info by default
+
+		// indicates if unused/optimizable local variables need to be preserved (debugging purpose)
+		this.preserveAllLocalVariables = false;
+
+		// indicates whether literal expressions are inlined at parse-time or not
+		this.parseLiteralExpressionsAsConstants = true;
+
+		// max problems per compilation unit
+		this.maxProblemsPerUnit = 100; // no more than 100 problems per default
+
+		// tags used to recognize tasks in comments
+		this.taskTags = null;
+		this.taskPriorites = null;
+		this.isTaskCaseSensitive = true;
+
+		// deprecation report
+		this.reportDeprecationInsideDeprecatedCode = false;
+		this.reportDeprecationWhenOverridingDeprecatedMethod = false;
+		
+		// unused parameters report
+		this.reportUnusedParameterWhenImplementingAbstract = false;
+		this.reportUnusedParameterWhenOverridingConcrete = false;
+		this.reportUnusedParameterIncludeDocCommentReference = true;
+		
+		// unused declaration of thrown exception
+		this.reportUnusedDeclaredThrownExceptionWhenOverriding = false;
+		this.reportUnusedDeclaredThrownExceptionIncludeDocCommentReference = true;
+		this.reportUnusedDeclaredThrownExceptionExemptExceptionAndThrowable = true;
+		
+		// constructor/setter parameter hiding
+		this.reportSpecialParameterHidingField = false;
+
+		// check javadoc comments tags
+		this.reportInvalidJavadocTagsVisibility = ClassFileConstants.AccPublic;
+		this.reportInvalidJavadocTags = false;
+		this.reportInvalidJavadocTagsDeprecatedRef = false;
+		this.reportInvalidJavadocTagsNotVisibleRef = false;
+		this.reportMissingJavadocTagDescription = RETURN_TAG;
+		
+		// check missing javadoc tags
+		this.reportMissingJavadocTagsVisibility = ClassFileConstants.AccPublic;
+		this.reportMissingJavadocTagsOverriding = false;
+
+		// check missing javadoc comments
+		this.reportMissingJavadocCommentsVisibility = ClassFileConstants.AccPublic;
+		this.reportMissingJavadocCommentsOverriding = false;
+		
+		// JSR bytecode inlining
+		this.inlineJsrBytecode = false;
+
+		// javadoc comment support
+		this.docCommentSupport = false;
+
+		// suppress warning annotation
+		this.suppressWarnings = true;
+
+		// treat optional error as fatal or just like warning?
+		this.treatOptionalErrorAsFatal = true;
+
+		// parser perform statements recovery
+		this.performMethodsFullRecovery = true;
+
+		// parser perform statements recovery
+		this.performStatementsRecovery = true;
+
+		// store annotations
+		this.storeAnnotations = false;
+
+		// annotation processing
+		this.generateClassFiles = true;
+
+		// enable annotation processing by default only in batch mode
+		this.processAnnotations = false;
+		
+		// dead code detection
+		this.reportDeadCodeInTrivialIfStatement = false;
+
 	}
 
 	public void set(Map optionsMap) {
@@ -771,7 +1169,7 @@ public class CompilerOptions {
 			} else if (DISABLED.equals(optionValue)) {
 				this.reportUnusedParameterIncludeDocCommentReference = false;
 			}
-		}		
+		}
 		if ((optionValue = optionsMap.get(OPTION_ReportSpecialParameterHidingField)) != null) {
 			if (ENABLED.equals(optionValue)) {
 				this.reportSpecialParameterHidingField = true;
@@ -779,6 +1177,13 @@ public class CompilerOptions {
 				this.reportSpecialParameterHidingField = false;
 			}
 		}
+		if ((optionValue = optionsMap.get(OPTION_ReportDeadCodeInTrivialIfStatement )) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.reportDeadCodeInTrivialIfStatement = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.reportDeadCodeInTrivialIfStatement = false;
+			}
+		}		
 		if ((optionValue = optionsMap.get(OPTION_MaxProblemPerUnit)) != null) {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
@@ -891,6 +1296,10 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_ReportOverridingMethodWithoutSuperInvocation)) != null) updateSeverity(OverridingMethodWithoutSuperInvocation, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedTypeArgumentsForMethodInvocation)) != null) updateSeverity(UnusedTypeArguments, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportRedundantSuperinterface)) != null) updateSeverity(RedundantSuperinterface, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportComparingIdentical)) != null) updateSeverity(ComparingIdentical, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportMissingSynchronizedOnInheritedMethod)) != null) updateSeverity(MissingSynchronizedModifierInInheritedMethod, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportMissingHashCodeMethod)) != null) updateSeverity(ShouldImplementHashcode, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportDeadCode)) != null) updateSeverity(DeadCode, optionValue);
 
 		// Javadoc options
 		if ((optionValue = optionsMap.get(OPTION_DocCommentSupport)) != null) {
@@ -958,10 +1367,10 @@ public class CompilerOptions {
 		}
 		if ((optionValue = optionsMap.get(OPTION_ReportMissingJavadocComments)) != null) {
 			updateSeverity(MissingJavadocComments, optionValue);
-		}		
+		}
 		if ((optionValue = optionsMap.get(OPTION_ReportMissingJavadocTagDescription)) != null) {
 			this.reportMissingJavadocTagDescription = (String) optionValue;
-		}		
+		}
 		if ((optionValue = optionsMap.get(OPTION_ReportMissingJavadocCommentsVisibility)) != null) {
 			if (PUBLIC.equals(optionValue)) {
 				this.reportMissingJavadocCommentsVisibility = ClassFileConstants.AccPublic;
@@ -1011,9 +1420,7 @@ public class CompilerOptions {
 		}
 		// GROOVY end
 	}
-
 	public String toString() {
-
 		StringBuffer buf = new StringBuffer("CompilerOptions:"); //$NON-NLS-1$
 		buf.append("\n\t- local variables debug attributes: ").append((this.produceDebugAttributes & ClassFileConstants.ATTR_VARS) != 0 ? "ON" : " OFF"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		buf.append("\n\t- line number debug attributes: ").append((this.produceDebugAttributes & ClassFileConstants.ATTR_LINES) != 0 ? "ON" : " OFF"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -1100,315 +1507,28 @@ public class CompilerOptions {
 		buf.append("\n\t- process annotations: ").append(this.processAnnotations ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- unused type arguments for method/constructor invocation: ").append(getSeverityString(UnusedTypeArguments)); //$NON-NLS-1$
 		buf.append("\n\t- redundant superinterface: ").append(getSeverityString(RedundantSuperinterface)); //$NON-NLS-1$
+		buf.append("\n\t- comparing identical expr: ").append(getSeverityString(ComparingIdentical)); //$NON-NLS-1$
+		buf.append("\n\t- missing synchronized on inherited method: ").append(getSeverityString(MissingSynchronizedModifierInInheritedMethod)); //$NON-NLS-1$
+		buf.append("\n\t- should implement hashCode() method: ").append(getSeverityString(ShouldImplementHashcode)); //$NON-NLS-1$
+		buf.append("\n\t- dead code: ").append(getSeverityString(DeadCode)); //$NON-NLS-1$
+		buf.append("\n\t- dead code in trivial if statement: ").append(this.reportDeadCodeInTrivialIfStatement ? ENABLED : DISABLED); //$NON-NLS-1$
 		// GROOVY start
 		buf.append("\n\t- build groovy files: ").append((buildGroovyFiles==0)?"dontknow":(buildGroovyFiles==1?"no":"yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		buf.append("\n\t- groovyclassloader path: ").append(groovyClassLoaderPath); //$NON-NLS-1$
 		// GROOVY end
 		return buf.toString();
 	}
-
-	void updateSeverity(long irritant, Object severityString) {
+	
+	protected void updateSeverity(int irritant, Object severityString) {
 		if (ERROR.equals(severityString)) {
-			this.errorThreshold |= irritant;
-			this.warningThreshold &= ~irritant;
+			this.errorThreshold.set(irritant);
+			this.warningThreshold.clear(irritant);
 		} else if (WARNING.equals(severityString)) {
-			this.errorThreshold &= ~irritant;
-			this.warningThreshold |= irritant;
+			this.errorThreshold.clear(irritant);
+			this.warningThreshold.set(irritant);
 		} else if (IGNORE.equals(severityString)) {
-			this.errorThreshold &= ~irritant;
-			this.warningThreshold &= ~irritant;
+			this.errorThreshold.clear(irritant);
+			this.warningThreshold.clear(irritant);
 		}
-	}
-	public static long versionToJdkLevel(Object versionID) {
-		if (versionID instanceof String) {
-			String version = (String) versionID;
-			// verification is optimized for all versions with same length and same "1." prefix
-			if (version.length() == 3 && version.charAt(0) == '1' && version.charAt(1) == '.') {
-				switch (version.charAt(2)) {
-					case '1':
-						return ClassFileConstants.JDK1_1;
-					case '2':
-						return ClassFileConstants.JDK1_2;
-					case '3':
-						return ClassFileConstants.JDK1_3;
-					case '4':
-						return ClassFileConstants.JDK1_4;
-					case '5':
-						return ClassFileConstants.JDK1_5;
-					case '6':
-						return ClassFileConstants.JDK1_6;
-					case '7':
-						return ClassFileConstants.JDK1_7;
-					default:
-						return 0; // unknown
-				}
-			}
-			if (VERSION_JSR14.equals(versionID)) {
-				return ClassFileConstants.JDK1_4;
-			}
-			if (VERSION_CLDC1_1.equals(versionID)) {
-				return ClassFileConstants.CLDC_1_1;
-			}
-		}
-		return 0; // unknown
-	}
-
-	public static String versionFromJdkLevel(long jdkLevel) {
-		switch ((int)(jdkLevel>>16)) {
-			case ClassFileConstants.MAJOR_VERSION_1_1 :
-				if (jdkLevel == ClassFileConstants.JDK1_1)
-					return VERSION_1_1;
-				break;
-			case ClassFileConstants.MAJOR_VERSION_1_2 :
-				if (jdkLevel == ClassFileConstants.JDK1_2)
-					return VERSION_1_2;
-				break;
-			case ClassFileConstants.MAJOR_VERSION_1_3 :
-				if (jdkLevel == ClassFileConstants.JDK1_3)
-					return VERSION_1_3;
-				break;
-			case ClassFileConstants.MAJOR_VERSION_1_4 :
-				if (jdkLevel == ClassFileConstants.JDK1_4)
-					return VERSION_1_4;
-				break;
-			case ClassFileConstants.MAJOR_VERSION_1_5 :
-				if (jdkLevel == ClassFileConstants.JDK1_5)
-					return VERSION_1_5;
-				break;
-			case ClassFileConstants.MAJOR_VERSION_1_6 :
-				if (jdkLevel == ClassFileConstants.JDK1_6)
-					return VERSION_1_6;
-				break;
-			case ClassFileConstants.MAJOR_VERSION_1_7 :
-				if (jdkLevel == ClassFileConstants.JDK1_7)
-					return VERSION_1_7;
-				break;
-		}
-		return Util.EMPTY_STRING; // unknown version
-	}
-
-	/**
-	 * Return all warning option names for use as keys in compiler options maps.
-	 * @return all warning option names
-	 * TODO (maxime) revise for ensuring completeness
-	 */
-	public static String[] warningOptionNames() {
-		String[] result = {
-			OPTION_ReportAnnotationSuperInterface,
-			OPTION_ReportAssertIdentifier,
-			OPTION_ReportAutoboxing,
-			OPTION_ReportDeprecation,
-			OPTION_ReportDiscouragedReference,
-			OPTION_ReportEmptyStatement,
-			OPTION_ReportEnumIdentifier,
-			OPTION_ReportFallthroughCase,
-			OPTION_ReportFieldHiding,
-			OPTION_ReportFinalParameterBound,
-			OPTION_ReportFinallyBlockNotCompletingNormally,
-			OPTION_ReportForbiddenReference,
-			OPTION_ReportHiddenCatchBlock,
-			OPTION_ReportIncompatibleNonInheritedInterfaceMethod,
-			OPTION_ReportIncompleteEnumSwitch,
-			OPTION_ReportIndirectStaticAccess,
-			OPTION_ReportInvalidJavadoc,
-			OPTION_ReportLocalVariableHiding,
-			OPTION_ReportMethodWithConstructorName,
-			OPTION_ReportMissingDeprecatedAnnotation,
-			OPTION_ReportMissingJavadocComments,
-			OPTION_ReportMissingJavadocTagDescription,
-			OPTION_ReportMissingJavadocTags,
-			OPTION_ReportMissingOverrideAnnotation,
-			OPTION_ReportMissingSerialVersion,
-			OPTION_ReportNoEffectAssignment,
-			OPTION_ReportNoImplicitStringConversion,
-			OPTION_ReportNonExternalizedStringLiteral,
-			OPTION_ReportNonStaticAccessToStatic,
-			OPTION_ReportNullReference,
-			OPTION_ReportPotentialNullReference,
-			OPTION_ReportRedundantNullCheck,
-			OPTION_ReportRedundantSuperinterface,
-			OPTION_ReportOverridingPackageDefaultMethod,
-			OPTION_ReportParameterAssignment,
-			OPTION_ReportPossibleAccidentalBooleanAssignment,
-			OPTION_ReportSyntheticAccessEmulation,
-			OPTION_ReportTypeParameterHiding,
-			OPTION_ReportUncheckedTypeOperation,
-			OPTION_ReportUndocumentedEmptyBlock,
-			OPTION_ReportUnnecessaryElse,
-			OPTION_ReportUnnecessaryTypeCheck,
-			OPTION_ReportUnqualifiedFieldAccess,
-			OPTION_ReportUnusedDeclaredThrownException,
-			OPTION_ReportUnusedImport,
-			OPTION_ReportUnusedLocal,
-			OPTION_ReportUnusedParameter,
-			OPTION_ReportUnusedPrivateMember,
-			OPTION_ReportVarargsArgumentNeedCast,
-			OPTION_ReportUnhandledWarningToken,
-			OPTION_ReportUnusedWarningToken,
-			OPTION_ReportOverridingMethodWithoutSuperInvocation,
-			OPTION_ReportUnusedTypeArgumentsForMethodInvocation,
-		};
-		return result;
-	}
-
-	/**
-	 * For suppressable warnings
-	 */
-	public static String warningTokenFromIrritant(long irritant) {
-		// keep in sync with warningTokens and warningTokenToIrritant
-		int irritantInt = (int) irritant;
-		if (irritantInt == irritant) {
-			switch (irritantInt) {
-				case (int) (InvalidJavadoc | UsingDeprecatedAPI) :
-				case (int) UsingDeprecatedAPI :
-					return "deprecation"; //$NON-NLS-1$
-				case (int) FinallyBlockNotCompleting :
-					return "finally"; //$NON-NLS-1$
-				case (int) FieldHiding :
-				case (int) LocalVariableHiding :
-				case (int) MaskedCatchBlock :
-					return "hiding"; //$NON-NLS-1$
-				case (int) NonExternalizedString :
-					return "nls"; //$NON-NLS-1$
-				case (int) UnnecessaryTypeCheck :
-					return "cast"; //$NON-NLS-1$
-				case (int) UnusedLocalVariable :
-				case (int) UnusedArgument :
-				case (int) UnusedImport :
-				case (int) UnusedPrivateMember:
-				case (int) UnusedDeclaredThrownException:
-					return "unused"; //$NON-NLS-1$
-				case (int) IndirectStaticAccess :
-				case (int) NonStaticAccessToStatic :
-					return "static-access"; //$NON-NLS-1$
-				case (int) AccessEmulation :
-					return "synthetic-access"; //$NON-NLS-1$
-				case (int) UnqualifiedFieldAccess :
-					return "unqualified-field-access"; //$NON-NLS-1$
-				case (int) UncheckedTypeOperation :
-					return "unchecked"; //$NON-NLS-1$
-			}
-		} else {
-			irritantInt = (int)(irritant >>> 32);
-			switch (irritantInt) {
-				case (int)(MissingSerialVersion >>> 32) :
-					return "serial"; //$NON-NLS-1$
-				case (int)(AutoBoxing >>> 32) :
-					return "boxing"; //$NON-NLS-1$
-				case (int)(TypeHiding >>> 32) :
-					return "hiding"; //$NON-NLS-1$
-				case (int)(IncompleteEnumSwitch >>> 32) :
-					return "incomplete-switch"; //$NON-NLS-1$
-				case (int)(MissingDeprecatedAnnotation >>> 32) :
-					return "dep-ann"; //$NON-NLS-1$
-				case (int)(RawTypeReference >>> 32):
-					return "unchecked"; //$NON-NLS-1$
-				case (int) (UnusedLabel >>> 32):
-				case (int) (UnusedTypeArguments >>> 32) :
-				case (int) (RedundantSuperinterface >>> 32) :
-					return "unused"; //$NON-NLS-1$
-				case (int) (DiscouragedReference >>> 32) :
-				case (int) (ForbiddenReference >>> 32) :
-					return "restriction"; //$NON-NLS-1$
-				case (int) (NullReference >>> 32) :
-				case (int) (PotentialNullReference >>> 32) :
-				case (int) (RedundantNullCheck >>> 32) :
-					return "null"; //$NON-NLS-1$
-				case (int) (FallthroughCase >>> 32) :
-					return "fallthrough"; //$NON-NLS-1$
-				case (int) (OverridingMethodWithoutSuperInvocation >>> 32) :
-					return "super"; //$NON-NLS-1$
-			}
-		}
-		return null;
-	}
-	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
-	public final static String[] warningTokens = {
-		"all", //$NON-NLS-1$
-		"boxing", //$NON-NLS-1$
-		"cast", //$NON-NLS-1$
-		"dep-ann", //$NON-NLS-1$
-		"deprecation", //$NON-NLS-1$
-		"fallthrough", //$NON-NLS-1$
-		"finally", //$NON-NLS-1$
-		"hiding", //$NON-NLS-1$
-		"incomplete-switch", //$NON-NLS-1$
-		"nls", //$NON-NLS-1$
-		"null", //$NON-NLS-1$
-		"restriction", //$NON-NLS-1$
-		"serial", //$NON-NLS-1$
-		"static-access", //$NON-NLS-1$
-		"super", //$NON-NLS-1$
-		"synthetic-access", //$NON-NLS-1$
-		"unchecked", //$NON-NLS-1$
-		"unqualified-field-access", //$NON-NLS-1$
-		"unused", //$NON-NLS-1$
-	};
-	public static long warningTokenToIrritants(String warningToken) {
-		// keep in sync with warningTokens and warningTokenFromIrritant
-		if (warningToken == null || warningToken.length() == 0) return 0;
-		switch (warningToken.charAt(0)) {
-			case 'a' :
-				if ("all".equals(warningToken)) //$NON-NLS-1$
-					return 0xFFFFFFFFFFFFFFFFl; // suppress all warnings
-				break;
-			case 'b' :
-				if ("boxing".equals(warningToken)) //$NON-NLS-1$
-					return AutoBoxing;
-				break;
-			case 'c' :
-				if ("cast".equals(warningToken)) //$NON-NLS-1$
-					return UnnecessaryTypeCheck;
-				break;
-			case 'd' :
-				if ("deprecation".equals(warningToken)) //$NON-NLS-1$
-					return UsingDeprecatedAPI;
-				if ("dep-ann".equals(warningToken)) //$NON-NLS-1$
-					return MissingDeprecatedAnnotation;
-				break;
-			case 'f' :
-				if ("fallthrough".equals(warningToken)) //$NON-NLS-1$
-					return FallthroughCase;
-				if ("finally".equals(warningToken)) //$NON-NLS-1$
-					return FinallyBlockNotCompleting;
-				break;
-			case 'h' :
-				if ("hiding".equals(warningToken)) //$NON-NLS-1$
-					return FieldHiding | LocalVariableHiding | MaskedCatchBlock | TypeHiding;
-			case 'i' :
-				if ("incomplete-switch".equals(warningToken)) //$NON-NLS-1$
-					return IncompleteEnumSwitch;
-				break;
-			case 'n' :
-				if ("nls".equals(warningToken)) //$NON-NLS-1$
-					return NonExternalizedString;
-				if ("null".equals(warningToken)) //$NON-NLS-1$
-					return NullReference | PotentialNullReference | RedundantNullCheck;
-				break;
-			case 'r' :
-				if ("restriction".equals(warningToken)) //$NON-NLS-1$
-					return DiscouragedReference | ForbiddenReference;
-				break;
-			case 's' :
-				if ("serial".equals(warningToken)) //$NON-NLS-1$
-					return MissingSerialVersion;
-				if ("static-access".equals(warningToken)) //$NON-NLS-1$
-					return IndirectStaticAccess | NonStaticAccessToStatic;
-				if ("synthetic-access".equals(warningToken)) //$NON-NLS-1$
-					return AccessEmulation;
-				if ("super".equals(warningToken)) { //$NON-NLS-1$
-					return OverridingMethodWithoutSuperInvocation;
-				}
-				break;
-			case 'u' :
-				if ("unused".equals(warningToken)) //$NON-NLS-1$
-					return UnusedLocalVariable | UnusedArgument | UnusedPrivateMember | UnusedDeclaredThrownException | UnusedLabel | UnusedImport | UnusedTypeArguments | RedundantSuperinterface;
-				if ("unchecked".equals(warningToken)) //$NON-NLS-1$
-					return UncheckedTypeOperation | RawTypeReference;
-				if ("unqualified-field-access".equals(warningToken)) //$NON-NLS-1$
-					return UnqualifiedFieldAccess;
-				break;
-		}
-		return 0;
 	}
 }

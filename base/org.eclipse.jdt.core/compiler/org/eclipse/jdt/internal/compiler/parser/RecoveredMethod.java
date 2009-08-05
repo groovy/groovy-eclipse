@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,9 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
@@ -32,16 +35,16 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 /**
- * Internal method structure for parsing recovery 
+ * Internal method structure for parsing recovery
  */
 
 public class RecoveredMethod extends RecoveredElement implements TerminalTokens {
 
 	public AbstractMethodDeclaration methodDeclaration;
-	
+
 	public RecoveredAnnotation[] annotations;
 	public int annotationCount;
-	
+
 	public int modifiers;
 	public int modifiersStart;
 
@@ -50,7 +53,7 @@ public class RecoveredMethod extends RecoveredElement implements TerminalTokens 
 
 	public RecoveredBlock methodBody;
 	public boolean discardBody = true;
-	
+
 	int pendingModifiers;
 	int pendingModifersSourceStart = -1;
 	RecoveredAnnotation[] pendingAnnotations;
@@ -70,11 +73,11 @@ public RecoveredMethod(AbstractMethodDeclaration methodDeclaration, RecoveredEle
 public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValue) {
 	/* default behavior is to delegate recording to parent if any,
 	do not consider elements passed the known end (if set)
-	it must be belonging to an enclosing element 
+	it must be belonging to an enclosing element
 	*/
-	if (methodDeclaration.declarationSourceEnd > 0
+	if (this.methodDeclaration.declarationSourceEnd > 0
 		&& nestedBlockDeclaration.sourceStart
-			> methodDeclaration.declarationSourceEnd){
+			> this.methodDeclaration.declarationSourceEnd){
 				resetPendingModifiers();
 				if (this.parent == null){
 					return this; // ignore
@@ -83,41 +86,41 @@ public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValu
 				}
 	}
 	/* consider that if the opening brace was not found, it is there */
-	if (!foundOpeningBrace){
-		foundOpeningBrace = true;
+	if (!this.foundOpeningBrace){
+		this.foundOpeningBrace = true;
 		this.bracketBalance++;
 	}
 
-	methodBody = new RecoveredBlock(nestedBlockDeclaration, this, bracketBalanceValue);
-	if (nestedBlockDeclaration.sourceEnd == 0) return methodBody;
+	this.methodBody = new RecoveredBlock(nestedBlockDeclaration, this, bracketBalanceValue);
+	if (nestedBlockDeclaration.sourceEnd == 0) return this.methodBody;
 	return this;
 }
 /*
  * Record a field declaration
  */
 public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanceValue) {
-	this.resetPendingModifiers();
+	resetPendingModifiers();
 
 	/* local variables inside method can only be final and non void */
-	char[][] fieldTypeName; 
-	if ((fieldDeclaration.modifiers & ~ClassFileConstants.AccFinal) != 0 // local var can only be final 
+	char[][] fieldTypeName;
+	if ((fieldDeclaration.modifiers & ~ClassFileConstants.AccFinal) != 0 // local var can only be final
 		|| (fieldDeclaration.type == null) // initializer
 		|| ((fieldTypeName = fieldDeclaration.type.getTypeName()).length == 1 // non void
-			&& CharOperation.equals(fieldTypeName[0], TypeBinding.VOID.sourceName()))){ 
+			&& CharOperation.equals(fieldTypeName[0], TypeBinding.VOID.sourceName()))){
 		if (this.parent == null){
 			return this; // ignore
 		} else {
-			this.updateSourceEndIfNecessary(this.previousAvailableLineEnd(fieldDeclaration.declarationSourceStart - 1));
+			this.updateSourceEndIfNecessary(previousAvailableLineEnd(fieldDeclaration.declarationSourceStart - 1));
 			return this.parent.add(fieldDeclaration, bracketBalanceValue);
 		}
 	}
 	/* default behavior is to delegate recording to parent if any,
 	do not consider elements passed the known end (if set)
-	it must be belonging to an enclosing element 
+	it must be belonging to an enclosing element
 	*/
-	if (methodDeclaration.declarationSourceEnd > 0
+	if (this.methodDeclaration.declarationSourceEnd > 0
 		&& fieldDeclaration.declarationSourceStart
-			> methodDeclaration.declarationSourceEnd){
+			> this.methodDeclaration.declarationSourceEnd){
 		if (this.parent == null){
 			return this; // ignore
 		} else {
@@ -125,8 +128,8 @@ public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanc
 		}
 	}
 	/* consider that if the opening brace was not found, it is there */
-	if (!foundOpeningBrace){
-		foundOpeningBrace = true;
+	if (!this.foundOpeningBrace){
+		this.foundOpeningBrace = true;
 		this.bracketBalance++;
 	}
 	// still inside method, treat as local variable
@@ -136,15 +139,15 @@ public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanc
  * Record a local declaration - regular method should have been created a block body
  */
 public RecoveredElement add(LocalDeclaration localDeclaration, int bracketBalanceValue) {
-	this.resetPendingModifiers();
+	resetPendingModifiers();
 
 	/* local variables inside method can only be final and non void */
-/*	
-	char[][] localTypeName; 
-	if ((localDeclaration.modifiers & ~AccFinal) != 0 // local var can only be final 
+/*
+	char[][] localTypeName;
+	if ((localDeclaration.modifiers & ~AccFinal) != 0 // local var can only be final
 		|| (localDeclaration.type == null) // initializer
 		|| ((localTypeName = localDeclaration.type.getTypeName()).length == 1 // non void
-			&& CharOperation.equals(localTypeName[0], VoidBinding.sourceName()))){ 
+			&& CharOperation.equals(localTypeName[0], VoidBinding.sourceName()))){
 
 		if (this.parent == null){
 			return this; // ignore
@@ -156,18 +159,18 @@ public RecoveredElement add(LocalDeclaration localDeclaration, int bracketBalanc
 */
 	/* do not consider a type starting passed the type end (if set)
 		it must be belonging to an enclosing type */
-	if (methodDeclaration.declarationSourceEnd != 0 
-		&& localDeclaration.declarationSourceStart > methodDeclaration.declarationSourceEnd){
-			
+	if (this.methodDeclaration.declarationSourceEnd != 0
+		&& localDeclaration.declarationSourceStart > this.methodDeclaration.declarationSourceEnd){
+
 		if (this.parent == null) {
 			return this; // ignore
 		} else {
 			return this.parent.add(localDeclaration, bracketBalanceValue);
 		}
 	}
-	if (methodBody == null){
+	if (this.methodBody == null){
 		Block block = new Block(0);
-		block.sourceStart = methodDeclaration.bodyStart;
+		block.sourceStart = this.methodDeclaration.bodyStart;
 		RecoveredElement currentBlock = this.add(block, 1);
 		if (this.bracketBalance > 0){
 			for (int i = 0; i < this.bracketBalance - 1; i++){
@@ -177,18 +180,18 @@ public RecoveredElement add(LocalDeclaration localDeclaration, int bracketBalanc
 		}
 		return currentBlock.add(localDeclaration, bracketBalanceValue);
 	}
-	return methodBody.add(localDeclaration, bracketBalanceValue, true);
+	return this.methodBody.add(localDeclaration, bracketBalanceValue, true);
 }
 /*
  * Record a statement - regular method should have been created a block body
  */
 public RecoveredElement add(Statement statement, int bracketBalanceValue) {
-	this.resetPendingModifiers();
+	resetPendingModifiers();
 
 	/* do not consider a type starting passed the type end (if set)
 		it must be belonging to an enclosing type */
-	if (methodDeclaration.declarationSourceEnd != 0 
-		&& statement.sourceStart > methodDeclaration.declarationSourceEnd){
+	if (this.methodDeclaration.declarationSourceEnd != 0
+		&& statement.sourceStart > this.methodDeclaration.declarationSourceEnd){
 
 		if (this.parent == null) {
 			return this; // ignore
@@ -196,9 +199,9 @@ public RecoveredElement add(Statement statement, int bracketBalanceValue) {
 			return this.parent.add(statement, bracketBalanceValue);
 		}
 	}
-	if (methodBody == null){
+	if (this.methodBody == null){
 		Block block = new Block(0);
-		block.sourceStart = methodDeclaration.bodyStart;
+		block.sourceStart = this.methodDeclaration.bodyStart;
 		RecoveredElement currentBlock = this.add(block, 1);
 		if (this.bracketBalance > 0){
 			for (int i = 0; i < this.bracketBalance - 1; i++){
@@ -208,85 +211,85 @@ public RecoveredElement add(Statement statement, int bracketBalanceValue) {
 		}
 		return currentBlock.add(statement, bracketBalanceValue);
 	}
-	return methodBody.add(statement, bracketBalanceValue, true);	
+	return this.methodBody.add(statement, bracketBalanceValue, true);
 }
 public RecoveredElement add(TypeDeclaration typeDeclaration, int bracketBalanceValue) {
 
 	/* do not consider a type starting passed the type end (if set)
 		it must be belonging to an enclosing type */
-	if (methodDeclaration.declarationSourceEnd != 0 
-		&& typeDeclaration.declarationSourceStart > methodDeclaration.declarationSourceEnd){
-			
+	if (this.methodDeclaration.declarationSourceEnd != 0
+		&& typeDeclaration.declarationSourceStart > this.methodDeclaration.declarationSourceEnd){
+
 		if (this.parent == null) {
 			return this; // ignore
 		}
 		return this.parent.add(typeDeclaration, bracketBalanceValue);
 	}
-	if ((typeDeclaration.bits & ASTNode.IsLocalType) != 0 || this.parser().methodRecoveryActivated || this.parser().statementRecoveryActivated){
-		if (methodBody == null){
+	if ((typeDeclaration.bits & ASTNode.IsLocalType) != 0 || parser().methodRecoveryActivated || parser().statementRecoveryActivated){
+		if (this.methodBody == null){
 			Block block = new Block(0);
-			block.sourceStart = methodDeclaration.bodyStart;
+			block.sourceStart = this.methodDeclaration.bodyStart;
 			this.add(block, 1);
 		}
-		methodBody.attachPendingModifiers(
+		this.methodBody.attachPendingModifiers(
 				this.pendingAnnotations,
 				this.pendingAnnotationCount,
 				this.pendingModifiers,
 				this.pendingModifersSourceStart);
-		this.resetPendingModifiers();
-		return methodBody.add(typeDeclaration, bracketBalanceValue, true);	
+		resetPendingModifiers();
+		return this.methodBody.add(typeDeclaration, bracketBalanceValue, true);
 	}
 	switch (TypeDeclaration.kind(typeDeclaration.modifiers)) {
 		case TypeDeclaration.INTERFACE_DECL :
 		case TypeDeclaration.ANNOTATION_TYPE_DECL :
 			resetPendingModifiers();
-			this.updateSourceEndIfNecessary(this.previousAvailableLineEnd(typeDeclaration.declarationSourceStart - 1));
+			this.updateSourceEndIfNecessary(previousAvailableLineEnd(typeDeclaration.declarationSourceStart - 1));
 			if (this.parent == null) {
 				return this; // ignore
 			}
 			// close the constructor
 			return this.parent.add(typeDeclaration, bracketBalanceValue);
 	}
-	if (localTypes == null) {
-		localTypes = new RecoveredType[5];
-		localTypeCount = 0;
+	if (this.localTypes == null) {
+		this.localTypes = new RecoveredType[5];
+		this.localTypeCount = 0;
 	} else {
-		if (localTypeCount == localTypes.length) {
+		if (this.localTypeCount == this.localTypes.length) {
 			System.arraycopy(
-				localTypes, 
-				0, 
-				(localTypes = new RecoveredType[2 * localTypeCount]), 
-				0, 
-				localTypeCount); 
+				this.localTypes,
+				0,
+				(this.localTypes = new RecoveredType[2 * this.localTypeCount]),
+				0,
+				this.localTypeCount);
 		}
 	}
 	RecoveredType element = new RecoveredType(typeDeclaration, this, bracketBalanceValue);
-	localTypes[localTypeCount++] = element;
+	this.localTypes[this.localTypeCount++] = element;
 
 	if(this.pendingAnnotationCount > 0) {
 		element.attach(
-				pendingAnnotations,
-				pendingAnnotationCount,
-				pendingModifiers,
-				pendingModifersSourceStart);
+				this.pendingAnnotations,
+				this.pendingAnnotationCount,
+				this.pendingModifiers,
+				this.pendingModifersSourceStart);
 	}
-	this.resetPendingModifiers();
-	
+	resetPendingModifiers();
+
 	/* consider that if the opening brace was not found, it is there */
-	if (!foundOpeningBrace){
-		foundOpeningBrace = true;
+	if (!this.foundOpeningBrace){
+		this.foundOpeningBrace = true;
 		this.bracketBalance++;
 	}
 	return element;
 }
 public boolean bodyStartsAtHeaderEnd(){
-	return methodDeclaration.bodyStart == methodDeclaration.sourceEnd+1;
+	return this.methodDeclaration.bodyStart == this.methodDeclaration.sourceEnd+1;
 }
-/* 
+/*
  * Answer the associated parsed structure
  */
 public ASTNode parseTree(){
-	return methodDeclaration;
+	return this.methodDeclaration;
 }
 public void resetPendingModifiers() {
 	this.pendingAnnotations = null;
@@ -326,56 +329,56 @@ public String toString(int tab) {
  * Update the bodyStart of the corresponding parse node
  */
 public void updateBodyStart(int bodyStart){
-	this.foundOpeningBrace = true;		
+	this.foundOpeningBrace = true;
 	this.methodDeclaration.bodyStart = bodyStart;
 }
-public AbstractMethodDeclaration updatedMethodDeclaration(){
+public AbstractMethodDeclaration updatedMethodDeclaration(int depth, Set knownTypes){
 	/* update annotations */
-	if (modifiers != 0) {
-		this.methodDeclaration.modifiers |= modifiers;
+	if (this.modifiers != 0) {
+		this.methodDeclaration.modifiers |= this.modifiers;
 		if (this.modifiersStart < this.methodDeclaration.declarationSourceStart) {
-			this.methodDeclaration.declarationSourceStart = modifiersStart;
+			this.methodDeclaration.declarationSourceStart = this.modifiersStart;
 		}
 	}
 	/* update annotations */
-	if (annotationCount > 0){
-		int existingCount = methodDeclaration.annotations == null ? 0 : methodDeclaration.annotations.length;
-		Annotation[] annotationReferences = new Annotation[existingCount + annotationCount];
+	if (this.annotationCount > 0){
+		int existingCount = this.methodDeclaration.annotations == null ? 0 : this.methodDeclaration.annotations.length;
+		Annotation[] annotationReferences = new Annotation[existingCount + this.annotationCount];
 		if (existingCount > 0){
-			System.arraycopy(methodDeclaration.annotations, 0, annotationReferences, annotationCount, existingCount);
+			System.arraycopy(this.methodDeclaration.annotations, 0, annotationReferences, this.annotationCount, existingCount);
 		}
-		for (int i = 0; i < annotationCount; i++){
-			annotationReferences[i] = annotations[i].updatedAnnotationReference();
+		for (int i = 0; i < this.annotationCount; i++){
+			annotationReferences[i] = this.annotations[i].updatedAnnotationReference();
 		}
-		methodDeclaration.annotations = annotationReferences;
-		
+		this.methodDeclaration.annotations = annotationReferences;
+
 		int start = this.annotations[0].annotation.sourceStart;
 		if (start < this.methodDeclaration.declarationSourceStart) {
 			this.methodDeclaration.declarationSourceStart = start;
 		}
 	}
-	
-	if (methodBody != null){
-		Block block = methodBody.updatedBlock();
+
+	if (this.methodBody != null){
+		Block block = this.methodBody.updatedBlock(depth, knownTypes);
 		if (block != null){
-			methodDeclaration.statements = block.statements;
-			
-			if (methodDeclaration.declarationSourceEnd == 0) {
-				methodDeclaration.declarationSourceEnd = block.sourceEnd;
-				methodDeclaration.bodyEnd = block.sourceEnd;
+			this.methodDeclaration.statements = block.statements;
+
+			if (this.methodDeclaration.declarationSourceEnd == 0) {
+				this.methodDeclaration.declarationSourceEnd = block.sourceEnd;
+				this.methodDeclaration.bodyEnd = block.sourceEnd;
 			}
 
 			/* first statement might be an explict constructor call destinated to a special slot */
-			if (methodDeclaration.isConstructor()) {
-				ConstructorDeclaration constructor = (ConstructorDeclaration)methodDeclaration;
-				if (methodDeclaration.statements != null
-					&& methodDeclaration.statements[0] instanceof ExplicitConstructorCall){
-					constructor.constructorCall = (ExplicitConstructorCall)methodDeclaration.statements[0];
-					int length = methodDeclaration.statements.length;
+			if (this.methodDeclaration.isConstructor()) {
+				ConstructorDeclaration constructor = (ConstructorDeclaration)this.methodDeclaration;
+				if (this.methodDeclaration.statements != null
+					&& this.methodDeclaration.statements[0] instanceof ExplicitConstructorCall){
+					constructor.constructorCall = (ExplicitConstructorCall)this.methodDeclaration.statements[0];
+					int length = this.methodDeclaration.statements.length;
 					System.arraycopy(
-						methodDeclaration.statements, 
-						1, 
-						(methodDeclaration.statements = new Statement[length-1]),
+						this.methodDeclaration.statements,
+						1,
+						(this.methodDeclaration.statements = new Statement[length-1]),
 						0,
 						length-1);
 					}
@@ -385,20 +388,20 @@ public AbstractMethodDeclaration updatedMethodDeclaration(){
 			}
 		}
 	} else {
-		if (methodDeclaration.declarationSourceEnd == 0) {
-			if (methodDeclaration.sourceEnd + 1 == methodDeclaration.bodyStart) {
+		if (this.methodDeclaration.declarationSourceEnd == 0) {
+			if (this.methodDeclaration.sourceEnd + 1 == this.methodDeclaration.bodyStart) {
 				// right brace is missing
-				methodDeclaration.declarationSourceEnd = methodDeclaration.sourceEnd;
-				methodDeclaration.bodyStart = methodDeclaration.sourceEnd;
-				methodDeclaration.bodyEnd = methodDeclaration.sourceEnd;
+				this.methodDeclaration.declarationSourceEnd = this.methodDeclaration.sourceEnd;
+				this.methodDeclaration.bodyStart = this.methodDeclaration.sourceEnd;
+				this.methodDeclaration.bodyEnd = this.methodDeclaration.sourceEnd;
 			} else {
-				methodDeclaration.declarationSourceEnd = methodDeclaration.bodyStart;
-				methodDeclaration.bodyEnd = methodDeclaration.bodyStart;
+				this.methodDeclaration.declarationSourceEnd = this.methodDeclaration.bodyStart;
+				this.methodDeclaration.bodyEnd = this.methodDeclaration.bodyStart;
 			}
 		}
 	}
-	if (localTypeCount > 0) methodDeclaration.bits |= ASTNode.HasLocalType;
-	return methodDeclaration;
+	if (this.localTypeCount > 0) this.methodDeclaration.bits |= ASTNode.HasLocalType;
+	return this.methodDeclaration;
 }
 /*
  * Update the corresponding parse node from parser state which
@@ -406,13 +409,13 @@ public AbstractMethodDeclaration updatedMethodDeclaration(){
  */
 public void updateFromParserState(){
 	// if parent is null then recovery already occured in diet parser.
-	if(this.bodyStartsAtHeaderEnd() && this.parent != null){
-		Parser parser = this.parser();
+	if(bodyStartsAtHeaderEnd() && this.parent != null){
+		Parser parser = parser();
 		/* might want to recover arguments or thrown exceptions */
 		if (parser.listLength > 0 && parser.astLengthPtr > 0){ // awaiting interface type references
 			/* has consumed the arguments - listed elements must be thrown exceptions */
-			if (methodDeclaration.sourceEnd == parser.rParenPos) {
-				
+			if (this.methodDeclaration.sourceEnd == parser.rParenPos) {
+
 				// protection for bugs 15142
 				int length = parser.astLengthStack[parser.astLengthPtr];
 				int astPtr = parser.astPtr - length;
@@ -428,7 +431,7 @@ public void updateFromParserState(){
 					}
 				}
 				if (canConsume){
-					parser.consumeMethodHeaderThrowsClause(); 
+					parser.consumeMethodHeaderThrowsClause();
 					// will reset typeListLength to zero
 					// thus this check will only be performed on first errorCheck after void foo() throws X, Y,
 				} else {
@@ -438,27 +441,27 @@ public void updateFromParserState(){
 				/* has not consumed arguments yet, listed elements must be arguments */
 				if (parser.currentToken == TokenNameLPAREN || parser.currentToken == TokenNameSEMICOLON){
 					/* if currentToken is parenthesis this last argument is a method/field signature */
-					parser.astLengthStack[parser.astLengthPtr] --; 
-					parser.astPtr --; 
+					parser.astLengthStack[parser.astLengthPtr] --;
+					parser.astPtr --;
 					parser.listLength --;
 					parser.currentToken = 0;
 				}
 				int argLength = parser.astLengthStack[parser.astLengthPtr];
 				int argStart = parser.astPtr - argLength + 1;
 				boolean needUpdateRParenPos = parser.rParenPos < parser.lParenPos; // 12387 : rParenPos will be used
-				
+
 				// remove unfinished annotation nodes
 				MemberValuePair[] memberValuePairs = null;
 				while (argLength > 0 && parser.astStack[parser.astPtr] instanceof MemberValuePair) {
 					System.arraycopy(parser.astStack, argStart, memberValuePairs = new MemberValuePair[argLength], 0, argLength);
 					parser.astLengthPtr--;
 					parser.astPtr -= argLength;
-					
+
 					argLength = parser.astLengthStack[parser.astLengthPtr];
 					argStart = parser.astPtr - argLength + 1;
 					needUpdateRParenPos = true;
 				}
-				
+
 				// to compute bodyStart, and thus used to set next checkpoint.
 				int count;
 				for (count = 0; count < argLength; count++){
@@ -470,23 +473,23 @@ public void updateFromParserState(){
 						if ((argument.modifiers & ~ClassFileConstants.AccFinal) != 0
 							|| (argTypeName.length == 1
 								&& CharOperation.equals(argTypeName[0], TypeBinding.VOID.sourceName()))){
-							parser.astLengthStack[parser.astLengthPtr] = count; 
-							parser.astPtr = argStart+count-1; 
+							parser.astLengthStack[parser.astLengthPtr] = count;
+							parser.astPtr = argStart+count-1;
 							parser.listLength = count;
 							parser.currentToken = 0;
 							break;
 						}
 						if (needUpdateRParenPos) parser.rParenPos = argument.sourceEnd + 1;
 					} else {
-						parser.astLengthStack[parser.astLengthPtr] = count; 
-						parser.astPtr = argStart+count-1; 
+						parser.astLengthStack[parser.astLengthPtr] = count;
+						parser.astPtr = argStart+count-1;
 						parser.listLength = count;
 						parser.currentToken = 0;
 						break;
 					}
 				}
 				if (parser.listLength > 0 && parser.astLengthPtr > 0){
-					
+
 					// protection for bugs 15142
 					int length = parser.astLengthStack[parser.astLengthPtr];
 					int astPtr = parser.astPtr - length;
@@ -505,13 +508,13 @@ public void updateFromParserState(){
 						parser.consumeMethodHeaderRightParen();
 						/* fix-up positions, given they were updated against rParenPos, which did not get set */
 						if (parser.currentElement == this){ // parameter addition might have added an awaiting (no return type) method - see 1FVXQZ4 */
-							methodDeclaration.sourceEnd = methodDeclaration.arguments[methodDeclaration.arguments.length-1].sourceEnd;
-							methodDeclaration.bodyStart = methodDeclaration.sourceEnd+1;
-							parser.lastCheckPoint = methodDeclaration.bodyStart;
+							this.methodDeclaration.sourceEnd = this.methodDeclaration.arguments[this.methodDeclaration.arguments.length-1].sourceEnd;
+							this.methodDeclaration.bodyStart = this.methodDeclaration.sourceEnd+1;
+							parser.lastCheckPoint = this.methodDeclaration.bodyStart;
 						}
 					}
 				}
-				
+
 				if(memberValuePairs != null) {
 					System.arraycopy(memberValuePairs, 0, parser.astStack, parser.astPtr + 1, memberValuePairs.length);
 					parser.astPtr += memberValuePairs.length;
@@ -547,9 +550,9 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 
 	/* in case the opening brace is close enough to the signature */
-	if (bracketBalance == 0){
+	if (this.bracketBalance == 0){
 		/*
-			if (parser.scanner.searchLineNumber(methodDeclaration.sourceEnd) 
+			if (parser.scanner.searchLineNumber(methodDeclaration.sourceEnd)
 				!= parser.scanner.searchLineNumber(braceEnd)){
 		 */
 		switch(parser().lastIgnoredToken){
@@ -557,14 +560,14 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 			case TokenNamethrows :
 				break;
 			default:
-				this.foundOpeningBrace = true;				
-				bracketBalance = 1; // pretend the brace was already there
+				this.foundOpeningBrace = true;
+				this.bracketBalance = 1; // pretend the brace was already there
 		}
-	}	
+	}
 	return super.updateOnOpeningBrace(braceStart, braceEnd);
 }
 public void updateParseTree(){
-	this.updatedMethodDeclaration();
+	updatedMethodDeclaration(0, new HashSet());
 }
 /*
  * Update the declarationSourceEnd of the corresponding parse node
@@ -581,46 +584,46 @@ public void updateSourceEndIfNecessary(int braceStart, int braceEnd){
 	}
 }
 public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengthPtr, int annotationStart, int bracketBalanceValue) {
-	if (pendingAnnotations == null) {
-		pendingAnnotations = new RecoveredAnnotation[5];
-		pendingAnnotationCount = 0;
+	if (this.pendingAnnotations == null) {
+		this.pendingAnnotations = new RecoveredAnnotation[5];
+		this.pendingAnnotationCount = 0;
 	} else {
-		if (pendingAnnotationCount == pendingAnnotations.length) {
+		if (this.pendingAnnotationCount == this.pendingAnnotations.length) {
 			System.arraycopy(
-				pendingAnnotations, 
-				0, 
-				(pendingAnnotations = new RecoveredAnnotation[2 * pendingAnnotationCount]), 
-				0, 
-				pendingAnnotationCount); 
+				this.pendingAnnotations,
+				0,
+				(this.pendingAnnotations = new RecoveredAnnotation[2 * this.pendingAnnotationCount]),
+				0,
+				this.pendingAnnotationCount);
 		}
 	}
-	
+
 	RecoveredAnnotation element = new RecoveredAnnotation(identifierPtr, identifierLengthPtr, annotationStart, this, bracketBalanceValue);
-	
-	pendingAnnotations[pendingAnnotationCount++] = element;
-	
+
+	this.pendingAnnotations[this.pendingAnnotationCount++] = element;
+
 	return element;
 }
 public void addModifier(int flag, int modifiersSourceStart) {
 	this.pendingModifiers |= flag;
-	
+
 	if (this.pendingModifersSourceStart < 0) {
 		this.pendingModifersSourceStart = modifiersSourceStart;
 	}
 }
 void attach(TypeParameter[] parameters, int startPos) {
-	if(methodDeclaration.modifiers != ClassFileConstants.AccDefault) return;
-	
+	if(this.methodDeclaration.modifiers != ClassFileConstants.AccDefault) return;
+
 	int lastParameterEnd = parameters[parameters.length - 1].sourceEnd;
-	
-	Parser parser = this.parser();
+
+	Parser parser = parser();
 	Scanner scanner = parser.scanner;
-	if(Util.getLineNumber(methodDeclaration.declarationSourceStart, scanner.lineEnds, 0, scanner.linePtr)
+	if(Util.getLineNumber(this.methodDeclaration.declarationSourceStart, scanner.lineEnds, 0, scanner.linePtr)
 			!= Util.getLineNumber(lastParameterEnd, scanner.lineEnds, 0, scanner.linePtr)) return;
-	
+
 	if(parser.modifiersSourceStart > lastParameterEnd
-			&& parser.modifiersSourceStart < methodDeclaration.declarationSourceStart) return;
-	
+			&& parser.modifiersSourceStart < this.methodDeclaration.declarationSourceStart) return;
+
 	if (this.methodDeclaration instanceof MethodDeclaration) {
 		((MethodDeclaration)this.methodDeclaration).typeParameters = parameters;
 		this.methodDeclaration.declarationSourceStart = startPos;
@@ -646,7 +649,7 @@ public void attach(RecoveredAnnotation[] annots, int annotCount, int mods, int m
 			this.annotationCount = annotCount;
 		}
 	}
-	
+
 	if (mods != 0) {
 		this.modifiers = mods;
 		this.modifiersStart = modsSourceStart;

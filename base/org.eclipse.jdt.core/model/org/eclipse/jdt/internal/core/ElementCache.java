@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,9 +18,9 @@ import org.eclipse.jdt.internal.core.util.LRUCache;
  * An LRU cache of <code>JavaElements</code>.
  */
 public class ElementCache extends OverflowingLRUCache {
-	
+
 	IJavaElement spaceLimitParent = null;
-	
+
 /**
  * Constructs a new element cache of the given size.
  */
@@ -41,7 +41,7 @@ public ElementCache(int size, int overflow) {
  * by closing the element.
  */
 protected boolean close(LRUCacheEntry entry) {
-	Openable element = (Openable) entry._fKey;
+	Openable element = (Openable) entry.key;
 	try {
 		if (!element.canBeRemovedFromCache()) {
 			return false;
@@ -60,12 +60,12 @@ protected boolean close(LRUCacheEntry entry) {
  */
 protected void ensureSpaceLimit(Object info, IJavaElement parent) {
 	// ensure the children can be put without closing other elements
-	int childrenSize = ((JavaElementInfo) info).children.length;
-	int spaceNeeded = 1 + (int)((1 + fLoadFactor) * (childrenSize + fOverflow));
-	if (fSpaceLimit < spaceNeeded) {
+	int childrenSize = ((JavaElementInfo) info).getChildren().length;
+	int spaceNeeded = 1 + (int)((1 + this.loadFactor) * (childrenSize + this.overflow));
+	if (this.spaceLimit < spaceNeeded) {
 		// parent is being opened with more children than the space limit
 		shrink(); // remove overflow
-		setSpaceLimit(spaceNeeded); 
+		setSpaceLimit(spaceNeeded);
 		this.spaceLimitParent = parent;
 	}
 }
@@ -73,8 +73,8 @@ protected void ensureSpaceLimit(Object info, IJavaElement parent) {
 /*
  * Returns a new instance of the receiver.
  */
-protected LRUCache newInstance(int size, int overflow) {
-	return new ElementCache(size, overflow);
+protected LRUCache newInstance(int size, int newOverflow) {
+	return new ElementCache(size, newOverflow);
 }
 
 /*

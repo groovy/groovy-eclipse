@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,7 @@ public class StringLiteralConcatenation extends StringLiteral {
 	private static final int INITIAL_SIZE = 5;
 	public Expression[] literals;
 	public int counter;
-	/**	
+	/**
 	 * Build a two-strings literal
 	 * */
 	public StringLiteralConcatenation(StringLiteral str1, StringLiteral str2) {
@@ -43,18 +43,18 @@ public class StringLiteralConcatenation extends StringLiteral {
 			System.arraycopy(this.literals, 0, this.literals = new StringLiteral[literalsLength + INITIAL_SIZE], 0, literalsLength);
 		}
 		//uddate the source
-		int length = source.length;
+		int length = this.source.length;
 		System.arraycopy(
-			source,
+			this.source,
 			0,
-			source = new char[length + lit.source.length],
+			this.source = new char[length + lit.source.length],
 			0,
 			length);
-		System.arraycopy(lit.source, 0, source, length, lit.source.length);
-		this.literals[this.counter++] = lit;		
+		System.arraycopy(lit.source, 0, this.source, length, lit.source.length);
+		this.literals[this.counter++] = lit;
 		return this;
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append("StringLiteralConcatenation{"); //$NON-NLS-1$
 		for (int i = 0, max = this.counter; i < max; i++) {
@@ -63,16 +63,16 @@ public class StringLiteralConcatenation extends StringLiteral {
 		}
 		return output.append('}');
 	}
-	
+
 	public char[] source() {
-		return source;
+		return this.source;
 	}
 
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			for (int i = 0, max = this.counter; i < max; i++) {
 				this.literals[i].traverse(visitor, scope);
-			}			
+			}
 		}
 		visitor.endVisit(this, scope);
 	}

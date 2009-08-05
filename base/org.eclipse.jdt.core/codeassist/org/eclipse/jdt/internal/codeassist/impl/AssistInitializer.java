@@ -26,11 +26,11 @@ public class AssistInitializer extends Initializer {
 		this.bindingCache = bindingCache;
 		this.infoCache = infoCache;
 	}
-	
+
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
-		return infoCache.get(this);
+		return this.infoCache.get(this);
 	}
-	
+
 	public IType getType(String typeName, int count) {
 		AssistSourceType type = new AssistSourceType(this, typeName, this.bindingCache, this.infoCache);
 		type.occurrenceCount = count;

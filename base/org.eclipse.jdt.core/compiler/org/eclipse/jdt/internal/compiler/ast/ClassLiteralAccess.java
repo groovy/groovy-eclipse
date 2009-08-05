@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class ClassLiteralAccess extends Expression {
-	
+
 	public TypeReference type;
 	public TypeBinding targetType;
 	FieldBinding syntheticField;
@@ -39,9 +39,9 @@ public class ClassLiteralAccess extends Expression {
 		SourceTypeBinding sourceType = currentScope.outerMostClassScope().enclosingSourceType();
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=22334
 		if (!sourceType.isInterface()
-				&& !targetType.isBaseType()
+				&& !this.targetType.isBaseType()
 				&& currentScope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_5) {
-			syntheticField = sourceType.addSyntheticFieldForClassLiteral(targetType, currentScope);
+			this.syntheticField = sourceType.addSyntheticFieldForClassLiteral(this.targetType, currentScope);
 		}
 		return flowInfo;
 	}
@@ -61,7 +61,7 @@ public class ClassLiteralAccess extends Expression {
 
 		// in interface case, no caching occurs, since cannot make a cache field for interface
 		if (valueRequired) {
-			codeStream.generateClassLiteralAccessForType(type.resolvedType, syntheticField);
+			codeStream.generateClassLiteralAccessForType(this.type.resolvedType, this.syntheticField);
 			codeStream.generateImplicitConversion(this.implicitConversion);
 		}
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
@@ -69,16 +69,16 @@ public class ClassLiteralAccess extends Expression {
 
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
-		return type.print(0, output).append(".class"); //$NON-NLS-1$
+		return this.type.print(0, output).append(".class"); //$NON-NLS-1$
 	}
 
 	public TypeBinding resolveType(BlockScope scope) {
 
-		constant = Constant.NotAConstant;
-		if ((targetType = type.resolveType(scope, true /* check bounds*/)) == null)
+		this.constant = Constant.NotAConstant;
+		if ((this.targetType = this.type.resolveType(scope, true /* check bounds*/)) == null)
 			return null;
 
-		if (targetType.isArrayType()) {
+		if (this.targetType.isArrayType()) {
 			ArrayBinding arrayBinding = (ArrayBinding) this.targetType;
 			TypeBinding leafComponentType = arrayBinding.leafComponentType;
 			if (leafComponentType == TypeBinding.VOID) {
@@ -88,16 +88,16 @@ public class ClassLiteralAccess extends Expression {
 				scope.problemReporter().illegalClassLiteralForTypeVariable((TypeVariableBinding)leafComponentType, this);
 			}
 		} else if (this.targetType.isTypeVariable()) {
-			scope.problemReporter().illegalClassLiteralForTypeVariable((TypeVariableBinding)targetType, this);
+			scope.problemReporter().illegalClassLiteralForTypeVariable((TypeVariableBinding)this.targetType, this);
 		}
 		ReferenceBinding classType = scope.getJavaLangClass();
 		if (classType.isGenericType()) {
 			// Integer.class --> Class<Integer>, perform boxing of base types (int.class --> Class<Integer>)
 			TypeBinding boxedType = null;
-			if (targetType.id == T_void) {
+			if (this.targetType.id == T_void) {
 				boxedType = scope.environment().getResolvedType(JAVA_LANG_VOID, scope);
 			} else {
-				boxedType = scope.boxing(targetType);
+				boxedType = scope.boxing(this.targetType);
 			}
 			this.resolvedType = scope.environment().createParameterizedType(classType, new TypeBinding[]{ boxedType }, null/*not a member*/);
 		} else {
@@ -111,7 +111,7 @@ public class ClassLiteralAccess extends Expression {
 		BlockScope blockScope) {
 
 		if (visitor.visit(this, blockScope)) {
-			type.traverse(visitor, blockScope);
+			this.type.traverse(visitor, blockScope);
 		}
 		visitor.endVisit(this, blockScope);
 	}

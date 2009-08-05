@@ -26,8 +26,8 @@ public class FieldInfo extends ClassFileStruct implements IBinaryField, Comparab
 	protected char[] name;
 	protected char[] signature;
 	protected int signatureUtf8Offset;
-	protected long tagBits;	
-	protected Object wrappedConstantValue;	
+	protected long tagBits;
+	protected Object wrappedConstantValue;
 
 public static FieldInfo createField(byte classFileBytes[], int offsets[], int offset) {
 	FieldInfo fieldInfo = new FieldInfo(classFileBytes, offsets, offset);
@@ -44,7 +44,7 @@ public static FieldInfo createField(byte classFileBytes[], int offsets[], int of
  */
 protected FieldInfo (byte classFileBytes[], int offsets[], int offset) {
 	super(classFileBytes, offsets, offset);
-	this.accessFlags = -1;	
+	this.accessFlags = -1;
 	this.signatureUtf8Offset = -1;
 }
 private AnnotationInfo[] decodeAnnotations(int offset, boolean runtimeVisible) {
@@ -76,16 +76,16 @@ private AnnotationInfo[] decodeAnnotations(int offset, boolean runtimeVisible) {
 	return null; // nothing to record
 }
 public int compareTo(Object o) {
-	return new String(this.getName()).compareTo(new String(((FieldInfo) o).getName()));
+	return new String(getName()).compareTo(new String(((FieldInfo) o).getName()));
 }
 public boolean equals(Object o) {
 	if (!(o instanceof FieldInfo)) {
 		return false;
 	}
-	return CharOperation.equals(this.getName(), ((FieldInfo) o).getName());
+	return CharOperation.equals(getName(), ((FieldInfo) o).getName());
 }
 public int hashCode() {
-	return CharOperation.hashCode(this.getName());
+	return CharOperation.hashCode(getName());
 }
 /**
  * Return the constant of the field.
@@ -93,11 +93,11 @@ public int hashCode() {
  * @return org.eclipse.jdt.internal.compiler.impl.Constant
  */
 public Constant getConstant() {
-	if (constant == null) {
+	if (this.constant == null) {
 		// read constant
 		readConstantAttribute();
 	}
-	return constant;
+	return this.constant;
 }
 public char[] getGenericSignature() {
 	if (this.signatureUtf8Offset != -1) {
@@ -128,12 +128,12 @@ public int getModifiers() {
  * @return char[]
  */
 public char[] getName() {
-	if (name == null) {
+	if (this.name == null) {
 		// read the name
-		int utf8Offset = constantPoolOffsets[u2At(2)] - structOffset;
-		name = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+		int utf8Offset = this.constantPoolOffsets[u2At(2)] - this.structOffset;
+		this.name = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 	}
-	return name;
+	return this.name;
 }
 public long getTagBits() {
 	return this.tagBits;
@@ -150,12 +150,12 @@ public long getTagBits() {
  * @return char[]
  */
 public char[] getTypeName() {
-	if (descriptor == null) {
+	if (this.descriptor == null) {
 		// read the signature
-		int utf8Offset = constantPoolOffsets[u2At(4)] - structOffset;
-		descriptor = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+		int utf8Offset = this.constantPoolOffsets[u2At(4)] - this.structOffset;
+		this.descriptor = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 	}
-	return descriptor;
+	return this.descriptor;
 }
 /**
  * @return the annotations or null if there is none.
@@ -255,7 +255,7 @@ private AnnotationInfo[] readAttributes() {
 						if (annotations == null) {
 							annotations = decodedAnnotations;
 						} else {
-							int length = annotations.length;			
+							int length = annotations.length;
 							AnnotationInfo[] combined = new AnnotationInfo[length + decodedAnnotations.length];
 							System.arraycopy(annotations, 0, combined, 0, length);
 							System.arraycopy(decodedAnnotations, 0, combined, length, decodedAnnotations.length);
@@ -274,68 +274,68 @@ private void readConstantAttribute() {
 	int readOffset = 8;
 	boolean isConstant = false;
 	for (int i = 0; i < attributesCount; i++) {
-		int utf8Offset = constantPoolOffsets[u2At(readOffset)] - structOffset;
+		int utf8Offset = this.constantPoolOffsets[u2At(readOffset)] - this.structOffset;
 		char[] attributeName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 		if (CharOperation
 			.equals(attributeName, AttributeNamesConstants.ConstantValueName)) {
 			isConstant = true;
 			// read the right constant
-			int relativeOffset = constantPoolOffsets[u2At(readOffset + 6)] - structOffset;
+			int relativeOffset = this.constantPoolOffsets[u2At(readOffset + 6)] - this.structOffset;
 			switch (u1At(relativeOffset)) {
 				case ClassFileConstants.IntegerTag :
 					char[] sign = getTypeName();
 					if (sign.length == 1) {
 						switch (sign[0]) {
 							case 'Z' : // boolean constant
-								constant = BooleanConstant.fromValue(i4At(relativeOffset + 1) == 1);
+								this.constant = BooleanConstant.fromValue(i4At(relativeOffset + 1) == 1);
 								break;
 							case 'I' : // integer constant
-								constant = IntConstant.fromValue(i4At(relativeOffset + 1));
+								this.constant = IntConstant.fromValue(i4At(relativeOffset + 1));
 								break;
 							case 'C' : // char constant
-								constant = CharConstant.fromValue((char) i4At(relativeOffset + 1));
+								this.constant = CharConstant.fromValue((char) i4At(relativeOffset + 1));
 								break;
 							case 'B' : // byte constant
-								constant = ByteConstant.fromValue((byte) i4At(relativeOffset + 1));
+								this.constant = ByteConstant.fromValue((byte) i4At(relativeOffset + 1));
 								break;
 							case 'S' : // short constant
-								constant = ShortConstant.fromValue((short) i4At(relativeOffset + 1));
+								this.constant = ShortConstant.fromValue((short) i4At(relativeOffset + 1));
 								break;
 							default:
-								constant = Constant.NotAConstant;                   
+								this.constant = Constant.NotAConstant;
 						}
 					} else {
-						constant = Constant.NotAConstant;
+						this.constant = Constant.NotAConstant;
 					}
 					break;
 				case ClassFileConstants.FloatTag :
-					constant = FloatConstant.fromValue(floatAt(relativeOffset + 1));
+					this.constant = FloatConstant.fromValue(floatAt(relativeOffset + 1));
 					break;
 				case ClassFileConstants.DoubleTag :
-					constant = DoubleConstant.fromValue(doubleAt(relativeOffset + 1));
+					this.constant = DoubleConstant.fromValue(doubleAt(relativeOffset + 1));
 					break;
 				case ClassFileConstants.LongTag :
-					constant = LongConstant.fromValue(i8At(relativeOffset + 1));
+					this.constant = LongConstant.fromValue(i8At(relativeOffset + 1));
 					break;
 				case ClassFileConstants.StringTag :
-					utf8Offset = constantPoolOffsets[u2At(relativeOffset + 1)] - structOffset;
-					constant = 
+					utf8Offset = this.constantPoolOffsets[u2At(relativeOffset + 1)] - this.structOffset;
+					this.constant =
 						StringConstant.fromValue(
-							String.valueOf(utf8At(utf8Offset + 3, u2At(utf8Offset + 1)))); 
+							String.valueOf(utf8At(utf8Offset + 3, u2At(utf8Offset + 1))));
 					break;
 			}
 		}
 		readOffset += (6 + u4At(readOffset + 2));
 	}
 	if (!isConstant) {
-		constant = Constant.NotAConstant;
+		this.constant = Constant.NotAConstant;
 	}
 }
 private void readModifierRelatedAttributes() {
 	int attributesCount = u2At(6);
 	int readOffset = 8;
 	for (int i = 0; i < attributesCount; i++) {
-		int utf8Offset = constantPoolOffsets[u2At(readOffset)] - structOffset;
+		int utf8Offset = this.constantPoolOffsets[u2At(readOffset)] - this.structOffset;
 		char[] attributeName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 		// test added for obfuscated .class file. See 79772
 		if (attributeName.length != 0) {
@@ -355,17 +355,17 @@ private void readModifierRelatedAttributes() {
 }
 /**
  * Answer the size of the receiver in bytes.
- * 
+ *
  * @return int
  */
 public int sizeInBytes() {
-	return attributeBytes;
+	return this.attributeBytes;
 }
 public void throwFormatException() throws ClassFormatException {
 	throw new ClassFormatException(ClassFormatException.ErrBadFieldInfo);
 }
 public String toString() {
-	StringBuffer buffer = new StringBuffer(this.getClass().getName());	
+	StringBuffer buffer = new StringBuffer(getClass().getName());
 	toStringContent(buffer);
 	return buffer.toString();
 }
@@ -388,6 +388,6 @@ protected void toStringContent(StringBuffer buffer) {
 		.append(' ')
 		.append(getConstant())
 		.append('}')
-		.toString(); 
+		.toString();
 }
 }

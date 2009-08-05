@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
  * HashSet of char[][]
  */
 public final class HashSetOfCharArrayArray implements Cloneable {
-	
+
 	// to avoid using Enumerations, walk the individual tables skipping nulls
 	public char[][][] set;
 
@@ -67,14 +67,14 @@ public final class HashSetOfCharArrayArray implements Cloneable {
 	private int hashCode(char[][] element) {
 		return hashCode(element, element.length);
 	}
-	
+
 	private int hashCode(char[][] element, int length) {
 		int hash = 0;
 		for (int i = length-1; i >= 0; i--)
 			hash = Util.combineHashCodes(hash, CharOperation.hashCode(element[i]));
 		return hash & 0x7FFFFFFF;
 	}
-	
+
 	public char[][] add(char[][] array) {
 		int length = this.set.length;
 		int index = hashCode(array) % length;
@@ -90,7 +90,7 @@ public final class HashSetOfCharArrayArray implements Cloneable {
 		this.set[index] = array;
 
 		// assumes the threshold is never equal to the size of the table
-		if (++this.elementSize > threshold)
+		if (++this.elementSize > this.threshold)
 			rehash();
 		return array;
 	}
@@ -116,7 +116,7 @@ public final class HashSetOfCharArrayArray implements Cloneable {
 	}
 
 	private void rehash() {
-		HashSetOfCharArrayArray newHashSet = new HashSetOfCharArrayArray(elementSize * 2);		// double the number of expected elements
+		HashSetOfCharArrayArray newHashSet = new HashSetOfCharArrayArray(this.elementSize * 2);		// double the number of expected elements
 		char[][] currentArray;
 		for (int i = this.set.length; --i >= 0;)
 			if ((currentArray = this.set[i]) != null)
@@ -127,7 +127,7 @@ public final class HashSetOfCharArrayArray implements Cloneable {
 	}
 
 	public int size() {
-		return elementSize;
+		return this.elementSize;
 	}
 
 	public String toString() {
@@ -143,11 +143,11 @@ public final class HashSetOfCharArrayArray implements Cloneable {
 						buffer.append('\'');
 						buffer.append(array[k]);
 						buffer.append('\'');
-						if (k != length3-1) 
+						if (k != length3-1)
 							buffer.append(", "); //$NON-NLS-1$
 					}
 					buffer.append('}');
-					if (j != length2-1) 
+					if (j != length2-1)
 						buffer.append(", "); //$NON-NLS-1$
 				}
 				buffer.append("}");  //$NON-NLS-1$

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,11 +22,11 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 public class BufferFactoryWrapper extends WorkingCopyOwner {
 
 	public org.eclipse.jdt.core.IBufferFactory factory;
-		
+
 	private BufferFactoryWrapper(org.eclipse.jdt.core.IBufferFactory factory) {
 		this.factory = factory;
 	}
-	
+
 	public static WorkingCopyOwner create(org.eclipse.jdt.core.IBufferFactory factory) {
 		return new BufferFactoryWrapper(factory);
 	}
@@ -37,8 +37,8 @@ public class BufferFactoryWrapper extends WorkingCopyOwner {
 	public IBuffer createBuffer(ICompilationUnit workingCopy) {
 		if (this.factory == null) return super.createBuffer(workingCopy);
 		return this.factory.createBuffer(workingCopy);
-	}	
-	
+	}
+
 	public boolean equals(Object obj) {
 		if (!(obj instanceof BufferFactoryWrapper)) return false;
 		BufferFactoryWrapper other = (BufferFactoryWrapper)obj;

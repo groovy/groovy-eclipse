@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 public class JavaCorePreferenceModifyListener extends PreferenceModifyListener {
-	
+
 	static int PREFIX_LENGTH = JavaModelManager.CP_CONTAINER_PREFERENCES_PREFIX.length();
 	JavaModel javaModel = JavaModelManager.getJavaModelManager().getJavaModel();
 
@@ -30,7 +30,7 @@ public class JavaCorePreferenceModifyListener extends PreferenceModifyListener {
 		cleanJavaCore(instance.node(JavaCore.PLUGIN_ID));
 		return super.preApply(node);
 	}
-	
+
 	/**
 	 * Clean imported preferences from obsolete keys.
 	 *
@@ -53,7 +53,7 @@ public class JavaCorePreferenceModifyListener extends PreferenceModifyListener {
 	/**
 	 * Returns whether a java project referenced in property key
 	 * is still longer accessible or not.
-	 * 
+	 *
 	 * @param propertyName
 	 * @return true if a project is referenced in given key and this project
 	 * 	is still accessible, false otherwise.
@@ -62,7 +62,7 @@ public class JavaCorePreferenceModifyListener extends PreferenceModifyListener {
 		int index = propertyName.indexOf('|', PREFIX_LENGTH);
 		if (index > 0) {
 			final String projectName = propertyName.substring(PREFIX_LENGTH, index).trim();
-			JavaProject project = (JavaProject) javaModel.getJavaProject(projectName);
+			JavaProject project = (JavaProject) this.javaModel.getJavaProject(projectName);
 			if (project.getProject().isAccessible()) {
 				return true;
 			}

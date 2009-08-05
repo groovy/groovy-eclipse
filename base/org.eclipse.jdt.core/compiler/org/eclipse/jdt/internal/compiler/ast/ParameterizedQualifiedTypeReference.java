@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 	 * @param positions
 	 */
 	public ParameterizedQualifiedTypeReference(char[][] tokens, TypeReference[][] typeArguments, int dim, long[] positions) {
-	    
+
 		super(tokens, dim, positions);
 		this.typeArguments = typeArguments;
 	}
@@ -47,20 +47,19 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 		if (index > 0 &&  type.enclosingType() != null) {
 			checkBounds(type.enclosingType(), scope, index - 1);
 		}
-		if (type.isParameterizedType()) {
+		if (type.isParameterizedTypeWithActualArguments()) {
 			ParameterizedTypeBinding parameterizedType = (ParameterizedTypeBinding) type;
 			ReferenceBinding currentType = parameterizedType.genericType();
 			TypeVariableBinding[] typeVariables = currentType.typeVariables();
-			TypeBinding[] argTypes = parameterizedType.arguments;
-			if (argTypes != null && typeVariables != null) { // argTypes may be null in error cases
+			if (typeVariables != null) { // argTypes may be null in error cases
 				parameterizedType.boundCheck(scope, this.typeArguments[index]);
 			}
 		}
 	}
 	public TypeReference copyDims(int dim){
 		return new ParameterizedQualifiedTypeReference(this.tokens, this.typeArguments, dim, this.sourcePositions);
-	}	
-	
+	}
+
 	/**
 	 * @return char[][]
 	 */
@@ -82,7 +81,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 				buffer.append('>');
 				int nameLength = buffer.length();
 				qParamName[i] = new char[nameLength];
-				buffer.getChars(0, nameLength, qParamName[i], 0);		
+				buffer.getChars(0, nameLength, qParamName[i], 0);
 			}
 		}
 		int dim = this.dimensions;
@@ -96,15 +95,15 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 			qParamName[length-1] = CharOperation.concat(qParamName[length-1], dimChars);
 		}
 		return qParamName;
-	}	
-	
+	}
+
 	/* (non-Javadoc)
      * @see org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference#getTypeBinding(org.eclipse.jdt.internal.compiler.lookup.Scope)
      */
     protected TypeBinding getTypeBinding(Scope scope) {
         return null; // not supported here - combined with resolveType(...)
     }
-    
+
     /*
      * No need to check for reference to raw type per construction
      */
@@ -262,6 +261,8 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 				// check argument type compatibility
 				if (checkBounds) // otherwise will do it in Scope.connectTypeVariables() or generic method resolution
 					parameterizedType.boundCheck(scope, args);
+				else
+					scope.deferBoundCheck(this);
 				qualifyingType = parameterizedType;
 		    } else {
 				ReferenceBinding currentOriginal = (ReferenceBinding)currentType.original();
@@ -292,12 +293,12 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 		}
 		return this.resolvedType;
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
-		int length = tokens.length;
+		int length = this.tokens.length;
 		for (int i = 0; i < length - 1; i++) {
-			output.append(tokens[i]);
-			TypeReference[] typeArgument = typeArguments[i];
+			output.append(this.tokens[i]);
+			TypeReference[] typeArgument = this.typeArguments[i];
 			if (typeArgument != null) {
 				output.append('<');
 				int max = typeArgument.length - 1;
@@ -310,8 +311,8 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 			}
 			output.append('.');
 		}
-		output.append(tokens[length - 1]);
-		TypeReference[] typeArgument = typeArguments[length - 1];
+		output.append(this.tokens[length - 1]);
+		TypeReference[] typeArgument = this.typeArguments[length - 1];
 		if (typeArgument != null) {
 			output.append('<');
 			int max = typeArgument.length - 1;
@@ -323,21 +324,21 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 			output.append('>');
 		}
 		if ((this.bits & IsVarArgs) != 0) {
-			for (int i= 0 ; i < dimensions - 1; i++) {
+			for (int i= 0 ; i < this.dimensions - 1; i++) {
 				output.append("[]"); //$NON-NLS-1$
 			}
 			output.append("..."); //$NON-NLS-1$
 		} else {
-			for (int i= 0 ; i < dimensions; i++) {
+			for (int i= 0 ; i < this.dimensions; i++) {
 				output.append("[]"); //$NON-NLS-1$
 			}
 		}
 		return output;
-	}	
-	
+	}
+
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
 	    return internalResolveType(scope, checkBounds);
-	}	
+	}
 	public TypeBinding resolveType(ClassScope scope) {
 	    return internalResolveType(scope, false);
 	}
@@ -353,7 +354,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 		}
 		visitor.endVisit(this, scope);
 	}
-	
+
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			for (int i = 0, max = this.typeArguments.length; i < max; i++) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,8 +11,11 @@
 package org.eclipse.jdt.internal.compiler.parser;
 
 /**
- * Internal local variable structure for parsing recovery 
+ * Internal local variable structure for parsing recovery
  */
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
@@ -25,10 +28,10 @@ public class RecoveredLocalVariable extends RecoveredStatement {
 
 	public RecoveredAnnotation[] annotations;
 	public int annotationCount;
-	
+
 	public int modifiers;
 	public int modifiersStart;
-	
+
 	public LocalDeclaration localDeclaration;
 	boolean alreadyCompletedLocalInitialization;
 public RecoveredLocalVariable(LocalDeclaration localDeclaration, RecoveredElement parent, int bracketBalance){
@@ -37,7 +40,7 @@ public RecoveredLocalVariable(LocalDeclaration localDeclaration, RecoveredElemen
 	this.alreadyCompletedLocalInitialization = localDeclaration.initialization != null;
 }
 /*
- * Record an expression statement if local variable is expecting an initialization expression. 
+ * Record an expression statement if local variable is expecting an initialization expression.
  */
 public RecoveredElement add(Statement stmt, int bracketBalanceValue) {
 
@@ -68,17 +71,17 @@ public void attach(RecoveredAnnotation[] annots, int annotCount, int mods, int m
 			this.annotationCount = annotCount;
 		}
 	}
-	
+
 	if (mods != 0) {
 		this.modifiers = mods;
 		this.modifiersStart = modsSourceStart;
 	}
 }
-/* 
+/*
  * Answer the associated parsed structure
  */
 public ASTNode parseTree(){
-	return localDeclaration;
+	return this.localDeclaration;
 }
 /*
  * Answer the very source end of the corresponding parse node
@@ -86,35 +89,35 @@ public ASTNode parseTree(){
 public int sourceEnd(){
 	return this.localDeclaration.declarationSourceEnd;
 }
-public String toString(int tab) {	
-	return tabString(tab) + "Recovered local variable:\n" + localDeclaration.print(tab + 1, new StringBuffer(10)); //$NON-NLS-1$
+public String toString(int tab) {
+	return tabString(tab) + "Recovered local variable:\n" + this.localDeclaration.print(tab + 1, new StringBuffer(10)); //$NON-NLS-1$
 }
-public Statement updatedStatement(){
+public Statement updatedStatement(int depth, Set knownTypes){
 	/* update annotations */
-	if (modifiers != 0) {
-		this.localDeclaration.modifiers |= modifiers;
+	if (this.modifiers != 0) {
+		this.localDeclaration.modifiers |= this.modifiers;
 		if (this.modifiersStart < this.localDeclaration.declarationSourceStart) {
-			this.localDeclaration.declarationSourceStart = modifiersStart;
+			this.localDeclaration.declarationSourceStart = this.modifiersStart;
 		}
 	}
 	/* update annotations */
-	if (annotationCount > 0){
-		int existingCount = localDeclaration.annotations == null ? 0 : localDeclaration.annotations.length;
-		Annotation[] annotationReferences = new Annotation[existingCount + annotationCount];
+	if (this.annotationCount > 0){
+		int existingCount = this.localDeclaration.annotations == null ? 0 : this.localDeclaration.annotations.length;
+		Annotation[] annotationReferences = new Annotation[existingCount + this.annotationCount];
 		if (existingCount > 0){
-			System.arraycopy(localDeclaration.annotations, 0, annotationReferences, annotationCount, existingCount);
+			System.arraycopy(this.localDeclaration.annotations, 0, annotationReferences, this.annotationCount, existingCount);
 		}
-		for (int i = 0; i < annotationCount; i++){
-			annotationReferences[i] = annotations[i].updatedAnnotationReference();
+		for (int i = 0; i < this.annotationCount; i++){
+			annotationReferences[i] = this.annotations[i].updatedAnnotationReference();
 		}
-		localDeclaration.annotations = annotationReferences;
-		
+		this.localDeclaration.annotations = annotationReferences;
+
 		int start = this.annotations[0].annotation.sourceStart;
 		if (start < this.localDeclaration.declarationSourceStart) {
 			this.localDeclaration.declarationSourceStart = start;
 		}
 	}
-	return localDeclaration;
+	return this.localDeclaration;
 }
 /*
  * A closing brace got consumed, might have closed the current element,
@@ -123,13 +126,13 @@ public Statement updatedStatement(){
  * Fields have no associated braces, thus if matches, then update parent.
  */
 public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
-	if (bracketBalance > 0){ // was an array initializer
-		bracketBalance--;
-		if (bracketBalance == 0) alreadyCompletedLocalInitialization = true;
+	if (this.bracketBalance > 0){ // was an array initializer
+		this.bracketBalance--;
+		if (this.bracketBalance == 0) this.alreadyCompletedLocalInitialization = true;
 		return this;
 	}
-	if (parent != null){
-		return parent.updateOnClosingBrace(braceStart, braceEnd);
+	if (this.parent != null){
+		return this.parent.updateOnClosingBrace(braceStart, braceEnd);
 	}
 	return this;
 }
@@ -138,18 +141,18 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
  * in which case the bodyStart is updated.
  */
 public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
-	if (localDeclaration.declarationSourceEnd == 0 
-		&& (localDeclaration.type instanceof ArrayTypeReference || localDeclaration.type instanceof ArrayQualifiedTypeReference)
-		&& !alreadyCompletedLocalInitialization){
-		bracketBalance++;
+	if (this.localDeclaration.declarationSourceEnd == 0
+		&& (this.localDeclaration.type instanceof ArrayTypeReference || this.localDeclaration.type instanceof ArrayQualifiedTypeReference)
+		&& !this.alreadyCompletedLocalInitialization){
+		this.bracketBalance++;
 		return null; // no update is necessary	(array initializer)
 	}
 	// might be an array initializer
-	this.updateSourceEndIfNecessary(braceStart - 1, braceEnd - 1);	
-	return this.parent.updateOnOpeningBrace(braceStart, braceEnd);	
+	this.updateSourceEndIfNecessary(braceStart - 1, braceEnd - 1);
+	return this.parent.updateOnOpeningBrace(braceStart, braceEnd);
 }
 public void updateParseTree(){
-	this.updatedStatement();
+	updatedStatement(0, new HashSet());
 }
 /*
  * Update the declarationSourceEnd of the corresponding parse node
@@ -157,7 +160,7 @@ public void updateParseTree(){
 public void updateSourceEndIfNecessary(int bodyStart, int bodyEnd){
 	if (this.localDeclaration.declarationSourceEnd == 0) {
 		this.localDeclaration.declarationSourceEnd = bodyEnd;
-		this.localDeclaration.declarationEnd = bodyEnd;	
+		this.localDeclaration.declarationEnd = bodyEnd;
 	}
 }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,14 +23,14 @@ import org.eclipse.jface.text.Position;
  * Minimal implementation of IDocument to apply text edit onto a string.
  */
 public class SimpleDocument implements IDocument {
-	
+
 	private StringBuffer buffer;
 
-	
+
 	public SimpleDocument(String source) {
 		this.buffer = new StringBuffer(source);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.text.IDocument#getChar(int)
 	 */
@@ -70,7 +70,7 @@ public class SimpleDocument implements IDocument {
 	 * @see org.eclipse.jface.text.IDocument#replace(int, int, java.lang.String)
 	 */
 	public void replace(int offset, int length, String text) {
-		
+
 		this.buffer.replace(offset, offset + length, text);
 	}
 

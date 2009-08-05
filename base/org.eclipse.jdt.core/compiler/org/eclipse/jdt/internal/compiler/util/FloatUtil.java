@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@ package org.eclipse.jdt.internal.compiler.util;
 
 /**
  * Internal utility for declaing with hexadecimal double and float literals.
- * 
+ *
  * @since 3.1
  */
 public class FloatUtil {
@@ -22,7 +22,7 @@ public class FloatUtil {
 	private static final int DOUBLE_PRECISION = 53;
 
 	private static final int MAX_DOUBLE_EXPONENT = +1023;
-	
+
 	private static final int MIN_NORMALIZED_DOUBLE_EXPONENT = -1022;
 
 	private static final int MIN_UNNORMALIZED_DOUBLE_EXPONENT = MIN_NORMALIZED_DOUBLE_EXPONENT
@@ -48,7 +48,7 @@ public class FloatUtil {
 	private static final int SINGLE_EXPONENT_SHIFT = 23;
 
 	/**
-	 * Returns the float value corresponding to the given 
+	 * Returns the float value corresponding to the given
 	 * hexadecimal floating-point single precision literal.
 	 * The literal must be syntactially correct, and must be
 	 * a float literal (end in a 'f' or 'F'). It must not
@@ -59,10 +59,10 @@ public class FloatUtil {
 	 * Float.parseFloat(new String(source)) does in JDK 1.5,
 	 * except that this method returns Floal.NaN if it
 	 * would underflow to 0 (parseFloat just returns 0).
-	 * The method handles all the tricky cases, including 
+	 * The method handles all the tricky cases, including
 	 * fraction rounding to 24 bits and gradual underflow.
 	 * </p>
-	 * 
+	 *
 	 * @param source source string containing single precision
 	 * hexadecimal floating-point literal
 	 * @return the float value, including Float.POSITIVE_INFINITY
@@ -75,7 +75,7 @@ public class FloatUtil {
 	}
 
 	/**
-	 * Returns the double value corresponding to the given 
+	 * Returns the double value corresponding to the given
 	 * hexadecimal floating-point double precision literal.
 	 * The literal must be syntactially correct, and must be
 	 * a double literal (end in an optional 'd' or 'D').
@@ -86,10 +86,10 @@ public class FloatUtil {
 	 * Double.parseDouble(new String(source)) does in JDK 1.5,
 	 * except that this method throw NumberFormatException in
 	 * the case of overflow to infinity or underflow to 0.
-	 * The method handles all the tricky cases, including 
+	 * The method handles all the tricky cases, including
 	 * fraction rounding to 53 bits and gradual underflow.
 	 * </p>
-	 * 
+	 *
 	 * @param source source string containing double precision
 	 * hexadecimal floating-point literal
 	 * @return the double value, including Double.POSITIVE_INFINITY
@@ -107,9 +107,9 @@ public class FloatUtil {
 	 * double-precision (double) IEEE floating point number.
 	 * The literal must be syntactially correct.  It must not
 	 * include either leading or trailing whitespace or a sign.
-	 * 
+	 *
 	 * @param source source string containing hexadecimal floating-point literal
-	 * @return for double precision literals, bits suitable 
+	 * @return for double precision literals, bits suitable
 	 * for passing to Double.longBitsToDouble; for single precision literals,
 	 * bits suitable for passing to Single.intBitsToDouble in the bottom
 	 * 32 bits of the result
@@ -302,7 +302,7 @@ public class FloatUtil {
 				}
 			}
 		}
-		
+
 		// Step 9: convert double literals to IEEE double
 		long result = 0L;
 		if (doublePrecision) {
@@ -327,15 +327,15 @@ public class FloatUtil {
 			int scaleFactor = 0; // how many bits to move '.' to before leading hex digit
 			if (mantissaBits > 0) {
 				if (leadingDigitPosition < binaryPointPosition) {
-					// e.g., 0x80.0p0 has scaleFactor == +8 
+					// e.g., 0x80.0p0 has scaleFactor == +8
 					scaleFactor = 4 * (binaryPointPosition - leadingDigitPosition);
-					// e.g., 0x10.0p0 has scaleFactorCompensation == +3 
+					// e.g., 0x10.0p0 has scaleFactorCompensation == +3
 					scaleFactor -= scaleFactorCompensation;
 				} else {
-					// e.g., 0x0.08p0 has scaleFactor == -4 
+					// e.g., 0x0.08p0 has scaleFactor == -4
 					scaleFactor = -4
 							* (leadingDigitPosition - binaryPointPosition - 1);
-					// e.g., 0x0.01p0 has scaleFactorCompensation == +3 
+					// e.g., 0x0.01p0 has scaleFactorCompensation == +3
 					scaleFactor -= scaleFactorCompensation;
 				}
 			}
@@ -384,15 +384,15 @@ public class FloatUtil {
 		int scaleFactor = 0; // how many bits to move '.' to before leading hex digit
 		if (mantissaBits > 0) {
 			if (leadingDigitPosition < binaryPointPosition) {
-				// e.g., 0x80.0p0 has scaleFactor == +8 
+				// e.g., 0x80.0p0 has scaleFactor == +8
 				scaleFactor = 4 * (binaryPointPosition - leadingDigitPosition);
-				// e.g., 0x10.0p0 has scaleFactorCompensation == +3 
+				// e.g., 0x10.0p0 has scaleFactorCompensation == +3
 				scaleFactor -= scaleFactorCompensation;
 			} else {
-				// e.g., 0x0.08p0 has scaleFactor == -4 
+				// e.g., 0x0.08p0 has scaleFactor == -4
 				scaleFactor = -4
 						* (leadingDigitPosition - binaryPointPosition - 1);
-				// e.g., 0x0.01p0 has scaleFactorCompensation == +3 
+				// e.g., 0x0.01p0 has scaleFactorCompensation == +3
 				scaleFactor -= scaleFactorCompensation;
 			}
 		}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,7 +32,7 @@ import org.osgi.service.prefs.BackingStoreException;
  *
  */
 public class UserLibraryManager {
-	
+
 	public final static String CP_USERLIBRARY_PREFERENCES_PREFIX = JavaCore.PLUGIN_ID+".userLibrary."; //$NON-NLS-1$
 
 	private Map userLibraries;
@@ -40,23 +40,23 @@ public class UserLibraryManager {
 	public UserLibraryManager() {
 		initialize();
 	}
-		
+
 	/*
 	 * Gets the library for a given name or <code>null</code> if no such library exists.
 	 */
 	public synchronized UserLibrary getUserLibrary(String libName) {
 		return (UserLibrary) this.userLibraries.get(libName);
 	}
-	
+
 	/*
 	 * Returns the names of all defined user libraries. The corresponding classpath container path
-	 * is the name appended to the CONTAINER_ID.  
+	 * is the name appended to the CONTAINER_ID.
 	 */
 	public synchronized String[] getUserLibraryNames() {
 		Set set = this.userLibraries.keySet();
 		return (String[]) set.toArray(new String[set.size()]);
 	}
-	
+
 	private void initialize() {
 		this.userLibraries = new HashMap();
 		IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
@@ -113,21 +113,21 @@ public class UserLibraryManager {
 						if (containerPath.equals(entry.getPath())) {
 							affectedProjects.add(javaProject);
 							break;
-						}				
+						}
 					}
 				}
 			}
-			
+
 			// decode user library
 			UserLibrary userLibrary = encodedUserLibrary == null ? null : UserLibrary.createFromString(new StringReader(encodedUserLibrary));
-			
+
 			// update user libraries map
 			if (userLibrary != null) {
 				this.userLibraries.put(libName, userLibrary);
 			} else {
 				this.userLibraries.remove(libName);
 			}
-			
+
 			// update affected projects
 			int length = affectedProjects.size();
 			if (length == 0)
@@ -148,7 +148,7 @@ public class UserLibraryManager {
 			Util.log(e, "Exception while setting user library '"+ libName +"'."); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
-	
+
 	public synchronized void removeUserLibrary(String libName)  {
 		IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
 		String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX+libName;
@@ -160,7 +160,7 @@ public class UserLibraryManager {
 		}
 		// this.userLibraries was updated during the PreferenceChangeEvent (see preferenceChange(...))
 	}
-	
+
 	public synchronized void setUserLibrary(String libName, IClasspathEntry[] entries, boolean isSystemLibrary)  {
 		IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
 		String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX+libName;
@@ -178,5 +178,5 @@ public class UserLibraryManager {
 		}
 		// this.userLibraries was updated during the PreferenceChangeEvent (see preferenceChange(...))
 	}
-	
+
 }

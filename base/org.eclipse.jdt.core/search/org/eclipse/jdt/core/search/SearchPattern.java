@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,13 +10,23 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.search;
 
+import java.io.IOException;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 import org.eclipse.jdt.internal.core.LocalVariable;
+import org.eclipse.jdt.internal.core.index.EntryResult;
+import org.eclipse.jdt.internal.core.index.Index;
+import org.eclipse.jdt.internal.core.search.IndexQueryRequestor;
+import org.eclipse.jdt.internal.core.search.JavaSearchScope;
+import org.eclipse.jdt.internal.core.search.StringOperation;
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 import org.eclipse.jdt.internal.core.search.matching.*;
 
@@ -26,15 +36,15 @@ import org.eclipse.jdt.internal.core.search.matching.*;
  * to create a search pattern.
  * <p>
  * Search patterns are used during the search phase to decode index entries that were added during the indexing phase
- * (see {@link SearchDocument#addIndexEntry(char[], char[])}). When an index is queried, the 
+ * (see {@link SearchDocument#addIndexEntry(char[], char[])}). When an index is queried, the
  * index categories and keys to consider are retrieved from the search pattern using {@link #getIndexCategories()} and
  * {@link #getIndexKey()}, as well as the match rule (see {@link #getMatchRule()}). A blank pattern is
  * then created (see {@link #getBlankPattern()}). This blank pattern is used as a record as follows.
- * For each index entry in the given index categories and that starts with the given key, the blank pattern is fed using 
+ * For each index entry in the given index categories and that starts with the given key, the blank pattern is fed using
  * {@link #decodeIndexKey(char[])}. The original pattern is then asked if it matches the decoded key using
  * {@link #matchesDecodedKey(SearchPattern)}. If it matches, a search document is created for this index entry
  * using {@link SearchParticipant#getDocument(String)}.
- * 
+ *
  * </p><p>
  * This class is intended to be sub-classed by clients. A default behavior is provided for each of the methods above, that
  * clients can override if they wish.
@@ -43,7 +53,7 @@ import org.eclipse.jdt.internal.core.search.matching.*;
  * @see #createPattern(String, int, int, int)
  * @since 3.0
  */
-public abstract class SearchPattern extends InternalSearchPattern {
+public abstract class SearchPattern {
 
 	// Rules for pattern matching: (exact, prefix, pattern) [ | case sensitive]
 	/**
@@ -58,7 +68,7 @@ public abstract class SearchPattern extends InternalSearchPattern {
 	public static final int R_PREFIX_MATCH = 0x0001;
 
 	/**
-	 * Match rule: The search pattern contains one or more wild cards ('*' or '?'). 
+	 * Match rule: The search pattern contains one or more wild cards ('*' or '?').
 	 * A '*' wild-card can replace 0 or more characters in the search result.
 	 * A '?' wild-card replaces exactly 1 character in the search result.
 	 */
@@ -157,7 +167,7 @@ public abstract class SearchPattern extends InternalSearchPattern {
 	 * <p>
 	 * @see #camelCaseMatch(String, String) for a detailed explanation of Camel
 	 * 	Case matching.
-	 * 
+	 *
 	 * @since 3.2
 	 */
 	public static final int R_CAMELCASE_MATCH = 0x0080;
@@ -189,19 +199,35 @@ public abstract class SearchPattern extends InternalSearchPattern {
 	public static final int R_CAMELCASE_SAME_PART_COUNT_MATCH = 0x0100;
 
 	private static final int MODE_MASK = R_EXACT_MATCH
-		| R_PREFIX_MATCH 
-		| R_PATTERN_MATCH 
-		| R_REGEXP_MATCH 
+		| R_PREFIX_MATCH
+		| R_PATTERN_MATCH
+		| R_REGEXP_MATCH
 		| R_CAMELCASE_MATCH
 		| R_CAMELCASE_SAME_PART_COUNT_MATCH;
 
 	private int matchRule;
 
+	/**
+	 * The focus element (used for reference patterns)
+	 * @noreference This field is not intended to be referenced by clients. 
+	 */
+	public IJavaElement focus;
+
+	/**
+	 * @noreference This field is not intended to be referenced by clients.
+	 */
+	public int kind;
+	
+	/**
+	 * @noreference This field is not intended to be referenced by clients.
+	 */
+	public boolean mustResolve = true;
+	
 /**
- * Creates a search pattern with the rule to apply for matching index keys. 
+ * Creates a search pattern with the rule to apply for matching index keys.
  * It can be exact match, prefix match, pattern match or regexp match.
  * Rule can also be combined with a case sensitivity flag.
- * 
+ *
  * @param matchRule one of following match rule
  * 	<ul>
  * 		<li>{@link #R_EXACT_MATCH}</li>
@@ -244,7 +270,44 @@ public SearchPattern(int matchRule) {
 		this.matchRule &= ~R_PREFIX_MATCH;
 	}
 }
+/**
+ * @noreference This method is not intended to be referenced by clients.
+ * @nooverride This method is not intended to be re-implemented or extended by clients.
+ */
+public void acceptMatch(String relativePath, String containerPath, char separator, SearchPattern pattern, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope) {
 
+	if (scope instanceof JavaSearchScope) {
+		JavaSearchScope javaSearchScope = (JavaSearchScope) scope;
+		// Get document path access restriction from java search scope
+		// Note that requestor has to verify if needed whether the document violates the access restriction or not
+		AccessRuleSet access = javaSearchScope.getAccessRuleSet(relativePath, containerPath);
+		if (access != JavaSearchScope.NOT_ENCLOSED) { // scope encloses the document path
+			StringBuffer documentPath = new StringBuffer(containerPath.length() + 1 + relativePath.length());
+			documentPath.append(containerPath);
+			documentPath.append(separator);
+			documentPath.append(relativePath);
+			if (!requestor.acceptIndexMatch(documentPath.toString(), pattern, participant, access))
+				throw new OperationCanceledException();
+		}
+	} else {
+		StringBuffer buffer = new StringBuffer(containerPath.length() + 1 + relativePath.length());
+		buffer.append(containerPath);
+		buffer.append(separator);
+		buffer.append(relativePath);
+		String documentPath = buffer.toString();
+		if (scope.encloses(documentPath))
+			if (!requestor.acceptIndexMatch(documentPath, pattern, participant, null))
+				throw new OperationCanceledException();
+
+	}
+}
+/**
+ * @noreference This method is not intended to be referenced by clients. 
+ * @nooverride This method is not intended to be re-implemented or extended by clients.
+ */
+public SearchPattern currentPattern() {
+	return this;
+}
 /**
  * Answers true if the pattern matches the given name using CamelCase rules, or
  * false otherwise. char[] CamelCase matching does NOT accept explicit wild-cards
@@ -296,10 +359,10 @@ public SearchPattern(int matchRule) {
  *  name = "HatMapper"
  *  result => true</li>
  * </ol></pre>
- * 
+ *
  * @see #camelCaseMatch(String, int, int, String, int, int, boolean) for algorithm
  * implementation
- * 
+ *
  * @param pattern the given pattern
  * @param name the given name
  * @return true if the pattern matches the given name, false otherwise
@@ -363,10 +426,10 @@ public static final boolean camelCaseMatch(String pattern, String name) {
  *  name = "HashMapEntry"
  *  result => (samePartCount == false)</li>
  * </ol></pre>
- * 
+ *
  * @see #camelCaseMatch(String, int, int, String, int, int, boolean) for algorithm
  * 	implementation
- * 
+ *
  * @param pattern the given pattern
  * @param name the given name
  * @param samePartCount flag telling whether the pattern and the name should
@@ -393,7 +456,7 @@ public static final boolean camelCaseMatch(String pattern, String name, boolean 
 /**
  * Answers true if a sub-pattern matches the sub-part of the given name using
  * CamelCase rules, or false otherwise.  char[] CamelCase matching does NOT
- * accept explicit wild-cards '*' and '?' and is inherently case sensitive. 
+ * accept explicit wild-cards '*' and '?' and is inherently case sensitive.
  * Can match only subset of name/pattern, considering end positions as non-inclusive.
  * The sub-pattern is defined by the patternStart and patternEnd positions.
  * <p>
@@ -484,7 +547,7 @@ public static final boolean camelCaseMatch(String pattern, String name, boolean 
  *  nameEnd = 9
  *  result => true</li>
  * </ol></pre>
- * 
+ *
  * @param pattern the given pattern
  * @param patternStart the start index of the pattern, inclusive
  * @param patternEnd the end index of the pattern, exclusive
@@ -499,9 +562,9 @@ public static final boolean camelCaseMatch(String pattern, int patternStart, int
 }
 
 /**
- * Answers true if a sub-pattern matches the sub-part of the given name using 
+ * Answers true if a sub-pattern matches the sub-part of the given name using
  * CamelCase rules, or false otherwise.  char[] CamelCase matching does NOT
- * accept explicit wild-cards '*' and '?' and is inherently case sensitive. 
+ * accept explicit wild-cards '*' and '?' and is inherently case sensitive.
  * Can match only subset of name/pattern, considering end positions as
  * non-inclusive. The sub-pattern is defined by the patternStart and patternEnd
  * positions.
@@ -583,10 +646,10 @@ public static final boolean camelCaseMatch(String pattern, int patternStart, int
  *  nameEnd = 12
  *  result => (samePartCount == false)</li>
  * </ol></pre>
- * 
+ *
  * @see CharOperation#camelCaseMatch(char[], int, int, char[], int, int, boolean)
  * 	from which algorithm implementation has been entirely copied.
- * 
+ *
  * @param pattern the given pattern
  * @param patternStart the start index of the pattern, inclusive
  * @param patternEnd the end index of the pattern, exclusive
@@ -606,129 +669,171 @@ public static final boolean camelCaseMatch(String pattern, int patternStart, int
  * @since 3.4
  */
 public static final boolean camelCaseMatch(String pattern, int patternStart, int patternEnd, String name, int nameStart, int nameEnd, boolean samePartCount) {
+	return StringOperation.getCamelCaseMatchingRegions(pattern, patternStart, patternEnd, name, nameStart, nameEnd, samePartCount) != null;
+}
 
-	/* !!!!!!!!!! WARNING !!!!!!!!!!
-	 * The algorithm of this method has been entirely copied from
-	 * CharOperation#camelCaseMatch(char[], int, int, char[], int, int, boolean).
-	 * Array lengths have been replaced with call to {@link String#length()} and
-	 * array direct access have been replaced with call to {@link String#charAt(int)}.
-	 * 
-	 * So, do NOT modify this method directly to fix any bug but modify first the
-	 * corresponding CharOperation method and do the copy again to be sure that
-	 * these two methods are kept synchronized.
-	 */
-
-	if (name == null)
-		return false; // null name cannot match
-	if (pattern == null)
-		return true; // null pattern is equivalent to '*'
-	if (patternEnd < 0) 	patternEnd = pattern.length();
-	if (nameEnd < 0) nameEnd = name.length();
-
-	if (patternEnd <= patternStart) return nameEnd <= nameStart;
-	if (nameEnd <= nameStart) return false;
-	// check first pattern char
-	if (name.charAt(nameStart) != pattern.charAt(patternStart)) {
-		// first char must strictly match (upper/lower)
-		return false;
+/**
+ * Answers all the regions in a given name matching a given pattern using
+ * a specified match rule.
+ * </p><p>
+ * Each of these regions is made of its starting index and its length in the given
+ * name. They are all concatenated in a single array of <code>int</code>
+ * which therefore always has an even length.
+ * </p><p>
+ * All returned regions are disjointed from each other. That means that the end
+ * of a region is always different than the start of the following one.<br>
+ * For example, if two regions are returned:<br>
+ * <code>{ start1, length1, start2, length2 }</code><br>
+ * then <code>start1+length1</code> will always be smaller than
+ * <code>start2</code>.
+ * </p><p>
+ * The possible comparison rules between the name and the pattern are:
+ * <ul>
+ * <li>{@link #R_EXACT_MATCH exact matching}</li>
+ * <li>{@link #R_PREFIX_MATCH prefix matching}</li>
+ * <li>{@link #R_PATTERN_MATCH pattern matching}</li>
+ * <li>{@link #R_CAMELCASE_MATCH camel case matching}</li>
+ * <li>{@link #R_CAMELCASE_SAME_PART_COUNT_MATCH camel case matching with same parts count}</li>
+ * </ul>
+ * Each of these rules may be combined with the
+ * {@link #R_CASE_SENSITIVE case sensitive flag} if the match comparison
+ * should respect the case.
+ * <pre>
+ * Examples:
+ * <ol><li>  pattern = "NPE"
+ *  name = NullPointerException / NoPermissionException
+ *  matchRule = {@link #R_CAMELCASE_MATCH}
+ *  result:  { 0, 1, 4, 1, 11, 1 } / { 0, 1, 2, 1, 12, 1 } </li>
+ * <li>  pattern = "NuPoEx"
+ *  name = NullPointerException
+ *  matchRule = {@link #R_CAMELCASE_MATCH}
+ *  result:  { 0, 2, 4, 2, 11, 2 }</li>
+ * <li>  pattern = "IPL3"
+ *  name = "IPerspectiveListener3"
+ *  matchRule = {@link #R_CAMELCASE_MATCH}
+ *  result:  { 0, 2, 12, 1, 20, 1 }</li>
+ * <li>  pattern = "HashME"
+ *  name = "HashMapEntry"
+ *  matchRule = {@link #R_CAMELCASE_MATCH}
+ *  result:  { 0, 5, 7, 1 }</li>
+ * <li>  pattern = "N???Po*Ex?eption"
+ *  name = NullPointerException
+ *  matchRule = {@link #R_PATTERN_MATCH} | {@link #R_CASE_SENSITIVE}
+ *  result:  { 0, 1, 4, 2, 11, 2, 14, 6 }</li>
+ * <li>  pattern = "Ha*M*ent*"
+ *  name = "HashMapEntry"
+ *  matchRule = {@link #R_PATTERN_MATCH}
+ *  result:  { 0, 2, 4, 1, 7, 3 }</li>
+ * </ol></pre>
+ *
+ * @see #camelCaseMatch(String, String, boolean) for more details on the
+ * 	camel case behavior
+ * @see CharOperation#match(char[], char[], boolean) for more details on the
+ * 	pattern match behavior
+ *
+ * @param pattern the given pattern. If <code>null</code>,
+ *     then an empty region (<code>new int[0]</code>) will be returned
+ *     showing that the name matches the pattern but no common
+ *     character has been found.
+ * @param name the given name
+ * @param matchRule the rule to apply for the comparison.<br>
+ *     The following values are accepted:
+ *     <ul>
+ *         <li>{@link #R_EXACT_MATCH}</li>
+ *         <li>{@link #R_PREFIX_MATCH}</li>
+ *         <li>{@link #R_PATTERN_MATCH}</li>
+ *         <li>{@link #R_CAMELCASE_MATCH}</li>
+ *         <li>{@link #R_CAMELCASE_SAME_PART_COUNT_MATCH}</li>
+ *     </ul>
+ *     <p>
+ *     Each of these valid values may be also combined with
+ *     the {@link #R_CASE_SENSITIVE} flag.
+ *     </p>
+ *     Some examples:
+ *     <ul>
+ *         <li>{@link #R_EXACT_MATCH} | {@link #R_CASE_SENSITIVE}:
+ *                 if an exact case sensitive match is expected,</li>
+ *         <li>{@link #R_PREFIX_MATCH}:
+ *                 if a case insensitive prefix match is expected,</li>
+ *         <li>{@link #R_CAMELCASE_MATCH}:
+ *                 if a case insensitive camel case match is expected,</li>
+ *         <li>{@link #R_CAMELCASE_SAME_PART_COUNT_MATCH}
+ *                 | {@link #R_CASE_SENSITIVE}:
+ *                 if a case sensitive camel case with same parts count match
+ *                 is expected,</li>
+ *         <li>etc.</li>
+ *     </ul>
+ * @return an array of <code>int</code> having two slots per returned
+ *     regions (the first one is the region starting index and the second one
+ *     is the region length or <code>null</code> if the given name does not
+ *     match the given pattern).
+ *     <p>
+ *     The returned regions may be empty (<code>new int[0]</code>) if the
+ *     pattern is <code>null</code> (whatever the match rule is). The returned
+ *     regions will also be empty if the pattern is only made of <code>'?'</code>
+ *     and/or <code>'*'</code> character(s) (e.g. <code>'*'</code>,
+ *     <code>'?*'</code>, <code>'???'</code>, etc.) when using a pattern
+ *     match rule.
+ *     </p>
+ * 
+ * @since 3.5
+ */
+public static final int[] getMatchingRegions(String pattern, String name, int matchRule) {
+	if (name == null) return null;
+	final int nameLength = name.length();
+	if (pattern == null) {
+		return new int[] { 0, nameLength };
 	}
-
-	char patternChar, nameChar;
-	int iPattern = patternStart;
-	int iName = nameStart;
-
-	// Main loop is on pattern characters
-	while (true) {
-
-		iPattern++;
-		iName++;
-
-		if (iPattern == patternEnd) { // we have exhausted pattern...
-			// it's a match if the name can have additional parts (i.e. uppercase characters) or is also exhausted
-			if (!samePartCount || iName == nameEnd) return true;
-
-			// otherwise it's a match only if the name has no more uppercase characters
-			while (true) {
-				if (iName == nameEnd) {
-					// we have exhausted the name, so it's a match
-					return true;
-				}
-				nameChar = name.charAt(iName);
-				// test if the name character is uppercase
-				if (nameChar < ScannerHelper.MAX_OBVIOUS) {
-					if ((ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[nameChar] & ScannerHelper.C_UPPER_LETTER) != 0) {
-						return false;
-					}
-				}
-				else if (!Character.isJavaIdentifierPart(nameChar) || Character.isUpperCase(nameChar)) {
-					return false;
-				}
-				iName++;
+	final int patternLength = pattern.length();
+	boolean countMatch = false;
+	switch (matchRule) {
+		case SearchPattern.R_EXACT_MATCH:
+			if (patternLength == nameLength && pattern.equalsIgnoreCase(name)) {
+				return new int[] { 0, patternLength };
 			}
-		}
-
-		if (iName == nameEnd){
-			// We have exhausted the name (and not the pattern), so it's not a match 
-			return false;
-		}
-
-		// For as long as we're exactly matching, bring it on (even if it's a lower case character)
-		if ((patternChar = pattern.charAt(iPattern)) == name.charAt(iName)) {
-			continue;
-		}
-
-		// If characters are not equals, then it's not a match if patternChar is lowercase
-		if (patternChar < ScannerHelper.MAX_OBVIOUS) {
-			if ((ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[patternChar] & (ScannerHelper.C_UPPER_LETTER | ScannerHelper.C_DIGIT)) == 0) {
-				return false;
+			break;
+		case SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE:
+			if (patternLength == nameLength && pattern.equals(name)) {
+				return new int[] { 0, patternLength };
 			}
-		}
-		else if (Character.isJavaIdentifierPart(patternChar) && !Character.isUpperCase(patternChar) && !Character.isDigit(patternChar)) {
-			return false;
-		}
-
-		// patternChar is uppercase, so let's find the next uppercase in name
-		while (true) {
-			if (iName == nameEnd){
-	            //	We have exhausted name (and not pattern), so it's not a match
-				return false;
+			break;
+		case SearchPattern.R_PREFIX_MATCH:
+			if (patternLength <= nameLength && name.substring(0, patternLength).equalsIgnoreCase(pattern)) {
+				return new int[] { 0, patternLength };
 			}
-
-			nameChar = name.charAt(iName);
-			if (nameChar < ScannerHelper.MAX_OBVIOUS) {
-				int charNature = ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[nameChar];
-				if ((charNature & (ScannerHelper.C_LOWER_LETTER | ScannerHelper.C_SPECIAL)) != 0) {
-					// nameChar is lowercase    
-					iName++;
-				} else if ((charNature & ScannerHelper.C_DIGIT) != 0) {
-					// nameChar is digit => break if the digit is current pattern character otherwise consume it
-					if (patternChar == nameChar) break;
-					iName++;
-				// nameChar is uppercase...
-				} else  if (patternChar != nameChar) {
-					//.. and it does not match patternChar, so it's not a match
-					return false;
-				} else {
-					//.. and it matched patternChar. Back to the big loop
-					break;
+			break;
+		case SearchPattern.R_PREFIX_MATCH | SearchPattern.R_CASE_SENSITIVE:
+			if (name.startsWith(pattern)) {
+				return new int[] { 0, patternLength };
+			}
+			break;
+		case SearchPattern.R_CAMELCASE_SAME_PART_COUNT_MATCH:
+			countMatch = true;
+			//$FALL-THROUGH$
+		case SearchPattern.R_CAMELCASE_MATCH:
+			if (patternLength <= nameLength) {
+				int[] regions = StringOperation.getCamelCaseMatchingRegions(pattern, 0, patternLength, name, 0, nameLength, countMatch);
+				if (regions != null) return regions;
+				if (name.substring(0, patternLength).equalsIgnoreCase(pattern)) {
+					return new int[] { 0, patternLength };
 				}
 			}
-			// Same tests for non-obvious characters
-			else if (Character.isJavaIdentifierPart(nameChar) && !Character.isUpperCase(nameChar)) {
-				iName++;
-			} else if (Character.isDigit(nameChar)) {
-				if (patternChar == nameChar) break;
-				iName++;
-			} else  if (patternChar != nameChar) {
-				return false;
-			} else {
-				break;
+			break;
+		case SearchPattern.R_CAMELCASE_SAME_PART_COUNT_MATCH | SearchPattern.R_CASE_SENSITIVE:
+			countMatch = true;
+			//$FALL-THROUGH$
+		case SearchPattern.R_CAMELCASE_MATCH | SearchPattern.R_CASE_SENSITIVE:
+			if (patternLength <= nameLength) {
+				return StringOperation.getCamelCaseMatchingRegions(pattern, 0, patternLength, name, 0, nameLength, countMatch);
 			}
-		}
-		// At this point, either name has been exhausted, or it is at an uppercase letter.
-		// Since pattern is also at an uppercase letter
+			break;
+		case SearchPattern.R_PATTERN_MATCH:
+			return StringOperation.getPatternMatchingRegions(pattern, 0, patternLength, name, 0, nameLength, false);
+		case SearchPattern.R_PATTERN_MATCH | SearchPattern.R_CASE_SENSITIVE:
+			return StringOperation.getPatternMatchingRegions(pattern, 0, patternLength, name, 0, nameLength, true);
 	}
-}	
+	return null;
+}
 
 /**
  * Returns a search pattern that combines the given two patterns into an
@@ -747,13 +852,13 @@ public static SearchPattern createAndPattern(SearchPattern leftPattern, SearchPa
 }
 
 private static SearchPattern createFieldPattern(String patternString, int limitTo, int matchRule) {
-	
-	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/); 
+
+	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
 	scanner.setSource(patternString.toCharArray());
 	final int InsideDeclaringPart = 1;
 	final int InsideType = 2;
 	int lastToken = -1;
-	
+
 	String declaringType = null, fieldName = null;
 	String type = null;
 	int mode = InsideDeclaringPart;
@@ -789,7 +894,7 @@ private static SearchPattern createFieldPattern(String patternString, int limitT
 							fieldName += scanner.getCurrentTokenString();
 				}
 				break;
-			// read type 
+			// read type
 			case InsideType:
 				switch (token) {
 					case TerminalTokens.TokenNameWHITESPACE:
@@ -813,7 +918,7 @@ private static SearchPattern createFieldPattern(String patternString, int limitT
 
 	char[] fieldNameChars = fieldName.toCharArray();
 	if (fieldNameChars.length == 1 && fieldNameChars[0] == '*') fieldNameChars = null;
-		
+
 	char[] declaringTypeQualification = null, declaringTypeSimpleName = null;
 	char[] typeQualification = null, typeSimpleName = null;
 
@@ -863,15 +968,15 @@ private static SearchPattern createFieldPattern(String patternString, int limitT
 }
 
 private static SearchPattern createMethodOrConstructorPattern(String patternString, int limitTo, int matchRule, boolean isConstructor) {
-	
-	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/); 
+
+	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
 	scanner.setSource(patternString.toCharArray());
 	final int InsideSelector = 1;
 	final int InsideTypeArguments = 2;
 	final int InsideParameter = 3;
 	final int InsideReturnType = 4;
 	int lastToken = -1;
-	
+
 	String declaringType = null, selector = null, parameterType = null;
 	String[] parameterTypes = null;
 	char[][] typeArguments = null;
@@ -1004,7 +1109,7 @@ private static SearchPattern createMethodOrConstructorPattern(String patternStri
 						case TerminalTokens.TokenNameLESS:
 							argCount++;
 							if (parameterType == null) return null; // invalid syntax
-							// fall through next case to add token
+							// $FALL-THROUGH$ - fall through next case to add token
 						default: // all other tokens are considered identifiers (see bug 21763 Problem in Java search [search])
 							if (parameterType == null)
 								parameterType = scanner.getCurrentTokenString();
@@ -1040,7 +1145,7 @@ private static SearchPattern createMethodOrConstructorPattern(String patternStri
 						case TerminalTokens.TokenNameLESS:
 							argCount++;
 							if (returnType == null) return null; // invalid syntax
-							// fall through next case to add token
+							// $FALL-THROUGH$ - fall through next case to add token
 						default: // all other tokens are considered identifiers (see bug 21763 Problem in Java search [search])
 							if (returnType == null)
 								returnType = scanner.getCurrentTokenString();
@@ -1089,7 +1194,7 @@ private static SearchPattern createMethodOrConstructorPattern(String patternStri
 		if (selectorChars.length == 1 && selectorChars[0] == '*')
 			selectorChars = null;
 	}
-		
+
 	char[] declaringTypeQualification = null, declaringTypeSimpleName = null;
 	char[] returnTypeQualification = null, returnTypeSimpleName = null;
 	char[][] parameterTypeQualifications = null, parameterTypeSimpleNames = null;
@@ -1165,7 +1270,7 @@ private static SearchPattern createMethodOrConstructorPattern(String patternStri
 			if (parameterTypeSimpleNames[i].length == 1 && parameterTypeSimpleNames[i][0] == '*')
 				parameterTypeSimpleNames[i] = null;
 		}
-	}	
+	}
 	// extract return type infos
 	if (returnType != null) {
 		// get return type part and signature
@@ -1190,7 +1295,7 @@ private static SearchPattern createMethodOrConstructorPattern(String patternStri
 			} else {
 				// because of an import
 				returnTypeQualification = CharOperation.concat(IIndexConstants.ONE_STAR, returnTypeQualification);
-			}			
+			}
 			returnTypeSimpleName = CharOperation.subarray(returnTypePart, lastDotPosition+1, returnTypePart.length);
 		} else {
 			returnTypeSimpleName = returnTypePart;
@@ -1201,10 +1306,10 @@ private static SearchPattern createMethodOrConstructorPattern(String patternStri
 	// Create method/constructor pattern
 	if (isConstructor) {
 		return new ConstructorPattern(
-				declaringTypeSimpleName, 
+				declaringTypeSimpleName,
 				declaringTypeQualification,
 				declaringTypeSignature,
-				parameterTypeQualifications, 
+				parameterTypeQualifications,
 				parameterTypeSimpleNames,
 				parameterTypeSignatures,
 				typeArguments,
@@ -1442,7 +1547,7 @@ public static SearchPattern createPattern(String stringPattern, int searchFor, i
 }
 
 /**
- * Returns a search pattern based on a given Java element. 
+ * Returns a search pattern based on a given Java element.
  * The pattern is used to trigger the appropriate search.
  * <br>
  * Note that for generic searches, the returned pattern consider {@link #R_ERASURE_MATCH} matches.
@@ -1498,7 +1603,7 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo) {
 }
 
 /**
- * Returns a search pattern based on a given Java element. 
+ * Returns a search pattern based on a given Java element.
  * The pattern is used to trigger the appropriate search, and can be parameterized as follows:
  *
  * @param element the Java element the search pattern is based on
@@ -1587,7 +1692,7 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 	char[] declaringQualification = null;
 	switch (element.getElementType()) {
 		case IJavaElement.FIELD :
-			IField field = (IField) element; 
+			IField field = (IField) element;
 			if (!ignoreDeclaringType) {
 				IType declaringClass = field.getDeclaringType();
 				declaringSimpleName = declaringClass.getElementName().toCharArray();
@@ -1622,12 +1727,12 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 				}
 			}
 			// Create field pattern
-			searchPattern = 
+			searchPattern =
 				new FieldPattern(
-					name, 
-					declaringQualification, 
-					declaringSimpleName, 
-					typeQualification, 
+					name,
+					declaringQualification,
+					declaringSimpleName,
+					typeQualification,
 					typeSimpleName,
 					typeSignature,
 					limitTo,
@@ -1641,7 +1746,7 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 			if (importDecl.isOnDemand()) {
 				searchPattern = createPackagePattern(elementName.substring(0, lastDot), maskedLimitTo, matchRule);
 			} else {
-				searchPattern = 
+				searchPattern =
 					createTypePattern(
 						elementName.substring(lastDot+1).toCharArray(),
 						elementName.substring(0, lastDot).toCharArray(),
@@ -1668,7 +1773,7 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 					findParamDeclarations = false;
 					break;
 			}
-			searchPattern = 
+			searchPattern =
 				new TypeParameterPattern(
 					findParamDeclarations,
 					findParamReferences,
@@ -1745,9 +1850,9 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 			if (isConstructor) {
 				searchPattern =
 					new ConstructorPattern(
-						declaringSimpleName, 
-						declaringQualification, 
-						parameterQualifications, 
+						declaringSimpleName,
+						declaringQualification,
+						parameterQualifications,
 						parameterSimpleNames,
 						parameterSignatures,
 						method,
@@ -1756,13 +1861,13 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 			} else {
 				searchPattern =
 					new MethodPattern(
-						selector, 
-						declaringQualification, 
-						declaringSimpleName, 
-						returnQualification, 
-						returnSimpleName, 
+						selector,
+						declaringQualification,
+						declaringSimpleName,
+						returnQualification,
+						returnSimpleName,
 						returnSignature,
-						parameterQualifications, 
+						parameterQualifications,
 						parameterSimpleNames,
 						parameterSignatures,
 						method,
@@ -1773,7 +1878,7 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 		case IJavaElement.TYPE :
 			IType type = (IType)element;
 			searchPattern = 	createTypePattern(
-						type.getElementName().toCharArray(), 
+						type.getElementName().toCharArray(),
 						type.getPackageFragment().getElementName().toCharArray(),
 						ignoreDeclaringType ? null : enclosingTypeNames(type),
 						null,
@@ -1795,46 +1900,46 @@ private static SearchPattern createTypePattern(char[] simpleName, char[] package
 	switch (limitTo) {
 		case IJavaSearchConstants.DECLARATIONS :
 			return new TypeDeclarationPattern(
-				packageName, 
-				enclosingTypeNames, 
-				simpleName, 
+				packageName,
+				enclosingTypeNames,
+				simpleName,
 				IIndexConstants.TYPE_SUFFIX,
 				matchRule);
 		case IJavaSearchConstants.REFERENCES :
 			if (type != null) {
 				return new TypeReferencePattern(
-					CharOperation.concatWith(packageName, enclosingTypeNames, '.'), 
+					CharOperation.concatWith(packageName, enclosingTypeNames, '.'),
 					simpleName,
 					type,
 					matchRule);
 			}
 			return new TypeReferencePattern(
-				CharOperation.concatWith(packageName, enclosingTypeNames, '.'), 
+				CharOperation.concatWith(packageName, enclosingTypeNames, '.'),
 				simpleName,
 				typeSignature,
 				matchRule);
-		case IJavaSearchConstants.IMPLEMENTORS : 
+		case IJavaSearchConstants.IMPLEMENTORS :
 			return new SuperTypeReferencePattern(
-				CharOperation.concatWith(packageName, enclosingTypeNames, '.'), 
+				CharOperation.concatWith(packageName, enclosingTypeNames, '.'),
 				simpleName,
 				SuperTypeReferencePattern.ONLY_SUPER_INTERFACES,
 				matchRule);
 		case IJavaSearchConstants.ALL_OCCURRENCES :
 			return new OrPattern(
 				new TypeDeclarationPattern(
-					packageName, 
-					enclosingTypeNames, 
-					simpleName, 
+					packageName,
+					enclosingTypeNames,
+					simpleName,
 					IIndexConstants.TYPE_SUFFIX,
-					matchRule), 
+					matchRule),
 				(type != null)
 					? new TypeReferencePattern(
-						CharOperation.concatWith(packageName, enclosingTypeNames, '.'), 
+						CharOperation.concatWith(packageName, enclosingTypeNames, '.'),
 						simpleName,
 						type,
 						matchRule)
 					: new TypeReferencePattern(
-						CharOperation.concatWith(packageName, enclosingTypeNames, '.'), 
+						CharOperation.concatWith(packageName, enclosingTypeNames, '.'),
 						simpleName,
 						typeSignature,
 						matchRule)
@@ -1842,7 +1947,7 @@ private static SearchPattern createTypePattern(char[] simpleName, char[] package
 		default:
 			if (type != null) {
 				return new TypeReferencePattern(
-					CharOperation.concatWith(packageName, enclosingTypeNames, '.'), 
+					CharOperation.concatWith(packageName, enclosingTypeNames, '.'),
 					simpleName,
 					type,
 					limitTo,
@@ -1853,8 +1958,8 @@ private static SearchPattern createTypePattern(char[] simpleName, char[] package
 }
 
 private static SearchPattern createTypePattern(String patternString, int limitTo, int matchRule, char indexSuffix) {
-	
-	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/); 
+
+	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
 	scanner.setSource(patternString.toCharArray());
 	String type = null;
 	int token;
@@ -1871,7 +1976,7 @@ private static SearchPattern createTypePattern(String patternString, int limitTo
 					break;
 				case TerminalTokens.TokenNameLESS:
 					argCount++;
-					// fall through default case to add token to type
+					// $FALL-THROUGH$ - fall through default case to add token to type
 				default: // all other tokens are considered identifiers (see bug 21763 Problem in Java search [search])
 					if (type == null)
 						type = scanner.getCurrentTokenString();
@@ -1935,7 +2040,7 @@ private static SearchPattern createTypePattern(String patternString, int limitTo
 			return new QualifiedTypeDeclarationPattern(qualificationChars, typeChars, indexSuffix, matchRule);
 		case IJavaSearchConstants.REFERENCES :
 			return new TypeReferencePattern(qualificationChars, typeChars, typeSignature, matchRule);
-		case IJavaSearchConstants.IMPLEMENTORS : 
+		case IJavaSearchConstants.IMPLEMENTORS :
 			return new SuperTypeReferencePattern(qualificationChars, typeChars, SuperTypeReferencePattern.ONLY_SUPER_INTERFACES, indexSuffix, matchRule);
 		case IJavaSearchConstants.ALL_OCCURRENCES :
 			return new OrPattern(
@@ -1957,7 +2062,7 @@ private static char[][] enclosingTypeNames(IType type) {
 			IType declaringType = type.getDeclaringType();
 			if (declaringType == null) return CharOperation.NO_CHAR_CHAR;
 			return CharOperation.arrayConcat(
-				enclosingTypeNames(declaringType), 
+				enclosingTypeNames(declaringType),
 				declaringType.getElementName().toCharArray());
 		case IJavaElement.COMPILATION_UNIT:
 			return CharOperation.NO_CHAR_CHAR;
@@ -1970,7 +2075,7 @@ private static char[][] enclosingTypeNames(IType type) {
 				new char[][] {declaringClass.getElementName().toCharArray(), IIndexConstants.ONE_STAR});
 		case IJavaElement.TYPE:
 			return CharOperation.arrayConcat(
-				enclosingTypeNames((IType)parent), 
+				enclosingTypeNames((IType)parent),
 				parent.getElementName().toCharArray());
 		default:
 			return null;
@@ -1978,17 +2083,50 @@ private static char[][] enclosingTypeNames(IType type) {
 }
 
 /**
- * Decode the given index key in this pattern. The decoded index key is used by 
- * {@link #matchesDecodedKey(SearchPattern)} to find out if the corresponding index entry 
+ * Decode the given index key in this pattern. The decoded index key is used by
+ * {@link #matchesDecodedKey(SearchPattern)} to find out if the corresponding index entry
  * should be considered.
  * <p>
  * This method should be re-implemented in subclasses that need to decode an index key.
  * </p>
- * 
+ *
  * @param key the given index key
  */
 public void decodeIndexKey(char[] key) {
 	// called from findIndexMatches(), override as necessary
+}
+/**
+ * Query a given index for matching entries. Assumes the sender has opened the index and will close when finished.
+ * 
+ * @noreference This method is not intended to be referenced by clients. 
+ * @nooverride This method is not intended to be re-implemented or extended by clients.
+ */
+public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor monitor) throws IOException {
+	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
+	try {
+		index.startQuery();
+		SearchPattern pattern = currentPattern();
+		EntryResult[] entries = pattern.queryIn(index);
+		if (entries == null) return;
+
+		SearchPattern decodedResult = pattern.getBlankPattern();
+		String containerPath = index.containerPath;
+		char separator = index.separator;
+		for (int i = 0, l = entries.length; i < l; i++) {
+			if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
+
+			EntryResult entry = entries[i];
+			decodedResult.decodeIndexKey(entry.getWord());
+			if (pattern.matchesDecodedKey(decodedResult)) {
+				// TODO (kent) some clients may not need the document names
+				String[] names = entry.getDocumentNames(index);
+				for (int j = 0, n = names.length; j < n; j++)
+					acceptMatch(names[j], containerPath, separator, decodedResult, requestor, participant, scope);
+			}
+		}
+	} finally {
+		index.stopQuery();
+	}
 }
 /**
  * Returns a blank pattern that can be used as a record to decode an index key.
@@ -1996,7 +2134,7 @@ public void decodeIndexKey(char[] key) {
  * Implementors of this method should return a new search pattern that is going to be used
  * to decode index keys.
  * </p>
- * 
+ *
  * @return a new blank pattern
  * @see #decodeIndexKey(char[])
  */
@@ -2010,7 +2148,7 @@ public abstract SearchPattern getBlankPattern();
  * This method should be re-implemented in subclasses that need to narrow down the
  * index query.
  * </p>
- * 
+ *
  * @return an index key from this pattern, or <code>null</code> if all index entries are matched.
  */
 public char[] getIndexKey() {
@@ -2025,7 +2163,7 @@ public char[] getIndexKey() {
  * This method should be re-implemented in subclasses that need to narrow down the
  * index query.
  * </p>
- * 
+ *
  * @return an array of index categories
  */
 public char[][] getIndexCategories() {
@@ -2034,14 +2172,21 @@ public char[][] getIndexCategories() {
 /**
  * Returns the rule to apply for matching index keys. Can be exact match, prefix match, pattern match or regexp match.
  * Rule can also be combined with a case sensitivity flag.
- * 
+ *
  * @return one of R_EXACT_MATCH, R_PREFIX_MATCH, R_PATTERN_MATCH, R_REGEXP_MATCH combined with R_CASE_SENSITIVE,
- *   e.g. R_EXACT_MATCH | R_CASE_SENSITIVE if an exact and case sensitive match is requested, 
+ *   e.g. R_EXACT_MATCH | R_CASE_SENSITIVE if an exact and case sensitive match is requested,
  *   or R_PREFIX_MATCH if a prefix non case sensitive match is requested.
  * [TODO (frederic) I hope R_ERASURE_MATCH doesn't need to be on this list. Because it would be a breaking API change.]
- */	
+ */
 public final int getMatchRule() {
 	return this.matchRule;
+}
+/**
+ * @noreference This method is not intended to be referenced by clients. 
+ * @nooverride This method is not intended to be re-implemented or extended by clients.
+ */
+public boolean isPolymorphicSearch() {
+	return false;
 }
 /**
  * Returns whether this pattern matches the given pattern (representing a decoded index key).
@@ -2049,7 +2194,7 @@ public final int getMatchRule() {
  * This method should be re-implemented in subclasses that need to narrow down the
  * index query.
  * </p>
- * 
+ *
  * @param decodedPattern a pattern representing a decoded index key
  * @return whether this pattern matches the given pattern
  */
@@ -2063,7 +2208,7 @@ public boolean matchesDecodedKey(SearchPattern decodedPattern) {
  * This method should be re-implemented in subclasses that need to define how
  * a name matches a pattern.
  * </p>
- * 
+ *
  * @param pattern the given pattern, or <code>null</code> to represent "*"
  * @param name the given name
  * @return whether the given name matches the given pattern
@@ -2139,7 +2284,7 @@ public boolean matchesName(char[] pattern, char[] name) {
  * 		{@link #R_CAMELCASE_SAME_PART_COUNT_MATCH} flags are reset</b>
  * 		if they are tentatively combined.
  * 	</li>
- * 	<li>when the {@link #R_CAMELCASE_MATCH} flag is set, then <b>other 
+ * 	<li>when the {@link #R_CAMELCASE_MATCH} flag is set, then <b>other
  * 		{@link #R_PREFIX_MATCH} or {@link #R_CAMELCASE_SAME_PART_COUNT_MATCH}
  * 		flags are reset</b> if they are tentatively combined.<br>
  * 		Reversely, if the string pattern cannot be a camel case pattern (i.e. contains
@@ -2171,7 +2316,7 @@ public static int validateMatchRule(String stringPattern, int matchRule) {
 
 	// Verify Regexp match rule
 	if ((matchRule & R_REGEXP_MATCH) != 0) {
-		if ((matchRule & R_PATTERN_MATCH) != 0 || (matchRule & R_PREFIX_MATCH) != 0 || 
+		if ((matchRule & R_PATTERN_MATCH) != 0 || (matchRule & R_PREFIX_MATCH) != 0 ||
 			(matchRule & R_CAMELCASE_MATCH) != 0 || (matchRule & R_CAMELCASE_SAME_PART_COUNT_MATCH) != 0) {
 			// regexp is not supported yet
 			return -1;
@@ -2211,7 +2356,7 @@ public static int validateMatchRule(String stringPattern, int matchRule) {
 		}
 		return matchRule;
 	}
-	
+
 	// Verify Camel Case with same count of parts
 	if ((matchRule & R_CAMELCASE_SAME_PART_COUNT_MATCH) != 0) {
 		// reset other incompatible flags
@@ -2251,6 +2396,14 @@ private static boolean validateCamelCasePattern(String stringPattern) {
 		validCamelCase = lowerCamelCase ? uppercase > 0 : uppercase > 1 ;
 	}
 	return validCamelCase;
+}
+
+/**
+ * @noreference This method is not intended to be referenced by clients. 
+ * @nooverride This method is not intended to be re-implemented or extended by clients.
+ */
+public EntryResult[] queryIn(Index index) throws IOException {
+	return index.query(getIndexCategories(), getIndexKey(), getMatchRule());
 }
 
 /**

@@ -18,12 +18,12 @@ import org.eclipse.jdt.internal.compiler.env.ISourceField;
  */
 
 public class SourceFieldElementInfo extends AnnotatableInfo implements ISourceField {
-	
+
 	/**
 	 * The type name of this field.
 	 */
 	protected char[] typeName;
-	
+
 	/**
 	 * The field's initializer string (if the field is a constant).
 	 */

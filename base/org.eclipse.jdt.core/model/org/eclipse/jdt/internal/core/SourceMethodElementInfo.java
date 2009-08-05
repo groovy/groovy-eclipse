@@ -15,15 +15,15 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.ISourceMethod;
 
-/** 
- * Element info for IMethod elements. 
+/**
+ * Element info for IMethod elements.
  */
 public abstract class SourceMethodElementInfo extends AnnotatableInfo implements ISourceMethod {
-	
+
 	/**
 	 * For a source method (that is, a method contained in a compilation unit)
 	 * this is a collection of the names of the parameters for this method,
-	 * in the order the parameters are delcared. For a binary method (that is, 
+	 * in the order the parameters are delcared. For a binary method (that is,
 	 * a method declared in a binary type), these names are invented as
 	 * "arg"i where i starts at 1. This is an empty array if this method
 	 * has no parameters.

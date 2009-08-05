@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -89,8 +89,18 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 				throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INVALID_CONTENTS));
 		} else {
 			TypeDeclaration typeDeclaration = (TypeDeclaration) node;
-			this.createdNode = (ASTNode) typeDeclaration.bodyDeclarations().iterator().next();
-			createdNodeSource = this.source;
+			if ((typeDeclaration.getFlags() & ASTNode.MALFORMED) != 0) {
+				createdNodeSource = generateSyntaxIncorrectAST();
+				if (this.createdNode == null)
+					throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INVALID_CONTENTS));
+			} else {
+				List bodyDeclarations = typeDeclaration.bodyDeclarations();
+				if (bodyDeclarations.size() == 0) {
+					throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INVALID_CONTENTS));
+				}
+				this.createdNode = (ASTNode) bodyDeclarations.iterator().next();
+				createdNodeSource = this.source;
+			}
 		}
 		if (this.alteredName != null) {
 			SimpleName newName = this.createdNode.getAST().newSimpleName(this.alteredName);
@@ -109,7 +119,7 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 				newSource.append(createdNodeSource.substring(createdNodeStart, nameStart));
 				newSource.append(this.alteredName);
 				newSource.append(createdNodeSource.substring(nameEnd, createdNodeEnd));
-				
+
 			}
 			this.source = newSource.toString();
 		}
@@ -193,7 +203,7 @@ public IJavaModelStatus verify() {
 	if (this.source == null) {
 		return new JavaModelStatus(IJavaModelStatusConstants.INVALID_CONTENTS);
 	}
-	if (!force) {
+	if (!this.force) {
 		//check for name collisions
 		try {
 			ICompilationUnit cu = getCompilationUnit();
@@ -203,7 +213,7 @@ public IJavaModelStatus verify() {
 		}
 		return verifyNameCollision();
 	}
-	
+
 	return JavaModelStatus.VERIFIED_OK;
 }
 /**

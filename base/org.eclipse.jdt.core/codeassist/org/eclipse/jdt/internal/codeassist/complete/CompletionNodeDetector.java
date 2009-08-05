@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,20 +21,20 @@ public class CompletionNodeDetector extends ASTVisitor {
 	private ASTNode searchedNode;
 	private ASTNode parent;
 	private boolean result;
-	
+
 	public CompletionNodeDetector(ASTNode searchedNode, ASTNode visitedAst){
 		this.searchedNode = searchedNode;
 		this.result = false;
-		
+
 		if(searchedNode != null && visitedAst != null) {
 			visitedAst.traverse(this, null);
 		}
 	}
-	
+
 	public boolean containsCompletionNode() {
 		return this.result;
 	}
-	
+
 	public ASTNode getCompletionNodeParent() {
 		return this.parent;
 	}
@@ -286,7 +286,7 @@ public class CompletionNodeDetector extends ASTVisitor {
 			if(!(astNode instanceof AllocationExpression && ((AllocationExpression) astNode).type == this.searchedNode)
 				&& !(astNode instanceof ConditionalExpression && ((ConditionalExpression) astNode).valueIfTrue == this.searchedNode)
 				&& !(astNode instanceof ConditionalExpression && ((ConditionalExpression) astNode).valueIfFalse == this.searchedNode)) {
-				this.parent = astNode;	
+				this.parent = astNode;
 			}
 		}
 	}

@@ -11,7 +11,7 @@
 package org.eclipse.jdt.internal.compiler;
 
 /**
- * A compilation result consists of all information returned by the compiler for 
+ * A compilation result consists of all information returned by the compiler for
  * a single compiled compilation source unit.  This includes:
  * <ul>
  * <li> the compilation unit that was compiled
@@ -27,7 +27,7 @@ package org.eclipse.jdt.internal.compiler;
  * parameter and return types, local variable types, types of intermediate expressions, etc.
  * It also includes the namespaces (packages) in which names were looked up.
  * It does <em>not</em> include finer grained dependencies such as information about
- * specific fields and methods which were referenced, but does contain their 
+ * specific fields and methods which were referenced, but does contain their
  * declaring types and any other types used to locate such fields or methods.
  */
 import java.util.Arrays;
@@ -49,7 +49,7 @@ import org.eclipse.jdt.internal.compiler.parser.RecoveryScannerData;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class CompilationResult {
-	
+
 	public CategorizedProblem problems[];
 	public CategorizedProblem tasks[];
 	public int problemCount;
@@ -60,6 +60,7 @@ public class CompilationResult {
 	private int maxProblemPerUnit;
 	public char[][][] qualifiedReferences;
 	public char[][] simpleNameReferences;
+	public char[][] rootReferences;
 	public boolean hasAnnotations = false;
 	public int lineSeparatorPositions[];
 	public RecoveryScannerData recoveryScannerData;
@@ -71,32 +72,22 @@ public class CompilationResult {
 	public boolean hasSyntaxError = false;
 	public char[][] packageName;
 	public boolean checkSecondaryTypes = false; // check for secondary types which were created after the initial buildTypeBindings call
-	
-private static final int[] EMPTY_LINE_ENDS = Util.EMPTY_INT_ARRAY;
-private static final Comparator PROBLEM_COMPARATOR = new Comparator() {
-	public int compare(Object o1, Object o2) {
-		return ((CategorizedProblem) o1).getSourceStart() - ((CategorizedProblem) o2).getSourceStart();
-	}
-};
 
-public CompilationResult(
-		char[] fileName,
-		int unitIndex, 
-		int totalUnitsKnown,
-		int maxProblemPerUnit){
+	private static final int[] EMPTY_LINE_ENDS = Util.EMPTY_INT_ARRAY;
+	private static final Comparator PROBLEM_COMPARATOR = new Comparator() {
+		public int compare(Object o1, Object o2) {
+			return ((CategorizedProblem) o1).getSourceStart() - ((CategorizedProblem) o2).getSourceStart();
+		}
+	};
 
+public CompilationResult(char[] fileName, int unitIndex, int totalUnitsKnown, int maxProblemPerUnit){
 	this.fileName = fileName;
 	this.unitIndex = unitIndex;
 	this.totalUnitsKnown = totalUnitsKnown;
 	this.maxProblemPerUnit = maxProblemPerUnit;
 }
 
-public CompilationResult(
-		ICompilationUnit compilationUnit,
-		int unitIndex, 
-		int totalUnitsKnown,
-		int maxProblemPerUnit){
-
+public CompilationResult(ICompilationUnit compilationUnit, int unitIndex, int totalUnitsKnown, int maxProblemPerUnit){
 	this.fileName = compilationUnit.getFileName();
 	this.compilationUnit = compilationUnit;
 	this.unitIndex = unitIndex;
@@ -109,7 +100,7 @@ private int computePriority(CategorizedProblem problem){
 	final int P_OUTSIDE_METHOD = 40000;
 	final int P_FIRST_ERROR = 20000;
 	final int P_ERROR = 100000;
-	
+
 	int priority = 10000 - problem.getSourceLineNumber(); // early problems first
 	if (priority < 0) priority = 0;
 	if (problem.isError()){
@@ -135,9 +126,9 @@ private int computePriority(CategorizedProblem problem){
 }
 
 public CategorizedProblem[] getAllProblems() {
-	CategorizedProblem[] onlyProblems = this.getProblems();
+	CategorizedProblem[] onlyProblems = getProblems();
 	int onlyProblemCount = onlyProblems != null ? onlyProblems.length : 0;
-	CategorizedProblem[] onlyTasks = this.getTasks();
+	CategorizedProblem[] onlyTasks = getTasks();
 	int onlyTaskCount = onlyTasks != null ? onlyTasks.length : 0;
 	if (onlyTaskCount == 0) {
 		return onlyProblems;
@@ -145,7 +136,6 @@ public CategorizedProblem[] getAllProblems() {
 	if (onlyProblemCount == 0) {
 		return onlyTasks;
 	}
-
 	int totalNumberOfProblem = onlyProblemCount + onlyTaskCount;
 	CategorizedProblem[] allProblems = new CategorizedProblem[totalNumberOfProblem];
 	int allProblemIndex = 0;
@@ -189,7 +179,7 @@ public CategorizedProblem[] getAllProblems() {
 public ClassFile[] getClassFiles() {
 	ClassFile[] classFiles = new ClassFile[this.compiledTypes.size()];
 	this.compiledTypes.values().toArray(classFiles);
-	return classFiles;	
+	return classFiles;
 }
 
 /**
@@ -307,7 +297,6 @@ public boolean hasWarnings() {
 
 private void quickPrioritize(CategorizedProblem[] problemList, int left, int right) {
 	if (left >= right) return;
-
 	// sort the problems by their priority... starting with the highest priority
 	int original_left = left;
 	int original_right = right;
@@ -330,12 +319,14 @@ private void quickPrioritize(CategorizedProblem[] problemList, int left, int rig
 	if (left < original_right)
 		quickPrioritize(problemList, left, original_right);
 }
+
 /*
  * Record the compilation unit result's package name
  */
 public void recordPackageName(char[][] packName) {
 	this.packageName = packName;
 }
+
 public void record(CategorizedProblem newProblem, ReferenceContext referenceContext) {
 	//new Exception("VERBOSE PROBLEM REPORTING").printStackTrace();
 	if(newProblem.getID() == IProblem.Task) {
@@ -396,7 +387,7 @@ public String toString(){
 		while (keys.hasNext()) {
 			char[] typeName = (char[]) keys.next();
 			buffer.append("\t - ").append(typeName).append('\n');   //$NON-NLS-1$
-			
+
 		}
 	} else {
 		buffer.append("No COMPILED type\n");  //$NON-NLS-1$
@@ -408,7 +399,7 @@ public String toString(){
 		}
 	} else {
 		buffer.append("No PROBLEM\n"); //$NON-NLS-1$
-	} 
+	}
 	return buffer.toString();
 }
 }

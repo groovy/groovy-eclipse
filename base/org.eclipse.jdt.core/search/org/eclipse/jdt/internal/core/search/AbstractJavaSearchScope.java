@@ -26,7 +26,7 @@ abstract public AccessRuleSet getAccessRuleSet(String relativePath, String conta
 
 /**
  * Returns the package fragment root corresponding to a given resource path.
- * 
+ *
  * @param resourcePathString path of expected package fragment root.
  * @param jarSeparatorIndex the index of the jar separator in the resource path, or -1 if none
  * @param jarPath the already extracted jar path, or null if none

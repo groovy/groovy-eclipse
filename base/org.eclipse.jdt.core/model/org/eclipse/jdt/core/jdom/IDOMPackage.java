@@ -10,12 +10,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.jdom;
 /**
- * Represents a package declaration. 
- * The corresponding syntactic unit is PackageDeclaration (JLS2 7.4). 
+ * Represents a package declaration.
+ * The corresponding syntactic unit is PackageDeclaration (JLS2 7.4).
  * A Package has no children, and its parent is a compilation unit.
- * 
+ *
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  * @noimplement This interface is not intended to be implemented by clients.
  */
@@ -25,7 +25,7 @@ public interface IDOMPackage extends IDOMNode {
  * method returns the name of this package declaration, or <code>null</code>
  * if it has none. The syntax for a package name corresponds to PackageName
  * as defined by PackageDeclaration (JLS2 7.4).
- * 
+ *
  * @return the name of this package declaration, or <code>null</code>
  *         if it has none
  */
@@ -36,7 +36,7 @@ public String getName();
  * name corresponds to PackageName as defined by PackageDeclaration (JLS2 7.4).
  * A <code>null</code> name indicates an empty package declaration; that is,
  * <code>getContents</code> returns the empty string.
- * 
+ *
  * @param name the given name
  */
 public void setName(String name);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @see IDOMCompilationUnit
  * @see DOMNode
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 class DOMCompilationUnit extends DOMNode implements IDOMCompilationUnit, SuffixConstants {
@@ -39,7 +39,7 @@ class DOMCompilationUnit extends DOMNode implements IDOMCompilationUnit, SuffixC
  * Creates a new empty COMPILATION_UNIT document fragment.
  */
 DOMCompilationUnit() {
-	fHeader=""; //$NON-NLS-1$
+	this.fHeader=""; //$NON-NLS-1$
 }
 /**
  * Creates a new COMPILATION_UNIT on the given range of the document.
@@ -47,13 +47,13 @@ DOMCompilationUnit() {
  * @param document - the document containing this node's original contents
  * @param sourceRange - a two element array of integers describing the
  *		entire inclusive source range of this node within its document.
- * 		A compilation unit's source range is the entire document - 
+ * 		A compilation unit's source range is the entire document -
  *		the first integer is zero, and the second integer is the position
  *		of the last character in the document.
  */
 DOMCompilationUnit(char[] document, int[] sourceRange) {
 	super(document, sourceRange, null, new int[]{-1, -1});
-	fHeader = ""; //$NON-NLS-1$
+	this.fHeader = ""; //$NON-NLS-1$
 }
 /**
  * @see DOMNode#appendContents(CharArrayBuffer)
@@ -72,7 +72,7 @@ public boolean canHaveChildren() {
  * @see IDOMCompilationUnit#getHeader()
  */
 public String getHeader() {
-	return fHeader;
+	return this.fHeader;
 }
 /**
  * @see IDOMNode#getJavaElement
@@ -81,16 +81,16 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 	if (parent.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
 		return ((IPackageFragment)parent).getCompilationUnit(getName());
 	} else {
-		throw new IllegalArgumentException(Messages.element_illegalParent); 
+		throw new IllegalArgumentException(Messages.element_illegalParent);
 	}
 }
 /**
  * @see IDOMCompilationUnit#getName()
  */
-public String getName() { 
+public String getName() {
 	IDOMType topLevelType= null;
 	IDOMType firstType= null;
-	IDOMNode child= fFirstChild;
+	IDOMNode child= this.fFirstChild;
 	while (child != null) {
 		if (child.getNodeType() == IDOMNode.TYPE) {
 			IDOMType type= (IDOMType)child;
@@ -127,7 +127,7 @@ protected void initalizeHeader() {
 	if (child != null) {
 		int childStart = child.getStartPosition();
 		if (childStart > 1) {
-			setHeader(new String(fDocument, 0, childStart));
+			setHeader(new String(this.fDocument, 0, childStart));
 		}
 	}
 }
@@ -137,11 +137,11 @@ protected void initalizeHeader() {
 public boolean isAllowableChild(IDOMNode node) {
 	if (node != null) {
 		int type= node.getNodeType();
-		return type == IDOMNode.PACKAGE || type == IDOMNode.IMPORT || type == IDOMNode.TYPE; 
+		return type == IDOMNode.PACKAGE || type == IDOMNode.IMPORT || type == IDOMNode.TYPE;
 	} else {
 		return false;
 	}
-	
+
 }
 /**
  * @see DOMNode
@@ -162,7 +162,7 @@ void normalize(ILineStartFinder finder) {
  * @see IDOMCompilationUnit#setHeader(String)
  */
 public void setHeader(String comment) {
-	fHeader= comment;
+	this.fHeader= comment;
 	fragment();
 }
 /**
@@ -176,7 +176,7 @@ public void setName(String name) {
  */
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
-	fHeader= ((DOMCompilationUnit)node).fHeader;
+	this.fHeader= ((DOMCompilationUnit)node).fHeader;
 }
 /**
  * @see IDOMNode#toString()

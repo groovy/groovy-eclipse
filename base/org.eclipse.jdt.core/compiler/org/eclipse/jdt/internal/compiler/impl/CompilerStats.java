@@ -16,7 +16,7 @@ public class CompilerStats implements Comparable {
 	public long startTime;
 	public long endTime;
 	public long lineCount;
-	
+
 	// compile phases
 	public long parseTime;
 	public long resolveTime;

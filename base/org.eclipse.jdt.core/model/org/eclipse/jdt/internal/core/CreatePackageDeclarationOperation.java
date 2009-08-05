@@ -81,14 +81,14 @@ protected IJavaElement generateResultHandle() {
  * @see CreateElementInCUOperation#getMainTaskName()
  */
 public String getMainTaskName(){
-	return Messages.operation_createPackageProgress; 
+	return Messages.operation_createPackageProgress;
 }
 /**
  * Sets the correct position for new package declaration:<ul>
  * <li> before the first import
  * <li> if no imports, before the first type
  * <li> if no type - first thing in the CU
- * <li> 
+ * <li>
  */
 protected void initializeDefaultPosition() {
 	try {
@@ -109,7 +109,7 @@ protected void initializeDefaultPosition() {
 }
 /**
  * Possible failures: <ul>
- *  <li>NO_ELEMENTS_TO_PROCESS - no compilation unit was supplied to the operation 
+ *  <li>NO_ELEMENTS_TO_PROCESS - no compilation unit was supplied to the operation
  *  <li>INVALID_NAME - a name supplied to the operation was not a valid
  * 		package declaration name.
  * </ul>

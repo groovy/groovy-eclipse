@@ -36,7 +36,7 @@ private static int combinedMatchRule(int matchRule, int matchRule2) {
 
 public AndPattern(SearchPattern leftPattern, SearchPattern rightPattern) {
 	super(AND_PATTERN, combinedMatchRule(leftPattern.getMatchRule(), rightPattern.getMatchRule()));
-	((InternalSearchPattern) this).mustResolve = ((InternalSearchPattern) leftPattern).mustResolve || ((InternalSearchPattern) rightPattern).mustResolve;
+	this.mustResolve = leftPattern.mustResolve || rightPattern.mustResolve;
 
 	SearchPattern[] leftPatterns = leftPattern instanceof AndPattern ? ((AndPattern) leftPattern).patterns : null;
 	SearchPattern[] rightPatterns = rightPattern instanceof AndPattern ? ((AndPattern) rightPattern).patterns : null;
@@ -54,7 +54,7 @@ public AndPattern(SearchPattern leftPattern, SearchPattern rightPattern) {
 		System.arraycopy(rightPatterns, 0, this.patterns, leftSize, rightSize);
 
 	// Store erasure match
-	matchCompatibility = getMatchRule() & MATCH_COMPATIBILITY_MASK;
+	this.matchCompatibility = getMatchRule() & MATCH_COMPATIBILITY_MASK;
 
 	this.current = 0;
 }
@@ -62,7 +62,7 @@ public AndPattern(SearchPattern leftPattern, SearchPattern rightPattern) {
 /* (non-Javadoc)
  * @see org.eclipse.jdt.internal.core.search.matching.InternalSearchPattern#currentPattern()
  */
-SearchPattern currentPattern() {
+public SearchPattern currentPattern() {
 	return this.patterns[this.current++];
 }
 

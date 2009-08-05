@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 
 public class JavadocSingleTypeReference extends SingleTypeReference {
-	
+
 	public int tagSourceStart, tagSourceEnd;
 	public PackageBinding packageBinding;
 
@@ -46,25 +46,30 @@ public class JavadocSingleTypeReference extends SingleTypeReference {
 				switch (this.resolvedType.problemId()) {
 					case ProblemReasons.NotFound :
 					case ProblemReasons.NotVisible :
-					case ProblemReasons.InheritedNameHidesEnclosingName :						
+					case ProblemReasons.InheritedNameHidesEnclosingName :
 						TypeBinding type = this.resolvedType.closestMatch();
-						return type;			
+						return type;
 					default :
 						return null;
-				}			
+				}
 			}
 		}
 		this.resolvedType = getTypeBinding(scope);
 		// End resolution when getTypeBinding(scope) returns null. This may happen in
-		// certain circumstances, typically when an illegal access is done on a type 
+		// certain circumstances, typically when an illegal access is done on a type
 		// variable (see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=204749)
 		if (this.resolvedType == null) return null;
-		
+
 		if (!this.resolvedType.isValidBinding()) {
 			char[][] tokens = { this.token };
 			Binding binding = scope.getTypeOrPackage(tokens);
 			if (binding instanceof PackageBinding) {
 				this.packageBinding = (PackageBinding) binding;
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=211054
+				// allow references to current package only. All other package references should be reported as invalid
+				if (scope.compilationUnitScope().fPackage != this.packageBinding) {
+					scope.problemReporter().javadocInvalidReference(this.sourceStart, this.sourceEnd);
+				}
 			} else {
 				if (this.resolvedType.problemId() == ProblemReasons.NonStaticReferenceInStaticContext) {
 					TypeBinding closestMatch = this.resolvedType.closestMatch();
@@ -93,7 +98,7 @@ public class JavadocSingleTypeReference extends SingleTypeReference {
 	protected void reportInvalidType(Scope scope) {
 		scope.problemReporter().javadocInvalidType(this, this.resolvedType, scope.getDeclarationModifiers());
 	}
-	
+
 	/* (non-Javadoc)
 	 * Redefine to capture javadoc specific signatures
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#traverse(org.eclipse.jdt.internal.compiler.ASTVisitor, org.eclipse.jdt.internal.compiler.lookup.BlockScope)

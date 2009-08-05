@@ -27,48 +27,48 @@ import java.util.List;
  *      [ <b>&lt;</b> Type { <b>,</b> Type } <b>&gt;</b> ]
  *		      <b>this</b> <b>(</b> [ Expression { <b>,</b> Expression } ] <b>)</b> <b>;</b>
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class ConstructorInvocation extends Statement {
-	
+
 	/**
 	 * The "typeArguments" structural property of this node type (added in JLS3 API).
 	 * @since 3.1
 	 */
-	public static final ChildListPropertyDescriptor TYPE_ARGUMENTS_PROPERTY = 
+	public static final ChildListPropertyDescriptor TYPE_ARGUMENTS_PROPERTY =
 		new ChildListPropertyDescriptor(ConstructorInvocation.class, "typeArguments", Type.class, NO_CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
 	 * The "arguments" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildListPropertyDescriptor ARGUMENTS_PROPERTY = 
+	public static final ChildListPropertyDescriptor ARGUMENTS_PROPERTY =
 		new ChildListPropertyDescriptor(ConstructorInvocation.class, "arguments", Expression.class, CYCLE_RISK); //$NON-NLS-1$
-	
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 * @since 3.0
 	 */
 	private static final List PROPERTY_DESCRIPTORS_2_0;
-	
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 * @since 3.1
 	 */
 	private static final List PROPERTY_DESCRIPTORS_3_0;
-	
+
 	static {
 		List properyList = new ArrayList(2);
 		createPropertyList(ConstructorInvocation.class, properyList);
 		addProperty(ARGUMENTS_PROPERTY, properyList);
 		PROPERTY_DESCRIPTORS_2_0 = reapPropertyList(properyList);
-		
+
 		properyList = new ArrayList(3);
 		createPropertyList(ConstructorInvocation.class, properyList);
 		addProperty(TYPE_ARGUMENTS_PROPERTY, properyList);
@@ -79,11 +79,11 @@ public class ConstructorInvocation extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
@@ -94,9 +94,9 @@ public class ConstructorInvocation extends Statement {
 			return PROPERTY_DESCRIPTORS_3_0;
 		}
 	}
-			
+
 	/**
-	 * The type arguments (element type: <code>Type</code>). 
+	 * The type arguments (element type: <code>Type</code>).
 	 * Null in JLS2. Added in JLS3; defaults to an empty list
 	 * (see constructor).
 	 * @since 3.1
@@ -104,7 +104,7 @@ public class ConstructorInvocation extends Statement {
 	private ASTNode.NodeList typeArguments = null;
 
 	/**
-	 * The list of argument expressions (element type: 
+	 * The list of argument expressions (element type:
 	 * <code>Expression</code>). Defaults to an empty list.
 	 */
 	private ASTNode.NodeList arguments =
@@ -113,11 +113,11 @@ public class ConstructorInvocation extends Statement {
 	/**
 	 * Creates a new AST node for an alternate constructor invocation statement
 	 * owned by the given AST. By default, an empty list of arguments.
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	ConstructorInvocation(AST ast) {
-		super(ast);	
+		super(ast);
 		if (ast.apiLevel >= AST.JLS3) {
 			this.typeArguments = new ASTNode.NodeList(TYPE_ARGUMENTS_PROPERTY);
 		}
@@ -129,7 +129,7 @@ public class ConstructorInvocation extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -156,7 +156,7 @@ public class ConstructorInvocation extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		ConstructorInvocation result = new ConstructorInvocation(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		if (this.ast.apiLevel >= AST.JLS3) {
 			result.typeArguments().addAll(ASTNode.copySubtrees(target, typeArguments()));
@@ -186,17 +186,17 @@ public class ConstructorInvocation extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the live ordered list of type arguments of this constructor
 	 * invocation (added in JLS3 API).
-	 * 
+	 *
 	 * @return the live list of type arguments
 	 *    (element type: <code>Type</code>)
 	 * @exception UnsupportedOperationException if this operation is used in
 	 * a JLS2 AST
 	 * @since 3.1
-	 */ 
+	 */
 	public List typeArguments() {
 		// more efficient than just calling unsupportedIn2() to check
 		if (this.typeArguments == null) {
@@ -204,14 +204,14 @@ public class ConstructorInvocation extends Statement {
 		}
 		return this.typeArguments;
 	}
-	
+
 	/**
 	 * Returns the live ordered list of argument expressions in this alternate
 	 * constructor invocation statement.
-	 * 
-	 * @return the live list of argument expressions 
+	 *
+	 * @return the live list of argument expressions
 	 *    (element type: <code>Expression</code>)
-	 */ 
+	 */
 	public List arguments() {
 		return this.arguments;
 	}
@@ -223,10 +223,10 @@ public class ConstructorInvocation extends Statement {
 	 * Note that bindings are generally unavailable unless requested when the
 	 * AST is being built.
 	 * </p>
-	 * 
+	 *
 	 * @return the constructor binding, or <code>null</code> if the binding
 	 *    cannot be resolved
-	 */	
+	 */
 	public IMethodBinding resolveConstructorBinding() {
 		return this.ast.getBindingResolver().resolveConstructor(this);
 	}
@@ -238,12 +238,12 @@ public class ConstructorInvocation extends Statement {
 		// treat Code as free
 		return BASE_NODE_SIZE + 2 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
-		return 
+		return
 			memSize()
 			+ (this.typeArguments == null ? 0 : this.typeArguments.listSize())
 			+ (this.arguments == null ? 0 : this.arguments.listSize());

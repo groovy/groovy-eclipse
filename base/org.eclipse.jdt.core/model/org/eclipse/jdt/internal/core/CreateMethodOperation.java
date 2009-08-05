@@ -29,7 +29,7 @@ import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * <p>This operation creates an instance method. 
+ * <p>This operation creates an instance method.
  *
  * <p>Required Attributes:<ul>
  *  <li>Containing type
@@ -38,9 +38,9 @@ import org.eclipse.jdt.internal.core.util.Util;
  * </ul>
  */
 public class CreateMethodOperation extends CreateTypeMemberOperation {
-	
+
 	protected String[] parameterTypes;
-	
+
 /**
  * When executed, this operation will create a method
  * in the given type with the specified source.
@@ -94,7 +94,7 @@ private String getASTNodeName() {
  * @see CreateElementInCUOperation#getMainTaskName()
  */
 public String getMainTaskName(){
-	return Messages.operation_createMethodProgress; 
+	return Messages.operation_createMethodProgress;
 }
 protected SimpleName rename(ASTNode node, SimpleName newName) {
 	MethodDeclaration method = (MethodDeclaration) node;
@@ -116,8 +116,8 @@ protected IJavaModelStatus verifyNameCollision() {
 		String[] types = convertASTMethodTypesToSignatures();
 		if (type.getMethod(name, types).exists()) {
 			return new JavaModelStatus(
-				IJavaModelStatusConstants.NAME_COLLISION, 
-				Messages.bind(Messages.status_nameCollision, name)); 
+				IJavaModelStatusConstants.NAME_COLLISION,
+				Messages.bind(Messages.status_nameCollision, name));
 		}
 	}
 	return JavaModelStatus.VERIFIED_OK;

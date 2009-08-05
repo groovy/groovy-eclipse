@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @see IDOMPackage
  * @see DOMNode
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 class DOMPackage extends DOMNode implements IDOMPackage {
@@ -76,26 +76,26 @@ DOMPackage(char[] document, int[] sourceRange, String name, int[] nameRange) {
  * @see DOMNode#appendFragmentedContents(CharArrayBuffer)
  */
 protected void appendFragmentedContents(CharArrayBuffer buffer) {
-	if (fNameRange[0] < 0) {
+	if (this.fNameRange[0] < 0) {
 		String lineSeparator = Util.getLineSeparator(buffer.toString(), null);
 		buffer
 			.append("package ") //$NON-NLS-1$
-			.append(fName)
+			.append(this.fName)
 			.append(';')
 			.append(lineSeparator)
 			.append(lineSeparator);
 	} else {
 		buffer
-			.append(fDocument, fSourceRange[0], fNameRange[0] - fSourceRange[0])
-			.append(fName)
-			.append(fDocument, fNameRange[1] + 1, fSourceRange[1] - fNameRange[1]);
+			.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0])
+			.append(this.fName)
+			.append(this.fDocument, this.fNameRange[1] + 1, this.fSourceRange[1] - this.fNameRange[1]);
 	}
 }
 /**
  * @see IDOMNode#getContents()
  */
 public String getContents() {
-	if (fName == null) {
+	if (this.fName == null) {
 		return null;
 	} else {
 		return super.getContents();
@@ -114,7 +114,7 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 	if (parent.getElementType() == IJavaElement.COMPILATION_UNIT) {
 		return ((ICompilationUnit)parent).getPackageDeclaration(getName());
 	} else {
-		throw new IllegalArgumentException(Messages.element_illegalParent); 
+		throw new IllegalArgumentException(Messages.element_illegalParent);
 	}
 }
 /**

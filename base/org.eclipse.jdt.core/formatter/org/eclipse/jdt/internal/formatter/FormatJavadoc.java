@@ -36,7 +36,7 @@ public FormatJavadoc(int sourceStart, int sourceEnd, int length) {
 /**
  * Return the first block of the javadoc or <code>null</code> if has no block
  * at all.
- * 
+ *
  * @return a {@link FormatJavadocBlock} or <code>null</code>.
  */
 public FormatJavadocBlock getFirstBlock() {
@@ -48,7 +48,7 @@ public FormatJavadocBlock getFirstBlock() {
 
 /**
  * Returns whether it has several lines or not.
- * 
+ *
  * @return <code>true</code> if the javadoc comment has several lines
  * 	<code>false</code> otherwise (e.g. header and footer are on the same
  * 	line).

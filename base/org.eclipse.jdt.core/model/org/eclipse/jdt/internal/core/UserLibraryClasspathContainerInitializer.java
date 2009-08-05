@@ -36,7 +36,7 @@ public class UserLibraryClasspathContainerInitializer extends ClasspathContainer
 	public Object getComparisonID(IPath containerPath, IJavaProject project) {
 		return containerPath;
 	}
-	
+
 	/**
 	 * @see org.eclipse.jdt.core.ClasspathContainerInitializer#getDescription(org.eclipse.core.runtime.IPath, org.eclipse.jdt.core.IJavaProject)
 	 */
@@ -61,11 +61,11 @@ public class UserLibraryClasspathContainerInitializer extends ClasspathContainer
 			verbose_not_a_user_library(project, containerPath);
 		}
 	}
-	
+
 	private boolean isUserLibraryContainer(IPath path) {
 		return path != null && path.segmentCount() == 2 && JavaCore.USER_LIBRARY_CONTAINER_ID.equals(path.segment(0));
 	}
-	
+
 	/**
 	 * @see org.eclipse.jdt.core.ClasspathContainerInitializer#requestClasspathContainerUpdate(org.eclipse.core.runtime.IPath, org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.core.IClasspathContainer)
 	 */
@@ -87,7 +87,7 @@ public class UserLibraryClasspathContainerInitializer extends ClasspathContainer
 			"	project: " + project.getElementName() + '\n' + //$NON-NLS-1$
 			"	userLibraryName: " + userLibraryName); //$NON-NLS-1$
 	}
-	
+
 	private void verbose_not_a_user_library(IJavaProject project, IPath containerPath) {
 		Util.verbose(
 			"UserLibrary INIT - FAILED (not a user library)\n" + //$NON-NLS-1$

@@ -59,13 +59,13 @@ public BuildNotifier(IProgressMonitor monitor, IProject project) {
  * Notification before a compile that a unit is about to be compiled.
  */
 public void aboutToCompile(SourceFile unit) {
-	String message = Messages.bind(Messages.build_compiling, unit.resource.getFullPath().removeLastSegments(1).makeRelative().toString()); 
+	String message = Messages.bind(Messages.build_compiling, unit.resource.getFullPath().removeLastSegments(1).makeRelative().toString());
 	subTask(message);
 }
 
 public void begin() {
-	if (monitor != null)
-		monitor.beginTask("", totalWork); //$NON-NLS-1$
+	if (this.monitor != null)
+		this.monitor.beginTask("", this.totalWork); //$NON-NLS-1$
 	this.previousSubtask = null;
 }
 
@@ -73,7 +73,7 @@ public void begin() {
  * Check whether the build has been canceled.
  */
 public void checkCancel() {
-	if (monitor != null && monitor.isCanceled())
+	if (this.monitor != null && this.monitor.isCanceled())
 		throw new OperationCanceledException();
 }
 
@@ -82,12 +82,12 @@ public void checkCancel() {
  * Must use this call instead of checkCancel() when within the compiler.
  */
 public void checkCancelWithinCompiler() {
-	if (monitor != null && monitor.isCanceled() && !cancelling) {
+	if (this.monitor != null && this.monitor.isCanceled() && !this.cancelling) {
 		// Once the compiler has been canceled, don't check again.
 		setCancelling(true);
 		// Only AbortCompilation can stop the compiler cleanly.
 		// We check cancelation again following the call to compile.
-		throw new AbortCompilation(true, null); 
+		throw new AbortCompilation(true, null);
 	}
 }
 
@@ -95,9 +95,9 @@ public void checkCancelWithinCompiler() {
  * Notification while within a compile that a unit has finished being compiled.
  */
 public void compiled(SourceFile unit) {
-	String message = Messages.bind(Messages.build_compiling, unit.resource.getFullPath().removeLastSegments(1).makeRelative().toString()); 
+	String message = Messages.bind(Messages.build_compiling, unit.resource.getFullPath().removeLastSegments(1).makeRelative().toString());
 	subTask(message);
-	updateProgressDelta(progressPerCompilationUnit);
+	updateProgressDelta(this.progressPerCompilationUnit);
 	checkCancelWithinCompiler();
 }
 
@@ -108,9 +108,9 @@ public void done() {
 	FixedWarningCount = this.fixedWarningCount;
 
 	updateProgress(1.0f);
-	subTask(Messages.build_done); 
-	if (monitor != null)
-		monitor.done();
+	subTask(Messages.build_done);
+	if (this.monitor != null)
+		this.monitor.done();
 	this.previousSubtask = null;
 }
 
@@ -118,8 +118,8 @@ public void done() {
  * Returns a string describing the problems.
  */
 protected String problemsMessage() {
-	int numNew = newErrorCount + newWarningCount;
-	int numFixed = fixedErrorCount + fixedWarningCount;
+	int numNew = this.newErrorCount + this.newWarningCount;
+	int numFixed = this.fixedErrorCount + this.fixedWarningCount;
 	if (numNew == 0 && numFixed == 0) return ""; //$NON-NLS-1$
 
 	boolean displayBoth = numNew > 0 && numFixed > 0;
@@ -127,47 +127,47 @@ protected String problemsMessage() {
 	buffer.append('(');
 	if (numNew > 0) {
 		// (Found x errors + y warnings)
-		buffer.append(Messages.build_foundHeader); 
+		buffer.append(Messages.build_foundHeader);
 		buffer.append(' ');
-		if (displayBoth || newErrorCount > 0) {
-			if (newErrorCount == 1)
-				buffer.append(Messages.build_oneError); 
+		if (displayBoth || this.newErrorCount > 0) {
+			if (this.newErrorCount == 1)
+				buffer.append(Messages.build_oneError);
 			else
-				buffer.append(Messages.bind(Messages.build_multipleErrors, String.valueOf(newErrorCount))); 
-			if (displayBoth || newWarningCount > 0)
+				buffer.append(Messages.bind(Messages.build_multipleErrors, String.valueOf(this.newErrorCount)));
+			if (displayBoth || this.newWarningCount > 0)
 				buffer.append(" + "); //$NON-NLS-1$
 		}
-		if (displayBoth || newWarningCount > 0) {
-			if (newWarningCount == 1)
-				buffer.append(Messages.build_oneWarning); 
+		if (displayBoth || this.newWarningCount > 0) {
+			if (this.newWarningCount == 1)
+				buffer.append(Messages.build_oneWarning);
 			else
-				buffer.append(Messages.bind(Messages.build_multipleWarnings, String.valueOf(newWarningCount))); 
+				buffer.append(Messages.bind(Messages.build_multipleWarnings, String.valueOf(this.newWarningCount)));
 		}
 		if (numFixed > 0)
 			buffer.append(", "); //$NON-NLS-1$
 	}
 	if (numFixed > 0) {
 		// (Fixed x errors + y warnings) or (Found x errors + y warnings, Fixed x + y)
-		buffer.append(Messages.build_fixedHeader); 
+		buffer.append(Messages.build_fixedHeader);
 		buffer.append(' ');
 		if (displayBoth) {
-			buffer.append(String.valueOf(fixedErrorCount));
+			buffer.append(String.valueOf(this.fixedErrorCount));
 			buffer.append(" + "); //$NON-NLS-1$
-			buffer.append(String.valueOf(fixedWarningCount));
+			buffer.append(String.valueOf(this.fixedWarningCount));
 		} else {
-			if (fixedErrorCount > 0) {
-				if (fixedErrorCount == 1)
-					buffer.append(Messages.build_oneError); 
+			if (this.fixedErrorCount > 0) {
+				if (this.fixedErrorCount == 1)
+					buffer.append(Messages.build_oneError);
 				else
-					buffer.append(Messages.bind(Messages.build_multipleErrors, String.valueOf(fixedErrorCount))); 
-				if (fixedWarningCount > 0)
+					buffer.append(Messages.bind(Messages.build_multipleErrors, String.valueOf(this.fixedErrorCount)));
+				if (this.fixedWarningCount > 0)
 					buffer.append(" + "); //$NON-NLS-1$
 			}
-			if (fixedWarningCount > 0) {
-				if (fixedWarningCount == 1)
-					buffer.append(Messages.build_oneWarning); 
+			if (this.fixedWarningCount > 0) {
+				if (this.fixedWarningCount == 1)
+					buffer.append(Messages.build_oneWarning);
 				else
-					buffer.append(Messages.bind(Messages.build_multipleWarnings, String.valueOf(fixedWarningCount))); 
+					buffer.append(Messages.bind(Messages.build_multipleWarnings, String.valueOf(this.fixedWarningCount)));
 			}
 		}
 	}
@@ -198,15 +198,15 @@ public void subTask(String message) {
 
 	if (msg.equals(this.previousSubtask)) return; // avoid refreshing with same one
 	//if (JavaBuilder.DEBUG) System.out.println(msg);
-	if (monitor != null)
-		monitor.subTask(msg);
+	if (this.monitor != null)
+		this.monitor.subTask(msg);
 
 	this.previousSubtask = msg;
 }
 
 protected void updateProblemCounts(CategorizedProblem[] newProblems) {
 	for (int i = 0, l = newProblems.length; i < l; i++)
-		if (newProblems[i].isError()) newErrorCount++; else newWarningCount++;
+		if (newProblems[i].isError()) this.newErrorCount++; else this.newWarningCount++;
 }
 
 /**
@@ -233,7 +233,7 @@ protected void updateProblemCounts(IMarker[] oldProblems, CategorizedProblem[] n
 					}
 				}
 			}
-			if (isError) newErrorCount++; else newWarningCount++;
+			if (isError) this.newErrorCount++; else this.newWarningCount++;
 		}
 	}
 	if (oldProblems != null) {
@@ -252,7 +252,7 @@ protected void updateProblemCounts(IMarker[] oldProblems, CategorizedProblem[] n
 						continue next;
 				}
 			}
-			if (wasError) fixedErrorCount++; else fixedWarningCount++;
+			if (wasError) this.fixedErrorCount++; else this.fixedWarningCount++;
 		}
 	}
 }
@@ -262,8 +262,8 @@ public void updateProgress(float newPercentComplete) {
 		this.percentComplete = Math.min(newPercentComplete, 1.0f);
 		int work = Math.round(this.percentComplete * this.totalWork);
 		if (work > this.workDone) {
-			if (monitor != null)
-				monitor.worked(work - this.workDone);
+			if (this.monitor != null)
+				this.monitor.worked(work - this.workDone);
 			//if (JavaBuilder.DEBUG)
 				//System.out.println(java.text.NumberFormat.getPercentInstance().format(this.percentComplete));
 			this.workDone = work;
@@ -272,6 +272,6 @@ public void updateProgress(float newPercentComplete) {
 }
 
 public void updateProgressDelta(float percentWorked) {
-	updateProgress(percentComplete + percentWorked);
+	updateProgress(this.percentComplete + percentWorked);
 }
 }

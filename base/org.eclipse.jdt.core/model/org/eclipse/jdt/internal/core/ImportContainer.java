@@ -114,7 +114,7 @@ protected void toString(int tab, StringBuffer buffer) {
  *  Debugging purposes
  */
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
-	buffer.append(this.tabString(tab));
+	buffer.append(tabString(tab));
 	buffer.append("<import container>"); //$NON-NLS-1$
 	if (info == null) {
 		buffer.append(" (not open)"); //$NON-NLS-1$

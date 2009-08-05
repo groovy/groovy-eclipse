@@ -52,8 +52,8 @@ ReferenceBinding resolve(LookupEnvironment environment, boolean convertGenericTo
 			// report the missing class file first - only if not resolving a previously missing type
 			if ((this.tagBits & TagBits.HasMissingType) == 0) {
 				environment.problemReporter.isClassPathCorrect(
-					this.compoundName, 
-					environment.unitBeingCompleted, 
+					this.compoundName,
+					environment.unitBeingCompleted,
 					environment.missingClassFileLocation);
 			}
 			// create a proxy for the missing BinaryType
@@ -79,6 +79,6 @@ void setResolvedType(ReferenceBinding targetType, LookupEnvironment environment)
 	environment.updateCaches(this, targetType);
 }
 public String toString() {
-	return "Unresolved type " + ((compoundName != null) ? CharOperation.toString(compoundName) : "UNNAMED"); //$NON-NLS-1$ //$NON-NLS-2$
+	return "Unresolved type " + ((this.compoundName != null) ? CharOperation.toString(this.compoundName) : "UNNAMED"); //$NON-NLS-1$ //$NON-NLS-2$
 }
 }

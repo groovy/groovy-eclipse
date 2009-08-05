@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,9 +38,9 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 
 public class CompletionElementNotifier extends SourceElementNotifier {
-	
+
 	private ASTNode assistNode;
-	
+
 	public CompletionElementNotifier(
 			CompletionUnitStructureRequestor requestor,
 			boolean reportLocalDeclarations,
@@ -48,7 +48,7 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		super(requestor, reportLocalDeclarations);
 		this.assistNode = assistNode;
 	}
-	
+
 	protected char[][][] getArguments(Argument[] arguments) {
 		int argumentLength = arguments.length;
 		char[][] argumentTypes = new char[argumentLength][];
@@ -56,21 +56,21 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		int argumentCount = 0;
 		next : for (int i = 0; i < argumentLength; i++) {
 			Argument argument = arguments[i];
-			
+
 			if (argument instanceof CompletionOnArgumentName && argument.name.length == 0) continue next;
-			
+
 			argumentTypes[argumentCount] = CharOperation.concatWith(argument.type.getParameterizedTypeName(), '.');
 			argumentNames[argumentCount++] = argument.name;
 		}
-		
+
 		if (argumentCount < argumentLength) {
 			System.arraycopy(argumentTypes, 0, argumentTypes = new char[argumentCount][], 0, argumentCount);
 			System.arraycopy(argumentNames, 0, argumentNames = new char[argumentCount][], 0, argumentCount);
 		}
-		
+
 		return new char[][][] {argumentTypes, argumentNames};
 	}
-	
+
 	protected char[][] getInterfaceNames(TypeDeclaration typeDeclaration) {
 		char[][] interfaceNames = null;
 		int superInterfacesLength = 0;
@@ -93,13 +93,13 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 			int superInterfaceCount = 0;
 			next: for (int i = 0; i < superInterfacesLength; i++) {
 				TypeReference superInterface = superInterfaces[i];
-				
+
 				if (superInterface instanceof CompletionOnKeyword) continue next;
 				if (CompletionUnitStructureRequestor.hasEmptyName(superInterface, this.assistNode)) continue next;
-				
-				interfaceNames[superInterfaceCount++] = CharOperation.concatWith(superInterface.getParameterizedTypeName(), '.'); 
+
+				interfaceNames[superInterfaceCount++] = CharOperation.concatWith(superInterface.getParameterizedTypeName(), '.');
 			}
-			
+
 			if (superInterfaceCount == 0) return null;
 			if (superInterfaceCount < superInterfacesLength) {
 				System.arraycopy(interfaceNames, 0, interfaceNames = new char[superInterfaceCount][], 0, superInterfaceCount);
@@ -107,16 +107,16 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		}
 		return interfaceNames;
 	}
-	
+
 	protected char[] getSuperclassName(TypeDeclaration typeDeclaration) {
 		TypeReference superclass = typeDeclaration.superclass;
-		
+
 		if (superclass instanceof CompletionOnKeyword) return null;
 		if (CompletionUnitStructureRequestor.hasEmptyName(superclass, this.assistNode)) return null;
-				
+
 		return superclass != null ? CharOperation.concatWith(superclass.getParameterizedTypeName(), '.') : null;
 	}
-	
+
 	protected char[][] getThrownExceptions(AbstractMethodDeclaration methodDeclaration) {
 		char[][] thrownExceptionTypes = null;
 		TypeReference[] thrownExceptions = methodDeclaration.thrownExceptions;
@@ -126,14 +126,14 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 			thrownExceptionTypes = new char[thrownExceptionLength][];
 			next : for (int i = 0; i < thrownExceptionLength; i++) {
 				TypeReference thrownException = thrownExceptions[i];
-				
+
 				if (thrownException instanceof CompletionOnKeyword) continue next;
 				if (CompletionUnitStructureRequestor.hasEmptyName(thrownException, this.assistNode)) continue next;
-				
-				thrownExceptionTypes[thrownExceptionCount++] = 
-					CharOperation.concatWith(thrownException.getParameterizedTypeName(), '.'); 
+
+				thrownExceptionTypes[thrownExceptionCount++] =
+					CharOperation.concatWith(thrownException.getParameterizedTypeName(), '.');
 			}
-			
+
 			if (thrownExceptionCount == 0) return null;
 			if (thrownExceptionCount < thrownExceptionLength) {
 				System.arraycopy(thrownExceptionTypes, 0, thrownExceptionTypes = new char[thrownExceptionCount][], 0, thrownExceptionCount);
@@ -141,7 +141,7 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		}
 		return thrownExceptionTypes;
 	}
-	
+
 	protected char[][] getTypeParameterBounds(TypeParameter typeParameter) {
 		TypeReference firstBound = typeParameter.type;
 		TypeReference[] otherBounds = typeParameter.bounds;
@@ -157,11 +157,11 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 				for (int j = 0; j < otherBoundsLength; j++) {
 					TypeReference otherBound = otherBounds[j];
 					if (!CompletionUnitStructureRequestor.hasEmptyName(otherBound, this.assistNode)) {
-						boundNames[boundCount++] = 
+						boundNames[boundCount++] =
 							CharOperation.concatWith(otherBound.getParameterizedTypeName(), '.');
 					}
 				}
-				
+
 				if (boundCount == 0) {
 					boundNames = CharOperation.NO_CHAR_CHAR;
 				} else if (boundCount < otherBoundsLength + 1){
@@ -178,39 +178,39 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		} else {
 			typeParameterBounds = CharOperation.NO_CHAR_CHAR;
 		}
-		
+
 		return typeParameterBounds;
 	}
-	
-	protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDeclaration) {
+
+	protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDeclaration, TypeDeclaration declaringType, ImportReference currentPackage) {
 		if (methodDeclaration instanceof CompletionOnMethodReturnType) return;
 		if (methodDeclaration instanceof CompletionOnMethodTypeParameter) return;
 		if (methodDeclaration instanceof CompletionOnMethodName) return;
-		super.notifySourceElementRequestor(methodDeclaration);
+		super.notifySourceElementRequestor(methodDeclaration, declaringType, currentPackage);
 	}
-	
+
 	public void notifySourceElementRequestor(CompilationUnitDeclaration parsedUnit, int sourceStart, int sourceEnd, boolean reportReference, HashtableOfObjectToInt sourceEndsMap, Map nodesToCategoriesMap) {
 		super.notifySourceElementRequestor(parsedUnit, sourceStart, sourceEnd, reportReference, sourceEndsMap, nodesToCategoriesMap);
 	}
-	
+
 	protected void notifySourceElementRequestor(FieldDeclaration fieldDeclaration, TypeDeclaration declaringType) {
 		if (fieldDeclaration instanceof CompletionOnFieldType) return;
 		if (fieldDeclaration instanceof CompletionOnFieldName) return;
 		super.notifySourceElementRequestor(fieldDeclaration, declaringType);
 	}
-	
+
 	protected void notifySourceElementRequestor(ImportReference importReference, boolean isPackage) {
 		if (importReference instanceof CompletionOnKeyword2) return;
 		if (importReference instanceof CompletionOnImportReference ||
 				importReference instanceof CompletionOnPackageReference) {
 			if (importReference.tokens[importReference.tokens.length - 1].length == 0) return;
 		}
-		
+
 		super.notifySourceElementRequestor(importReference, isPackage);
 	}
-	
-	protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType) {
+
+	protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
 		if (typeDeclaration instanceof CompletionOnAnnotationOfType) return;
-		super.notifySourceElementRequestor(typeDeclaration, notifyTypePresence, declaringType);
+		super.notifySourceElementRequestor(typeDeclaration, notifyTypePresence, declaringType, currentPackage);
 	}
 }

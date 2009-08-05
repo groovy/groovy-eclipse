@@ -21,26 +21,26 @@ import java.util.List;
  * ContinueStatement:
  *    <b>continue</b> [ Identifier ] <b>;</b>
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class ContinueStatement extends Statement {
-			
+
 	/**
 	 * The "label" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor LABEL_PROPERTY = 
+	public static final ChildPropertyDescriptor LABEL_PROPERTY =
 		new ChildPropertyDescriptor(ContinueStatement.class, "label", SimpleName.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(2);
 		createPropertyList(ContinueStatement.class, properyList);
@@ -51,30 +51,30 @@ public class ContinueStatement extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The label, or <code>null</code> if none; none by default.
 	 */
 	private SimpleName optionalLabel = null;
 
 	/**
-	 * Creates a new unparented continue statement node owned by the given 
+	 * Creates a new unparented continue statement node owned by the given
 	 * AST. By default, the continue statement has no label.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	ContinueStatement(AST ast) {
@@ -87,7 +87,7 @@ public class ContinueStatement extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -103,7 +103,7 @@ public class ContinueStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -116,7 +116,7 @@ public class ContinueStatement extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		ContinueStatement result = new ContinueStatement(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.setLabel((SimpleName) ASTNode.copySubtree(target, getLabel()));
 		return result;
@@ -140,49 +140,49 @@ public class ContinueStatement extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the label of this continue statement, or <code>null</code> if
 	 * there is none.
-	 * 
+	 *
 	 * @return the label, or <code>null</code> if there is none
-	 */ 
+	 */
 	public SimpleName getLabel() {
 		return this.optionalLabel;
 	}
-	
+
 	/**
 	 * Sets or clears the label of this continue statement.
-	 * 
-	 * @param label the label, or <code>null</code> if 
+	 *
+	 * @param label the label, or <code>null</code> if
 	 *    there is none
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setLabel(SimpleName label) {
 		ASTNode oldChild = this.optionalLabel;
 		preReplaceChild(oldChild, label, LABEL_PROPERTY);
 		this.optionalLabel = label;
 		postReplaceChild(oldChild, label, LABEL_PROPERTY);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 1 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
 		return
 			memSize()
-			+ (optionalLabel == null ? 0 : getLabel().treeSize());
+			+ (this.optionalLabel == null ? 0 : getLabel().treeSize());
 	}
 }
 

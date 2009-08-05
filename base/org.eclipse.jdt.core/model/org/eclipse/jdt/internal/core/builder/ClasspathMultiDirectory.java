@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,10 +42,10 @@ public boolean equals(Object o) {
 	if (!(o instanceof ClasspathMultiDirectory)) return false;
 
 	ClasspathMultiDirectory md = (ClasspathMultiDirectory) o;
-	return sourceFolder.equals(md.sourceFolder) && binaryFolder.equals(md.binaryFolder)
-		&& CharOperation.equals(inclusionPatterns, md.inclusionPatterns)
-		&& CharOperation.equals(exclusionPatterns, md.exclusionPatterns);
-} 
+	return this.sourceFolder.equals(md.sourceFolder) && this.binaryFolder.equals(md.binaryFolder)
+		&& CharOperation.equals(this.inclusionPatterns, md.inclusionPatterns)
+		&& CharOperation.equals(this.exclusionPatterns, md.exclusionPatterns);
+}
 
 protected boolean isExcluded(IResource resource) {
 	if (this.exclusionPatterns != null || this.inclusionPatterns != null)
@@ -55,7 +55,7 @@ protected boolean isExcluded(IResource resource) {
 }
 
 public String toString() {
-	return "Source classpath directory " + sourceFolder.getFullPath().toString() + //$NON-NLS-1$
+	return "Source classpath directory " + this.sourceFolder.getFullPath().toString() + //$NON-NLS-1$
 		" with " + super.toString(); //$NON-NLS-1$
 }
 }

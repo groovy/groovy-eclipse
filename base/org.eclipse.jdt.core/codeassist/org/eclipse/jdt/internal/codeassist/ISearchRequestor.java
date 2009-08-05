@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,18 @@ import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
  * to the raw name environment results before answering them to the UI.
  */
 public interface ISearchRequestor {
+	public void acceptConstructor(
+						int modifiers,
+						char[] simpleTypeName,
+						int parameterCount,
+						char[] signature,
+						char[][] parameterTypes,
+						char[][] parameterNames,
+						int typeModifiers,
+						char[] packageName,
+						int extraFlags,
+						String path,
+						AccessRestriction access);
 	/**
 	 * One result of the search consists of a new type.
 	 *

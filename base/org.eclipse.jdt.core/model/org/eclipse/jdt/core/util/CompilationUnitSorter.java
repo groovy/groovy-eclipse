@@ -29,19 +29,19 @@ import org.eclipse.text.edits.TextEditGroup;
  * <p>
  * This class provides all functionality via static members.
  * </p>
- * 
+ *
  * @since 2.1
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class CompilationUnitSorter {
-	
+
  	/**
  	 * Private constructor to prevent instantiation.
  	 */
 	private CompilationUnitSorter() {
 		// Not instantiable
-	} 
-	
+	}
+
     /**
      * @deprecated marking deprecated as it is using deprecated code
      */
@@ -77,7 +77,7 @@ public final class CompilationUnitSorter {
 	 * return i1.intValue() - i2.intValue(); // preserve original order
 	 * </pre>
 	 * </p>
-	 * 
+	 *
 	 * @see #sort(ICompilationUnit, int[], Comparator, int, IProgressMonitor)
 	 * @see org.eclipse.jdt.core.dom.BodyDeclaration
 	 */
@@ -99,7 +99,7 @@ public final class CompilationUnitSorter {
 	 * with caution and due concern for potential negative side effects.
 	 * </p>
 	 * <p>
-	 * The optional <code>positions</code> array contains a non-decreasing 
+	 * The optional <code>positions</code> array contains a non-decreasing
 	 * ordered list of character-based source positions within the compilation
 	 * unit's source code string. Upon return from this method, the positions in
 	 * the array reflect the corresponding new locations in the modified source
@@ -107,7 +107,7 @@ public final class CompilationUnitSorter {
 	 * </p>
 	 * <p>
 	 * The <code>compare</code> method of the given comparator is passed pairs
-	 * of JLS2 AST body declarations (subclasses of <code>BodyDeclaration</code>) 
+	 * of JLS2 AST body declarations (subclasses of <code>BodyDeclaration</code>)
 	 * representing body declarations at the same level. The comparator is
 	 * called on body declarations of nested classes, including anonymous and
 	 * local classes, but always at the same level. Clients need to provide
@@ -153,16 +153,16 @@ public final class CompilationUnitSorter {
 	 * non-recursive sorting, etc.)
 	 * </p>
 	 *
-	 * @param compilationUnit the given compilation unit, which must be a 
+	 * @param compilationUnit the given compilation unit, which must be a
 	 * working copy
-	 * @param positions an array of source positions to map, or 
-	 * <code>null</code> if none. If supplied, the positions must 
+	 * @param positions an array of source positions to map, or
+	 * <code>null</code> if none. If supplied, the positions must
 	 * character-based source positions within the original source code for
 	 * the given compilation unit, arranged in non-decreasing order.
 	 * The array is updated in place when this method returns to reflect the
 	 * corresponding source positions in the permuted source code string
 	 * (but not necessarily any longer in non-decreasing order).
-	 * @param comparator the comparator capable of ordering 
+	 * @param comparator the comparator capable of ordering
 	 *   <code>BodyDeclaration</code>s; this comparator is passed AST nodes
      *   from a JLS2 AST
 	 * @param options bitwise-or of option flags; <code>0</code> for default
@@ -193,7 +193,7 @@ public final class CompilationUnitSorter {
 	        IProgressMonitor monitor) throws JavaModelException {
 		sort(AST.JLS2, compilationUnit, positions, comparator, options, monitor);
 	}
-    
+
     /**
      * Reorders the declarations in the given compilation unit according to
      * the specified AST level. The caller is responsible for arranging in
@@ -210,7 +210,7 @@ public final class CompilationUnitSorter {
      * with caution and due concern for potential negative side effects.
      * </p>
      * <p>
-     * The optional <code>positions</code> array contains a non-decreasing 
+     * The optional <code>positions</code> array contains a non-decreasing
      * ordered list of character-based source positions within the compilation
      * unit's source code string. Upon return from this method, the positions in
      * the array reflect the corresponding new locations in the modified source
@@ -218,9 +218,9 @@ public final class CompilationUnitSorter {
      * </p>
      * <p>
      * The <code>compare</code> method of the given comparator is passed pairs
-     * of body declarations (subclasses of <code>BodyDeclaration</code>) 
+     * of body declarations (subclasses of <code>BodyDeclaration</code>)
      * representing body declarations at the same level. The nodes are from an
-     * AST of the specified level 
+     * AST of the specified level
      * ({@link org.eclipse.jdt.core.dom.ASTParser#newParser(int)}. Clients
      * will generally specify AST.JLS3 since that will cover all constructs found
      * in Java 1.0, 1.1, 1.2, 1.3, 1.4, and 1.5 source code.
@@ -289,16 +289,16 @@ public final class CompilationUnitSorter {
      * </p>
      *
      * @param level the AST level; one of the AST LEVEL constants
-     * @param compilationUnit the given compilation unit, which must be a 
+     * @param compilationUnit the given compilation unit, which must be a
      * working copy
-     * @param positions an array of source positions to map, or 
-     * <code>null</code> if none. If supplied, the positions must 
+     * @param positions an array of source positions to map, or
+     * <code>null</code> if none. If supplied, the positions must
      * character-based source positions within the original source code for
      * the given compilation unit, arranged in non-decreasing order.
      * The array is updated in place when this method returns to reflect the
      * corresponding source positions in the permuted source code string
      * (but not necessarily any longer in non-decreasing order).
-     * @param comparator the comparator capable of ordering 
+     * @param comparator the comparator capable of ordering
      *   <code>BodyDeclaration</code>s; this comparator is passed AST nodes
      *   from an AST of the specified AST level
      * @param options bitwise-or of option flags; <code>0</code> for default
@@ -333,7 +333,7 @@ public final class CompilationUnitSorter {
         SortElementsOperation operation = new SortElementsOperation(level, compilationUnits, positions, comparator);
         operation.runOperation(monitor);
     }
-    
+
 	/**
 	 * Reorders the declarations in the given compilation unit according to the
 	 * specified comparator. The caller is responsible for arranging in advance
@@ -352,7 +352,7 @@ public final class CompilationUnitSorter {
 	 * <p>
 	 * The <code>compare</code> method of the given comparator is passed pairs
 	 * of body declarations (subclasses of <code>BodyDeclaration</code>)
-	 * representing body declarations at the same level. 
+	 * representing body declarations at the same level.
 	 * The comparator is called on body declarations of nested classes,
 	 * including anonymous and local classes, but always at the same level.
 	 * Clients need to provide a comparator implementation (there is no standard
@@ -412,7 +412,7 @@ public final class CompilationUnitSorter {
 	 * </tr>
 	 * </table>
 	 * </p>
-	 * 
+	 *
 	 * @param unit
 	 *            the CompilationUnit to sort
 	 * @param comparator
@@ -426,7 +426,7 @@ public final class CompilationUnitSorter {
 	 *            the text edit group to use when generating text edits, or <code>null</code>
 	 * @param monitor
 	 *            the progress monitor to notify, or <code>null</code> if none
-	 * @return a TextEdit describing the required edits to do the sort, or <code>null</code> 
+	 * @return a TextEdit describing the required edits to do the sort, or <code>null</code>
 	 *            if sorting is not required
 	 * @exception JavaModelException
 	 *                if the compilation unit could not be sorted. Reasons

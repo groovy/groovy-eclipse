@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -29,7 +29,7 @@ public abstract class JarEntryResource  extends PlatformObject implements IJarEn
 	public JarEntryResource(String simpleName) {
 		this.simpleName = simpleName;
 	}
-	
+
 	public abstract JarEntryResource clone(Object newParent);
 
 	public boolean equals(Object obj) {
@@ -38,7 +38,7 @@ public abstract class JarEntryResource  extends PlatformObject implements IJarEn
 		JarEntryResource other = (JarEntryResource) obj;
 		return this.parent.equals(other.parent) && this.simpleName.equals(other.simpleName);
 	}
-	
+
 	protected String getEntryName() {
 		String parentEntryName;
 		if (this.parent instanceof IPackageFragment) {
@@ -51,19 +51,19 @@ public abstract class JarEntryResource  extends PlatformObject implements IJarEn
 		}
 		return parentEntryName + this.simpleName;
 	}
-	
+
 	public IPath getFullPath() {
 		return new Path(getEntryName()).makeAbsolute();
 	}
-	
+
 	public String getName() {
 		return this.simpleName;
 	}
-	
+
 	public Object getParent() {
 		return this.parent;
 	}
-	
+
 	public IPackageFragmentRoot getPackageFragmentRoot() {
 		if (this.parent instanceof IPackageFragment) {
 			return (IPackageFragmentRoot) ((IPackageFragment) this.parent).getParent();
@@ -73,7 +73,7 @@ public abstract class JarEntryResource  extends PlatformObject implements IJarEn
 			return ((JarEntryDirectory) this.parent).getPackageFragmentRoot();
 		}
 	}
-	
+
 	protected ZipFile getZipFile() throws CoreException {
 		if (this.parent instanceof IPackageFragment) {
 			JarPackageFragmentRoot root = (JarPackageFragmentRoot) ((IPackageFragment) this.parent).getParent();
@@ -83,11 +83,11 @@ public abstract class JarEntryResource  extends PlatformObject implements IJarEn
 		} else
 			return ((JarEntryDirectory) this.parent).getZipFile();
 	}
-	
+
 	public int hashCode() {
 		return Util.combineHashCodes(this.simpleName.hashCode(), this.parent.hashCode());
 	}
-	
+
 	public boolean isReadOnly() {
 		return true;
 	}

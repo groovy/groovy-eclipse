@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,10 +16,10 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
 /**
- * 
+ *
  */
 public abstract class LineInformation {
-	
+
 	public static LineInformation create(final IDocument doc) {
 		return new LineInformation() {
 			public int getLineOfOffset(int offset) {
@@ -39,7 +39,7 @@ public abstract class LineInformation {
 			}
 		};
 	}
-	
+
 	public static LineInformation create(final CompilationUnit astRoot) {
 		return new LineInformation() {
 			public int getLineOfOffset(int offset) {
@@ -50,10 +50,10 @@ public abstract class LineInformation {
 			}
 		};
 	}
-	
-	
-	
+
+
+
 	public abstract int getLineOfOffset(int offset);
 	public abstract int getLineOffset(int line);
-	
+
 }

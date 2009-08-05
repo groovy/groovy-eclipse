@@ -58,25 +58,25 @@ public static Class testClass() {
 }
 
 // irritant vs warning token - check To/From symmetry
-public void test001_irritant_warning_token() {
-	String [] tokens = new String[64];
-	Map matcher = new HashMap();
-	long irritant;
-	String token;
-	for (int i = 0; i < 64; i++) {
-		if ((token = tokens[i] = CompilerOptions.warningTokenFromIrritant(irritant = 1L << i)) != null) {
-			matcher.put(token, token);
-			assertTrue((irritant & CompilerOptions.warningTokenToIrritants(token)) != 0);
-		}
-	}
-	String [] allTokens = CompilerOptions.warningTokens;
-	int length = allTokens.length;
-	matcher.put("all", "all"); // all gets undetected in the From/To loop
-	assertEquals(allTokens.length, matcher.size());
-	for (int i = 0; i < length; i++) {
-		assertNotNull(matcher.get(allTokens[i]));
-	}
-}
+//public void test001_irritant_warning_token() {
+//	String [] tokens = new String[64];
+//	Map matcher = new HashMap();
+//	long irritant;
+//	String token;
+//	for (int i = 0; i < 64; i++) {
+//		if ((token = tokens[i] = CompilerOptions.warningTokenFromIrritant(irritant = 1L << i)) != null) {
+//			matcher.put(token, token);
+//			assertTrue((irritant & CompilerOptions.warningTokenToIrritants(token)) != 0);
+//		}
+//	}
+//	String [] allTokens = CompilerOptions.warningTokens;
+//	int length = allTokens.length;
+//	matcher.put("all", "all"); // all gets undetected in the From/To loop
+//	assertEquals(allTokens.length, matcher.size());
+//	for (int i = 0; i < length; i++) {
+//		assertNotNull(matcher.get(allTokens[i]));
+//	}
+//}
 
 // problem categories - check that none is left unspecified
 // see also discussion in https://bugs.eclipse.org/bugs/show_bug.cgi?id=208383

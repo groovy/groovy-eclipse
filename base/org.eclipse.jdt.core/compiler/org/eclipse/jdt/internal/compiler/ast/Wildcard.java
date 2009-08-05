@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,7 @@ public class Wildcard extends SingleTypeReference {
     public static final int UNBOUND = 0;
     public static final int EXTENDS = 1;
     public static final int SUPER = 2;
-    
+
 	public TypeReference bound;
 	public int kind;
 
@@ -30,10 +30,10 @@ public class Wildcard extends SingleTypeReference {
 		super(WILDCARD_NAME, 0);
 		this.kind = kind;
 	}
-	
+
 	public char [][] getParameterizedTypeName() {
 		switch (this.kind) {
-			case Wildcard.UNBOUND : 
+			case Wildcard.UNBOUND :
 				return new char[][] { WILDCARD_NAME };
 			case Wildcard.EXTENDS :
 				return new char[][] { CharOperation.concat(WILDCARD_NAME, WILDCARD_EXTENDS, CharOperation.concatWith(this.bound.getParameterizedTypeName(), '.')) };
@@ -44,7 +44,7 @@ public class Wildcard extends SingleTypeReference {
 
 	public char [][] getTypeName() {
 		switch (this.kind) {
-			case Wildcard.UNBOUND : 
+			case Wildcard.UNBOUND :
 				return new char[][] { WILDCARD_NAME };
 			case Wildcard.EXTENDS :
 				return new char[][] { CharOperation.concat(WILDCARD_NAME, WILDCARD_EXTENDS, CharOperation.concatWith(this.bound.getTypeName(), '.')) };
@@ -52,7 +52,7 @@ public class Wildcard extends SingleTypeReference {
 				return new char[][] { CharOperation.concat(WILDCARD_NAME, WILDCARD_SUPER, CharOperation.concatWith(this.bound.getTypeName(), '.')) };
 		}
 	}
-	
+
 	private TypeBinding internalResolveType(Scope scope, ReferenceBinding genericType, int rank) {
 		TypeBinding boundType = null;
 		if (this.bound != null) {
@@ -67,10 +67,10 @@ public class Wildcard extends SingleTypeReference {
 		WildcardBinding wildcard = scope.environment().createWildcard(genericType, rank, boundType, null /*no extra bound*/, this.kind);
 		return this.resolvedType = wildcard;
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output){
 		switch (this.kind) {
-			case Wildcard.UNBOUND : 
+			case Wildcard.UNBOUND :
 				output.append(WILDCARD_NAME);
 				break;
 			case Wildcard.EXTENDS :
@@ -84,7 +84,7 @@ public class Wildcard extends SingleTypeReference {
 		}
 		return output;
 	}
-	
+
 	// only invoked for improving resilience when unable to bind generic type from parameterized reference
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
 		if (this.bound != null) {
@@ -102,7 +102,7 @@ public class Wildcard extends SingleTypeReference {
 	public TypeBinding resolveTypeArgument(BlockScope blockScope, ReferenceBinding genericType, int rank) {
 	    return internalResolveType(blockScope, genericType, rank);
 	}
-	
+
 	public TypeBinding resolveTypeArgument(ClassScope classScope, ReferenceBinding genericType, int rank) {
 	    return internalResolveType(classScope, genericType, rank);
 	}

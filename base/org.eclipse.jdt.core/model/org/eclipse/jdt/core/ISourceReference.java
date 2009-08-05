@@ -38,18 +38,18 @@ public interface ISourceReference {
  * @since 2.0
  */
 boolean exists();
-	
+
 /**
  * Returns the source code associated with this element.
  * This extracts the substring from the source buffer containing this source
  * element. This corresponds to the source range that would be returned by
  * <code>getSourceRange</code>.
  * <p>
- * For class files, this returns the source of the entire compilation unit 
+ * For class files, this returns the source of the entire compilation unit
  * associated with the class file (if there is one).
  * </p>
  *
- * @return the source code, or <code>null</code> if this element has no 
+ * @return the source code, or <code>null</code> if this element has no
  *   associated source code
  * @exception JavaModelException if an exception occurs while accessing its corresponding resource
  */
@@ -57,7 +57,7 @@ String getSource() throws JavaModelException;
 /**
  * Returns the source range associated with this element.
  * <p>
- * For class files, this returns the range of the entire compilation unit 
+ * For class files, this returns the range of the entire compilation unit
  * associated with the class file (if there is one).
  * </p>
  * <p>
@@ -65,7 +65,7 @@ String getSource() throws JavaModelException;
  * or a source range with a -1 offset and a 0 length.
  * </p>
  *
- * @return the source range, or either <code>null</code> or [-1, 0] if this element has no 
+ * @return the source range, or either <code>null</code> or [-1, 0] if this element has no
  *   associated source code
  * @exception JavaModelException if an exception occurs while accessing its corresponding resource
  */

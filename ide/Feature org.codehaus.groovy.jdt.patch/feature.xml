@@ -33,7 +33,7 @@
    </url>
 
    <requires>
-      <import feature="org.eclipse.jdt" version="3.4.2.r342_v20081217-7o7tEAoEEDWEm5HTrKn-svO4BbDI" patch="true"/>
+      <import feature="org.eclipse.jdt" version="3.5.0.v20090527-2000-7r88FEeFJePyvYeA33DjZ_c1" patch="true"/>
    </requires>
 
    <plugin

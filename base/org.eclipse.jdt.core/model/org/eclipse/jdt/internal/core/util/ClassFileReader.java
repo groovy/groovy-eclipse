@@ -52,20 +52,20 @@ public class ClassFileReader extends ClassFileStruct implements IClassFileReader
 	private ISourceAttribute sourceFileAttribute;
 	private char[] superclassName;
 	private int superclassNameIndex;
-	
+
 	/**
 	 * Constructor for ClassFileReader.
-	 * 
+	 *
 	 * @param classFileBytes the raw bytes of the .class file
 	 * @param decodingFlags the decoding flags
-	 * 
+	 *
 	 * @see IClassFileReader#ALL
 	 * @see IClassFileReader#CLASSFILE_ATTRIBUTES
 	 * @see IClassFileReader#CONSTANT_POOL
 	 * @see IClassFileReader#FIELD_INFOS
 	 */
 	public ClassFileReader(byte[] classFileBytes, int decodingFlags) throws ClassFormatException {
-	
+
 		// This method looks ugly but is actually quite simple, the constantPool is constructed
 		// in 3 passes.  All non-primitive constant pool members that usually refer to other members
 		// by index are tweaked to have their value in inst vars, this minor cost at read-time makes
@@ -77,21 +77,21 @@ public class ClassFileReader extends ClassFileStruct implements IClassFileReader
 			if (this.magicNumber != 0xCAFEBABE) {
 				throw new ClassFormatException(ClassFormatException.INVALID_MAGIC_NUMBER);
 			}
-			
+
 			int readOffset = 10;
-			this.minorVersion = this.u2At(classFileBytes, 4, 0);
-			this.majorVersion = this.u2At(classFileBytes, 6, 0);
-			
+			this.minorVersion = u2At(classFileBytes, 4, 0);
+			this.majorVersion = u2At(classFileBytes, 6, 0);
+
 			if ((decodingFlags & IClassFileReader.CONSTANT_POOL) == 0) {
 				// no need to go further
 				return;
 			}
-			
-			constantPoolCount = this.u2At(classFileBytes, 8, 0);
+
+			constantPoolCount = u2At(classFileBytes, 8, 0);
 			// Pass #1 - Fill in all primitive constants
 			constantPoolOffsets = new int[constantPoolCount];
 			for (int i = 1; i < constantPoolCount; i++) {
-				int tag = this.u1At(classFileBytes, readOffset, 0);
+				int tag = u1At(classFileBytes, readOffset, 0);
 				switch (tag) {
 					case IConstantPoolConstant.CONSTANT_Utf8 :
 						constantPoolOffsets[i] = readOffset;
@@ -144,26 +144,26 @@ public class ClassFileReader extends ClassFileStruct implements IClassFileReader
 						throw new ClassFormatException(ClassFormatException.INVALID_TAG_CONSTANT);
 				}
 			}
-			
+
 			this.constantPool = new ConstantPool(classFileBytes, constantPoolOffsets);
 			// Read and validate access flags
 			this.accessFlags = u2At(classFileBytes, readOffset, 0);
 			readOffset += 2;
-	
+
 			// Read the classname, use exception handlers to catch bad format
 			this.classNameIndex = u2At(classFileBytes, readOffset, 0);
 			this.className = getConstantClassNameAt(classFileBytes, constantPoolOffsets, this.classNameIndex);
 			readOffset += 2;
-	
+
 			// Read the superclass name, can be zero for java.lang.Object
 			this.superclassNameIndex = u2At(classFileBytes, readOffset, 0);
 			readOffset += 2;
-			// if superclassNameIndex is equals to 0 there is no need to set a value for the 
+			// if superclassNameIndex is equals to 0 there is no need to set a value for the
 			// field this.superclassName. null is fine.
-			if (superclassNameIndex != 0) {
+			if (this.superclassNameIndex != 0) {
 				this.superclassName = getConstantClassNameAt(classFileBytes, constantPoolOffsets, this.superclassNameIndex);
 			}
-	
+
 			// Read the interfaces, use exception handlers to catch bad format
 			this.interfacesCount = u2At(classFileBytes, readOffset, 0);
 			readOffset += 2;
@@ -205,7 +205,7 @@ public class ClassFileReader extends ClassFileStruct implements IClassFileReader
 								readOffset += (6 + attributeLength);
 							}
 						}
-					}					
+					}
 				}
 			}
 			// Read the this.methods
@@ -231,20 +231,20 @@ public class ClassFileReader extends ClassFileStruct implements IClassFileReader
 								readOffset += (6 + attributeLength);
 							}
 						}
-					}					
+					}
 				}
 			}
-	
+
 			// Read the attributes
 			this.attributesCount = u2At(classFileBytes, readOffset, 0);
 			readOffset += 2;
-	
+
 			int attributesIndex = 0;
 			this.attributes = ClassFileAttribute.NO_ATTRIBUTES;
 			if (this.attributesCount != 0) {
 				if ((decodingFlags & IClassFileReader.CLASSFILE_ATTRIBUTES) != IClassFileReader.CONSTANT_POOL) {
 					this.attributes = new IClassFileAttribute[this.attributesCount];
-					for (int i = 0; i < attributesCount; i++) {
+					for (int i = 0; i < this.attributesCount; i++) {
 						int utf8Offset = constantPoolOffsets[u2At(classFileBytes, readOffset, 0)];
 						char[] attributeName = utf8At(classFileBytes, utf8Offset + 3, 0, u2At(classFileBytes, utf8Offset + 1, 0));
 						if (equals(attributeName, IAttributeNamesConstants.INNER_CLASSES)) {
@@ -267,19 +267,19 @@ public class ClassFileReader extends ClassFileStruct implements IClassFileReader
 						readOffset += (6 + u4At(classFileBytes, readOffset + 2, 0));
 					}
 				} else {
-					for (int i = 0; i < attributesCount; i++) {
+					for (int i = 0; i < this.attributesCount; i++) {
 						readOffset += (6 + u4At(classFileBytes, readOffset + 2, 0));
 					}
 				}
 			}
 			if (readOffset != classFileBytes.length) {
-				throw new ClassFormatException(ClassFormatException.TOO_MANY_BYTES); 
+				throw new ClassFormatException(ClassFormatException.TOO_MANY_BYTES);
 			}
 		} catch(ClassFormatException e) {
 			throw e;
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new ClassFormatException(ClassFormatException.ERROR_TRUNCATED_INPUT); 
+			throw new ClassFormatException(ClassFormatException.ERROR_TRUNCATED_INPUT);
 		}
 	}
 

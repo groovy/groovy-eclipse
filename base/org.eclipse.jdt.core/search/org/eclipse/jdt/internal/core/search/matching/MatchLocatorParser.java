@@ -284,7 +284,7 @@ protected void consumeClassInstanceCreationExpressionWithTypeArguments() {
 }
 
 protected void consumeEnterVariable() {
-	boolean isLocalDeclaration = this.nestedMethod[this.nestedType] != 0; 
+	boolean isLocalDeclaration = this.nestedMethod[this.nestedType] != 0;
 	super.consumeEnterVariable();
 	if (isLocalDeclaration) {
 		if ((this.patternFineGrain & IJavaSearchConstants.LOCAL_VARIABLE_DECLARATION_TYPE_REFERENCE) != 0) {
@@ -435,7 +435,7 @@ protected void consumeMethodInvocationNameWithTypeArguments() {
 }
 
 protected void consumeMethodInvocationPrimary() {
-	super.consumeMethodInvocationPrimary(); 
+	super.consumeMethodInvocationPrimary();
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.THIS_REFERENCE) != 0) {
 		this.patternLocator.match((MessageSend) this.expressionStack[this.expressionPtr], this.nodeSet);
 	}
@@ -492,7 +492,7 @@ protected void consumePrimaryNoNewArray() {
 }
 
 protected void consumePrimaryNoNewArrayWithName() {
-	// PrimaryNoNewArray ::=  PushLPAREN Expression PushRPAREN 
+	// PrimaryNoNewArray ::=  PushLPAREN Expression PushRPAREN
 	pushOnExpressionStack(getUnspecifiedReferenceOptimized());
 	// pop parenthesis positions (and don't update expression positions
 	// (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=23329)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,11 +20,11 @@ import org.eclipse.jdt.core.util.IExceptionAttribute;
 /**
  * Default implementation of IExceptionAttribute.
  */
-public class ExceptionAttribute extends ClassFileAttribute implements IExceptionAttribute {	
+public class ExceptionAttribute extends ClassFileAttribute implements IExceptionAttribute {
 	private int exceptionsNumber;
 	private char[][] exceptionNames;
 	private int[] exceptionIndexes;
-	
+
 	ExceptionAttribute(byte[] classFileBytes, IConstantPool constantPool, int offset) throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);
 		this.exceptionsNumber = u2At(classFileBytes, 6, offset);
@@ -38,16 +38,16 @@ public class ExceptionAttribute extends ClassFileAttribute implements IException
 		int readOffset = 8;
 		IConstantPoolEntry constantPoolEntry;
 		for (int i = 0; i < exceptionLength; i++) {
-			exceptionIndexes[i] = u2At(classFileBytes, readOffset, offset);
-			constantPoolEntry = constantPool.decodeEntry(exceptionIndexes[i]);
+			this.exceptionIndexes[i] = u2At(classFileBytes, readOffset, offset);
+			constantPoolEntry = constantPool.decodeEntry(this.exceptionIndexes[i]);
 			if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Class) {
 				throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
 			}
-			exceptionNames[i] = constantPoolEntry.getClassInfoName();
+			this.exceptionNames[i] = constantPoolEntry.getClassInfoName();
 			readOffset += 2;
 		}
 	}
-	
+
 	/**
 	 * @see IExceptionAttribute#getExceptionIndexes()
 	 */

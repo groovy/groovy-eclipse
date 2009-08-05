@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -70,31 +70,31 @@ import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
  *    SuperConstructorInvocation
  * </pre>
  * </p>
- * 
+ *
  * @since 2.0
  */
 public abstract class Statement extends ASTNode {
-	
+
 	/**
 	 * The leading comment, or <code>null</code> if none.
 	 * Defaults to none.
-	 * 
+	 *
 	 * @deprecated The leading comment feature was removed in 2.1.
 	 */
 	private String optionalLeadingComment = null;
-	
+
 	/**
 	 * Creates a new AST node for a statement owned by the given AST.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	Statement(AST ast) {
 		super(ast);
 	}
-	
+
 	/**
 	 * Returns the leading comment string, including the starting
 	 * and ending comment delimiters, and any embedded line breaks.
@@ -106,7 +106,7 @@ public abstract class Statement extends ASTNode {
 	 * must end with a line delimiter (as per JLS 3.7), and must not contain
 	 * line breaks.
 	 * </p>
-	 * 
+	 *
 	 * @return the comment string, or <code>null</code> if none
 	 * @deprecated This feature was removed in the 2.1 release because it was
 	 * only a partial, and inadequate, solution to the issue of associating
@@ -118,7 +118,7 @@ public abstract class Statement extends ASTNode {
 	 * the statement's source range.
 	 */
 	public String getLeadingComment() {
-		return optionalLeadingComment;
+		return this.optionalLeadingComment;
 	}
 
 	/**
@@ -146,7 +146,7 @@ public abstract class Statement extends ASTNode {
 	 * </pre>
 	 * </code>
 	 * </p>
-	 * 
+	 *
 	 * @param comment the comment string, or <code>null</code> if none
 	 * @exception IllegalArgumentException if the comment string is invalid
 	 * @deprecated This feature was removed in the 2.1 release because it was
@@ -191,14 +191,14 @@ public abstract class Statement extends ASTNode {
 
 	/**
 	 * Copies the leading comment from the given statement.
-	 * 
+	 *
 	 * @param source the statement that supplies the leading comment
 	 * @since 2.1
 	 */
 	void copyLeadingComment(Statement source) {
 		setLeadingComment(source.getLeadingComment());
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -206,5 +206,5 @@ public abstract class Statement extends ASTNode {
 		int size = BASE_NODE_SIZE + 1 * 4 + stringSize(getLeadingComment());
 		return size;
 	}
-}	
+}
 

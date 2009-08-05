@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -89,13 +89,13 @@ public int hashCode(Object key) {
 /**
  * Puts the specified element into the hashtable, using the specified
  * key.  The element may be retrieved by doing a get() with the same key.
- * The key and the element cannot be null. 
- * 
+ * The key and the element cannot be null.
+ *
  * @param key <CODE>Object</CODE> the specified key in the hashtable
  * @param value <CODE>int</CODE> the specified element
  * @return int the old value of the key, or -1 if it did not have one.
  */
-public int put(Object key, int value) { 
+public int put(Object key, int value) {
 	int index = hashCode(key), length = this.keyTable.length;
 	while (this.keyTable[index] != null) {
 		if (this.keyTable[index] == key)

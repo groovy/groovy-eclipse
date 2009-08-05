@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,80 +15,81 @@ import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 /**
  * Annotation
  */
 public abstract class Annotation extends Expression {
-	
+
 	final static MemberValuePair[] NoValuePairs = new MemberValuePair[0];
 	public int declarationSourceEnd;
 	public Binding recipient;
-	
+
 	public TypeReference type;
-	/** 
-	 *  The representation of this annotation in the type system. 
+	/**
+	 *  The representation of this annotation in the type system.
 	 */
 	private AnnotationBinding compilerAnnotation = null;
-	
+
 	public static long getRetentionPolicy(char[] policyName) {
 		if (policyName == null || policyName.length == 0)
 			return 0;
 		switch(policyName[0]) {
 			case 'C' :
-				if (CharOperation.equals(policyName, TypeConstants.UPPER_CLASS)) 
+				if (CharOperation.equals(policyName, TypeConstants.UPPER_CLASS))
 					return TagBits.AnnotationClassRetention;
 				break;
 			case 'S' :
-				if (CharOperation.equals(policyName, TypeConstants.UPPER_SOURCE)) 
+				if (CharOperation.equals(policyName, TypeConstants.UPPER_SOURCE))
 					return TagBits.AnnotationSourceRetention;
 				break;
 			case 'R' :
-				if (CharOperation.equals(policyName, TypeConstants.UPPER_RUNTIME)) 
+				if (CharOperation.equals(policyName, TypeConstants.UPPER_RUNTIME))
 					return TagBits.AnnotationRuntimeRetention;
 				break;
 		}
 		return 0; // unknown
 	}
-	
+
 	public static long getTargetElementType(char[] elementName) {
 		if (elementName == null || elementName.length == 0)
 			return 0;
 		switch(elementName[0]) {
 			case 'A' :
-				if (CharOperation.equals(elementName, TypeConstants.UPPER_ANNOTATION_TYPE)) 
+				if (CharOperation.equals(elementName, TypeConstants.UPPER_ANNOTATION_TYPE))
 					return TagBits.AnnotationForAnnotationType;
 				break;
 			case 'C' :
-				if (CharOperation.equals(elementName, TypeConstants.UPPER_CONSTRUCTOR)) 
+				if (CharOperation.equals(elementName, TypeConstants.UPPER_CONSTRUCTOR))
 					return TagBits.AnnotationForConstructor;
 				break;
 			case 'F' :
-				if (CharOperation.equals(elementName, TypeConstants.UPPER_FIELD)) 
+				if (CharOperation.equals(elementName, TypeConstants.UPPER_FIELD))
 					return TagBits.AnnotationForField;
 				break;
 			case 'L' :
-				if (CharOperation.equals(elementName, TypeConstants.UPPER_LOCAL_VARIABLE)) 
+				if (CharOperation.equals(elementName, TypeConstants.UPPER_LOCAL_VARIABLE))
 					return TagBits.AnnotationForLocalVariable;
 				break;
 			case 'M' :
-				if (CharOperation.equals(elementName, TypeConstants.UPPER_METHOD)) 
+				if (CharOperation.equals(elementName, TypeConstants.UPPER_METHOD))
 					return TagBits.AnnotationForMethod;
 				break;
 			case 'P' :
-				if (CharOperation.equals(elementName, TypeConstants.UPPER_PARAMETER)) 
+				if (CharOperation.equals(elementName, TypeConstants.UPPER_PARAMETER))
 					return TagBits.AnnotationForParameter;
-				else if (CharOperation.equals(elementName, TypeConstants.UPPER_PACKAGE)) 
+				else if (CharOperation.equals(elementName, TypeConstants.UPPER_PACKAGE))
 					return TagBits.AnnotationForPackage;
 				break;
 			case 'T' :
-				if (CharOperation.equals(elementName, TypeConstants.TYPE)) 
+				if (CharOperation.equals(elementName, TypeConstants.TYPE))
 					return TagBits.AnnotationForType;
 				break;
 		}
 		return 0; // unknown
-	}		
+	}
 
 	public ElementValuePair[] computeElementValuePairs() {
 		return Binding.NO_ELEMENT_VALUE_PAIRS;
@@ -113,7 +114,7 @@ public abstract class Annotation extends Expression {
 				}
 				break;
 			// target annotation
-			case TypeIds.T_JavaLangAnnotationTarget :		
+			case TypeIds.T_JavaLangAnnotationTarget :
 				tagBits |= TagBits.AnnotationTarget; // target specified (could be empty)
 				if (valueAttribute != null) {
 					Expression expr = valueAttribute.value;
@@ -132,7 +133,7 @@ public abstract class Annotation extends Expression {
 										} else {
 											tagBits |= element;
 										}
-									}							
+									}
 								}
 							}
 						}
@@ -169,16 +170,16 @@ public abstract class Annotation extends Expression {
 	}
 
 	public abstract MemberValuePair[] memberValuePairs();
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append('@');
 		this.type.printExpression(0, output);
 		return output;
 	}
-	
+
 	public void recordSuppressWarnings(Scope scope, int startSuppresss, int endSuppress, boolean isSuppressingWarnings) {
-		long suppressWarningIrritants = 0;
-		MemberValuePair[] pairs = this.memberValuePairs();
+		IrritantSet suppressWarningIrritants = null;
+		MemberValuePair[] pairs = memberValuePairs();
 		pairLoop: for (int i = 0, length = pairs.length; i < length; i++) {
 			MemberValuePair pair = pairs[i];
 			if (CharOperation.equals(pair.name, TypeConstants.VALUE)) {
@@ -190,12 +191,12 @@ public abstract class Annotation extends Expression {
 						for (int j = 0, initsLength = inits.length; j < initsLength; j++) {
 							Constant cst = inits[j].constant;
 							if (cst != Constant.NotAConstant && cst.typeID() == T_JavaLangString) {
-								long irritants = CompilerOptions.warningTokenToIrritants(cst.stringValue());
-								if (irritants != 0) {
-									if ((suppressWarningIrritants & irritants) == irritants) {
-										scope.problemReporter().unusedWarningToken(inits[j]);
-									} else {
-										suppressWarningIrritants |= irritants;
+								IrritantSet irritants = CompilerOptions.warningTokenToIrritants(cst.stringValue());
+								if (irritants != null) {
+									if (suppressWarningIrritants == null) {
+										suppressWarningIrritants = new IrritantSet(irritants);
+									} else if (suppressWarningIrritants.set(irritants) == null) {
+											scope.problemReporter().unusedWarningToken(inits[j]);
 									}
 								} else {
 									scope.problemReporter().unhandledWarningToken(inits[j]);
@@ -206,28 +207,29 @@ public abstract class Annotation extends Expression {
 				} else {
 					Constant cst = value.constant;
 					if (cst != Constant.NotAConstant && cst.typeID() == T_JavaLangString) {
-						long irritants = CompilerOptions.warningTokenToIrritants(cst.stringValue());
-						if (irritants != 0) {
-							suppressWarningIrritants |= irritants;
+						IrritantSet irritants = CompilerOptions.warningTokenToIrritants(cst.stringValue());
+						if (irritants != null) {
+							suppressWarningIrritants = new IrritantSet(irritants);
+							// TODO: should check for unused warning token against enclosing annotation as well ?
 						} else {
 							scope.problemReporter().unhandledWarningToken(value);
 						}
-					}	
+					}
 				}
 				break pairLoop;
 			}
 		}
-		if (isSuppressingWarnings && suppressWarningIrritants != 0) {
+		if (isSuppressingWarnings && suppressWarningIrritants != null) {
 			scope.referenceCompilationUnit().recordSuppressWarnings(suppressWarningIrritants, this, startSuppresss, endSuppress);
 		}
 	}
-	
+
 	public TypeBinding resolveType(BlockScope scope) {
 
 		if (this.compilerAnnotation != null)
 			return this.resolvedType;
 		this.constant = Constant.NotAConstant;
-		
+
 		TypeBinding typeBinding = this.type.resolveType(scope);
 		if (typeBinding == null) {
 			return null;
@@ -250,8 +252,8 @@ public abstract class Annotation extends Expression {
 			System.arraycopy(originalValuePairs, 0, pairs = new MemberValuePair[pairsLength], 0, pairsLength);
 		} else {
 			pairs = originalValuePairs;
-		}		
-		
+		}
+
 		nextMember: for (int i = 0, requiredLength = methods.length; i < requiredLength; i++) {
 			MethodBinding method = methods[i];
 			char[] selector = method.selector;
@@ -268,7 +270,7 @@ public abstract class Annotation extends Expression {
 					pair.resolveTypeExpecting(scope, method.returnType);
 					pairs[j] = null; // consumed
 					foundValue = true;
-					
+
 					// check duplicates
 					boolean foundDuplicate = false;
 					for (int k = j+1; k < pairsLength; k++) {
@@ -302,12 +304,12 @@ public abstract class Annotation extends Expression {
 			}
 		}
 //		if (scope.compilerOptions().storeAnnotations)
-		this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType, this.computeElementValuePairs());
+		this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType, computeElementValuePairs());
 		// recognize standard annotations ?
 		long tagBits = detectStandardAnnotation(scope, annotationType, valueAttribute);
 
 		// record annotation positions in the compilation result
-		scope.referenceCompilationUnit().recordSuppressWarnings(CompilerOptions.NonExternalizedString, null, this.sourceStart, this.declarationSourceEnd);
+		scope.referenceCompilationUnit().recordSuppressWarnings(IrritantSet.NLS, null, this.sourceStart, this.declarationSourceEnd);
 		if (this.recipient != null) {
 			if (tagBits != 0) {
 				// tag bits onto recipient
@@ -346,7 +348,7 @@ public abstract class Annotation extends Expression {
 							sourceType = (SourceTypeBinding) sourceField.declaringClass;
 							FieldDeclaration fieldDeclaration = sourceType.scope.referenceContext.declarationOf(sourceField);
 							recordSuppressWarnings(scope, fieldDeclaration.declarationSourceStart, fieldDeclaration.declarationSourceEnd, scope.compilerOptions().suppressWarnings);
-						}						
+						}
 						break;
 					case Binding.LOCAL :
 						LocalVariableBinding variable = (LocalVariableBinding) this.recipient;
@@ -354,9 +356,9 @@ public abstract class Annotation extends Expression {
 						if ((tagBits & TagBits.AnnotationSuppressWarnings) != 0) {
 							 LocalDeclaration localDeclaration = variable.declaration;
 							recordSuppressWarnings(scope, localDeclaration.declarationSourceStart, localDeclaration.declarationSourceEnd, scope.compilerOptions().suppressWarnings);
-						}									
+						}
 						break;
-				}			
+				}
 			}
 			// GROOVY start
 			if (scope.compilationUnitScope().checkTargetCompatibility()) {
@@ -366,8 +368,8 @@ public abstract class Annotation extends Expression {
 				long metaTagBits = annotationType.getAnnotationTagBits(); // could be forward reference
 				if ((metaTagBits & TagBits.AnnotationTargetMASK) == 0) // does not specify any target restriction
 					break checkTargetCompatibility;
-					
-				switch (recipient.kind()) {
+
+				switch (this.recipient.kind()) {
 					case Binding.PACKAGE :
 						if ((metaTagBits & TagBits.AnnotationForPackage) != 0)
 							break checkTargetCompatibility;
@@ -377,8 +379,12 @@ public abstract class Annotation extends Expression {
 						if (((ReferenceBinding)this.recipient).isAnnotationType()) {
 							if ((metaTagBits & (TagBits.AnnotationForAnnotationType|TagBits.AnnotationForType)) != 0)
 							break checkTargetCompatibility;
-						} else if ((metaTagBits & TagBits.AnnotationForType) != 0) 
+						} else if ((metaTagBits & TagBits.AnnotationForType) != 0) {
 							break checkTargetCompatibility;
+						} else if ((metaTagBits & TagBits.AnnotationForPackage) != 0) {
+							if (CharOperation.equals(((ReferenceBinding)this.recipient).sourceName, TypeConstants.PACKAGE_INFO_NAME))
+								break checkTargetCompatibility;
+						}
 						break;
 					case Binding.METHOD :
 						if (((MethodBinding)this.recipient).isConstructor()) {
@@ -398,7 +404,7 @@ public abstract class Annotation extends Expression {
 						} else 	if ((annotationType.tagBits & TagBits.AnnotationForLocalVariable) != 0)
 							break checkTargetCompatibility;
 						break;
-				}			
+				}
 				scope.problemReporter().disallowedTargetForAnnotation(this);
 				// GROOVY start
 				}
@@ -407,7 +413,7 @@ public abstract class Annotation extends Expression {
 		}
 		return this.resolvedType;
 	}
-	
+
 	public abstract void traverse(ASTVisitor visitor, BlockScope scope);
-	
+
 }

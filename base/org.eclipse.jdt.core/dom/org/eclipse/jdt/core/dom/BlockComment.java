@@ -29,19 +29,19 @@ import java.util.List;
  * was found in a source string. It is not useful for creating
  * comments.
  * </p>
- * 
+ *
  * @since 3.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class BlockComment extends Comment {
-	
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(1);
 		createPropertyList(BlockComment.class, properyList);
@@ -51,24 +51,24 @@ public final class BlockComment extends Comment {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * Creates a new block comment node owned by the given AST.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	BlockComment(AST ast) {
@@ -81,7 +81,7 @@ public final class BlockComment extends Comment {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -94,7 +94,7 @@ public final class BlockComment extends Comment {
 	 */
 	ASTNode clone0(AST target) {
 		BlockComment result = new BlockComment(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		return result;
 	}
 
@@ -113,14 +113,14 @@ public final class BlockComment extends Comment {
 		visitor.visit(this);
 		visitor.endVisit(this);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize();
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

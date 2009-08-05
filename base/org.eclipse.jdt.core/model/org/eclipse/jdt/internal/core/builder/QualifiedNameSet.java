@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,25 +32,25 @@ public char[][] add(char[][] qualifiedName) {
 	int qLength = qualifiedName.length;
 	if (qLength == 0) return CharOperation.NO_CHAR_CHAR;
 
-	int length = qualifiedNames.length;
+	int length = this.qualifiedNames.length;
 	int index = CharOperation.hashCode(qualifiedName[qLength - 1]) % length;
 	char[][] current;
-	while ((current = qualifiedNames[index]) != null) {
+	while ((current = this.qualifiedNames[index]) != null) {
 		if (CharOperation.equals(current, qualifiedName)) return current;
 		if (++index == length) index = 0;
 	}
-	qualifiedNames[index] = qualifiedName;
+	this.qualifiedNames[index] = qualifiedName;
 
 	// assumes the threshold is never equal to the size of the table
-	if (++elementSize > threshold) rehash();
+	if (++this.elementSize > this.threshold) rehash();
 	return qualifiedName;
 }
 
 private void rehash() {
-	QualifiedNameSet newSet = new QualifiedNameSet(elementSize * 2); // double the number of expected elements
+	QualifiedNameSet newSet = new QualifiedNameSet(this.elementSize * 2); // double the number of expected elements
 	char[][] current;
-	for (int i = qualifiedNames.length; --i >= 0;)
-		if ((current = qualifiedNames[i]) != null)
+	for (int i = this.qualifiedNames.length; --i >= 0;)
+		if ((current = this.qualifiedNames[i]) != null)
 			newSet.add(current);
 
 	this.qualifiedNames = newSet.qualifiedNames;
@@ -61,8 +61,8 @@ private void rehash() {
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	char[][] qualifiedName;
-	for (int i = 0, l = qualifiedNames.length; i < l; i++)
-		if ((qualifiedName = qualifiedNames[i]) != null)
+	for (int i = 0, l = this.qualifiedNames.length; i < l; i++)
+		if ((qualifiedName = this.qualifiedNames[i]) != null)
 			s += CharOperation.toString(qualifiedName) + "\n"; //$NON-NLS-1$
 	return s;
 }

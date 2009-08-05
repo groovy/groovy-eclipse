@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,7 +19,7 @@ import org.eclipse.jdt.internal.core.util.Messages;
  * This operation renames resources (Package fragments and compilation units).
  *
  * <p>Notes:<ul>
- * <li>When a compilation unit is renamed, its main type and the constructors of the 
+ * <li>When a compilation unit is renamed, its main type and the constructors of the
  * 		main type are renamed.
  * </ul>
  */
@@ -38,7 +38,7 @@ public RenameResourceElementsOperation(IJavaElement[] elements, IJavaElement[] d
  * @see MultiOperation
  */
 protected String getMainTaskName() {
-	return Messages.operation_renameResourceProgress; 
+	return Messages.operation_renameResourceProgress;
 }
 /**
  * @see CopyResourceElementsOperation#isRename()
@@ -53,7 +53,7 @@ protected void verify(IJavaElement element) throws JavaModelException {
 	super.verify(element);
 
 	int elementType = element.getElementType();
-	
+
 	if (!(elementType == IJavaElement.COMPILATION_UNIT || elementType == IJavaElement.PACKAGE_FRAGMENT)) {
 		error(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, element);
 	}

@@ -17,9 +17,9 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
  * Normal annotation node
  */
 public class NormalAnnotation extends Annotation {
-	
+
 	public MemberValuePair[] memberValuePairs;
-	
+
 	public NormalAnnotation(TypeReference type, int sourceStart) {
 		this.type = type;
 		this.sourceStart = sourceStart;
@@ -57,7 +57,7 @@ public class NormalAnnotation extends Annotation {
 		output.append(')');
 		return output;
 	}
-	
+
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {

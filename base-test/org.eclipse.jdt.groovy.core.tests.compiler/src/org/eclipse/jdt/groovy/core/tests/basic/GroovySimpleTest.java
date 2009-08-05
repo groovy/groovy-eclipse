@@ -25,6 +25,15 @@ import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
@@ -71,12 +80,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         try {
             newcps[newcps.length-1] = FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar")).getFile();
             newcps[newcps.length-2] = FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar")).getFile();
-            // FIXASC (M2) think more about why this is here... the tests that need it specify the option but that is just for
-            // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
-            // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
-            // classpath for just this reason, hmm.
-            newcps[newcps.length-3] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
-//      newcps[newcps.length-4] = new File("astTransformations/spock-core-0.1.jar").getAbsolutePath();
+	        // TODO (asc1) think more about why this is here... the tests that need it specify the option but that is just for
+	        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
+	        // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
+	        // classpath for just this reason, hmm.
+	        newcps[newcps.length-3] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
+	        // newcps[newcps.length-4] = new File("astTransformations/spock-core-0.1.jar").getAbsolutePath();
         } catch (IOException e) {
             fail("IOException thrown " + e.getMessage());
         }
@@ -94,6 +103,366 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"  }\n"+
 			"}\n",
 		},"success");		
+	}
+	
+	public void testGenericsPositions_1_GRE267() {
+		this.runConformTest(new String[] {
+			"X.groovy",
+			"class X {\n" + 
+			"  Set<?> setone;\n"+
+			"  Set<? extends Serializable> settwo;\n"+
+			"  Set<? super Number> setthree;\n"+
+			"  public static void main(String[]argv){ print 'y';}\n"+
+			"}\n",
+			
+			// this Java class is for comparison - breakpoint on building type bindings and you can check the decls
+			"Y.java",
+			"import java.util.*;\n"+
+			"class Y {\n" + 
+			"  Set<?> a;\n"+
+			"  Set<? extends java.io.Serializable> b;\n"+
+			"  Set<? super Number> c;\n"+
+			"}\n",
+		},"y");		
+
+		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+		
+		FieldDeclaration fDecl = null;
+		
+		fDecl = grabField(decl,"setone");
+		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
+		
+		fDecl = grabField(decl,"settwo");
+		assertEquals("(29>31)Set<(33>54)? extends (43>54)Serializable>",stringify(fDecl.type));
+		
+		fDecl = grabField(decl,"setthree");
+		assertEquals("(67>69)Set<(71>84)? super (79>84)Number>",stringify(fDecl.type));
+	}
+	
+
+	public void testGenericsPositions_2_GRE267() {
+		this.runConformTest(new String[] {
+			"X.groovy",
+			"class X {\n" + 
+			"  Set<?> setone;\n"+
+			"  Set<? extends java.io.Serializable> settwo;\n"+
+			"  Set<? super java.lang.Number> setthree;\n"+
+			"  public static void main(String[]argv){ print 'y';}\n"+
+			"}\n",
+		},"y");		
+
+		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+		
+		FieldDeclaration fDecl = null;
+		
+		fDecl = grabField(decl,"setone");
+		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
+		
+		fDecl = grabField(decl,"settwo");
+		assertEquals("(29>31)Set<(33>62)? extends (43>62)(43>46)java.(48>49)io.(51>62)Serializable>",stringify(fDecl.type));
+		
+		fDecl = grabField(decl,"setthree");
+		assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Number>",stringify(fDecl.type));
+	}
+	
+	public void testNPE_GRE273() {
+		this.runNegativeTest(new String[] {
+			"X.groovy",
+			"import java.util.Map\n"+
+			"import org.andrill.coretools.data.edit.Command\n"+
+			"import org.andrill.coretools.data.edit.EditableProperty\n"+
+			"import org.andrill.coretools.data.Model\n"+
+			"import org.andrill.coretools.data.ModelCollection\n"+
+			"import org.andrill.coretools.data.edit.commands.CompositeCommand\n"+
+			"\n"+
+			"class GProperty implements EditableProperty {\n"+
+			"def source\n"+
+			"String name\n"+
+			"String widgetType\n"+
+			"Map widgetProperties = [:]\n"+
+			"Map constraints = [:]\n"+
+			"def validators = []\n"+
+			"Command command\n"+
+			"\n"+
+			"String getValue() {\n"+
+			"if (source instanceof Model) { return source.modelData[name] } else { return (source.\"$name\" as String) }\n"+
+			"}\n"+
+			"\n"+
+			"boolean isValid(String newValue) {\n"+
+			"try {\n"+
+			"return validators.inject(true) { prev, cur -> prev && cur.call([newValue, source]) }\n"+
+			"} catch (e) { return false }\n"+
+			"}\n"+
+			"\n"+
+			"Command getCommand(String newValue) {\n"+
+			"if (constraints?.linkTo && source instanceof Model) {\n"+
+			"def value = source.\"$name\"\n"+
+			"def links = source.collection.models.findAll { it.class == source.class && it?.\"${constraints.linkTo}\" == value }\n"+
+			"if (links) {\n"+
+			"def commands = []\n"+
+			"commands << new GCommand(source: source, prop: name, value: newValue)\n"+
+			"links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n"+
+			"return new CompositeCommand(\"Change $name\", (commands as Command[]))\n"+
+			"} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
+			"} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
+			"}\n"+
+			"}\n"
+			},
+			"----------\n" + 
+			"1. ERROR in X.groovy (at line 2)\n" + 
+			"	import org.andrill.coretools.data.edit.Command\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command\n" + 
+			"----------\n" + 
+			"2. ERROR in X.groovy (at line 3)\n" + 
+			"	import org.andrill.coretools.data.edit.EditableProperty\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.edit.EditableProperty\n" + 
+			"----------\n" + 
+			"3. ERROR in X.groovy (at line 4)\n" + 
+			"	import org.andrill.coretools.data.Model\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.Model\n" + 
+			"----------\n" + 
+			"4. ERROR in X.groovy (at line 5)\n" + 
+			"	import org.andrill.coretools.data.ModelCollection\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.ModelCollection\n" + 
+			"----------\n" + 
+			"5. ERROR in X.groovy (at line 6)\n" + 
+			"	import org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
+			"----------\n" + 
+			"6. ERROR in X.groovy (at line 8)\n" + 
+			"	class GProperty implements EditableProperty {\n" + 
+			"	^^\n" + 
+			"Groovy:You are not allowed to implement the class \'org.andrill.coretools.data.edit.EditableProperty\', use extends instead.\n" + 
+			"----------\n" + 
+			"7. WARNING in X.groovy (at line 12)\n" + 
+			"	Map widgetProperties = [:]\n" + 
+			"	^^^\n" + 
+			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
+			"----------\n" + 
+			"8. WARNING in X.groovy (at line 13)\n" + 
+			"	Map constraints = [:]\n" + 
+			"	^^^\n" + 
+			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
+			"----------\n" + 
+			"9. ERROR in X.groovy (at line 15)\n" + 
+			"	Command command\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command \n" + 
+			"----------\n" + 
+			"10. ERROR in X.groovy (at line 33)\n" + 
+			"	commands << new GCommand(source: source, prop: name, value: newValue)\n" + 
+			"	            ^^\n" + 
+			"Groovy:unable to resolve class GCommand \n" + 
+			"----------\n" + 
+			"11. ERROR in X.groovy (at line 34)\n" + 
+			"	links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n" + 
+			"	                         ^^\n" + 
+			"Groovy:unable to resolve class GCommand \n" + 
+			"----------\n" + 
+			"12. ERROR in X.groovy (at line 36)\n" + 
+			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
+			"	                ^^\n" + 
+			"Groovy:unable to resolve class GCommand \n" + 
+			"----------\n" + 
+			"13. ERROR in X.groovy (at line 37)\n" + 
+			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
+			"	                ^^\n" + 
+			"Groovy:unable to resolve class GCommand \n" + 
+			"----------\n");
+	}
+	
+	public void testGenericsPositions_3_GRE267() {
+		this.runConformTest(new String[] {
+			"X.groovy",
+			"class X {\n" + 
+			"  Set<?> setone;\n"+
+			"  Set<String[]> settwo;\n"+
+			"  Set<String[][]> setthree;\n"+
+			"  Set<java.lang.Number[][][]> setfour;\n"+
+			"  public static void main(String[]argv){ print 'y';}\n"+
+			"}\n",
+			"Y.java",
+			"import java.util.*;\n"+
+			"class Y {\n" + 
+			"  Set<String[]> a;\n"+
+			"  Set<String[][]> b;\n"+
+			"  Set<java.lang.Number[][][]> c;\n"+ 
+			"}\n",
+		},"y");		
+
+		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+		
+		FieldDeclaration fDecl = null;
+		
+		fDecl = grabField(decl,"setone");
+		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
+		
+		fDecl = grabField(decl,"settwo");
+		assertEquals("(29>31)Set<(33>40 ose:38)String[]>",stringify(fDecl.type));
+		
+		fDecl = grabField(decl,"setthree");
+		assertEquals("(53>55)Set<(57>66 ose:62)String[][]>",stringify(fDecl.type));
+		
+		fDecl = grabField(decl,"setfour");
+		assertEquals("(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Number[][][]>",stringify(fDecl.type));
+	}
+	
+//	// FIXASC (M2) appears to be a groovy bug - the java.util.Set is missing generics info - as if it had none
+//	public void testGenericsPositions_4_GRE267() {
+//		this.runConformTest(new String[] {
+//			"X.groovy",
+//			"class X {\n" + 
+////			"  java.util.Set<?> setone;\n"+
+////			"  java.util.Set<? extends Serializable> settwo;\n"+
+////			"  java.util.Set<? super Number> setthree;\n"+
+//			"  public static void main(String[]argv){ print 'y';}\n"+
+//			"}\n",
+//		},"y");		
+//
+//		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+//		
+//		FieldDeclaration fDecl = null;
+//		
+//		fDecl = grabField(decl,"setone");
+//		assertEquals("x",stringify(fDecl.type));
+//		
+////		fDecl = grabField(decl,"settwo");
+////		assertEquals("y",stringify(fDecl.type));
+////		
+////		fDecl = grabField(decl,"setthree");
+////		assertEquals("z",stringify(fDecl.type));
+//	}
+	
+//	public void testGenericsPositions_5_GRE267() {
+//		this.runConformTest(new String[] {
+//			"X.groovy",
+//			"class X {\n" + 
+//			"  java.util.Set<?> setone;\n"+
+//			"  java.util.Set<? extends java.io.Serializable> settwo;\n"+
+//			"  java.util.Set<? super java.lang.Number> setthree;\n"+
+//			"  public static void main(String[]argv){ print 'y';}\n"+
+//			"}\n",
+//		},"y");		
+//
+//		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+//		
+//		FieldDeclaration fDecl = null;
+//		
+//		fDecl = grabField(decl,"setone");
+//		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
+//		
+//		fDecl = grabField(decl,"settwo");
+//		assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>",stringify(fDecl.type));
+//		
+//		fDecl = grabField(decl,"setthree");
+//		assertEquals("(67>69)Set<(71>71)? super (79>84)Number>",stringify(fDecl.type));
+//	}
+
+	// FIXASC (M2) check tests after porting to recent 1.7 compiler
+//	// Multiple generified components in a reference
+//	public void testGenericsPositions_6_GRE267() {
+//		this.runConformTest(new String[] {
+//			"X.groovy",
+//			"class X {\n" + 
+//			"  One<String,Integer>.Two<Boolean> whoa;\n"+
+////			"  java.util.Set<? extends java.io.Serializable> settwo;\n"+
+////			"  java.util.Set<? super java.lang.Number> setthree;\n"+
+//			"  public static void main(String[]argv){ print 'y';}\n"+
+//			"}\n",
+//			"One.java",
+//			"public class One<A,B> {\n"+
+//			"	  class Two<C> {\n"+
+//			"	  }\n"+
+//			"	}\n"
+//		},"y");		
+//
+//		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+//		
+//		FieldDeclaration fDecl = null;
+//		
+//		fDecl = grabField(decl,"one");
+//		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
+//		
+//		fDecl = grabField(decl,"settwo");
+//		assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>",stringify(fDecl.type));
+//		
+//		fDecl = grabField(decl,"setthree");
+//		assertEquals("(67>69)Set<(71>71)? super (79>84)Number>",stringify(fDecl.type));
+//	}
+
+//	public void testGenericsPositions_7_GRE267() {
+//		this.runConformTest(new String[] {
+//			"X.groovy",
+//			"class X {\n" + 
+//			"  java.util.Set<?> setone;\n"+
+//			"  java.util.Set<String[]> settwo;\n"+
+//			"  java.util.Set<java.lang.Number[][][]> setthree;\n"+
+//			"  public static void main(String[]argv){ print 'y';}\n"+
+//			"}\n",
+//		},"y");		
+//
+//		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+//		
+//		FieldDeclaration fDecl = null;
+//		
+//		fDecl = grabField(decl,"setone");
+//		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
+//		
+//		fDecl = grabField(decl,"settwo");
+//		assertEquals("(29>31)Set<(33>33)? extends (43>54)Serializable>",stringify(fDecl.type));
+//		
+//		fDecl = grabField(decl,"setthree");
+//		assertEquals("(67>69)Set<(71>71)? super (79>84)Number>",stringify(fDecl.type));
+//	}
+	
+//	public void testGenericsPositions_8_GRE267() {
+//		this.runConformTest(new String[] {
+//			"X.groovy",
+//			"class X {\n" + 
+//			"  Set<Map.Entry<String,List<String>>> foo;\n"+
+//			"  public static void main(String[]argv){ print 'y';}\n"+
+//			"}\n",
+//		},"y");		
+//	
+//		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+//		
+//		FieldDeclaration fDecl = null;
+//		
+//		fDecl = grabField(decl,"foo");
+//		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
+//	}
+	
+//	public void testGenericsPositions_9_GRE267() {
+//		this.runConformTest(new String[] {
+//			"X.groovy",
+//			"class X {\n" + 
+//			"  Map.Entry<String,List<String>> foo;\n"+
+//			"  public static void main(String[]argv){ print 'y';}\n"+
+//			"}\n",
+//		},"y");		
+//	
+//		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+//		
+//		FieldDeclaration fDecl = null;
+//		
+//		fDecl = grabField(decl,"foo");
+//		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
+//	}
+	
+
+	private FieldDeclaration grabField(GroovyCompilationUnitDeclaration decl, String fieldname) {
+		FieldDeclaration[] fDecls = decl.types[0].fields;
+		for (int i=0;i<fDecls.length;i++) { 
+			if (new String(fDecls[i].name).equals(fieldname)) { 
+				return fDecls[i];
+			}
+		}
+		return null;
 	}
 
 	// The getter for 'description' implements the interface
@@ -456,6 +825,90 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"	class MyMap<K,V> extends Map {\n" + 
 		"	                 ^^^^^^^^^^^^\n" + 
 		"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
+		"----------\n");
+	}
+	
+	public void testHalfFinishedGenericsProgramWithCorrectSuppression() {
+		this.runNegativeTest(new String[] {
+			"Demo.groovy",
+			"public class Demo {\n"+
+			"\n"+
+			"@SuppressWarnings(\"unchecked\")\n"+ // should cause no warnings
+			"List myList;\n"+
+			"}\n"
+		},"");
+	}
+
+	public void testHalfFinishedGenericsProgramWithCorrectSuppressionAtTheTypeLevel() {
+		this.runNegativeTest(new String[] {
+			"Demo.groovy",
+			"@SuppressWarnings(\"unchecked\")\n"+ // should cause no warnings
+			"public class Demo {\n"+
+			"\n"+
+			"List myList;\n"+
+			"}\n"
+		},"");
+	}
+
+
+	public void testHalfFinishedGenericsProgramWithUnnecessarySuppression() {
+		this.runNegativeTest(new String[] {
+			"Demo.groovy",
+			"public class Demo {\n"+
+			"\n"+
+			"@SuppressWarnings(\"unchecked\")\n"+ // unnecessary suppression
+			"List<String> myList;\n"+
+			"}\n"
+		},
+		"----------\n" + 
+		"1. WARNING in Demo.groovy (at line 3)\n" + 
+		"	@SuppressWarnings(\"unchecked\")\n" + 
+		"	 ^^^^^^^^^^^^^^^^^\n" + 
+		"Unnecessary @SuppressWarnings(\"unchecked\")\n" + 
+		"----------\n");
+	}
+
+	public void testHalfFinishedGenericsProgramWithSuppressionValueSpeltWrong() {
+		this.runNegativeTest(new String[] {
+			"Demo.groovy",
+			"public class Demo {\n"+
+			"\n"+
+			"@SuppressWarnings(\"unchecked2\")\n"+ // spelt wrong
+			"List<String> myList;\n"+
+			"}\n"
+		},
+		"----------\n" + 
+		"1. WARNING in Demo.groovy (at line 3)\n" + 
+		"	@SuppressWarnings(\"unchecked2\")\n" + 
+		"	 ^^^^^^^^^^^^^^^^^\n" + 
+		"Unsupported @SuppressWarnings(\"unchecked2\")\n" + 
+		"----------\n");
+	}
+	
+	public void testHalfFinishedGenericsProgramWithMultipleSuppressionValues() {
+		this.runNegativeTest(new String[] {
+			"Demo.groovy",
+			"public class Demo {\n"+
+			"\n"+
+			"@SuppressWarnings([\"unchecked\",\"cast\"])\n"+
+			"List myList;\n"+
+			"}\n"
+		},"");
+	}
+
+	public void testHalfFinishedGenericsProgramWithMultipleSuppressionValuesWithOneSpeltWrong() {
+		this.runNegativeTest(new String[] {
+			"Demo.groovy",
+			"public class Demo {\n"+
+			"\n"+
+			"@SuppressWarnings([\"unchecked\",\"cast2\"])\n"+
+			"List myList;\n"+
+			"}\n"
+		},"----------\n" + 
+		"1. WARNING in Demo.groovy (at line 3)\n" + 
+		"	@SuppressWarnings([\"unchecked\",\"cast2\"])\n" + 
+		"	 ^^^^^^^^^^^^^^^^^\n" + 
+		"Unsupported @SuppressWarnings(\"cast2\")\n" + 
 		"----------\n");
 	}
 
@@ -2190,7 +2643,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. WARNING in p\\I.groovy (at line 3)\n" + 
 			"	List[] m();\n" + 
-			"	^^^^^^\n" + 
+			"	^^^^\n" + 
 			"List is a raw type. References to generic type List<E> should be parameterized\n" + 
 			"----------\n");
 	}
@@ -2224,7 +2677,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. WARNING in p\\I.groovy (at line 3)\n" + 
 			"	java.util.List[] m();\n" + 
-			"	^^^^^^^^^^^^^^^^\n" + 
+			"	^^^^^^^^^^^^^^\n" + 
 			"List is a raw type. References to generic type List<E> should be parameterized\n" + 
 			"----------\n");
 	}
@@ -4470,10 +4923,14 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			}
 		}
 	}
+	
+	private GroovyCompilationUnitDeclaration getDecl(String filename) {
+		return (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
+	}
 
 	static class DebugRequestor implements IGroovyDebugRequestor {
 
-		private Map declarations;
+		Map declarations;
 		
 		public DebugRequestor() {
 			declarations = new HashMap();
@@ -4485,6 +4942,87 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			declarations.put(filename,gcuDeclaration);
 		}
 		
+	}
+	
+
+	private String stringify(TypeReference type) {
+		StringBuffer sb = new StringBuffer();
+		stringify(type,sb);
+		return sb.toString();		
+	}
+	private void stringify(TypeReference type, StringBuffer sb) {		
+		if (type.getClass()==ParameterizedSingleTypeReference.class) {
+			ParameterizedSingleTypeReference pstr = (ParameterizedSingleTypeReference)type;
+			sb.append("("+pstr.sourceStart+">"+pstr.sourceEnd+")").append(pstr.token);
+			TypeReference[] typeArgs = pstr.typeArguments;
+			sb.append("<");
+			for (int t=0;t<typeArgs.length;t++) {
+				stringify(typeArgs[t],sb);
+			}
+			sb.append(">");
+		} else if (type.getClass()==ParameterizedQualifiedTypeReference.class) {
+			ParameterizedQualifiedTypeReference pqtr = (ParameterizedQualifiedTypeReference)type;
+			sb.append("("+type.sourceStart+">"+type.sourceEnd+")");
+			long[] positions = pqtr.sourcePositions;
+			TypeReference[][] allTypeArgs = pqtr.typeArguments;
+			for (int i=0;i<pqtr.tokens.length;i++) {
+				if (i>0) {
+					sb.append('.');
+				}
+				sb.append("("+(int)(positions[i]>>>32)+">"+(int)(positions[i]&0x00000000FFFFFFFFL)+")").append(pqtr.tokens[i]);
+				if (allTypeArgs[i]!=null) {
+					sb.append("<");
+					for (int t=0;t<allTypeArgs[i].length;t++) {
+						stringify(allTypeArgs[i][t],sb);
+					}
+					sb.append(">");
+				}
+			}
+			
+		} else if (type.getClass()==ArrayTypeReference.class) {
+			ArrayTypeReference atr = (ArrayTypeReference)type;
+			// for a reference 'String[]' sourceStart='S' sourceEnd=']' originalSourceEnd='g'
+			sb.append("("+atr.sourceStart+">"+atr.sourceEnd+" ose:"+atr.originalSourceEnd+")").append(atr.token);
+			for (int d=0;d<atr.dimensions;d++) {
+				sb.append("[]");
+			}			
+		} else if (type.getClass()==Wildcard.class) {
+			Wildcard w = (Wildcard)type;
+			if (w.kind== Wildcard.UNBOUND) {
+				sb.append("("+type.sourceStart+">"+type.sourceEnd+")").append('?');
+			} else if (w.kind==Wildcard.SUPER) {
+				sb.append("("+type.sourceStart+">"+type.sourceEnd+")").append("? super ");
+				stringify(w.bound,sb);
+			} else if (w.kind==Wildcard.EXTENDS) {
+				sb.append("("+type.sourceStart+">"+type.sourceEnd+")").append("? extends ");
+				stringify(w.bound,sb);
+			}
+		} else if (type.getClass()== SingleTypeReference.class) {
+			sb.append("("+type.sourceStart+">"+type.sourceEnd+")").append(((SingleTypeReference)type).token);
+		} else if (type instanceof ArrayQualifiedTypeReference) {
+			ArrayQualifiedTypeReference aqtr = (ArrayQualifiedTypeReference)type;
+			sb.append("("+type.sourceStart+">"+type.sourceEnd+")");
+			long[] positions = aqtr.sourcePositions;
+			for (int i=0;i<aqtr.tokens.length;i++) {
+				if (i>0) {
+					sb.append('.');
+				}
+				sb.append("("+(int)(positions[i]>>>32)+">"+(int)(positions[i]&0x00000000FFFFFFFFL)+")").append(aqtr.tokens[i]);
+			}
+			for (int i=0;i<aqtr.dimensions();i++) { sb.append("[]"); }
+		} else if (type.getClass()== QualifiedTypeReference.class) {
+			QualifiedTypeReference qtr = (QualifiedTypeReference)type;
+			sb.append("("+type.sourceStart+">"+type.sourceEnd+")");
+			long[] positions = qtr.sourcePositions;
+			for (int i=0;i<qtr.tokens.length;i++) {
+				if (i>0) {
+					sb.append('.');
+				}
+				sb.append("("+(int)(positions[i]>>>32)+">"+(int)(positions[i]&0x00000000FFFFFFFFL)+")").append(qtr.tokens[i]);
+			}
+		} else {
+			throw new RuntimeException("Dont know how to print "+type.getClass());
+		}
 	}
 
 }

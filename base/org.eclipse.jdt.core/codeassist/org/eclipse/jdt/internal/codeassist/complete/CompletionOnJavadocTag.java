@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 package org.eclipse.jdt.internal.codeassist.complete;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.JavadocSingleNameReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
@@ -38,7 +39,7 @@ public class CompletionOnJavadocTag extends JavadocSingleNameReference implement
 
 	/**
 	 * Get completion node flags.
-	 * 
+	 *
 	 * @return int Flags of the javadoc completion node.
 	 */
 	public int getCompletionFlags() {
@@ -89,6 +90,16 @@ public class CompletionOnJavadocTag extends JavadocSingleNameReference implement
 		char[][] specifiedTags = null;
 		switch (kind) {
 			case Scope.COMPILATION_UNIT_SCOPE:
+				// bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=255752
+				// Check for FAKE_TYPE_NAME to allow proposals (@see CompletionParser#consumeCompilationUnit)
+				CompilationUnitDeclaration compilationUnit = scope.referenceCompilationUnit();
+				if (compilationUnit != null &&
+						(compilationUnit.types.length > 0 && compilationUnit.types[0].name == CompletionParser.FAKE_TYPE_NAME)) {
+					specifiedTags = CLASS_TAGS;
+				} else {
+					specifiedTags = COMPILATION_UNIT_TAGS;
+				}
+				break;
 			case Scope.CLASS_SCOPE:
 				specifiedTags = CLASS_TAGS;
 				break;

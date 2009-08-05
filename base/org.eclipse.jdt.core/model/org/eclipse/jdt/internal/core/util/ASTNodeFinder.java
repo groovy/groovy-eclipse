@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -120,14 +120,14 @@ public class ASTNodeFinder {
 			TypeDeclaration result;
 			int count = 0;
 			public boolean visit(TypeDeclaration typeDeclaration, BlockScope scope) {
-				if (result != null) return false;
+				if (this.result != null) return false;
 				if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
-					if (findAnonymous && ++count == occurenceCount) {
-						result = typeDeclaration;
+					if (findAnonymous && ++this.count == occurenceCount) {
+						this.result = typeDeclaration;
 					}
 				} else {
 					if (!findAnonymous && CharOperation.equals(typeName, typeDeclaration.name)) {
-						result = typeDeclaration;
+						this.result = typeDeclaration;
 					}
 				}
 				return false; // visit only one level

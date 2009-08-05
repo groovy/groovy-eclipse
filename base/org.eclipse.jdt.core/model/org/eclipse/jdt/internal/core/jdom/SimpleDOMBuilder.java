@@ -27,7 +27,7 @@ import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 /**
  * A DOM builder that uses the SourceElementParser
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 public class SimpleDOMBuilder extends AbstractDOMBuilder implements ISourceElementRequestor {
@@ -46,14 +46,14 @@ public void acceptImport(int declarationStart, int declarationEnd, char[][] toke
 	if (onDemand) {
 		importName+=".*"; //$NON-NLS-1$
 	}
-	fNode= new DOMImport(fDocument, sourceRange, importName, onDemand, modifiers);
-	addChild(fNode);	
+	this.fNode= new DOMImport(this.fDocument, sourceRange, importName, onDemand, modifiers);
+	addChild(this.fNode);
 }
 public void acceptPackage(ImportReference importReference) {
 	int[] sourceRange= new int[] {importReference.declarationSourceStart, importReference.declarationSourceEnd};
 	char[] name = CharOperation.concatWith(importReference.getImportName(), '.');
-	fNode= new DOMPackage(fDocument, sourceRange, new String(name));
-	addChild(fNode);	
+	this.fNode= new DOMPackage(this.fDocument, sourceRange, new String(name));
+	addChild(this.fNode);
 }
 /**
  * @see IDOMFactory#createCompilationUnit(String, String)
@@ -73,24 +73,24 @@ public IDOMCompilationUnit createCompilationUnit(ICompilationUnit compilationUni
  * Creates a new DOMMethod and inizializes.
  */
 protected void enterAbstractMethod(MethodInfo methodInfo) {
-		
+
 	int[] sourceRange = {methodInfo.declarationStart, -1}; // will be fixed up on exit
 	int[] nameRange = {methodInfo.nameSourceStart, methodInfo.nameSourceEnd};
-	fNode = new DOMMethod(fDocument, sourceRange, CharOperation.charToString(methodInfo.name), nameRange, methodInfo.modifiers, 
+	this.fNode = new DOMMethod(this.fDocument, sourceRange, CharOperation.charToString(methodInfo.name), nameRange, methodInfo.modifiers,
 		methodInfo.isConstructor, CharOperation.charToString(methodInfo.returnType),
 		CharOperation.charArrayToStringArray(methodInfo.parameterTypes),
-		CharOperation.charArrayToStringArray(methodInfo.parameterNames), 
+		CharOperation.charArrayToStringArray(methodInfo.parameterNames),
 		CharOperation.charArrayToStringArray(methodInfo.exceptionTypes));
-	addChild(fNode);
-	fStack.push(fNode);
-	
+	addChild(this.fNode);
+	this.fStack.push(this.fNode);
+
 	// type parameters not supported by JDOM
 }
 /**
  */
 public void enterConstructor(MethodInfo methodInfo) {
 	/* see 1FVIIQZ */
-	String nameString = new String(fDocument, methodInfo.nameSourceStart, methodInfo.nameSourceEnd - methodInfo.nameSourceStart);
+	String nameString = new String(this.fDocument, methodInfo.nameSourceStart, methodInfo.nameSourceEnd - methodInfo.nameSourceStart);
 	int openParenPosition = nameString.indexOf('(');
 	if (openParenPosition > -1)
 		methodInfo.nameSourceEnd = methodInfo.nameSourceStart + openParenPosition - 1;
@@ -104,22 +104,22 @@ public void enterField(FieldInfo fieldInfo) {
 	int[] sourceRange = {fieldInfo.declarationStart, -1};
 	int[] nameRange = {fieldInfo.nameSourceStart, fieldInfo.nameSourceEnd};
 	boolean isSecondary= false;
-	if (fNode instanceof DOMField) {
-		isSecondary = fieldInfo.declarationStart == fNode.fSourceRange[0];
+	if (this.fNode instanceof DOMField) {
+		isSecondary = fieldInfo.declarationStart == this.fNode.fSourceRange[0];
 	}
-	fNode = new DOMField(fDocument, sourceRange, CharOperation.charToString(fieldInfo.name), nameRange, 
+	this.fNode = new DOMField(this.fDocument, sourceRange, CharOperation.charToString(fieldInfo.name), nameRange,
 		fieldInfo.modifiers, CharOperation.charToString(fieldInfo.type), isSecondary);
-	addChild(fNode);
-	fStack.push(fNode);
+	addChild(this.fNode);
+	this.fStack.push(this.fNode);
 }
 /**
 
  */
 public void enterInitializer(int declarationSourceStart, int modifiers) {
 	int[] sourceRange = {declarationSourceStart, -1};
-	fNode = new DOMInitializer(fDocument, sourceRange, modifiers);
-	addChild(fNode);
-	fStack.push(fNode);
+	this.fNode = new DOMInitializer(this.fDocument, sourceRange, modifiers);
+	addChild(this.fNode);
+	this.fStack.push(this.fNode);
 }
 /**
  */
@@ -129,14 +129,14 @@ public void enterMethod(MethodInfo methodInfo) {
 /**
  */
 public void enterType(TypeInfo typeInfo) {
-	if (fBuildingType) {
+	if (this.fBuildingType) {
 		int[] sourceRange = {typeInfo.declarationStart, -1}; // will be fixed in the exit
 		int[] nameRange = new int[] {typeInfo.nameSourceStart, typeInfo.nameSourceEnd};
-		fNode = new DOMType(fDocument, sourceRange, new String(typeInfo.name), nameRange,
+		this.fNode = new DOMType(this.fDocument, sourceRange, new String(typeInfo.name), nameRange,
 			typeInfo.modifiers, CharOperation.charArrayToStringArray(typeInfo.superinterfaces), TypeDeclaration.kind(typeInfo.modifiers) == TypeDeclaration.CLASS_DECL); // TODO (jerome) should pass in kind
-		addChild(fNode);
-		fStack.push(fNode);
-		
+		addChild(this.fNode);
+		this.fStack.push(this.fNode);
+
 		// type parameters not supported by JDOM
 	}
 }
@@ -166,9 +166,9 @@ public void exitInitializer(int declarationEnd) {
  *		declaration.  This can include whitespace and comments following the closing bracket.
  */
 protected void exitMember(int declarationEnd) {
-	DOMMember m= (DOMMember) fStack.pop();
+	DOMMember m= (DOMMember) this.fStack.pop();
 	m.setSourceRangeEnd(declarationEnd);
-	fNode = m;
+	this.fNode = m;
 }
 /**
  */

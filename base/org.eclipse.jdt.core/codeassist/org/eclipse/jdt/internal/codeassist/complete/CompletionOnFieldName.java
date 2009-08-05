@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,22 +21,22 @@ public class CompletionOnFieldName extends FieldDeclaration {
 		super(CharOperation.concat(name, FAKENAMESUFFIX), sourceStart, sourceEnd);
 		this.realName = name;
 	}
-	
+
 	public StringBuffer printStatement(int tab, StringBuffer output) {
-		
+
 		printIndent(tab, output).append("<CompleteOnFieldName:"); //$NON-NLS-1$
-		if (type != null) type.print(0, output).append(' ');
-		output.append(realName);
-		if (initialization != null) {
+		if (this.type != null) this.type.print(0, output).append(' ');
+		output.append(this.realName);
+		if (this.initialization != null) {
 			output.append(" = "); //$NON-NLS-1$
-			initialization.printExpression(0, output); 
+			this.initialization.printExpression(0, output);
 		}
 		return output.append(">;"); //$NON-NLS-1$
-	}	
+	}
 
 	public void resolve(MethodScope initializationScope) {
 		super.resolve(initializationScope);
-		
+
 		throw new CompletionNodeFound(this, initializationScope);
 	}
 }

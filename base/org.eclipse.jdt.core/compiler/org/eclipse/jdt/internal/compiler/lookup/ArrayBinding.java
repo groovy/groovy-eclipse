@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,10 +23,10 @@ public final class ArrayBinding extends TypeBinding {
 
 	public TypeBinding leafComponentType;
 	public int dimensions;
-	LookupEnvironment environment;	
+	LookupEnvironment environment;
 	char[] constantPoolName;
 	char[] genericTypeSignature;
-	
+
 public ArrayBinding(TypeBinding type, int dimensions, LookupEnvironment environment) {
 	this.tagBits |= TagBits.IsArrayType;
 	this.leafComponentType = type;
@@ -35,11 +35,11 @@ public ArrayBinding(TypeBinding type, int dimensions, LookupEnvironment environm
 	if (type instanceof UnresolvedReferenceBinding)
 		((UnresolvedReferenceBinding) type).addWrapper(this, environment);
 	else
-    	this.tagBits |= type.tagBits & (TagBits.HasTypeVariable | TagBits.HasDirectWildcard | TagBits.HasMissingType);
+		this.tagBits |= type.tagBits & (TagBits.HasTypeVariable | TagBits.HasDirectWildcard | TagBits.HasMissingType | TagBits.ContainsNestedTypeReferences);
 }
 
 public TypeBinding closestMatch() {
-	if (this.isValidBinding()) {
+	if (isValidBinding()) {
 		return this;
 	}
 	TypeBinding leafClosestMatch = this.leafComponentType.closestMatch();
@@ -68,10 +68,10 @@ public List collectMissingTypes(List missingTypes) {
  *   A >> F   corresponds to:   F.collectSubstitutes(..., A, ..., CONSTRAINT_SUPER (2))
 */
 public void collectSubstitutes(Scope scope, TypeBinding actualType, InferenceContext inferenceContext, int constraint) {
-	
+
 	if ((this.tagBits & TagBits.HasTypeVariable) == 0) return;
 	if (actualType == TypeBinding.NULL) return;
-	
+
 	switch(actualType.kind()) {
 		case Binding.ARRAY_TYPE :
 	        int actualDim = actualType.dimensions();
@@ -94,29 +94,29 @@ public void collectSubstitutes(Scope scope, TypeBinding actualType, InferenceCon
  * p.X[][] --> [[Lp/X;
  */
 public char[] computeUniqueKey(boolean isLeaf) {
-	char[] brackets = new char[dimensions];
-	for (int i = dimensions - 1; i >= 0; i--) brackets[i] = '[';
+	char[] brackets = new char[this.dimensions];
+	for (int i = this.dimensions - 1; i >= 0; i--) brackets[i] = '[';
 	return CharOperation.concat(brackets, this.leafComponentType.computeUniqueKey(isLeaf));
  }
-	
+
 /**
  * Answer the receiver's constant pool name.
  * NOTE: This method should only be used during/after code gen.
  * e.g. '[Ljava/lang/Object;'
  */
 public char[] constantPoolName() {
-	if (constantPoolName != null)
-		return constantPoolName;
+	if (this.constantPoolName != null)
+		return this.constantPoolName;
 
-	char[] brackets = new char[dimensions];
-	for (int i = dimensions - 1; i >= 0; i--) brackets[i] = '[';
-	return constantPoolName = CharOperation.concat(brackets, leafComponentType.signature());
+	char[] brackets = new char[this.dimensions];
+	for (int i = this.dimensions - 1; i >= 0; i--) brackets[i] = '[';
+	return this.constantPoolName = CharOperation.concat(brackets, this.leafComponentType.signature());
 }
 public String debugName() {
-	StringBuffer brackets = new StringBuffer(dimensions * 2);
-	for (int i = dimensions; --i >= 0;)
+	StringBuffer brackets = new StringBuffer(this.dimensions * 2);
+	for (int i = this.dimensions; --i >= 0;)
 		brackets.append("[]"); //$NON-NLS-1$
-	return leafComponentType.debugName() + brackets.toString();
+	return this.leafComponentType.debugName() + brackets.toString();
 }
 public int dimensions() {
 	return this.dimensions;
@@ -145,17 +145,17 @@ public LookupEnvironment environment() {
 }
 
 public char[] genericTypeSignature() {
-	
+
     if (this.genericTypeSignature == null) {
-		char[] brackets = new char[dimensions];
-		for (int i = dimensions - 1; i >= 0; i--) brackets[i] = '[';
-		this.genericTypeSignature = CharOperation.concat(brackets, leafComponentType.genericTypeSignature());
+		char[] brackets = new char[this.dimensions];
+		for (int i = this.dimensions - 1; i >= 0; i--) brackets[i] = '[';
+		this.genericTypeSignature = CharOperation.concat(brackets, this.leafComponentType.genericTypeSignature());
     }
     return this.genericTypeSignature;
 }
 
 public PackageBinding getPackage() {
-	return leafComponentType.getPackage();
+	return this.leafComponentType.getPackage();
 }
 
 public int hashCode() {
@@ -173,9 +173,9 @@ public boolean isCompatibleWith(TypeBinding otherType) {
 			ArrayBinding otherArray = (ArrayBinding) otherType;
 			if (otherArray.leafComponentType.isBaseType())
 				return false; // relying on the fact that all equal arrays are identical
-			if (dimensions == otherArray.dimensions)
-				return leafComponentType.isCompatibleWith(otherArray.leafComponentType);
-			if (dimensions < otherArray.dimensions)
+			if (this.dimensions == otherArray.dimensions)
+				return this.leafComponentType.isCompatibleWith(otherArray.leafComponentType);
+			if (this.dimensions < otherArray.dimensions)
 				return false; // cannot assign 'String[]' into 'Object[][]' but can assign 'byte[][]' into 'Object[]'
 			break;
 		case Binding.BASE_TYPE :
@@ -183,15 +183,15 @@ public boolean isCompatibleWith(TypeBinding otherType) {
 		case Binding.WILDCARD_TYPE :
 		case Binding.INTERSECTION_TYPE :
 		    return ((WildcardBinding) otherType).boundCheck(this);
-		    
+
 		case Binding.TYPE_PARAMETER :
 			// check compatibility with capture of ? super X
 			if (otherType.isCapture()) {
 				CaptureBinding otherCapture = (CaptureBinding) otherType;
 				TypeBinding otherLowerBound;
 				if ((otherLowerBound = otherCapture.lowerBound) != null) {
-					if (!otherLowerBound.isArrayType()) return false;					
-					return this.isCompatibleWith(otherLowerBound);
+					if (!otherLowerBound.isArrayType()) return false;
+					return isCompatibleWith(otherLowerBound);
 				}
 			}
 			return false;
@@ -213,7 +213,7 @@ public int kind() {
 }
 
 public TypeBinding leafComponentType(){
-	return leafComponentType;
+	return this.leafComponentType;
 }
 
 /* API
@@ -221,7 +221,7 @@ public TypeBinding leafComponentType(){
 * NoError if the receiver is a valid binding.
 */
 public int problemId() {
-	return leafComponentType.problemId();
+	return this.leafComponentType.problemId();
 }
 /**
 * Answer the source name for the type.
@@ -230,36 +230,36 @@ public int problemId() {
 */
 
 public char[] qualifiedSourceName() {
-	char[] brackets = new char[dimensions * 2];
-	for (int i = dimensions * 2 - 1; i >= 0; i -= 2) {
+	char[] brackets = new char[this.dimensions * 2];
+	for (int i = this.dimensions * 2 - 1; i >= 0; i -= 2) {
 		brackets[i] = ']';
 		brackets[i - 1] = '[';
 	}
-	return CharOperation.concat(leafComponentType.qualifiedSourceName(), brackets);
+	return CharOperation.concat(this.leafComponentType.qualifiedSourceName(), brackets);
 }
 public char[] readableName() /* java.lang.Object[] */ {
-	char[] brackets = new char[dimensions * 2];
-	for (int i = dimensions * 2 - 1; i >= 0; i -= 2) {
+	char[] brackets = new char[this.dimensions * 2];
+	for (int i = this.dimensions * 2 - 1; i >= 0; i -= 2) {
 		brackets[i] = ']';
 		brackets[i - 1] = '[';
 	}
-	return CharOperation.concat(leafComponentType.readableName(), brackets);
+	return CharOperation.concat(this.leafComponentType.readableName(), brackets);
 }
 public char[] shortReadableName(){
-	char[] brackets = new char[dimensions * 2];
-	for (int i = dimensions * 2 - 1; i >= 0; i -= 2) {
+	char[] brackets = new char[this.dimensions * 2];
+	for (int i = this.dimensions * 2 - 1; i >= 0; i -= 2) {
 		brackets[i] = ']';
 		brackets[i - 1] = '[';
 	}
-	return CharOperation.concat(leafComponentType.shortReadableName(), brackets);
+	return CharOperation.concat(this.leafComponentType.shortReadableName(), brackets);
 }
 public char[] sourceName() {
-	char[] brackets = new char[dimensions * 2];
-	for (int i = dimensions * 2 - 1; i >= 0; i -= 2) {
+	char[] brackets = new char[this.dimensions * 2];
+	for (int i = this.dimensions * 2 - 1; i >= 0; i -= 2) {
 		brackets[i] = ']';
 		brackets[i - 1] = '[';
 	}
-	return CharOperation.concat(leafComponentType.sourceName(), brackets);
+	return CharOperation.concat(this.leafComponentType.sourceName(), brackets);
 }
 public void swapUnresolved(UnresolvedReferenceBinding unresolvedType, ReferenceBinding resolvedType, LookupEnvironment env) {
 	if (this.leafComponentType == unresolvedType) {
@@ -268,6 +268,6 @@ public void swapUnresolved(UnresolvedReferenceBinding unresolvedType, ReferenceB
 	}
 }
 public String toString() {
-	return leafComponentType != null ? debugName() : "NULL TYPE ARRAY"; //$NON-NLS-1$
+	return this.leafComponentType != null ? debugName() : "NULL TYPE ARRAY"; //$NON-NLS-1$
 }
 }

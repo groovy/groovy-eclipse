@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 
-/** 
+/**
  * A visitor for iterating through the parse tree.
  */
 public abstract class ASTVisitor {
@@ -36,7 +36,7 @@ public abstract class ASTVisitor {
 			AnnotationMethodDeclaration annotationTypeDeclaration,
 			ClassScope classScope) {
 			// do nothing by default
-	}	
+	}
 	public void endVisit(Argument argument, BlockScope scope) {
 		// do nothing by default
 	}
@@ -427,7 +427,7 @@ public abstract class ASTVisitor {
 		TypeDeclaration localTypeDeclaration,
 		BlockScope scope) {
 		// do nothing by default
-	}	
+	}
 	public void endVisit(
 		TypeDeclaration memberTypeDeclaration,
 		ClassScope scope) {
@@ -468,7 +468,7 @@ public abstract class ASTVisitor {
 			AnnotationMethodDeclaration annotationTypeDeclaration,
 			ClassScope classScope) {
 		return true; // do nothing by default, keep traversing
-	}	
+	}
 	public boolean visit(Argument argument, BlockScope scope) {
 		return true; // do nothing by default, keep traversing
 	}
@@ -867,7 +867,7 @@ public abstract class ASTVisitor {
 		TypeDeclaration memberTypeDeclaration,
 		ClassScope scope) {
 		return true; // do nothing by default, keep traversing
-	}	
+	}
 	public boolean visit(
 		TypeDeclaration typeDeclaration,
 		CompilationUnitScope scope) {

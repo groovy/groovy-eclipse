@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,7 +26,7 @@ public interface ITypeNameRequestor {
  *
  * @param packageName the dot-separated name of the package of the class
  * @param simpleTypeName the simple name of the class
- * @param enclosingTypeNames if the class is a member type, 
+ * @param enclosingTypeNames if the class is a member type,
  *          the simple names of the enclosing types from the outer-most to the
  *          direct parent of the class (for example, if the class is x.y.A$B$C then
  *          the enclosing types are [A, B]. This is an empty array if the class
@@ -34,9 +34,9 @@ public interface ITypeNameRequestor {
  * @param path the full path to the resource containing the class. If the resource is a .class file
  *          or a source file, this is the full path in the workspace to this resource. If the
  *          resource is an archive (that is, a .zip or .jar file), the path is composed of 2 paths separated
- *		 	 by <code>IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR</code>: 
- *			 the first path is the full OS path to the archive (if it is an external archive), 
- *			 or the workspace relative <code>IPath</code> to the archive (if it is an internal archive), 
+ *		 	 by <code>IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR</code>:
+ *			 the first path is the full OS path to the archive (if it is an external archive),
+ *			 or the workspace relative <code>IPath</code> to the archive (if it is an internal archive),
  * 		 the second path is the path to the resource inside the archive.
  */
 void acceptClass(char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, String path);
@@ -45,7 +45,7 @@ void acceptClass(char[] packageName, char[] simpleTypeName, char[][] enclosingTy
  *
  * @param packageName the dot-separated name of the package of the interface
  * @param simpleTypeName the simple name of the interface
- * @param enclosingTypeNames if the interface is a member type, 
+ * @param enclosingTypeNames if the interface is a member type,
  *          the simple names of the enclosing types from the outer-most to the
  *          direct parent of the interface (for example, if the interface is x.y.A$B$I then
  *          the enclosing types are [A, B]. This is an empty array if the interface
@@ -53,9 +53,9 @@ void acceptClass(char[] packageName, char[] simpleTypeName, char[][] enclosingTy
  * @param path the full path to the resource containing the interface. If the resource is a .class file
  *          or a source file, this is the full path in the workspace to this resource. If the
  *          resource is an archive (that is, a .zip or .jar file), the path is composed of 2 paths separated
- *		 	 by <code>IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR</code>: 
- *			 the first path is the full OS path to the archive (if it is an external archive), 
- *			 or the workspace relative <code>IPath</code> to the archive (if it is an internal archive), 
+ *		 	 by <code>IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR</code>:
+ *			 the first path is the full OS path to the archive (if it is an external archive),
+ *			 or the workspace relative <code>IPath</code> to the archive (if it is an internal archive),
  * 		 the second path is the path to the resource inside the archive.
  * */
 void acceptInterface(char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, String path);

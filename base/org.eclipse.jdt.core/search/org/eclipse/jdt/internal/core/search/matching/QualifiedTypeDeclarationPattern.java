@@ -26,7 +26,7 @@ public QualifiedTypeDeclarationPattern(char[] qualification, char[] simpleName, 
 	this.simpleName = (this.isCaseSensitive || this.isCamelCase) ? simpleName : CharOperation.toLowerCase(simpleName);
 	this.typeSuffix = typeSuffix;
 
-	((InternalSearchPattern)this).mustResolve = this.qualification != null || typeSuffix != TYPE_SUFFIX;
+	this.mustResolve = this.qualification != null || typeSuffix != TYPE_SUFFIX;
 }
 public QualifiedTypeDeclarationPattern(char[] qualification, int qualificationMatchRule, char[] simpleName, char typeSuffix, int matchRule) {
 	this(qualification, simpleName, typeSuffix, matchRule);
@@ -81,9 +81,9 @@ public SearchPattern getBlankPattern() {
 }
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	QualifiedTypeDeclarationPattern pattern = (QualifiedTypeDeclarationPattern) decodedPattern;
-	
+
 	// check type suffix
-	if (this.typeSuffix != pattern.typeSuffix && typeSuffix != TYPE_SUFFIX) {
+	if (this.typeSuffix != pattern.typeSuffix && this.typeSuffix != TYPE_SUFFIX) {
 		if (!matchDifferentTypeSuffixes(this.typeSuffix, pattern.typeSuffix)) {
 			return false;
 		}
@@ -120,13 +120,13 @@ protected StringBuffer print(StringBuffer output) {
 			output.append("TypeDeclarationPattern: qualification<"); //$NON-NLS-1$
 			break;
 	}
-	if (this.qualification != null) 
+	if (this.qualification != null)
 		output.append(this.qualification);
 	else
 		output.append("*"); //$NON-NLS-1$
 	output.append(">, type<"); //$NON-NLS-1$
-	if (simpleName != null) 
-		output.append(simpleName);
+	if (this.simpleName != null)
+		output.append(this.simpleName);
 	else
 		output.append("*"); //$NON-NLS-1$
 	output.append("> "); //$NON-NLS-1$

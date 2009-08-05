@@ -17,9 +17,9 @@ import org.eclipse.jdt.core.JavaModelException;
  * The uniqueKey contains the genericTypeSignature of the resolved type. Use BindingKey to decode it.
  */
 public class ResolvedBinaryType extends BinaryType {
-	
+
 	private String uniqueKey;
-	
+
 	/*
 	 * See class comments.
 	 */
@@ -31,21 +31,21 @@ public class ResolvedBinaryType extends BinaryType {
 	public String getFullyQualifiedParameterizedName() throws JavaModelException {
 		return getFullyQualifiedParameterizedName(getFullyQualifiedName('.'), this.uniqueKey);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.core.BinaryType#getKey()
 	 */
 	public String getKey() {
 		return this.uniqueKey;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.core.BinaryType#isResolved()
 	 */
 	public boolean isResolved() {
 		return true;
 	}
-	
+
 	/**
 	 * @private Debugging purposes
 	 */
@@ -57,7 +57,7 @@ public class ResolvedBinaryType extends BinaryType {
 			buffer.append("}"); //$NON-NLS-1$
 		}
 	}
-	
+
 	public JavaElement unresolved() {
 		SourceRefElement handle = new BinaryType(this.parent, this.name);
 		handle.occurrenceCount = this.occurrenceCount;

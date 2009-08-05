@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,63 +32,63 @@ import java.util.List;
  * the source range begins with the first character of the initial modifier or
  * type. The source range extends through the last character of the final ";".
  * </p>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class FieldDeclaration extends BodyDeclaration {
-	
+
 	/**
 	 * The "javadoc" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor JAVADOC_PROPERTY = 
+	public static final ChildPropertyDescriptor JAVADOC_PROPERTY =
 		internalJavadocPropertyFactory(FieldDeclaration.class);
 
 	/**
 	 * The "modifiers" structural property of this node type (JLS2 API only).
 	 * @since 3.0
 	 */
-	public static final SimplePropertyDescriptor MODIFIERS_PROPERTY = 
+	public static final SimplePropertyDescriptor MODIFIERS_PROPERTY =
 		internalModifiersPropertyFactory(FieldDeclaration.class);
-	
+
 	/**
 	 * The "modifiers" structural property of this node type (added in JLS3 API).
 	 * @since 3.1
 	 */
-	public static final ChildListPropertyDescriptor MODIFIERS2_PROPERTY = 
+	public static final ChildListPropertyDescriptor MODIFIERS2_PROPERTY =
 		internalModifiers2PropertyFactory(FieldDeclaration.class);
-	
+
 	/**
 	 * The "type" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor TYPE_PROPERTY = 
+	public static final ChildPropertyDescriptor TYPE_PROPERTY =
 		new ChildPropertyDescriptor(FieldDeclaration.class, "type", Type.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "fragments" structural property of this node type).
 	 * @since 3.0
 	 */
-	public static final ChildListPropertyDescriptor FRAGMENTS_PROPERTY = 
+	public static final ChildListPropertyDescriptor FRAGMENTS_PROPERTY =
 		new ChildListPropertyDescriptor(FieldDeclaration.class, "fragments", VariableDeclarationFragment.class, CYCLE_RISK); //$NON-NLS-1$
-		
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 * @since 3.0
 	 */
 	private static final List PROPERTY_DESCRIPTORS_2_0;
-	
+
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 * @since 3.1
 	 */
 	private static final List PROPERTY_DESCRIPTORS_3_0;
-	
+
 	static {
 		List properyList = new ArrayList(5);
 		createPropertyList(FieldDeclaration.class, properyList);
@@ -97,7 +97,7 @@ public class FieldDeclaration extends BodyDeclaration {
 		addProperty(TYPE_PROPERTY, properyList);
 		addProperty(FRAGMENTS_PROPERTY, properyList);
 		PROPERTY_DESCRIPTORS_2_0 = reapPropertyList(properyList);
-		
+
 		properyList = new ArrayList(5);
 		createPropertyList(FieldDeclaration.class, properyList);
 		addProperty(JAVADOC_PROPERTY, properyList);
@@ -110,11 +110,11 @@ public class FieldDeclaration extends BodyDeclaration {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
@@ -125,7 +125,7 @@ public class FieldDeclaration extends BodyDeclaration {
 			return PROPERTY_DESCRIPTORS_3_0;
 		}
 	}
-			
+
 	/**
 	 * The base type; lazily initialized; defaults to an unspecified,
 	 * legal type.
@@ -133,21 +133,21 @@ public class FieldDeclaration extends BodyDeclaration {
 	private Type baseType = null;
 
 	/**
-	 * The list of variable declaration fragments (element type: 
-	 * <code VariableDeclarationFragment</code>).  Defaults to an empty list.
+	 * The list of variable declaration fragments (element type:
+	 * {@link VariableDeclarationFragment}).  Defaults to an empty list.
 	 */
-	private ASTNode.NodeList variableDeclarationFragments = 
+	private ASTNode.NodeList variableDeclarationFragments =
 		new ASTNode.NodeList(FRAGMENTS_PROPERTY);
 
 	/**
-	 * Creates a new unparented field declaration statement node owned 
+	 * Creates a new unparented field declaration statement node owned
 	 * by the given AST.  By default, the field declaration has: no modifiers,
-	 * an unspecified (but legal) type, and an empty list of variable 
+	 * an unspecified (but legal) type, and an empty list of variable
 	 * declaration fragments (which is syntactically illegal).
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	FieldDeclaration(AST ast) {
@@ -161,7 +161,7 @@ public class FieldDeclaration extends BodyDeclaration {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -201,7 +201,7 @@ public class FieldDeclaration extends BodyDeclaration {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -215,7 +215,7 @@ public class FieldDeclaration extends BodyDeclaration {
 		// allow default implementation to flag the error
 		return super.internalGetChildListProperty(property);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on BodyDeclaration.
 	 */
@@ -249,7 +249,7 @@ public class FieldDeclaration extends BodyDeclaration {
 	 */
 	ASTNode clone0(AST target) {
 		FieldDeclaration result = new FieldDeclaration(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setJavadoc(
 			(Javadoc) ASTNode.copySubtree(target, getJavadoc()));
 		if (this.ast.apiLevel == AST.JLS2_INTERNAL) {
@@ -263,7 +263,7 @@ public class FieldDeclaration extends BodyDeclaration {
 			ASTNode.copySubtrees(target, fragments()));
 		return result;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -271,7 +271,7 @@ public class FieldDeclaration extends BodyDeclaration {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -288,17 +288,17 @@ public class FieldDeclaration extends BodyDeclaration {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the base type declared in this field declaration.
 	 * <p>
-	 * N.B. The individual child variable declaration fragments may specify 
-	 * additional array dimensions. So the type of the variable are not 
+	 * N.B. The individual child variable declaration fragments may specify
+	 * additional array dimensions. So the type of the variable are not
 	 * necessarily exactly this type.
 	 * </p>
-	 * 
+	 *
 	 * @return the base type
-	 */ 
+	 */
 	public Type getType() {
 		if (this.baseType == null) {
 			// lazy init must be thread-safe for readers
@@ -315,14 +315,14 @@ public class FieldDeclaration extends BodyDeclaration {
 
 	/**
 	 * Sets the base type declared in this field declaration to the given type.
-	 * 
+	 *
 	 * @param type the new base type
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setType(Type type) {
 		if (type == null) {
 			throw new IllegalArgumentException();
@@ -334,26 +334,26 @@ public class FieldDeclaration extends BodyDeclaration {
 	}
 
 	/**
-	 * Returns the live list of variable declaration fragments in this field 
+	 * Returns the live list of variable declaration fragments in this field
 	 * declaration. Adding and removing nodes from this list affects this node
-	 * dynamically. All nodes in this list must be 
-	 * <code>VariableDeclarationFragment</code>s; attempts to add any other 
+	 * dynamically. All nodes in this list must be
+	 * <code>VariableDeclarationFragment</code>s; attempts to add any other
 	 * type of node will trigger an exception.
-	 * 
-	 * @return the live list of variable declaration fragments in this 
+	 *
+	 * @return the live list of variable declaration fragments in this
 	 *    statement (element type: <code>VariableDeclarationFragment</code>)
-	 */ 
+	 */
 	public List fragments() {
 		return this.variableDeclarationFragments;
 	}
-		
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 2 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

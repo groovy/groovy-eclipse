@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,21 +27,21 @@ import org.eclipse.jdt.internal.core.util.MementoTokenizer;
  */
 
 public abstract class Member extends SourceRefElement implements IMember {
-	
+
 protected Member(JavaElement parent) {
 	super(parent);
 }
 protected static boolean areSimilarMethods(
-	String name1, String[] params1, 
+	String name1, String[] params1,
 	String name2, String[] params2,
 	String[] simpleNames1) {
-		
+
 	if (name1.equals(name2)) {
 		int params1Length = params1.length;
 		if (params1Length == params2.length) {
 			for (int i = 0; i < params1Length; i++) {
-				String simpleName1 = 
-					simpleNames1 == null ? 
+				String simpleName1 =
+					simpleNames1 == null ?
 						Signature.getSimpleName(Signature.toString(Signature.getTypeErasure(params1[i]))) :
 						simpleNames1[i];
 				String simpleName2 = Signature.getSimpleName(Signature.toString(Signature.getTypeErasure(params2[i])));
@@ -257,19 +257,19 @@ public Member getOuterMostLocalContext() {
 				 // these elements can define local members
 				lastLocalContext = (Member) current;
 				break;
-		}		
+		}
 		current = current.getParent();
-	} 
+	}
 	return lastLocalContext;
 }
 public ISourceRange getJavadocRange() throws JavaModelException {
-	ISourceRange range= this.getSourceRange();
+	ISourceRange range= getSourceRange();
 	if (range == null) return null;
 	IBuffer buf= null;
-	if (this.isBinary()) {
-		buf = this.getClassFile().getBuffer();
+	if (isBinary()) {
+		buf = getClassFile().getBuffer();
 	} else {
-		ICompilationUnit compilationUnit = this.getCompilationUnit();
+		ICompilationUnit compilationUnit = getCompilationUnit();
 		if (!compilationUnit.isConsistent()) {
 			return null;
 		}
@@ -283,7 +283,7 @@ public ISourceRange getJavadocRange() throws JavaModelException {
 		try {
 			int docOffset= -1;
 			int docEnd= -1;
-			
+
 			int terminal= scanner.getNextToken();
 			loop: while (true) {
 				switch(terminal) {
@@ -301,7 +301,7 @@ public ISourceRange getJavadocRange() throws JavaModelException {
 				}
 			}
 			if (docOffset != -1) {
-				return new SourceRange(docOffset + start, docEnd - docOffset + 1);
+				return new SourceRange(docOffset + start, docEnd - docOffset);
 			}
 		} catch (InvalidInputException ex) {
 			// try if there is inherited Javadoc
@@ -372,22 +372,10 @@ public String readableName() {
 		String declaringName = ((JavaElement) getDeclaringType()).readableName();
 		StringBuffer buffer = new StringBuffer(declaringName);
 		buffer.append('.');
-		buffer.append(this.getElementName());
+		buffer.append(getElementName());
 		return buffer.toString();
 	} else {
 		return super.readableName();
-	}
-}
-/**
- * Updates the name range for this element.
- */
-protected void updateNameRange(int nameStart, int nameEnd) {
-	try {
-		MemberElementInfo info = (MemberElementInfo) getElementInfo();
-		info.setNameSourceStart(nameStart);
-		info.setNameSourceEnd(nameEnd);
-	} catch (JavaModelException npe) {
-		return;
 	}
 }
 }

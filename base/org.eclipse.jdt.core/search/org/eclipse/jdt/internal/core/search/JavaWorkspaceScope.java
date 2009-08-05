@@ -75,7 +75,7 @@ public IPath[] enclosingProjectsAndJars() {
 		Set paths = new HashSet(projects.length * 2);
 		for (int i = 0, length = projects.length; i < length; i++) {
 			JavaProject javaProject = (JavaProject) projects[i];
-			
+
 			// Add project full path
 			IPath projectPath = javaProject.getProject().getFullPath();
 			paths.add(projectPath);
@@ -113,7 +113,7 @@ public boolean equals(Object o) {
 }
 
 public AccessRuleSet getAccessRuleSet(String relativePath, String containerPath) {
-	// Do not consider access rules on workspace scope 
+	// Do not consider access rules on workspace scope
 	return null;
 }
 
@@ -157,7 +157,7 @@ public void processDelta(IJavaElementDelta delta, int eventType) {
 			IJavaElementDelta[] children = delta.getAffectedChildren();
 			for (int i = 0, length = children.length; i < length; i++) {
 				IJavaElementDelta child = children[i];
-				this.processDelta(child, eventType);
+				processDelta(child, eventType);
 			}
 			break;
 		case IJavaElement.JAVA_PROJECT:
@@ -176,7 +176,7 @@ public void processDelta(IJavaElementDelta delta, int eventType) {
 						children = delta.getAffectedChildren();
 						for (int i = 0, length = children.length; i < length; i++) {
 							IJavaElementDelta child = children[i];
-							this.processDelta(child, eventType);
+							processDelta(child, eventType);
 						}
 					}
 					break;

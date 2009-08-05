@@ -19,44 +19,44 @@ import java.util.List;
  *
  * <pre>
  * TryStatement:
- *     <b>try</b> Block 
+ *     <b>try</b> Block
  *         { CatchClause }
  *         [ <b>finally</b> Block ]
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class TryStatement extends Statement {
-	
+
 	/**
 	 * The "body" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor BODY_PROPERTY = 
+	public static final ChildPropertyDescriptor BODY_PROPERTY =
 		new ChildPropertyDescriptor(TryStatement.class, "body", Block.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "catchClauses" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildListPropertyDescriptor CATCH_CLAUSES_PROPERTY = 
+	public static final ChildListPropertyDescriptor CATCH_CLAUSES_PROPERTY =
 		new ChildListPropertyDescriptor(TryStatement.class, "catchClauses", CatchClause.class, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "finally" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor FINALLY_PROPERTY = 
+	public static final ChildPropertyDescriptor FINALLY_PROPERTY =
 		new ChildPropertyDescriptor(TryStatement.class, "finally", Block.class, OPTIONAL, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(4);
 		createPropertyList(TryStatement.class, propertyList);
@@ -69,17 +69,17 @@ public class TryStatement extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The body; lazily initialized; defaults to an empty block.
 	 */
@@ -91,22 +91,22 @@ public class TryStatement extends Statement {
 	 */
 	private ASTNode.NodeList catchClauses =
 		new ASTNode.NodeList(CATCH_CLAUSES_PROPERTY);
-	
+
 	/**
 	 * The finally block, or <code>null</code> if none.
 	 * Defaults to none.
 	 */
 	private Block optionalFinallyBody = null;
 
-			
+
 	/**
-	 * Creates a new AST node for a try statement owned by the given 
+	 * Creates a new AST node for a try statement owned by the given
 	 * AST. By default, the try statement has an empty block, no catch
 	 * clauses, and no finally block.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	TryStatement(AST ast) {
@@ -119,7 +119,7 @@ public class TryStatement extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -143,7 +143,7 @@ public class TryStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -167,7 +167,7 @@ public class TryStatement extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		TryStatement result = new TryStatement(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.setBody((Block) getBody().clone(target));
 		result.catchClauses().addAll(
@@ -198,12 +198,12 @@ public class TryStatement extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the body of this try statement.
-	 * 
+	 *
 	 * @return the try body
-	 */ 
+	 */
 	public Block getBody() {
 		if (this.body == null) {
 			// lazy init must be thread-safe for readers
@@ -217,10 +217,10 @@ public class TryStatement extends Statement {
 		}
 		return this.body;
 	}
-	
+
 	/**
 	 * Sets the body of this try statement.
-	 * 
+	 *
 	 * @param body the block node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -228,7 +228,7 @@ public class TryStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setBody(Block body) {
 		if (body == null) {
 			throw new IllegalArgumentException();
@@ -241,29 +241,29 @@ public class TryStatement extends Statement {
 
 	/**
 	 * Returns the live ordered list of catch clauses for this try statement.
-	 * 
+	 *
 	 * @return the live list of catch clauses
 	 *    (element type: <code>CatchClause</code>)
-	 */ 
+	 */
 	public List catchClauses() {
 		return this.catchClauses;
 	}
-		
+
 	/**
-	 * Returns the finally block of this try statement, or <code>null</code> if 
+	 * Returns the finally block of this try statement, or <code>null</code> if
 	 * this try statement has <b>no</b> finally block.
-	 * 
+	 *
 	 * @return the finally block, or <code>null</code> if this try statement
 	 *    has none
-	 */ 
+	 */
 	public Block getFinally() {
 		return this.optionalFinallyBody;
 	}
 
 	/**
 	 * Sets or clears the finally block of this try statement.
-	 * 
-	 * @param block the finally block node, or <code>null</code> if 
+	 *
+	 * @param block the finally block node, or <code>null</code> if
 	 *    there is none
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -271,21 +271,21 @@ public class TryStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setFinally(Block block) {
 		ASTNode oldChild = this.optionalFinallyBody;
 		preReplaceChild(oldChild, block, FINALLY_PROPERTY);
 		this.optionalFinallyBody = block;
 		postReplaceChild(oldChild, block, FINALLY_PROPERTY);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 3 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

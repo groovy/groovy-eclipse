@@ -31,6 +31,9 @@ org.eclipse.jdt.core/debug/hierarchy=false
 # Reports background indexer activity: indexing, saving index file, index queries
 org.eclipse.jdt.core/debug/indexmanager=false
 
+# Reports internals of indexer activity (to be used on the JDT/Core team request only)
+org.eclipse.jdt.core/debug/indexmanager/advanced=false
+
 # Print notified Java element deltas
 org.eclipse.jdt.core/debug/javadelta=false
 org.eclipse.jdt.core/debug/javadelta/verbose=false

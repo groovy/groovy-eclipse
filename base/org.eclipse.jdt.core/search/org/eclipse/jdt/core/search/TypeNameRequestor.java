@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,7 +36,7 @@ public abstract class TypeNameRequestor {
 	 *		@see org.eclipse.jdt.core.Flags
 	 * @param packageName the package name as specified in the package declaration (ie. a dot-separated name)
 	 * @param simpleTypeName the simple name of the type
-	 * @param enclosingTypeNames if the type is a member type, 
+	 * @param enclosingTypeNames if the type is a member type,
 	 *          the simple names of the enclosing types from the outer-most to the
 	 *          direct parent of the type (for example, if the class is x.y.A$B$C then
 	 *          the enclosing types are [A, B]. This is an empty array if the type
@@ -44,9 +44,9 @@ public abstract class TypeNameRequestor {
 	 * @param path the full path to the resource containing the type. If the resource is a .class file
 	 *          or a source file, this is the full path in the workspace to this resource. If the
 	 *          resource is an archive (that is, a .zip or .jar file), the path is composed of 2 paths separated
-	 *		 	 by <code>IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR</code>: 
-	 *			 the first path is the full OS path to the archive (if it is an external archive), 
-	 *			 or the workspace relative <code>IPath</code> to the archive (if it is an internal archive), 
+	 *		 	 by <code>IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR</code>:
+	 *			 the first path is the full OS path to the archive (if it is an external archive),
+	 *			 or the workspace relative <code>IPath</code> to the archive (if it is an internal archive),
 	 * 		 the second path is the path to the resource inside the archive.
 	 */
 	public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, String path) {

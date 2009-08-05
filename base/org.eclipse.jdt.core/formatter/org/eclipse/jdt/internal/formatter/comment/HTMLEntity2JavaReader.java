@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,14 +22,14 @@ import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
  * <code>SubstitutionTextReader</code> that will substitute plain text values
  * for html entities encountered in the original text. Line breaks and
  * whitespace are preserved.
- * 
+ *
  * @since 3.0
  */
 public class HTMLEntity2JavaReader extends SubstitutionTextReader {
 
 	/** The hard-coded entity map. */
 	private static final Map fgEntityLookup;
-	
+
 	static {
 		fgEntityLookup= new HashMap(7);
 		fgEntityLookup.put("lt", "<"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -43,7 +43,7 @@ public class HTMLEntity2JavaReader extends SubstitutionTextReader {
 
 	/**
 	 * Creates a new instance that will read from <code>reader</code>
-	 * 
+	 *
 	 * @param reader the source reader
 	 */
 	public HTMLEntity2JavaReader(Reader reader) {
@@ -63,7 +63,7 @@ public class HTMLEntity2JavaReader extends SubstitutionTextReader {
 	/**
 	 * Replaces an HTML entity body (without &amp; and ;) with its
 	 * plain/text (or plain/java) counterpart.
-	 * 
+	 *
 	 * @param symbol the entity body to resolve
 	 * @return the plain/text counterpart of <code>symbol</code>
 	 */
@@ -92,7 +92,7 @@ public class HTMLEntity2JavaReader extends SubstitutionTextReader {
 	/**
 	 * Reads an HTML entity from the stream and returns its plain/text
 	 * counterpart.
-	 * 
+	 *
 	 * @return an entity read from the stream, or the stream content.
 	 * @throws IOException if the underlying reader throws one
 	 */

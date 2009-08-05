@@ -24,11 +24,11 @@ public class AssistImportContainer extends ImportContainer {
 		super(parent);
 		this.infoCache = infoCache;
 	}
-	
+
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
-		return infoCache.get(this);
+		return this.infoCache.get(this);
 	}
-	
+
 	protected IImportDeclaration getImport(String importName, boolean isOnDemand) {
 		return new AssistImportDeclaration(this, importName, isOnDemand, this.infoCache);
 	}

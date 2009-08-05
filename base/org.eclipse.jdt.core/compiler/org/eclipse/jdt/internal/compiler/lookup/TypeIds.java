@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,11 +56,11 @@ public interface TypeIds {
 
 	// 1.4 features
 	final int T_JavaLangAssertionError = 35;
-	
+
 	// array interfaces
 	final int T_JavaLangCloneable = 36;
 	final int T_JavaIoSerializable = 37;
-	    
+
 	// 1.5 features
 	final int T_JavaLangIterable = 38;
 	final int T_JavaUtilIterator = 39;
@@ -86,6 +86,8 @@ public interface TypeIds {
 	final int T_JavaIoExternalizable = 56;
 	final int T_JavaIoObjectStreamException = 57;
 	final int T_JavaIoException = 58;
+	
+	final int T_JavaUtilCollection = 59;
 
 	final int NoId = Integer.MAX_VALUE;
 
@@ -154,6 +156,7 @@ public interface TypeIds {
 	final int Double2String = T_double + (T_JavaLangString << 4);
 	final int String2String = T_JavaLangString + (T_JavaLangString << 4);
 	final int Object2String = T_JavaLangObject + (T_JavaLangString << 4);
+	final int Null2Null = T_null + (T_null << 4);
 	final int Null2String = T_null + (T_JavaLangString << 4);
 	final int Object2Object = T_JavaLangObject + (T_JavaLangObject << 4);
 	final int BOXING = 0x200;

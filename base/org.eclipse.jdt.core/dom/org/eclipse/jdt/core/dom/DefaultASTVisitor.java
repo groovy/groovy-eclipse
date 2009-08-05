@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,23 +13,23 @@ package org.eclipse.jdt.core.dom;
  */
 class DefaultASTVisitor extends ASTVisitor {
 	/**
-	 * 
+	 *
 	 */
 	public DefaultASTVisitor() {
 		super();
 	}
-	
+
 	/**
-	 * 
+	 *
 	 */
 	public DefaultASTVisitor(boolean visitDocTags) {
 		super(visitDocTags);
 	}
-	
+
 	public void endVisit(AnnotationTypeDeclaration node) {
 		endVisitNode(node);
 	}
-	
+
 	public void endVisit(AnnotationTypeMemberDeclaration node) {
 		endVisitNode(node);
 	}
@@ -389,7 +389,7 @@ class DefaultASTVisitor extends ASTVisitor {
 	}
 	public boolean visit(Javadoc node) {
 		//	do not visit Javadoc tags by default. Use constructor with boolean to enable.
-		if (super.visit(node)) { 
+		if (super.visit(node)) {
 			return visitNode(node);
 		}
 		return false;
@@ -445,7 +445,7 @@ class DefaultASTVisitor extends ASTVisitor {
 	public boolean visit(PrefixExpression node) {
 		return visitNode(node);
 	}
-	
+
 	public boolean visit(PrimitiveType node) {
 		return visitNode(node);
 	}

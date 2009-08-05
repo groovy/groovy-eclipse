@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,7 +19,7 @@ import org.eclipse.jdt.core.IJavaElement;
  * <p>
  * This class is intended to be instantiated and subclassed by clients.
  * </p>
- * 
+ *
  * @since 3.0
  */
 public class LocalVariableReferenceMatch extends SearchMatch {
@@ -29,7 +29,7 @@ public class LocalVariableReferenceMatch extends SearchMatch {
 
 	/**
 	 * Creates a new local variable reference match.
-	 * 
+	 *
 	 * @param enclosingElement the inner-most enclosing member that references this local variable
 	 * @param accuracy one of {@link #A_ACCURATE} or {@link #A_INACCURATE}
 	 * @param offset the offset the match starts at, or -1 if unknown
@@ -51,7 +51,7 @@ public class LocalVariableReferenceMatch extends SearchMatch {
 	/**
 	 * Returns whether the local variable reference is a read access to the variable.
 	 * Note that a local variable reference can be read and written at once in case of compound assignments (e.g. i += 0;)
-	 * 
+	 *
 	 * @return whether the local variable reference is a read access to the variable.
 	 */
 	public final boolean isReadAccess() {
@@ -61,7 +61,7 @@ public class LocalVariableReferenceMatch extends SearchMatch {
 	/**
 	 * Returns whether the local variable reference is a write access to the variable.
 	 * Note that a local variable reference can be read and written at once in case of compound assignments (e.g. i += 0;)
-	 * 
+	 *
 	 * @return whether the local variable reference is a write access to the variable.
 	 */
 	public final boolean isWriteAccess() {

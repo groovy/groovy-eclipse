@@ -20,40 +20,40 @@ import java.util.List;
  * IfStatement:
  *    <b>if</b> <b>(</b> Expression <b>)</b> Statement [ <b>else</b> Statement]
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class IfStatement extends Statement {
-	
+
 	/**
 	 * The "expression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(IfStatement.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "thenStatement" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor THEN_STATEMENT_PROPERTY = 
+	public static final ChildPropertyDescriptor THEN_STATEMENT_PROPERTY =
 		new ChildPropertyDescriptor(IfStatement.class, "thenStatement", Statement.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "elseStatement" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor ELSE_STATEMENT_PROPERTY = 
+	public static final ChildPropertyDescriptor ELSE_STATEMENT_PROPERTY =
 		new ChildPropertyDescriptor(IfStatement.class, "elseStatement", Statement.class, OPTIONAL, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(4);
 		createPropertyList(IfStatement.class, properyList);
@@ -66,26 +66,26 @@ public class IfStatement extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
-	 * The expression; lazily initialized; defaults to an unspecified, but 
+	 * The expression; lazily initialized; defaults to an unspecified, but
 	 * legal, expression.
 	 */
 	private Expression expression = null;
 
 	/**
-	 * The then statement; lazily initialized; defaults to an unspecified, but 
+	 * The then statement; lazily initialized; defaults to an unspecified, but
 	 * legal, statement.
 	 */
 	private Statement thenStatement = null;
@@ -96,27 +96,27 @@ public class IfStatement extends Statement {
 	private Statement optionalElseStatement = null;
 
 	/**
-	 * Creates a new unparented if statement node owned by the given 
+	 * Creates a new unparented if statement node owned by the given
 	 * AST. By default, the expresssion is unspecified,
 	 * but legal, the then statement is an empty block, and there is no else
 	 * statement.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	IfStatement(AST ast) {
 		super(ast);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -148,7 +148,7 @@ public class IfStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -161,7 +161,7 @@ public class IfStatement extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		IfStatement result = new IfStatement(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.setExpression((Expression) getExpression().clone(target));
 		result.setThenStatement(
@@ -192,12 +192,12 @@ public class IfStatement extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the expression of this if statement.
-	 * 
+	 *
 	 * @return the expression node
-	 */ 
+	 */
 	public Expression getExpression() {
 		if (this.expression == null) {
 			// lazy init must be thread-safe for readers
@@ -211,10 +211,10 @@ public class IfStatement extends Statement {
 		}
 		return this.expression;
 	}
-	
+
 	/**
 	 * Sets the condition of this if statement.
-	 * 
+	 *
 	 * @param expression the expression node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -222,7 +222,7 @@ public class IfStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setExpression(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -235,9 +235,9 @@ public class IfStatement extends Statement {
 
 	/**
 	 * Returns the "then" part of this if statement.
-	 * 
+	 *
 	 * @return the "then" statement node
-	 */ 
+	 */
 	public Statement getThenStatement() {
 		if (this.thenStatement == null) {
 			// lazy init must be thread-safe for readers
@@ -251,7 +251,7 @@ public class IfStatement extends Statement {
 		}
 		return this.thenStatement;
 	}
-	
+
 	/**
 	 * Sets the "then" part of this if statement.
 	 * <p>
@@ -262,7 +262,7 @@ public class IfStatement extends Statement {
 	 * compile, be sure to embed the <code>VariableDeclarationStatement</code>
 	 * inside a <code>Block</code>.
 	 * </p>
-	 * 
+	 *
 	 * @param statement the "then" statement node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -270,7 +270,7 @@ public class IfStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setThenStatement(Statement statement) {
 		if (statement == null) {
 			throw new IllegalArgumentException();
@@ -285,12 +285,12 @@ public class IfStatement extends Statement {
 	 * Returns the "else" part of this if statement, or <code>null</code> if
 	 * this if statement has <b>no</b> "else" part.
 	 * <p>
-	 * Note that there is a subtle difference between having no else 
+	 * Note that there is a subtle difference between having no else
 	 * statement and having an empty statement ("{}") or null statement (";").
 	 * </p>
-	 * 
+	 *
 	 * @return the "else" statement node, or <code>null</code> if none
-	 */ 
+	 */
 	public Statement getElseStatement() {
 		return this.optionalElseStatement;
 	}
@@ -300,7 +300,7 @@ public class IfStatement extends Statement {
 	 * <p>
 	 * Note that there is a subtle difference between having no else part
 	 * (as in <code>"if(true){}"</code>) and having an empty block (as in
-	 * "if(true){}else{}") or null statement (as in "if(true){}else;"). 
+	 * "if(true){}else{}") or null statement (as in "if(true){}else;").
 	 * </p>
 	 * <p>
 	 * Special note: The Java language does not allow a local variable declaration
@@ -310,8 +310,8 @@ public class IfStatement extends Statement {
 	 * compile, be sure to embed the <code>VariableDeclarationStatement</code>
 	 * inside a <code>Block</code>.
 	 * </p>
-	 * 
-	 * @param statement the "else" statement node, or <code>null</code> if 
+	 *
+	 * @param statement the "else" statement node, or <code>null</code> if
 	 *    there is none
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -319,21 +319,21 @@ public class IfStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setElseStatement(Statement statement) {
 		ASTNode oldChild = this.optionalElseStatement;
 		preReplaceChild(oldChild, statement, ELSE_STATEMENT_PROPERTY);
 		this.optionalElseStatement = statement;
 		postReplaceChild(oldChild, statement, ELSE_STATEMENT_PROPERTY);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 3 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

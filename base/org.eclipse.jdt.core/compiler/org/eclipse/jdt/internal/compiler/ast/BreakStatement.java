@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,7 @@ import org.eclipse.jdt.internal.compiler.flow.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class BreakStatement extends BranchStatement {
-	
+
 public BreakStatement(char[] label, int sourceStart, int e) {
 	super(label, sourceStart, e);
 }
@@ -26,7 +26,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	// to each of the traversed try statements, so that execution will terminate properly.
 
 	// lookup the label, this should answer the returnContext
-	FlowContext targetContext = (this.label == null) 
+	FlowContext targetContext = (this.label == null)
 		? flowContext.getTargetContextForDefaultBreak()
 		: flowContext.getTargetContextForBreakLabel(this.label);
 
@@ -34,19 +34,19 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		if (this.label == null) {
 			currentScope.problemReporter().invalidBreak(this);
 		} else {
-			currentScope.problemReporter().undefinedLabel(this); 
+			currentScope.problemReporter().undefinedLabel(this);
 		}
 		return flowInfo; // pretend it did not break since no actual target
 	}
-	
+
 	this.initStateIndex =
 		currentScope.methodScope().recordInitializationStates(flowInfo);
-	
+
 	this.targetLabel = targetContext.breakLabel();
 	FlowContext traversedContext = flowContext;
 	int subCount = 0;
 	this.subroutines = new SubRoutineStatement[5];
-	
+
 	do {
 		SubRoutineStatement sub;
 		if ((sub = traversedContext.subroutine()) != null) {
@@ -60,12 +60,12 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		}
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
 		traversedContext.recordBreakTo(targetContext);
-		
+
 		if (traversedContext instanceof InsideSubRoutineFlowContext) {
 			ASTNode node = traversedContext.associatedNode;
 			if (node instanceof TryStatement) {
 				TryStatement tryStatement = (TryStatement) node;
-				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits			
+				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
 			}
 		} else if (traversedContext == targetContext) {
 			// only record break info once accumulated through subroutines, and only against target context
@@ -73,7 +73,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			break;
 		}
 	} while ((traversedContext = traversedContext.parent) != null);
-	
+
 	// resize subroutines
 	if (subCount != this.subroutines.length) {
 		System.arraycopy(this.subroutines, 0, (this.subroutines = new SubRoutineStatement[subCount]), 0, subCount);

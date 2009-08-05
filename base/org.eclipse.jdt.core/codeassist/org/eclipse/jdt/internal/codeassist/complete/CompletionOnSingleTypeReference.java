@@ -23,7 +23,7 @@ package org.eclipse.jdt.internal.codeassist.complete;
  * The source range of the completion node denotes the source range
  * which should be replaced by the completion.
  */
- 
+
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
@@ -43,7 +43,7 @@ public CompletionOnSingleTypeReference(char[] source, long pos) {
 }
 public CompletionOnSingleTypeReference(char[] source, long pos, int kind) {
 	super(source, pos);
-	isCompletionNode = true;
+	this.isCompletionNode = true;
 	this.kind = kind;
 }
 public void aboutToResolve(Scope scope) {
@@ -59,7 +59,7 @@ protected TypeBinding getTypeBinding(Scope scope) {
     if (this.fieldTypeCompletionNode != null) {
 		throw new CompletionNodeFound(this.fieldTypeCompletionNode, scope);
     }
-	if(isCompletionNode) {
+	if(this.isCompletionNode) {
 		throw new CompletionNodeFound(this, scope);
 	} else {
 		return super.getTypeBinding(scope);
@@ -92,13 +92,13 @@ public StringBuffer printExpression(int indent, StringBuffer output){
 			output.append("<CompleteOnType:");//$NON-NLS-1$
 			break;
 	}
-	return output.append(token).append('>');
+	return output.append(this.token).append('>');
 }
 public TypeBinding resolveTypeEnclosing(BlockScope scope, ReferenceBinding enclosingType) {
     if (this.fieldTypeCompletionNode != null) {
 		throw new CompletionNodeFound(this.fieldTypeCompletionNode, scope);
     }
-	if(isCompletionNode) {
+	if(this.isCompletionNode) {
 		throw new CompletionNodeFound(this, enclosingType, scope);
 	} else {
 		return super.resolveTypeEnclosing(scope, enclosingType);

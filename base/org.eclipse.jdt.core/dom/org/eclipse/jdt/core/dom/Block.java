@@ -21,26 +21,26 @@ import java.util.List;
  * Block:
  *    <b>{</b> { Statement } <b>}</b>
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class Block extends Statement {
-	
+
 	/**
 	 * The "statements" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildListPropertyDescriptor STATEMENTS_PROPERTY = 
+	public static final ChildListPropertyDescriptor STATEMENTS_PROPERTY =
 		new ChildListPropertyDescriptor(Block.class, "statements", Statement.class, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(2);
 		createPropertyList(Block.class, properyList);
@@ -51,22 +51,22 @@ public class Block extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
-	 * The list of statements (element type: <code>Statement</code>). 
+	 * The list of statements (element type: <code>Statement</code>).
 	 * Defaults to an empty list.
 	 */
-	private ASTNode.NodeList statements = 
+	private ASTNode.NodeList statements =
 		new ASTNode.NodeList(STATEMENTS_PROPERTY);
 
 	/**
@@ -75,7 +75,7 @@ public class Block extends Statement {
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	Block(AST ast) {
@@ -88,7 +88,7 @@ public class Block extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -112,7 +112,7 @@ public class Block extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		Block result = new Block(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.statements().addAll(
 			ASTNode.copySubtrees(target, statements()));
@@ -137,28 +137,28 @@ public class Block extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the live list of statements in this block. Adding and
 	 * removing nodes from this list affects this node dynamically.
 	 * All nodes in this list must be <code>Statement</code>s;
 	 * attempts to add any other type of node will trigger an
 	 * exception.
-	 * 
+	 *
 	 * @return the live list of statements in this block
 	 *    (element type: <code>Statement</code>)
-	 */ 
+	 */
 	public List statements() {
 		return this.statements;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 1 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

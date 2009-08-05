@@ -26,7 +26,7 @@ import java.util.EventObject;
  * and <code>getLength</code> is the length of the text that was removed.
  * </p>
  * <p>
- * For replacements (including <code>IBuffer.setContents</code>), 
+ * For replacements (including <code>IBuffer.setContents</code>),
  * <code>getOffset</code> is the offset
  * of the first replaced character, <code>getText</code> is the replacement
  * text, and <code>getLength</code> is the length of the original text
@@ -60,12 +60,12 @@ public class BufferChangedEvent extends EventObject {
 	 * The text that was modified.
 	 */
 	private String text;
-	
+
 	private static final long serialVersionUID = 655379473891745999L; // backward compatible
 
 /**
  * Creates a new buffer changed event indicating that the given buffer has changed.
- * 
+ *
  * @param buffer the given buffer
  * @param offset the given offset
  * @param length the given length
@@ -89,7 +89,7 @@ public IBuffer getBuffer() {
  * Returns the length of text removed or replaced in the buffer, or
  * 0 if text has been inserted into the buffer.
  *
- * @return the length of the original text fragment modified by the 
+ * @return the length of the original text fragment modified by the
  *   buffer change (<code> 0 </code> in case of insertion).
  */
 public int getLength() {

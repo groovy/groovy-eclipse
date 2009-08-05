@@ -84,14 +84,14 @@ class MethodBinding implements IMethodBinding {
 	 * @see IBinding#getName()
 	 */
 	public String getName() {
-		if (name == null) {
+		if (this.name == null) {
 			if (this.binding.isConstructor()) {
-				name = this.getDeclaringClass().getName();
+				this.name = getDeclaringClass().getName();
 			} else {
-				name = new String(this.binding.selector);
+				this.name = new String(this.binding.selector);
 			}
 		}
-		return name;
+		return this.name;
 	}
 
 	public IAnnotationBinding[] getAnnotations() {
@@ -129,7 +129,7 @@ class MethodBinding implements IMethodBinding {
 		if (this.declaringClass == null) {
 			this.declaringClass = this.resolver.getTypeBinding(this.binding.declaringClass);
 		}
-		return declaringClass;
+		return this.declaringClass;
 	}
 
 	public IAnnotationBinding[] getParameterAnnotations(int index) {
@@ -158,7 +158,7 @@ class MethodBinding implements IMethodBinding {
 			}
 		}
 		this.parameterAnnotations = domAnnotations;
-		
+
 		return this.parameterAnnotations[index];
 	}
 
@@ -167,7 +167,7 @@ class MethodBinding implements IMethodBinding {
 	 */
 	public ITypeBinding[] getParameterTypes() {
 		if (this.parameterTypes != null) {
-			return parameterTypes;
+			return this.parameterTypes;
 		}
 		org.eclipse.jdt.internal.compiler.lookup.TypeBinding[] parameters = this.binding.parameters;
 		int length = parameters == null ? 0 : parameters.length;
@@ -186,7 +186,7 @@ class MethodBinding implements IMethodBinding {
 				} else {
 					// log error
 					StringBuffer message = new StringBuffer("Report method binding where a parameter is null:\n");  //$NON-NLS-1$
-					message.append(this.toString());
+					message.append(toString());
 					Util.log(new IllegalArgumentException(), message.toString());
 					// report no binding since one or more parameter has no binding
 					return this.parameterTypes = NO_TYPE_BINDINGS;
@@ -217,7 +217,7 @@ class MethodBinding implements IMethodBinding {
 	 */
 	public ITypeBinding[] getExceptionTypes() {
 		if (this.exceptionTypes != null) {
-			return exceptionTypes;
+			return this.exceptionTypes;
 		}
 		org.eclipse.jdt.internal.compiler.lookup.TypeBinding[] exceptions = this.binding.thrownExceptions;
 		int length = exceptions == null ? 0 : exceptions.length;
@@ -244,7 +244,7 @@ class MethodBinding implements IMethodBinding {
 
 	private JavaElement getUnresolvedJavaElement() {
 		if (!(this.resolver instanceof DefaultBindingResolver)) return null;
-		
+
 		DefaultBindingResolver defaultBindingResolver = (DefaultBindingResolver) this.resolver;
 		return Util.getUnresolvedJavaElement(
 				this.binding,

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,46 +14,46 @@ import org.eclipse.jdt.core.IType;
 
 public final class TypeVector {
 	static int INITIAL_SIZE = 10;
-	
+
 	public int size;
 	int maxSize;
 	IType[] elements;
-	
+
 	public final static IType[] NoElements = new IType[0];
-	
+
 public TypeVector() {
-	maxSize = INITIAL_SIZE;
-	size = 0;
-	elements = new IType[maxSize];
+	this.maxSize = INITIAL_SIZE;
+	this.size = 0;
+	this.elements = new IType[this.maxSize];
 }
 public TypeVector(IType[] types) {
-	this.size = types.length; 
+	this.size = types.length;
 	this.maxSize = this.size + 1; // when an element is added, it assumes that the length is > 0
-	elements = new IType[this.maxSize];
-	System.arraycopy(types, 0, elements, 0, this.size);	
+	this.elements = new IType[this.maxSize];
+	System.arraycopy(types, 0, this.elements, 0, this.size);
 }
 public TypeVector(IType type) {
 	this.maxSize = INITIAL_SIZE;
 	this.size = 1;
-	elements = new IType[this.maxSize];
-	elements[0] = type;
+	this.elements = new IType[this.maxSize];
+	this.elements[0] = type;
 }
 public void add(IType newElement) {
-	if (size == maxSize)	// knows that size starts <= maxSize
-		System.arraycopy(elements, 0, (elements = new IType[maxSize *= 2]), 0, size);
-	elements[size++] = newElement;
+	if (this.size == this.maxSize)	// knows that size starts <= maxSize
+		System.arraycopy(this.elements, 0, (this.elements = new IType[this.maxSize *= 2]), 0, this.size);
+	this.elements[this.size++] = newElement;
 }
 public void addAll(IType[] newElements) {
-	if (size + newElements.length >= maxSize) {
-		maxSize = size + newElements.length;	// assume no more elements will be added
-		System.arraycopy(elements, 0, (elements = new IType[maxSize]), 0, size);
+	if (this.size + newElements.length >= this.maxSize) {
+		this.maxSize = this.size + newElements.length;	// assume no more elements will be added
+		System.arraycopy(this.elements, 0, (this.elements = new IType[this.maxSize]), 0, this.size);
 	}
-	System.arraycopy(newElements, 0, elements, size, newElements.length);
-	size += newElements.length;
+	System.arraycopy(newElements, 0, this.elements, this.size, newElements.length);
+	this.size += newElements.length;
 }
 public boolean contains(IType element) {
-	for (int i = size; --i >= 0;)
-		if (element.equals(elements[i]))
+	for (int i = this.size; --i >= 0;)
+		if (element.equals(this.elements[i]))
 			return true;
 	return false;
 }
@@ -66,46 +66,46 @@ public TypeVector copy() {
 	return clone;
 }
 public IType elementAt(int index) {
-	return elements[index];
+	return this.elements[index];
 }
 public IType[] elements() {
-	
+
 	// do not resize to 0 if empty since may add more elements later
 	if (this.size == 0) return NoElements;
-	
+
 	if (this.size < this.maxSize) {
-		maxSize = size;
-		System.arraycopy(this.elements, 0, (this.elements = new IType[maxSize]), 0, size);
+		this.maxSize = this.size;
+		System.arraycopy(this.elements, 0, (this.elements = new IType[this.maxSize]), 0, this.size);
 	}
 	return this.elements;
 }
 public IType find(IType element) {
-	for (int i = size; --i >= 0;)
-		if (element == elements[i])
-			return elements[i];
+	for (int i = this.size; --i >= 0;)
+		if (element == this.elements[i])
+			return this.elements[i];
 	return null;
 }
 public IType remove(IType element) {
 	// assumes only one occurrence of the element exists
-	for (int i = size; --i >= 0;)
-		if (element == elements[i]) {
+	for (int i = this.size; --i >= 0;)
+		if (element == this.elements[i]) {
 			// shift the remaining elements down one spot
-			System.arraycopy(elements, i + 1, elements, i, --size - i);
-			elements[size] = null;
+			System.arraycopy(this.elements, i + 1, this.elements, i, --this.size - i);
+			this.elements[this.size] = null;
 			return element;
 		}
 	return null;
 }
 public void removeAll() {
-	for (int i = size; --i >= 0;)
-		elements[i] = null;
-	size = 0;
+	for (int i = this.size; --i >= 0;)
+		this.elements[i] = null;
+	this.size = 0;
 }
 public String toString() {
 	StringBuffer buffer = new StringBuffer("["); //$NON-NLS-1$
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < this.size; i++) {
 		buffer.append("\n"); //$NON-NLS-1$
-		buffer.append(elements[i]);
+		buffer.append(this.elements[i]);
 	}
 	buffer.append("\n]"); //$NON-NLS-1$
 	return buffer.toString();

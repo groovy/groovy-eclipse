@@ -211,6 +211,28 @@ public void acceptType(char[] packageName, char[] typeName, int modifiers, boole
 	}
 }
 /**
+ * Resolve the type.
+ */
+public void acceptType(IType type) {
+	String key = type.getKey();
+	if(type.isBinary()) {
+		ResolvedBinaryType resolvedType = new ResolvedBinaryType((JavaElement)type.getParent(), type.getElementName(), key);
+		resolvedType.occurrenceCount = type.getOccurrenceCount();
+		type = resolvedType;
+	} else {
+		ResolvedSourceType resolvedType = new ResolvedSourceType((JavaElement)type.getParent(), type.getElementName(), key);
+		resolvedType.occurrenceCount = type.getOccurrenceCount();
+		type = resolvedType;
+	}
+
+	addElement(type);
+	if(SelectionEngine.DEBUG){
+		System.out.print("SELECTION - accept type("); //$NON-NLS-1$
+		System.out.print(type.toString());
+		System.out.println(")"); //$NON-NLS-1$
+	}
+}
+/**
  * @see ISelectionRequestor#acceptError
  */
 public void acceptError(CategorizedProblem error) {
@@ -468,7 +490,7 @@ public void acceptMethod(
 				start, end);
 
 		if(type != null) {
-			this.acceptMethodDeclaration(type, selector, start, end);
+			acceptMethodDeclaration(type, selector, start, end);
 		}
 	} else {
 		IType type = resolveType(declaringTypePackageName, declaringTypeName,
@@ -744,13 +766,13 @@ public void acceptMethodTypeParameter(char[] declaringTypePackageName, char[] de
  */
 protected void addElement(IJavaElement element) {
 	int elementLength = this.elementIndex + 1;
-	
+
 	for (int i = 0; i < elementLength; i++) {
 		if (this.elements[i].equals(element)) {
 			return;
 		}
 	}
-	
+
 	if (elementLength == this.elements.length) {
 		System.arraycopy(this.elements, 0, this.elements = new IJavaElement[(elementLength*2) + 1], 0, elementLength);
 	}

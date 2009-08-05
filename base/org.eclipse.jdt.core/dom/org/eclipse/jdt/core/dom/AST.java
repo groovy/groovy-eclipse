@@ -32,12 +32,12 @@ import org.eclipse.text.edits.TextEdit;
 /**
  * Umbrella owner and abstract syntax tree node factory.
  * An <code>AST</code> instance serves as the common owner of any number of
- * AST nodes, and as the factory for creating new AST nodes owned by that 
+ * AST nodes, and as the factory for creating new AST nodes owned by that
  * instance.
  * <p>
  * Abstract syntax trees may be hand constructed by clients, using the
  * <code>new<i>TYPE</i></code> factory methods to create new nodes, and the
- * various <code>set<i>CHILD</i></code> methods 
+ * various <code>set<i>CHILD</i></code> methods
  * (see {@link org.eclipse.jdt.core.dom.ASTNode ASTNode} and its subclasses)
  * to connect them together.
  * </p>
@@ -84,10 +84,10 @@ import org.eclipse.text.edits.TextEdit;
  * read-only AST.
  * </p>
  * <p>
- * Clients may create instances of this class using {@link #newAST(int)}, 
+ * Clients may create instances of this class using {@link #newAST(int)},
  * but this class is not intended to be subclassed.
  * </p>
- * 
+ *
  * @see ASTParser
  * @see ASTNode
  * @since 2.0
@@ -108,7 +108,7 @@ public final class AST {
 	 * @deprecated Clients should use the {@link #JLS3} AST API instead.
 	 */
 	public static final int JLS2 = 2;
-	
+
 	/**
 	 * Internal synonym for {@link #JLS2}. Use to alleviate
 	 * deprecation warnings.
@@ -124,37 +124,37 @@ public final class AST {
      * JLS3 is a superset of all earlier versions of the
      * Java language, and the JLS3 API can be used to manipulate
      * programs written in all versions of the Java language
-     * up to and including J2SE 5 (aka JDK 1.5). 
+     * up to and including J2SE 5 (aka JDK 1.5).
      *
 	 * @since 3.1
 	 */
 	public static final int JLS3 = 3;
-	
+
 	/**
 	 * The binding resolver for this AST. Initially a binding resolver that
 	 * does not resolve names at all.
 	 */
 	private BindingResolver resolver = new BindingResolver();
-	
+
 	/**
-	 * The event handler for this AST. 
+	 * The event handler for this AST.
 	 * Initially an event handler that does not nothing.
 	 * @since 3.0
 	 */
 	private NodeEventHandler eventHandler = new NodeEventHandler();
-	
+
 	/**
 	 * Level of AST API supported by this AST.
 	 * @since 3.0
 	 */
 	int apiLevel;
-	
+
 	/**
 	 * Internal modification count; initially 0; increases monotonically
 	 * <b>by one or more</b> as the AST is successively modified.
 	 */
 	private long modificationCount = 0;
-	
+
 	/**
 	 * Internal original modification count; value is equals to <code>
 	 * modificationCount</code> at the end of the parse (<code>ASTParser
@@ -314,7 +314,7 @@ public final class AST {
 			IProgressMonitor monitor) {
 		return null;
 	}
-	
+
 	/**
 	 * Creates a new, empty abstract syntax tree using the given options.
 	 * <p>
@@ -1228,8 +1228,8 @@ public final class AST {
 
 	/**
 	 * Creates an unparented node of the given node class
-	 * (non-abstract subclass of {@link ASTNode}). 
-	 * 
+	 * (non-abstract subclass of {@link ASTNode}).
+	 *
 	 * @param nodeClass AST node class
 	 * @return a new unparented node owned by this AST
 	 * @exception IllegalArgumentException if <code>nodeClass</code> is
@@ -2825,7 +2825,7 @@ public final class AST {
 		}
 
 		this.rewriter = new InternalASTRewrite(root);
-		this.setEventHandler(this.rewriter);
+		setEventHandler(this.rewriter);
 	}
 
 	/**

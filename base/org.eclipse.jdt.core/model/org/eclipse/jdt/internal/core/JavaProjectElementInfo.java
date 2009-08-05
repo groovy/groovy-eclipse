@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,19 +22,19 @@ import org.eclipse.jdt.internal.core.util.HashSetOfArray;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
 
-/** 
+/**
  * Info for IJavaProject.
  * <p>
  * Note: <code>getChildren()</code> returns all of the <code>IPackageFragmentRoots</code>
  * specified on the classpath for the project.  This can include roots external to the
- * project. See <code>JavaProject#getAllPackageFragmentRoots()</code> and 
+ * project. See <code>JavaProject#getAllPackageFragmentRoots()</code> and
  * <code>JavaProject#getPackageFragmentRoots()</code>.  To get only the <code>IPackageFragmentRoots</code>
  * that are internal to the project, use <code>JavaProject#getChildren()</code>.
  */
 
 /* package */
 class JavaProjectElementInfo extends OpenableElementInfo {
-	
+
 	static final IPackageFragmentRoot[] NO_ROOTS = new IPackageFragmentRoot[0];
 
 	static class ProjectCache {
@@ -43,34 +43,34 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 			this.rootToResolvedEntries = rootToResolvedEntries;
 			this.pkgFragmentsCaches = pkgFragmentsCaches;
 		}
-		
+
 		/*
 		 * A cache of all package fragment roots of this project.
 		 */
 		public IPackageFragmentRoot[] allPkgFragmentRootsCache;
-		
+
 		/*
 		 * A cache of all package fragments in this project.
 		 * (a map from String[] (the package name) to IPackageFragmentRoot[] (the package fragment roots that contain a package fragment with this name))
 		 */
 		public HashtableOfArrayToObject allPkgFragmentsCache;
-		
+
 		/*
 		 * A cache of package fragments for each package fragment root of this project
 		 * (a map from IPackageFragmentRoot to a set of String[] (the package name))
 		 */
 		public Map pkgFragmentsCaches;
-		
-		public Map rootToResolvedEntries;		
+
+		public Map rootToResolvedEntries;
 	}
-	
+
 	/**
 	 * A array with all the non-java resources contained by this PackageFragment
 	 */
 	private Object[] nonJavaResources;
-	
+
 	ProjectCache projectCache;
-	
+
 	/*
 	 * Adds the given name and its super names to the given set
 	 * (e.g. for {"a", "b", "c"}, adds {"a", "b", "c"}, {"a", "b"}, and {"a"})
@@ -83,19 +83,19 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 			}
 		}
 	}
-	
+
 	/**
 	 * Create and initialize a new instance of the receiver
 	 */
 	public JavaProjectElementInfo() {
 		this.nonJavaResources = null;
 	}
-	
+
 	/**
 	 * Compute the non-java resources contained in this java project.
 	 */
 	private Object[] computeNonJavaResources(JavaProject project) {
-		
+
 		// determine if src == project and/or if bin == project
 		IPath projectPath = project.getProject().getFullPath();
 		boolean srcIsProject = false;
@@ -132,13 +132,14 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 						case IResource.FILE :
 							IPath resFullPath = res.getFullPath();
 							String resName = res.getName();
-						
+
 							// ignore a jar file on the classpath
-							if (isClasspathResolved && isClasspathEntryOrOutputLocation(resFullPath, classpath, projectOutput)) {
+							if (isClasspathResolved && 
+									isClasspathEntryOrOutputLocation(resFullPath, res.getLocation()/* see https://bugs.eclipse.org/bugs/show_bug.cgi?id=244406 */, classpath, projectOutput)) {
 								break;
 							}
 							// ignore .java file if src == project
-							if (srcIsProject 
+							if (srcIsProject
 									&& Util.isValidCompilationUnitName(resName, sourceLevel, complianceLevel)
 									&& !Util.isExcluded(res, inclusionPatterns, exclusionPatterns)) {
 								break;
@@ -161,10 +162,10 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 							break;
 						case IResource.FOLDER :
 							resFullPath = res.getFullPath();
-						
+
 							// ignore non-excluded folders on the classpath or that correspond to an output location
 							if ((srcIsProject && !Util.isExcluded(res, inclusionPatterns, exclusionPatterns) && Util.isValidFolderNameForPackage(res.getName(), sourceLevel, complianceLevel))
-									|| (isClasspathResolved && this.isClasspathEntryOrOutputLocation(resFullPath, classpath, projectOutput))) {
+									|| (isClasspathResolved && isClasspathEntryOrOutputLocation(resFullPath, res.getLocation(), classpath, projectOutput))) {
 								break;
 							}
 							// else add non java resource
@@ -195,7 +196,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		}
 		return resources;
 	}
-	
+
 	ProjectCache getProjectCache(JavaProject project) {
 		ProjectCache cache = this.projectCache;
 		if (cache == null) {
@@ -208,7 +209,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 				roots = new IPackageFragmentRoot[0];
 				reverseMap.clear();
 			}
-			
+
 			HashMap rootInfos = JavaModelManager.getJavaModelManager().deltaState.roots;
 			HashMap pkgFragmentsCaches = new HashMap();
 			int length = roots.length;
@@ -225,13 +226,13 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 					pkgFragmentsCaches.put(root, fragmentsCache);
 				}
 			}
-			
+
 			cache = new ProjectCache(roots, reverseMap, pkgFragmentsCaches);
 			this.projectCache = cache;
 		}
 		return cache;
 	}
-	
+
 	/**
 	 * Returns an array of non-java resources contained in the receiver.
 	 */
@@ -242,7 +243,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		}
 		return this.nonJavaResources;
 	}
-	
+
 	private void initializePackageNames(IPackageFragmentRoot root, HashSetOfArray fragmentsCache) {
 		IJavaElement[] frags = null;
 		try {
@@ -250,7 +251,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 				PackageFragmentRootInfo info = root.isArchive() ? new JarPackageFragmentRootInfo() : new PackageFragmentRootInfo();
 				((PackageFragmentRoot) root).computeChildren(info, ((JavaElement) root).resource());
 				frags = info.children;
-			} else 
+			} else
 				frags = root.getChildren();
 		} catch (JavaModelException e) {
 			// root doesn't exist: ignore
@@ -264,11 +265,12 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 	/*
 	 * Returns whether the given path is a classpath entry or an output location.
 	 */
-	private boolean isClasspathEntryOrOutputLocation(IPath path, IClasspathEntry[] resolvedClasspath, IPath projectOutput) {
+	private boolean isClasspathEntryOrOutputLocation(IPath path, IPath location, IClasspathEntry[] resolvedClasspath, IPath projectOutput) {
 		if (projectOutput.equals(path)) return true;
 		for (int i = 0, length = resolvedClasspath.length; i < length; i++) {
 			IClasspathEntry entry = resolvedClasspath[i];
-			if (entry.getPath().equals(path)) {
+			IPath entryPath;
+			if ((entryPath = entry.getPath()).equals(path) || entryPath.equals(location)) {
 				return true;
 			}
 			IPath output;
@@ -278,9 +280,9 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		}
 		return false;
 	}
-	
+
 	/*
-	 * Creates a new name lookup for this project info. 
+	 * Creates a new name lookup for this project info.
 	 * The given project is assumed to be the handle of this info.
 	 * This name lookup first looks in the given working copies.
 	 */
@@ -343,14 +345,14 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		}
 		return new NameLookup(cache.allPkgFragmentRootsCache, cache.allPkgFragmentsCache, workingCopies, cache.rootToResolvedEntries);
 	}
-	
+
 	/*
 	 * Reset the package fragment roots and package fragment caches
 	 */
 	void resetCaches() {
 		this.projectCache = null;
 	}
-	
+
 	/**
 	 * Set the fNonJavaResources to res value
 	 */
@@ -358,5 +360,5 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 
 		this.nonJavaResources = resources;
 	}
-	
+
 }

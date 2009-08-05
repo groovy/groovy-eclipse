@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -48,7 +48,7 @@ import org.eclipse.text.edits.TextEditGroup;
 /**
  * This operation is used to sort elements in a compilation unit according to
  * certain criteria.
- * 
+ *
  * @since 2.1
  */
 public class SortElementsOperation extends JavaModelOperation {
@@ -57,10 +57,10 @@ public class SortElementsOperation extends JavaModelOperation {
 	Comparator comparator;
 	int[] positions;
     int apiLevel;
-    
+
 	/**
 	 * Constructor for SortElementsOperation.
-     * 
+     *
      * @param level the AST API level; one of the AST LEVEL constants
 	 * @param elements
 	 * @param positions
@@ -80,7 +80,7 @@ public class SortElementsOperation extends JavaModelOperation {
 	protected int getMainAmountOfWork(){
 		return this.elementsToProcess.length;
 	}
-	
+
 	boolean checkMalformedNodes(ASTNode node) {
 		Object property = node.getProperty(CONTAINS_MALFORMED_NODES);
 		if (property == null) return false;
@@ -96,11 +96,11 @@ public class SortElementsOperation extends JavaModelOperation {
 	 */
 	protected void executeOperation() throws JavaModelException {
 		try {
-			beginTask(Messages.operation_sortelements, getMainAmountOfWork()); 
+			beginTask(Messages.operation_sortelements, getMainAmountOfWork());
 			CompilationUnit copy = (CompilationUnit) this.elementsToProcess[0];
 			ICompilationUnit unit = copy.getPrimary();
 			IBuffer buffer = copy.getBuffer();
-			if (buffer  == null) { 
+			if (buffer  == null) {
 				return;
 			}
 			char[] bufferContents = buffer.getCharacters();
@@ -113,29 +113,29 @@ public class SortElementsOperation extends JavaModelOperation {
 			done();
 		}
 	}
-	
+
 	/**
 	 * Calculates the required text edits to sort the <code>unit</code>
-	 * @param group 
+	 * @param group
 	 * @return the edit or null if no sorting is required
 	 */
 	public TextEdit calculateEdit(org.eclipse.jdt.core.dom.CompilationUnit unit, TextEditGroup group) throws JavaModelException {
 		if (this.elementsToProcess.length != 1)
 			throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.NO_ELEMENTS_TO_PROCESS));
-		
+
 		if (!(this.elementsToProcess[0] instanceof ICompilationUnit))
 			throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, this.elementsToProcess[0]));
-		
+
 		try {
 			beginTask(Messages.operation_sortelements, getMainAmountOfWork());
-			
+
 			ICompilationUnit cu= (ICompilationUnit)this.elementsToProcess[0];
 			String content= cu.getBuffer().getContents();
 			ASTRewrite rewrite= sortCompilationUnit(unit, group);
 			if (rewrite == null) {
 				return null;
 			}
-			
+
 			Document document= new Document(content);
 			return rewrite.rewriteAST(document, null);
 		} finally {
@@ -163,7 +163,7 @@ public class SortElementsOperation extends JavaModelOperation {
 			return document.get();
 
 		TextEdit edits = rewriter.rewriteAST(document, null);
-		
+
 		RangeMarker[] markers = null;
 		if (this.positions != null) {
 			markers = new RangeMarker[this.positions.length];
@@ -184,8 +184,8 @@ public class SortElementsOperation extends JavaModelOperation {
 		}
 		return document.get();
 	}
-	
-	
+
+
 	private ASTRewrite sortCompilationUnit(org.eclipse.jdt.core.dom.CompilationUnit ast, final TextEditGroup group) {
 		ast.accept(new ASTVisitor() {
 			public boolean visit(org.eclipse.jdt.core.dom.CompilationUnit compilationUnit) {
@@ -216,7 +216,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				}
 				return true;
 			}
-			
+
 			public boolean visit(TypeDeclaration typeDeclaration) {
 				List bodyDeclarations = typeDeclaration.bodyDeclarations();
 				for (Iterator iter = bodyDeclarations.iterator(); iter.hasNext();) {
@@ -239,24 +239,24 @@ public class SortElementsOperation extends JavaModelOperation {
 					EnumConstantDeclaration enumConstantDeclaration = (EnumConstantDeclaration) iter.next();
 					enumConstantDeclaration.setProperty(CompilationUnitSorter.RELATIVE_ORDER, new Integer(enumConstantDeclaration.getStartPosition()));
 					enumDeclaration.setProperty(CONTAINS_MALFORMED_NODES, Boolean.valueOf(isMalformed(enumConstantDeclaration)));
-				}				
+				}
 				return true;
 			}
 		});
-		
-		final ASTRewrite rewriter= ASTRewrite.create(ast.getAST()); 
-		final boolean[] hasChanges= new boolean[] {false}; 
-		
+
+		final ASTRewrite rewriter= ASTRewrite.create(ast.getAST());
+		final boolean[] hasChanges= new boolean[] {false};
+
 		ast.accept(new ASTVisitor() {
-		
+
 			private void sortElements(List elements, ListRewrite listRewrite) {
 				if (elements.size() == 0)
 					return;
-				
+
 				final List myCopy = new ArrayList();
 				myCopy.addAll(elements);
 				Collections.sort(myCopy, SortElementsOperation.this.comparator);
-				
+
 				for (int i = 0; i < elements.size(); i++) {
 					ASTNode oldNode= (ASTNode) elements.get(i);
 					ASTNode newNode= (ASTNode) myCopy.get(i);
@@ -271,7 +271,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				if (checkMalformedNodes(compilationUnit)) {
 					return true; // abort sorting of current element
 				}
-				
+
 				sortElements(compilationUnit.types(), rewriter.getListRewrite(compilationUnit, org.eclipse.jdt.core.dom.CompilationUnit.TYPES_PROPERTY));
 				return true;
 			}
@@ -280,7 +280,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				if (checkMalformedNodes(annotationTypeDeclaration)) {
 					return true; // abort sorting of current element
 				}
-				
+
 				sortElements(annotationTypeDeclaration.bodyDeclarations(), rewriter.getListRewrite(annotationTypeDeclaration, AnnotationTypeDeclaration.BODY_DECLARATIONS_PROPERTY));
 				return true;
 			}
@@ -289,16 +289,16 @@ public class SortElementsOperation extends JavaModelOperation {
 				if (checkMalformedNodes(anonymousClassDeclaration)) {
 					return true; // abort sorting of current element
 				}
-				
-				sortElements(anonymousClassDeclaration.bodyDeclarations(), rewriter.getListRewrite(anonymousClassDeclaration, AnonymousClassDeclaration.BODY_DECLARATIONS_PROPERTY));	
+
+				sortElements(anonymousClassDeclaration.bodyDeclarations(), rewriter.getListRewrite(anonymousClassDeclaration, AnonymousClassDeclaration.BODY_DECLARATIONS_PROPERTY));
 				return true;
 			}
-			
+
 			public boolean visit(TypeDeclaration typeDeclaration) {
 				if (checkMalformedNodes(typeDeclaration)) {
 					return true; // abort sorting of current element
 				}
-				
+
 				sortElements(typeDeclaration.bodyDeclarations(), rewriter.getListRewrite(typeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY));
 				return true;
 			}
@@ -307,16 +307,16 @@ public class SortElementsOperation extends JavaModelOperation {
 				if (checkMalformedNodes(enumDeclaration)) {
 					return true; // abort sorting of current element
 				}
-				
+
 				sortElements(enumDeclaration.bodyDeclarations(), rewriter.getListRewrite(enumDeclaration, EnumDeclaration.BODY_DECLARATIONS_PROPERTY));
 				sortElements(enumDeclaration.enumConstants(), rewriter.getListRewrite(enumDeclaration, EnumDeclaration.ENUM_CONSTANTS_PROPERTY));
 				return true;
 			}
 		});
-		
+
 		if (!hasChanges[0])
 			return null;
-		
+
 		return rewriter;
 	}
 
@@ -340,7 +340,7 @@ public class SortElementsOperation extends JavaModelOperation {
 		}
 		return JavaModelStatus.VERIFIED_OK;
 	}
-	
+
 	public static void insert(TextEdit parent, TextEdit edit) {
 		if (!parent.hasChildren()) {
 			parent.addChild(edit);
@@ -366,14 +366,14 @@ public class SortElementsOperation extends JavaModelOperation {
 		}
 		parent.addChild(edit);
 	}
-	
+
 	private static boolean covers(TextEdit thisEdit, TextEdit otherEdit) {
 		if (thisEdit.getLength() == 0) {
 			return false;
 		}
-		
+
 		int thisOffset= thisEdit.getOffset();
-		int thisEnd= thisEdit.getExclusiveEnd();	
+		int thisEnd= thisEdit.getExclusiveEnd();
 		if (otherEdit.getLength() == 0) {
 			int otherOffset= otherEdit.getOffset();
 			return thisOffset <= otherOffset && otherOffset < thisEnd;

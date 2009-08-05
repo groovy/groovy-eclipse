@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,7 @@ public interface ICompilationUnit extends IDependent {
  * In normal use, the contents are requested twice.
  * Once during the initial lite parsing step, then again for the
  * more detailed parsing step.
- * Implementors must never return null - return an empty char[] instead, 
+ * Implementors must never return null - return an empty char[] instead,
  * CharOperation.NO_CHAR being the candidate of choice.
  */
 char[] getContents();

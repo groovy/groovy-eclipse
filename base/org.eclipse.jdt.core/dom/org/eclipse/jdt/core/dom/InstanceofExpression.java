@@ -20,7 +20,7 @@ import java.util.List;
  * InstanceofExpression:
  *    Expression <b>instanceof</b> Type
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -30,23 +30,23 @@ public class InstanceofExpression extends Expression {
 	 * The "leftOperand" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor LEFT_OPERAND_PROPERTY = 
+	public static final ChildPropertyDescriptor LEFT_OPERAND_PROPERTY =
 		new ChildPropertyDescriptor(InstanceofExpression.class, "leftOperand", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "rightOperand" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor RIGHT_OPERAND_PROPERTY = 
+	public static final ChildPropertyDescriptor RIGHT_OPERAND_PROPERTY =
 		new ChildPropertyDescriptor(InstanceofExpression.class, "rightOperand", Type.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List properyList = new ArrayList(3);
 		createPropertyList(InstanceofExpression.class, properyList);
@@ -58,18 +58,18 @@ public class InstanceofExpression extends Expression {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The left operand; lazily initialized; defaults to an unspecified,
 	 * but legal, simple name.
@@ -83,10 +83,10 @@ public class InstanceofExpression extends Expression {
 	private Type rightOperand = null;
 
 	/**
-	 * Creates a new AST node for an instanceof expression owned by the given 
+	 * Creates a new AST node for an instanceof expression owned by the given
 	 * AST. By default, the node has unspecified (but legal) operator,
 	 * left and right operands.
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	InstanceofExpression(AST ast) {
@@ -99,7 +99,7 @@ public class InstanceofExpression extends Expression {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -123,7 +123,7 @@ public class InstanceofExpression extends Expression {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -136,7 +136,7 @@ public class InstanceofExpression extends Expression {
 	 */
 	ASTNode clone0(AST target) {
 		InstanceofExpression result = new InstanceofExpression(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setLeftOperand((Expression) getLeftOperand().clone(target));
 		result.setRightOperand((Type) getRightOperand().clone(target));
 		return result;
@@ -162,12 +162,12 @@ public class InstanceofExpression extends Expression {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the left operand of this instanceof expression.
-	 * 
+	 *
 	 * @return the left operand node
-	 */ 
+	 */
 	public Expression getLeftOperand() {
 		if (this.leftOperand  == null) {
 			// lazy init must be thread-safe for readers
@@ -181,10 +181,10 @@ public class InstanceofExpression extends Expression {
 		}
 		return this.leftOperand;
 	}
-		
+
 	/**
 	 * Sets the left operand of this instanceof expression.
-	 * 
+	 *
 	 * @param expression the left operand node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -192,7 +192,7 @@ public class InstanceofExpression extends Expression {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setLeftOperand(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -205,9 +205,9 @@ public class InstanceofExpression extends Expression {
 
 	/**
 	 * Returns the right operand of this instanceof expression.
-	 * 
+	 *
 	 * @return the right operand node
-	 */ 
+	 */
 	public Type getRightOperand() {
 		if (this.rightOperand  == null) {
 			// lazy init must be thread-safe for readers
@@ -221,10 +221,10 @@ public class InstanceofExpression extends Expression {
 		}
 		return this.rightOperand;
 	}
-		
+
 	/**
 	 * Sets the right operand of this instanceof expression.
-	 * 
+	 *
 	 * @param referenceType the right operand node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -232,7 +232,7 @@ public class InstanceofExpression extends Expression {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setRightOperand(Type referenceType) {
 		if (referenceType == null) {
 			throw new IllegalArgumentException();
@@ -242,7 +242,7 @@ public class InstanceofExpression extends Expression {
 		this.rightOperand = referenceType;
 		postReplaceChild(oldChild, referenceType, RIGHT_OPERAND_PROPERTY);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -250,12 +250,12 @@ public class InstanceofExpression extends Expression {
 		// treat Operator as free
 		return BASE_NODE_SIZE + 2 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
-		return 
+		return
 			memSize()
 			+ (this.leftOperand == null ? 0 : getLeftOperand().treeSize())
 			+ (this.rightOperand == null ? 0 : getRightOperand().treeSize());

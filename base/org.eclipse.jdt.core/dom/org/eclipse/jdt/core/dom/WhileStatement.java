@@ -21,7 +21,7 @@ import java.util.List;
  * WhileStatement:
  *    <b>while</b> <b>(</b> Expression <b>)</b> Statement
  * </pre>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -31,23 +31,23 @@ public class WhileStatement extends Statement {
 	 * The "expression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(WhileStatement.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "body" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor BODY_PROPERTY = 
+	public static final ChildPropertyDescriptor BODY_PROPERTY =
 		new ChildPropertyDescriptor(WhileStatement.class, "body", Statement.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(3);
 		createPropertyList(WhileStatement.class, propertyList);
@@ -59,38 +59,38 @@ public class WhileStatement extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
 
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
-	 * The expression; lazily initialized; defaults to an unspecified, but 
+	 * The expression; lazily initialized; defaults to an unspecified, but
 	 * legal, expression.
 	 */
 	private Expression expression = null;
 
 	/**
-	 * The body statement; lazily initialized; defaults to an empty block 
+	 * The body statement; lazily initialized; defaults to an empty block
 	 * statement.
 	 */
 	private Statement body = null;
 
 	/**
-	 * Creates a new unparented while statement node owned by the given 
+	 * Creates a new unparented while statement node owned by the given
 	 * AST. By default, the expresssion is unspecified, but legal, and
 	 * the body statement is an empty block.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	WhileStatement(AST ast) {
@@ -103,7 +103,7 @@ public class WhileStatement extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -127,7 +127,7 @@ public class WhileStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -140,7 +140,7 @@ public class WhileStatement extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		WhileStatement result = new WhileStatement(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.setExpression((Expression) getExpression().clone(target));
 		result.setBody((Statement) getBody().clone(target));
@@ -167,12 +167,12 @@ public class WhileStatement extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the expression of this while statement.
-	 * 
+	 *
 	 * @return the expression node
-	 */ 
+	 */
 	public Expression getExpression() {
 		if (this.expression == null) {
 			// lazy init must be thread-safe for readers
@@ -186,10 +186,10 @@ public class WhileStatement extends Statement {
 		}
 		return this.expression;
 	}
-	
+
 	/**
 	 * Sets the expression of this while statement.
-	 * 
+	 *
 	 * @param expression the expression node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -197,7 +197,7 @@ public class WhileStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setExpression(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -210,9 +210,9 @@ public class WhileStatement extends Statement {
 
 	/**
 	 * Returns the body of this while statement.
-	 * 
+	 *
 	 * @return the body statement node
-	 */ 
+	 */
 	public Statement getBody() {
 		if (this.body == null) {
 			// lazy init must be thread-safe for readers
@@ -226,7 +226,7 @@ public class WhileStatement extends Statement {
 		}
 		return this.body;
 	}
-	
+
 	/**
 	 * Sets the body of this while statement.
 	 * <p>
@@ -237,7 +237,7 @@ public class WhileStatement extends Statement {
 	 * compile, be sure to embed the <code>VariableDeclarationStatement</code>
 	 * inside a <code>Block</code>.
 	 * </p>
-	 * 
+	 *
 	 * @param statement the body statement node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -245,7 +245,7 @@ public class WhileStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setBody(Statement statement) {
 		if (statement == null) {
 			throw new IllegalArgumentException();
@@ -255,14 +255,14 @@ public class WhileStatement extends Statement {
 		this.body = statement;
 		postReplaceChild(oldChild, statement, BODY_PROPERTY);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 2 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

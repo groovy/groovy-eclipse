@@ -27,7 +27,7 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 
 /**
  * Internal helper class for comparing bindings.
- * 
+ *
  * @since 3.1
  */
 class BindingComparator {
@@ -57,7 +57,7 @@ class BindingComparator {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * @param declaringElement
 	 * @param declaringElement2
@@ -103,12 +103,12 @@ class BindingComparator {
 		}
 		return false;
 	}
-	
+
 	static boolean isEqual(org.eclipse.jdt.internal.compiler.lookup.MethodBinding methodBinding,
 			org.eclipse.jdt.internal.compiler.lookup.MethodBinding methodBinding2) {
 		return isEqual(methodBinding, methodBinding2, new HashSet());
 	}
-			
+
 	static boolean isEqual(org.eclipse.jdt.internal.compiler.lookup.MethodBinding methodBinding,
 			org.eclipse.jdt.internal.compiler.lookup.MethodBinding methodBinding2,
 			HashSet visitedTypes) {
@@ -117,7 +117,7 @@ class BindingComparator {
 		}
 		if (methodBinding2 == null) return false;
 		return CharOperation.equals(methodBinding.selector, methodBinding2.selector)
-				&& isEqual(methodBinding.returnType, methodBinding2.returnType, visitedTypes) 
+				&& isEqual(methodBinding.returnType, methodBinding2.returnType, visitedTypes)
 				&& isEqual(methodBinding.thrownExceptions, methodBinding2.thrownExceptions, visitedTypes)
 				&& isEqual(methodBinding.declaringClass, methodBinding2.declaringClass, visitedTypes)
 				&& isEqual(methodBinding.typeVariables, methodBinding2.typeVariables, visitedTypes)
@@ -183,14 +183,14 @@ class BindingComparator {
 					return false;
 				}
 				return typeBinding.id == typeBinding2.id;
-				
+
 			case Binding.ARRAY_TYPE :
 				if (!typeBinding2.isArrayType()) {
 					return false;
 				}
 				return typeBinding.dimensions() == typeBinding2.dimensions()
 						&& isEqual(typeBinding.leafComponentType(), typeBinding2.leafComponentType(), visitedTypes);
-				
+
 			case Binding.PARAMETERIZED_TYPE :
 				if (!typeBinding2.isParameterizedType()) {
 					return false;
@@ -202,7 +202,7 @@ class BindingComparator {
 							== (parameterizedTypeBinding2.modifiers & (ExtraCompilerModifiers.AccJustFlag | ClassFileConstants.AccInterface | ClassFileConstants.AccEnum | ClassFileConstants.AccAnnotation))
 					&& isEqual(parameterizedTypeBinding.arguments, parameterizedTypeBinding2.arguments, visitedTypes)
 					&& isEqual(parameterizedTypeBinding.enclosingType(), parameterizedTypeBinding2.enclosingType(), visitedTypes);
-							
+
 			case Binding.WILDCARD_TYPE :
 				if (typeBinding2.kind() != Binding.WILDCARD_TYPE) {
 					return false;
@@ -211,7 +211,7 @@ class BindingComparator {
 				WildcardBinding wildcardBinding2 = (WildcardBinding) typeBinding2;
 				return isEqual(wildcardBinding.bound, wildcardBinding2.bound, visitedTypes)
 					&& wildcardBinding.boundKind == wildcardBinding2.boundKind;
-				
+
 			case Binding.INTERSECTION_TYPE:
 				if (typeBinding2.kind() != Binding.INTERSECTION_TYPE) {
 					return false;
@@ -220,7 +220,7 @@ class BindingComparator {
 				WildcardBinding intersectionBinding2 = (WildcardBinding) typeBinding2;
 				return isEqual(intersectionBinding.bound, intersectionBinding2.bound, visitedTypes)
 					&& isEqual(intersectionBinding.otherBounds, intersectionBinding2.otherBounds, visitedTypes);
-				
+
 			case Binding.TYPE_PARAMETER :
 				if (!(typeBinding2.isTypeVariable())) {
 					return false;
@@ -234,7 +234,7 @@ class BindingComparator {
 					if (captureBinding.position == captureBinding2.position) {
 						if (visitedTypes.contains(typeBinding)) return true;
 						visitedTypes.add(typeBinding);
-						
+
 						return isEqual(captureBinding.wildcard, captureBinding2.wildcard, visitedTypes)
 							&& isEqual(captureBinding.sourceType, captureBinding2.sourceType, visitedTypes);
 					}
@@ -267,7 +267,7 @@ class BindingComparator {
 			default :
 				if (!(typeBinding2 instanceof ReferenceBinding)) {
 					return false;
-				}				
+				}
 				referenceBinding = (ReferenceBinding) typeBinding;
 				referenceBinding2 = (ReferenceBinding) typeBinding2;
 				char[] constantPoolName = referenceBinding.constantPoolName();

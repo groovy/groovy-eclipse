@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,7 @@ public class FloatCache {
 	private int elementSize;
 /**
  * Constructs a new, empty hashtable. A default capacity and
- * load factor is used. Note that the hashtable will automatically 
+ * load factor is used. Note that the hashtable will automatically
  * grow when it gets full.
  */
 public FloatCache() {
@@ -72,7 +72,7 @@ public boolean containsKey(float key) {
 /**
  * Puts the specified element into the hashtable, using the specified
  * key.  The element may be retrieved by doing a get() with the same key.
- * 
+ *
  * @param key <CODE>float</CODE> the specified key in the hashtable
  * @param value <CODE>int</CODE> the specified element
  * @return int value
@@ -91,7 +91,7 @@ public int put(float key, int value) {
 /**
  * Puts the specified element into the hashtable, using the specified
  * key.  The element may be retrieved by doing a get() with the same key.
- * 
+ *
  * @param key <CODE>float</CODE> the specified key in the hashtable
  * @param value <CODE>int</CODE> the specified element
  * @return int value

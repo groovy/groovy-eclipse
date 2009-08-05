@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class ForStatement extends Statement {
-	
+
 	public Statement[] initializations;
 	public Expression condition;
 	public Statement[] increments;
@@ -58,21 +58,18 @@ public class ForStatement extends Statement {
 		}
 	}
 
-	public FlowInfo analyseCode(
-		BlockScope currentScope,
-		FlowContext flowContext,
-		FlowInfo flowInfo) {
-			
-		breakLabel = new BranchLabel();
-		continueLabel = new BranchLabel();
+	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
+		this.breakLabel = new BranchLabel();
+		this.continueLabel = new BranchLabel();
+		int initialComplaintLevel = (flowInfo.reachMode() & FlowInfo.UNREACHABLE) != 0 ? Statement.COMPLAINED_FAKE_REACHABLE : Statement.NOT_COMPLAINED;
 
 		// process the initializations
-		if (initializations != null) {
-			for (int i = 0, count = initializations.length; i < count; i++) {
-				flowInfo = initializations[i].analyseCode(scope, flowContext, flowInfo);
+		if (this.initializations != null) {
+			for (int i = 0, count = this.initializations.length; i < count; i++) {
+				flowInfo = this.initializations[i].analyseCode(this.scope, flowContext, flowInfo);
 			}
 		}
-		preCondInitStateIndex =
+		this.preCondInitStateIndex =
 			currentScope.methodScope().recordInitializationStates(flowInfo);
 
 		Constant cst = this.condition == null ? null : this.condition.constant;
@@ -86,14 +83,14 @@ public class ForStatement extends Statement {
 		// process the condition
 		LoopingFlowContext condLoopContext = null;
 		FlowInfo condInfo = flowInfo.nullInfoLessUnconditionalCopy();
-		if (condition != null) {
+		if (this.condition != null) {
 			if (!isConditionTrue) {
 				condInfo =
-					condition.analyseCode(
-						scope,
+					this.condition.analyseCode(
+						this.scope,
 						(condLoopContext =
-							new LoopingFlowContext(flowContext, flowInfo, this, null, 
-								null, scope)),
+							new LoopingFlowContext(flowContext, flowInfo, this, null,
+								null, this.scope)),
 						condInfo);
 			}
 		}
@@ -101,10 +98,10 @@ public class ForStatement extends Statement {
 		// process the action
 		LoopingFlowContext loopingContext;
 		UnconditionalFlowInfo actionInfo;
-		if (action == null 
-			|| (action.isEmptyBlock() && currentScope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_3)) {
+		if (this.action == null
+			|| (this.action.isEmptyBlock() && currentScope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_3)) {
 			if (condLoopContext != null)
-				condLoopContext.complainOnDeferredFinalChecks(scope, condInfo);
+				condLoopContext.complainOnDeferredFinalChecks(this.scope, condInfo);
 			if (isConditionTrue) {
 				if (condLoopContext != null) {
 					condLoopContext.complainOnDeferredNullChecks(currentScope,
@@ -113,20 +110,20 @@ public class ForStatement extends Statement {
 				return FlowInfo.DEAD_END;
 			} else {
 				if (isConditionFalse){
-					continueLabel = null; // for(;false;p());
+					this.continueLabel = null; // for(;false;p());
 				}
 				actionInfo = condInfo.initsWhenTrue().unconditionalCopy();
 				loopingContext =
-					new LoopingFlowContext(flowContext, flowInfo, this, 
-						breakLabel, continueLabel, scope);
+					new LoopingFlowContext(flowContext, flowInfo, this,
+						this.breakLabel, this.continueLabel, this.scope);
 			}
-		} 
+		}
 		else {
 			loopingContext =
-				new LoopingFlowContext(flowContext, flowInfo, this, breakLabel, 
-					continueLabel, scope);
+				new LoopingFlowContext(flowContext, flowInfo, this, this.breakLabel,
+					this.continueLabel, this.scope);
 			FlowInfo initsWhenTrue = condInfo.initsWhenTrue();
-			condIfTrueInitStateIndex =
+			this.condIfTrueInitStateIndex =
 				currentScope.methodScope().recordInitializationStates(initsWhenTrue);
 
 				if (isConditionFalse) {
@@ -137,24 +134,23 @@ public class ForStatement extends Statement {
 						actionInfo.setReachMode(FlowInfo.UNREACHABLE);
 					}
 				}
-			if (!this.action.complainIfUnreachable(actionInfo, scope, false)) {
-				actionInfo = action.analyseCode(scope, loopingContext, actionInfo).
-					unconditionalInits();
+			if (this.action.complainIfUnreachable(actionInfo, this.scope, initialComplaintLevel) < Statement.COMPLAINED_UNREACHABLE) {
+				actionInfo = this.action.analyseCode(this.scope, loopingContext, actionInfo).unconditionalInits();
 			}
 
 			// code generation can be optimized when no need to continue in the loop
-			if ((actionInfo.tagBits & 
+			if ((actionInfo.tagBits &
 					loopingContext.initsOnContinue.tagBits &
 					FlowInfo.UNREACHABLE) != 0) {
-				continueLabel = null;
-			} 
+				this.continueLabel = null;
+			}
 			else {
 				if (condLoopContext != null) {
-					condLoopContext.complainOnDeferredFinalChecks(scope, 
+					condLoopContext.complainOnDeferredFinalChecks(this.scope,
 							condInfo);
 				}
 				actionInfo = actionInfo.mergedWith(loopingContext.initsOnContinue);
-				loopingContext.complainOnDeferredFinalChecks(scope, 
+				loopingContext.complainOnDeferredFinalChecks(this.scope,
 						actionInfo);
 			}
 		}
@@ -162,36 +158,40 @@ public class ForStatement extends Statement {
 		FlowInfo exitBranch = flowInfo.copy();
 		// recover null inits from before condition analysis
 		LoopingFlowContext incrementContext = null;
-		if (continueLabel != null) {
-			if (increments != null) {
+		if (this.continueLabel != null) {
+			if (this.increments != null) {
 				incrementContext =
-					new LoopingFlowContext(flowContext, flowInfo, this, null, 
-						null, scope);
+					new LoopingFlowContext(flowContext, flowInfo, this, null,
+						null, this.scope);
 				FlowInfo incrementInfo = actionInfo;
 				this.preIncrementsInitStateIndex =
 					currentScope.methodScope().recordInitializationStates(incrementInfo);
-				for (int i = 0, count = increments.length; i < count; i++) {
-					incrementInfo = increments[i].
-						analyseCode(scope, incrementContext, incrementInfo);
+				for (int i = 0, count = this.increments.length; i < count; i++) {
+					incrementInfo = this.increments[i].
+						analyseCode(this.scope, incrementContext, incrementInfo);
 				}
-				incrementContext.complainOnDeferredFinalChecks(scope,
+				incrementContext.complainOnDeferredFinalChecks(this.scope,
 						actionInfo = incrementInfo.unconditionalInits());
 			}
 			exitBranch.addPotentialInitializationsFrom(actionInfo).
 				addInitializationsFrom(condInfo.initsWhenFalse());
-		}
-		else {
+		} else {
 			exitBranch.addInitializationsFrom(condInfo.initsWhenFalse());
+			if (this.increments != null) {
+				if (initialComplaintLevel == Statement.NOT_COMPLAINED) {
+					currentScope.problemReporter().fakeReachable(this.increments[0]);
+				}
+			}
 		}
 		// nulls checks
 		if (condLoopContext != null) {
-			condLoopContext.complainOnDeferredNullChecks(currentScope, 
+			condLoopContext.complainOnDeferredNullChecks(currentScope,
 				actionInfo);
 		}
-		loopingContext.complainOnDeferredNullChecks(currentScope, 
+		loopingContext.complainOnDeferredNullChecks(currentScope,
 			actionInfo);
 		if (incrementContext != null) {
-			incrementContext.complainOnDeferredNullChecks(currentScope, 
+			incrementContext.complainOnDeferredNullChecks(currentScope,
 				actionInfo);
 		}
 
@@ -201,11 +201,11 @@ public class ForStatement extends Statement {
 					FlowInfo.UNREACHABLE) != 0 ?
 					loopingContext.initsOnBreak :
 					flowInfo.addInitializationsFrom(loopingContext.initsOnBreak), // recover upstream null info
-				isConditionOptimizedTrue, 
-				exitBranch, 
-				isConditionOptimizedFalse, 
+				isConditionOptimizedTrue,
+				exitBranch,
+				isConditionOptimizedFalse,
 				!isConditionTrue /*for(;;){}while(true); unreachable(); */);
-		mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(mergedInfo);
+		this.mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(mergedInfo);
 		return mergedInfo;
 	}
 
@@ -217,67 +217,67 @@ public class ForStatement extends Statement {
 	 */
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
-		if ((bits & IsReachable) == 0) {
+		if ((this.bits & IsReachable) == 0) {
 			return;
 		}
 		int pc = codeStream.position;
 
 		// generate the initializations
-		if (initializations != null) {
-			for (int i = 0, max = initializations.length; i < max; i++) {
-				initializations[i].generateCode(scope, codeStream);
+		if (this.initializations != null) {
+			for (int i = 0, max = this.initializations.length; i < max; i++) {
+				this.initializations[i].generateCode(this.scope, codeStream);
 			}
 		}
 		Constant cst = this.condition == null ? null : this.condition.optimizedBooleanConstant();
 		boolean isConditionOptimizedFalse = cst != null && (cst != Constant.NotAConstant && cst.booleanValue() == false);
 		if (isConditionOptimizedFalse) {
-			condition.generateCode(scope, codeStream, false);
+			this.condition.generateCode(this.scope, codeStream, false);
 			// May loose some local variable initializations : affecting the local variable attributes
 			if ((this.bits & ASTNode.NeededScope) != 0) {
-				codeStream.exitUserScope(scope);
+				codeStream.exitUserScope(this.scope);
 			}
-			if (mergedInitStateIndex != -1) {
-				codeStream.removeNotDefinitelyAssignedVariables(currentScope, mergedInitStateIndex);
-				codeStream.addDefinitelyAssignedVariables(currentScope, mergedInitStateIndex);
+			if (this.mergedInitStateIndex != -1) {
+				codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.mergedInitStateIndex);
+				codeStream.addDefinitelyAssignedVariables(currentScope, this.mergedInitStateIndex);
 			}
 			codeStream.recordPositionsFrom(pc, this.sourceStart);
 			return;
 		}
-		
+
 		// label management
 		BranchLabel actionLabel = new BranchLabel(codeStream);
 		actionLabel.tagBits |= BranchLabel.USED;
 		BranchLabel conditionLabel = new BranchLabel(codeStream);
-		breakLabel.initialize(codeStream);
+		this.breakLabel.initialize(codeStream);
 		if (this.continueLabel == null) {
 			conditionLabel.place();
-			if ((condition != null) && (condition.constant == Constant.NotAConstant)) {
-				condition.generateOptimizedBoolean(scope, codeStream, null, breakLabel, true);
+			if ((this.condition != null) && (this.condition.constant == Constant.NotAConstant)) {
+				this.condition.generateOptimizedBoolean(this.scope, codeStream, null, this.breakLabel, true);
 			}
 		} else {
 			this.continueLabel.initialize(codeStream);
 			// jump over the actionBlock
-			if ((condition != null)
-				&& (condition.constant == Constant.NotAConstant)
-				&& !((action == null || action.isEmptyBlock()) && (increments == null))) {
+			if ((this.condition != null)
+				&& (this.condition.constant == Constant.NotAConstant)
+				&& !((this.action == null || this.action.isEmptyBlock()) && (this.increments == null))) {
 				conditionLabel.tagBits |= BranchLabel.USED;
 				int jumpPC = codeStream.position;
 				codeStream.goto_(conditionLabel);
-				codeStream.recordPositionsFrom(jumpPC, condition.sourceStart);
+				codeStream.recordPositionsFrom(jumpPC, this.condition.sourceStart);
 			}
 		}
 
 		// generate the loop action
-		if (action != null) {
+		if (this.action != null) {
 			// Required to fix 1PR0XVS: LFRE:WINNT - Compiler: variable table for method appears incorrect
-			if (condIfTrueInitStateIndex != -1) {
+			if (this.condIfTrueInitStateIndex != -1) {
 				// insert all locals initialized inside the condition into the action generated prior to the condition
 				codeStream.addDefinitelyAssignedVariables(
 					currentScope,
-					condIfTrueInitStateIndex);
+					this.condIfTrueInitStateIndex);
 			}
 			actionLabel.place();
-			action.generateCode(scope, codeStream);
+			this.action.generateCode(this.scope, codeStream);
 		} else {
 			actionLabel.place();
 		}
@@ -286,43 +286,43 @@ public class ForStatement extends Statement {
 			codeStream.addDefinitelyAssignedVariables(currentScope, this.preIncrementsInitStateIndex);
 		}
 		// continuation point
-		if (continueLabel != null) {
-			continueLabel.place();
+		if (this.continueLabel != null) {
+			this.continueLabel.place();
 			// generate the increments for next iteration
-			if (increments != null) {
-				for (int i = 0, max = increments.length; i < max; i++) {
-					increments[i].generateCode(scope, codeStream);
+			if (this.increments != null) {
+				for (int i = 0, max = this.increments.length; i < max; i++) {
+					this.increments[i].generateCode(this.scope, codeStream);
 				}
 			}
 			// May loose some local variable initializations : affecting the local variable attributes
-			if (preCondInitStateIndex != -1) {
-				codeStream.removeNotDefinitelyAssignedVariables(currentScope, preCondInitStateIndex);
-			}		
+			if (this.preCondInitStateIndex != -1) {
+				codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.preCondInitStateIndex);
+			}
 			// generate the condition
 			conditionLabel.place();
-			if ((condition != null) && (condition.constant == Constant.NotAConstant)) {
-				condition.generateOptimizedBoolean(scope, codeStream, actionLabel, null, true);
+			if ((this.condition != null) && (this.condition.constant == Constant.NotAConstant)) {
+				this.condition.generateOptimizedBoolean(this.scope, codeStream, actionLabel, null, true);
 			} else {
 				codeStream.goto_(actionLabel);
 			}
-			
+
 		} else {
 			// May loose some local variable initializations : affecting the local variable attributes
-			if (preCondInitStateIndex != -1) {
-				codeStream.removeNotDefinitelyAssignedVariables(currentScope, preCondInitStateIndex);
+			if (this.preCondInitStateIndex != -1) {
+				codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.preCondInitStateIndex);
 			}
 		}
 
 
 		// May loose some local variable initializations : affecting the local variable attributes
 		if ((this.bits & ASTNode.NeededScope) != 0) {
-			codeStream.exitUserScope(scope);
+			codeStream.exitUserScope(this.scope);
 		}
-		if (mergedInitStateIndex != -1) {
-			codeStream.removeNotDefinitelyAssignedVariables(currentScope, mergedInitStateIndex);
-			codeStream.addDefinitelyAssignedVariables(currentScope, mergedInitStateIndex);
+		if (this.mergedInitStateIndex != -1) {
+			codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.mergedInitStateIndex);
+			codeStream.addDefinitelyAssignedVariables(currentScope, this.mergedInitStateIndex);
 		}
-		breakLabel.place();
+		this.breakLabel.place();
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
@@ -330,31 +330,31 @@ public class ForStatement extends Statement {
 
 		printIndent(tab, output).append("for ("); //$NON-NLS-1$
 		//inits
-		if (initializations != null) {
-			for (int i = 0; i < initializations.length; i++) {
+		if (this.initializations != null) {
+			for (int i = 0; i < this.initializations.length; i++) {
 				//nice only with expressions
 				if (i > 0) output.append(", "); //$NON-NLS-1$
-				initializations[i].print(0, output);
+				this.initializations[i].print(0, output);
 			}
 		}
 		output.append("; "); //$NON-NLS-1$
 		//cond
-		if (condition != null) condition.printExpression(0, output);
+		if (this.condition != null) this.condition.printExpression(0, output);
 		output.append("; "); //$NON-NLS-1$
 		//updates
-		if (increments != null) {
-			for (int i = 0; i < increments.length; i++) {
+		if (this.increments != null) {
+			for (int i = 0; i < this.increments.length; i++) {
 				if (i > 0) output.append(", "); //$NON-NLS-1$
-				increments[i].print(0, output);
+				this.increments[i].print(0, output);
 			}
 		}
 		output.append(") "); //$NON-NLS-1$
 		//block
-		if (action == null)
+		if (this.action == null)
 			output.append(';');
 		else {
 			output.append('\n');
-			action.printStatement(tab + 1, output);
+			this.action.printStatement(tab + 1, output);
 		}
 		return output;
 	}
@@ -362,43 +362,43 @@ public class ForStatement extends Statement {
 	public void resolve(BlockScope upperScope) {
 
 		// use the scope that will hold the init declarations
-		scope = (this.bits & ASTNode.NeededScope) != 0 ? new BlockScope(upperScope) : upperScope;
-		if (initializations != null)
-			for (int i = 0, length = initializations.length; i < length; i++)
-				initializations[i].resolve(scope);
-		if (condition != null) {
-			TypeBinding type = condition.resolveTypeExpecting(scope, TypeBinding.BOOLEAN);
-			condition.computeConversion(scope, type, type);
+		this.scope = (this.bits & ASTNode.NeededScope) != 0 ? new BlockScope(upperScope) : upperScope;
+		if (this.initializations != null)
+			for (int i = 0, length = this.initializations.length; i < length; i++)
+				this.initializations[i].resolve(this.scope);
+		if (this.condition != null) {
+			TypeBinding type = this.condition.resolveTypeExpecting(this.scope, TypeBinding.BOOLEAN);
+			this.condition.computeConversion(this.scope, type, type);
 		}
-		if (increments != null)
-			for (int i = 0, length = increments.length; i < length; i++)
-				increments[i].resolve(scope);
-		if (action != null)
-			action.resolve(scope);
+		if (this.increments != null)
+			for (int i = 0, length = this.increments.length; i < length; i++)
+				this.increments[i].resolve(this.scope);
+		if (this.action != null)
+			this.action.resolve(this.scope);
 	}
-	
+
 	public void traverse(
 		ASTVisitor visitor,
 		BlockScope blockScope) {
 
 		if (visitor.visit(this, blockScope)) {
-			if (initializations != null) {
-				int initializationsLength = initializations.length;
+			if (this.initializations != null) {
+				int initializationsLength = this.initializations.length;
 				for (int i = 0; i < initializationsLength; i++)
-					initializations[i].traverse(visitor, scope);
+					this.initializations[i].traverse(visitor, this.scope);
 			}
 
-			if (condition != null)
-				condition.traverse(visitor, scope);
+			if (this.condition != null)
+				this.condition.traverse(visitor, this.scope);
 
-			if (increments != null) {
-				int incrementsLength = increments.length;
+			if (this.increments != null) {
+				int incrementsLength = this.increments.length;
 				for (int i = 0; i < incrementsLength; i++)
-					increments[i].traverse(visitor, scope);
+					this.increments[i].traverse(visitor, this.scope);
 			}
 
-			if (action != null)
-				action.traverse(visitor, scope);
+			if (this.action != null)
+				this.action.traverse(visitor, this.scope);
 		}
 		visitor.endVisit(this, blockScope);
 	}

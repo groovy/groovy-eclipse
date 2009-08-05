@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,12 +18,14 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class FalseLiteral extends MagicLiteral {
+	
 	static final char[] source = {'f', 'a', 'l', 's', 'e'};
+	
 public FalseLiteral(int s , int e) {
 	super(s,e);
 }
 public void computeConstant() {
-	constant = BooleanConstant.fromValue(false);
+	this.constant = BooleanConstant.fromValue(false);
 }
 /**
  * Code generation for false literal
@@ -58,7 +60,7 @@ public TypeBinding literalType(BlockScope scope) {
 	return TypeBinding.BOOLEAN;
 }
 /**
- * 
+ *
  */
 public char[] source() {
 	return source;

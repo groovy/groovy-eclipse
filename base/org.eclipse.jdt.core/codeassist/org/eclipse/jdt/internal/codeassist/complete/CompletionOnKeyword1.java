@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 public class CompletionOnKeyword1 extends SingleTypeReference implements CompletionOnKeyword {
 	private char[][] possibleKeywords;
 	public boolean canCompleteEmptyToken;
-	
+
 	public CompletionOnKeyword1(char[] token, long pos, char[] possibleKeyword) {
 		this(token, pos, new char[][]{possibleKeyword});
 	}
@@ -29,10 +29,10 @@ public class CompletionOnKeyword1 extends SingleTypeReference implements Complet
 		return this.canCompleteEmptyToken;
 	}
 	public char[] getToken() {
-		return token;
+		return this.token;
 	}
 	public char[][] getPossibleKeywords() {
-		return possibleKeywords;
+		return this.possibleKeywords;
 	}
 	public void aboutToResolve(Scope scope) {
 		getTypeBinding(scope);
@@ -41,7 +41,7 @@ public class CompletionOnKeyword1 extends SingleTypeReference implements Complet
 		throw new CompletionNodeFound(this, scope);
 	}
 	public StringBuffer printExpression(int indent, StringBuffer output){
-		
-		return output.append("<CompleteOnKeyword:").append(token).append('>');  //$NON-NLS-1$ 
+
+		return output.append("<CompleteOnKeyword:").append(this.token).append('>');  //$NON-NLS-1$
 	}
 }

@@ -1,13 +1,11 @@
 /*******************************************************************************
- * Copyright (c) 2004 Ben Konrath <ben@bagu.org>
- * Copyright (c) 2006 Red Hat Incorporated
- * Copyright (c) 2008 IBM Corporation and others
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ *  Copyright (c) 2005, 2009 IBM Corporation and others.
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
  * 
- * Contributors:
+ *  Contributors:
  *     Ben Konrath <ben@bagu.org> - initial implementation
  *     Red Hat Incorporated - improvements based on comments from JDT developers
  *     IBM Corporation - Code review and integration
@@ -37,11 +35,11 @@ import org.eclipse.text.edits.TextEdit;
 
 /**
  * Implements an Eclipse Application for org.eclipse.jdt.core.JavaCodeFormatter.
- * 
+ *
  * There are a couple improvements that could be made: 1. Make a list of all the
  * files first so that a file does not get formatted twice. 2. Use a text based
  * progress monitor for output.
- * 
+ *
  * @author Ben Konrath <bkonrath@redhat.com>
  * @since 3.2
  * @noinstantiate This class is not intended to be instantiated by clients.
@@ -67,7 +65,7 @@ public class CodeFormatterApplication implements IApplication {
 		public static String CommandLineErrorFileDir;
 
 		public static String CommandLineErrorQuietVerbose;
-		
+
 		public static String CommandLineErrorNoConfigFile;
 
 		public static String CommandLineFormatting;
@@ -91,7 +89,7 @@ public class CodeFormatterApplication implements IApplication {
 		/**
 		 * Bind the given message's substitution locations with the given string
 		 * values.
-		 * 
+		 *
 		 * @param message
 		 *            the message to be manipulated
 		 * @return the manipulated String
@@ -103,7 +101,7 @@ public class CodeFormatterApplication implements IApplication {
 		/**
 		 * Bind the given message's substitution locations with the given string
 		 * values.
-		 * 
+		 *
 		 * @param message
 		 *            the message to be manipulated
 		 * @param binding
@@ -119,7 +117,7 @@ public class CodeFormatterApplication implements IApplication {
 		/**
 		 * Bind the given message's substitution locations with the given string
 		 * values.
-		 * 
+		 *
 		 * @param message
 		 *            the message to be manipulated
 		 * @param binding1
@@ -137,7 +135,7 @@ public class CodeFormatterApplication implements IApplication {
 		/**
 		 * Bind the given message's substitution locations with the given string
 		 * values.
-		 * 
+		 *
 		 * @param message
 		 *            the message to be manipulated
 		 * @param bindings
@@ -167,7 +165,7 @@ public class CodeFormatterApplication implements IApplication {
 
 	private boolean verbose = false;
 
-	/** 
+	/**
 	 * Display the command line usage message.
 	 */
 	private void displayHelp() {
@@ -255,11 +253,11 @@ public class CodeFormatterApplication implements IApplication {
 
 		final int DEFAULT_MODE = 0;
 		final int CONFIG_MODE = 1;
-		
+
 		int mode = DEFAULT_MODE;
 		final int INITIAL_SIZE = 1;
 		int fileCounter = 0;
-		
+
 		File[] filesToFormat = new File[INITIAL_SIZE];
 
 		loop: while (index < argCount) {
@@ -272,7 +270,7 @@ public class CodeFormatterApplication implements IApplication {
 					}
 					if (ARG_HELP.equals(currentArg)) {
 						displayHelp();
-						return null;				
+						return null;
 					}
 					if (ARG_VERBOSE.equals(currentArg)) {
 						this.verbose = true;
@@ -307,12 +305,12 @@ public class CodeFormatterApplication implements IApplication {
 					}
 					mode = DEFAULT_MODE;
 					continue loop;
-			}			
+			}
 		}
 
 		if (mode == CONFIG_MODE || this.options == null) {
 			displayHelp(Messages.bind(Messages.CommandLineErrorNoConfigFile));
-			return null;			
+			return null;
 		}
 		if (this.quiet && this.verbose) {
 			displayHelp(
@@ -382,7 +380,7 @@ public class CodeFormatterApplication implements IApplication {
 				formatDirTree(file, codeFormatter);
 			} else if (Util.isJavaLikeFileName(file.getPath())) {
 				formatFile(file, codeFormatter);
-			}			
+			}
 		}
 		if (!this.quiet) {
 			System.out.println(Messages.bind(Messages.CommandLineDone));

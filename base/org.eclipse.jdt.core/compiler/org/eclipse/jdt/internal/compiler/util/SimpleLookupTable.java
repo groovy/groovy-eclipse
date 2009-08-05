@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -53,10 +53,10 @@ public Object clone() throws CloneNotSupportedException {
 }
 
 public boolean containsKey(Object key) {
-	int length = keyTable.length;
+	int length = this.keyTable.length;
 	int index = (key.hashCode() & 0x7FFFFFFF) % length;
 	Object currentKey;
-	while ((currentKey = keyTable[index]) != null) {
+	while ((currentKey = this.keyTable[index]) != null) {
 		if (currentKey.equals(key)) return true;
 		if (++index == length) index = 0;
 	}
@@ -64,21 +64,21 @@ public boolean containsKey(Object key) {
 }
 
 public Object get(Object key) {
-	int length = keyTable.length;
+	int length = this.keyTable.length;
 	int index = (key.hashCode() & 0x7FFFFFFF) % length;
 	Object currentKey;
-	while ((currentKey = keyTable[index]) != null) {
-		if (currentKey.equals(key)) return valueTable[index];
+	while ((currentKey = this.keyTable[index]) != null) {
+		if (currentKey.equals(key)) return this.valueTable[index];
 		if (++index == length) index = 0;
 	}
 	return null;
 }
 
 public Object getKey(Object key) {
-	int length = keyTable.length;
+	int length = this.keyTable.length;
 	int index = (key.hashCode() & 0x7FFFFFFF) % length;
 	Object currentKey;
-	while ((currentKey = keyTable[index]) != null) {
+	while ((currentKey = this.keyTable[index]) != null) {
 		if (currentKey.equals(key)) return currentKey;
 		if (++index == length) index = 0;
 	}
@@ -87,39 +87,39 @@ public Object getKey(Object key) {
 
 public Object keyForValue(Object valueToMatch) {
 	if (valueToMatch != null)
-		for (int i = 0, l = keyTable.length; i < l; i++)
-			if (keyTable[i] != null && valueToMatch.equals(valueTable[i]))
-				return keyTable[i];
+		for (int i = 0, l = this.keyTable.length; i < l; i++)
+			if (this.keyTable[i] != null && valueToMatch.equals(this.valueTable[i]))
+				return this.keyTable[i];
 	return null;
 }
 
 public Object put(Object key, Object value) {
-	int length = keyTable.length;
+	int length = this.keyTable.length;
 	int index = (key.hashCode() & 0x7FFFFFFF) % length;
 	Object currentKey;
-	while ((currentKey = keyTable[index]) != null) {
-		if (currentKey.equals(key)) return valueTable[index] = value;
+	while ((currentKey = this.keyTable[index]) != null) {
+		if (currentKey.equals(key)) return this.valueTable[index] = value;
 		if (++index == length) index = 0;
 	}
-	keyTable[index] = key;
-	valueTable[index] = value;
+	this.keyTable[index] = key;
+	this.valueTable[index] = value;
 
 	// assumes the threshold is never equal to the size of the table
-	if (++elementSize > threshold) rehash();
+	if (++this.elementSize > this.threshold) rehash();
 	return value;
 }
 
 public Object removeKey(Object key) {
-	int length = keyTable.length;
+	int length = this.keyTable.length;
 	int index = (key.hashCode() & 0x7FFFFFFF) % length;
 	Object currentKey;
-	while ((currentKey = keyTable[index]) != null) {
+	while ((currentKey = this.keyTable[index]) != null) {
 		if (currentKey.equals(key)) {
-			elementSize--;
-			Object oldValue = valueTable[index];
-			keyTable[index] = null;
-			valueTable[index] = null;
-			if (keyTable[index + 1 == length ? 0 : index + 1] != null)
+			this.elementSize--;
+			Object oldValue = this.valueTable[index];
+			this.keyTable[index] = null;
+			this.valueTable[index] = null;
+			if (this.keyTable[index + 1 == length ? 0 : index + 1] != null)
 				rehash(); // only needed if a possible collision existed
 			return oldValue;
 		}
@@ -130,13 +130,13 @@ public Object removeKey(Object key) {
 
 public void removeValue(Object valueToRemove) {
 	boolean rehash = false;
-	for (int i = 0, l = valueTable.length; i < l; i++) {
-		Object value = valueTable[i];
+	for (int i = 0, l = this.valueTable.length; i < l; i++) {
+		Object value = this.valueTable[i];
 		if (value != null && value.equals(valueToRemove)) {
-			elementSize--;
-			keyTable[i] = null;
-			valueTable[i] = null;
-			if (!rehash && keyTable[i + 1 == l ? 0 : i + 1] != null)
+			this.elementSize--;
+			this.keyTable[i] = null;
+			this.valueTable[i] = null;
+			if (!rehash && this.keyTable[i + 1 == l ? 0 : i + 1] != null)
 				rehash = true; // only needed if a possible collision existed
 		}
 	}
@@ -144,11 +144,11 @@ public void removeValue(Object valueToRemove) {
 }
 
 private void rehash() {
-	SimpleLookupTable newLookupTable = new SimpleLookupTable(elementSize * 2); // double the number of expected elements
+	SimpleLookupTable newLookupTable = new SimpleLookupTable(this.elementSize * 2); // double the number of expected elements
 	Object currentKey;
-	for (int i = keyTable.length; --i >= 0;)
-		if ((currentKey = keyTable[i]) != null)
-			newLookupTable.put(currentKey, valueTable[i]);
+	for (int i = this.keyTable.length; --i >= 0;)
+		if ((currentKey = this.keyTable[i]) != null)
+			newLookupTable.put(currentKey, this.valueTable[i]);
 
 	this.keyTable = newLookupTable.keyTable;
 	this.valueTable = newLookupTable.valueTable;
@@ -159,9 +159,9 @@ private void rehash() {
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	Object object;
-	for (int i = 0, l = valueTable.length; i < l; i++)
-		if ((object = valueTable[i]) != null)
-			s += keyTable[i].toString() + " -> " + object.toString() + "\n"; 	//$NON-NLS-2$ //$NON-NLS-1$
+	for (int i = 0, l = this.valueTable.length; i < l; i++)
+		if ((object = this.valueTable[i]) != null)
+			s += this.keyTable[i].toString() + " -> " + object.toString() + "\n"; 	//$NON-NLS-2$ //$NON-NLS-1$
 	return s;
 }
 }

@@ -34,9 +34,9 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @see org.eclipse.jdt.internal.core.JarPackageFragmentRootInfo
  */
 public class JarPackageFragmentRoot extends PackageFragmentRoot {
-	
+
 	private final static ArrayList EMPTY_LIST = new ArrayList();
-	
+
 	/**
 	 * The path to the jar file
 	 * (a workspace relative path if the jar is internal,
@@ -45,7 +45,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 	protected final IPath jarPath;
 
 	/**
-	 * Constructs a package fragment root which is the root of the Java package directory hierarchy 
+	 * Constructs a package fragment root which is the root of the Java package directory hierarchy
 	 * based on a JAR file that is not contained in a <code>IJavaProject</code> and
 	 * does not have an associated <code>IResource</code>.
 	 */
@@ -54,7 +54,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 		this.jarPath = externalJarPath;
 	}
 	/**
-	 * Constructs a package fragment root which is the root of the Java package directory hierarchy 
+	 * Constructs a package fragment root which is the root of the Java package directory hierarchy
 	 * based on a JAR file.
 	 */
 	protected JarPackageFragmentRoot(IResource resource, JavaProject project) {
@@ -79,12 +79,12 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 
 			// always create the default package
 			rawPackageInfo.put(CharOperation.NO_STRINGS, new ArrayList[] { EMPTY_LIST, EMPTY_LIST });
-			
+
 			for (Enumeration e= jar.entries(); e.hasMoreElements();) {
 				ZipEntry member= (ZipEntry) e.nextElement();
 				initRawPackageInfo(rawPackageInfo, member.getName(), member.isDirectory(), sourceLevel, compliance);
 			}
-			
+
 			// loop through all of referenced packages, creating package fragments if necessary
 			// and cache the entry names in the rawPackageInfo table
 			children = new IJavaElement[rawPackageInfo.size()];
@@ -107,7 +107,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 		} finally {
 			JavaModelManager.getJavaModelManager().closeZipFile(jar);
 		}
-		
+
 		info.setChildren(children);
 		((JarPackageFragmentRootInfo) info).rawPackageInfo = rawPackageInfo;
 		return true;
@@ -185,7 +185,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 		} else {
 			return super.internalPath();
 		}
-	}	
+	}
 	public IResource resource(PackageFragmentRoot root) {
 		if (this.resource == null) {
 			// external jar
@@ -238,7 +238,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 		}
 		if (isDirectory)
 			return;
-		
+
 		// add classfile info amongst children
 		ArrayList[] children = (ArrayList[]) rawPackageInfo.get(pkgName);
 		if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(entryName)) {
@@ -249,7 +249,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 			if (children[1/*NON_JAVA*/] == EMPTY_LIST) children[1/*NON_JAVA*/] = new ArrayList();
 			children[1/*NON_JAVA*/].add(entryName);
 		}
-		
+
 	}
 	/**
 	 * @see IPackageFragmentRoot
@@ -275,15 +275,15 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 	 */
 	protected boolean resourceExists(IResource underlyingResource) {
 		if (underlyingResource == null) {
-			return 
+			return
 				JavaModel.getExternalTarget(
-					getPath()/*don't make the path relative as this is an external archive*/, 
-					true/*check existence*/) != null;	
+					getPath()/*don't make the path relative as this is an external archive*/,
+					true/*check existence*/) != null;
 		} else {
 			return super.resourceExists(underlyingResource);
 		}
 	}
-	
+
 	protected void toStringAncestors(StringBuffer buffer) {
 		if (isExternal())
 			// don't show project as it is irrelevant for external jar files.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -68,15 +68,15 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 	 */
 	protected void executeOperation() throws JavaModelException {
 		try {
-			beginTask(Messages.workingCopy_commit, 2); 
+			beginTask(Messages.workingCopy_commit, 2);
 			CompilationUnit workingCopy = getCompilationUnit();
-			
+
 			if (ExternalJavaProject.EXTERNAL_PROJECT_NAME.equals(workingCopy.getJavaProject().getElementName())) {
 				// case of a working copy without a resource
 				workingCopy.getBuffer().save(this.progressMonitor, this.force);
 				return;
 			}
-			
+
 			ICompilationUnit primary = workingCopy.getPrimary();
 			boolean isPrimary = workingCopy.isPrimary();
 
@@ -86,7 +86,7 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 			IFile resource = (IFile)workingCopy.getResource();
 			IJavaProject project = root.getJavaProject();
 			if (isPrimary || (root.validateOnClasspath().isOK() && isIncluded && resource.isAccessible() && Util.isValidCompilationUnitName(workingCopy.getElementName(), project.getOption(JavaCore.COMPILER_SOURCE, true), project.getOption(JavaCore.COMPILER_COMPLIANCE, true)))) {
-				
+
 				// force opening so that the delta builder can get the old info
 				if (!isPrimary && !primary.isOpen()) {
 					primary.open(null);
@@ -98,7 +98,7 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 				if (isIncluded && (!isPrimary || !workingCopy.isConsistent())) {
 					deltaBuilder = new JavaElementDeltaBuilder(primary);
 				}
-			
+
 				// save the cu
 				IBuffer primaryBuffer = primary.getBuffer();
 				if (!isPrimary) {
@@ -135,14 +135,14 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 				String contents = workingCopy.getSource();
 				if (contents == null) return;
 				try {
-					byte[] bytes = encoding == null 
-						? contents.getBytes() 
+					byte[] bytes = encoding == null
+						? contents.getBytes()
 						: contents.getBytes(encoding);
 					ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
 					if (resource.exists()) {
 						resource.setContents(
-							stream, 
-							this.force ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY, 
+							stream,
+							this.force ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY,
 							null);
 					} else {
 						resource.create(
@@ -155,27 +155,27 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 				} catch (UnsupportedEncodingException e) {
 					throw new JavaModelException(e, IJavaModelStatusConstants.IO_EXCEPTION);
 				}
-				
+
 			}
 
-			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
-			
+			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
+
 			// make sure working copy is in sync
 			workingCopy.updateTimeStamp((CompilationUnit)primary);
 			workingCopy.makeConsistent(this);
 			worked(1);
-		
+
 			// build the deltas
 			if (deltaBuilder != null) {
 				deltaBuilder.buildDeltas();
-			
+
 				// add the deltas to the list of deltas created during this operation
 				if (deltaBuilder.delta != null) {
 					addDelta(deltaBuilder.delta);
 				}
 			}
 			worked(1);
-		} finally {	
+		} finally {
 			done();
 		}
 	}
@@ -215,7 +215,7 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 			return new JavaModelStatus(IJavaModelStatusConstants.UPDATE_CONFLICT);
 		}
 		// no read-only check, since some repository adapters can change the flag on save
-		// operation.	
+		// operation.
 		return JavaModelStatus.VERIFIED_OK;
 	}
 }

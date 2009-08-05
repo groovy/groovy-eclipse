@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,16 +38,16 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
 public class CompletionOnMessageSend extends MessageSend {
 
 	public TypeBinding resolveType(BlockScope scope) {
-		if (arguments != null) {
-			int argsLength = arguments.length;
+		if (this.arguments != null) {
+			int argsLength = this.arguments.length;
 			for (int a = argsLength; --a >= 0;)
-				arguments[a].resolveType(scope);
+				this.arguments[a].resolveType(scope);
 		}
-		
-		if (receiver.isImplicitThis())
+
+		if (this.receiver.isImplicitThis())
 			throw new CompletionNodeFound(this, null, scope);
 
-		this.actualReceiverType = receiver.resolveType(scope);
+		this.actualReceiverType = this.receiver.resolveType(scope);
 		if (this.actualReceiverType == null || this.actualReceiverType.isBaseType())
 			throw new CompletionNodeFound();
 
@@ -59,22 +59,22 @@ public class CompletionOnMessageSend extends MessageSend {
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		output.append("<CompleteOnMessageSend:"); //$NON-NLS-1$
-		if (!receiver.isImplicitThis()) receiver.printExpression(0, output).append('.');
+		if (!this.receiver.isImplicitThis()) this.receiver.printExpression(0, output).append('.');
 		if (this.typeArguments != null) {
 			output.append('<');
-			int max = typeArguments.length - 1;
+			int max = this.typeArguments.length - 1;
 			for (int j = 0; j < max; j++) {
-				typeArguments[j].print(0, output);
+				this.typeArguments[j].print(0, output);
 				output.append(", ");//$NON-NLS-1$
 			}
-			typeArguments[max].print(0, output);
+			this.typeArguments[max].print(0, output);
 			output.append('>');
 		}
-		output.append(selector).append('(');
-		if (arguments != null) {
-			for (int i = 0; i < arguments.length; i++) {
+		output.append(this.selector).append('(');
+		if (this.arguments != null) {
+			for (int i = 0; i < this.arguments.length; i++) {
 				if (i > 0) output.append(", "); //$NON-NLS-1$
-				arguments[i].printExpression(0, output);
+				this.arguments[i].printExpression(0, output);
 			}
 		}
 		return output.append(")>"); //$NON-NLS-1$

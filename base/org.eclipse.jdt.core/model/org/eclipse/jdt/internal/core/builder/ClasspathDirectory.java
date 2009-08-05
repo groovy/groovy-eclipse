@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,7 +33,7 @@ AccessRuleSet accessRuleSet;
 
 ClasspathDirectory(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSet accessRuleSet) {
 	this.binaryFolder = binaryFolder;
-	this.isOutputFolder = isOutputFolder;
+	this.isOutputFolder = isOutputFolder || binaryFolder.getProjectRelativePath().isEmpty(); // if binaryFolder == project, then treat it as an outputFolder
 	this.directoryCache = new SimpleLookupTable(5);
 	this.accessRuleSet = accessRuleSet;
 }
@@ -43,12 +43,12 @@ public void cleanup() {
 }
 
 String[] directoryList(String qualifiedPackageName) {
-	String[] dirList = (String[]) directoryCache.get(qualifiedPackageName);
-	if (dirList == missingPackageHolder) return null; // package exists in another classpath directory or jar
+	String[] dirList = (String[]) this.directoryCache.get(qualifiedPackageName);
+	if (dirList == this.missingPackageHolder) return null; // package exists in another classpath directory or jar
 	if (dirList != null) return dirList;
 
 	try {
-		IResource container = binaryFolder.findMember(qualifiedPackageName); // this is a case-sensitive check
+		IResource container = this.binaryFolder.findMember(qualifiedPackageName); // this is a case-sensitive check
 		if (container instanceof IContainer) {
 			IResource[] members = ((IContainer) container).members();
 			dirList = new String[members.length];
@@ -61,13 +61,13 @@ String[] directoryList(String qualifiedPackageName) {
 			}
 			if (index < dirList.length)
 				System.arraycopy(dirList, 0, dirList = new String[index], 0, index);
-			directoryCache.put(qualifiedPackageName, dirList);
+			this.directoryCache.put(qualifiedPackageName, dirList);
 			return dirList;
 		}
 	} catch(CoreException ignored) {
 		// ignore
 	}
-	directoryCache.put(qualifiedPackageName, missingPackageHolder);
+	this.directoryCache.put(qualifiedPackageName, this.missingPackageHolder);
 	return null;
 }
 
@@ -90,7 +90,7 @@ public boolean equals(Object o) {
 		if (this.accessRuleSet == null || !this.accessRuleSet.equals(dir.accessRuleSet))
 			return false;
 	return this.binaryFolder.equals(dir.binaryFolder);
-} 
+}
 
 public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String qualifiedBinaryFileName) {
 	if (!doesFileExist(binaryFileName, qualifiedPackageName, qualifiedBinaryFileName)) return null; // most common case
@@ -115,7 +115,11 @@ public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPa
 }
 
 public IPath getProjectRelativePath() {
-	return binaryFolder.getProjectRelativePath();
+	return this.binaryFolder.getProjectRelativePath();
+}
+
+public int hashCode() {
+	return this.binaryFolder == null ? super.hashCode() : this.binaryFolder.hashCode();
 }
 
 protected boolean isExcluded(IResource resource) {
@@ -123,7 +127,7 @@ protected boolean isExcluded(IResource resource) {
 }
 
 public boolean isOutputFolder() {
-	return isOutputFolder;
+	return this.isOutputFolder;
 }
 
 public boolean isPackage(String qualifiedPackageName) {

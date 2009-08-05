@@ -127,10 +127,10 @@ class PackageBinding implements IPackageBinding {
 	 * @see IBinding#getName()
 	 */
 	public String getName() {
-		if (name == null) {
+		if (this.name == null) {
 			computeNameAndComponents();
 		}
-		return name;
+		return this.name;
 	}
 
 	/*
@@ -144,10 +144,10 @@ class PackageBinding implements IPackageBinding {
 	 * @see IPackageBinding#getNameComponents()
 	 */
 	public String[] getNameComponents() {
-		if (components == null) {
+		if (this.components == null) {
 			computeNameAndComponents();
 		}
-		return components;
+		return this.components;
 	}
 
 	/*
@@ -228,19 +228,19 @@ class PackageBinding implements IPackageBinding {
 	private void computeNameAndComponents() {
 		char[][] compoundName = this.binding.compoundName;
 		if (compoundName == CharOperation.NO_CHAR_CHAR || compoundName == null) {
-			name = UNNAMED;
-			components = NO_NAME_COMPONENTS;
+			this.name = UNNAMED;
+			this.components = NO_NAME_COMPONENTS;
 		} else {
 			int length = compoundName.length;
-			components = new String[length];
+			this.components = new String[length];
 			StringBuffer buffer = new StringBuffer();
 			for (int i = 0; i < length - 1; i++) {
-				components[i] = new String(compoundName[i]);
+				this.components[i] = new String(compoundName[i]);
 				buffer.append(compoundName[i]).append(PACKAGE_NAME_SEPARATOR);
 			}
-			components[length - 1] = new String(compoundName[length - 1]);
+			this.components[length - 1] = new String(compoundName[length - 1]);
 			buffer.append(compoundName[length - 1]);
-			name = buffer.toString();
+			this.name = buffer.toString();
 		}
 	}
 

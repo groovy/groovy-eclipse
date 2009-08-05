@@ -44,30 +44,30 @@ import org.eclipse.jdt.internal.formatter.DefaultCodeFormatter;
  * <p>
  *  This class provides static methods only.
  * </p>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noextend This class is not intended to be subclassed by clients.
  */
 public class ToolFactory {
-	
+
 	/**
-	 * This mode is used for formatting new code when some formatter options should not be used. 
-	 * In particular, options that preserve the indentation of comments are not used. 
+	 * This mode is used for formatting new code when some formatter options should not be used.
+	 * In particular, options that preserve the indentation of comments are not used.
 	 * In the future,  newly added options may be ignored as well.
 	 * <p>Clients that are formatting new code are recommended to use this mode.
 	 * </p>
-	 * 
+	 *
 	 * @see DefaultCodeFormatterConstants#FORMATTER_NEVER_INDENT_BLOCK_COMMENTS_ON_FIRST_COLUMN
 	 * @see DefaultCodeFormatterConstants#FORMATTER_NEVER_INDENT_LINE_COMMENTS_ON_FIRST_COLUMN
 	 * @see #createCodeFormatter(Map, int)
 	 * @since 3.3
 	 */
 	public static final int M_FORMAT_NEW = new Integer(0).intValue();
-	
+
 	/**
-	 * This mode is used for formatting existing code when all formatter options should be used. 
-	 * In particular, options that preserve the indentation of comments are used. 
+	 * This mode is used for formatting existing code when all formatter options should be used.
+	 * In particular, options that preserve the indentation of comments are used.
 	 * <p>Clients that are formatting existing code are recommended to use this mode.
 	 * </p>
 	 *
@@ -79,20 +79,20 @@ public class ToolFactory {
 	public static final int M_FORMAT_EXISTING = new Integer(1).intValue();
 
 	/**
-	 * Create an instance of a code formatter. A code formatter implementation can be contributed via the 
-	 * extension point "org.eclipse.jdt.core.codeFormatter". If unable to find a registered extension, the factory 
+	 * Create an instance of a code formatter. A code formatter implementation can be contributed via the
+	 * extension point "org.eclipse.jdt.core.codeFormatter". If unable to find a registered extension, the factory
 	 * will default to using the default code formatter.
-	 * 
+	 *
 	 * @return an instance of a code formatter
 	 * @see ICodeFormatter
 	 * @see ToolFactory#createDefaultCodeFormatter(Map)
 	 * @deprecated Use {@link #createCodeFormatter(Map)} instead. Extension point is discontinued
 	 */
 	public static ICodeFormatter createCodeFormatter(){
-		
+
 			Plugin jdtCorePlugin = JavaCore.getPlugin();
 			if (jdtCorePlugin == null) return null;
-		
+
 			IExtensionPoint extension = jdtCorePlugin.getDescriptor().getExtensionPoint(JavaModelManager.FORMATTER_EXTPOINT_ID);
 			if (extension != null) {
 				IExtension[] extensions =  extension.getExtensions();
@@ -109,9 +109,9 @@ public class ToolFactory {
 							// unable to instantiate extension, will answer default formatter instead
 						}
 					}
-				}	
+				}
 			}
-		// no proper contribution found, use default formatter			
+		// no proper contribution found, use default formatter
 		return createDefaultCodeFormatter(null);
 	}
 
@@ -126,7 +126,7 @@ public class ToolFactory {
 	 * may be ignored. See @{link {@link #M_FORMAT_NEW} for more details.
 	 * </p>
 	 * @param options - the options map to use for formatting with the default code formatter. Recognized options
-	 * 	are documented on <code>JavaCore#getDefaultOptions()</code>. If set to <code>null</code>, then use 
+	 * 	are documented on <code>JavaCore#getDefaultOptions()</code>. If set to <code>null</code>, then use
 	 * 	the current settings from <code>JavaCore#getOptions</code>.
 	 * @return an instance of the built-in code formatter
 	 * @see CodeFormatter
@@ -147,9 +147,9 @@ public class ToolFactory {
 	 * <p>The given mode determines what options should be enabled when formatting the code. It can have the following
 	 * values: {@link #M_FORMAT_NEW}, {@link #M_FORMAT_EXISTING}, but other values may be added in the future.
 	 * </p>
-	 * 
+	 *
 	 * @param options the options map to use for formatting with the default code formatter. Recognized options
-	 * 	are documented on <code>JavaCore#getDefaultOptions()</code>. If set to <code>null</code>, then use 
+	 * 	are documented on <code>JavaCore#getDefaultOptions()</code>. If set to <code>null</code>, then use
 	 * 	the current settings from <code>JavaCore#getOptions</code>.
 	 * @param mode the given mode to modify the given options.
 	 *
@@ -171,7 +171,7 @@ public class ToolFactory {
 
 	/**
 	 * Create a classfile bytecode disassembler, able to produce a String representation of a given classfile.
-	 * 
+	 *
 	 * @return a classfile bytecode disassembler
 	 * @see ClassFileBytesDisassembler
 	 * @since 2.1
@@ -179,13 +179,13 @@ public class ToolFactory {
 	public static ClassFileBytesDisassembler createDefaultClassFileBytesDisassembler(){
 		return new Disassembler();
 	}
-	
+
 	/**
 	 * Create a classfile bytecode disassembler, able to produce a String representation of a given classfile.
-	 * 
+	 *
 	 * @return a classfile bytecode disassembler
 	 * @see org.eclipse.jdt.core.util.IClassFileDisassembler
-	 * @deprecated Use {@link #createDefaultClassFileBytesDisassembler()} instead 
+	 * @deprecated Use {@link #createDefaultClassFileBytesDisassembler()} instead
 	 */
 	public static org.eclipse.jdt.core.util.IClassFileDisassembler createDefaultClassFileDisassembler(){
 		class DeprecatedDisassembler extends Disassembler implements org.eclipse.jdt.core.util.IClassFileDisassembler {
@@ -193,19 +193,19 @@ public class ToolFactory {
 		}
 		return new DeprecatedDisassembler();
 	}
-	
+
 	/**
 	 * Create a classfile reader onto a classfile Java element.
 	 * Create a default classfile reader, able to expose the internal representation of a given classfile
 	 * according to the decoding flag used to initialize the reader.
 	 * Answer null if the file named fileName doesn't represent a valid .class file.
-	 * 
+	 *
 	 * The decoding flags are described in IClassFileReader.
-	 * 
+	 *
 	 * @param classfile the classfile element to introspect
 	 * @param decodingFlag the flag used to decode the class file reader.
 	 * @return a default classfile reader
-	 * 
+	 *
 	 * @see IClassFileReader
 	 */
 	public static IClassFileReader createDefaultClassFileReader(IClassFile classfile, int decodingFlag){
@@ -251,13 +251,13 @@ public class ToolFactory {
 	 * Create a default classfile reader, able to expose the internal representation of a given classfile
 	 * according to the decoding flag used to initialize the reader.
 	 * Answer null if the input stream contents cannot be retrieved
-	 * 
+	 *
 	 * The decoding flags are described in IClassFileReader.
-	 * 
+	 *
 	 * @param stream the given input stream to read
 	 * @param decodingFlag the flag used to decode the class file reader.
 	 * @return a default classfile reader
-	 * 
+	 *
 	 * @see IClassFileReader
 	 * @since 3.2
 	 */
@@ -270,19 +270,19 @@ public class ToolFactory {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Create a default classfile reader, able to expose the internal representation of a given classfile
 	 * according to the decoding flag used to initialize the reader.
 	 * Answer null if the file named fileName doesn't represent a valid .class file.
 	 * The fileName has to be an absolute OS path to the given .class file.
-	 * 
+	 *
 	 * The decoding flags are described in IClassFileReader.
-	 * 
+	 *
 	 * @param fileName the name of the file to be read
 	 * @param decodingFlag the flag used to decode the class file reader.
 	 * @return a default classfile reader
-	 * 
+	 *
 	 * @see IClassFileReader
 	 */
 	public static IClassFileReader createDefaultClassFileReader(String fileName, int decodingFlag){
@@ -301,9 +301,9 @@ public class ToolFactory {
 	 * Answer null if the file named zipFileName doesn't represent a valid zip file or if the zipEntryName
 	 * is not a valid entry name for the specified zip file or if the bytes don't represent a valid
 	 * .class file according to the JVM specifications.
-	 * 
+	 *
 	 * The decoding flags are described in IClassFileReader.
-	 * 
+	 *
 	 * @param zipFileName the name of the zip file
 	 * @param zipEntryName the name of the entry in the zip file to be read
 	 * @param decodingFlag the flag used to decode the class file reader.
@@ -340,14 +340,14 @@ public class ToolFactory {
 			}
 		}
 	}
-	
+
 	/**
-	 * Create an instance of the built-in code formatter. A code formatter implementation can be contributed via the 
-	 * extension point "org.eclipse.jdt.core.codeFormatter". If unable to find a registered extension, the factory will 
+	 * Create an instance of the built-in code formatter. A code formatter implementation can be contributed via the
+	 * extension point "org.eclipse.jdt.core.codeFormatter". If unable to find a registered extension, the factory will
 	 * default to using the default code formatter.
-	 * 
+	 *
 	 * @param options - the options map to use for formatting with the default code formatter. Recognized options
-	 * 	are documented on <code>JavaCore#getDefaultOptions()</code>. If set to <code>null</code>, then use 
+	 * 	are documented on <code>JavaCore#getDefaultOptions()</code>. If set to <code>null</code>, then use
 	 * 	the current settings from <code>JavaCore#getOptions</code>.
 	 * @return an instance of the built-in code formatter
 	 * @see ICodeFormatter
@@ -359,12 +359,12 @@ public class ToolFactory {
 		if (options == null) options = JavaCore.getOptions();
 		return new org.eclipse.jdt.internal.formatter.old.CodeFormatter(options);
 	}
-	
+
 	/**
 	 * Create a scanner, indicating the level of detail requested for tokenizing. The scanner can then be
 	 * used to tokenize some source in a Java aware way.
 	 * Here is a typical scanning loop:
-	 * 
+	 *
 	 * <code>
 	 * <pre>
 	 *   IScanner scanner = ToolFactory.createScanner(false, false, false, false);
@@ -376,7 +376,7 @@ public class ToolFactory {
 	 *   }
 	 * </pre>
 	 * </code>
-	 * 
+	 *
 	 * <p>
 	 * The returned scanner will tolerate unterminated line comments (missing line separator). It can be made stricter
 	 * by using API with extra boolean parameter (<code>strictCommentMode</code>).
@@ -387,9 +387,9 @@ public class ToolFactory {
 	 * (<code>ITerminalSymbols#TokenNameIdentifier</code>), whereas if set to <code>true</code>, it
 	 * would report assert keywords (<code>ITerminalSymbols#TokenNameassert</code>). Java 1.4 has introduced
 	 * a new 'assert' keyword.
-	 * @param recordLineSeparator if set to <code>true</code>, the scanner will record positions of encountered line 
+	 * @param recordLineSeparator if set to <code>true</code>, the scanner will record positions of encountered line
 	 * separator ends. In case of multi-character line separators, the last character position is considered. These positions
-	 * can then be extracted using <code>IScanner#getLineEnds</code>. Only non-unicode escape sequences are 
+	 * can then be extracted using <code>IScanner#getLineEnds</code>. Only non-unicode escape sequences are
 	 * considered as valid line separators.
   	 * @return a scanner
 	 * @see org.eclipse.jdt.core.compiler.IScanner
@@ -400,12 +400,12 @@ public class ToolFactory {
 		scanner.recordLineSeparator = recordLineSeparator;
 		return scanner;
 	}
-	
+
 	/**
 	 * Create a scanner, indicating the level of detail requested for tokenizing. The scanner can then be
 	 * used to tokenize some source in a Java aware way.
 	 * Here is a typical scanning loop:
-	 * 
+	 *
 	 * <code>
 	 * <pre>
 	 *   IScanner scanner = ToolFactory.createScanner(false, false, false, false);
@@ -417,16 +417,16 @@ public class ToolFactory {
 	 *   }
 	 * </pre>
 	 * </code>
-	 * 
+	 *
 	 * <p>
 	 * The returned scanner will tolerate unterminated line comments (missing line separator). It can be made stricter
 	 * by using API with extra boolean parameter (<code>strictCommentMode</code>).
 	 * <p>
 	 * @param tokenizeComments if set to <code>false</code>, comments will be silently consumed
 	 * @param tokenizeWhiteSpace if set to <code>false</code>, white spaces will be silently consumed,
-	 * @param recordLineSeparator if set to <code>true</code>, the scanner will record positions of encountered line 
+	 * @param recordLineSeparator if set to <code>true</code>, the scanner will record positions of encountered line
 	 * separator ends. In case of multi-character line separators, the last character position is considered. These positions
-	 * can then be extracted using <code>IScanner#getLineEnds</code>. Only non-unicode escape sequences are 
+	 * can then be extracted using <code>IScanner#getLineEnds</code>. Only non-unicode escape sequences are
 	 * considered as valid line separators.
 	 * @param sourceLevel if set to <code>&quot;1.3&quot;</code> or <code>null</code>, occurrences of 'assert' will be reported as identifiers
 	 * (<code>ITerminalSymbols#TokenNameIdentifier</code>), whereas if set to <code>&quot;1.4&quot;</code>, it
@@ -449,7 +449,7 @@ public class ToolFactory {
 	 * Create a scanner, indicating the level of detail requested for tokenizing. The scanner can then be
 	 * used to tokenize some source in a Java aware way.
 	 * Here is a typical scanning loop:
-	 * 
+	 *
 	 * <code>
 	 * <pre>
 	 *   IScanner scanner = ToolFactory.createScanner(false, false, false, false);
@@ -461,16 +461,16 @@ public class ToolFactory {
 	 *   }
 	 * </pre>
 	 * </code>
-	 * 
+	 *
 	 * <p>
 	 * The returned scanner will tolerate unterminated line comments (missing line separator). It can be made stricter
 	 * by using API with extra boolean parameter (<code>strictCommentMode</code>).
 	 * <p>
 	 * @param tokenizeComments if set to <code>false</code>, comments will be silently consumed
 	 * @param tokenizeWhiteSpace if set to <code>false</code>, white spaces will be silently consumed,
-	 * @param recordLineSeparator if set to <code>true</code>, the scanner will record positions of encountered line 
+	 * @param recordLineSeparator if set to <code>true</code>, the scanner will record positions of encountered line
 	 * separator ends. In case of multi-character line separators, the last character position is considered. These positions
-	 * can then be extracted using <code>IScanner#getLineEnds</code>. Only non-unicode escape sequences are 
+	 * can then be extracted using <code>IScanner#getLineEnds</code>. Only non-unicode escape sequences are
 	 * considered as valid line separators.
 	 * @param sourceLevel if set to <code>&quot;1.3&quot;</code> or <code>null</code>, occurrences of 'assert' will be reported as identifiers
 	 * (<code>ITerminalSymbols#TokenNameIdentifier</code>), whereas if set to <code>&quot;1.4&quot;</code>, it

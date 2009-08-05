@@ -102,8 +102,8 @@ private void computeClasspathLocations(
 		switch(entry.getEntryKind()) {
 			case IClasspathEntry.CPE_SOURCE :
 				if (!(target instanceof IContainer)) continue nextEntry;
-				IPath outputPath = entry.getOutputLocation() != null 
-					? entry.getOutputLocation() 
+				IPath outputPath = entry.getOutputLocation() != null
+					? entry.getOutputLocation()
 					: javaProject.getOutputLocation();
 				IContainer outputFolder;
 				if (outputPath.segmentCount() == 1) {
@@ -130,8 +130,8 @@ private void computeClasspathLocations(
 					if (prereqEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
 						Object prereqTarget = JavaModel.getTarget(prereqEntry.getPath(), true);
 						if (!(prereqTarget instanceof IContainer)) continue nextPrereqEntry;
-						IPath prereqOutputPath = prereqEntry.getOutputLocation() != null 
-							? prereqEntry.getOutputLocation() 
+						IPath prereqOutputPath = prereqEntry.getOutputLocation() != null
+							? prereqEntry.getOutputLocation()
 							: prereqJavaProject.getOutputLocation();
 						IContainer binaryFolder = prereqOutputPath.segmentCount() == 1
 							? (IContainer) prereqProject
@@ -161,14 +161,14 @@ private void computeClasspathLocations(
 					IResource resource = (IResource) target;
 					ClasspathLocation bLocation = null;
 					if (resource instanceof IFile) {
-						AccessRuleSet accessRuleSet = 
+						AccessRuleSet accessRuleSet =
 							(JavaCore.IGNORE.equals(javaProject.getOption(JavaCore.COMPILER_PB_FORBIDDEN_REFERENCE, true))
 							&& JavaCore.IGNORE.equals(javaProject.getOption(JavaCore.COMPILER_PB_DISCOURAGED_REFERENCE, true)))
 								? null
 								: entry.getAccessRuleSet();
 						bLocation = ClasspathLocation.forLibrary((IFile) resource, accessRuleSet);
 					} else if (resource instanceof IContainer) {
-						AccessRuleSet accessRuleSet = 
+						AccessRuleSet accessRuleSet =
 							(JavaCore.IGNORE.equals(javaProject.getOption(JavaCore.COMPILER_PB_FORBIDDEN_REFERENCE, true))
 							&& JavaCore.IGNORE.equals(javaProject.getOption(JavaCore.COMPILER_PB_DISCOURAGED_REFERENCE, true)))
 								? null
@@ -189,7 +189,7 @@ private void computeClasspathLocations(
 						binaryLocationsPerProject.put(p, existingLocations);
 					}
 				} else if (target instanceof File) {
-					AccessRuleSet accessRuleSet = 
+					AccessRuleSet accessRuleSet =
 						(JavaCore.IGNORE.equals(javaProject.getOption(JavaCore.COMPILER_PB_FORBIDDEN_REFERENCE, true))
 							&& JavaCore.IGNORE.equals(javaProject.getOption(JavaCore.COMPILER_PB_DISCOURAGED_REFERENCE, true)))
 								? null
@@ -207,20 +207,20 @@ private void computeClasspathLocations(
 		sLocations.toArray(this.sourceLocations);
 
 		// collect the output folders, skipping duplicates
-		next : for (int i = 0, l = sourceLocations.length; i < l; i++) {
-			ClasspathMultiDirectory md = sourceLocations[i];
+		next : for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
+			ClasspathMultiDirectory md = this.sourceLocations[i];
 			IPath outputPath = md.binaryFolder.getFullPath();
 			for (int j = 0; j < i; j++) { // compare against previously walked source folders
-				if (outputPath.equals(sourceLocations[j].binaryFolder.getFullPath())) {
-					md.hasIndependentOutputFolder = sourceLocations[j].hasIndependentOutputFolder;
+				if (outputPath.equals(this.sourceLocations[j].binaryFolder.getFullPath())) {
+					md.hasIndependentOutputFolder = this.sourceLocations[j].hasIndependentOutputFolder;
 					continue next;
 				}
 			}
 			outputFolders.add(md);
 
 			// also tag each source folder whose output folder is an independent folder & is not also a source folder
-			for (int j = 0, m = sourceLocations.length; j < m; j++)
-				if (outputPath.equals(sourceLocations[j].sourceFolder.getFullPath()))
+			for (int j = 0, m = this.sourceLocations.length; j < m; j++)
+				if (outputPath.equals(this.sourceLocations[j].sourceFolder.getFullPath()))
 					continue next;
 			md.hasIndependentOutputFolder = true;
 		}
@@ -238,10 +238,10 @@ private void computeClasspathLocations(
 public void cleanup() {
 	this.initialTypeNames = null;
 	this.additionalUnits = null;
-	for (int i = 0, l = sourceLocations.length; i < l; i++)
-		sourceLocations[i].cleanup();
-	for (int i = 0, l = binaryLocations.length; i < l; i++)
-		binaryLocations[i].cleanup();
+	for (int i = 0, l = this.sourceLocations.length; i < l; i++)
+		this.sourceLocations[i].cleanup();
+	for (int i = 0, l = this.binaryLocations.length; i < l; i++)
+		this.binaryLocations[i].cleanup();
 }
 
 private void createOutputFolder(IContainer outputFolder) throws CoreException {
@@ -261,7 +261,7 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		this.notifier.checkCancelWithinCompiler();
 
 	if (this.initialTypeNames != null && this.initialTypeNames.includes(qualifiedTypeName)) {
-		if (isIncrementalBuild)
+		if (this.isIncrementalBuild)
 			// catch the case that a type inside a source file has been renamed but other class files are looking for it
 			throw new AbortCompilation(true, new AbortIncrementalBuildException(qualifiedTypeName));
 		return null; // looking for a file which we know was provided at the beginning of the compilation
@@ -287,8 +287,8 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 
 	// NOTE: the output folders are added at the beginning of the binaryLocations
 	NameEnvironmentAnswer suggestedAnswer = null;
-	for (int i = 0, l = binaryLocations.length; i < l; i++) {
-		NameEnvironmentAnswer answer = binaryLocations[i].findClass(binaryFileName, qPackageName, qBinaryFileName);
+	for (int i = 0, l = this.binaryLocations.length; i < l; i++) {
+		NameEnvironmentAnswer answer = this.binaryLocations[i].findClass(binaryFileName, qPackageName, qBinaryFileName);
 		if (answer != null) {
 			if (!answer.ignoreIfBetter()) {
 				if (answer.isBetter(suggestedAnswer))
@@ -326,8 +326,8 @@ public boolean isPackage(char[][] compoundName, char[] packageName) {
 
 public boolean isPackage(String qualifiedPackageName) {
 	// NOTE: the output folders are added at the beginning of the binaryLocations
-	for (int i = 0, l = binaryLocations.length; i < l; i++)
-		if (binaryLocations[i].isPackage(qualifiedPackageName))
+	for (int i = 0, l = this.binaryLocations.length; i < l; i++)
+		if (this.binaryLocations[i].isPackage(qualifiedPackageName))
 			return true;
 	return false;
 }
@@ -353,9 +353,9 @@ void setNames(String[] typeNames, SourceFile[] additionalFiles) {
 		}
 	}
 
-	for (int i = 0, l = sourceLocations.length; i < l; i++)
-		sourceLocations[i].reset();
-	for (int i = 0, l = binaryLocations.length; i < l; i++)
-		binaryLocations[i].reset();
+	for (int i = 0, l = this.sourceLocations.length; i < l; i++)
+		this.sourceLocations[i].reset();
+	for (int i = 0, l = this.binaryLocations.length; i < l; i++)
+		this.binaryLocations[i].reset();
 }
 }

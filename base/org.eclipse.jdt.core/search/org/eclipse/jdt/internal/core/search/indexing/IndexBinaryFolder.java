@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -64,11 +64,11 @@ public class IndexBinaryFolder extends IndexRequest {
 			if (paths == null) {
 				this.folder.accept(new IResourceProxyVisitor() {
 					public boolean visit(IResourceProxy proxy) {
-						if (isCancelled) return false;
+						if (IndexBinaryFolder.this.isCancelled) return false;
 						if (proxy.getType() == IResource.FILE) {
 							if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName())) {
 								IFile file = (IFile) proxy.requestResource();
-								String containerRelativePath = Util.relativePath(file.getFullPath(), containerPath.segmentCount());
+								String containerRelativePath = Util.relativePath(file.getFullPath(), IndexBinaryFolder.this.containerPath.segmentCount());
 								indexedFileNames.put(containerRelativePath, file);
 							}
 							return false;
@@ -84,16 +84,16 @@ public class IndexBinaryFolder extends IndexRequest {
 				this.folder.accept(
 					new IResourceProxyVisitor() {
 						public boolean visit(IResourceProxy proxy) throws CoreException {
-							if (isCancelled) return false;
+							if (IndexBinaryFolder.this.isCancelled) return false;
 							if (proxy.getType() == IResource.FILE) {
 								if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName())) {
 									IFile file = (IFile) proxy.requestResource();
 									URI location = file.getLocationURI();
 									if (location != null) {
-										String containerRelativePath = Util.relativePath(file.getFullPath(), containerPath.segmentCount());
+										String containerRelativePath = Util.relativePath(file.getFullPath(), IndexBinaryFolder.this.containerPath.segmentCount());
 										indexedFileNames.put(containerRelativePath,
-											indexedFileNames.get(containerRelativePath) == null 
-													|| indexLastModified < 
+											indexedFileNames.get(containerRelativePath) == null
+													|| indexLastModified <
 													EFS.getStore(location).fetchInfo().getLastModified()
 												? (Object) file
 												: (Object) OK);

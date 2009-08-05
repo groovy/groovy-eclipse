@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ public class StackMapTableAttribute
 
 	private int numberOfEntries;
 	private IStackMapFrame[] frames;
-	
+
 	private byte[] bytes;
 
 	/**
@@ -43,8 +43,8 @@ public class StackMapTableAttribute
 			int offset)
 			throws ClassFormatException {
 		super(classFileBytes, constantPool, offset);
-		
-		final int length = u2At(classFileBytes, 6, offset); 
+
+		final int length = u2At(classFileBytes, 6, offset);
 		this.numberOfEntries = length;
 		if (length != 0) {
 			int readOffset = 8;
@@ -58,7 +58,7 @@ public class StackMapTableAttribute
 			this.frames = NO_FRAMES;
 		}
 		final int byteLength = (int) u4At(classFileBytes, 2, offset);
-		
+
 		if (length != 0) {
 			System.arraycopy(classFileBytes, offset + 6, this.bytes = new byte[byteLength], 0, byteLength);
 		} else {
@@ -73,7 +73,7 @@ public class StackMapTableAttribute
 	public IStackMapFrame[] getStackMapFrame() {
 		return this.frames;
 	}
-	
+
 	/**
 	 */
 	public byte[] getBytes() {

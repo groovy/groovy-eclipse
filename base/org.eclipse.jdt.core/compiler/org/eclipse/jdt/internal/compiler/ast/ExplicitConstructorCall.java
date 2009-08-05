@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package org.eclipse.jdt.internal.compiler.ast;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
+import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -33,22 +34,21 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
 
 public class ExplicitConstructorCall extends Statement implements InvocationSite {
-		
+
 	public Expression[] arguments;
 	public Expression qualification;
 	public MethodBinding binding;							// exact binding resulting from lookup
-	protected MethodBinding codegenBinding;		// actual binding used for code generation (if no synthetic accessor)
 	MethodBinding syntheticAccessor;						// synthetic accessor for inner-emulation
 	public int accessMode;
 	public TypeReference[] typeArguments;
 	public TypeBinding[] genericTypeArguments;
-	
+
 	public final static int ImplicitSuper = 1;
 	public final static int Super = 2;
 	public final static int This = 3;
 
 	public VariableBinding[][] implicitArguments;
-	
+
 	// TODO Remove once DOMParser is activated
 	public int typeArgumentsSourceStart;
 
@@ -81,6 +81,9 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 
 			ReferenceBinding[] thrownExceptions;
 			if ((thrownExceptions = this.binding.thrownExceptions) != Binding.NO_EXCEPTIONS) {
+				if ((this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null) {
+					thrownExceptions = currentScope.environment().convertToRawTypes(this.binding.original().thrownExceptions, true, true);
+				}				
 				// check exceptions
 				flowContext.checkExceptionHandlers(
 					thrownExceptions,
@@ -114,8 +117,9 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 			int pc = codeStream.position;
 			codeStream.aload_0();
 
-			ReferenceBinding targetType = this.codegenBinding.declaringClass;
-			
+			MethodBinding codegenBinding = this.binding.original();
+			ReferenceBinding targetType = codegenBinding.declaringClass;
+
 			// special name&ordinal argument generation for enum constructors
 			if (targetType.erasure().id == TypeIds.T_JavaLangEnum || targetType.isEnum()) {
 				codeStream.aload_1(); // pass along name param as name arg
@@ -131,8 +135,8 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 					this);
 			}
 			// generate arguments
-			generateArguments(this.binding, this.arguments, currentScope, codeStream);			
-			
+			generateArguments(this.binding, this.arguments, currentScope, codeStream);
+
 			// handling innerclass instance allocation - outer local arguments
 			if (targetType.isNestedType()) {
 				codeStream.generateSyntheticOuterArgumentValues(
@@ -143,28 +147,28 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 			if (this.syntheticAccessor != null) {
 				// synthetic accessor got some extra arguments appended to its signature, which need values
 				for (int i = 0,
-					max = this.syntheticAccessor.parameters.length - this.codegenBinding.parameters.length;
+					max = this.syntheticAccessor.parameters.length - codegenBinding.parameters.length;
 					i < max;
 					i++) {
 					codeStream.aconst_null();
 				}
-				codeStream.invokespecial(this.syntheticAccessor);
+				codeStream.invoke(Opcodes.OPC_invokespecial, this.syntheticAccessor, null /* default declaringClass */);
 			} else {
-				codeStream.invokespecial(this.codegenBinding);
+				codeStream.invoke(Opcodes.OPC_invokespecial, codegenBinding, null /* default declaringClass */);
 			}
 			codeStream.recordPositionsFrom(pc, this.sourceStart);
 		} finally {
 			((MethodScope) currentScope).isConstructorCall = false;
 		}
 	}
-	
+
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
 	 */
 	public TypeBinding[] genericTypeArguments() {
 		return this.genericTypeArguments;
 	}
-	
+
 	public boolean isImplicitSuper() {
 		return (this.accessMode == ExplicitConstructorCall.ImplicitSuper);
 	}
@@ -177,7 +181,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 		return true;
 	}
 
-	/* Inner emulation consists in either recording a dependency 
+	/* Inner emulation consists in either recording a dependency
 	 * link only, or performing one level of propagation.
 	 *
 	 * Dependency mechanism is used whenever dealing with source target
@@ -205,18 +209,18 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 	public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
 		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
 			// if constructor from parameterized type got found, use the original constructor at codegen time
-			this.codegenBinding = this.binding.original();
-			
+			MethodBinding codegenBinding = this.binding.original();
+
 			// perform some emulation work in case there is some and we are inside a local type only
 			if (this.binding.isPrivate() && this.accessMode != ExplicitConstructorCall.This) {
-				ReferenceBinding declaringClass = this.codegenBinding.declaringClass;
+				ReferenceBinding declaringClass = codegenBinding.declaringClass;
 				// from 1.4 on, local type constructor can lose their private flag to ease emulation
 				if ((declaringClass.tagBits & TagBits.IsLocalType) != 0 	&& currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
 					// constructor will not be dumped as private, no emulation required thus
-					this.codegenBinding.tagBits |= TagBits.ClearPrivateModifier;
+					codegenBinding.tagBits |= TagBits.ClearPrivateModifier;
 				} else {
-					this.syntheticAccessor = ((SourceTypeBinding) declaringClass).addSyntheticMethod(this.codegenBinding, isSuperAccess());
-					currentScope.problemReporter().needToEmulateMethodAccess(this.codegenBinding, this);
+					this.syntheticAccessor = ((SourceTypeBinding) declaringClass).addSyntheticMethod(codegenBinding, isSuperAccess());
+					currentScope.problemReporter().needToEmulateMethodAccess(codegenBinding, this);
 				}
 			}
 		}
@@ -234,7 +238,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 			}
 			this.typeArguments[max].print(0, output);
 			output.append('>');
-		}		
+		}
 		if (this.accessMode == ExplicitConstructorCall.This) {
 			output.append("this("); //$NON-NLS-1$
 		} else {
@@ -248,7 +252,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 		}
 		return output.append(");"); //$NON-NLS-1$
 	}
-	
+
 	public void resolve(BlockScope scope) {
 		// the return type should be void for a constructor.
 		// the test is made into getConstructor
@@ -258,7 +262,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 		MethodScope methodScope = scope.methodScope();
 		try {
 			AbstractMethodDeclaration methodDeclaration = methodScope.referenceMethod();
-			if (methodDeclaration == null 
+			if (methodDeclaration == null
 					|| !methodDeclaration.isConstructor()
 					|| ((ConstructorDeclaration) methodDeclaration).constructorCall != this) {
 				scope.problemReporter().invalidExplicitConstructorCall(this);
@@ -331,10 +335,10 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 						for (int i = 0, max = this.arguments.length; i < max; i++) {
 							this.arguments[i].resolveType(scope);
 						}
-					}					
+					}
 					return;
 				}
-			}			
+			}
 			// arguments buffering for the method lookup
 			TypeBinding[] argumentTypes = Binding.NO_PARAMETERS;
 			boolean argsContainCast = false;
@@ -372,7 +376,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 							}
 							this.binding = closestMatch;
 							MethodBinding closestMatchOriginal = closestMatch.original();
-							if ((closestMatchOriginal.isPrivate() || closestMatchOriginal.declaringClass.isLocalType()) && !scope.isDefinedInMethod(closestMatchOriginal)) {
+							if (closestMatchOriginal.isOrEnclosedByPrivateType() && !scope.isDefinedInMethod(closestMatchOriginal)) {
 								// ignore cases where method is used from within inside itself (e.g. direct recursions)
 								closestMatchOriginal.modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 							}
@@ -392,18 +396,20 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 					if (!methodScope.enclosingSourceType().isAnonymousType()) {
 						scope.problemReporter().missingTypeInConstructor(this, this.binding);
 					}
-				}				
+				}
 				if (isMethodUseDeprecated(this.binding, scope, this.accessMode != ExplicitConstructorCall.ImplicitSuper)) {
 					scope.problemReporter().deprecatedMethod(this.binding, this);
 				}
-				checkInvocationArguments(scope, null, receiverType, this.binding, this.arguments, argumentTypes, argsContainCast, this);
-				if (this.binding.isPrivate() || receiverType.isLocalType()) {
+				if (checkInvocationArguments(scope, null, receiverType, this.binding, this.arguments, argumentTypes, argsContainCast, this)) {
+					this.bits |= ASTNode.Unchecked;
+				}
+				if (this.binding.isOrEnclosedByPrivateType()) {
 					this.binding.original().modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 				}
-				if (this.typeArguments != null 
+				if (this.typeArguments != null
 						&& this.binding.original().typeVariables == Binding.NO_TYPE_VARIABLES) {
 					scope.problemReporter().unnecessaryTypeArgumentsForMethodInvocation(this.binding, this.genericTypeArguments, this.typeArguments);
-				}				
+				}
 			} else {
 				if (this.binding.declaringClass == null) {
 					this.binding.declaringClass = receiverType;
@@ -428,7 +434,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 	public void setFieldIndex(int depth) {
 		// ignore for here
 	}
-
+	
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.qualification != null) {
@@ -437,7 +443,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 			if (this.typeArguments != null) {
 				for (int i = 0, typeArgumentsLength = this.typeArguments.length; i < typeArgumentsLength; i++) {
 					this.typeArguments[i].traverse(visitor, scope);
-				}			
+				}
 			}
 			if (this.arguments != null) {
 				for (int i = 0, argumentLength = this.arguments.length; i < argumentLength; i++)

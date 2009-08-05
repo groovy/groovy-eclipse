@@ -24,7 +24,7 @@ import org.eclipse.core.runtime.IStatus;
  * <code>IJavaModelStatusConstants</code>.
  * </p>
  * <p>
- * A Java model status may also carry additional information (that is, in 
+ * A Java model status may also carry additional information (that is, in
  * addition to the information defined in <code>IStatus</code>):
  * <ul>
  *   <li>elements - optional handles to Java elements associated with the failure</li>
@@ -47,8 +47,8 @@ public interface IJavaModelStatus extends IStatus {
 IJavaElement[] getElements();
 /**
  * Returns the path associated with the failure (see specification
- * of the status code), or <code>null</code> if the failure is not 
- * one of <code>DEVICE_PATH</code>, <code>INVALID_PATH</code>, 
+ * of the status code), or <code>null</code> if the failure is not
+ * one of <code>DEVICE_PATH</code>, <code>INVALID_PATH</code>,
  * <code>PATH_OUTSIDE_PROJECT</code>, or <code>RELATIVE_PATH</code>.
  *
  * @return the path that caused the failure, or <code>null</code> if none

@@ -51,7 +51,7 @@ public void bufferChanged(BufferChangedEvent event) {
 	} else {
 		JavaModelManager.getJavaModelManager().getElementsOutOfSynchWithBuffers().add(this);
 	}
-}	
+}
 /**
  * Builds this element's structure and properties in the given
  * info object, based on this element's current contents (reuse buffer
@@ -101,7 +101,8 @@ protected void codeComplete(
 		org.eclipse.jdt.internal.compiler.env.ICompilationUnit unitToSkip,
 		int position, CompletionRequestor requestor,
 		WorkingCopyOwner owner,
-		ITypeRoot typeRoot) throws JavaModelException {
+		ITypeRoot typeRoot,
+		IProgressMonitor monitor) throws JavaModelException {
 	if (requestor == null) {
 		throw new IllegalArgumentException("Completion requestor cannot be null"); //$NON-NLS-1$
 	}
@@ -125,7 +126,7 @@ protected void codeComplete(
 	environment.unitToSkip = unitToSkip;
 
 	// code complete
-	CompletionEngine engine = new CompletionEngine(environment, requestor, project.getOptions(true), project, owner);
+	CompletionEngine engine = new CompletionEngine(environment, requestor, project.getOptions(true), project, owner, monitor);
 	engine.complete(cu, position, 0, typeRoot);
 	if(performanceStats != null) {
 		performanceStats.endRun();
@@ -142,10 +143,10 @@ protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompi
 	if(performanceStats != null) {
 		performanceStats.startRun(new String(cu.getFileName()) + " at [" + offset + "," + length + "]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
-	
+
 	JavaProject project = (JavaProject)getJavaProject();
 	SearchableEnvironment environment = project.newSearchableNameEnvironment(owner);
-	
+
 	SelectionRequestor requestor= new SelectionRequestor(environment.nameLookup, this);
 	IBuffer buffer = getBuffer();
 	if (buffer == null) {
@@ -157,9 +158,9 @@ protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompi
 	}
 
 	// fix for 1FVXGDK
-	SelectionEngine engine = new SelectionEngine(environment, requestor, project.getOptions(true));
+	SelectionEngine engine = new SelectionEngine(environment, requestor, project.getOptions(true), owner);
 	engine.select(cu, offset, offset + length - 1);
-	
+
 	if(performanceStats != null) {
 		performanceStats.endRun();
 	}
@@ -179,7 +180,7 @@ protected Object createElementInfo() {
  * @see IJavaElement
  */
 public boolean exists() {
-	if (JavaModelManager.getJavaModelManager().getInfo(this) != null) 
+	if (JavaModelManager.getJavaModelManager().getInfo(this) != null)
 		return true;
 	switch (getElementType()) {
 		case IJavaElement.PACKAGE_FRAGMENT:
@@ -234,17 +235,17 @@ protected void generateInfos(Object info, HashMap newElements, IProgressMonitor 
 		}
 		System.out.println(Thread.currentThread() +" OPENING " + element + " " + this.toStringWithAncestors()); //$NON-NLS-1$//$NON-NLS-2$
 	}
-	
+
 	// open its ancestors if needed
 	openAncestors(newElements, monitor);
-	
+
 	// validate existence
 	IResource underlResource = resource();
 	IStatus status = validateExistence(underlResource);
 	if (!status.isOK())
 		throw newJavaModelException(status);
-	
-	if (monitor != null && monitor.isCanceled()) 
+
+	if (monitor != null && monitor.isCanceled())
 		throw new OperationCanceledException();
 
 	 // puts the info before building the structure so that questions to the handle behave as if the element existed
@@ -260,7 +261,7 @@ protected void generateInfos(Object info, HashMap newElements, IProgressMonitor 
 		newElements.remove(this);
 		throw e;
 	}
-	
+
 	// remove out of sync buffer for this element
 	JavaModelManager.getJavaModelManager().getElementsOutOfSynchWithBuffers().remove(this);
 
@@ -274,7 +275,7 @@ protected void generateInfos(Object info, HashMap newElements, IProgressMonitor 
  * is the first time a request is being made for the buffer, an attempt is
  * made to create and fill this element's buffer. If the buffer has been
  * closed since it was first opened, the buffer is re-created.
- * 
+ *
  * @see IOpenable
  */
 public IBuffer getBuffer() throws JavaModelException {
@@ -321,7 +322,7 @@ public IResource getCorrespondingResource() throws JavaModelException {
  * @see IJavaElement
  */
 public IOpenable getOpenable() {
-	return this;	
+	return this;
 }
 
 
@@ -359,11 +360,11 @@ protected boolean hasBuffer() {
  * @see IOpenable
  */
 public boolean hasUnsavedChanges() throws JavaModelException{
-	
+
 	if (isReadOnly() || !isOpen()) {
 		return false;
 	}
-	IBuffer buf = this.getBuffer();
+	IBuffer buf = getBuffer();
 	if (buf != null && buf.hasUnsavedChanges()) {
 		return true;
 	}
@@ -385,7 +386,7 @@ public boolean hasUnsavedChanges() throws JavaModelException{
 			}
 		}
 	}
-	
+
 	return false;
 }
 /**
@@ -397,7 +398,7 @@ public boolean isConsistent() {
 	return true;
 }
 /**
- * 
+ *
  * @see IOpenable
  */
 public boolean isOpen() {
@@ -478,7 +479,7 @@ public void save(IProgressMonitor pm, boolean force) throws JavaModelException {
 	IBuffer buf = getBuffer();
 	if (buf != null) { // some Openables (like a JavaProject) don't have a buffer
 		buf.save(pm, force);
-		this.makeConsistent(pm); // update the element info of this element
+		makeConsistent(pm); // update the element info of this element
 	}
 }
 

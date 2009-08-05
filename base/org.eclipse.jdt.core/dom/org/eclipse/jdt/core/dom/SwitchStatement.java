@@ -19,7 +19,7 @@ import java.util.List;
  * <p>
  * <pre>
  * SwitchStatement:
- *		<b>switch</b> <b>(</b> Expression <b>)</b> 
+ *		<b>switch</b> <b>(</b> Expression <b>)</b>
  * 			<b>{</b> { SwitchCase | Statement } } <b>}</b>
  * SwitchCase:
  *		<b>case</b> Expression  <b>:</b>
@@ -28,33 +28,33 @@ import java.util.List;
  * <code>SwitchCase</code> nodes are treated as a kind of
  * <code>Statement</code>.
  * </p>
- * 
+ *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class SwitchStatement extends Statement {
-			
+
 	/**
 	 * The "expression" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY = 
+	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
 		new ChildPropertyDescriptor(SwitchStatement.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "statements" structural property of this node type.
 	 * @since 3.0
 	 */
-	public static final ChildListPropertyDescriptor STATEMENTS_PROPERTY = 
+	public static final ChildListPropertyDescriptor STATEMENTS_PROPERTY =
 		new ChildListPropertyDescriptor(SwitchStatement.class, "statements", Statement.class, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(3);
 		createPropertyList(SwitchStatement.class, propertyList);
@@ -66,17 +66,17 @@ public class SwitchStatement extends Statement {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
+
 	/**
 	 * The expression; lazily initialized; defaults to a unspecified, but legal,
 	 * expression.
@@ -90,15 +90,15 @@ public class SwitchStatement extends Statement {
 	 */
 	private ASTNode.NodeList statements =
 		new ASTNode.NodeList(STATEMENTS_PROPERTY);
-	
+
 	/**
-	 * Creates a new unparented switch statement node owned by the given 
+	 * Creates a new unparented switch statement node owned by the given
 	 * AST. By default, the swicth statement has an unspecified, but legal,
 	 * expression, and an empty list of switch groups.
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	SwitchStatement(AST ast) {
@@ -111,7 +111,7 @@ public class SwitchStatement extends Statement {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -127,7 +127,7 @@ public class SwitchStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -138,7 +138,7 @@ public class SwitchStatement extends Statement {
 		// allow default implementation to flag the error
 		return super.internalGetChildListProperty(property);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -151,7 +151,7 @@ public class SwitchStatement extends Statement {
 	 */
 	ASTNode clone0(AST target) {
 		SwitchStatement result = new SwitchStatement(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.setExpression((Expression) getExpression().clone(target));
 		result.statements().addAll(ASTNode.copySubtrees(target, statements()));
@@ -178,12 +178,12 @@ public class SwitchStatement extends Statement {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the expression of this switch statement.
-	 * 
+	 *
 	 * @return the expression node
-	 */ 
+	 */
 	public Expression getExpression() {
 		if (this.expression == null) {
 			// lazy init must be thread-safe for readers
@@ -197,10 +197,10 @@ public class SwitchStatement extends Statement {
 		}
 		return this.expression;
 	}
-		
+
 	/**
 	 * Sets the expression of this switch statement.
-	 * 
+	 *
 	 * @param expression the new expression node
 	 * @exception IllegalArgumentException if:
 	 * <ul>
@@ -208,7 +208,7 @@ public class SwitchStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * <li>a cycle in would be created</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setExpression(Expression expression) {
 		if (expression == null) {
 			throw new IllegalArgumentException();
@@ -218,26 +218,26 @@ public class SwitchStatement extends Statement {
 		this.expression = expression;
 		postReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
 	}
-	
+
 	/**
 	 * Returns the live ordered list of statements for this switch statement.
-	 * Within this list, <code>SwitchCase</code> nodes mark the start of 
+	 * Within this list, <code>SwitchCase</code> nodes mark the start of
 	 * the switch groups.
-	 * 
+	 *
 	 * @return the live list of statement nodes
 	 *    (element type: <code>Statement</code>)
-	 */ 
+	 */
 	public List statements() {
 		return this.statements;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int memSize() {
 		return super.memSize() + 2 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

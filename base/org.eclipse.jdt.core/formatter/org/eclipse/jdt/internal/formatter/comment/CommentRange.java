@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,7 @@ import org.eclipse.jface.text.Position;
 
 /**
  * Range in a comment region in comment region coordinates.
- * 
+ *
  * @since 3.0
  */
 public class CommentRange extends Position implements ICommentAttributes, IHtmlTagDelimiters {
@@ -30,7 +30,7 @@ public class CommentRange extends Position implements ICommentAttributes, IHtmlT
 
 	/**
 	 * Creates a new comment range.
-	 * 
+	 *
 	 * @param position offset of the range
 	 * @param count length of the range
 	 */
@@ -40,18 +40,18 @@ public class CommentRange extends Position implements ICommentAttributes, IHtmlT
 
 	/**
 	 * Is the attribute <code>attribute</code> true?
-	 * 
+	 *
 	 * @param attribute the attribute to get
 	 * @return <code>true</code> iff this attribute is <code>true</code>,
 	 *         <code>false</code> otherwise
 	 */
 	protected final boolean hasAttribute(final int attribute) {
-		return (fAttributes & attribute) == attribute;
+		return (this.fAttributes & attribute) == attribute;
 	}
 
 	/**
 	 * Does this comment range contain a closing HTML tag?
-	 * 
+	 *
 	 * @param token token belonging to the comment range
 	 * @param tag the HTML tag to check
 	 * @return <code>true</code> iff this comment range contains a closing
@@ -71,7 +71,7 @@ public class CommentRange extends Position implements ICommentAttributes, IHtmlT
 
 	/**
 	 * Does this comment range contain an opening HTML tag?
-	 * 
+	 *
 	 * @param token token belonging to the comment range
 	 * @param tag the HTML tag to check
 	 * @return <code>true</code> iff this comment range contains an
@@ -93,7 +93,7 @@ public class CommentRange extends Position implements ICommentAttributes, IHtmlT
 
 	/**
 	 * Mark the comment range with the occurred HTML tags.
-	 * 
+	 *
 	 * @param tags the HTML tags to test for their occurrence
 	 * @param token token belonging to the comment range
 	 * @param attribute attribute to set if a HTML tag is present
@@ -127,7 +127,7 @@ public class CommentRange extends Position implements ICommentAttributes, IHtmlT
 
 	/**
 	 * Mark the comment range with the occurred tags.
-	 * 
+	 *
 	 * @param tags the tags to test for their occurrence
 	 * @param prefix the prefix which is common to all the tags to test
 	 * @param token the token belonging to the comment range
@@ -152,7 +152,7 @@ public class CommentRange extends Position implements ICommentAttributes, IHtmlT
 
 	/**
 	 * Marks the comment range with the HTML range tag.
-	 * 
+	 *
 	 * @param token the token belonging to the comment range
 	 * @param tag the HTML tag which confines the HTML range
 	 * @param level the nesting level of the current HTML range
@@ -179,41 +179,41 @@ public class CommentRange extends Position implements ICommentAttributes, IHtmlT
 
 	/**
 	 * Moves this comment range.
-	 * 
+	 *
 	 * @param delta the delta to move the range
 	 */
 	public final void move(final int delta) {
-		offset += delta;
+		this.offset += delta;
 	}
 
 	/**
 	 * Set the attribute <code>attribute</code> to true.
-	 * 
+	 *
 	 * @param attribute the attribute to set.
 	 */
 	protected final void setAttribute(final int attribute) {
-		fAttributes |= attribute;
+		this.fAttributes |= attribute;
 	}
 
 	/**
 	 * Trims this comment range at the beginning.
-	 * 
+	 *
 	 * @param delta amount to trim the range
 	 */
 	public final void trimBegin(final int delta) {
-		offset += delta;
-		length -= delta;
+		this.offset += delta;
+		this.length -= delta;
 	}
 
 	/**
 	 * Trims this comment range at the end.
-	 * 
+	 *
 	 * @param delta amount to trim the range
 	 */
 	public final void trimEnd(final int delta) {
-		length += delta;
+		this.length += delta;
 	}
-	
+
 	/*
 	 * @see java.lang.Object#toString()
 	 * @since 3.1
@@ -248,15 +248,15 @@ public class CommentRange extends Position implements ICommentAttributes, IHtmlT
 			attributes.add("COMMENT_FIRST_TOKEN"); //$NON-NLS-1$
 		if (hasAttribute(COMMENT_STARTS_WITH_RANGE_DELIMITER))
 			attributes.add("COMMENT_STARTS_WITH_RANGE_DELIMITER"); //$NON-NLS-1$
-		
-		StringBuffer buf= new StringBuffer("CommentRange [" + offset + "+" + length + "] {"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+		StringBuffer buf= new StringBuffer("CommentRange [" + this.offset + "+" + this.length + "] {"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		for (Iterator it= attributes.iterator(); it.hasNext();) {
 			String string= (String) it.next();
 			buf.append(string);
 			if (it.hasNext())
 				buf.append(", "); //$NON-NLS-1$
 		}
-		
+
 		return buf.toString() + "}"; //$NON-NLS-1$
 	}
 }

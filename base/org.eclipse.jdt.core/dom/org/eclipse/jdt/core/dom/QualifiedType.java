@@ -35,12 +35,12 @@ import java.util.List;
  * <code>SimpleType(QualifiedName(SimpleName("A"),SimpleName("B")))</code>
  * </li>
  * </ol>
- * The first form is preferred when "A" is known to be a type. However, a 
+ * The first form is preferred when "A" is known to be a type. However, a
  * parser cannot always determine this. Clients should be prepared to handle
  * either rather than make assumptions. (Note also that the first form
  * became possible as of JLS3; only the second form existed in JLS2 API.)
  * </p>
- * 
+ *
  * @since 3.1
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -49,26 +49,26 @@ public class QualifiedType extends Type {
      * This index represents the position inside a parameterized qualified type.
      */
     int index;
-	
+
 	/**
 	 * The "qualifier" structural property of this node type.
 	 */
-	public static final ChildPropertyDescriptor QUALIFIER_PROPERTY = 
+	public static final ChildPropertyDescriptor QUALIFIER_PROPERTY =
 		new ChildPropertyDescriptor(QualifiedType.class, "qualifier", Type.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "name" structural property of this node type.
 	 */
-	public static final ChildPropertyDescriptor NAME_PROPERTY = 
+	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(QualifiedType.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * A list of property descriptors (element type: 
+	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
 	 */
 	private static final List PROPERTY_DESCRIPTORS;
-	
+
 	static {
 		List propertyList = new ArrayList(3);
 		createPropertyList(QualifiedType.class, propertyList);
@@ -80,22 +80,22 @@ public class QualifiedType extends Type {
 	/**
 	 * Returns a list of structural property descriptors for this node type.
 	 * Clients must not modify the result.
-	 * 
+	 *
 	 * @param apiLevel the API level; one of the
 	 * <code>AST.JLS*</code> constants
-	 * @return a list of property descriptors (element type: 
+	 * @return a list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor})
 	 */
 	public static List propertyDescriptors(int apiLevel) {
 		return PROPERTY_DESCRIPTORS;
 	}
-			
-	/** 
+
+	/**
 	 * The type node; lazily initialized; defaults to a type with
 	 * an unspecfied, but legal, simple name.
 	 */
 	private Type qualifier = null;
-	
+
 	/**
 	 * The name being qualified; lazily initialized; defaults to a unspecified,
 	 * legal Java identifier.
@@ -108,7 +108,7 @@ public class QualifiedType extends Type {
 	 * <p>
 	 * N.B. This constructor is package-private.
 	 * </p>
-	 * 
+	 *
 	 * @param ast the AST that is to own this node
 	 */
 	QualifiedType(AST ast) {
@@ -122,7 +122,7 @@ public class QualifiedType extends Type {
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -146,7 +146,7 @@ public class QualifiedType extends Type {
 		// allow default implementation to flag the error
 		return super.internalGetSetChildProperty(property, get, child);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -159,7 +159,7 @@ public class QualifiedType extends Type {
 	 */
 	ASTNode clone0(AST target) {
 		QualifiedType result = new QualifiedType(target);
-		result.setSourceRange(this.getStartPosition(), this.getLength());
+		result.setSourceRange(getStartPosition(), getLength());
 		result.setQualifier((Type) ((ASTNode) getQualifier()).clone(target));
 		result.setName((SimpleName) ((ASTNode) getName()).clone(target));
 		return result;
@@ -185,12 +185,12 @@ public class QualifiedType extends Type {
 		}
 		visitor.endVisit(this);
 	}
-	
+
 	/**
 	 * Returns the qualifier of this qualified type.
-	 * 
+	 *
 	 * @return the qualifier of this qualified type
-	 */ 
+	 */
 	public Type getQualifier() {
 		if (this.qualifier == null) {
 			// lazy init must be thread-safe for readers
@@ -204,17 +204,17 @@ public class QualifiedType extends Type {
 		}
 		return this.qualifier;
 	}
-	
+
 	/**
 	 * Sets the qualifier of this qualified type to the given type.
-	 * 
+	 *
 	 * @param type the new qualifier of this qualified type
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setQualifier(Type type) {
 		if (type == null) {
 			throw new IllegalArgumentException();
@@ -227,9 +227,9 @@ public class QualifiedType extends Type {
 
 	/**
 	 * Returns the name part of this qualified type.
-	 * 
-	 * @return the name being qualified 
-	 */ 
+	 *
+	 * @return the name being qualified
+	 */
 	public SimpleName getName() {
 		if (this.name == null) {
 			// lazy init must be thread-safe for readers
@@ -243,17 +243,17 @@ public class QualifiedType extends Type {
 		}
 		return this.name;
 	}
-	
+
 	/**
 	 * Sets the name part of this qualified type to the given simple name.
-	 * 
+	 *
 	 * @param name the identifier of this qualified name
 	 * @exception IllegalArgumentException if:
 	 * <ul>
 	 * <li>the node belongs to a different AST</li>
 	 * <li>the node already has a parent</li>
 	 * </ul>
-	 */ 
+	 */
 	public void setName(SimpleName name) {
 		if (name == null) {
 			throw new IllegalArgumentException();
@@ -263,7 +263,7 @@ public class QualifiedType extends Type {
 		this.name = name;
 		postReplaceChild(oldChild, name, NAME_PROPERTY);
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
@@ -271,12 +271,12 @@ public class QualifiedType extends Type {
 		// treat Code as free
 		return BASE_NODE_SIZE + 3 * 4;
 	}
-	
+
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
 	int treeSize() {
-		return 
+		return
 			memSize()
 			+ (this.qualifier == null ? 0 : getQualifier().treeSize())
 			+ (this.name == null ? 0 : getName().treeSize());

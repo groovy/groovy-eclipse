@@ -13,13 +13,13 @@ package org.eclipse.jdt.core.jdom;
 /**
  * An <code>IDOMMember</code> defines functionality common to nodes, which
  * can be members of types.
- * 
+ *
  * @see IDOMType
  * @see IDOMMethod
  * @see IDOMField
  * @see IDOMInitializer
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  * @noimplement This interface is not intended to be implemented by clients.
  */
@@ -46,7 +46,7 @@ public int getFlags();
  * deprecated flag is automatically set to reflect the deprecated tag in the
  * comment.
  *
- * @param comment the comment, including comment delimiters, or 
+ * @param comment the comment, including comment delimiters, or
  *   <code>null</code> indicating this member should have no associated comment
  * @see #setFlags(int)
  */

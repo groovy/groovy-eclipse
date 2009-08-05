@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -69,7 +69,7 @@ class TypeBinding implements ITypeBinding {
 
 	public ITypeBinding createArrayType(int dimension) {
 		int realDimensions = dimension;
-		realDimensions += this.getDimensions();
+		realDimensions += getDimensions();
 		if (realDimensions < 1 || realDimensions > 255) {
 			throw new IllegalArgumentException();
 		}
@@ -163,16 +163,46 @@ class TypeBinding implements ITypeBinding {
 		}
 		return null;
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jdt.core.dom.ITypeBinding#getGenericTypeOfWildcardType()
+	 */
+	public ITypeBinding getGenericTypeOfWildcardType() {
+		switch (this.binding.kind()) {
+			case Binding.WILDCARD_TYPE :
+			case Binding.INTERSECTION_TYPE :
+				WildcardBinding wildcardBinding = (WildcardBinding) this.binding;
+				if (wildcardBinding.genericType != null) {
+					return this.resolver.getTypeBinding(wildcardBinding.genericType);
+				}
+				break;
+		}
+		return null;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jdt.core.dom.ITypeBinding#getRank()
+	 */
+	public int getRank() {
+		switch (this.binding.kind()) {
+			case Binding.WILDCARD_TYPE :
+			case Binding.INTERSECTION_TYPE :
+				WildcardBinding wildcardBinding = (WildcardBinding) this.binding;
+				return wildcardBinding.rank;
+			default:
+				return -1;
+		}
+	}
+	
 	/*
 	 * @see ITypeBinding#getComponentType()
 	 */
 	public ITypeBinding getComponentType() {
-		if (!this.isArray()) {
+		if (!isArray()) {
 			return null;
 		}
-		ArrayBinding arrayBinding = (ArrayBinding) binding;
-		return resolver.getTypeBinding(arrayBinding.elementsType());
+		ArrayBinding arrayBinding = (ArrayBinding) this.binding;
+		return this.resolver.getTypeBinding(arrayBinding.elementsType());
 	}
 
 	/*
@@ -193,18 +223,17 @@ class TypeBinding implements ITypeBinding {
 					for (int i = 0; i < length; i++) {
 						FieldBinding fieldBinding = fieldBindings[i];
 						IVariableBinding variableBinding = this.resolver.getVariableBinding(fieldBinding);
-						if (variableBinding == null) {
-							return this.fields = NO_VARIABLE_BINDINGS;
+						if (variableBinding != null) {
+							newFields[convertedFieldCount++] = variableBinding;
 						}
-						newFields[convertedFieldCount++] = variableBinding;
 					}
 
 					if (convertedFieldCount != length) {
 						if (convertedFieldCount == 0) {
 							return this.fields = NO_VARIABLE_BINDINGS;
-						}						
+						}
 						System.arraycopy(newFields, 0, (newFields = new IVariableBinding[convertedFieldCount]), 0, convertedFieldCount);
-					}					
+					}
 					return this.fields = newFields;
 				}
 			}
@@ -385,10 +414,10 @@ class TypeBinding implements ITypeBinding {
 	 * @see ITypeBinding#getDimensions()
 	 */
 	public int getDimensions() {
-		if (!this.isArray()) {
+		if (!isArray()) {
 			return 0;
 		}
-		ArrayBinding arrayBinding = (ArrayBinding) binding;
+		ArrayBinding arrayBinding = (ArrayBinding) this.binding;
 		return arrayBinding.dimensions;
 	}
 
@@ -396,11 +425,11 @@ class TypeBinding implements ITypeBinding {
 	 * @see ITypeBinding#getElementType()
 	 */
 	public ITypeBinding getElementType() {
-		if (!this.isArray()) {
+		if (!isArray()) {
 			return null;
 		}
-		ArrayBinding arrayBinding = (ArrayBinding) binding;
-		return resolver.getTypeBinding(arrayBinding.leafComponentType);
+		ArrayBinding arrayBinding = (ArrayBinding) this.binding;
+		return this.resolver.getTypeBinding(arrayBinding.leafComponentType);
 	}
 
 	/* (non-Javadoc)
@@ -685,6 +714,9 @@ class TypeBinding implements ITypeBinding {
 				return new String(typeVariableBinding.sourceName);
 
 			case Binding.PARAMETERIZED_TYPE :
+				if (this.binding.isLocalType()) {
+					return NO_NAME;
+				}
 				buffer = new StringBuffer();
 				if (isMember()) {
 					buffer
@@ -720,7 +752,6 @@ class TypeBinding implements ITypeBinding {
 					buffer.append('>');
 				}
 				return String.valueOf(buffer);
-
 			default :
 				if (isAnonymous() || this.binding.isLocalType()) {
 					return NO_NAME;
@@ -787,21 +818,19 @@ class TypeBinding implements ITypeBinding {
 		if (this.typeArguments != null) {
 			return this.typeArguments;
 		}
-		if (this.binding.isParameterizedType()) {
+		if (this.binding.isParameterizedTypeWithActualArguments()) {
 			ParameterizedTypeBinding parameterizedTypeBinding = (ParameterizedTypeBinding) this.binding;
 			final org.eclipse.jdt.internal.compiler.lookup.TypeBinding[] arguments = parameterizedTypeBinding.arguments;
-			if (arguments != null) {
-				int argumentsLength = arguments.length;
-				ITypeBinding[] newTypeArguments = new ITypeBinding[argumentsLength];
-				for (int i = 0; i < argumentsLength; i++) {
-					ITypeBinding typeBinding = this.resolver.getTypeBinding(arguments[i]);
-					if (typeBinding == null) {
-						return this.typeArguments = NO_TYPE_BINDINGS;
-					}
-					newTypeArguments[i] = typeBinding;
+			int argumentsLength = arguments.length;
+			ITypeBinding[] newTypeArguments = new ITypeBinding[argumentsLength];
+			for (int i = 0; i < argumentsLength; i++) {
+				ITypeBinding typeBinding = this.resolver.getTypeBinding(arguments[i]);
+				if (typeBinding == null) {
+					return this.typeArguments = NO_TYPE_BINDINGS;
 				}
-				return this.typeArguments = newTypeArguments;
+				newTypeArguments[i] = typeBinding;
 			}
+			return this.typeArguments = newTypeArguments;
 		}
 		return this.typeArguments = NO_TYPE_BINDINGS;
 	}
@@ -933,7 +962,7 @@ class TypeBinding implements ITypeBinding {
 	 * @see ITypeBinding#isArray()
 	 */
 	public boolean isArray() {
-		return binding.isArrayType();
+		return this.binding.isArrayType();
 	}
 
 	/* (non-Javadoc)
@@ -1138,14 +1167,14 @@ class TypeBinding implements ITypeBinding {
 	 * @see org.eclipse.jdt.core.dom.ITypeBinding#isParameterizedType()
 	 */
 	public boolean isParameterizedType() {
-		return this.binding.isParameterizedType() && ((ParameterizedTypeBinding) this.binding).arguments != null;
+		return this.binding.isParameterizedTypeWithActualArguments();
 	}
 
 	/*
 	 * @see ITypeBinding#isPrimitive()
 	 */
 	public boolean isPrimitive() {
-		return !isNullType() && binding.isBaseType();
+		return !isNullType() && this.binding.isBaseType();
 	}
 
 	/* (non-Javadoc)

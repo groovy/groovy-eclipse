@@ -11,7 +11,7 @@
 package org.eclipse.jdt.internal.codeassist;
 
 public interface RelevanceConstants {
-	
+
 	int R_DEFAULT = 0;
 	int R_INTERESTING = 5;
 	int R_CASE = 10;

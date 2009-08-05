@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,7 +39,7 @@ public class ImportReference extends ASTNode {
 		this.sourceStart = (int) (sourcePositions[0] >>> 32);
 		this.modifiers = modifiers;
 	}
-	
+
 	public boolean isStatic() {
 		return (this.modifiers & ClassFileConstants.AccStatic) != 0;
 	}
@@ -49,7 +49,7 @@ public class ImportReference extends ASTNode {
 	 */
 	public char[][] getImportName() {
 
-		return tokens;
+		return this.tokens;
 	}
 
 	public StringBuffer print(int indent, StringBuffer output) {
@@ -60,9 +60,9 @@ public class ImportReference extends ASTNode {
 	public StringBuffer print(int tab, StringBuffer output, boolean withOnDemand) {
 
 		/* when withOnDemand is false, only the name is printed */
-		for (int i = 0; i < tokens.length; i++) {
+		for (int i = 0; i < this.tokens.length; i++) {
 			if (i > 0) output.append('.');
-			output.append(tokens[i]);
+			output.append(this.tokens[i]);
 		}
 		if (withOnDemand && ((this.bits & ASTNode.OnDemand) != 0)) {
 			output.append(".*"); //$NON-NLS-1$

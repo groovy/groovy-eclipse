@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,8 @@ public MemberTypeBinding(char[][] compoundName, ClassScope scope, SourceTypeBind
 	this.tagBits |= TagBits.MemberTypeMask;
 }
 void checkSyntheticArgsAndFields() {
-	if (this.isStatic()) return;
-	if (this.isInterface()) return;
+	if (isStatic()) return;
+	if (isInterface()) return;
 	this.addSyntheticArgumentAndField(this.enclosingType);
 }
 /* Answer the receiver's constant pool name.
@@ -28,10 +28,10 @@ void checkSyntheticArgsAndFields() {
 */
 
 public char[] constantPoolName() /* java/lang/Object */ {
-	if (constantPoolName != null)
-		return constantPoolName;
+	if (this.constantPoolName != null)
+		return this.constantPoolName;
 
-	return constantPoolName = CharOperation.concat(enclosingType().constantPoolName(), sourceName, '$');
+	return this.constantPoolName = CharOperation.concat(enclosingType().constantPoolName(), this.sourceName, '$');
 }
 
 /**
@@ -43,7 +43,7 @@ public void initializeDeprecatedAnnotationTagBits() {
 		if ((this.tagBits & TagBits.AnnotationDeprecated) == 0) {
 			// check enclosing type
 			ReferenceBinding enclosing;
-			if (((enclosing = this.enclosingType()).tagBits & TagBits.DeprecatedAnnotationResolved) == 0) {
+			if (((enclosing = enclosingType()).tagBits & TagBits.DeprecatedAnnotationResolved) == 0) {
 				enclosing.initializeDeprecatedAnnotationTagBits();
 			}
 			if (enclosing.isViewedAsDeprecated()) {

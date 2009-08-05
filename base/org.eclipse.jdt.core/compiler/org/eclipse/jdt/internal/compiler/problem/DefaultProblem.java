@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,13 +22,13 @@ public class DefaultProblem extends CategorizedProblem {
 	private int severity;
 	private String[] arguments;
 	private String message;
-	
+
 	// cannot directly point to IJavaModelMarker constants from within batch compiler
 	private static final String MARKER_TYPE_PROBLEM = "org.eclipse.jdt.core.problem"; //$NON-NLS-1$
 	private static final String MARKER_TYPE_TASK = "org.eclipse.jdt.core.task"; //$NON-NLS-1$
 
 	public static final Object[] EMPTY_VALUES = {};
-	
+
 public DefaultProblem(
 	char[] originatingFileName,
 	String message,
@@ -62,20 +62,20 @@ public String errorReportSource(char[] unitSource) {
 	if ((this.startPosition > this.endPosition)
 		|| ((this.startPosition < 0) && (this.endPosition < 0))
 		|| unitSource.length == 0)
-		return Messages.problem_noSourceInformation; 
+		return Messages.problem_noSourceInformation;
 
 	StringBuffer errorBuffer = new StringBuffer();
-	errorBuffer.append(' ').append(Messages.bind(Messages.problem_atLine, String.valueOf(this.line))); 
+	errorBuffer.append(' ').append(Messages.bind(Messages.problem_atLine, String.valueOf(this.line)));
 	errorBuffer.append(Util.LINE_SEPARATOR);
 	errorBuffer.append('\t');
-	
+
 	char c;
 	final char SPACE = '\u0020';
 	final char MARK = '^';
 	final char TAB = '\t';
 	//the next code tries to underline the token.....
 	//it assumes (for a good display) that token source does not
-	//contain any \r \n. This is false on statements ! 
+	//contain any \r \n. This is false on statements !
 	//(the code still works but the display is not optimal !)
 
 	// expand to line limits
@@ -86,11 +86,11 @@ public String errorReportSource(char[] unitSource) {
 	for (end = this.endPosition >= length ? length - 1 : this.endPosition ; end+1 < length; end++) {
 		if ((c = unitSource[end + 1]) == '\r' || c == '\n') break;
 	}
-	
+
 	// trim left and right spaces/tabs
 	while ((c = unitSource[begin]) == ' ' || c == '\t') begin++;
 	//while ((c = unitSource[end]) == ' ' || c == '\t') end--; TODO (philippe) should also trim right, but all tests are to be updated
-	
+
 	// copy source
 	errorBuffer.append(unitSource, begin, end-begin+1);
 	errorBuffer.append(Util.LINE_SEPARATOR).append("\t"); //$NON-NLS-1$
@@ -176,7 +176,7 @@ public String getInternalCategoryMessage() {
  * @see org.eclipse.jdt.core.compiler.CategorizedProblem#getMarkerType()
  */
 public String getMarkerType() {
-	return this.id == IProblem.Task 
+	return this.id == IProblem.Task
 		? MARKER_TYPE_TASK
 		: MARKER_TYPE_PROBLEM;
 }

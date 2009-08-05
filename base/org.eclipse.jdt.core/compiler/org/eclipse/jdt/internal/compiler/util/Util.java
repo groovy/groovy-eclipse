@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.util;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,15 +20,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
+import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 
 public class Util implements SuffixConstants {
 
@@ -38,10 +50,10 @@ public class Util implements SuffixConstants {
 	private static final int DEFAULT_WRITING_SIZE = 1024;
 	public final static String UTF_8 = "UTF-8";	//$NON-NLS-1$
 	public static final String LINE_SEPARATOR = System.getProperty("line.separator"); //$NON-NLS-1$
-	
+
 	public static final String EMPTY_STRING = new String(CharOperation.NO_CHAR);
 	public static final int[] EMPTY_INT_ARRAY= new int[0];
-	
+
 	/**
 	 * Build all the directories and subdirectories corresponding to the packages names
 	 * into the directory specified in parameters.
@@ -156,7 +168,7 @@ public class Util implements SuffixConstants {
 			return outDir.append(token).toString();
 		}
 	}
-	
+
 	/**
 	 * Returns the given bytes as a char array using a given encoding (null means platform default).
 	 */
@@ -165,10 +177,10 @@ public class Util implements SuffixConstants {
 		return getInputStreamAsCharArray(new ByteArrayInputStream(bytes), bytes.length, encoding);
 
 	}
-	
+
 	/**
 	 * Returns the outer most enclosing type's visibility for the given TypeDeclaration
-	 * and visibility based on compiler options.  
+	 * and visibility based on compiler options.
 	 */
 	public static int computeOuterMostVisibility(TypeDeclaration typeDeclaration, int visibility) {
 		while (typeDeclaration != null) {
@@ -188,7 +200,7 @@ public class Util implements SuffixConstants {
 					break;
 			}
 			typeDeclaration = typeDeclaration.enclosingType;
-		}	
+		}
 		return visibility;
 	}
 	/**
@@ -198,7 +210,7 @@ public class Util implements SuffixConstants {
 	public static byte[] getFileByteContent(File file) throws IOException {
 		InputStream stream = null;
 		try {
-			stream = new FileInputStream(file);
+			stream = new BufferedInputStream(new FileInputStream(file));
 			return getInputStreamAsByteArray(stream, (int) file.length());
 		} finally {
 			if (stream != null) {
@@ -256,9 +268,9 @@ public class Util implements SuffixConstants {
 				}
 			}
 			return new FileOutputStream(new File(fileName));
-		}		
+		}
 	}
-	
+
 	/*
 	 * NIO support to get input stream as byte array.
 	 * Not used as with JDK 1.4.2 this support is slower than standard IO one...
@@ -285,7 +297,7 @@ public class Util implements SuffixConstants {
 	 * @throws IOException if a problem occured reading the stream.
 	 */
 	public static byte[] getInputStreamAsByteArray(InputStream stream, int length)
-		throws IOException {
+			throws IOException {
 		byte[] contents;
 		if (length == -1) {
 			contents = new byte[0];
@@ -293,7 +305,7 @@ public class Util implements SuffixConstants {
 			int amountRead = -1;
 			do {
 				int amountRequested = Math.max(stream.available(), DEFAULT_READING_SIZE);  // read at least 8K
-				
+
 				// resize contents if needed
 				if (contentsLength + amountRequested > contents.length) {
 					System.arraycopy(
@@ -311,7 +323,7 @@ public class Util implements SuffixConstants {
 					// remember length of contents
 					contentsLength += amountRead;
 				}
-			} while (amountRead != -1); 
+			} while (amountRead != -1);
 
 			// resize contents if necessary
 			if (contentsLength < contents.length) {
@@ -344,7 +356,7 @@ public class Util implements SuffixConstants {
 	 * in this area...
 	public static char[] getInputStreamAsCharArray(FileInputStream stream, int length, String encoding)
 		throws IOException {
-	
+
 		FileChannel channel = stream.getChannel();
 		int size = (int)channel.size();
 		if (length >= 0 && length < size) size = length;
@@ -367,15 +379,15 @@ public class Util implements SuffixConstants {
 	 * @throws IOException if a problem occured reading the stream.
 	 */
 	public static char[] getInputStreamAsCharArray(InputStream stream, int length, String encoding)
-		throws IOException {
-		InputStreamReader reader = null;
+			throws IOException {
+		BufferedReader reader = null;
 		try {
 			reader = encoding == null
-						? new InputStreamReader(stream)
-						: new InputStreamReader(stream, encoding);
+						? new BufferedReader(new InputStreamReader(stream))
+						: new BufferedReader(new InputStreamReader(stream, encoding));
 		} catch (UnsupportedEncodingException e) {
 			// encoding is not supported
-			reader =  new InputStreamReader(stream);
+			reader =  new BufferedReader(new InputStreamReader(stream));
 		}
 		char[] contents;
 		int totalRead = 0;
@@ -393,15 +405,15 @@ public class Util implements SuffixConstants {
 				amountRequested = length - totalRead;
 			} else {
 				// reading beyond known length
-				int current = reader.read(); 
+				int current = reader.read();
 				if (current < 0) break;
-				
+
 				amountRequested = Math.max(stream.available(), DEFAULT_READING_SIZE);  // read at least 8K
-				
+
 				// resize contents if needed
 				if (totalRead + 1 + amountRequested > contents.length)
 					System.arraycopy(contents, 	0, 	contents = new char[totalRead + 1 + amountRequested], 0, totalRead);
-				
+
 				// add current character
 				contents[totalRead++] = (char) current; // coming from totalRead==length
 			}
@@ -419,7 +431,7 @@ public class Util implements SuffixConstants {
 				start = 1;
 			}
 		}
-		
+
 		// resize contents if necessary
 		if (totalRead < contents.length)
 			System.arraycopy(contents, start, contents = new char[totalRead], 	0, 	totalRead);
@@ -427,6 +439,42 @@ public class Util implements SuffixConstants {
 		return contents;
 	}
 
+	/**
+	 * Returns a one line summary for an exception (extracted from its stacktrace: name + first frame)
+	 * @param exception
+	 * @return one line summary for an exception
+	 */
+	public static String getExceptionSummary(Throwable exception) {
+		StringWriter stringWriter = new StringWriter();
+		exception.printStackTrace(new PrintWriter(stringWriter));
+		StringBuffer buffer = stringWriter.getBuffer();		
+		StringBuffer exceptionBuffer = new StringBuffer(50);
+		exceptionBuffer.append(exception.toString());
+		// only keep leading frame portion of the trace (i.e. line no. 2 from the stacktrace)
+		lookupLine2: for (int i = 0, lineSep = 0, max = buffer.length(), line2Start = 0; i < max; i++) {
+			switch (buffer.charAt(i)) {
+				case '\n':
+				case '\r' :
+					if (line2Start > 0) {
+						exceptionBuffer.append(' ').append(buffer.substring(line2Start, i));
+						break lookupLine2;
+					}						
+					lineSep++;
+					break;
+				case ' ' :
+				case '\t' :
+					break;
+				default :
+					if (lineSep > 0) {
+						line2Start = i;
+						lineSep = 0;
+					}
+					break;
+			}
+		}
+		return exceptionBuffer.toString();
+	}
+	
 	public static int getLineNumber(int position, int[] lineEnds, int g, int d) {
 		if (lineEnds == null)
 			return 1;
@@ -447,7 +495,7 @@ public class Util implements SuffixConstants {
 			return m+1;
 		}
 		return m+2;
-	}	
+	}
 	/**
 	 * Returns the contents of the given zip entry as a byte array.
 	 * @throws IOException if a problem occured reading the zip entry.
@@ -457,8 +505,9 @@ public class Util implements SuffixConstants {
 
 		InputStream stream = null;
 		try {
-			stream = zip.getInputStream(ze);
-			if (stream == null) throw new IOException("Invalid zip entry name : " + ze.getName()); //$NON-NLS-1$
+			InputStream inputStream = zip.getInputStream(ze);
+			if (inputStream == null) throw new IOException("Invalid zip entry name : " + ze.getName()); //$NON-NLS-1$
+			stream = new BufferedInputStream(inputStream);
 			return getInputStreamAsByteArray(stream, (int) ze.getSize());
 		} finally {
 			if (stream != null) {
@@ -469,7 +518,7 @@ public class Util implements SuffixConstants {
 				}
 			}
 		}
-	}	
+	}
 
 	/**
 	 * Returns whether the given name is potentially a zip archive file name
@@ -517,8 +566,8 @@ public class Util implements SuffixConstants {
 			char c = name[offset + i];
 			if (c != SUFFIX_class[i] && c != SUFFIX_CLASS[i]) return false;
 		}
-		return true;		
-	}			
+		return true;
+	}
 	/**
 	 * Returns true iff str.toLowerCase().endsWith(".class")
 	 * implementation is not creating extra strings.
@@ -533,7 +582,7 @@ public class Util implements SuffixConstants {
 			int suffixIndex = suffixLength - i - 1;
 			if (c != SUFFIX_class[suffixIndex] && c != SUFFIX_CLASS[suffixIndex]) return false;
 		}
-		return true;		
+		return true;
 	}
 	/* TODO (philippe) should consider promoting it to CharOperation
 	 * Returns whether the given resource path matches one of the inclusion/exclusion
@@ -554,7 +603,7 @@ public class Util implements SuffixConstants {
 					if (lastSlash != -1 && lastSlash != pattern.length-1){ // trailing slash -> adds '**' for free (see http://ant.apache.org/manual/dirtasks.html)
 						int star = CharOperation.indexOf('*', pattern, lastSlash);
 						if ((star == -1
-								|| star >= pattern.length-1 
+								|| star >= pattern.length-1
 								|| pattern[star+1] != '*')) {
 							folderPattern = CharOperation.subarray(pattern, 0, lastSlash);
 						}
@@ -592,7 +641,7 @@ public class Util implements SuffixConstants {
 			char c = name[offset + i];
 			if (c != SUFFIX_java[i] && c != SUFFIX_JAVA[i]) return false;
 		}
-		return true;		
+		return true;
 	}
 
 	/**
@@ -703,11 +752,11 @@ public class Util implements SuffixConstants {
 	 * Converts an array of Objects into String.
 	 */
 	public static String toString(Object[] objects) {
-		return toString(objects, 
-			new Displayable(){ 
-				public String displayString(Object o) { 
+		return toString(objects,
+			new Displayable(){
+				public String displayString(Object o) {
 					if (o == null) return "null"; //$NON-NLS-1$
-					return o.toString(); 
+					return o.toString();
 				}
 			});
 	}
@@ -766,6 +815,71 @@ public class Util implements SuffixConstants {
 			throw e;
 		} finally {
 			output.close();
+		}
+	}
+	public static void recordNestedType(ClassFile classFile, TypeBinding typeBinding) {
+		if (classFile.visitedTypes == null) {
+			classFile.visitedTypes = new HashSet(3);
+		} else if (classFile.visitedTypes.contains(typeBinding)) {
+			// type is already visited
+			return;
+		}
+		classFile.visitedTypes.add(typeBinding);
+		if (typeBinding.isParameterizedType()
+				&& ((typeBinding.tagBits & TagBits.ContainsNestedTypeReferences) != 0)) {
+			ParameterizedTypeBinding parameterizedTypeBinding = (ParameterizedTypeBinding) typeBinding;
+			ReferenceBinding genericType = parameterizedTypeBinding.genericType();
+			if ((genericType.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
+				recordNestedType(classFile, genericType);
+			}
+			TypeBinding[] arguments = parameterizedTypeBinding.arguments;
+			if (arguments != null) {
+				for (int j = 0, max2 = arguments.length; j < max2; j++) {
+					TypeBinding argument = arguments[j];
+					if (argument.isWildcard()) {
+						WildcardBinding wildcardBinding = (WildcardBinding) argument;
+						TypeBinding bound = wildcardBinding.bound;
+						if (bound != null
+								&& ((bound.tagBits & TagBits.ContainsNestedTypeReferences) != 0)) {
+							recordNestedType(classFile, bound);
+						}
+						ReferenceBinding superclass = wildcardBinding.superclass();
+						if (superclass != null
+								&& ((superclass.tagBits & TagBits.ContainsNestedTypeReferences) != 0)) {
+							recordNestedType(classFile, superclass);
+						}
+						ReferenceBinding[] superInterfaces = wildcardBinding.superInterfaces();
+						if (superInterfaces != null) {
+							for (int k = 0, max3 =  superInterfaces.length; k < max3; k++) {
+								ReferenceBinding superInterface = superInterfaces[k];
+								if ((superInterface.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
+									recordNestedType(classFile, superInterface);
+								}
+							}
+						}
+					} else if ((argument.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
+						recordNestedType(classFile, argument);
+					}
+				}
+			}
+		} else if (typeBinding.isTypeVariable()
+				&& ((typeBinding.tagBits & TagBits.ContainsNestedTypeReferences) != 0)) {
+			TypeVariableBinding typeVariableBinding = (TypeVariableBinding) typeBinding;
+			TypeBinding upperBound = typeVariableBinding.upperBound();
+			if (upperBound != null && ((upperBound.tagBits & TagBits.ContainsNestedTypeReferences) != 0)) {
+				recordNestedType(classFile, upperBound);
+			}
+			TypeBinding[] upperBounds = typeVariableBinding.otherUpperBounds();
+			if (upperBounds != null) {
+				for (int k = 0, max3 =  upperBounds.length; k < max3; k++) {
+					TypeBinding otherUpperBound = upperBounds[k];
+					if ((otherUpperBound.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
+						recordNestedType(classFile, otherUpperBound);
+					}
+				}
+			}
+		} else if (typeBinding.isNestedType()) {
+			classFile.recordInnerClasses(typeBinding);
 		}
 	}
 }

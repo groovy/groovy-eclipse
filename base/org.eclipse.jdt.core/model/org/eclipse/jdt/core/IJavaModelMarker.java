@@ -36,7 +36,7 @@ public interface IJavaModelMarker {
 	 * transient problems are reported as <code>IProblem</code> through
 	 * various API. Only the evaluation API is still producing markers for
 	 * transient problems.
-	 * 
+	 *
 	 * @see org.eclipse.jdt.core.compiler.IProblem
 	 * @see org.eclipse.jdt.core.eval.ICodeSnippetRequestor#acceptProblem(org.eclipse.core.resources.IMarker,String,
 	 *      int)
@@ -51,7 +51,7 @@ public interface IJavaModelMarker {
 	 * example, 'TO-DO: ...'). Tasks are identified by a task tag, which can be
 	 * customized through <code>JavaCore</code> option
 	 * <code>"org.eclipse.jdt.core.compiler.taskTag"</code>.
-	 * 
+	 *
 	 * @since 2.1
 	 */
 	String TASK_MARKER = JavaCore.PLUGIN_ID + ".task"; //$NON-NLS-1$
@@ -61,7 +61,7 @@ public interface IJavaModelMarker {
 	 * concatenated into one String, prefixed with an argument count (followed
 	 * with colon separator) and separated with '#' characters. For example: {
 	 * "foo", "bar" } is encoded as "2:foo#bar", { } is encoded as "0: "
-	 * 
+	 *
 	 * @since 2.0
 	 */
 	String ARGUMENTS = "arguments"; //$NON-NLS-1$
@@ -103,7 +103,7 @@ public interface IJavaModelMarker {
 	 * Classpath file format marker attribute (value
 	 * <code>"classpathFileFormat"</code>). Used only on buildpath problem
 	 * markers. The value of this attribute is either "true" or "false".
-	 * 
+	 *
 	 * @since 2.0
 	 */
 	String CLASSPATH_FILE_FORMAT = "classpathFileFormat"; //$NON-NLS-1$

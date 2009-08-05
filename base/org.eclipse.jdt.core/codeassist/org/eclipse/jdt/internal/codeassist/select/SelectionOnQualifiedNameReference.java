@@ -53,36 +53,36 @@ public SelectionOnQualifiedNameReference(char[][] previousIdentifiers, char[] se
 public StringBuffer printExpression(int indent, StringBuffer output) {
 
 	output.append("<SelectOnName:"); //$NON-NLS-1$
-	for (int i = 0, length = tokens.length; i < length; i++) {
+	for (int i = 0, length = this.tokens.length; i < length; i++) {
 		if (i > 0) output.append('.');
-		output.append(tokens[i]);
+		output.append(this.tokens[i]);
 	}
-	return output.append('>'); 
+	return output.append('>');
 }
 public TypeBinding resolveType(BlockScope scope) {
 	// it can be a package, type, member type, local variable or field
-	binding = scope.getBinding(tokens, this);
-	if (!binding.isValidBinding()) {
-		if (binding instanceof ProblemFieldBinding) {
+	this.binding = scope.getBinding(this.tokens, this);
+	if (!this.binding.isValidBinding()) {
+		if (this.binding instanceof ProblemFieldBinding) {
 			// tolerate some error cases
-			if (binding.problemId() == ProblemReasons.NotVisible
-					|| binding.problemId() == ProblemReasons.InheritedNameHidesEnclosingName
-					|| binding.problemId() == ProblemReasons.NonStaticReferenceInConstructorInvocation
-					|| binding.problemId() == ProblemReasons.NonStaticReferenceInStaticContext) {
-				throw new SelectionNodeFound(binding);
+			if (this.binding.problemId() == ProblemReasons.NotVisible
+					|| this.binding.problemId() == ProblemReasons.InheritedNameHidesEnclosingName
+					|| this.binding.problemId() == ProblemReasons.NonStaticReferenceInConstructorInvocation
+					|| this.binding.problemId() == ProblemReasons.NonStaticReferenceInStaticContext) {
+				throw new SelectionNodeFound(this.binding);
 			}
-			scope.problemReporter().invalidField(this, (FieldBinding) binding);
-		} else if (binding instanceof ProblemReferenceBinding || binding instanceof MissingTypeBinding) {
+			scope.problemReporter().invalidField(this, (FieldBinding) this.binding);
+		} else if (this.binding instanceof ProblemReferenceBinding || this.binding instanceof MissingTypeBinding) {
 			// tolerate some error cases
-			if (binding.problemId() == ProblemReasons.NotVisible){
-				throw new SelectionNodeFound(binding);
+			if (this.binding.problemId() == ProblemReasons.NotVisible){
+				throw new SelectionNodeFound(this.binding);
 			}
-			scope.problemReporter().invalidType(this, (TypeBinding) binding);
+			scope.problemReporter().invalidType(this, (TypeBinding) this.binding);
 		} else {
-			scope.problemReporter().unresolvableReference(this, binding);
+			scope.problemReporter().unresolvableReference(this, this.binding);
 		}
 		throw new SelectionNodeFound();
 	}
-	throw new SelectionNodeFound(binding);
+	throw new SelectionNodeFound(this.binding);
 }
 }

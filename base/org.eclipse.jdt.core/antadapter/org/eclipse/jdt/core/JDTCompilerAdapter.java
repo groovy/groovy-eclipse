@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,7 +47,7 @@ import org.eclipse.jdt.internal.compiler.util.Util;
  * <p>
  * For more information on Ant check out the website at http://jakarta.apache.org/ant/ .
  * </p>
- * 
+ *
  * @since 2.0
  */
 public class JDTCompilerAdapter extends DefaultCompilerAdapter {
@@ -61,7 +61,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 	private Map fileEncodings = null;
 	private Map dirEncodings = null;
 	private List accessRules = null;
-	
+
 	/**
 	 * Performs a compile using the JDT batch compiler
 	 * @throws BuildException if anything wrong happen during the compilation
@@ -88,14 +88,14 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 			throw new BuildException(ex);
 		}
 	}
-	
-	
+
+
 	protected Commandline setupJavacCommand() throws BuildException {
 		Commandline cmd = new Commandline();
 		this.customDefaultOptions = new CompilerOptions().getMap();
-		
+
 		Class javacClass = Javac.class;
-		
+
 		/*
 		 * Read in the compiler arguments first since we might need to modify
 		 * the classpath if any access rules were specified
@@ -103,7 +103,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 		String [] compilerArgs = processCompilerArguments(javacClass);
 
 		/*
-		 * This option is used to never exit at the end of the ant task. 
+		 * This option is used to never exit at the end of the ant task.
 		 */
 		cmd.createArgument().setValue("-noExit"); //$NON-NLS-1$
 
@@ -123,12 +123,12 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 
        /*
          * Eclipse compiler doesn't support -extdirs.
-         * It is emulated using the classpath. We add extdirs entries after the 
+         * It is emulated using the classpath. We add extdirs entries after the
          * bootclasspath.
          */
         if (this.extdirs != null) {
 			cmd.createArgument().setValue("-extdirs"); //$NON-NLS-1$
-			cmd.createArgument().setPath(this.extdirs);        	
+			cmd.createArgument().setPath(this.extdirs);
         }
 
 		/*
@@ -140,7 +140,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
         // For -sourcepath, use the "sourcepath" value if present.
         // Otherwise default to the "srcdir" value.
         Path sourcepath = null;
-        
+
         // retrieve the method getSourcepath() using reflect
         // This is done to improve the compatibility to ant 1.5
         Method getSourcepathMethod = null;
@@ -236,7 +236,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 			this.customDefaultOptions.put(CompilerOptions.OPTION_LineNumberAttribute, CompilerOptions.DO_NOT_GENERATE);
 			this.customDefaultOptions.put(CompilerOptions.OPTION_SourceFileAttribute , CompilerOptions.DO_NOT_GENERATE);
         }
-    	
+
 		/*
 		 * Handle the nowarn option. If none, then we generate all warnings.
 		 */
@@ -255,23 +255,23 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 			}
 			this.customDefaultOptions.put(CompilerOptions.OPTION_TaskTags, Util.EMPTY_STRING);
 			if (this.deprecation) {
-				this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING); 
-				this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, CompilerOptions.ENABLED); 
-				this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationWhenOverridingDeprecatedMethod, CompilerOptions.ENABLED); 
+				this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING);
+				this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, CompilerOptions.ENABLED);
+				this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationWhenOverridingDeprecatedMethod, CompilerOptions.ENABLED);
 			}
 		} else if (this.deprecation) {
-			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING); 
-			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, CompilerOptions.ENABLED); 
-			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationWhenOverridingDeprecatedMethod, CompilerOptions.ENABLED); 
+			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING);
+			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, CompilerOptions.ENABLED);
+			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationWhenOverridingDeprecatedMethod, CompilerOptions.ENABLED);
 		} else {
-			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE); 
-			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, CompilerOptions.DISABLED); 
-			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationWhenOverridingDeprecatedMethod, CompilerOptions.DISABLED); 
+			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
+			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, CompilerOptions.DISABLED);
+			this.customDefaultOptions.put(CompilerOptions.OPTION_ReportDeprecationWhenOverridingDeprecatedMethod, CompilerOptions.DISABLED);
 		}
 
 	   	/*
 		 * destDir option.
-		 */		
+		 */
 		if (this.destDir != null) {
 			cmd.createArgument().setValue("-d"); //$NON-NLS-1$
 			cmd.createArgument().setFile(this.destDir.getAbsoluteFile());
@@ -333,11 +333,11 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 		 * Eclipse compiler doesn't have a -sourcepath option. This is
 		 * handled through the javac task that collects all source files in
 		 * srcdir option.
-		 */        
+		 */
         logAndAddFilesToCompile(cmd);
         return cmd;
 	}
-	
+
 	/**
 	 * Get the compiler arguments
 	 * @param javacClass
@@ -388,8 +388,8 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 						while (CharOperation.isWhitespace(content[end])) {
 							end--;
 						}
-						
-						// end is inclusive, but in the API end is exclusive 
+
+						// end is inclusive, but in the API end is exclusive
 						if (CharOperation.equals(ADAPTER_ENCODING, content, start, start + ADAPTER_ENCODING.length)) {
 							CharOperation.replace(content, SEPARATOR_CHARS, File.separatorChar, start, end + 1);
 							// file or folder level custom encoding
@@ -401,14 +401,14 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 								String str = String.valueOf(content, start, encodeStart - start);
 								String enc = String.valueOf(content, encodeStart, end - encodeStart + 1);
 								if (isFile) {
-									if (fileEncodings == null)
-										fileEncodings = new HashMap();
+									if (this.fileEncodings == null)
+										this.fileEncodings = new HashMap();
 									//use File to translate the string into a path with the correct File.seperator
-									fileEncodings.put(str, enc);
+									this.fileEncodings.put(str, enc);
 								} else {
-									if (dirEncodings == null)
-										dirEncodings = new HashMap();
-									dirEncodings.put(str, enc);
+									if (this.dirEncodings == null)
+										this.dirEncodings = new HashMap();
+									this.dirEncodings.put(str, enc);
 								}
 							}
 						} else if (CharOperation.equals(ADAPTER_ACCESS, content, start, start + ADAPTER_ACCESS.length)) {
@@ -419,10 +419,10 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 							if (start < accessStart && accessStart < end) {
 								String path = String.valueOf(content, start, accessStart - start);
 								String access = String.valueOf(content, accessStart, end - accessStart + 1);
-								if (accessRules == null)
-									accessRules = new ArrayList();
-								accessRules.add(path);
-								accessRules.add(access);
+								if (this.accessRules == null)
+									this.accessRules = new ArrayList();
+								this.accessRules.add(path);
+								this.accessRules.add(access);
 							}
 						}
 						offset = end;
@@ -434,7 +434,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 		}
 
 	}
-	
+
 	/**
 	 * Copy the classpath to the command line with access rules included.
 	 * @param cmd the given command line
@@ -451,13 +451,13 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 		}
 
 		// no access rules, can set the path directly
-		if (accessRules == null) {
+		if (this.accessRules == null) {
 			arg.setPath(classpath);
 			return;
 		}
 
-		int rulesLength = accessRules.size();
-		String[] rules = (String[]) accessRules.toArray(new String[rulesLength]);
+		int rulesLength = this.accessRules.size();
+		String[] rules = (String[]) this.accessRules.toArray(new String[rulesLength]);
 		int nextRule = 0;
 		final StringBuffer result = new StringBuffer();
 
@@ -501,18 +501,18 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 		arg.setValue(result.toString());
 	}
 	/**
-	 * Modified from base class, Logs the compilation parameters, adds the files 
+	 * Modified from base class, Logs the compilation parameters, adds the files
 	 * to compile and logs the &quot;niceSourceList&quot;
 	 * Appends encoding information at the end of arguments
-	 * 
+	 *
 	 * @param cmd the given command line
 	 */
 	protected void logAndAddFilesToCompile(Commandline cmd) {
-		attributes.log("Compilation " + cmd.describeArguments(), //$NON-NLS-1$
+		this.attributes.log("Compilation " + cmd.describeArguments(), //$NON-NLS-1$
 				Project.MSG_VERBOSE);
 
 		StringBuffer niceSourceList = new StringBuffer("File"); //$NON-NLS-1$
-		if (compileList.length != 1) {
+		if (this.compileList.length != 1) {
 			niceSourceList.append("s"); //$NON-NLS-1$
 		}
 		niceSourceList.append(" to be compiled:"); //$NON-NLS-1$
@@ -520,15 +520,15 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 
 		String[] encodedFiles = null, encodedDirs = null;
 		int encodedFilesLength = 0, encodedDirsLength = 0;
-		if (fileEncodings != null) {
-			encodedFilesLength = fileEncodings.size();
+		if (this.fileEncodings != null) {
+			encodedFilesLength = this.fileEncodings.size();
 			encodedFiles = new String[encodedFilesLength];
-			fileEncodings.keySet().toArray(encodedFiles);
+			this.fileEncodings.keySet().toArray(encodedFiles);
 		}
-		if (dirEncodings != null) {
-			encodedDirsLength = dirEncodings.size();
+		if (this.dirEncodings != null) {
+			encodedDirsLength = this.dirEncodings.size();
 			encodedDirs = new String[encodedDirsLength];
-			dirEncodings.keySet().toArray(encodedDirs);
+			this.dirEncodings.keySet().toArray(encodedDirs);
 			//we need the directories sorted, longest first,since sub directories can
 			//override encodings for their parent directories
 			Comparator comparator = new Comparator() {
@@ -539,15 +539,15 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 			Arrays.sort(encodedDirs, comparator);
 		}
 
-		for (int i = 0; i < compileList.length; i++) {
-			String arg = compileList[i].getAbsolutePath();
+		for (int i = 0; i < this.compileList.length; i++) {
+			String arg = this.compileList[i].getAbsolutePath();
 			boolean encoded = false;
 			if (encodedFiles != null) {
 				//check for file level custom encoding
 				for (int j = 0; j < encodedFilesLength; j++) {
 					if (arg.endsWith(encodedFiles[j])) {
 						//found encoding, remove it from the list to speed things up next time around
-						arg = arg + (String) fileEncodings.get(encodedFiles[j]);
+						arg = arg + (String) this.fileEncodings.get(encodedFiles[j]);
 						if (j < encodedFilesLength - 1) {
 							System.arraycopy(encodedFiles, j + 1, encodedFiles, j, encodedFilesLength - j - 1);
 						}
@@ -561,7 +561,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 				//check folder level custom encoding
 				for (int j = 0; j < encodedDirsLength; j++) {
 					if (arg.lastIndexOf(encodedDirs[j]) != -1) {
-						arg = arg + (String) dirEncodings.get(encodedDirs[j]);
+						arg = arg + (String) this.dirEncodings.get(encodedDirs[j]);
 						break;
 					}
 				}
@@ -570,6 +570,6 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 			niceSourceList.append("    " + arg + lSep); //$NON-NLS-1$
 		}
 
-		attributes.log(niceSourceList.toString(), Project.MSG_VERBOSE);
+		this.attributes.log(niceSourceList.toString(), Project.MSG_VERBOSE);
 	}
 }

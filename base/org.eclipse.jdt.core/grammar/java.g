@@ -1166,25 +1166,25 @@ AllocationHeader ::= 'new' ClassType '(' ArgumentListopt ')'
 /.$putCase consumeAllocationHeader(); $break ./
 /:$readableName AllocationHeader:/
 
-ClassInstanceCreationExpression ::= 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' ClassBodyopt
+ClassInstanceCreationExpression ::= 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' UnqualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionWithTypeArguments(); $break ./
 
-ClassInstanceCreationExpression ::= 'new' ClassType '(' ArgumentListopt ')' ClassBodyopt
+ClassInstanceCreationExpression ::= 'new' ClassType '(' ArgumentListopt ')' UnqualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpression(); $break ./
 --1.1 feature
 
-ClassInstanceCreationExpression ::= Primary '.' 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' ClassBodyopt
+ClassInstanceCreationExpression ::= Primary '.' 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' QualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionQualifiedWithTypeArguments() ; $break ./
 
-ClassInstanceCreationExpression ::= Primary '.' 'new' ClassType '(' ArgumentListopt ')' ClassBodyopt
+ClassInstanceCreationExpression ::= Primary '.' 'new' ClassType '(' ArgumentListopt ')' QualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionQualified() ; $break ./
 
 --1.1 feature
-ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' ClassType '(' ArgumentListopt ')' ClassBodyopt
+ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' ClassType '(' ArgumentListopt ')' QualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionQualified() ; $break ./
 /:$readableName ClassInstanceCreationExpression:/
 
-ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' ClassBodyopt
+ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' QualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionQualifiedWithTypeArguments() ; $break ./
 /:$readableName ClassInstanceCreationExpression:/
 
@@ -1192,14 +1192,24 @@ ClassInstanceCreationExpressionName ::= Name '.'
 /.$putCase consumeClassInstanceCreationExpressionName() ; $break ./
 /:$readableName ClassInstanceCreationExpressionName:/
 
-ClassBodyopt ::= $empty --test made using null as contents
+UnqualifiedClassBodyopt ::= $empty --test made using null as contents
 /.$putCase consumeClassBodyopt(); $break ./
-ClassBodyopt ::= EnterAnonymousClassBody ClassBody
+UnqualifiedClassBodyopt ::= UnqualifiedEnterAnonymousClassBody ClassBody
 /:$readableName ClassBody:/
 /:$no_statements_recovery:/
 
-EnterAnonymousClassBody ::= $empty
-/.$putCase consumeEnterAnonymousClassBody(); $break ./
+UnqualifiedEnterAnonymousClassBody ::= $empty
+/.$putCase consumeEnterAnonymousClassBody(false); $break ./
+/:$readableName EnterAnonymousClassBody:/
+
+QualifiedClassBodyopt ::= $empty --test made using null as contents
+/.$putCase consumeClassBodyopt(); $break ./
+QualifiedClassBodyopt ::= QualifiedEnterAnonymousClassBody ClassBody
+/:$readableName ClassBody:/
+/:$no_statements_recovery:/
+
+QualifiedEnterAnonymousClassBody ::= $empty
+/.$putCase consumeEnterAnonymousClassBody(true); $break ./
 /:$readableName EnterAnonymousClassBody:/
 
 ArgumentList ::= Expression

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007 IBM Corporation and others.
+ * Copyright (c) 2007, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -89,7 +89,7 @@ class RecoveredVariableBinding implements IVariableBinding {
 	public String getKey() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("Recovered#"); //$NON-NLS-1$
-		if (variableDeclaration != null) {
+		if (this.variableDeclaration != null) {
 			buffer
 				.append("variableDeclaration") //$NON-NLS-1$
 				.append(this.variableDeclaration.getClass())
@@ -113,7 +113,7 @@ class RecoveredVariableBinding implements IVariableBinding {
 
 	public boolean isEqualTo(IBinding binding) {
 		if (binding.isRecovered() && binding.getKind() == IBinding.VARIABLE) {
-			return this.getKey().equals(binding.getKey());
+			return getKey().equals(binding.getKey());
 		}
 		return false;
 	}

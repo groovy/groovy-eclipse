@@ -53,15 +53,15 @@ import org.eclipse.jdt.internal.core.util.Messages;
  * 	the creation operation for that element type.
  *
  *    <li>This operation can be used to copy and rename elements within
- *    the same container. 
+ *    the same container.
  *
- *    <li>This operation only copies elements contained within compilation units. 
+ *    <li>This operation only copies elements contained within compilation units.
  * </ul>
  *
  */
 public class CopyElementsOperation extends MultiOperation implements SuffixConstants {
 
-	
+
 	private Map sources = new HashMap();
 /**
  * When executed, this operation will copy the given elements to the
@@ -84,7 +84,7 @@ public CopyElementsOperation(IJavaElement[] elementsToCopy, IJavaElement destCon
  * for progress monitoring.
  */
 protected String getMainTaskName() {
-	return Messages.operation_copyElementProgress; 
+	return Messages.operation_copyElementProgress;
 }
 /**
  * Returns the nested operation to use for processing this element
@@ -193,7 +193,7 @@ protected void processElement(IJavaElement element) throws JavaModelException {
 	}
 }
 /**
- * Returns the anchor used for positioning in the destination for 
+ * Returns the anchor used for positioning in the destination for
  * the element being renamed. For renaming, if no anchor has
  * explicitly been provided, the element is anchored in the same position.
  */

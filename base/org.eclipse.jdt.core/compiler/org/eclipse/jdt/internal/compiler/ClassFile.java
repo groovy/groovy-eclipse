@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -67,6 +67,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.compiler.problem.ShouldNotImplement;
 import org.eclipse.jdt.internal.compiler.util.Messages;
@@ -120,9 +121,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 	public SourceTypeBinding referenceBinding;
 	public boolean isNestedType;
 	public long targetJDK;
-	
+
 	public List missingTypes = null;
-	
+
+	public Set visitedTypes;
+
 	public static final int INITIAL_CONTENTS_SIZE = 400;
 	public static final int INITIAL_HEADER_SIZE = 1500;
 	public static final int INNER_CLASSES_SIZE = 5;
@@ -151,7 +154,13 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if (typeBinding.isNestedType()) {
 			classFile.recordInnerClasses(typeBinding);
 		}
-
+		TypeVariableBinding[] typeVariables = typeBinding.typeVariables();
+		for (int i = 0, max = typeVariables.length; i < max; i++) {
+			TypeVariableBinding typeVariableBinding = typeVariables[i];
+			if ((typeVariableBinding.tagBits & TagBits.ContainsNestedTypeReferences) != 0) {
+				Util.recordNestedType(classFile, typeVariableBinding);
+			}
+		}
 		// add its fields
 		FieldBinding[] fields = typeBinding.fields();
 		if ((fields != null) && (fields != Binding.NO_FIELDS)) {
@@ -191,6 +200,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 					if (method == null) continue;
 					if (method.isConstructor()) {
 						classFile.addProblemConstructor(methodDecl, method, problemsCopy);
+					} else if (method.isAbstract()) {
+						classFile.addAbstractMethod(methodDecl, method);
 					} else {
 						classFile.addProblemMethod(methodDecl, method, problemsCopy);
 					}
@@ -244,7 +255,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		} else {
 			this.codeStream = new CodeStream(this);
 		}
-		this.initByteArrays();
+		initByteArrays();
 	}
 
 	/**
@@ -264,7 +275,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.generateMethodInfoHeader(methodBinding);
 		int methodAttributeOffset = this.contentsOffset;
 		int attributeNumber = this.generateMethodInfoAttribute(methodBinding);
-		this.completeMethodInfo(methodAttributeOffset, attributeNumber);
+		completeMethodInfo(methodAttributeOffset, attributeNumber);
 	}
 
 	/**
@@ -277,18 +288,18 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 */
 	public void addAttributes() {
 		// update the method count
-		contents[methodCountOffset++] = (byte) (methodCount >> 8);
-		contents[methodCountOffset] = (byte) methodCount;
+		this.contents[this.methodCountOffset++] = (byte) (this.methodCount >> 8);
+		this.contents[this.methodCountOffset] = (byte) this.methodCount;
 
 		int attributesNumber = 0;
 		// leave two bytes for the number of attributes and store the current offset
-		int attributeOffset = contentsOffset;
-		contentsOffset += 2;
+		int attributeOffset = this.contentsOffset;
+		this.contentsOffset += 2;
 
 		// source attribute
-		if ((produceAttributes & ClassFileConstants.ATTR_SOURCE) != 0) {
+		if ((this.produceAttributes & ClassFileConstants.ATTR_SOURCE) != 0) {
 			String fullFileName =
-				new String(referenceBinding.scope.referenceCompilationUnit().getFileName());
+				new String(this.referenceBinding.scope.referenceCompilationUnit().getFileName());
 			fullFileName = fullFileName.replace('\\', '/');
 			int lastIndex = fullFileName.lastIndexOf('/');
 			if (lastIndex != -1) {
@@ -296,102 +307,102 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 			// check that there is enough space to write all the bytes for the field info corresponding
 			// to the @fieldBinding
-			if (contentsOffset + 8 >= contents.length) {
+			if (this.contentsOffset + 8 >= this.contents.length) {
 				resizeContents(8);
 			}
 			int sourceAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.SourceName);
-			contents[contentsOffset++] = (byte) (sourceAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) sourceAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.SourceName);
+			this.contents[this.contentsOffset++] = (byte) (sourceAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) sourceAttributeNameIndex;
 			// The length of a source file attribute is 2. This is a fixed-length
 			// attribute
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 2;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 2;
 			// write the source file name
-			int fileNameIndex = constantPool.literalIndex(fullFileName.toCharArray());
-			contents[contentsOffset++] = (byte) (fileNameIndex >> 8);
-			contents[contentsOffset++] = (byte) fileNameIndex;
+			int fileNameIndex = this.constantPool.literalIndex(fullFileName.toCharArray());
+			this.contents[this.contentsOffset++] = (byte) (fileNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) fileNameIndex;
 			attributesNumber++;
 		}
 		// Deprecated attribute
-		if (referenceBinding.isDeprecated()) {
+		if (this.referenceBinding.isDeprecated()) {
 			// check that there is enough space to write all the bytes for the field info corresponding
 			// to the @fieldBinding
-			if (contentsOffset + 6 >= contents.length) {
+			if (this.contentsOffset + 6 >= this.contents.length) {
 				resizeContents(6);
 			}
 			int deprecatedAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.DeprecatedName);
-			contents[contentsOffset++] = (byte) (deprecatedAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) deprecatedAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.DeprecatedName);
+			this.contents[this.contentsOffset++] = (byte) (deprecatedAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) deprecatedAttributeNameIndex;
 			// the length of a deprecated attribute is equals to 0
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
 			attributesNumber++;
 		}
 		// add signature attribute
-		char[] genericSignature = referenceBinding.genericSignature();
-		if (genericSignature != null) {
+		char[] genericSignature = this.referenceBinding.genericSignature();
+		if (genericSignature != null && this.targetJDK >= ClassFileConstants.JDK1_5) {
 			// check that there is enough space to write all the bytes for the field info corresponding
 			// to the @fieldBinding
-			if (contentsOffset + 8 >= contents.length) {
+			if (this.contentsOffset + 8 >= this.contents.length) {
 				resizeContents(8);
 			}
 			int signatureAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.SignatureName);
-			contents[contentsOffset++] = (byte) (signatureAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) signatureAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.SignatureName);
+			this.contents[this.contentsOffset++] = (byte) (signatureAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) signatureAttributeNameIndex;
 			// the length of a signature attribute is equals to 2
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 2;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 2;
 			int signatureIndex =
-				constantPool.literalIndex(genericSignature);
-			contents[contentsOffset++] = (byte) (signatureIndex >> 8);
-			contents[contentsOffset++] = (byte) signatureIndex;
+				this.constantPool.literalIndex(genericSignature);
+			this.contents[this.contentsOffset++] = (byte) (signatureIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) signatureIndex;
 			attributesNumber++;
 		}
-		if (targetJDK >= ClassFileConstants.JDK1_5
+		if (this.targetJDK >= ClassFileConstants.JDK1_5
 				&& this.referenceBinding.isNestedType()
 				&& !this.referenceBinding.isMemberType()) {
 			// add enclosing method attribute (1.5 mode only)
-			if (contentsOffset + 10 >= contents.length) {
+			if (this.contentsOffset + 10 >= this.contents.length) {
 				resizeContents(10);
 			}
 			int enclosingMethodAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.EnclosingMethodName);
-			contents[contentsOffset++] = (byte) (enclosingMethodAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) enclosingMethodAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.EnclosingMethodName);
+			this.contents[this.contentsOffset++] = (byte) (enclosingMethodAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) enclosingMethodAttributeNameIndex;
 			// the length of a signature attribute is equals to 2
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 4;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 4;
 
-			int enclosingTypeIndex = constantPool.literalIndexForType(this.referenceBinding.enclosingType().constantPoolName());
-			contents[contentsOffset++] = (byte) (enclosingTypeIndex >> 8);
-			contents[contentsOffset++] = (byte) enclosingTypeIndex;
+			int enclosingTypeIndex = this.constantPool.literalIndexForType(this.referenceBinding.enclosingType().constantPoolName());
+			this.contents[this.contentsOffset++] = (byte) (enclosingTypeIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) enclosingTypeIndex;
 			byte methodIndexByte1 = 0;
 			byte methodIndexByte2 = 0;
 			if (this.referenceBinding instanceof LocalTypeBinding) {
 				MethodBinding methodBinding = ((LocalTypeBinding) this.referenceBinding).enclosingMethod;
 				if (methodBinding != null) {
-					int enclosingMethodIndex = constantPool.literalIndexForNameAndType(methodBinding.selector, methodBinding.signature(this));
+					int enclosingMethodIndex = this.constantPool.literalIndexForNameAndType(methodBinding.selector, methodBinding.signature(this));
 					methodIndexByte1 = (byte) (enclosingMethodIndex >> 8);
 					methodIndexByte2 = (byte) enclosingMethodIndex;
 				}
 			}
-			contents[contentsOffset++] = methodIndexByte1;
-			contents[contentsOffset++] = methodIndexByte2;
+			this.contents[this.contentsOffset++] = methodIndexByte1;
+			this.contents[this.contentsOffset++] = methodIndexByte2;
 			attributesNumber++;
 		}
 		if (this.targetJDK >= ClassFileConstants.JDK1_5) {
-			TypeDeclaration typeDeclaration = referenceBinding.scope.referenceContext;
+			TypeDeclaration typeDeclaration = this.referenceBinding.scope.referenceContext;
 			if (typeDeclaration != null) {
 				final Annotation[] annotations = typeDeclaration.annotations;
 				if (annotations != null) {
@@ -410,18 +421,18 @@ public class ClassFile implements TypeConstants, TypeIds {
 				this.missingTypes = superInterfaces[i].collectMissingTypes(this.missingTypes);
 			}
 			// add an attribute for inconsistent hierarchy
-			if (contentsOffset + 6 >= contents.length) {
+			if (this.contentsOffset + 6 >= this.contents.length) {
 				resizeContents(6);
 			}
 			int inconsistentHierarchyNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.InconsistentHierarchy);
-			contents[contentsOffset++] = (byte) (inconsistentHierarchyNameIndex >> 8);
-			contents[contentsOffset++] = (byte) inconsistentHierarchyNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.InconsistentHierarchy);
+			this.contents[this.contentsOffset++] = (byte) (inconsistentHierarchyNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) inconsistentHierarchyNameIndex;
 			// the length of an inconsistent hierarchy attribute is equals to 0
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
 			attributesNumber++;
 		}
 		// Inner class attribute
@@ -438,49 +449,49 @@ public class ClassFile implements TypeConstants, TypeIds {
 			});
 			// Generate the inner class attribute
 			int exSize = 8 * numberOfInnerClasses + 8;
-			if (exSize + contentsOffset >= this.contents.length) {
+			if (exSize + this.contentsOffset >= this.contents.length) {
 				resizeContents(exSize);
 			}
 			// Now we now the size of the attribute and the number of entries
 			// attribute name
 			int attributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.InnerClassName);
-			contents[contentsOffset++] = (byte) (attributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) attributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.InnerClassName);
+			this.contents[this.contentsOffset++] = (byte) (attributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) attributeNameIndex;
 			int value = (numberOfInnerClasses << 3) + 2;
-			contents[contentsOffset++] = (byte) (value >> 24);
-			contents[contentsOffset++] = (byte) (value >> 16);
-			contents[contentsOffset++] = (byte) (value >> 8);
-			contents[contentsOffset++] = (byte) value;
-			contents[contentsOffset++] = (byte) (numberOfInnerClasses >> 8);
-			contents[contentsOffset++] = (byte) numberOfInnerClasses;
+			this.contents[this.contentsOffset++] = (byte) (value >> 24);
+			this.contents[this.contentsOffset++] = (byte) (value >> 16);
+			this.contents[this.contentsOffset++] = (byte) (value >> 8);
+			this.contents[this.contentsOffset++] = (byte) value;
+			this.contents[this.contentsOffset++] = (byte) (numberOfInnerClasses >> 8);
+			this.contents[this.contentsOffset++] = (byte) numberOfInnerClasses;
 			for (int i = 0; i < numberOfInnerClasses; i++) {
 				ReferenceBinding innerClass = innerClasses[i];
 				int accessFlags = innerClass.getAccessFlags();
-				int innerClassIndex = constantPool.literalIndexForType(innerClass.constantPoolName());
+				int innerClassIndex = this.constantPool.literalIndexForType(innerClass.constantPoolName());
 				// inner class index
-				contents[contentsOffset++] = (byte) (innerClassIndex >> 8);
-				contents[contentsOffset++] = (byte) innerClassIndex;
+				this.contents[this.contentsOffset++] = (byte) (innerClassIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) innerClassIndex;
 				// outer class index: anonymous and local have no outer class index
 				if (innerClass.isMemberType()) {
 					// member or member of local
-					int outerClassIndex = constantPool.literalIndexForType(innerClass.enclosingType().constantPoolName());
-					contents[contentsOffset++] = (byte) (outerClassIndex >> 8);
-					contents[contentsOffset++] = (byte) outerClassIndex;
+					int outerClassIndex = this.constantPool.literalIndexForType(innerClass.enclosingType().constantPoolName());
+					this.contents[this.contentsOffset++] = (byte) (outerClassIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) outerClassIndex;
 				} else {
 					// equals to 0 if the innerClass is not a member type
-					contents[contentsOffset++] = 0;
-					contents[contentsOffset++] = 0;
+					this.contents[this.contentsOffset++] = 0;
+					this.contents[this.contentsOffset++] = 0;
 				}
 				// name index
 				if (!innerClass.isAnonymousType()) {
-					int nameIndex = constantPool.literalIndex(innerClass.sourceName());
-					contents[contentsOffset++] = (byte) (nameIndex >> 8);
-					contents[contentsOffset++] = (byte) nameIndex;
+					int nameIndex = this.constantPool.literalIndex(innerClass.sourceName());
+					this.contents[this.contentsOffset++] = (byte) (nameIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) nameIndex;
 				} else {
 					// equals to 0 if the innerClass is an anonymous type
-					contents[contentsOffset++] = 0;
-					contents[contentsOffset++] = 0;
+					this.contents[this.contentsOffset++] = 0;
+					this.contents[this.contentsOffset++] = 0;
 				}
 				// access flag
 				if (innerClass.isAnonymousType()) {
@@ -488,8 +499,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				} else if (innerClass.isMemberType() && innerClass.isInterface()) {
 					accessFlags |= ClassFileConstants.AccStatic; // implicitely static
 				}
-				contents[contentsOffset++] = (byte) (accessFlags >> 8);
-				contents[contentsOffset++] = (byte) accessFlags;
+				this.contents[this.contentsOffset++] = (byte) (accessFlags >> 8);
+				this.contents[this.contentsOffset++] = (byte) accessFlags;
 			}
 			attributesNumber++;
 		}
@@ -501,15 +512,15 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if (attributeOffset + 2 >= this.contents.length) {
 			resizeContents(2);
 		}
-		contents[attributeOffset++] = (byte) (attributesNumber >> 8);
-		contents[attributeOffset] = (byte) attributesNumber;
+		this.contents[attributeOffset++] = (byte) (attributesNumber >> 8);
+		this.contents[attributeOffset] = (byte) attributesNumber;
 
 		// resynchronize all offsets of the classfile
-		header = constantPool.poolContent;
-		headerOffset = constantPool.currentOffset;
-		int constantPoolCount = constantPool.currentIndex;
-		header[constantPoolOffset++] = (byte) (constantPoolCount >> 8);
-		header[constantPoolOffset] = (byte) constantPoolCount;
+		this.header = this.constantPool.poolContent;
+		this.headerOffset = this.constantPool.currentOffset;
+		int constantPoolCount = this.constantPool.currentIndex;
+		this.header[this.constantPoolOffset++] = (byte) (constantPoolCount >> 8);
+		this.header[this.constantPoolOffset] = (byte) constantPoolCount;
 	}
 
 	/**
@@ -519,10 +530,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 */
 	public void addDefaultAbstractMethods() { // default abstract methods
 		MethodBinding[] defaultAbstractMethods =
-			referenceBinding.getDefaultAbstractMethods();
+			this.referenceBinding.getDefaultAbstractMethods();
 		for (int i = 0, max = defaultAbstractMethods.length; i < max; i++) {
 			generateMethodInfoHeader(defaultAbstractMethods[i]);
-			int methodAttributeOffset = contentsOffset;
+			int methodAttributeOffset = this.contentsOffset;
 			int attributeNumber = generateMethodInfoAttribute(defaultAbstractMethods[i]);
 			completeMethodInfo(methodAttributeOffset, attributeNumber);
 		}
@@ -534,63 +545,63 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// Generate the constantValueAttribute
 		Constant fieldConstant = fieldBinding.constant();
 		if (fieldConstant != Constant.NotAConstant){
-			if (contentsOffset + 8 >= contents.length) {
+			if (this.contentsOffset + 8 >= this.contents.length) {
 				resizeContents(8);
 			}
 			// Now we generate the constant attribute corresponding to the fieldBinding
 			int constantValueNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.ConstantValueName);
-			contents[contentsOffset++] = (byte) (constantValueNameIndex >> 8);
-			contents[contentsOffset++] = (byte) constantValueNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.ConstantValueName);
+			this.contents[this.contentsOffset++] = (byte) (constantValueNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) constantValueNameIndex;
 			// The attribute length = 2 in case of a constantValue attribute
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 2;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 2;
 			attributesNumber++;
 			// Need to add the constant_value_index
 			switch (fieldConstant.typeID()) {
 				case T_boolean :
 					int booleanValueIndex =
-						constantPool.literalIndex(fieldConstant.booleanValue() ? 1 : 0);
-					contents[contentsOffset++] = (byte) (booleanValueIndex >> 8);
-					contents[contentsOffset++] = (byte) booleanValueIndex;
+						this.constantPool.literalIndex(fieldConstant.booleanValue() ? 1 : 0);
+					this.contents[this.contentsOffset++] = (byte) (booleanValueIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) booleanValueIndex;
 					break;
 				case T_byte :
 				case T_char :
 				case T_int :
 				case T_short :
 					int integerValueIndex =
-						constantPool.literalIndex(fieldConstant.intValue());
-					contents[contentsOffset++] = (byte) (integerValueIndex >> 8);
-					contents[contentsOffset++] = (byte) integerValueIndex;
+						this.constantPool.literalIndex(fieldConstant.intValue());
+					this.contents[this.contentsOffset++] = (byte) (integerValueIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) integerValueIndex;
 					break;
 				case T_float :
 					int floatValueIndex =
-						constantPool.literalIndex(fieldConstant.floatValue());
-					contents[contentsOffset++] = (byte) (floatValueIndex >> 8);
-					contents[contentsOffset++] = (byte) floatValueIndex;
+						this.constantPool.literalIndex(fieldConstant.floatValue());
+					this.contents[this.contentsOffset++] = (byte) (floatValueIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) floatValueIndex;
 					break;
 				case T_double :
 					int doubleValueIndex =
-						constantPool.literalIndex(fieldConstant.doubleValue());
-					contents[contentsOffset++] = (byte) (doubleValueIndex >> 8);
-					contents[contentsOffset++] = (byte) doubleValueIndex;
+						this.constantPool.literalIndex(fieldConstant.doubleValue());
+					this.contents[this.contentsOffset++] = (byte) (doubleValueIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) doubleValueIndex;
 					break;
 				case T_long :
 					int longValueIndex =
-						constantPool.literalIndex(fieldConstant.longValue());
-					contents[contentsOffset++] = (byte) (longValueIndex >> 8);
-					contents[contentsOffset++] = (byte) longValueIndex;
+						this.constantPool.literalIndex(fieldConstant.longValue());
+					this.contents[this.contentsOffset++] = (byte) (longValueIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) longValueIndex;
 					break;
 				case T_JavaLangString :
 					int stringValueIndex =
-						constantPool.literalIndex(
+						this.constantPool.literalIndex(
 							((StringConstant) fieldConstant).stringValue());
 					if (stringValueIndex == -1) {
-						if (!creatingProblemType) {
+						if (!this.creatingProblemType) {
 							// report an error and abort: will lead to a problem type classfile creation
-							TypeDeclaration typeDeclaration = referenceBinding.scope.referenceContext;
+							TypeDeclaration typeDeclaration = this.referenceBinding.scope.referenceContext;
 							FieldDeclaration[] fieldDecls = typeDeclaration.fields;
 							for (int i = 0, max = fieldDecls.length; i < max; i++) {
 								if (fieldDecls[i].binding == fieldBinding) {
@@ -601,65 +612,65 @@ public class ClassFile implements TypeConstants, TypeIds {
 							}
 						} else {
 							// already inside a problem type creation : no constant for this field
-							contentsOffset = fieldAttributeOffset;
+							this.contentsOffset = fieldAttributeOffset;
 						}
 					} else {
-						contents[contentsOffset++] = (byte) (stringValueIndex >> 8);
-						contents[contentsOffset++] = (byte) stringValueIndex;
+						this.contents[this.contentsOffset++] = (byte) (stringValueIndex >> 8);
+						this.contents[this.contentsOffset++] = (byte) stringValueIndex;
 					}
 			}
 		}
 		if (this.targetJDK < ClassFileConstants.JDK1_5 && fieldBinding.isSynthetic()) {
-			if (contentsOffset + 6 >= contents.length) {
+			if (this.contentsOffset + 6 >= this.contents.length) {
 				resizeContents(6);
 			}
 			int syntheticAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.SyntheticName);
-			contents[contentsOffset++] = (byte) (syntheticAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) syntheticAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.SyntheticName);
+			this.contents[this.contentsOffset++] = (byte) (syntheticAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) syntheticAttributeNameIndex;
 			// the length of a synthetic attribute is equals to 0
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
 			attributesNumber++;
 		}
 		if (fieldBinding.isDeprecated()) {
-			if (contentsOffset + 6 >= contents.length) {
+			if (this.contentsOffset + 6 >= this.contents.length) {
 				resizeContents(6);
 			}
 			int deprecatedAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.DeprecatedName);
-			contents[contentsOffset++] = (byte) (deprecatedAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) deprecatedAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.DeprecatedName);
+			this.contents[this.contentsOffset++] = (byte) (deprecatedAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) deprecatedAttributeNameIndex;
 			// the length of a deprecated attribute is equals to 0
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
 			attributesNumber++;
 		}
 		// add signature attribute
 		char[] genericSignature = fieldBinding.genericSignature();
-		if (genericSignature != null) {
+		if (genericSignature != null && this.targetJDK >= ClassFileConstants.JDK1_5) {
 			// check that there is enough space to write all the bytes for the field info corresponding
 			// to the @fieldBinding
-			if (contentsOffset + 8 >= contents.length) {
+			if (this.contentsOffset + 8 >= this.contents.length) {
 				resizeContents(8);
 			}
 			int signatureAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.SignatureName);
-			contents[contentsOffset++] = (byte) (signatureAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) signatureAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.SignatureName);
+			this.contents[this.contentsOffset++] = (byte) (signatureAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) signatureAttributeNameIndex;
 			// the length of a signature attribute is equals to 2
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 2;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 2;
 			int signatureIndex =
-				constantPool.literalIndex(genericSignature);
-			contents[contentsOffset++] = (byte) (signatureIndex >> 8);
-			contents[contentsOffset++] = (byte) signatureIndex;
+				this.constantPool.literalIndex(genericSignature);
+			this.contents[this.contentsOffset++] = (byte) (signatureIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) signatureIndex;
 			attributesNumber++;
 		}
 		if (this.targetJDK >= ClassFileConstants.JDK1_5) {
@@ -685,36 +696,36 @@ public class ClassFile implements TypeConstants, TypeIds {
 	private void addFieldInfo(FieldBinding fieldBinding) {
 		// check that there is enough space to write all the bytes for the field info corresponding
 		// to the @fieldBinding
-		if (contentsOffset + 8 >= contents.length) {
+		if (this.contentsOffset + 8 >= this.contents.length) {
 			resizeContents(8);
 		}
 		// Now we can generate all entries into the byte array
 		// First the accessFlags
 		int accessFlags = fieldBinding.getAccessFlags();
-		if (targetJDK < ClassFileConstants.JDK1_5) {
+		if (this.targetJDK < ClassFileConstants.JDK1_5) {
 			// pre 1.5, synthetic was an attribute, not a modifier
 			accessFlags &= ~ClassFileConstants.AccSynthetic;
 		}
-		contents[contentsOffset++] = (byte) (accessFlags >> 8);
-		contents[contentsOffset++] = (byte) accessFlags;
+		this.contents[this.contentsOffset++] = (byte) (accessFlags >> 8);
+		this.contents[this.contentsOffset++] = (byte) accessFlags;
 		// Then the nameIndex
-		int nameIndex = constantPool.literalIndex(fieldBinding.name);
-		contents[contentsOffset++] = (byte) (nameIndex >> 8);
-		contents[contentsOffset++] = (byte) nameIndex;
+		int nameIndex = this.constantPool.literalIndex(fieldBinding.name);
+		this.contents[this.contentsOffset++] = (byte) (nameIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) nameIndex;
 		// Then the descriptorIndex
-		int descriptorIndex = constantPool.literalIndex(fieldBinding.type);
-		contents[contentsOffset++] = (byte) (descriptorIndex >> 8);
-		contents[contentsOffset++] = (byte) descriptorIndex;
-		int fieldAttributeOffset = contentsOffset;
+		int descriptorIndex = this.constantPool.literalIndex(fieldBinding.type);
+		this.contents[this.contentsOffset++] = (byte) (descriptorIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) descriptorIndex;
+		int fieldAttributeOffset = this.contentsOffset;
 		int attributeNumber = 0;
 		// leave some space for the number of attributes
-		contentsOffset += 2;
+		this.contentsOffset += 2;
 		attributeNumber += addFieldAttributes(fieldBinding, fieldAttributeOffset);
-		if (contentsOffset + 2 >= contents.length) {
+		if (this.contentsOffset + 2 >= this.contents.length) {
 			resizeContents(2);
 		}
-		contents[fieldAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[fieldAttributeOffset] = (byte) attributeNumber;
+		this.contents[fieldAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[fieldAttributeOffset] = (byte) attributeNumber;
 	}
 
 	/**
@@ -732,18 +743,16 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 * - a field info for each synthetic field (e.g. this$0)
 	 */
 	public void addFieldInfos() {
-		SourceTypeBinding currentBinding = referenceBinding;
+		SourceTypeBinding currentBinding = this.referenceBinding;
 		FieldBinding[] syntheticFields = currentBinding.syntheticFields();
-		int fieldCount =
-			currentBinding.fieldCount()
-				+ (syntheticFields == null ? 0 : syntheticFields.length);
+		int fieldCount = 	currentBinding.fieldCount() + (syntheticFields == null ? 0 : syntheticFields.length);
 
 		// write the number of fields
 		if (fieldCount > 0xFFFF) {
-			referenceBinding.scope.problemReporter().tooManyFields(referenceBinding.scope.referenceType());
+			this.referenceBinding.scope.problemReporter().tooManyFields(this.referenceBinding.scope.referenceType());
 		}
-		contents[contentsOffset++] = (byte) (fieldCount >> 8);
-		contents[contentsOffset++] = (byte) fieldCount;
+		this.contents[this.contentsOffset++] = (byte) (fieldCount >> 8);
+		this.contents[this.contentsOffset++] = (byte) fieldCount;
 
 		FieldDeclaration[] fieldDecls = currentBinding.scope.referenceContext.fields;
 		for (int i = 0, max = fieldDecls == null ? 0 : fieldDecls.length; i < max; i++) {
@@ -763,25 +772,25 @@ public class ClassFile implements TypeConstants, TypeIds {
 	private void addMissingAbstractProblemMethod(MethodDeclaration methodDeclaration, MethodBinding methodBinding, CategorizedProblem problem, CompilationResult compilationResult) {
 		// always clear the strictfp/native/abstract bit for a problem method
 		generateMethodInfoHeader(methodBinding, methodBinding.modifiers & ~(ClassFileConstants.AccStrictfp | ClassFileConstants.AccNative | ClassFileConstants.AccAbstract));
-		int methodAttributeOffset = contentsOffset;
+		int methodAttributeOffset = this.contentsOffset;
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 
 		// Code attribute
 		attributeNumber++;
 
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		generateCodeAttributeHeader();
 		StringBuffer buffer = new StringBuffer(25);
 		buffer.append("\t"  + problem.getMessage() + "\n" ); //$NON-NLS-1$ //$NON-NLS-2$
 		buffer.insert(0, Messages.compilation_unresolvedProblem);
 		String problemString = buffer.toString();
 
-		codeStream.init(this);
-		codeStream.preserveUnusedLocals = true;
-		codeStream.initializeMaxLocals(methodBinding);
+		this.codeStream.init(this);
+		this.codeStream.preserveUnusedLocals = true;
+		this.codeStream.initializeMaxLocals(methodBinding);
 
 		// return codeStream.generateCodeAttributeForProblemMethod(comp.options.runtimeExceptionNameForCompileError, "")
-		codeStream.generateCodeAttributeForProblemMethod(problemString);
+		this.codeStream.generateCodeAttributeForProblemMethod(problemString);
 
 		completeCodeAttributeForMissingAbstractProblemMethod(
 			methodBinding,
@@ -801,14 +810,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 	public void addProblemClinit(CategorizedProblem[] problems) {
 		generateMethodInfoHeaderForClinit();
 		// leave two spaces for the number of attributes
-		contentsOffset -= 2;
-		int attributeOffset = contentsOffset;
-		contentsOffset += 2;
+		this.contentsOffset -= 2;
+		int attributeOffset = this.contentsOffset;
+		this.contentsOffset += 2;
 		int attributeNumber = 0;
 
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		generateCodeAttributeHeader();
-		codeStream.resetForProblemClinit(this);
+		this.codeStream.resetForProblemClinit(this);
 		String problemString = "" ; //$NON-NLS-1$
 		int problemLine = 0;
 		if (problems != null) {
@@ -835,16 +844,16 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 
 		// return codeStream.generateCodeAttributeForProblemMethod(comp.options.runtimeExceptionNameForCompileError, "")
-		codeStream.generateCodeAttributeForProblemMethod(problemString);
+		this.codeStream.generateCodeAttributeForProblemMethod(problemString);
 		attributeNumber++; // code attribute
 		completeCodeAttributeForClinit(
 			codeAttributeOffset,
 			problemLine);
-		if (contentsOffset + 2 >= contents.length) {
+		if (this.contentsOffset + 2 >= this.contents.length) {
 			resizeContents(2);
 		}
-		contents[attributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[attributeOffset] = (byte) attributeNumber;
+		this.contents[attributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[attributeOffset] = (byte) attributeNumber;
 	}
 	/**
 	 * INTERNAL USE-ONLY
@@ -861,14 +870,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 		// always clear the strictfp/native/abstract bit for a problem method
 		generateMethodInfoHeader(methodBinding, methodBinding.modifiers & ~(ClassFileConstants.AccStrictfp | ClassFileConstants.AccNative | ClassFileConstants.AccAbstract));
-		int methodAttributeOffset = contentsOffset;
+		int methodAttributeOffset = this.contentsOffset;
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 
 		// Code attribute
 		attributeNumber++;
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		generateCodeAttributeHeader();
-		codeStream.reset(method, this);
+		this.codeStream.reset(method, this);
 		String problemString = "" ; //$NON-NLS-1$
 		int problemLine = 0;
 		if (problems != null) {
@@ -894,7 +903,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 
 		// return codeStream.generateCodeAttributeForProblemMethod(comp.options.runtimeExceptionNameForCompileError, "")
-		codeStream.generateCodeAttributeForProblemMethod(problemString);
+		this.codeStream.generateCodeAttributeForProblemMethod(problemString);
 		completeCodeAttributeForProblemMethod(
 			method,
 			methodBinding,
@@ -923,8 +932,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 		CategorizedProblem[] problems,
 		int savedOffset) {
 		// we need to move back the contentsOffset to the value at the beginning of the method
-		contentsOffset = savedOffset;
-		methodCount--; // we need to remove the method that causes the problem
+		this.contentsOffset = savedOffset;
+		this.methodCount--; // we need to remove the method that causes the problem
 		addProblemConstructor(method, methodBinding, problems);
 	}
 
@@ -945,15 +954,15 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		// always clear the strictfp/native/abstract bit for a problem method
 		generateMethodInfoHeader(methodBinding, methodBinding.modifiers & ~(ClassFileConstants.AccStrictfp | ClassFileConstants.AccNative | ClassFileConstants.AccAbstract));
-		int methodAttributeOffset = contentsOffset;
+		int methodAttributeOffset = this.contentsOffset;
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 
 		// Code attribute
 		attributeNumber++;
 
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		generateCodeAttributeHeader();
-		codeStream.reset(method, this);
+		this.codeStream.reset(method, this);
 		String problemString = "" ; //$NON-NLS-1$
 		int problemLine = 0;
 		if (problems != null) {
@@ -983,7 +992,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 
 		// return codeStream.generateCodeAttributeForProblemMethod(comp.options.runtimeExceptionNameForCompileError, "")
-		codeStream.generateCodeAttributeForProblemMethod(problemString);
+		this.codeStream.generateCodeAttributeForProblemMethod(problemString);
 		completeCodeAttributeForProblemMethod(
 			method,
 			methodBinding,
@@ -1013,8 +1022,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 		CategorizedProblem[] problems,
 		int savedOffset) {
 		// we need to move back the contentsOffset to the value at the beginning of the method
-		contentsOffset = savedOffset;
-		methodCount--; // we need to remove the method that causes the problem
+		this.contentsOffset = savedOffset;
+		this.methodCount--; // we need to remove the method that causes the problem
 		addProblemMethod(method, methodBinding, problems);
 	}
 
@@ -1030,12 +1039,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// add all methods (default abstract methods and synthetic)
 
 		// default abstract methods
-		generateMissingAbstractMethods(referenceBinding.scope.referenceType().missingAbstractMethods, referenceBinding.scope.referenceCompilationUnit().compilationResult);
+		generateMissingAbstractMethods(this.referenceBinding.scope.referenceType().missingAbstractMethods, this.referenceBinding.scope.referenceCompilationUnit().compilationResult);
 
 		MethodBinding[] defaultAbstractMethods = this.referenceBinding.getDefaultAbstractMethods();
 		for (int i = 0, max = defaultAbstractMethods.length; i < max; i++) {
 			generateMethodInfoHeader(defaultAbstractMethods[i]);
-			int methodAttributeOffset = contentsOffset;
+			int methodAttributeOffset = this.contentsOffset;
 			int attributeNumber = generateMethodInfoAttribute(defaultAbstractMethods[i]);
 			completeMethodInfo(methodAttributeOffset, attributeNumber);
 		}
@@ -1046,11 +1055,13 @@ public class ClassFile implements TypeConstants, TypeIds {
 				SyntheticMethodBinding syntheticMethod = syntheticMethods[i];
 				switch (syntheticMethod.purpose) {
 					case SyntheticMethodBinding.FieldReadAccess :
+					case SyntheticMethodBinding.SuperFieldReadAccess :
 						// generate a method info to emulate an reading access to
 						// a non-accessible field
 						addSyntheticFieldReadAccessMethod(syntheticMethod);
 						break;
 					case SyntheticMethodBinding.FieldWriteAccess :
+					case SyntheticMethodBinding.SuperFieldWriteAccess :
 						// generate a method info to emulate an writing access to
 						// a non-accessible field
 						addSyntheticFieldWriteAccessMethod(syntheticMethod);
@@ -1093,11 +1104,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// this will add exception attribute, synthetic attribute, deprecated attribute,...
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 		// Code attribute
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		codeStream.init(this);
-		codeStream.generateSyntheticBodyForConstructorAccess(methodBinding);
+		this.codeStream.init(this);
+		this.codeStream.generateSyntheticBodyForConstructorAccess(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
 			codeAttributeOffset,
@@ -1107,8 +1118,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				.compilationResult
 				.getLineSeparatorPositions());
 		// update the number of attributes
-		contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[methodAttributeOffset] = (byte) attributeNumber;
+		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[methodAttributeOffset] = (byte) attributeNumber;
 	}
 
 	/**
@@ -1123,11 +1134,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// this will add exception attribute, synthetic attribute, deprecated attribute,...
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 		// Code attribute
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		codeStream.init(this);
-		codeStream.generateSyntheticBodyForEnumValueOf(methodBinding);
+		this.codeStream.init(this);
+		this.codeStream.generateSyntheticBodyForEnumValueOf(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
 			codeAttributeOffset,
@@ -1137,8 +1148,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				.compilationResult
 				.getLineSeparatorPositions());
 		// update the number of attributes
-		contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[methodAttributeOffset] = (byte) attributeNumber;
+		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[methodAttributeOffset] = (byte) attributeNumber;
 	}
 
 	/**
@@ -1153,11 +1164,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// this will add exception attribute, synthetic attribute, deprecated attribute,...
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 		// Code attribute
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		codeStream.init(this);
-		codeStream.generateSyntheticBodyForEnumValues(methodBinding);
+		this.codeStream.init(this);
+		this.codeStream.generateSyntheticBodyForEnumValues(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
 			codeAttributeOffset,
@@ -1167,8 +1178,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				.compilationResult
 				.getLineSeparatorPositions());
 		// update the number of attributes
-		contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[methodAttributeOffset] = (byte) attributeNumber;
+		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[methodAttributeOffset] = (byte) attributeNumber;
 	}
 
 	/**
@@ -1184,11 +1195,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// this will add exception attribute, synthetic attribute, deprecated attribute,...
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 		// Code attribute
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		codeStream.init(this);
-		codeStream.generateSyntheticBodyForFieldReadAccess(methodBinding);
+		this.codeStream.init(this);
+		this.codeStream.generateSyntheticBodyForFieldReadAccess(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
 			codeAttributeOffset,
@@ -1198,8 +1209,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				.compilationResult
 				.getLineSeparatorPositions());
 		// update the number of attributes
-		contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[methodAttributeOffset] = (byte) attributeNumber;
+		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[methodAttributeOffset] = (byte) attributeNumber;
 	}
 
 	/**
@@ -1215,11 +1226,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// this will add exception attribute, synthetic attribute, deprecated attribute,...
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 		// Code attribute
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		codeStream.init(this);
-		codeStream.generateSyntheticBodyForFieldWriteAccess(methodBinding);
+		this.codeStream.init(this);
+		this.codeStream.generateSyntheticBodyForFieldWriteAccess(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
 			codeAttributeOffset,
@@ -1229,8 +1240,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				.compilationResult
 				.getLineSeparatorPositions());
 		// update the number of attributes
-		contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[methodAttributeOffset] = (byte) attributeNumber;
+		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[methodAttributeOffset] = (byte) attributeNumber;
 	}
 
 	/**
@@ -1245,11 +1256,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// this will add exception attribute, synthetic attribute, deprecated attribute,...
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 		// Code attribute
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		codeStream.init(this);
-		codeStream.generateSyntheticBodyForMethodAccess(methodBinding);
+		this.codeStream.init(this);
+		this.codeStream.generateSyntheticBodyForMethodAccess(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			methodBinding,
 			codeAttributeOffset,
@@ -1259,8 +1270,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				.compilationResult
 				.getLineSeparatorPositions());
 		// update the number of attributes
-		contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[methodAttributeOffset] = (byte) attributeNumber;
+		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[methodAttributeOffset] = (byte) attributeNumber;
 	}
 
 	public void addSyntheticSwitchTable(SyntheticMethodBinding methodBinding) {
@@ -1269,11 +1280,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// this will add exception attribute, synthetic attribute, deprecated attribute,...
 		int attributeNumber = generateMethodInfoAttribute(methodBinding);
 		// Code attribute
-		int codeAttributeOffset = contentsOffset;
+		int codeAttributeOffset = this.contentsOffset;
 		attributeNumber++; // add code attribute
 		generateCodeAttributeHeader();
-		codeStream.init(this);
-		codeStream.generateSyntheticBodyForSwitchTable(methodBinding);
+		this.codeStream.init(this);
+		this.codeStream.generateSyntheticBodyForSwitchTable(methodBinding);
 		completeCodeAttributeForSyntheticMethod(
 			true,
 			methodBinding,
@@ -1284,8 +1295,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				.compilationResult
 				.getLineSeparatorPositions());
 		// update the number of attributes
-		contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[methodAttributeOffset] = (byte) attributeNumber;
+		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[methodAttributeOffset] = (byte) attributeNumber;
 	}
 
 	/**
@@ -1302,24 +1313,24 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 */
 	public void completeCodeAttribute(int codeAttributeOffset) {
 		// reinitialize the localContents with the byte modified by the code stream
-		this.contents = codeStream.bCodeStream;
-		int localContentsOffset = codeStream.classFileOffset;
+		this.contents = this.codeStream.bCodeStream;
+		int localContentsOffset = this.codeStream.classFileOffset;
 		// codeAttributeOffset is the position inside localContents byte array before we started to write
 		// any information about the codeAttribute
 		// That means that to write the attribute_length you need to offset by 2 the value of codeAttributeOffset
 		// to get the right position, 6 for the max_stack etc...
-		int code_length = codeStream.position;
+		int code_length = this.codeStream.position;
 		if (code_length > 65535) {
-			codeStream.methodDeclaration.scope.problemReporter().bytecodeExceeds64KLimit(
-				codeStream.methodDeclaration);
+			this.codeStream.methodDeclaration.scope.problemReporter().bytecodeExceeds64KLimit(
+				this.codeStream.methodDeclaration);
 		}
 		if (localContentsOffset + 20 >= this.contents.length) {
 			resizeContents(20);
 		}
-		int max_stack = codeStream.stackMax;
+		int max_stack = this.codeStream.stackMax;
 		this.contents[codeAttributeOffset + 6] = (byte) (max_stack >> 8);
 		this.contents[codeAttributeOffset + 7] = (byte) max_stack;
-		int max_locals = codeStream.maxLocals;
+		int max_locals = this.codeStream.maxLocals;
 		this.contents[codeAttributeOffset + 8] = (byte) (max_locals >> 8);
 		this.contents[codeAttributeOffset + 9] = (byte) max_locals;
 		this.contents[codeAttributeOffset + 10] = (byte) (code_length >> 24);
@@ -1329,10 +1340,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 		boolean addStackMaps = (this.produceAttributes & ClassFileConstants.ATTR_STACK_MAP_TABLE) != 0;
 		// write the exception table
-		ExceptionLabel[] exceptionLabels = codeStream.exceptionLabels;
+		ExceptionLabel[] exceptionLabels = this.codeStream.exceptionLabels;
 		int exceptionHandlersCount = 0; // each label holds one handler per range (start/end contiguous)
-		for (int i = 0, length = codeStream.exceptionLabelsCounter; i < length; i++) {
-			exceptionHandlersCount += codeStream.exceptionLabels[i].count / 2;
+		for (int i = 0, length = this.codeStream.exceptionLabelsCounter; i < length; i++) {
+			exceptionHandlersCount += this.codeStream.exceptionLabels[i].count / 2;
 		}
 		int exSize = exceptionHandlersCount * 8 + 2;
 		if (exSize + localContentsOffset >= this.contents.length) {
@@ -1342,14 +1353,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// on the attribute generation
 		this.contents[localContentsOffset++] = (byte) (exceptionHandlersCount >> 8);
 		this.contents[localContentsOffset++] = (byte) exceptionHandlersCount;
-		for (int i = 0, max = codeStream.exceptionLabelsCounter; i < max; i++) {
+		for (int i = 0, max = this.codeStream.exceptionLabelsCounter; i < max; i++) {
 			ExceptionLabel exceptionLabel = exceptionLabels[i];
 			if (exceptionLabel != null) {
 				int iRange = 0, maxRange = exceptionLabel.count;
 				if ((maxRange & 1) != 0) {
-					codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
-							Messages.bind(Messages.abort_invalidExceptionAttribute, new String(codeStream.methodDeclaration.selector)),
-							codeStream.methodDeclaration);
+					this.codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
+							Messages.bind(Messages.abort_invalidExceptionAttribute, new String(this.codeStream.methodDeclaration.selector)),
+							this.codeStream.methodDeclaration);
 				}
 				while  (iRange < maxRange) {
 					int start = exceptionLabel.ranges[iRange++]; // even ranges are start positions
@@ -1374,9 +1385,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 						int nameIndex;
 						if (exceptionLabel.exceptionType == TypeBinding.NULL) {
 							/* represents ClassNotFoundException, see class literal access*/
-							nameIndex = constantPool.literalIndexForType(ConstantPool.JavaLangClassNotFoundExceptionConstantPoolName);
+							nameIndex = this.constantPool.literalIndexForType(ConstantPool.JavaLangClassNotFoundExceptionConstantPoolName);
 						} else {
-							nameIndex = constantPool.literalIndexForType(exceptionLabel.exceptionType);
+							nameIndex = this.constantPool.literalIndexForType(exceptionLabel.exceptionType);
 						}
 						this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 						this.contents[localContentsOffset++] = (byte) nameIndex;
@@ -1402,10 +1413,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 			 * contained into the codestream
 			 */
 			int[] pcToSourceMapTable;
-			if (((pcToSourceMapTable = codeStream.pcToSourceMap) != null)
-				&& (codeStream.pcToSourceMapSize != 0)) {
+			if (((pcToSourceMapTable = this.codeStream.pcToSourceMap) != null)
+				&& (this.codeStream.pcToSourceMapSize != 0)) {
 				int lineNumberNameIndex =
-					constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
+					this.constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
 				if (localContentsOffset + 8 >= this.contents.length) {
 					resizeContents(8);
 				}
@@ -1415,7 +1426,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				localContentsOffset += 6;
 				// leave space for attribute_length and line_number_table_length
 				int numberOfEntries = 0;
-				int length = codeStream.pcToSourceMapSize;
+				int length = this.codeStream.pcToSourceMapSize;
 				for (int i = 0; i < length;) {
 					// write the entry
 					if (localContentsOffset + 4 >= this.contents.length) {
@@ -1444,11 +1455,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if ((this.produceAttributes & ClassFileConstants.ATTR_VARS) != 0) {
 			int numberOfEntries = 0;
 			int localVariableNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
-			final boolean methodDeclarationIsStatic = codeStream.methodDeclaration.isStatic();
+				this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
+			final boolean methodDeclarationIsStatic = this.codeStream.methodDeclaration.isStatic();
 			int maxOfEntries = 8 + 10 * (methodDeclarationIsStatic ? 0 : 1);
-			for (int i = 0; i < codeStream.allLocalsCounter; i++) {
-				LocalVariableBinding localVariableBinding = codeStream.locals[i];
+			for (int i = 0; i < this.codeStream.allLocalsCounter; i++) {
+				LocalVariableBinding localVariableBinding = this.codeStream.locals[i];
 				maxOfEntries += 10 * localVariableBinding.initializationCount;
 			}
 			// reserve enough space
@@ -1469,12 +1480,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 				this.contents[localContentsOffset++] = 0;
 				this.contents[localContentsOffset++] = (byte) (code_length >> 8);
 				this.contents[localContentsOffset++] = (byte) code_length;
-				nameIndex = constantPool.literalIndex(ConstantPool.This);
+				nameIndex = this.constantPool.literalIndex(ConstantPool.This);
 				this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 				this.contents[localContentsOffset++] = (byte) nameIndex;
-				declaringClassBinding = (SourceTypeBinding) codeStream.methodDeclaration.binding.declaringClass;
+				declaringClassBinding = (SourceTypeBinding) this.codeStream.methodDeclaration.binding.declaringClass;
 				descriptorIndex =
-					constantPool.literalIndex(
+					this.constantPool.literalIndex(
 						declaringClassBinding.signature());
 				this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 				this.contents[localContentsOffset++] = (byte) descriptorIndex;
@@ -1486,8 +1497,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 			LocalVariableBinding[] genericLocalVariables = null;
 			int numberOfGenericEntries = 0;
 
-			for (int i = 0, max = codeStream.allLocalsCounter; i < max; i++) {
-				LocalVariableBinding localVariable = codeStream.locals[i];
+			for (int i = 0, max = this.codeStream.allLocalsCounter; i < max; i++) {
+				LocalVariableBinding localVariable = this.codeStream.locals[i];
 				if (localVariable.declaration == null) continue;
 				final TypeBinding localVariableTypeBinding = localVariable.type;
 				boolean isParameterizedType = localVariableTypeBinding.isParameterizedType() || localVariableTypeBinding.isTypeVariable();
@@ -1517,10 +1528,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 						int length = endPC - startPC;
 						this.contents[localContentsOffset++] = (byte) (length >> 8);
 						this.contents[localContentsOffset++] = (byte) length;
-						nameIndex = constantPool.literalIndex(localVariable.name);
+						nameIndex = this.constantPool.literalIndex(localVariable.name);
 						this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 						this.contents[localContentsOffset++] = (byte) nameIndex;
-						descriptorIndex = constantPool.literalIndex(localVariableTypeBinding.signature());
+						descriptorIndex = this.constantPool.literalIndex(localVariableTypeBinding.signature());
 						this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 						this.contents[localContentsOffset++] = (byte) descriptorIndex;
 						int resolvedPosition = localVariable.resolvedPosition;
@@ -1551,7 +1562,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 					resizeContents(maxOfEntries);
 				}
 				int localVariableTypeNameIndex =
-					constantPool.literalIndex(AttributeNamesConstants.LocalVariableTypeTableName);
+					this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTypeTableName);
 				this.contents[localContentsOffset++] = (byte) (localVariableTypeNameIndex >> 8);
 				this.contents[localContentsOffset++] = (byte) localVariableTypeNameIndex;
 				value = numberOfGenericEntries * 10 + 2;
@@ -1566,10 +1577,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 					this.contents[localContentsOffset++] = 0;
 					this.contents[localContentsOffset++] = (byte) (code_length >> 8);
 					this.contents[localContentsOffset++] = (byte) code_length;
-					nameIndex = constantPool.literalIndex(ConstantPool.This);
+					nameIndex = this.constantPool.literalIndex(ConstantPool.This);
 					this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) nameIndex;
-					descriptorIndex = constantPool.literalIndex(declaringClassBinding.genericTypeSignature());
+					descriptorIndex = this.constantPool.literalIndex(declaringClassBinding.genericTypeSignature());
 					this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) descriptorIndex;
 					this.contents[localContentsOffset++] = 0;// the resolved position for this is always 0
@@ -1589,10 +1600,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 							int length = endPC - startPC;
 							this.contents[localContentsOffset++] = (byte) (length >> 8);
 							this.contents[localContentsOffset++] = (byte) length;
-							nameIndex = constantPool.literalIndex(localVariable.name);
+							nameIndex = this.constantPool.literalIndex(localVariable.name);
 							this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 							this.contents[localContentsOffset++] = (byte) nameIndex;
-							descriptorIndex = constantPool.literalIndex(localVariable.type.genericTypeSignature());
+							descriptorIndex = this.constantPool.literalIndex(localVariable.type.genericTypeSignature());
 							this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 							this.contents[localContentsOffset++] = (byte) descriptorIndex;
 							int resolvedPosition = localVariable.resolvedPosition;
@@ -1619,7 +1630,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapTableAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
 					this.contents[localContentsOffset++] = (byte) (stackMapTableAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapTableAttributeNameIndex;
 
@@ -1693,7 +1704,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -1764,7 +1775,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -1812,7 +1823,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -1872,7 +1883,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -1926,7 +1937,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -1968,7 +1979,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapName);
 					this.contents[localContentsOffset++] = (byte) (stackMapAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapAttributeNameIndex;
 
@@ -2041,7 +2052,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -2095,7 +2106,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -2131,7 +2142,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contents[codeAttributeOffset + 3] = (byte) (codeAttributeLength >> 16);
 		this.contents[codeAttributeOffset + 4] = (byte) (codeAttributeLength >> 8);
 		this.contents[codeAttributeOffset + 5] = (byte) codeAttributeLength;
-		contentsOffset = localContentsOffset;
+		this.contentsOffset = localContentsOffset;
 	}
 
 	/**
@@ -2148,24 +2159,24 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 */
 	public void completeCodeAttributeForClinit(int codeAttributeOffset) {
 		// reinitialize the contents with the byte modified by the code stream
-		this.contents = codeStream.bCodeStream;
-		int localContentsOffset = codeStream.classFileOffset;
+		this.contents = this.codeStream.bCodeStream;
+		int localContentsOffset = this.codeStream.classFileOffset;
 		// codeAttributeOffset is the position inside contents byte array before we started to write
 		// any information about the codeAttribute
 		// That means that to write the attribute_length you need to offset by 2 the value of codeAttributeOffset
 		// to get the right position, 6 for the max_stack etc...
-		int code_length = codeStream.position;
+		int code_length = this.codeStream.position;
 		if (code_length > 65535) {
-			codeStream.methodDeclaration.scope.problemReporter().bytecodeExceeds64KLimit(
-				codeStream.methodDeclaration.scope.referenceType());
+			this.codeStream.methodDeclaration.scope.problemReporter().bytecodeExceeds64KLimit(
+				this.codeStream.methodDeclaration.scope.referenceType());
 		}
 		if (localContentsOffset + 20 >= this.contents.length) {
 			resizeContents(20);
 		}
-		int max_stack = codeStream.stackMax;
+		int max_stack = this.codeStream.stackMax;
 		this.contents[codeAttributeOffset + 6] = (byte) (max_stack >> 8);
 		this.contents[codeAttributeOffset + 7] = (byte) max_stack;
-		int max_locals = codeStream.maxLocals;
+		int max_locals = this.codeStream.maxLocals;
 		this.contents[codeAttributeOffset + 8] = (byte) (max_locals >> 8);
 		this.contents[codeAttributeOffset + 9] = (byte) max_locals;
 		this.contents[codeAttributeOffset + 10] = (byte) (code_length >> 24);
@@ -2175,10 +2186,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 		boolean addStackMaps = (this.produceAttributes & ClassFileConstants.ATTR_STACK_MAP_TABLE) != 0;
 		// write the exception table
-		ExceptionLabel[] exceptionLabels = codeStream.exceptionLabels;
+		ExceptionLabel[] exceptionLabels = this.codeStream.exceptionLabels;
 		int exceptionHandlersCount = 0; // each label holds one handler per range (start/end contiguous)
-		for (int i = 0, length = codeStream.exceptionLabelsCounter; i < length; i++) {
-			exceptionHandlersCount += codeStream.exceptionLabels[i].count / 2;
+		for (int i = 0, length = this.codeStream.exceptionLabelsCounter; i < length; i++) {
+			exceptionHandlersCount += this.codeStream.exceptionLabels[i].count / 2;
 		}
 		int exSize = exceptionHandlersCount * 8 + 2;
 		if (exSize + localContentsOffset >= this.contents.length) {
@@ -2188,14 +2199,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// on the attribute generation
 		this.contents[localContentsOffset++] = (byte) (exceptionHandlersCount >> 8);
 		this.contents[localContentsOffset++] = (byte) exceptionHandlersCount;
-		for (int i = 0, max = codeStream.exceptionLabelsCounter; i < max; i++) {
+		for (int i = 0, max = this.codeStream.exceptionLabelsCounter; i < max; i++) {
 			ExceptionLabel exceptionLabel = exceptionLabels[i];
 			if (exceptionLabel != null) {
 				int iRange = 0, maxRange = exceptionLabel.count;
 				if ((maxRange & 1) != 0) {
-					codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
-							Messages.bind(Messages.abort_invalidExceptionAttribute, new String(codeStream.methodDeclaration.selector)),
-							codeStream.methodDeclaration);
+					this.codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
+							Messages.bind(Messages.abort_invalidExceptionAttribute, new String(this.codeStream.methodDeclaration.selector)),
+							this.codeStream.methodDeclaration);
 				}
 				while  (iRange < maxRange) {
 					int start = exceptionLabel.ranges[iRange++]; // even ranges are start positions
@@ -2220,9 +2231,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 						int nameIndex;
 						if (exceptionLabel.exceptionType == TypeBinding.NULL) {
 							/* represents denote ClassNotFoundException, see class literal access*/
-							nameIndex = constantPool.literalIndexForType(ConstantPool.JavaLangClassNotFoundExceptionConstantPoolName);
+							nameIndex = this.constantPool.literalIndexForType(ConstantPool.JavaLangClassNotFoundExceptionConstantPoolName);
 						} else {
-							nameIndex = constantPool.literalIndexForType(exceptionLabel.exceptionType);
+							nameIndex = this.constantPool.literalIndexForType(exceptionLabel.exceptionType);
 						}
 						this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 						this.contents[localContentsOffset++] = (byte) nameIndex;
@@ -2248,10 +2259,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 			 * contained into the codestream
 			 */
 			int[] pcToSourceMapTable;
-			if (((pcToSourceMapTable = codeStream.pcToSourceMap) != null)
-				&& (codeStream.pcToSourceMapSize != 0)) {
+			if (((pcToSourceMapTable = this.codeStream.pcToSourceMap) != null)
+				&& (this.codeStream.pcToSourceMapSize != 0)) {
 				int lineNumberNameIndex =
-					constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
+					this.constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
 				if (localContentsOffset + 8 >= this.contents.length) {
 					resizeContents(8);
 				}
@@ -2261,7 +2272,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				localContentsOffset += 6;
 				// leave space for attribute_length and line_number_table_length
 				int numberOfEntries = 0;
-				int length = codeStream.pcToSourceMapSize;
+				int length = this.codeStream.pcToSourceMapSize;
 				for (int i = 0; i < length;) {
 					// write the entry
 					if (localContentsOffset + 4 >= this.contents.length) {
@@ -2290,10 +2301,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if ((this.produceAttributes & ClassFileConstants.ATTR_VARS) != 0) {
 			int numberOfEntries = 0;
 			//		codeAttribute.addLocalVariableTableAttribute(this);
-			if ((codeStream.pcToSourceMap != null)
-				&& (codeStream.pcToSourceMapSize != 0)) {
+			if ((this.codeStream.pcToSourceMap != null)
+				&& (this.codeStream.pcToSourceMapSize != 0)) {
 				int localVariableNameIndex =
-					constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
+					this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
 				if (localContentsOffset + 8 >= this.contents.length) {
 					resizeContents(8);
 				}
@@ -2311,8 +2322,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				LocalVariableBinding[] genericLocalVariables = null;
 				int numberOfGenericEntries = 0;
 
-				for (int i = 0, max = codeStream.allLocalsCounter; i < max; i++) {
-					LocalVariableBinding localVariable = codeStream.locals[i];
+				for (int i = 0, max = this.codeStream.allLocalsCounter; i < max; i++) {
+					LocalVariableBinding localVariable = this.codeStream.locals[i];
 					if (localVariable.declaration == null) continue;
 					final TypeBinding localVariableTypeBinding = localVariable.type;
 					boolean isParameterizedType = localVariableTypeBinding.isParameterizedType() || localVariableTypeBinding.isTypeVariable();
@@ -2345,10 +2356,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 							int length = endPC - startPC;
 							this.contents[localContentsOffset++] = (byte) (length >> 8);
 							this.contents[localContentsOffset++] = (byte) length;
-							nameIndex = constantPool.literalIndex(localVariable.name);
+							nameIndex = this.constantPool.literalIndex(localVariable.name);
 							this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 							this.contents[localContentsOffset++] = (byte) nameIndex;
-							descriptorIndex = constantPool.literalIndex(localVariableTypeBinding.signature());
+							descriptorIndex = this.constantPool.literalIndex(localVariableTypeBinding.signature());
 							this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 							this.contents[localContentsOffset++] = (byte) descriptorIndex;
 							int resolvedPosition = localVariable.resolvedPosition;
@@ -2375,7 +2386,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(maxOfEntries);
 					}
 					int localVariableTypeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.LocalVariableTypeTableName);
+						this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTypeTableName);
 					this.contents[localContentsOffset++] = (byte) (localVariableTypeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) localVariableTypeNameIndex;
 					value = numberOfGenericEntries * 10 + 2;
@@ -2397,10 +2408,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 								int length = endPC - startPC;
 								this.contents[localContentsOffset++] = (byte) (length >> 8);
 								this.contents[localContentsOffset++] = (byte) length;
-								nameIndex = constantPool.literalIndex(localVariable.name);
+								nameIndex = this.constantPool.literalIndex(localVariable.name);
 								this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 								this.contents[localContentsOffset++] = (byte) nameIndex;
-								descriptorIndex = constantPool.literalIndex(localVariable.type.genericTypeSignature());
+								descriptorIndex = this.constantPool.literalIndex(localVariable.type.genericTypeSignature());
 								this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 								this.contents[localContentsOffset++] = (byte) descriptorIndex;
 								int resolvedPosition = localVariable.resolvedPosition;
@@ -2428,7 +2439,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapTableAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
 					this.contents[localContentsOffset++] = (byte) (stackMapTableAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapTableAttributeNameIndex;
 
@@ -2502,7 +2513,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -2573,7 +2584,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -2621,7 +2632,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -2681,7 +2692,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -2735,7 +2746,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -2777,7 +2788,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapName);
 					this.contents[localContentsOffset++] = (byte) (stackMapAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapAttributeNameIndex;
 
@@ -2850,7 +2861,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -2904,7 +2915,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -2944,7 +2955,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contents[codeAttributeOffset + 3] = (byte) (codeAttributeLength >> 16);
 		this.contents[codeAttributeOffset + 4] = (byte) (codeAttributeLength >> 8);
 		this.contents[codeAttributeOffset + 5] = (byte) codeAttributeLength;
-		contentsOffset = localContentsOffset;
+		this.contentsOffset = localContentsOffset;
 	}
 
 	/**
@@ -2961,24 +2972,24 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset,
 		int problemLine) {
 		// reinitialize the contents with the byte modified by the code stream
-		this.contents = codeStream.bCodeStream;
-		int localContentsOffset = codeStream.classFileOffset;
+		this.contents = this.codeStream.bCodeStream;
+		int localContentsOffset = this.codeStream.classFileOffset;
 		// codeAttributeOffset is the position inside contents byte array before we started to write
 		// any information about the codeAttribute
 		// That means that to write the attribute_length you need to offset by 2 the value of codeAttributeOffset
 		// to get the right position, 6 for the max_stack etc...
-		int code_length = codeStream.position;
+		int code_length = this.codeStream.position;
 		if (code_length > 65535) {
-			codeStream.methodDeclaration.scope.problemReporter().bytecodeExceeds64KLimit(
-				codeStream.methodDeclaration.scope.referenceType());
+			this.codeStream.methodDeclaration.scope.problemReporter().bytecodeExceeds64KLimit(
+				this.codeStream.methodDeclaration.scope.referenceType());
 		}
 		if (localContentsOffset + 20 >= this.contents.length) {
 			resizeContents(20);
 		}
-		int max_stack = codeStream.stackMax;
+		int max_stack = this.codeStream.stackMax;
 		this.contents[codeAttributeOffset + 6] = (byte) (max_stack >> 8);
 		this.contents[codeAttributeOffset + 7] = (byte) max_stack;
-		int max_locals = codeStream.maxLocals;
+		int max_locals = this.codeStream.maxLocals;
 		this.contents[codeAttributeOffset + 8] = (byte) (max_locals >> 8);
 		this.contents[codeAttributeOffset + 9] = (byte) max_locals;
 		this.contents[codeAttributeOffset + 10] = (byte) (code_length >> 24);
@@ -3010,7 +3021,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				* contained into the codestream
 				*/
 			int lineNumberNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
+				this.constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
 			this.contents[localContentsOffset++] = (byte) (lineNumberNameIndex >> 8);
 			this.contents[localContentsOffset++] = (byte) lineNumberNameIndex;
 			this.contents[localContentsOffset++] = 0;
@@ -3030,7 +3041,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// then we do the local variable attribute
 		if ((this.produceAttributes & ClassFileConstants.ATTR_VARS) != 0) {
 			int localVariableNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
+				this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
 			if (localContentsOffset + 8 >= this.contents.length) {
 				resizeContents(8);
 			}
@@ -3059,7 +3070,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapTableAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
 					this.contents[localContentsOffset++] = (byte) (stackMapTableAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapTableAttributeNameIndex;
 
@@ -3135,7 +3146,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -3206,7 +3217,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -3254,7 +3265,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -3314,7 +3325,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -3368,7 +3379,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -3409,7 +3420,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapName);
 					this.contents[localContentsOffset++] = (byte) (stackMapAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapAttributeNameIndex;
 
@@ -3482,7 +3493,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -3536,7 +3547,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -3576,7 +3587,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contents[codeAttributeOffset + 3] = (byte) (codeAttributeLength >> 16);
 		this.contents[codeAttributeOffset + 4] = (byte) (codeAttributeLength >> 8);
 		this.contents[codeAttributeOffset + 5] = (byte) codeAttributeLength;
-		contentsOffset = localContentsOffset;
+		this.contentsOffset = localContentsOffset;
 	}
 
 	/**
@@ -3588,16 +3599,16 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int[] startLineIndexes,
 		int problemLine) {
 		// reinitialize the localContents with the byte modified by the code stream
-		this.contents = codeStream.bCodeStream;
-		int localContentsOffset = codeStream.classFileOffset;
+		this.contents = this.codeStream.bCodeStream;
+		int localContentsOffset = this.codeStream.classFileOffset;
 		// codeAttributeOffset is the position inside localContents byte array before we started to write// any information about the codeAttribute// That means that to write the attribute_length you need to offset by 2 the value of codeAttributeOffset// to get the right position, 6 for the max_stack etc...
-		int max_stack = codeStream.stackMax;
+		int max_stack = this.codeStream.stackMax;
 		this.contents[codeAttributeOffset + 6] = (byte) (max_stack >> 8);
 		this.contents[codeAttributeOffset + 7] = (byte) max_stack;
-		int max_locals = codeStream.maxLocals;
+		int max_locals = this.codeStream.maxLocals;
 		this.contents[codeAttributeOffset + 8] = (byte) (max_locals >> 8);
 		this.contents[codeAttributeOffset + 9] = (byte) max_locals;
-		int code_length = codeStream.position;
+		int code_length = this.codeStream.position;
 		this.contents[codeAttributeOffset + 10] = (byte) (code_length >> 24);
 		this.contents[codeAttributeOffset + 11] = (byte) (code_length >> 16);
 		this.contents[codeAttributeOffset + 12] = (byte) (code_length >> 8);
@@ -3627,7 +3638,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				* contained into the codestream
 				*/
 			int lineNumberNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
+				this.constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
 			this.contents[localContentsOffset++] = (byte) (lineNumberNameIndex >> 8);
 			this.contents[localContentsOffset++] = (byte) lineNumberNameIndex;
 			this.contents[localContentsOffset++] = 0;
@@ -3662,7 +3673,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapTableAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
 					this.contents[localContentsOffset++] = (byte) (stackMapTableAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapTableAttributeNameIndex;
 
@@ -3738,7 +3749,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -3809,7 +3820,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -3857,7 +3868,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -3917,7 +3928,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -3971,7 +3982,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -4012,7 +4023,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapName);
 					this.contents[localContentsOffset++] = (byte) (stackMapAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapAttributeNameIndex;
 
@@ -4085,7 +4096,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -4139,7 +4150,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -4179,7 +4190,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contents[codeAttributeOffset + 3] = (byte) (codeAttributeLength >> 16);
 		this.contents[codeAttributeOffset + 4] = (byte) (codeAttributeLength >> 8);
 		this.contents[codeAttributeOffset + 5] = (byte) codeAttributeLength;
-		contentsOffset = localContentsOffset;
+		this.contentsOffset = localContentsOffset;
 	}
 
 	/**
@@ -4194,23 +4205,18 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 *
 	 * @param codeAttributeOffset <CODE>int</CODE>
 	 */
-	public void completeCodeAttributeForProblemMethod(
-		AbstractMethodDeclaration method,
-		MethodBinding binding,
-		int codeAttributeOffset,
-		int[] startLineIndexes,
-		int problemLine) {
+	public void completeCodeAttributeForProblemMethod(AbstractMethodDeclaration method, MethodBinding binding, int codeAttributeOffset, int[] startLineIndexes, int problemLine) {
 		// reinitialize the localContents with the byte modified by the code stream
-		this.contents = codeStream.bCodeStream;
-		int localContentsOffset = codeStream.classFileOffset;
+		this.contents = this.codeStream.bCodeStream;
+		int localContentsOffset = this.codeStream.classFileOffset;
 		// codeAttributeOffset is the position inside localContents byte array before we started to write// any information about the codeAttribute// That means that to write the attribute_length you need to offset by 2 the value of codeAttributeOffset// to get the right position, 6 for the max_stack etc...
-		int max_stack = codeStream.stackMax;
+		int max_stack = this.codeStream.stackMax;
 		this.contents[codeAttributeOffset + 6] = (byte) (max_stack >> 8);
 		this.contents[codeAttributeOffset + 7] = (byte) max_stack;
-		int max_locals = codeStream.maxLocals;
+		int max_locals = this.codeStream.maxLocals;
 		this.contents[codeAttributeOffset + 8] = (byte) (max_locals >> 8);
 		this.contents[codeAttributeOffset + 9] = (byte) max_locals;
-		int code_length = codeStream.position;
+		int code_length = this.codeStream.position;
 		this.contents[codeAttributeOffset + 10] = (byte) (code_length >> 24);
 		this.contents[codeAttributeOffset + 11] = (byte) (code_length >> 16);
 		this.contents[codeAttributeOffset + 12] = (byte) (code_length >> 8);
@@ -4242,7 +4248,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				* contained into the codestream
 				*/
 			int lineNumberNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
+				this.constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
 			this.contents[localContentsOffset++] = (byte) (lineNumberNameIndex >> 8);
 			this.contents[localContentsOffset++] = (byte) lineNumberNameIndex;
 			this.contents[localContentsOffset++] = 0;
@@ -4269,7 +4275,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			int numberOfEntries = 0;
 			//		codeAttribute.addLocalVariableTableAttribute(this);
 			int localVariableNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
+				this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
 			if (localContentsOffset + 8 >= this.contents.length) {
 				resizeContents(8);
 			}
@@ -4281,7 +4287,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			int descriptorIndex;
 			int nameIndex;
 			SourceTypeBinding declaringClassBinding = null;
-			final boolean methodDeclarationIsStatic = codeStream.methodDeclaration.isStatic();
+			final boolean methodDeclarationIsStatic = this.codeStream.methodDeclaration.isStatic();
 			if (!methodDeclarationIsStatic) {
 				numberOfEntries++;
 				if (localContentsOffset + 10 >= this.contents.length) {
@@ -4291,12 +4297,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 				this.contents[localContentsOffset++] = 0;
 				this.contents[localContentsOffset++] = (byte) (code_length >> 8);
 				this.contents[localContentsOffset++] = (byte) code_length;
-				nameIndex = constantPool.literalIndex(ConstantPool.This);
+				nameIndex = this.constantPool.literalIndex(ConstantPool.This);
 				this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 				this.contents[localContentsOffset++] = (byte) nameIndex;
-				declaringClassBinding = (SourceTypeBinding) codeStream.methodDeclaration.binding.declaringClass;
+				declaringClassBinding = (SourceTypeBinding) this.codeStream.methodDeclaration.binding.declaringClass;
 				descriptorIndex =
-					constantPool.literalIndex(declaringClassBinding.signature());
+					this.constantPool.literalIndex(declaringClassBinding.signature());
 				this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 				this.contents[localContentsOffset++] = (byte) descriptorIndex;
 				// the resolved position for this is always 0
@@ -4312,7 +4318,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				ReferenceBinding declaringClass = binding.declaringClass;
 				if (declaringClass.isNestedType()) {
 					NestedTypeBinding methodDeclaringClass = (NestedTypeBinding) declaringClass;
-					argSize = methodDeclaringClass.enclosingInstancesSlotSize;
+					argSize = methodDeclaringClass.getEnclosingInstancesSlotSize();
 					SyntheticArgumentBinding[] syntheticArguments;
 					if ((syntheticArguments = methodDeclaringClass.syntheticEnclosingInstances()) != null) {
 						for (int i = 0, max = syntheticArguments.length; i < max; i++) {
@@ -4335,10 +4341,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 							this.contents[localContentsOffset++] = 0;
 							this.contents[localContentsOffset++] = (byte) (code_length >> 8);
 							this.contents[localContentsOffset++] = (byte) code_length;
-							nameIndex = constantPool.literalIndex(localVariable.name);
+							nameIndex = this.constantPool.literalIndex(localVariable.name);
 							this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 							this.contents[localContentsOffset++] = (byte) nameIndex;
-							descriptorIndex = constantPool.literalIndex(localVariableTypeBinding.signature());
+							descriptorIndex = this.constantPool.literalIndex(localVariableTypeBinding.signature());
 							this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 							this.contents[localContentsOffset++] = (byte) descriptorIndex;
 							int resolvedPosition = localVariable.resolvedPosition;
@@ -4373,7 +4379,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						this.contents[localContentsOffset++] = 0;
 						this.contents[localContentsOffset++] = (byte) (code_length >> 8);
 						this.contents[localContentsOffset++] = (byte) code_length;
-						nameIndex = constantPool.literalIndex(arguments[i].name);
+						nameIndex = this.constantPool.literalIndex(arguments[i].name);
 						this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 						this.contents[localContentsOffset++] = (byte) nameIndex;
 						int resolvedPosition = argSize;
@@ -4388,14 +4394,18 @@ public class ClassFile implements TypeConstants, TypeIds {
 							genericArgumentsResolvedPositions[genericArgumentsCounter] = resolvedPosition;
 							genericArgumentsTypeBindings[genericArgumentsCounter++] = argumentBinding;
 						}
-						descriptorIndex = constantPool.literalIndex(argumentBinding.signature());
+						descriptorIndex = this.constantPool.literalIndex(argumentBinding.signature());
 						this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 						this.contents[localContentsOffset++] = (byte) descriptorIndex;
-						if ((argumentBinding == TypeBinding.LONG)
-							|| (argumentBinding == TypeBinding.DOUBLE))
-							argSize += 2;
-						else
-							argSize++;
+						switch(argumentBinding.id) {
+							case TypeIds.T_long :
+							case TypeIds.T_double :
+								argSize += 2;
+								break;
+							default :
+								argSize++;
+								break;
+						}
 						this.contents[localContentsOffset++] = (byte) (resolvedPosition >> 8);
 						this.contents[localContentsOffset++] = (byte) resolvedPosition;
 					}
@@ -4423,7 +4433,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 					resizeContents(maxOfEntries);
 				}
 				int localVariableTypeNameIndex =
-					constantPool.literalIndex(AttributeNamesConstants.LocalVariableTypeTableName);
+					this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTypeTableName);
 				this.contents[localContentsOffset++] = (byte) (localVariableTypeNameIndex >> 8);
 				this.contents[localContentsOffset++] = (byte) localVariableTypeNameIndex;
 				value = numberOfEntries * 10 + 2;
@@ -4439,10 +4449,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 					this.contents[localContentsOffset++] = 0;
 					this.contents[localContentsOffset++] = (byte) (code_length >> 8);
 					this.contents[localContentsOffset++] = (byte) code_length;
-					nameIndex = constantPool.literalIndex(ConstantPool.This);
+					nameIndex = this.constantPool.literalIndex(ConstantPool.This);
 					this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) nameIndex;
-					descriptorIndex = constantPool.literalIndex(declaringClassBinding.genericTypeSignature());
+					descriptorIndex = this.constantPool.literalIndex(declaringClassBinding.genericTypeSignature());
 					this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) descriptorIndex;
 					this.contents[localContentsOffset++] = 0;// the resolved position for this is always 0
@@ -4455,10 +4465,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 					this.contents[localContentsOffset++] = 0;
 					this.contents[localContentsOffset++] = (byte) (code_length >> 8);
 					this.contents[localContentsOffset++] = (byte) code_length;
-					nameIndex = constantPool.literalIndex(localVariable.name);
+					nameIndex = this.constantPool.literalIndex(localVariable.name);
 					this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) nameIndex;
-					descriptorIndex = constantPool.literalIndex(localVariable.type.genericTypeSignature());
+					descriptorIndex = this.constantPool.literalIndex(localVariable.type.genericTypeSignature());
 					this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) descriptorIndex;
 					int resolvedPosition = localVariable.resolvedPosition;
@@ -4473,7 +4483,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 					nameIndex = genericArgumentsNameIndexes[i];
 					this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) nameIndex;
-					descriptorIndex = constantPool.literalIndex(genericArgumentsTypeBindings[i].genericTypeSignature());
+					descriptorIndex = this.constantPool.literalIndex(genericArgumentsTypeBindings[i].genericTypeSignature());
 					this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) descriptorIndex;
 					int resolvedPosition = genericArgumentsResolvedPositions[i];
@@ -4498,7 +4508,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapTableAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
 					this.contents[localContentsOffset++] = (byte) (stackMapTableAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapTableAttributeNameIndex;
 
@@ -4574,7 +4584,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -4645,7 +4655,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -4693,7 +4703,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -4753,7 +4763,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -4807,7 +4817,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -4848,7 +4858,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapName);
 					this.contents[localContentsOffset++] = (byte) (stackMapAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapAttributeNameIndex;
 
@@ -4921,7 +4931,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -4975,7 +4985,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -5014,7 +5024,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contents[codeAttributeOffset + 3] = (byte) (codeAttributeLength >> 16);
 		this.contents[codeAttributeOffset + 4] = (byte) (codeAttributeLength >> 8);
 		this.contents[codeAttributeOffset + 5] = (byte) codeAttributeLength;
-		contentsOffset = localContentsOffset;
+		this.contentsOffset = localContentsOffset;
 	}
 
 	/**
@@ -5036,23 +5046,23 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int codeAttributeOffset,
 		int[] startLineIndexes) {
 		// reinitialize the contents with the byte modified by the code stream
-		this.contents = codeStream.bCodeStream;
-		int localContentsOffset = codeStream.classFileOffset;
+		this.contents = this.codeStream.bCodeStream;
+		int localContentsOffset = this.codeStream.classFileOffset;
 		// codeAttributeOffset is the position inside contents byte array before we started to write
 		// any information about the codeAttribute
 		// That means that to write the attribute_length you need to offset by 2 the value of codeAttributeOffset
 		// to get the right position, 6 for the max_stack etc...
-		int max_stack = codeStream.stackMax;
-		contents[codeAttributeOffset + 6] = (byte) (max_stack >> 8);
-		contents[codeAttributeOffset + 7] = (byte) max_stack;
-		int max_locals = codeStream.maxLocals;
-		contents[codeAttributeOffset + 8] = (byte) (max_locals >> 8);
-		contents[codeAttributeOffset + 9] = (byte) max_locals;
-		int code_length = codeStream.position;
-		contents[codeAttributeOffset + 10] = (byte) (code_length >> 24);
-		contents[codeAttributeOffset + 11] = (byte) (code_length >> 16);
-		contents[codeAttributeOffset + 12] = (byte) (code_length >> 8);
-		contents[codeAttributeOffset + 13] = (byte) code_length;
+		int max_stack = this.codeStream.stackMax;
+		this.contents[codeAttributeOffset + 6] = (byte) (max_stack >> 8);
+		this.contents[codeAttributeOffset + 7] = (byte) max_stack;
+		int max_locals = this.codeStream.maxLocals;
+		this.contents[codeAttributeOffset + 8] = (byte) (max_locals >> 8);
+		this.contents[codeAttributeOffset + 9] = (byte) max_locals;
+		int code_length = this.codeStream.position;
+		this.contents[codeAttributeOffset + 10] = (byte) (code_length >> 24);
+		this.contents[codeAttributeOffset + 11] = (byte) (code_length >> 16);
+		this.contents[codeAttributeOffset + 12] = (byte) (code_length >> 8);
+		this.contents[codeAttributeOffset + 13] = (byte) code_length;
 		if ((localContentsOffset + 40) >= this.contents.length) {
 			resizeContents(40);
 		}
@@ -5060,10 +5070,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 		boolean addStackMaps = (this.produceAttributes & ClassFileConstants.ATTR_STACK_MAP_TABLE) != 0;
 		if (hasExceptionHandlers) {
 			// write the exception table
-			ExceptionLabel[] exceptionLabels = codeStream.exceptionLabels;
+			ExceptionLabel[] exceptionLabels = this.codeStream.exceptionLabels;
 			int exceptionHandlersCount = 0; // each label holds one handler per range (start/end contiguous)
-			for (int i = 0, length = codeStream.exceptionLabelsCounter; i < length; i++) {
-				exceptionHandlersCount += codeStream.exceptionLabels[i].count / 2;
+			for (int i = 0, length = this.codeStream.exceptionLabelsCounter; i < length; i++) {
+				exceptionHandlersCount += this.codeStream.exceptionLabels[i].count / 2;
 			}
 			int exSize = exceptionHandlersCount * 8 + 2;
 			if (exSize + localContentsOffset >= this.contents.length) {
@@ -5073,14 +5083,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 			// on the attribute generation
 			this.contents[localContentsOffset++] = (byte) (exceptionHandlersCount >> 8);
 			this.contents[localContentsOffset++] = (byte) exceptionHandlersCount;
-			for (int i = 0, max = codeStream.exceptionLabelsCounter; i < max; i++) {
+			for (int i = 0, max = this.codeStream.exceptionLabelsCounter; i < max; i++) {
 				ExceptionLabel exceptionLabel = exceptionLabels[i];
 				if (exceptionLabel != null) {
 					int iRange = 0, maxRange = exceptionLabel.count;
 					if ((maxRange & 1) != 0) {
-						referenceBinding.scope.problemReporter().abortDueToInternalError(
+						this.referenceBinding.scope.problemReporter().abortDueToInternalError(
 								Messages.bind(Messages.abort_invalidExceptionAttribute, new String(binding.selector),
-										referenceBinding.scope.problemReporter().referenceContext));
+										this.referenceBinding.scope.problemReporter().referenceContext));
 					}
 					while  (iRange < maxRange) {
 						int start = exceptionLabel.ranges[iRange++]; // even ranges are start positions
@@ -5106,14 +5116,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 							switch(exceptionLabel.exceptionType.id) {
 								case T_null :
 									/* represents ClassNotFoundException, see class literal access*/
-									nameIndex = constantPool.literalIndexForType(ConstantPool.JavaLangClassNotFoundExceptionConstantPoolName);
+									nameIndex = this.constantPool.literalIndexForType(ConstantPool.JavaLangClassNotFoundExceptionConstantPoolName);
 									break;
 								case T_long :
 									/* represents NoSuchFieldError, see switch table generation*/
-									nameIndex = constantPool.literalIndexForType(ConstantPool.JavaLangNoSuchFieldErrorConstantPoolName);
+									nameIndex = this.constantPool.literalIndexForType(ConstantPool.JavaLangNoSuchFieldErrorConstantPoolName);
 									break;
 								default:
-									nameIndex = constantPool.literalIndexForType(exceptionLabel.exceptionType);
+									nameIndex = this.constantPool.literalIndexForType(exceptionLabel.exceptionType);
 							}
 							this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
 							this.contents[localContentsOffset++] = (byte) nameIndex;
@@ -5124,8 +5134,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 		} else {
 			// there is no exception table, so we need to offset by 2 the current offset and move
 			// on the attribute generation
-			contents[localContentsOffset++] = 0;
-			contents[localContentsOffset++] = 0;
+			this.contents[localContentsOffset++] = 0;
+			this.contents[localContentsOffset++] = 0;
 		}
 		// debug attributes
 		int codeAttributeAttributeOffset = localContentsOffset;
@@ -5143,37 +5153,37 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 			int index = 0;
 			int lineNumberNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
-			contents[localContentsOffset++] = (byte) (lineNumberNameIndex >> 8);
-			contents[localContentsOffset++] = (byte) lineNumberNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.LineNumberTableName);
+			this.contents[localContentsOffset++] = (byte) (lineNumberNameIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) lineNumberNameIndex;
 			int lineNumberTableOffset = localContentsOffset;
 			localContentsOffset += 6;
 			// leave space for attribute_length and line_number_table_length
 			// Seems like do would be better, but this preserves the existing behavior.
 			index = Util.getLineNumber(binding.sourceStart, startLineIndexes, 0, startLineIndexes.length-1);
-			contents[localContentsOffset++] = 0;
-			contents[localContentsOffset++] = 0;
-			contents[localContentsOffset++] = (byte) (index >> 8);
-			contents[localContentsOffset++] = (byte) index;
+			this.contents[localContentsOffset++] = 0;
+			this.contents[localContentsOffset++] = 0;
+			this.contents[localContentsOffset++] = (byte) (index >> 8);
+			this.contents[localContentsOffset++] = (byte) index;
 			// now we change the size of the line number attribute
-			contents[lineNumberTableOffset++] = 0;
-			contents[lineNumberTableOffset++] = 0;
-			contents[lineNumberTableOffset++] = 0;
-			contents[lineNumberTableOffset++] = 6;
-			contents[lineNumberTableOffset++] = 0;
-			contents[lineNumberTableOffset++] = 1;
+			this.contents[lineNumberTableOffset++] = 0;
+			this.contents[lineNumberTableOffset++] = 0;
+			this.contents[lineNumberTableOffset++] = 0;
+			this.contents[lineNumberTableOffset++] = 6;
+			this.contents[lineNumberTableOffset++] = 0;
+			this.contents[lineNumberTableOffset++] = 1;
 			attributeNumber++;
 		}
 		// then we do the local variable attribute
 		if ((this.produceAttributes & ClassFileConstants.ATTR_VARS) != 0) {
 			int numberOfEntries = 0;
 			int localVariableNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
+				this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTableName);
 			if (localContentsOffset + 8 > this.contents.length) {
 				resizeContents(8);
 			}
-			contents[localContentsOffset++] = (byte) (localVariableNameIndex >> 8);
-			contents[localContentsOffset++] = (byte) localVariableNameIndex;
+			this.contents[localContentsOffset++] = (byte) (localVariableNameIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) localVariableNameIndex;
 			int localVariableTableOffset = localContentsOffset;
 			localContentsOffset += 6;
 			// leave space for attribute_length and local_variable_table_length
@@ -5185,8 +5195,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 			LocalVariableBinding[] genericLocalVariables = null;
 			int numberOfGenericEntries = 0;
 
-			for (int i = 0, max = codeStream.allLocalsCounter; i < max; i++) {
-				LocalVariableBinding localVariable = codeStream.locals[i];
+			for (int i = 0, max = this.codeStream.allLocalsCounter; i < max; i++) {
+				LocalVariableBinding localVariable = this.codeStream.locals[i];
 				if (localVariable.declaration == null) continue;
 				final TypeBinding localVariableTypeBinding = localVariable.type;
 				boolean isParameterizedType = localVariableTypeBinding.isParameterizedType() || localVariableTypeBinding.isTypeVariable();
@@ -5214,30 +5224,30 @@ public class ClassFile implements TypeConstants, TypeIds {
 						if (isParameterizedType) {
 							numberOfGenericEntries++;
 						}
-						contents[localContentsOffset++] = (byte) (startPC >> 8);
-						contents[localContentsOffset++] = (byte) startPC;
+						this.contents[localContentsOffset++] = (byte) (startPC >> 8);
+						this.contents[localContentsOffset++] = (byte) startPC;
 						int length = endPC - startPC;
-						contents[localContentsOffset++] = (byte) (length >> 8);
-						contents[localContentsOffset++] = (byte) length;
-						nameIndex = constantPool.literalIndex(localVariable.name);
-						contents[localContentsOffset++] = (byte) (nameIndex >> 8);
-						contents[localContentsOffset++] = (byte) nameIndex;
-						descriptorIndex = constantPool.literalIndex(localVariableTypeBinding.signature());
-						contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
-						contents[localContentsOffset++] = (byte) descriptorIndex;
+						this.contents[localContentsOffset++] = (byte) (length >> 8);
+						this.contents[localContentsOffset++] = (byte) length;
+						nameIndex = this.constantPool.literalIndex(localVariable.name);
+						this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+						this.contents[localContentsOffset++] = (byte) nameIndex;
+						descriptorIndex = this.constantPool.literalIndex(localVariableTypeBinding.signature());
+						this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
+						this.contents[localContentsOffset++] = (byte) descriptorIndex;
 						int resolvedPosition = localVariable.resolvedPosition;
-						contents[localContentsOffset++] = (byte) (resolvedPosition >> 8);
-						contents[localContentsOffset++] = (byte) resolvedPosition;
+						this.contents[localContentsOffset++] = (byte) (resolvedPosition >> 8);
+						this.contents[localContentsOffset++] = (byte) resolvedPosition;
 					}
 				}
 			}
 			int value = numberOfEntries * 10 + 2;
-			contents[localVariableTableOffset++] = (byte) (value >> 24);
-			contents[localVariableTableOffset++] = (byte) (value >> 16);
-			contents[localVariableTableOffset++] = (byte) (value >> 8);
-			contents[localVariableTableOffset++] = (byte) value;
-			contents[localVariableTableOffset++] = (byte) (numberOfEntries >> 8);
-			contents[localVariableTableOffset] = (byte) numberOfEntries;
+			this.contents[localVariableTableOffset++] = (byte) (value >> 24);
+			this.contents[localVariableTableOffset++] = (byte) (value >> 16);
+			this.contents[localVariableTableOffset++] = (byte) (value >> 8);
+			this.contents[localVariableTableOffset++] = (byte) value;
+			this.contents[localVariableTableOffset++] = (byte) (numberOfEntries >> 8);
+			this.contents[localVariableTableOffset] = (byte) numberOfEntries;
 			attributeNumber++;
 
 			if (genericLocalVariablesCounter != 0) {
@@ -5248,16 +5258,16 @@ public class ClassFile implements TypeConstants, TypeIds {
 					resizeContents(maxOfEntries);
 				}
 				int localVariableTypeNameIndex =
-					constantPool.literalIndex(AttributeNamesConstants.LocalVariableTypeTableName);
-				contents[localContentsOffset++] = (byte) (localVariableTypeNameIndex >> 8);
-				contents[localContentsOffset++] = (byte) localVariableTypeNameIndex;
+					this.constantPool.literalIndex(AttributeNamesConstants.LocalVariableTypeTableName);
+				this.contents[localContentsOffset++] = (byte) (localVariableTypeNameIndex >> 8);
+				this.contents[localContentsOffset++] = (byte) localVariableTypeNameIndex;
 				value = numberOfGenericEntries * 10 + 2;
-				contents[localContentsOffset++] = (byte) (value >> 24);
-				contents[localContentsOffset++] = (byte) (value >> 16);
-				contents[localContentsOffset++] = (byte) (value >> 8);
-				contents[localContentsOffset++] = (byte) value;
-				contents[localContentsOffset++] = (byte) (numberOfGenericEntries >> 8);
-				contents[localContentsOffset++] = (byte) numberOfGenericEntries;
+				this.contents[localContentsOffset++] = (byte) (value >> 24);
+				this.contents[localContentsOffset++] = (byte) (value >> 16);
+				this.contents[localContentsOffset++] = (byte) (value >> 8);
+				this.contents[localContentsOffset++] = (byte) value;
+				this.contents[localContentsOffset++] = (byte) (numberOfGenericEntries >> 8);
+				this.contents[localContentsOffset++] = (byte) numberOfGenericEntries;
 
 				for (int i = 0; i < genericLocalVariablesCounter; i++) {
 					LocalVariableBinding localVariable = genericLocalVariables[i];
@@ -5266,20 +5276,20 @@ public class ClassFile implements TypeConstants, TypeIds {
 						int endPC = localVariable.initializationPCs[(j << 1) + 1];
 						if (startPC != endPC) { // only entries for non zero length
 							// now we can safely add the local entry
-							contents[localContentsOffset++] = (byte) (startPC >> 8);
-							contents[localContentsOffset++] = (byte) startPC;
+							this.contents[localContentsOffset++] = (byte) (startPC >> 8);
+							this.contents[localContentsOffset++] = (byte) startPC;
 							int length = endPC - startPC;
-							contents[localContentsOffset++] = (byte) (length >> 8);
-							contents[localContentsOffset++] = (byte) length;
-							nameIndex = constantPool.literalIndex(localVariable.name);
-							contents[localContentsOffset++] = (byte) (nameIndex >> 8);
-							contents[localContentsOffset++] = (byte) nameIndex;
-							descriptorIndex = constantPool.literalIndex(localVariable.type.genericTypeSignature());
-							contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
-							contents[localContentsOffset++] = (byte) descriptorIndex;
+							this.contents[localContentsOffset++] = (byte) (length >> 8);
+							this.contents[localContentsOffset++] = (byte) length;
+							nameIndex = this.constantPool.literalIndex(localVariable.name);
+							this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+							this.contents[localContentsOffset++] = (byte) nameIndex;
+							descriptorIndex = this.constantPool.literalIndex(localVariable.type.genericTypeSignature());
+							this.contents[localContentsOffset++] = (byte) (descriptorIndex >> 8);
+							this.contents[localContentsOffset++] = (byte) descriptorIndex;
 							int resolvedPosition = localVariable.resolvedPosition;
-							contents[localContentsOffset++] = (byte) (resolvedPosition >> 8);
-							contents[localContentsOffset++] = (byte) resolvedPosition;
+							this.contents[localContentsOffset++] = (byte) (resolvedPosition >> 8);
+							this.contents[localContentsOffset++] = (byte) resolvedPosition;
 						}
 					}
 				}
@@ -5301,7 +5311,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapTableAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapTableName);
 					this.contents[localContentsOffset++] = (byte) (stackMapTableAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapTableAttributeNameIndex;
 
@@ -5375,7 +5385,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -5446,7 +5456,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -5494,7 +5504,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 													this.contents[localContentsOffset++] = (byte) offset;
 													break;
 												case VerificationTypeInfo.ITEM_OBJECT :
-													int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+													int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 													this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 													this.contents[localContentsOffset++] = (byte) indexForType;
 											}
@@ -5554,7 +5564,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -5608,7 +5618,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 														this.contents[localContentsOffset++] = (byte) offset;
 														break;
 													case VerificationTypeInfo.ITEM_OBJECT :
-														int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+														int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 														this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 														this.contents[localContentsOffset++] = (byte) indexForType;
 												}
@@ -5650,7 +5660,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						resizeContents(8);
 					}
 					int stackMapAttributeNameIndex =
-						constantPool.literalIndex(AttributeNamesConstants.StackMapName);
+						this.constantPool.literalIndex(AttributeNamesConstants.StackMapName);
 					this.contents[localContentsOffset++] = (byte) (stackMapAttributeNameIndex >> 8);
 					this.contents[localContentsOffset++] = (byte) stackMapAttributeNameIndex;
 
@@ -5723,7 +5733,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -5777,7 +5787,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 											this.contents[localContentsOffset++] = (byte) offset;
 											break;
 										case VerificationTypeInfo.ITEM_OBJECT :
-											int indexForType = constantPool.literalIndexForType(info.constantPoolName());
+											int indexForType = this.constantPool.literalIndexForType(info.constantPoolName());
 											this.contents[localContentsOffset++] = (byte) (indexForType >> 8);
 											this.contents[localContentsOffset++] = (byte) indexForType;
 									}
@@ -5809,16 +5819,16 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if (codeAttributeAttributeOffset + 2 >= this.contents.length) {
 			resizeContents(2);
 		}
-		contents[codeAttributeAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[codeAttributeAttributeOffset] = (byte) attributeNumber;
+		this.contents[codeAttributeAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[codeAttributeAttributeOffset] = (byte) attributeNumber;
 
 		// update the attribute length
 		int codeAttributeLength = localContentsOffset - (codeAttributeOffset + 6);
-		contents[codeAttributeOffset + 2] = (byte) (codeAttributeLength >> 24);
-		contents[codeAttributeOffset + 3] = (byte) (codeAttributeLength >> 16);
-		contents[codeAttributeOffset + 4] = (byte) (codeAttributeLength >> 8);
-		contents[codeAttributeOffset + 5] = (byte) codeAttributeLength;
-		contentsOffset = localContentsOffset;
+		this.contents[codeAttributeOffset + 2] = (byte) (codeAttributeLength >> 24);
+		this.contents[codeAttributeOffset + 3] = (byte) (codeAttributeLength >> 16);
+		this.contents[codeAttributeOffset + 4] = (byte) (codeAttributeLength >> 8);
+		this.contents[codeAttributeOffset + 5] = (byte) codeAttributeLength;
+		this.contentsOffset = localContentsOffset;
 	}
 
 	/**
@@ -5857,8 +5867,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int methodAttributeOffset,
 		int attributeNumber) {
 		// update the number of attributes
-		contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
-		contents[methodAttributeOffset] = (byte) attributeNumber;
+		this.contents[methodAttributeOffset++] = (byte) (attributeNumber >> 8);
+		this.contents[methodAttributeOffset] = (byte) attributeNumber;
 	}
 
 	/**
@@ -5868,12 +5878,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 * @return char[]
 	 */
 	public char[] fileName() {
-		return constantPool.UTF8Cache.returnKeyFor(2);
+		return this.constantPool.UTF8Cache.returnKeyFor(2);
 	}
 
 	private void generateAnnotation(Annotation annotation, int currentOffset) {
 		int startingContentsOffset = currentOffset;
-		if (contentsOffset + 4 >= this.contents.length) {
+		if (this.contentsOffset + 4 >= this.contents.length) {
 			resizeContents(4);
 		}
 		TypeBinding annotationTypeBinding = annotation.resolvedType;
@@ -5881,68 +5891,68 @@ public class ClassFile implements TypeConstants, TypeIds {
 			this.contentsOffset = startingContentsOffset;
 			return;
 		}
-		final int typeIndex = constantPool.literalIndex(annotationTypeBinding.signature());
-		contents[contentsOffset++] = (byte) (typeIndex >> 8);
-		contents[contentsOffset++] = (byte) typeIndex;
+		final int typeIndex = this.constantPool.literalIndex(annotationTypeBinding.signature());
+		this.contents[this.contentsOffset++] = (byte) (typeIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) typeIndex;
 		if (annotation instanceof NormalAnnotation) {
 			NormalAnnotation normalAnnotation = (NormalAnnotation) annotation;
 			MemberValuePair[] memberValuePairs = normalAnnotation.memberValuePairs;
 			if (memberValuePairs != null) {
 				final int memberValuePairsLength = memberValuePairs.length;
-				contents[contentsOffset++] = (byte) (memberValuePairsLength >> 8);
-				contents[contentsOffset++] = (byte) memberValuePairsLength;
+				this.contents[this.contentsOffset++] = (byte) (memberValuePairsLength >> 8);
+				this.contents[this.contentsOffset++] = (byte) memberValuePairsLength;
 				for (int i = 0; i < memberValuePairsLength; i++) {
 					MemberValuePair memberValuePair = memberValuePairs[i];
-					if (contentsOffset + 2 >= this.contents.length) {
+					if (this.contentsOffset + 2 >= this.contents.length) {
 						resizeContents(2);
 					}
-					final int elementNameIndex = constantPool.literalIndex(memberValuePair.name);
-					contents[contentsOffset++] = (byte) (elementNameIndex >> 8);
-					contents[contentsOffset++] = (byte) elementNameIndex;
+					final int elementNameIndex = this.constantPool.literalIndex(memberValuePair.name);
+					this.contents[this.contentsOffset++] = (byte) (elementNameIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) elementNameIndex;
 					MethodBinding methodBinding = memberValuePair.binding;
 					if (methodBinding == null) {
-						contentsOffset = startingContentsOffset;
+						this.contentsOffset = startingContentsOffset;
 					} else {
 						try {
 							generateElementValue(memberValuePair.value, methodBinding.returnType, startingContentsOffset);
 						} catch(ClassCastException e) {
-							contentsOffset = startingContentsOffset;
+							this.contentsOffset = startingContentsOffset;
 						} catch(ShouldNotImplement e) {
-							contentsOffset = startingContentsOffset;
+							this.contentsOffset = startingContentsOffset;
 						}
 					}
 				}
 			} else {
-				contents[contentsOffset++] = 0;
-				contents[contentsOffset++] = 0;
+				this.contents[this.contentsOffset++] = 0;
+				this.contents[this.contentsOffset++] = 0;
 			}
 		} else if (annotation instanceof SingleMemberAnnotation) {
 			SingleMemberAnnotation singleMemberAnnotation = (SingleMemberAnnotation) annotation;
 			// this is a single member annotation (one member value)
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 1;
-			if (contentsOffset + 2 >= this.contents.length) {
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 1;
+			if (this.contentsOffset + 2 >= this.contents.length) {
 				resizeContents(2);
 			}
-			final int elementNameIndex = constantPool.literalIndex(VALUE);
-			contents[contentsOffset++] = (byte) (elementNameIndex >> 8);
-			contents[contentsOffset++] = (byte) elementNameIndex;
+			final int elementNameIndex = this.constantPool.literalIndex(VALUE);
+			this.contents[this.contentsOffset++] = (byte) (elementNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) elementNameIndex;
 			MethodBinding methodBinding = singleMemberAnnotation.memberValuePairs()[0].binding;
 			if (methodBinding == null) {
-				contentsOffset = startingContentsOffset;
+				this.contentsOffset = startingContentsOffset;
 			} else {
 				try {
 					generateElementValue(singleMemberAnnotation.memberValue, methodBinding.returnType, startingContentsOffset);
 				} catch(ClassCastException e) {
-					contentsOffset = startingContentsOffset;
+					this.contentsOffset = startingContentsOffset;
 				} catch(ShouldNotImplement e) {
-					contentsOffset = startingContentsOffset;
+					this.contentsOffset = startingContentsOffset;
 				}
 			}
 		} else {
 			// this is a marker annotation (no member value pairs)
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
 		}
 	}
 
@@ -5953,15 +5963,15 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 * - leave some space for attribute_length(4), max_stack(2), max_locals(2), code_length(4).
 	 */
 	public void generateCodeAttributeHeader() {
-		if (contentsOffset + 20 >= this.contents.length) {
+		if (this.contentsOffset + 20 >= this.contents.length) {
 			resizeContents(20);
 		}
 		int constantValueNameIndex =
-			constantPool.literalIndex(AttributeNamesConstants.CodeName);
-		contents[contentsOffset++] = (byte) (constantValueNameIndex >> 8);
-		contents[contentsOffset++] = (byte) constantValueNameIndex;
+			this.constantPool.literalIndex(AttributeNamesConstants.CodeName);
+		this.contents[this.contentsOffset++] = (byte) (constantValueNameIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) constantValueNameIndex;
 		// leave space for attribute_length(4), max_stack(2), max_locals(2), code_length(4)
-		contentsOffset += 12;
+		this.contentsOffset += 12;
 	}
 
 	private void generateElementValue(
@@ -5971,16 +5981,16 @@ public class ClassFile implements TypeConstants, TypeIds {
 		Constant constant = defaultValue.constant;
 		TypeBinding defaultValueBinding = defaultValue.resolvedType;
 		if (defaultValueBinding == null) {
-			contentsOffset = attributeOffset;
+			this.contentsOffset = attributeOffset;
 		} else {
 			if (memberValuePairReturnType.isArrayType() && !defaultValueBinding.isArrayType()) {
 				// automatic wrapping
-				if (contentsOffset + 3 >= this.contents.length) {
+				if (this.contentsOffset + 3 >= this.contents.length) {
 					resizeContents(3);
 				}
-				contents[contentsOffset++] = (byte) '[';
-				contents[contentsOffset++] = (byte) 0;
-				contents[contentsOffset++] = (byte) 1;
+				this.contents[this.contentsOffset++] = (byte) '[';
+				this.contents[this.contentsOffset++] = (byte) 0;
+				this.contents[this.contentsOffset++] = (byte) 1;
 			}
 			if (constant != null && constant != Constant.NotAConstant) {
 				generateElementValue(attributeOffset, defaultValue, constant, memberValuePairReturnType.leafComponentType());
@@ -5994,82 +6004,82 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 * @param attributeOffset
 	 */
 	private void generateElementValue(int attributeOffset, Expression defaultValue, Constant constant, TypeBinding binding) {
-		if (contentsOffset + 3 >= this.contents.length) {
+		if (this.contentsOffset + 3 >= this.contents.length) {
 			resizeContents(3);
 		}
 		switch (binding.id) {
 			case T_boolean :
-				contents[contentsOffset++] = (byte) 'Z';
+				this.contents[this.contentsOffset++] = (byte) 'Z';
 				int booleanValueIndex =
-					constantPool.literalIndex(constant.booleanValue() ? 1 : 0);
-				contents[contentsOffset++] = (byte) (booleanValueIndex >> 8);
-				contents[contentsOffset++] = (byte) booleanValueIndex;
+					this.constantPool.literalIndex(constant.booleanValue() ? 1 : 0);
+				this.contents[this.contentsOffset++] = (byte) (booleanValueIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) booleanValueIndex;
 				break;
 			case T_byte :
-				contents[contentsOffset++] = (byte) 'B';
+				this.contents[this.contentsOffset++] = (byte) 'B';
 				int integerValueIndex =
-					constantPool.literalIndex(constant.intValue());
-				contents[contentsOffset++] = (byte) (integerValueIndex >> 8);
-				contents[contentsOffset++] = (byte) integerValueIndex;
+					this.constantPool.literalIndex(constant.intValue());
+				this.contents[this.contentsOffset++] = (byte) (integerValueIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) integerValueIndex;
 				break;
 			case T_char :
-				contents[contentsOffset++] = (byte) 'C';
+				this.contents[this.contentsOffset++] = (byte) 'C';
 				integerValueIndex =
-					constantPool.literalIndex(constant.intValue());
-				contents[contentsOffset++] = (byte) (integerValueIndex >> 8);
-				contents[contentsOffset++] = (byte) integerValueIndex;
+					this.constantPool.literalIndex(constant.intValue());
+				this.contents[this.contentsOffset++] = (byte) (integerValueIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) integerValueIndex;
 				break;
 			case T_int :
-				contents[contentsOffset++] = (byte) 'I';
+				this.contents[this.contentsOffset++] = (byte) 'I';
 				integerValueIndex =
-					constantPool.literalIndex(constant.intValue());
-				contents[contentsOffset++] = (byte) (integerValueIndex >> 8);
-				contents[contentsOffset++] = (byte) integerValueIndex;
+					this.constantPool.literalIndex(constant.intValue());
+				this.contents[this.contentsOffset++] = (byte) (integerValueIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) integerValueIndex;
 				break;
 			case T_short :
-				contents[contentsOffset++] = (byte) 'S';
+				this.contents[this.contentsOffset++] = (byte) 'S';
 				integerValueIndex =
-					constantPool.literalIndex(constant.intValue());
-				contents[contentsOffset++] = (byte) (integerValueIndex >> 8);
-				contents[contentsOffset++] = (byte) integerValueIndex;
+					this.constantPool.literalIndex(constant.intValue());
+				this.contents[this.contentsOffset++] = (byte) (integerValueIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) integerValueIndex;
 				break;
 			case T_float :
-				contents[contentsOffset++] = (byte) 'F';
+				this.contents[this.contentsOffset++] = (byte) 'F';
 				int floatValueIndex =
-					constantPool.literalIndex(constant.floatValue());
-				contents[contentsOffset++] = (byte) (floatValueIndex >> 8);
-				contents[contentsOffset++] = (byte) floatValueIndex;
+					this.constantPool.literalIndex(constant.floatValue());
+				this.contents[this.contentsOffset++] = (byte) (floatValueIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) floatValueIndex;
 				break;
 			case T_double :
-				contents[contentsOffset++] = (byte) 'D';
+				this.contents[this.contentsOffset++] = (byte) 'D';
 				int doubleValueIndex =
-					constantPool.literalIndex(constant.doubleValue());
-				contents[contentsOffset++] = (byte) (doubleValueIndex >> 8);
-				contents[contentsOffset++] = (byte) doubleValueIndex;
+					this.constantPool.literalIndex(constant.doubleValue());
+				this.contents[this.contentsOffset++] = (byte) (doubleValueIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) doubleValueIndex;
 				break;
 			case T_long :
-				contents[contentsOffset++] = (byte) 'J';
+				this.contents[this.contentsOffset++] = (byte) 'J';
 				int longValueIndex =
-					constantPool.literalIndex(constant.longValue());
-				contents[contentsOffset++] = (byte) (longValueIndex >> 8);
-				contents[contentsOffset++] = (byte) longValueIndex;
+					this.constantPool.literalIndex(constant.longValue());
+				this.contents[this.contentsOffset++] = (byte) (longValueIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) longValueIndex;
 				break;
 			case T_JavaLangString :
-				contents[contentsOffset++] = (byte) 's';
+				this.contents[this.contentsOffset++] = (byte) 's';
 				int stringValueIndex =
-					constantPool.literalIndex(((StringConstant) constant).stringValue().toCharArray());
+					this.constantPool.literalIndex(((StringConstant) constant).stringValue().toCharArray());
 				if (stringValueIndex == -1) {
-					if (!creatingProblemType) {
+					if (!this.creatingProblemType) {
 						// report an error and abort: will lead to a problem type classfile creation
-						TypeDeclaration typeDeclaration = referenceBinding.scope.referenceContext;
+						TypeDeclaration typeDeclaration = this.referenceBinding.scope.referenceContext;
 						typeDeclaration.scope.problemReporter().stringConstantIsExceedingUtf8Limit(defaultValue);
 					} else {
 						// already inside a problem type creation : no attribute
-						contentsOffset = attributeOffset;
+						this.contentsOffset = attributeOffset;
 					}
 				} else {
-					contents[contentsOffset++] = (byte) (stringValueIndex >> 8);
-					contents[contentsOffset++] = (byte) stringValueIndex;
+					this.contents[this.contentsOffset++] = (byte) (stringValueIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) stringValueIndex;
 				}
 		}
 	}
@@ -6077,10 +6087,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 	private void generateElementValueForNonConstantExpression(Expression defaultValue, int attributeOffset, TypeBinding defaultValueBinding) {
 		if (defaultValueBinding != null) {
 			if (defaultValueBinding.isEnum()) {
-				if (contentsOffset + 5 >= this.contents.length) {
+				if (this.contentsOffset + 5 >= this.contents.length) {
 					resizeContents(5);
 				}
-				contents[contentsOffset++] = (byte) 'e';
+				this.contents[this.contentsOffset++] = (byte) 'e';
 				FieldBinding fieldBinding = null;
 				if (defaultValue instanceof QualifiedNameReference) {
 					QualifiedNameReference nameReference = (QualifiedNameReference) defaultValue;
@@ -6089,56 +6099,56 @@ public class ClassFile implements TypeConstants, TypeIds {
 					SingleNameReference nameReference = (SingleNameReference) defaultValue;
 					fieldBinding = (FieldBinding) nameReference.binding;
 				} else {
-					contentsOffset = attributeOffset;
+					this.contentsOffset = attributeOffset;
 				}
 				if (fieldBinding != null) {
-					final int enumConstantTypeNameIndex = constantPool.literalIndex(fieldBinding.type.signature());
-					final int enumConstantNameIndex = constantPool.literalIndex(fieldBinding.name);
-					contents[contentsOffset++] = (byte) (enumConstantTypeNameIndex >> 8);
-					contents[contentsOffset++] = (byte) enumConstantTypeNameIndex;
-					contents[contentsOffset++] = (byte) (enumConstantNameIndex >> 8);
-					contents[contentsOffset++] = (byte) enumConstantNameIndex;
+					final int enumConstantTypeNameIndex = this.constantPool.literalIndex(fieldBinding.type.signature());
+					final int enumConstantNameIndex = this.constantPool.literalIndex(fieldBinding.name);
+					this.contents[this.contentsOffset++] = (byte) (enumConstantTypeNameIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) enumConstantTypeNameIndex;
+					this.contents[this.contentsOffset++] = (byte) (enumConstantNameIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) enumConstantNameIndex;
 				}
 			} else if (defaultValueBinding.isAnnotationType()) {
-				if (contentsOffset + 1 >= this.contents.length) {
+				if (this.contentsOffset + 1 >= this.contents.length) {
 					resizeContents(1);
 				}
-				contents[contentsOffset++] = (byte) '@';
+				this.contents[this.contentsOffset++] = (byte) '@';
 				generateAnnotation((Annotation) defaultValue, attributeOffset);
 			} else if (defaultValueBinding.isArrayType()) {
 				// array type
-				if (contentsOffset + 3 >= this.contents.length) {
+				if (this.contentsOffset + 3 >= this.contents.length) {
 					resizeContents(3);
 				}
-				contents[contentsOffset++] = (byte) '[';
+				this.contents[this.contentsOffset++] = (byte) '[';
 				if (defaultValue instanceof ArrayInitializer) {
 					ArrayInitializer arrayInitializer = (ArrayInitializer) defaultValue;
 					int arrayLength = arrayInitializer.expressions != null ? arrayInitializer.expressions.length : 0;
-					contents[contentsOffset++] = (byte) (arrayLength >> 8);
-					contents[contentsOffset++] = (byte) arrayLength;
+					this.contents[this.contentsOffset++] = (byte) (arrayLength >> 8);
+					this.contents[this.contentsOffset++] = (byte) arrayLength;
 					for (int i = 0; i < arrayLength; i++) {
 						generateElementValue(arrayInitializer.expressions[i], defaultValueBinding.leafComponentType(), attributeOffset);
 					}
 				} else {
-					contentsOffset = attributeOffset;
+					this.contentsOffset = attributeOffset;
 				}
 			} else {
 				// class type
-				if (contentsOffset + 3 >= this.contents.length) {
+				if (this.contentsOffset + 3 >= this.contents.length) {
 					resizeContents(3);
 				}
-				contents[contentsOffset++] = (byte) 'c';
+				this.contents[this.contentsOffset++] = (byte) 'c';
 				if (defaultValue instanceof ClassLiteralAccess) {
 					ClassLiteralAccess classLiteralAccess = (ClassLiteralAccess) defaultValue;
-					final int classInfoIndex = constantPool.literalIndex(classLiteralAccess.targetType.signature());
-					contents[contentsOffset++] = (byte) (classInfoIndex >> 8);
-					contents[contentsOffset++] = (byte) classInfoIndex;
+					final int classInfoIndex = this.constantPool.literalIndex(classLiteralAccess.targetType.signature());
+					this.contents[this.contentsOffset++] = (byte) (classInfoIndex >> 8);
+					this.contents[this.contentsOffset++] = (byte) classInfoIndex;
 				} else {
-					contentsOffset = attributeOffset;
+					this.contentsOffset = attributeOffset;
 				}
 			}
 		} else {
-			contentsOffset = attributeOffset;
+			this.contentsOffset = attributeOffset;
 		}
 	}
 
@@ -6157,8 +6167,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 */
 	public int generateMethodInfoAttribute(MethodBinding methodBinding) {
 		// leave two bytes for the attribute_number
-		contentsOffset += 2;
-		if (contentsOffset + 2 >= this.contents.length) {
+		this.contentsOffset += 2;
+		if (this.contentsOffset + 2 >= this.contents.length) {
 			resizeContents(2);
 		}
 		// now we can handle all the attribute for that method info:
@@ -6176,43 +6186,43 @@ public class ClassFile implements TypeConstants, TypeIds {
 			// check that there is enough space to write all the bytes for the exception attribute
 			int length = thrownsExceptions.length;
 			int exSize = 8 + length * 2;
-			if (exSize + contentsOffset >= this.contents.length) {
+			if (exSize + this.contentsOffset >= this.contents.length) {
 				resizeContents(exSize);
 			}
 			int exceptionNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.ExceptionsName);
-			contents[contentsOffset++] = (byte) (exceptionNameIndex >> 8);
-			contents[contentsOffset++] = (byte) exceptionNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.ExceptionsName);
+			this.contents[this.contentsOffset++] = (byte) (exceptionNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) exceptionNameIndex;
 			// The attribute length = length * 2 + 2 in case of a exception attribute
 			int attributeLength = length * 2 + 2;
-			contents[contentsOffset++] = (byte) (attributeLength >> 24);
-			contents[contentsOffset++] = (byte) (attributeLength >> 16);
-			contents[contentsOffset++] = (byte) (attributeLength >> 8);
-			contents[contentsOffset++] = (byte) attributeLength;
-			contents[contentsOffset++] = (byte) (length >> 8);
-			contents[contentsOffset++] = (byte) length;
+			this.contents[this.contentsOffset++] = (byte) (attributeLength >> 24);
+			this.contents[this.contentsOffset++] = (byte) (attributeLength >> 16);
+			this.contents[this.contentsOffset++] = (byte) (attributeLength >> 8);
+			this.contents[this.contentsOffset++] = (byte) attributeLength;
+			this.contents[this.contentsOffset++] = (byte) (length >> 8);
+			this.contents[this.contentsOffset++] = (byte) length;
 			for (int i = 0; i < length; i++) {
-				int exceptionIndex = constantPool.literalIndexForType(thrownsExceptions[i]);
-				contents[contentsOffset++] = (byte) (exceptionIndex >> 8);
-				contents[contentsOffset++] = (byte) exceptionIndex;
+				int exceptionIndex = this.constantPool.literalIndexForType(thrownsExceptions[i]);
+				this.contents[this.contentsOffset++] = (byte) (exceptionIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) exceptionIndex;
 			}
 			attributeNumber++;
 		}
 		if (methodBinding.isDeprecated()) {
 			// Deprecated attribute
 			// Check that there is enough space to write the deprecated attribute
-			if (contentsOffset + 6 >= this.contents.length) {
+			if (this.contentsOffset + 6 >= this.contents.length) {
 				resizeContents(6);
 			}
 			int deprecatedAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.DeprecatedName);
-			contents[contentsOffset++] = (byte) (deprecatedAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) deprecatedAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.DeprecatedName);
+			this.contents[this.contentsOffset++] = (byte) (deprecatedAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) deprecatedAttributeNameIndex;
 			// the length of a deprecated attribute is equals to 0
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
 
 			attributeNumber++;
 		}
@@ -6220,19 +6230,19 @@ public class ClassFile implements TypeConstants, TypeIds {
 			if (methodBinding.isSynthetic()) {
 				// Synthetic attribute
 				// Check that there is enough space to write the deprecated attribute
-				if (contentsOffset + 6 >= this.contents.length) {
+				if (this.contentsOffset + 6 >= this.contents.length) {
 					resizeContents(6);
 				}
 				int syntheticAttributeNameIndex =
-					constantPool.literalIndex(AttributeNamesConstants.SyntheticName);
-				contents[contentsOffset++] = (byte) (syntheticAttributeNameIndex >> 8);
-				contents[contentsOffset++] = (byte) syntheticAttributeNameIndex;
+					this.constantPool.literalIndex(AttributeNamesConstants.SyntheticName);
+				this.contents[this.contentsOffset++] = (byte) (syntheticAttributeNameIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) syntheticAttributeNameIndex;
 				// the length of a synthetic attribute is equals to 0
-				contents[contentsOffset++] = 0;
-				contents[contentsOffset++] = 0;
-				contents[contentsOffset++] = 0;
-				contents[contentsOffset++] = 0;
-	
+				this.contents[this.contentsOffset++] = 0;
+				this.contents[this.contentsOffset++] = 0;
+				this.contents[this.contentsOffset++] = 0;
+				this.contents[this.contentsOffset++] = 0;
+
 				attributeNumber++;
 			}
 			if (methodBinding.isVarargs()) {
@@ -6241,43 +6251,43 @@ public class ClassFile implements TypeConstants, TypeIds {
 				 * Varargs attribute
 				 * Check that there is enough space to write the deprecated attribute
 				 */
-				if (contentsOffset + 6 >= this.contents.length) {
+				if (this.contentsOffset + 6 >= this.contents.length) {
 					resizeContents(6);
 				}
 				int varargsAttributeNameIndex =
-					constantPool.literalIndex(AttributeNamesConstants.VarargsName);
-				contents[contentsOffset++] = (byte) (varargsAttributeNameIndex >> 8);
-				contents[contentsOffset++] = (byte) varargsAttributeNameIndex;
+					this.constantPool.literalIndex(AttributeNamesConstants.VarargsName);
+				this.contents[this.contentsOffset++] = (byte) (varargsAttributeNameIndex >> 8);
+				this.contents[this.contentsOffset++] = (byte) varargsAttributeNameIndex;
 				// the length of a varargs attribute is equals to 0
-				contents[contentsOffset++] = 0;
-				contents[contentsOffset++] = 0;
-				contents[contentsOffset++] = 0;
-				contents[contentsOffset++] = 0;
-	
+				this.contents[this.contentsOffset++] = 0;
+				this.contents[this.contentsOffset++] = 0;
+				this.contents[this.contentsOffset++] = 0;
+				this.contents[this.contentsOffset++] = 0;
+
 				attributeNumber++;
 			}
 		}
 		// add signature attribute
 		char[] genericSignature = methodBinding.genericSignature();
-		if (genericSignature != null) {
+		if (genericSignature != null && this.targetJDK >= ClassFileConstants.JDK1_5) {
 			// check that there is enough space to write all the bytes for the field info corresponding
 			// to the @fieldBinding
-			if (contentsOffset + 8 >= this.contents.length) {
+			if (this.contentsOffset + 8 >= this.contents.length) {
 				resizeContents(8);
 			}
 			int signatureAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.SignatureName);
-			contents[contentsOffset++] = (byte) (signatureAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) signatureAttributeNameIndex;
+				this.constantPool.literalIndex(AttributeNamesConstants.SignatureName);
+			this.contents[this.contentsOffset++] = (byte) (signatureAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) signatureAttributeNameIndex;
 			// the length of a signature attribute is equals to 2
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 0;
-			contents[contentsOffset++] = 2;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 0;
+			this.contents[this.contentsOffset++] = 2;
 			int signatureIndex =
-				constantPool.literalIndex(genericSignature);
-			contents[contentsOffset++] = (byte) (signatureIndex >> 8);
-			contents[contentsOffset++] = (byte) signatureIndex;
+				this.constantPool.literalIndex(genericSignature);
+			this.contents[this.contentsOffset++] = (byte) (signatureIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) signatureIndex;
 			attributeNumber++;
 		}
 		if (this.targetJDK >= ClassFileConstants.JDK1_5) {
@@ -6303,25 +6313,25 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 	public int generateMethodInfoAttribute(MethodBinding methodBinding, AnnotationMethodDeclaration declaration) {
 		int attributesNumber = generateMethodInfoAttribute(methodBinding);
-		int attributeOffset = contentsOffset;
+		int attributeOffset = this.contentsOffset;
 		if ((declaration.modifiers & ClassFileConstants.AccAnnotationDefault) != 0) {
 			// add an annotation default attribute
 			int annotationDefaultNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.AnnotationDefaultName);
-			contents[contentsOffset++] = (byte) (annotationDefaultNameIndex >> 8);
-			contents[contentsOffset++] = (byte) annotationDefaultNameIndex;
-			int attributeLengthOffset = contentsOffset;
-			contentsOffset += 4;
-			if (contentsOffset + 4 >= this.contents.length) {
+				this.constantPool.literalIndex(AttributeNamesConstants.AnnotationDefaultName);
+			this.contents[this.contentsOffset++] = (byte) (annotationDefaultNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) annotationDefaultNameIndex;
+			int attributeLengthOffset = this.contentsOffset;
+			this.contentsOffset += 4;
+			if (this.contentsOffset + 4 >= this.contents.length) {
 				resizeContents(4);
 			}
 			generateElementValue(declaration.defaultValue, declaration.binding.returnType, attributeOffset);
-			if (contentsOffset != attributeOffset) {
-				int attributeLength = contentsOffset - attributeLengthOffset - 4;
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
-				contents[attributeLengthOffset++] = (byte) attributeLength;
+			if (this.contentsOffset != attributeOffset) {
+				int attributeLength = this.contentsOffset - attributeLengthOffset - 4;
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
+				this.contents[attributeLengthOffset++] = (byte) attributeLength;
 				attributesNumber++;
 			}
 		}
@@ -6354,11 +6364,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 	public void generateMethodInfoHeader(MethodBinding methodBinding, int accessFlags) {
 		// check that there is enough space to write all the bytes for the method info corresponding
 		// to the @methodBinding
-		methodCount++; // add one more method
-		if (contentsOffset + 10 >= this.contents.length) {
+		this.methodCount++; // add one more method
+		if (this.contentsOffset + 10 >= this.contents.length) {
 			resizeContents(10);
 		}
-		if (targetJDK < ClassFileConstants.JDK1_5) {
+		if (this.targetJDK < ClassFileConstants.JDK1_5) {
 			// pre 1.5, synthetic is an attribute, not a modifier
 			// pre 1.5, varargs is an attribute, not a modifier (-target jsr14 mode)
 			accessFlags &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccVarargs);
@@ -6366,14 +6376,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if ((methodBinding.tagBits & TagBits.ClearPrivateModifier) != 0) {
 			accessFlags &= ~ClassFileConstants.AccPrivate;
 		}
-		contents[contentsOffset++] = (byte) (accessFlags >> 8);
-		contents[contentsOffset++] = (byte) accessFlags;
-		int nameIndex = constantPool.literalIndex(methodBinding.selector);
-		contents[contentsOffset++] = (byte) (nameIndex >> 8);
-		contents[contentsOffset++] = (byte) nameIndex;
-		int descriptorIndex = constantPool.literalIndex(methodBinding.signature(this));
-		contents[contentsOffset++] = (byte) (descriptorIndex >> 8);
-		contents[contentsOffset++] = (byte) descriptorIndex;
+		this.contents[this.contentsOffset++] = (byte) (accessFlags >> 8);
+		this.contents[this.contentsOffset++] = (byte) accessFlags;
+		int nameIndex = this.constantPool.literalIndex(methodBinding.selector);
+		this.contents[this.contentsOffset++] = (byte) (nameIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) nameIndex;
+		int descriptorIndex = this.constantPool.literalIndex(methodBinding.signature(this));
+		this.contents[this.contentsOffset++] = (byte) (descriptorIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) descriptorIndex;
 	}
 
 	/**
@@ -6387,22 +6397,22 @@ public class ClassFile implements TypeConstants, TypeIds {
 	public void generateMethodInfoHeaderForClinit() {
 		// check that there is enough space to write all the bytes for the method info corresponding
 		// to the @methodBinding
-		methodCount++; // add one more method
-		if (contentsOffset + 10 >= this.contents.length) {
+		this.methodCount++; // add one more method
+		if (this.contentsOffset + 10 >= this.contents.length) {
 			resizeContents(10);
 		}
-		contents[contentsOffset++] = (byte) ((ClassFileConstants.AccDefault | ClassFileConstants.AccStatic) >> 8);
-		contents[contentsOffset++] = (byte) (ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
-		int nameIndex = constantPool.literalIndex(ConstantPool.Clinit);
-		contents[contentsOffset++] = (byte) (nameIndex >> 8);
-		contents[contentsOffset++] = (byte) nameIndex;
+		this.contents[this.contentsOffset++] = (byte) ((ClassFileConstants.AccDefault | ClassFileConstants.AccStatic) >> 8);
+		this.contents[this.contentsOffset++] = (byte) (ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+		int nameIndex = this.constantPool.literalIndex(ConstantPool.Clinit);
+		this.contents[this.contentsOffset++] = (byte) (nameIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) nameIndex;
 		int descriptorIndex =
-			constantPool.literalIndex(ConstantPool.ClinitSignature);
-		contents[contentsOffset++] = (byte) (descriptorIndex >> 8);
-		contents[contentsOffset++] = (byte) descriptorIndex;
+			this.constantPool.literalIndex(ConstantPool.ClinitSignature);
+		this.contents[this.contentsOffset++] = (byte) (descriptorIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) descriptorIndex;
 		// We know that we won't get more than 1 attribute: the code attribute
-		contents[contentsOffset++] = 0;
-		contents[contentsOffset++] = 1;
+		this.contents[this.contentsOffset++] = 0;
+		this.contents[this.contentsOffset++] = 1;
 	}
 
 	/**
@@ -6474,7 +6484,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contents[this.contentsOffset++] = (byte) (attributeLength >> 16);
 		this.contents[this.contentsOffset++] = (byte) (attributeLength >> 8);
 		this.contents[this.contentsOffset++] = (byte) attributeLength;
-		
+
 		// generate number of missing types
 		this.contents[this.contentsOffset++] = (byte) (numberOfMissingTypes >> 8);
 		this.contents[this.contentsOffset++] = (byte) numberOfMissingTypes;
@@ -6505,20 +6515,22 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 		}
 
-		int annotationAttributeOffset = contentsOffset;
+		int annotationAttributeOffset = this.contentsOffset;
+		int constantPOffset = this.constantPool.currentOffset;
+		int constantPoolIndex = this.constantPool.currentIndex;
 		if (invisibleAnnotationsCounter != 0) {
-			if (contentsOffset + 10 >= contents.length) {
+			if (this.contentsOffset + 10 >= this.contents.length) {
 				resizeContents(10);
 			}
 			int runtimeInvisibleAnnotationsAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.RuntimeInvisibleAnnotationsName);
-			contents[contentsOffset++] = (byte) (runtimeInvisibleAnnotationsAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) runtimeInvisibleAnnotationsAttributeNameIndex;
-			int attributeLengthOffset = contentsOffset;
-			contentsOffset += 4; // leave space for the attribute length
+				this.constantPool.literalIndex(AttributeNamesConstants.RuntimeInvisibleAnnotationsName);
+			this.contents[this.contentsOffset++] = (byte) (runtimeInvisibleAnnotationsAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) runtimeInvisibleAnnotationsAttributeNameIndex;
+			int attributeLengthOffset = this.contentsOffset;
+			this.contentsOffset += 4; // leave space for the attribute length
 
-			int annotationsLengthOffset = contentsOffset;
-			contentsOffset += 2; // leave space for the annotations length
+			int annotationsLengthOffset = this.contentsOffset;
+			this.contentsOffset += 2; // leave space for the annotations length
 
 			int counter = 0;
 			loop: for (int i = 0; i < length; i++) {
@@ -6534,34 +6546,38 @@ public class ClassFile implements TypeConstants, TypeIds {
 				}
 			}
 			if (counter != 0) {
-				contents[annotationsLengthOffset++] = (byte) (counter >> 8);
-				contents[annotationsLengthOffset++] = (byte) counter;
+				this.contents[annotationsLengthOffset++] = (byte) (counter >> 8);
+				this.contents[annotationsLengthOffset++] = (byte) counter;
 
-				int attributeLength = contentsOffset - attributeLengthOffset - 4;
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
-				contents[attributeLengthOffset++] = (byte) attributeLength;
+				int attributeLength = this.contentsOffset - attributeLengthOffset - 4;
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
+				this.contents[attributeLengthOffset++] = (byte) attributeLength;
 				attributesNumber++;
 			} else {
-				contentsOffset = annotationAttributeOffset;
+				this.contentsOffset = annotationAttributeOffset;
+				// reset the constant pool to its state before the clinit
+				this.constantPool.resetForAttributeName(AttributeNamesConstants.RuntimeInvisibleAnnotationsName, constantPoolIndex, constantPOffset);
 			}
 		}
 
-		annotationAttributeOffset = contentsOffset;
+		annotationAttributeOffset = this.contentsOffset;
+		constantPOffset = this.constantPool.currentOffset;
+		constantPoolIndex = this.constantPool.currentIndex;
 		if (visibleAnnotationsCounter != 0) {
-			if (contentsOffset + 10 >= contents.length) {
+			if (this.contentsOffset + 10 >= this.contents.length) {
 				resizeContents(10);
 			}
 			int runtimeVisibleAnnotationsAttributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.RuntimeVisibleAnnotationsName);
-			contents[contentsOffset++] = (byte) (runtimeVisibleAnnotationsAttributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) runtimeVisibleAnnotationsAttributeNameIndex;
-			int attributeLengthOffset = contentsOffset;
-			contentsOffset += 4; // leave space for the attribute length
+				this.constantPool.literalIndex(AttributeNamesConstants.RuntimeVisibleAnnotationsName);
+			this.contents[this.contentsOffset++] = (byte) (runtimeVisibleAnnotationsAttributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) runtimeVisibleAnnotationsAttributeNameIndex;
+			int attributeLengthOffset = this.contentsOffset;
+			this.contentsOffset += 4; // leave space for the attribute length
 
-			int annotationsLengthOffset = contentsOffset;
-			contentsOffset += 2; // leave space for the annotations length
+			int annotationsLengthOffset = this.contentsOffset;
+			this.contentsOffset += 2; // leave space for the annotations length
 
 			int counter = 0;
 			loop: for (int i = 0; i < length; i++) {
@@ -6577,17 +6593,18 @@ public class ClassFile implements TypeConstants, TypeIds {
 				}
 			}
 			if (counter != 0) {
-				contents[annotationsLengthOffset++] = (byte) (counter >> 8);
-				contents[annotationsLengthOffset++] = (byte) counter;
+				this.contents[annotationsLengthOffset++] = (byte) (counter >> 8);
+				this.contents[annotationsLengthOffset++] = (byte) counter;
 
-				int attributeLength = contentsOffset - attributeLengthOffset - 4;
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
-				contents[attributeLengthOffset++] = (byte) attributeLength;
+				int attributeLength = this.contentsOffset - attributeLengthOffset - 4;
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
+				this.contents[attributeLengthOffset++] = (byte) attributeLength;
 				attributesNumber++;
 			} else {
-				contentsOffset = annotationAttributeOffset;
+				this.contentsOffset = annotationAttributeOffset;
+				this.constantPool.resetForAttributeName(AttributeNamesConstants.RuntimeVisibleAnnotationsName, constantPoolIndex, constantPOffset);
 			}
 		}
 		return attributesNumber;
@@ -6617,27 +6634,27 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 		}
 		int attributesNumber = 0;
-		int annotationAttributeOffset = contentsOffset;
+		int annotationAttributeOffset = this.contentsOffset;
 		if (invisibleParametersAnnotationsCounter != 0) {
 			int globalCounter = 0;
-			if (contentsOffset + 7 >= contents.length) {
+			if (this.contentsOffset + 7 >= this.contents.length) {
 				resizeContents(7);
 			}
 			int attributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.RuntimeInvisibleParameterAnnotationsName);
-			contents[contentsOffset++] = (byte) (attributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) attributeNameIndex;
-			int attributeLengthOffset = contentsOffset;
-			contentsOffset += 4; // leave space for the attribute length
+				this.constantPool.literalIndex(AttributeNamesConstants.RuntimeInvisibleParameterAnnotationsName);
+			this.contents[this.contentsOffset++] = (byte) (attributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) attributeNameIndex;
+			int attributeLengthOffset = this.contentsOffset;
+			this.contentsOffset += 4; // leave space for the attribute length
 
-			contents[contentsOffset++] = (byte) argumentsLength;
+			this.contents[this.contentsOffset++] = (byte) argumentsLength;
 			for (int i = 0; i < argumentsLength; i++) {
-				if (contentsOffset + 2 >= contents.length) {
+				if (this.contentsOffset + 2 >= this.contents.length) {
 					resizeContents(2);
 				}
 				if (invisibleParametersAnnotationsCounter == 0) {
-					contents[contentsOffset++] = (byte) 0;
-					contents[contentsOffset++] = (byte) 0;
+					this.contents[this.contentsOffset++] = (byte) 0;
+					this.contents[this.contentsOffset++] = (byte) 0;
 				} else {
 					final int numberOfInvisibleAnnotations = annotationsCounters[i][INVISIBLE_INDEX];
 					int invisibleAnnotationsOffset = this.contentsOffset;
@@ -6652,7 +6669,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 							if (isRuntimeInvisible(annotation)) {
 								int currentAnnotationOffset = this.contentsOffset;
 								generateAnnotation(annotation, currentAnnotationOffset);
-								if (contentsOffset != currentAnnotationOffset) {
+								if (this.contentsOffset != currentAnnotationOffset) {
 									counter++;
 									globalCounter++;
 								}
@@ -6660,42 +6677,42 @@ public class ClassFile implements TypeConstants, TypeIds {
 							}
 						}
 					}
-					contents[invisibleAnnotationsOffset++] = (byte) (counter >> 8);
-					contents[invisibleAnnotationsOffset] = (byte) counter;
+					this.contents[invisibleAnnotationsOffset++] = (byte) (counter >> 8);
+					this.contents[invisibleAnnotationsOffset] = (byte) counter;
 				}
 			}
 			if (globalCounter != 0) {
-				int attributeLength = contentsOffset - attributeLengthOffset - 4;
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
-				contents[attributeLengthOffset++] = (byte) attributeLength;
+				int attributeLength = this.contentsOffset - attributeLengthOffset - 4;
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
+				this.contents[attributeLengthOffset++] = (byte) attributeLength;
 				attributesNumber++;
 			} else {
 				// if globalCounter is 0, this means that the code generation for all visible annotations failed
-				contentsOffset = annotationAttributeOffset;
+				this.contentsOffset = annotationAttributeOffset;
 			}
 		}
 		if (visibleParametersAnnotationsCounter != 0) {
 			int globalCounter = 0;
-			if (contentsOffset + 7 >= contents.length) {
+			if (this.contentsOffset + 7 >= this.contents.length) {
 				resizeContents(7);
 			}
 			int attributeNameIndex =
-				constantPool.literalIndex(AttributeNamesConstants.RuntimeVisibleParameterAnnotationsName);
-			contents[contentsOffset++] = (byte) (attributeNameIndex >> 8);
-			contents[contentsOffset++] = (byte) attributeNameIndex;
-			int attributeLengthOffset = contentsOffset;
-			contentsOffset += 4; // leave space for the attribute length
+				this.constantPool.literalIndex(AttributeNamesConstants.RuntimeVisibleParameterAnnotationsName);
+			this.contents[this.contentsOffset++] = (byte) (attributeNameIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) attributeNameIndex;
+			int attributeLengthOffset = this.contentsOffset;
+			this.contentsOffset += 4; // leave space for the attribute length
 
-			contents[contentsOffset++] = (byte) argumentsLength;
+			this.contents[this.contentsOffset++] = (byte) argumentsLength;
 			for (int i = 0; i < argumentsLength; i++) {
-				if (contentsOffset + 2 >= contents.length) {
+				if (this.contentsOffset + 2 >= this.contents.length) {
 					resizeContents(2);
 				}
 				if (visibleParametersAnnotationsCounter == 0) {
-					contents[contentsOffset++] = (byte) 0;
-					contents[contentsOffset++] = (byte) 0;
+					this.contents[this.contentsOffset++] = (byte) 0;
+					this.contents[this.contentsOffset++] = (byte) 0;
 				} else {
 					final int numberOfVisibleAnnotations = annotationsCounters[i][VISIBLE_INDEX];
 					int visibleAnnotationsOffset = this.contentsOffset;
@@ -6710,7 +6727,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 							if (isRuntimeVisible(annotation)) {
 								int currentAnnotationOffset = this.contentsOffset;
 								generateAnnotation(annotation, currentAnnotationOffset);
-								if (contentsOffset != currentAnnotationOffset) {
+								if (this.contentsOffset != currentAnnotationOffset) {
 									counter++;
 									globalCounter++;
 								}
@@ -6718,20 +6735,20 @@ public class ClassFile implements TypeConstants, TypeIds {
 							}
 						}
 					}
-					contents[visibleAnnotationsOffset++] = (byte) (counter >> 8);
-					contents[visibleAnnotationsOffset] = (byte) counter;
+					this.contents[visibleAnnotationsOffset++] = (byte) (counter >> 8);
+					this.contents[visibleAnnotationsOffset] = (byte) counter;
 				}
 			}
 			if (globalCounter != 0) {
-				int attributeLength = contentsOffset - attributeLengthOffset - 4;
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
-				contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
-				contents[attributeLengthOffset++] = (byte) attributeLength;
+				int attributeLength = this.contentsOffset - attributeLengthOffset - 4;
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 24);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 16);
+				this.contents[attributeLengthOffset++] = (byte) (attributeLength >> 8);
+				this.contents[attributeLengthOffset++] = (byte) attributeLength;
 				attributesNumber++;
 			} else {
 				// if globalCounter is 0, this means that the code generation for all visible annotations failed
-				contentsOffset = annotationAttributeOffset;
+				this.contentsOffset = annotationAttributeOffset;
 			}
 		}
 		return attributesNumber;
@@ -6826,29 +6843,29 @@ public class ClassFile implements TypeConstants, TypeIds {
 	}
 
 	protected void initByteArrays() {
-		int members = referenceBinding.methods().length + referenceBinding.fields().length;
+		int members = this.referenceBinding.methods().length + this.referenceBinding.fields().length;
 		this.header = new byte[INITIAL_HEADER_SIZE];
 		this.contents = new byte[members < 15 ? INITIAL_CONTENTS_SIZE : INITIAL_HEADER_SIZE];
 	}
 
 	public void initialize(SourceTypeBinding aType, ClassFile parentClassFile, boolean createProblemType) {
 		// generate the magic numbers inside the header
-		header[headerOffset++] = (byte) (0xCAFEBABEL >> 24);
-		header[headerOffset++] = (byte) (0xCAFEBABEL >> 16);
-		header[headerOffset++] = (byte) (0xCAFEBABEL >> 8);
-		header[headerOffset++] = (byte) (0xCAFEBABEL >> 0);
+		this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 24);
+		this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 16);
+		this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 8);
+		this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 0);
 
 		long targetVersion = this.targetJDK;
 		if (targetVersion == ClassFileConstants.JDK1_7) {
 			targetVersion = ClassFileConstants.JDK1_6;
 		}
-		header[headerOffset++] = (byte) (targetVersion >> 8); // minor high
-		header[headerOffset++] = (byte) (targetVersion>> 0); // minor low
-		header[headerOffset++] = (byte) (targetVersion >> 24); // major high
-		header[headerOffset++] = (byte) (targetVersion >> 16); // major low
+		this.header[this.headerOffset++] = (byte) (targetVersion >> 8); // minor high
+		this.header[this.headerOffset++] = (byte) (targetVersion>> 0); // minor low
+		this.header[this.headerOffset++] = (byte) (targetVersion >> 24); // major high
+		this.header[this.headerOffset++] = (byte) (targetVersion >> 16); // major low
 
-		constantPoolOffset = headerOffset;
-		headerOffset += 2;
+		this.constantPoolOffset = this.headerOffset;
+		this.headerOffset += 2;
 		this.constantPool.initialize(this);
 
 		// Modifier manipulations for classfile
@@ -6880,39 +6897,34 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// innerclasses get their names computed at code gen time
 
 		// now we continue to generate the bytes inside the contents array
-		contents[contentsOffset++] = (byte) (accessFlags >> 8);
-		contents[contentsOffset++] = (byte) accessFlags;
-		int classNameIndex = constantPool.literalIndexForType(aType);
-		contents[contentsOffset++] = (byte) (classNameIndex >> 8);
-		contents[contentsOffset++] = (byte) classNameIndex;
+		this.contents[this.contentsOffset++] = (byte) (accessFlags >> 8);
+		this.contents[this.contentsOffset++] = (byte) accessFlags;
+		int classNameIndex = this.constantPool.literalIndexForType(aType);
+		this.contents[this.contentsOffset++] = (byte) (classNameIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) classNameIndex;
 		int superclassNameIndex;
 		if (aType.isInterface()) {
-			superclassNameIndex = constantPool.literalIndexForType(ConstantPool.JavaLangObjectConstantPoolName);
+			superclassNameIndex = this.constantPool.literalIndexForType(ConstantPool.JavaLangObjectConstantPoolName);
 		} else {
 			superclassNameIndex =
-				(aType.superclass == null ? 0 : constantPool.literalIndexForType(aType.superclass));
+				(aType.superclass == null ? 0 : this.constantPool.literalIndexForType(aType.superclass));
 		}
-		contents[contentsOffset++] = (byte) (superclassNameIndex >> 8);
-		contents[contentsOffset++] = (byte) superclassNameIndex;
+		this.contents[this.contentsOffset++] = (byte) (superclassNameIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) superclassNameIndex;
 		ReferenceBinding[] superInterfacesBinding = aType.superInterfaces();
 		int interfacesCount = superInterfacesBinding.length;
-		contents[contentsOffset++] = (byte) (interfacesCount >> 8);
-		contents[contentsOffset++] = (byte) interfacesCount;
+		this.contents[this.contentsOffset++] = (byte) (interfacesCount >> 8);
+		this.contents[this.contentsOffset++] = (byte) interfacesCount;
 		for (int i = 0; i < interfacesCount; i++) {
-			int interfaceIndex = constantPool.literalIndexForType(superInterfacesBinding[i]);
-			contents[contentsOffset++] = (byte) (interfaceIndex >> 8);
-			contents[contentsOffset++] = (byte) interfaceIndex;
+			int interfaceIndex = this.constantPool.literalIndexForType(superInterfacesBinding[i]);
+			this.contents[this.contentsOffset++] = (byte) (interfaceIndex >> 8);
+			this.contents[this.contentsOffset++] = (byte) interfaceIndex;
 		}
 		this.creatingProblemType = createProblemType;
 
 		// retrieve the enclosing one guaranteed to be the one matching the propagated flow info
 		// 1FF9ZBU: LFCOM:ALL - Local variable attributes busted (Sanity check)
-		if (this.enclosingClassFile == null) {
-			this.codeStream.maxFieldCount = aType.scope.referenceType().maxFieldCount;
-		} else {
-			ClassFile outermostClassFile = this.outerMostEnclosingClassFile();
-			this.codeStream.maxFieldCount = outermostClassFile.codeStream.maxFieldCount;
-		}
+		this.codeStream.maxFieldCount = aType.scope.outerMostClassScope().referenceType().maxFieldCount;
 	}
 
 	private void initializeDefaultLocals(StackMapFrame frame,
@@ -6926,7 +6938,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			if (isConstructor) {
 				LocalVariableBinding localVariableBinding = new LocalVariableBinding("this".toCharArray(), methodBinding.declaringClass, 0, false); //$NON-NLS-1$
 				localVariableBinding.resolvedPosition = 0;
-				codeStream.record(localVariableBinding);
+				this.codeStream.record(localVariableBinding);
 				localVariableBinding.recordInitializationStartPC(0);
 				localVariableBinding.recordInitializationEndPC(codeLength);
 				frame.putLocal(resolvedPosition, new VerificationTypeInfo(
@@ -6936,7 +6948,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			} else if (!methodBinding.isStatic()) {
 				LocalVariableBinding localVariableBinding = new LocalVariableBinding("this".toCharArray(), methodBinding.declaringClass, 0, false); //$NON-NLS-1$
 				localVariableBinding.resolvedPosition = 0;
-				codeStream.record(localVariableBinding);
+				this.codeStream.record(localVariableBinding);
 				localVariableBinding.recordInitializationStartPC(0);
 				localVariableBinding.recordInitializationEndPC(codeLength);
 				frame.putLocal(resolvedPosition, new VerificationTypeInfo(
@@ -6949,7 +6961,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				if (methodBinding.declaringClass.isEnum()) {
 					LocalVariableBinding localVariableBinding = new LocalVariableBinding(" name".toCharArray(), this.referenceBinding.scope.getJavaLangString(), 0, false); //$NON-NLS-1$
 					localVariableBinding.resolvedPosition = resolvedPosition;
-					codeStream.record(localVariableBinding);
+					this.codeStream.record(localVariableBinding);
 					localVariableBinding.recordInitializationStartPC(0);
 					localVariableBinding.recordInitializationEndPC(codeLength);
 
@@ -6960,7 +6972,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 					localVariableBinding = new LocalVariableBinding(" ordinal".toCharArray(), TypeBinding.INT, 0, false); //$NON-NLS-1$
 					localVariableBinding.resolvedPosition = resolvedPosition;
-					codeStream.record(localVariableBinding);
+					this.codeStream.record(localVariableBinding);
 					localVariableBinding.recordInitializationStartPC(0);
 					localVariableBinding.recordInitializationEndPC(codeLength);
 					frame.putLocal(resolvedPosition, new VerificationTypeInfo(
@@ -6971,21 +6983,19 @@ public class ClassFile implements TypeConstants, TypeIds {
 				// take into account the synthetic parameters
 				if (methodBinding.declaringClass.isNestedType()) {
 					ReferenceBinding enclosingInstanceTypes[];
-					if ((enclosingInstanceTypes = methodBinding.declaringClass
-							.syntheticEnclosingInstanceTypes()) != null) {
+					if ((enclosingInstanceTypes = methodBinding.declaringClass.syntheticEnclosingInstanceTypes()) != null) {
 						for (int i = 0, max = enclosingInstanceTypes.length; i < max; i++) {
 							// an enclosingInstanceType can only be a reference
 							// binding. It cannot be
 							// LongBinding or DoubleBinding
 							LocalVariableBinding localVariableBinding = new LocalVariableBinding((" enclosingType" + i).toCharArray(), enclosingInstanceTypes[i], 0, false); //$NON-NLS-1$
 							localVariableBinding.resolvedPosition = resolvedPosition;
-							codeStream.record(localVariableBinding);
+							this.codeStream.record(localVariableBinding);
 							localVariableBinding.recordInitializationStartPC(0);
 							localVariableBinding.recordInitializationEndPC(codeLength);
-							
+
 							frame.putLocal(resolvedPosition,
-									new VerificationTypeInfo(
-											enclosingInstanceTypes[i]));
+									new VerificationTypeInfo(enclosingInstanceTypes[i]));
 							resolvedPosition++;
 						}
 					}
@@ -7013,7 +7023,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 							final TypeBinding typeBinding = syntheticArguments[i].type;
 							LocalVariableBinding localVariableBinding = new LocalVariableBinding((" synthetic" + i).toCharArray(), typeBinding, 0, false); //$NON-NLS-1$
 							localVariableBinding.resolvedPosition = resolvedPosition;
-							codeStream.record(localVariableBinding);
+							this.codeStream.record(localVariableBinding);
 							localVariableBinding.recordInitializationStartPC(0);
 							localVariableBinding.recordInitializationEndPC(codeLength);
 
@@ -7080,8 +7090,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 			locals[i] = null;
 		}
 		i = 0;
-		locals: for (int max = codeStream.allLocalsCounter; i < max; i++) {
-			LocalVariableBinding localVariable = codeStream.locals[i];
+		locals: for (int max = this.codeStream.allLocalsCounter; i < max; i++) {
+			LocalVariableBinding localVariable = this.codeStream.locals[i];
 			if (localVariable == null) continue;
 			int resolvedPosition = localVariable.resolvedPosition;
 			final TypeBinding localVariableTypeBinding = localVariable.type;
@@ -7139,7 +7149,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			current = current.enclosingClassFile;
 		return current;
 	}
-	
+
 	public void recordInnerClasses(TypeBinding binding) {
 		if (this.innerClassesBindings == null) {
 			this.innerClassesBindings = new HashSet(INNER_CLASSES_SIZE);
@@ -7181,6 +7191,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			this.innerClassesBindings.clear();
 		}
 		this.missingTypes = null;
+		this.visitedTypes = null;
 	}
 
 	/**
@@ -7195,8 +7206,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 	}
 
 	private VerificationTypeInfo retrieveLocal(int currentPC, int resolvedPosition) {
-		for (int i = 0, max = codeStream.allLocalsCounter; i < max; i++) {
-			LocalVariableBinding localVariable = codeStream.locals[i];
+		for (int i = 0, max = this.codeStream.allLocalsCounter; i < max; i++) {
+			LocalVariableBinding localVariable = this.codeStream.locals[i];
 			if (localVariable == null) continue;
 			if (resolvedPosition == localVariable.resolvedPosition) {
 				inits: for (int j = 0; j < localVariable.initializationCount; j++) {
@@ -7241,8 +7252,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 */
 	public void setForMethodInfos() {
 		// leave some space for the methodCount
-		methodCountOffset = contentsOffset;
-		contentsOffset += 2;
+		this.methodCountOffset = this.contentsOffset;
+		this.contentsOffset += 2;
 	}
 
 	public void traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, ArrayList frames, boolean isClinit) {
@@ -7426,13 +7437,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 							frame.addStackItem(TypeBinding.FLOAT);
 							break;
 						case ClassFileConstants.ClassTag:
-							int utf8index = u2At(poolContents, 1,
-									constantPoolOffsets[index]);
-							char[] classSignature = utf8At(poolContents,
-									constantPoolOffsets[utf8index] + 3, u2At(
-											poolContents, 1,
-											constantPoolOffsets[utf8index]));
-							frame.addStackItem(new VerificationTypeInfo(0, classSignature));
+							frame.addStackItem(new VerificationTypeInfo(
+									TypeIds.T_JavaLangClass,
+									ConstantPool.JavaLangClassConstantPoolName));
 					}
 					pc += 2;
 					break;
@@ -7452,14 +7459,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 							frame.addStackItem(TypeBinding.FLOAT);
 							break;
 						case ClassFileConstants.ClassTag:
-							int utf8index = u2At(poolContents, 1,
-									constantPoolOffsets[index]);
-							char[] classSignature = utf8At(poolContents,
-									constantPoolOffsets[utf8index] + 3, u2At(
-											poolContents, 1,
-											constantPoolOffsets[utf8index]));
-							frame.addStackItem(new VerificationTypeInfo(0,
-									classSignature));
+							frame.addStackItem(new VerificationTypeInfo(
+									TypeIds.T_JavaLangClass,
+									ConstantPool.JavaLangClassConstantPoolName));
 					}
 					pc += 3;
 					break;
@@ -8471,15 +8473,15 @@ public class ClassFile implements TypeConstants, TypeIds {
 					pc += 5;
 					break;
 				default: // should not occur
-					codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
+					this.codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
 							Messages.bind(
-									Messages.abort_invalidOpcode, 
+									Messages.abort_invalidOpcode,
 									new Object[] {
 										new Byte(opcode),
 										new Integer(pc),
 										new String(methodBinding.shortReadableName()),
 									}),
-							codeStream.methodDeclaration);
+							this.codeStream.methodDeclaration);
 				break;
 			}
 			if (pc >= (codeLength + codeOffset)) {

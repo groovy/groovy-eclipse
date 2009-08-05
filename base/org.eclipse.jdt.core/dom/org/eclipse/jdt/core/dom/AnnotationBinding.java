@@ -15,6 +15,7 @@ package org.eclipse.jdt.core.dom;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -33,10 +34,10 @@ class AnnotationBinding implements IAnnotationBinding {
 	AnnotationBinding(org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding annotation, BindingResolver resolver) {
 		if (annotation == null)
 			throw new IllegalStateException();
-		binding = annotation;
-		bindingResolver = resolver;
+		this.binding = annotation;
+		this.bindingResolver = resolver;
 	}
-	
+
 	public IAnnotationBinding[] getAnnotations() {
 		return NoAnnotations;
 	}
@@ -47,7 +48,7 @@ class AnnotationBinding implements IAnnotationBinding {
 			return null;
 		return typeBinding;
 	}
-	
+
 	public IMemberValuePairBinding[] getDeclaredMemberValuePairs() {
 		ReferenceBinding typeBinding = this.binding.getAnnotationType();
 		if (typeBinding == null || ((typeBinding.tagBits & TagBits.HasMissingType) != 0)) {
@@ -97,7 +98,7 @@ class AnnotationBinding implements IAnnotationBinding {
 		}
 		return allPairs;
 	}
-	
+
 	public IJavaElement getJavaElement() {
 		if (!(this.bindingResolver instanceof DefaultBindingResolver)) return null;
 		ASTNode node = (ASTNode) ((DefaultBindingResolver) this.bindingResolver).bindingsToAstNodes.get(this);
@@ -112,8 +113,10 @@ class AnnotationBinding implements IAnnotationBinding {
 				parentElement =  ((ICompilationUnit) cu).getPackageDeclaration(pkgName);
 			}
 			break;
+		case ASTNode.ENUM_DECLARATION:
 		case ASTNode.TYPE_DECLARATION:
-			parentElement = ((TypeDeclaration) parent).resolveBinding().getJavaElement();
+		case ASTNode.ANNOTATION_TYPE_DECLARATION:
+			parentElement = ((AbstractTypeDeclaration) parent).resolveBinding().getJavaElement();
 			break;
 		case ASTNode.FIELD_DECLARATION:
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) ((FieldDeclaration) parent).fragments().get(0);
@@ -130,6 +133,9 @@ class AnnotationBinding implements IAnnotationBinding {
 			return null;
 		}
 		if (! (parentElement instanceof IAnnotatable)) return null;
+		if ((parentElement instanceof IMember) && ((IMember) parentElement).isBinary()) {
+			return ((IAnnotatable) parentElement).getAnnotation(getAnnotationType().getQualifiedName());
+		}
 		return ((IAnnotatable) parentElement).getAnnotation(getName());
 	}
 
@@ -140,7 +146,7 @@ class AnnotationBinding implements IAnnotationBinding {
 		}
 		return this.key;
 	}
-	
+
 	private String getRecipientKey() {
 		if (!(this.bindingResolver instanceof DefaultBindingResolver)) return ""; //$NON-NLS-1$
 		DefaultBindingResolver resolver = (DefaultBindingResolver) this.bindingResolver;
@@ -185,13 +191,13 @@ class AnnotationBinding implements IAnnotationBinding {
 			return annotationType.getName();
 		}
 	}
-	
+
 	public boolean isDeprecated() {
 		ReferenceBinding typeBinding = this.binding.getAnnotationType();
 		if (typeBinding == null) return false;
 		return typeBinding.isDeprecated();
 	}
-	
+
 	public boolean isEqualTo(IBinding otherBinding) {
 		if (this == otherBinding)
 			return true;
@@ -216,7 +222,7 @@ class AnnotationBinding implements IAnnotationBinding {
 	 * @see org.eclipse.jdt.core.dom.IBinding#isRecovered()
 	 */
 	public boolean isRecovered() {
-        ReferenceBinding annotationType = binding.getAnnotationType();
+        ReferenceBinding annotationType = this.binding.getAnnotationType();
         return annotationType == null || (annotationType.tagBits & TagBits.HasMissingType) != 0;	}
 
 	public boolean isSynthetic() {
@@ -239,5 +245,5 @@ class AnnotationBinding implements IAnnotationBinding {
 		buffer.append(')');
 		return buffer.toString();
 	}
-	
+
 }

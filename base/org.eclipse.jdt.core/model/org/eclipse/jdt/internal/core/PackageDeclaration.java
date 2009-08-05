@@ -18,9 +18,9 @@ import org.eclipse.jdt.core.IPackageDeclaration;
  */
 
 public class PackageDeclaration extends SourceRefElement implements IPackageDeclaration {
-	
+
 	String name;
-	
+
 protected PackageDeclaration(CompilationUnit parent, String name) {
 	super(parent);
 	this.name = name;
@@ -56,7 +56,7 @@ public IJavaElement getPrimaryElement(boolean checkOwner) {
  * @private Debugging purposes
  */
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
-	buffer.append(this.tabString(tab));
+	buffer.append(tabString(tab));
 	buffer.append("package "); //$NON-NLS-1$
 	toStringName(buffer);
 	if (info == null) {

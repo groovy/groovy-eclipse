@@ -33,7 +33,9 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -55,6 +57,7 @@ import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
+import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
@@ -73,6 +76,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
@@ -312,6 +316,65 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						annotation.memberValue = new ClassLiteralAccess(value.getEnd(), ref);
 						annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length();
 						annotations.add(annotation);
+						// FIXASC (M2) underlying for SuppressWarnings doesn't seem right when included in messages
+					} else if (annoType.getName().equals("SuppressWarnings")
+							&& (value instanceof ConstantExpression || value instanceof ListExpression)) {
+						if (value instanceof ListExpression) {
+							ListExpression listExpression = (ListExpression) value;
+							// FIXASC (M2) tidy up all this junk
+							List<Expression> listOfExpressions = listExpression.getExpressions();
+							TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
+							annotationReference.sourceStart = annotationNode.getStart();
+							annotationReference.sourceEnd = annotationNode.getEnd();
+							SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
+									.getStart());
+
+							ArrayInitializer arrayInitializer = new ArrayInitializer();
+							arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
+									.size()];
+							for (int c = 0; c < listOfExpressions.size(); c++) {
+								String v = (String) ((ConstantExpression) listOfExpressions.get(c)).getValue();
+								TypeReference ref = null;
+								int start = annotationReference.sourceStart;
+								int end = annotationReference.sourceEnd;
+								if (v.indexOf(".") == -1) {
+									ref = new SingleTypeReference(v.toCharArray(), positionFor(start, end));
+								} else {
+									char[][] splits = CharOperation.splitOn('.', v.toCharArray());
+									ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
+								}
+								// FIXASC (M2) positions are crap
+								arrayInitializer.expressions[c] = new StringLiteral(v.toCharArray(), start, end, -1);
+							}
+							annotation.memberValue = arrayInitializer;
+							annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length();
+							annotations.add(annotation);
+						} else {
+							ConstantExpression constantExpression = (ConstantExpression) value;
+							if (value.getType().getName().equals("java.lang.String")) {
+								// single value, eg. @SuppressWarnings("unchecked")
+								// FIXASC (M2) test positional info for conjured up anno refs
+								TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
+								annotationReference.sourceStart = annotationNode.getStart();
+								annotationReference.sourceEnd = annotationNode.getEnd();
+								SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
+										.getStart());
+								String v = (String) constantExpression.getValue();
+								TypeReference ref = null;
+								int start = annotationReference.sourceStart;
+								int end = annotationReference.sourceEnd;
+								if (v.indexOf(".") == -1) {
+									ref = new SingleTypeReference(v.toCharArray(), positionFor(start, end));
+								} else {
+									char[][] splits = CharOperation.splitOn('.', v.toCharArray());
+									ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
+								}
+								annotation.memberValue = new StringLiteral(v.toCharArray(), start, end, -1);
+								annotation.declarationSourceEnd = annotation.sourceStart
+										+ annoType.getNameWithoutPackage().length();
+								annotations.add(annotation);
+							}
+						}
 					}
 				}
 			}
@@ -783,23 +846,25 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * position 'end' because in some cases just adding 1+length of previous reference isn't enough. For example in java.util.List[]
 	 * the end will be the end of [] but reference will only contain 'java' 'util' 'List'
 	 * <p>
+	 * Because the 'end' is quite often wrong right now (for example on a return type 'java.util.List[]' the end can be two
+	 * characters off the end (set to the start of the method name...) - we are just computing the positional information from the
+	 * start.
 	 */
 	// FIXASC (M2) seems that sometimes, especially for types that are defined as 'def', but are converted to java.lang.Object, end
-	// < start. This causes no end of problems
+	// < start. This causes no end of problems. I don't think it is so much the 'declaration' as the fact that is no reference and
+	// really what is computed here is the reference for something actually specified in the source code. Coming up with fake
+	// positions for something not specified is not entirely unreasonable we should check
+	// if the reference in particular needed creating at all in the first place...
 	private long[] positionsFor(char[][] reference, long start, long end) {
 		long[] result = new long[reference.length];
-		if (start <= end) {
+		if (start < end) {
 			// Do the right thing
 			long pos = start;
 			for (int i = 0, max = result.length; i < max; i++) {
 				long s = pos;
-				// extra 1 for '.'
-				pos = pos + reference[i].length + (i < (max - 1) ? 1 : 0);
-				long e = Math.min(pos - 1, end); // -1 dont want the char after, want the last char
-				if (i == (max - 1)) {
-					e = end;
-				}
-				result[i] = ((s << 32) | e);
+				pos = pos + reference[i].length - 1; // jump to the last char of the name
+				result[i] = ((s << 32) | pos);
+				pos += 2; // jump onto the following '.' then off it
 			}
 		} else {
 			// FIXASC (M2) this case shouldn't happen (end<start) - uncomment following if to collect diagnostics
@@ -808,17 +873,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				result[i] = pos;
 			}
 		}
-		// if (end < start) {
-		// StringBuilder posInfo = new StringBuilder();
-		// for (int i = 0; i < result.length; i++) {
-		// posInfo.append("[" + (result[i] >>> 32) + ">" + (result[i] & 0x7fffffff) + "]");
-		// }
-		// throw new GroovyEclipseBug("ref='" + CharOperation.toString(reference) + "' start=" + start + " end=" + end + " == "
-		// + posInfo.toString());
-		// }
 		return result;
 	}
 
+	// callers change to toPos() which does mess with end position - it is the callers responsibility
 	private long positionFor(long start, long end) {
 		return ((start << 32) | (end - 1));
 	}
@@ -843,41 +901,46 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		if (signature.charAt(pos) == 'L' && dim > 0) {
 			String arrayComponentTypename = signature.substring(pos + 1, signature.length() - 1); // chop off '['s 'L' and ';'
 			if (arrayComponentTypename.indexOf(".") == -1) {
-				// FIXASC (M2) why the minus one here?
-				return new ArrayTypeReference(arrayComponentTypename.toCharArray(), dim, positionFor(start, end - 1));
+				return createJDTArrayTypeReference(arrayComponentTypename, dim, start, end);
 			} else {
-				char[][] compoundName = CharOperation.splitOn('.', arrayComponentTypename.toCharArray());
-				// FIXASC (M2) why the minus two here?
-				return new ArrayQualifiedTypeReference(compoundName, dim, positionsFor(compoundName, start, end - 2));
+				return createJDTArrayQualifiedTypeReference(arrayComponentTypename, dim, start, end);
 			}
-
 		}
 		throw new GroovyEclipseBug("Unable to convert signature to reference.  Signature was '" + signature + "'");
+	}
+
+	/**
+	 * Pack start and end positions into a long - no adjustments are made to the values passed in, the caller must make any required
+	 * adjustments.
+	 */
+	private long toPos(long start, long end) {
+		return ((start << 32) | end);
 	}
 
 	private TypeReference createTypeReferenceForClassNode(GenericsType genericsType) {
 		if (genericsType.isWildcard()) {
 			ClassNode[] bounds = genericsType.getUpperBounds();
 			if (bounds != null) {
-				// FIXASC (M2) other bounds...
-				// FIXASC (M2) positional testing for wildcard bounds
+				// FIXASC (M2) other bounds?
+				// positions example: (29>31)Set<(33>54)? extends (43>54)Serializable>
 				TypeReference boundReference = createTypeReferenceForClassNode(bounds[0]);
 				Wildcard wildcard = new Wildcard(Wildcard.EXTENDS);
 				wildcard.sourceStart = genericsType.getStart();
-				wildcard.sourceEnd = genericsType.getEnd();
+				wildcard.sourceEnd = boundReference.sourceEnd();
 				wildcard.bound = boundReference;
 				return wildcard;
 			} else if (genericsType.getLowerBound() != null) {
+				// positions example: (67>69)Set<(71>84)? super (79>84)Number>
 				TypeReference boundReference = createTypeReferenceForClassNode(genericsType.getLowerBound());
 				Wildcard wildcard = new Wildcard(Wildcard.SUPER);
 				wildcard.sourceStart = genericsType.getStart();
-				wildcard.sourceEnd = genericsType.getEnd();
+				wildcard.sourceEnd = boundReference.sourceEnd();
 				wildcard.bound = boundReference;
 				return wildcard;
 			} else {
 				Wildcard w = new Wildcard(Wildcard.UNBOUND);
 				w.sourceStart = genericsType.getStart();
-				w.sourceEnd = genericsType.getEnd();
+				w.sourceEnd = genericsType.getStart();
 				return w;
 			}
 			// FIXASC (M2) what does the check on this next really line mean?
@@ -951,7 +1014,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		} else {
 			char[][] compoundName = CharOperation.splitOn('.', name.toCharArray());
 			if (typeArguments == null) {
-				return new QualifiedTypeReference(compoundName, positionsFor(compoundName, start, end - 2));
+				return new QualifiedTypeReference(compoundName, positionsFor(compoundName, start, end));
 			} else {
 				// FIXASC (M2) support individual parameterization of component
 				// references A<String>.B<Wibble>
@@ -1124,7 +1187,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void fixupSourceLocationsForTypeDeclaration(GroovyTypeDeclaration typeDeclaration, ClassNode classNode) {
 		// TODO (groovy) each area marked with a '*' is only approximate
-		// and can be revisted to make more precise
+		// and can be revisited to make more precise
 
 		// start and end of the name of class
 		typeDeclaration.sourceStart = classNode.getNameStart();
@@ -1350,9 +1413,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	@Override
-	public void recordSuppressWarnings(long irritant, Annotation annotation, int scopeStart, int scopeEnd) {
+	public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation, int scopeStart, int scopeEnd) {
 		// FIXASC (M2) Auto-generated method stub
-		super.recordSuppressWarnings(irritant, annotation, scopeStart, scopeEnd);
+		super.recordSuppressWarnings(irritants, annotation, scopeStart, scopeEnd);
 	}
 
 	@Override
@@ -1413,5 +1476,38 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		// FIXASC (M2) Auto-generated method stub
 		super.traverse(visitor, scope);
+	}
+
+	// -- builders for JDT TypeReference subclasses
+
+	/**
+	 * Create a JDT ArrayTypeReference.<br>
+	 * Positional information:
+	 * <p>
+	 * For a single array reference, for example 'String[]' start will be 'S' and end will be the char after ']'. When the
+	 * ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the ']';
+	 * originalSourceEnd - the 'g'
+	 */
+	private ArrayTypeReference createJDTArrayTypeReference(String arrayComponentTypename, int dimensions, int start, int end) {
+		ArrayTypeReference atr = new ArrayTypeReference(arrayComponentTypename.toCharArray(), dimensions, toPos(start, end - 1));
+		atr.originalSourceEnd = atr.sourceStart + arrayComponentTypename.length() - 1;
+		return atr;
+	}
+
+	/**
+	 * Create a JDT ArrayQualifiedTypeReference.<br>
+	 * Positional information:
+	 * <p>
+	 * For a qualified array reference, for example 'java.lang.Number[][]' start will be 'j' and end will be the char after ']'.
+	 * When the ArrayQualifiedTypeReference is built we need these positions for the result: sourceStart - the 'j'; sourceEnd - the
+	 * final ']'; the positions computed for the reference components would be j..a l..g and N..r
+	 */
+	private ArrayQualifiedTypeReference createJDTArrayQualifiedTypeReference(String arrayComponentTypename, int dimensions,
+			int start, int end) {
+		char[][] compoundName = CharOperation.splitOn('.', arrayComponentTypename.toCharArray());
+		ArrayQualifiedTypeReference aqtr = new ArrayQualifiedTypeReference(compoundName, dimensions, positionsFor(compoundName,
+				start, end - dimensions * 2));
+		aqtr.sourceEnd = end - 1;
+		return aqtr;
 	}
 }

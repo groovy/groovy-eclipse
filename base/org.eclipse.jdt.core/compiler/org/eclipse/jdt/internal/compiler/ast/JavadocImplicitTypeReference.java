@@ -15,7 +15,7 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class JavadocImplicitTypeReference extends TypeReference {
-	
+
 	public char[] token;
 
 	public JavadocImplicitTypeReference(char[] name, int pos) {
@@ -42,7 +42,7 @@ public class JavadocImplicitTypeReference extends TypeReference {
 	public char[] getLastToken() {
 		return this.token;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.compiler.ast.TypeReference#getTypeName()
 	 */
@@ -72,16 +72,16 @@ public class JavadocImplicitTypeReference extends TypeReference {
 					case ProblemReasons.NotFound :
 					case ProblemReasons.NotVisible :
 						TypeBinding type = this.resolvedType.closestMatch();
-						return type;			
+						return type;
 					default :
 						return null;
-				}			
+				}
 			}
 		}
 		boolean hasError;
 		TypeBinding type = this.resolvedType = getTypeBinding(scope);
 		if (type == null) {
-			return null; // detected cycle while resolving hierarchy	
+			return null; // detected cycle while resolving hierarchy
 		} else if ((hasError = !type.isValidBinding())== true) {
 			reportInvalidType(scope);
 			switch (type.problemId()) {
@@ -89,7 +89,7 @@ public class JavadocImplicitTypeReference extends TypeReference {
 				case ProblemReasons.NotVisible :
 					type = type.closestMatch();
 					if (type == null) return null;
-					break;					
+					break;
 				default :
 					return null;
 			}
@@ -106,7 +106,7 @@ public class JavadocImplicitTypeReference extends TypeReference {
 		if (type.isGenericType() || type.isParameterizedType()) {
 			type = scope.environment().convertToRawType(type, true /*force the conversion of enclosing types*/);
 		}
-		
+
 		if (hasError) {
 			// do not store the computed type, keep the problem type instead
 			return type;

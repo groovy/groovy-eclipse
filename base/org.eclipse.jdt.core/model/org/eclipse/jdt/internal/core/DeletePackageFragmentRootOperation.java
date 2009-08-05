@@ -27,30 +27,30 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 		IPackageFragmentRoot root,
 		int updateResourceFlags,
 		int updateModelFlags) {
-			
+
 		super(root);
 		this.updateResourceFlags = updateResourceFlags;
 		this.updateModelFlags = updateModelFlags;
 	}
 
 	protected void executeOperation() throws JavaModelException {
-		
-		IPackageFragmentRoot root = (IPackageFragmentRoot)this.getElementToProcess();
+
+		IPackageFragmentRoot root = (IPackageFragmentRoot)getElementToProcess();
 		IClasspathEntry rootEntry = root.getRawClasspathEntry();
-		
+
 		// remember olds roots
 		DeltaProcessor deltaProcessor = JavaModelManager.getJavaModelManager().getDeltaProcessor();
 		if (deltaProcessor.oldRoots == null)
 			deltaProcessor.oldRoots = new HashMap();
-		
+
 		// update classpath if needed
-		if ((updateModelFlags & IPackageFragmentRoot.ORIGINATING_PROJECT_CLASSPATH) != 0) {
+		if ((this.updateModelFlags & IPackageFragmentRoot.ORIGINATING_PROJECT_CLASSPATH) != 0) {
 			updateProjectClasspath(rootEntry.getPath(), root.getJavaProject(), deltaProcessor.oldRoots);
 		}
-		if ((updateModelFlags & IPackageFragmentRoot.OTHER_REFERRING_PROJECTS_CLASSPATH) != 0) {
+		if ((this.updateModelFlags & IPackageFragmentRoot.OTHER_REFERRING_PROJECTS_CLASSPATH) != 0) {
 			updateReferringProjectClasspaths(rootEntry.getPath(), root.getJavaProject(), deltaProcessor.oldRoots);
 		}
-		
+
 		// delete resource
 		if (!root.isExternal() && (this.updateModelFlags & IPackageFragmentRoot.NO_RESOURCE_MODIFICATION) == 0) {
 			deleteResource(root, rootEntry);
@@ -65,7 +65,7 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 		IResource rootResource = ((JavaElement) root).resource();
 		if (rootEntry.getEntryKind() != IClasspathEntry.CPE_SOURCE || exclusionPatterns == null) {
 			try {
-				rootResource.delete(this.updateResourceFlags, progressMonitor);
+				rootResource.delete(this.updateResourceFlags, this.progressMonitor);
 			} catch (CoreException e) {
 				throw new JavaModelException(e);
 			}
@@ -80,11 +80,11 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 							return !equalsOneOf(path, nestedFolders);
 						} else {
 							// subtree doesn't contain any nested source folders
-							proxy.requestResource().delete(updateResourceFlags, progressMonitor);
+							proxy.requestResource().delete(DeletePackageFragmentRootOperation.this.updateResourceFlags, DeletePackageFragmentRootOperation.this.progressMonitor);
 							return false;
 						}
 					} else {
-						proxy.requestResource().delete(updateResourceFlags, progressMonitor);
+						proxy.requestResource().delete(DeletePackageFragmentRootOperation.this.updateResourceFlags, DeletePackageFragmentRootOperation.this.progressMonitor);
 						return false;
 					}
 				}
@@ -95,7 +95,7 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 				throw new JavaModelException(e);
 			}
 		}
-		setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE); 
+		setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 	}
 
 
@@ -103,7 +103,7 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 	 * Deletes the classpath entries equals to the given rootPath from all Java projects.
 	 */
 	protected void updateReferringProjectClasspaths(IPath rootPath, IJavaProject projectOfRoot, Map oldRoots) throws JavaModelException {
-		IJavaModel model = this.getJavaModel();
+		IJavaModel model = getJavaModel();
 		IJavaProject[] projects = model.getJavaProjects();
 		for (int i = 0, length = projects.length; i < length; i++) {
 			IJavaProject project = projects[i];
@@ -118,7 +118,7 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 	protected void updateProjectClasspath(IPath rootPath, IJavaProject project, Map oldRoots) throws JavaModelException {
 		// remember old roots
 		oldRoots.put(project, project.getPackageFragmentRoots());
-		
+
 		IClasspathEntry[] classpath = project.getRawClasspath();
 		IClasspathEntry[] newClasspath = null;
 		int cpLength = classpath.length;
@@ -139,9 +139,9 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 			if (newCPIndex < newClasspath.length) {
 				System.arraycopy(newClasspath, 0, newClasspath = new IClasspathEntry[newCPIndex], 0, newCPIndex);
 			}
-			project.setRawClasspath(newClasspath, progressMonitor);
+			project.setRawClasspath(newClasspath, this.progressMonitor);
 		}
-	}	
+	}
 	protected IJavaModelStatus verify() {
 		IJavaModelStatus status = super.verify();
 		if (!status.isOK()) {

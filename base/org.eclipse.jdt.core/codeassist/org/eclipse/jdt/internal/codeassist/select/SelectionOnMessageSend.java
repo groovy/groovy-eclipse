@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -75,38 +75,38 @@ public class SelectionOnMessageSend extends MessageSend {
 		}
 		return methodBinding;
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		output.append("<SelectOnMessageSend:"); //$NON-NLS-1$
-		if (!receiver.isImplicitThis()) receiver.printExpression(0, output).append('.');
+		if (!this.receiver.isImplicitThis()) this.receiver.printExpression(0, output).append('.');
 		output.append(this.selector).append('(');
-		if (arguments != null) {
-			for (int i = 0; i < arguments.length; i++) {
+		if (this.arguments != null) {
+			for (int i = 0; i < this.arguments.length; i++) {
 				if (i > 0) output.append(", "); //$NON-NLS-1$
-				arguments[i].printExpression(0, output);
+				this.arguments[i].printExpression(0, output);
 			}
 		}
 		return output.append(")>"); //$NON-NLS-1$
 	}
-	
+
 	public TypeBinding resolveType(BlockScope scope) {
 
 		super.resolveType(scope);
 
 		// tolerate some error cases
-		if(binding == null ||
-					!(binding.isValidBinding() || 
-						binding.problemId() == ProblemReasons.NotVisible
-						|| binding.problemId() == ProblemReasons.InheritedNameHidesEnclosingName
-						|| binding.problemId() == ProblemReasons.NonStaticReferenceInConstructorInvocation
-						|| binding.problemId() == ProblemReasons.NonStaticReferenceInStaticContext)) {
+		if(this.binding == null ||
+					!(this.binding.isValidBinding() ||
+						this.binding.problemId() == ProblemReasons.NotVisible
+						|| this.binding.problemId() == ProblemReasons.InheritedNameHidesEnclosingName
+						|| this.binding.problemId() == ProblemReasons.NonStaticReferenceInConstructorInvocation
+						|| this.binding.problemId() == ProblemReasons.NonStaticReferenceInStaticContext)) {
 			throw new SelectionNodeFound();
 		} else {
-			if(binding.isDefaultAbstract()) {
-				throw new SelectionNodeFound(findNonDefaultAbstractMethod(binding)); // 23594
+			if(this.binding.isDefaultAbstract()) {
+				throw new SelectionNodeFound(findNonDefaultAbstractMethod(this.binding)); // 23594
 			} else {
-				throw new SelectionNodeFound(binding);
+				throw new SelectionNodeFound(this.binding);
 			}
 		}
 	}

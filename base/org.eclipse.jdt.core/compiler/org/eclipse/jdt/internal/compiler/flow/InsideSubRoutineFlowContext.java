@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,7 @@ import org.eclipse.jdt.internal.compiler.ast.SubRoutineStatement;
 public class InsideSubRoutineFlowContext extends FlowContext {
 
 	public UnconditionalFlowInfo initsOnReturn;
-	
+
 public InsideSubRoutineFlowContext(
 	FlowContext parent,
 	ASTNode associatedNode) {
@@ -37,11 +37,11 @@ public String individualToString() {
 public UnconditionalFlowInfo initsOnReturn(){
 	return this.initsOnReturn;
 }
-	
+
 public boolean isNonReturningContext() {
 	return ((SubRoutineStatement) this.associatedNode).isSubRoutineEscaping();
 }
-	
+
 public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
 	if (this.initsOnReturn == FlowInfo.DEAD_END) {

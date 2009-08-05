@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,7 +19,7 @@ import org.eclipse.jdt.internal.core.util.ReferenceInfoAdapter;
 /**
  * An abstract DOM builder that contains shared functionality of DOMBuilder and SimpleDOMBuilder.
  * @deprecated The JDOM was made obsolete by the addition in 2.0 of the more
- * powerful, fine-grained DOM/AST API found in the 
+ * powerful, fine-grained DOM/AST API found in the
  * org.eclipse.jdt.core.dom package.
  */
 public class AbstractDOMBuilder extends ReferenceInfoAdapter implements ILineStartFinder {
@@ -28,7 +28,7 @@ public class AbstractDOMBuilder extends ReferenceInfoAdapter implements ILineSta
 	 * fuzzy parsing
 	 */
 	protected boolean fAbort;
-	
+
 	/**
 	 * True when a compilation unit is being constructed.
 	 * False when any other type of document fragment is
@@ -47,7 +47,7 @@ public class AbstractDOMBuilder extends ReferenceInfoAdapter implements ILineSta
 	 * The String on which the JDOM is being created.
 	 */
 	protected char[] fDocument= null;
-		
+
 	/**
 	 * The source positions of all of the line separators in the document.
 	 */
@@ -58,7 +58,7 @@ public class AbstractDOMBuilder extends ReferenceInfoAdapter implements ILineSta
 	 * a compilation unit or type. The top of the stack
 	 * is the document fragment that children are added to.
 	 */
-	protected Stack fStack = null;	
+	protected Stack fStack = null;
 
 	/**
 	 * The number of fields constructed in the current
@@ -89,26 +89,26 @@ public void acceptLineSeparatorPositions(int[] positions) {
 	if (positions != null) {
 		int length = positions.length;
 		if (length > 0) {
-			fLineStartPositions = new int[length + 1];
-			fLineStartPositions[0] = 0;
-			int documentLength = fDocument.length;
+			this.fLineStartPositions = new int[length + 1];
+			this.fLineStartPositions[0] = 0;
+			int documentLength = this.fDocument.length;
 			for (int i = 0; i < length; i++) {
 				int iPlusOne = i + 1;
-				int positionPlusOne = positions[i] + 1;	
+				int positionPlusOne = positions[i] + 1;
 				if (positionPlusOne < documentLength) {
 					if (iPlusOne < length) {
 						// more separators
-						fLineStartPositions[iPlusOne] = positionPlusOne;
+						this.fLineStartPositions[iPlusOne] = positionPlusOne;
 					} else {
 						// no more separators
-						if (fDocument[positionPlusOne] == '\n') {
-							fLineStartPositions[iPlusOne] = positionPlusOne + 1;
+						if (this.fDocument[positionPlusOne] == '\n') {
+							this.fLineStartPositions[iPlusOne] = positionPlusOne + 1;
 						} else {
-							fLineStartPositions[iPlusOne] = positionPlusOne;
+							this.fLineStartPositions[iPlusOne] = positionPlusOne;
 						}
 					}
 				} else {
-					fLineStartPositions[iPlusOne] = positionPlusOne;
+					this.fLineStartPositions[iPlusOne] = positionPlusOne;
 				}
 			}
 		}
@@ -120,12 +120,12 @@ public void acceptLineSeparatorPositions(int[] positions) {
  * is being built (since those are the only nodes that have children).
  *
  * <p>NOTE: nodes are added to the JDOM via the method #basicAddChild such that
- * the nodes in the newly created JDOM are not fragmented. 
+ * the nodes in the newly created JDOM are not fragmented.
  */
 protected void addChild(IDOMNode child) {
-	if (fStack.size() > 0) {
-		DOMNode parent = (DOMNode) fStack.peek();
-		if (fBuildingCU || fBuildingType) {
+	if (this.fStack.size() > 0) {
+		DOMNode parent = (DOMNode) this.fStack.peek();
+		if (this.fBuildingCU || this.fBuildingType) {
 			parent.basicAddChild(child);
 		}
 	}
@@ -140,19 +140,19 @@ public IDOMCompilationUnit createCompilationUnit(char[] contents, char[] name) {
  * @see IDOMFactory#createCompilationUnit(String, String)
  */
 public IDOMCompilationUnit createCompilationUnit(ICompilationUnit compilationUnit) {
-	if (fAbort) {
+	if (this.fAbort) {
 		return null;
 	}
-	fNode.normalize(this);
-	return (IDOMCompilationUnit)fNode;
+	this.fNode.normalize(this);
+	return (IDOMCompilationUnit)this.fNode;
 }
 /**
  * @see org.eclipse.jdt.internal.compiler.IDocumentElementRequestor#enterClass(int, int[], int, int, int, char[], int, int, char[], int, int, char[][], int[], int[], int)
  */
 public void enterCompilationUnit() {
- 	if (fBuildingCU) {
- 		IDOMCompilationUnit cu= new DOMCompilationUnit(fDocument, new int[] {0, fDocument.length - 1});
- 		fStack.push(cu);
+ 	if (this.fBuildingCU) {
+ 		IDOMCompilationUnit cu= new DOMCompilationUnit(this.fDocument, new int[] {0, this.fDocument.length - 1});
+ 		this.fStack.push(cu);
  	}
 }
 /**
@@ -162,9 +162,9 @@ public void enterCompilationUnit() {
  * @see org.eclipse.jdt.internal.compiler.IDocumentElementRequestor#exitCompilationUnit(int)
  */
 public void exitCompilationUnit(int declarationEnd) {
-	DOMCompilationUnit cu = (DOMCompilationUnit) fStack.pop();
+	DOMCompilationUnit cu = (DOMCompilationUnit) this.fStack.pop();
 	cu.setSourceRangeEnd(declarationEnd);
-	fNode = cu;
+	this.fNode = cu;
 }
 /**
  * Finishes the configuration of the class and interface DOM objects.
@@ -174,21 +174,21 @@ public void exitCompilationUnit(int declarationEnd) {
  *		declaration.  This can include whitespace and comments following the closing bracket.
  */
 protected void exitType(int bodyEnd, int declarationEnd) {
-	DOMType type = (DOMType)fStack.pop();
+	DOMType type = (DOMType)this.fStack.pop();
 	type.setSourceRangeEnd(declarationEnd);
 	type.setCloseBodyRangeStart(bodyEnd);
 	type.setCloseBodyRangeEnd(bodyEnd);
-	fNode = type;
+	this.fNode = type;
 }
 /**
  * @see ILineStartFinder#getLineStart(int)
  */
 public int getLineStart(int position) {
-	int lineSeparatorCount = fLineStartPositions.length;
+	int lineSeparatorCount = this.fLineStartPositions.length;
 	// reverse traversal intentional.
 	for(int i = lineSeparatorCount - 1; i >= 0; i--) {
-		if (fLineStartPositions[i] <= position)
-			return fLineStartPositions[i];
+		if (this.fLineStartPositions[i] <= position)
+			return this.fLineStartPositions[i];
 	}
 	return 0;
 }
@@ -202,11 +202,11 @@ public int getLineStart(int position) {
  *		type or compilation unit
  */
 protected void initializeBuild(char[] sourceCode, boolean buildingCompilationUnit, boolean buildingType) {
-	fBuildingCU = buildingCompilationUnit;
-	fBuildingType = buildingType;
-	fStack = new Stack();
-	fDocument = sourceCode;
-	fFieldCount = 0;
-	fAbort = false;
+	this.fBuildingCU = buildingCompilationUnit;
+	this.fBuildingType = buildingType;
+	this.fStack = new Stack();
+	this.fDocument = sourceCode;
+	this.fFieldCount = 0;
+	this.fAbort = false;
 }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,20 +20,20 @@ public interface ISelectionRequestor {
 	 * Code assist notification of a enum selection.
 	 * @param packageName char[]
 	 * 		Declaring package name of the type.
-	 * 
+	 *
 	 * @param annotationName char[]
 	 * 		Name of the type.
-	 * 
+	 *
 	 * @param isDeclaration boolean
 	 *  	Answer if the selected type is a declaration
-	 *  
+	 *
 	 * @param genericTypeSignature
 	 *  	genric type signature of the selected type if it is a
 	 *  	parameterized type
-	 * 
+	 *
 	 * @param start
 	 *  	Start of the selection
-	 * 
+	 *
 	 * @param end
 	 *  	End of the selection
 	 *
@@ -69,22 +69,22 @@ public interface ISelectionRequestor {
 	 * Code assist notification of a field selection.
 	 * @param declaringTypePackageName char[]
 	 * 		Name of the package in which the type that contains this field is declared.
-	 * 
+	 *
 	 * @param declaringTypeName char[]
 	 * 		Name of the type declaring this new field.
-	 * 
+	 *
 	 * @param name char[]
 	 * 		Name of the field.
-	 * 
+	 *
 	 * @param isDeclaration boolean
 	 *  	Answer if the selected field is a declaration
-	 * 
+	 *
 	 * @param uniqueKey
 	 *  	unique key of this field
-	 *  
+	 *
 	 * @param start
 	 *  	Start of the selection
-	 * 
+	 *
 	 * @param end
 	 *  	End of the selection
 	 *
@@ -106,41 +106,41 @@ public interface ISelectionRequestor {
 	 * Code assist notification of a method selection.
 	 * @param declaringTypePackageName char[]
 	 * 		Name of the package in which the type that contains this new method is declared.
-	 * 
+	 *
 	 * @param declaringTypeName char[]
 	 * 		Name of the type declaring this new method.
-	 * 
+	 *
 	 * @param enclosingDeclaringTypeSignature String
 	 *  	Type signature of the declaring type of the declaring type or <code>null</code>
 	 *  	if declaring type is a top level type.
-	 * 
+	 *
 	 * @param selector char[]
 	 * 		Name of the new method.
-	 * 
+	 *
 	 * @param parameterPackageNames char[][]
 	 * 		Names of the packages in which the parameter types are declared.
 	 *    	Should contain as many elements as parameterTypeNames.
-	 * 
+	 *
 	 * @param parameterTypeNames char[][]
 	 * 		Names of the parameters types.
 	 *    	Should contain as many elements as parameterPackageNames.
-	 * 
+	 *
 	 * @param parameterSignatures String[]
 	 * 		Signature of the parameters types.
 	 *    	Should contain as many elements as parameterPackageNames.
-	 * 
+	 *
 	 *  @param isConstructor boolean
 	 * 		Answer if the method is a constructor.
-	 * 
+	 *
 	 * @param isDeclaration boolean
 	 *  	Answer if the selected method is a declaration
-	 * 
+	 *
 	 * @param uniqueKey
 	 *  	unique key of the method
 	 *
 	 * @param start
 	 *  	Start of the selection
-	 * 
+	 *
 	 * @param end
 	 *  	End of the selection
 	 *
@@ -167,7 +167,7 @@ public interface ISelectionRequestor {
 		char[] uniqueKey,
 		int start,
 		int end);
-	
+
 	/**
 	 * Code assist notification of a package selection.
 	 * @param packageName char[]
@@ -180,22 +180,22 @@ public interface ISelectionRequestor {
 	void acceptPackage(char[] packageName);
 	/**
 	 * Code assist notification of a type parameter selection.
-	 * 
+	 *
 	 * @param declaringTypePackageName char[]
 	 * 		Name of the package in which the type that contains this new method is declared.
-	 * 
+	 *
 	 * @param declaringTypeName char[]
 	 * 		Name of the type declaring this new method.
-	 * 
+	 *
 	 * @param typeParameterName char[]
 	 * 		Name of the type parameter.
-	 * 
+	 *
 	 * @param isDeclaration boolean
 	 *  	Answer if the selected type parameter is a declaration
-	 * 
+	 *
 	 * @param start
 	 *  	Start of the selection
-	 * 
+	 *
 	 * @param end
 	 *  	End of the selection
 	 *
@@ -211,34 +211,34 @@ public interface ISelectionRequestor {
 		boolean isDeclaration,
 		int start,
 		int end);
-	
+
 	/**
 	 * Code assist notification of a type parameter selection.
-	 * 
+	 *
 	 * @param declaringTypePackageName char[]
 	 * 		Name of the package in which the type that contains this new method is declared.
-	 * 
+	 *
 	 * @param declaringTypeName char[]
 	 * 		Name of the type declaring this new method.
-	 * 
+	 *
 	 * @param selector char[]
 	 * 		Name of the declaring method.
-	 * 
+	 *
 	 * @param selectorStart int
 	 * 		Start of the selector.
-	 * 
+	 *
 	 * @param selectorEnd int
 	 * 		End of the selector.
-	 * 
+	 *
 	 * @param typeParameterName char[]
 	 * 		Name of the type parameter.
-	 * 
+	 *
 	 * @param isDeclaration boolean
 	 *  	Answer if the selected type parameter is a declaration
-	 * 
+	 *
 	 * @param start
 	 *  	Start of the selection
-	 * 
+	 *
 	 * @param end
 	 *  	End of the selection
 	 *

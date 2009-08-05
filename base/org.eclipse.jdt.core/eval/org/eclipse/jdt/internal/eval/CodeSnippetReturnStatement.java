@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 import org.eclipse.jdt.internal.compiler.ast.TryStatement;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
+import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
@@ -47,7 +48,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
  *
  */
 public void generateReturnBytecode(CodeStream codeStream) {
-	
+
 	// output the return bytecode
 	codeStream.return_();
 }
@@ -74,7 +75,7 @@ public void generateStoreSaveValueIfNecessary(CodeStream codeStream){
 		}
 
 		// generate wrapper if needed
-		if (this.expression.resolvedType.isBaseType() && this.expression.resolvedType != TypeBinding.NULL) { 
+		if (this.expression.resolvedType.isBaseType() && this.expression.resolvedType != TypeBinding.NULL) {
 			codeStream.generateBoxingConversion(this.expression.resolvedType.id);
 		}
 
@@ -83,7 +84,7 @@ public void generateStoreSaveValueIfNecessary(CodeStream codeStream){
 	}
 
 	// generate the invoke virtual to "setResult(Object,Class)"
-	codeStream.invokevirtual(this.setResultMethod);
+	codeStream.invoke(Opcodes.OPC_invokevirtual, this.setResultMethod, null /* default declaringClass */);
 }
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
@@ -101,7 +102,7 @@ public boolean needValue(){
 	return true;
 }
 public void prepareSaveValueLocation(TryStatement targetTryStatement){
-		
+
 	// do nothing: no storage is necessary for snippets
 }
 public void resolve(BlockScope scope) {
@@ -140,5 +141,4 @@ public void setDepth(int depth) {
 public void setFieldIndex(int depth) {
 	// ignored
 }
-
 }

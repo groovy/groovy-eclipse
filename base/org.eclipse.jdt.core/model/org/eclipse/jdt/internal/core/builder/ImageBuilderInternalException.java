@@ -26,14 +26,14 @@ public ImageBuilderInternalException(CoreException e) {
 }
 
 public CoreException getThrowable() {
-	return coreException;
+	return this.coreException;
 }
 
 public void printStackTrace() {
-	if (coreException != null) {
+	if (this.coreException != null) {
 		System.err.println(this);
 		System.err.println("Stack trace of embedded core exception:"); //$NON-NLS-1$
-		coreException.printStackTrace();
+		this.coreException.printStackTrace();
 	} else {
 		super.printStackTrace();
 	}

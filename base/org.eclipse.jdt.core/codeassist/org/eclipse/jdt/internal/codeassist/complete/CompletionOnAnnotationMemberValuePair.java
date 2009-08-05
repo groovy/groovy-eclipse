@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,17 +23,17 @@ public class CompletionOnAnnotationMemberValuePair extends NormalAnnotation {
 		this.memberValuePairs = memberValuePairs;
 		this.completedMemberValuePair = completedMemberValuePair;
 	}
-	
+
 	public TypeBinding resolveType(BlockScope scope) {
 		super.resolveType(scope);
-		
+
 		if (this.resolvedType == null || !this.resolvedType.isValidBinding()) {
 			throw new CompletionNodeFound();
 		} else {
 			throw new CompletionNodeFound(this.completedMemberValuePair, scope);
 		}
 	}
-	
+
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append('@');
 		this.type.printExpression(0, output);
@@ -49,7 +49,7 @@ public class CompletionOnAnnotationMemberValuePair extends NormalAnnotation {
 		}
 		this.completedMemberValuePair.print(indent, output);
 		output.append(')');
-		
+
 		return output;
 	}
 }

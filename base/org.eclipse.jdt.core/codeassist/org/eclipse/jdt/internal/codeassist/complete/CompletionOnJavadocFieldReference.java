@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -75,7 +75,7 @@ public class CompletionOnJavadocFieldReference extends JavadocFieldReference imp
 
 	/**
 	 * Get completion node flags.
-	 * 
+	 *
 	 * @return int Flags of the javadoc completion node.
 	 */
 	public int getCompletionFlags() {
@@ -90,14 +90,14 @@ public class CompletionOnJavadocFieldReference extends JavadocFieldReference imp
 		if (this.token != null) {
 			return super.internalResolveType(scope);
 		}
-		
+
 		// Resolve only receiver
 		if (this.receiver == null) {
-			this.receiverType = scope.enclosingSourceType();
+			this.actualReceiverType = scope.enclosingSourceType();
 		} else if (scope.kind == Scope.CLASS_SCOPE) {
-			this.receiverType = this.receiver.resolveType((ClassScope) scope);
+			this.actualReceiverType = this.receiver.resolveType((ClassScope) scope);
 		} else {
-			this.receiverType = this.receiver.resolveType((BlockScope)scope);
+			this.actualReceiverType = this.receiver.resolveType((BlockScope)scope);
 		}
 		return null;
 	}

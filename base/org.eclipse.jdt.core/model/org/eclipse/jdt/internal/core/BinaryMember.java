@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,26 +10,25 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.util.ArrayList;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
-import org.eclipse.jdt.core.IMemberValuePair;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.env.ClassSignature;
-import org.eclipse.jdt.internal.compiler.env.EnumConstantSignature;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
-import org.eclipse.jdt.internal.compiler.env.IBinaryElementValuePair;
-import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Common functionality for Binary member handles.
  */
 public abstract class BinaryMember extends NamedMember {
+		
 /*
  * Constructs a binary member.
  */
@@ -42,89 +41,59 @@ protected BinaryMember(JavaElement parent, String name) {
 public void copy(IJavaElement container, IJavaElement sibling, String rename, boolean force, IProgressMonitor monitor) throws JavaModelException {
 	throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.READ_ONLY, this));
 }
-protected IAnnotation[] getAnnotations(IBinaryAnnotation[] binaryAnnotations) {
-	if (binaryAnnotations == null) 
-		return Annotation.NO_ANNOTATIONS;
+protected IAnnotation[] getAnnotations(IBinaryAnnotation[] binaryAnnotations, long tagBits) {
+	IAnnotation[] standardAnnotations = getStandardAnnotations(tagBits);
+	if (binaryAnnotations == null)
+		return standardAnnotations;
 	int length = binaryAnnotations.length;
-	IAnnotation[] annotations = new IAnnotation[length];
+	int standardLength = standardAnnotations.length;
+	IAnnotation[] annotations = new IAnnotation[length + standardLength];
 	for (int i = 0; i < length; i++) {
-		annotations[i] = getAnnotation(binaryAnnotations[i]);
+		annotations[i] = Util.getAnnotation(this, binaryAnnotations[i], null);
 	}
+	System.arraycopy(standardAnnotations, 0, annotations, length, standardLength);
 	return annotations;
 }
-private IAnnotation getAnnotation(IBinaryAnnotation binaryAnnotation) {
-	IBinaryElementValuePair[] binaryElementValuePairs = binaryAnnotation.getElementValuePairs();
-	int pairsLength = binaryElementValuePairs.length;
-	final IMemberValuePair[] members;
-	if (pairsLength == 0) {
-		members = Annotation.NO_MEMBER_VALUE_PAIRS;
-	} else {
-		members = new IMemberValuePair[pairsLength];
-		for (int i = 0; i < pairsLength; i++) {
-			IBinaryElementValuePair binaryElementValuePair = binaryElementValuePairs[i];
-			MemberValuePair memberValuePair = new MemberValuePair(new String(binaryElementValuePair.getName()));
-			memberValuePair.value = getMemberValue(memberValuePair, binaryElementValuePair.getValue());
-			members[i] = memberValuePair;
-		}
-	}
-	char[] typeName = org.eclipse.jdt.core.Signature.toCharArray(CharOperation.replaceOnCopy(binaryAnnotation.getTypeName(), '/', '.'));
-	return new Annotation(this, new String(typeName)) {
-		public IMemberValuePair[] getMemberValuePairs() throws JavaModelException {
-			return members;
-		}
-	};
+private IAnnotation getAnnotation(char[][] annotationName) {
+	return new Annotation(this, new String(CharOperation.concatWith(annotationName, '.')));
 }
-protected Object getMemberValue(MemberValuePair memberValuePair, Object binaryValue) {
-	if (binaryValue instanceof Constant) {
-		return Util.getAnnotationMemberValue(memberValuePair, (Constant) binaryValue);
-	} else if (binaryValue instanceof IBinaryAnnotation) {
-		memberValuePair.valueKind = IMemberValuePair.K_ANNOTATION;
-		return getAnnotation((IBinaryAnnotation) binaryValue);
-	} else if (binaryValue instanceof ClassSignature) {
-		memberValuePair.valueKind = IMemberValuePair.K_CLASS;
-		char[] className = Signature.toCharArray(CharOperation.replaceOnCopy(((ClassSignature) binaryValue).getTypeName(), '/', '.'));
-		return new String(className);
-	} else if (binaryValue instanceof EnumConstantSignature) {
-		memberValuePair.valueKind = IMemberValuePair.K_QUALIFIED_NAME;
-		EnumConstantSignature enumConstant = (EnumConstantSignature) binaryValue;
-		char[] enumName = Signature.toCharArray(CharOperation.replaceOnCopy(enumConstant.getTypeName(), '/', '.'));
-		char[] qualifiedName = CharOperation.concat(enumName, enumConstant.getEnumConstantName(), '.');
-		return new String(qualifiedName);
-	} else if (binaryValue instanceof Object[]) {
-		memberValuePair.valueKind = -1; // modified below by the first call to getMemberValue(...)
-		Object[] binaryValues = (Object[]) binaryValue;
-		int length = binaryValues.length;
-		Object[] values = new Object[length];
-		for (int i = 0; i < length; i++) {
-			int previousValueKind = memberValuePair.valueKind;
-			Object value = getMemberValue(memberValuePair, binaryValues[i]);
-			if (previousValueKind != -1 && memberValuePair.valueKind != previousValueKind) {
-				// values are heterogeneous, value kind is thus unknown
-				memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
-			}
-			values[i] = value;
-		}
-		if (memberValuePair.valueKind == -1)
-			memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
-		return values;
-	} else {
-		memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
-		return null;
+private IAnnotation[] getStandardAnnotations(long tagBits) {
+	if ((tagBits & TagBits.AllStandardAnnotationsMask) == 0)
+		return Annotation.NO_ANNOTATIONS;
+	ArrayList annotations = new ArrayList();
+
+	if ((tagBits & TagBits.AnnotationTargetMASK) != 0) {
+		annotations.add(getAnnotation(TypeConstants.JAVA_LANG_ANNOTATION_TARGET));
 	}
+	if ((tagBits & TagBits.AnnotationRetentionMASK) != 0) {
+		annotations.add(getAnnotation(TypeConstants.JAVA_LANG_ANNOTATION_RETENTION));
+	}
+	if ((tagBits & TagBits.AnnotationDeprecated) != 0) {
+		annotations.add(getAnnotation(TypeConstants.JAVA_LANG_DEPRECATED));
+	}
+	if ((tagBits & TagBits.AnnotationDocumented) != 0) {
+		annotations.add(getAnnotation(TypeConstants.JAVA_LANG_ANNOTATION_DOCUMENTED));
+	}
+	if ((tagBits & TagBits.AnnotationInherited) != 0) {
+		annotations.add(getAnnotation(TypeConstants.JAVA_LANG_ANNOTATION_INHERITED));
+	}
+	// note that JAVA_LANG_SUPPRESSWARNINGS and JAVA_LANG_OVERRIDE cannot appear in binaries
+	return (IAnnotation[]) annotations.toArray(new IAnnotation[annotations.size()]);
 }
+
 public String[] getCategories() throws JavaModelException {
 	SourceMapper mapper= getSourceMapper();
 	if (mapper != null) {
 		// ensure the class file's buffer is open so that categories are computed
 		((ClassFile)getClassFile()).getBuffer();
-		
+
 		if (mapper.categories != null) {
 			String[] categories = (String[]) mapper.categories.get(this);
 			if (categories != null)
 				return categories;
 		}
 	}
-	return CharOperation.NO_STRINGS;	
+	return CharOperation.NO_STRINGS;
 }
 public String getKey() {
 	try {
@@ -146,7 +115,7 @@ public ISourceRange getNameRange() throws JavaModelException {
 	if (mapper != null) {
 		// ensure the class file's buffer is open so that source ranges are computed
 		((ClassFile)getClassFile()).getBuffer();
-		
+
 		return mapper.getNameRange(this);
 	} else {
 		return SourceMapper.UNKNOWN_RANGE;

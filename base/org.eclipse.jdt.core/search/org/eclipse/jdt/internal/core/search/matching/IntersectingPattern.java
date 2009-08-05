@@ -30,13 +30,13 @@ public IntersectingPattern(int patternKind, int matchRule) {
 public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor progressMonitor) throws IOException {
 	if (progressMonitor != null && progressMonitor.isCanceled()) throw new OperationCanceledException();
 
-	this.resetQuery();
+	resetQuery();
 	SimpleSet intersectedNames = null;
 	try {
 		index.startQuery();
 		do {
-			SearchPattern pattern = ((InternalSearchPattern) this).currentPattern();
-			EntryResult[] entries = ((InternalSearchPattern)pattern).queryIn(index);
+			SearchPattern pattern = currentPattern();
+			EntryResult[] entries = pattern.queryIn(index);
 			if (entries == null) return;
 
 			SearchPattern decodedResult = pattern.getBlankPattern();
@@ -61,7 +61,7 @@ public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchP
 
 			if (newIntersectedNames.elementSize == 0) return;
 			intersectedNames = newIntersectedNames;
-		} while (this.hasNextQuery());
+		} while (hasNextQuery());
 	} finally {
 		index.stopQuery();
 	}
@@ -71,7 +71,7 @@ public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchP
 	Object[] names = intersectedNames.values;
 	for (int i = 0, l = names.length; i < l; i++)
 		if (names[i] != null)
-			((InternalSearchPattern) this).acceptMatch((String) names[i], containerPath, separator, null/*no pattern*/, requestor, participant, scope); // AndPatterns cannot provide the decoded result
+			acceptMatch((String) names[i], containerPath, separator, null/*no pattern*/, requestor, participant, scope); // AndPatterns cannot provide the decoded result
 }
 /**
  * Returns whether another query must be done.

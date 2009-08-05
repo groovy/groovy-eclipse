@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,28 +24,28 @@ public class CompletionOnLocalName extends LocalDeclaration {
 		super(CharOperation.concat(name, FAKENAMESUFFIX), sourceStart, sourceEnd);
 		this.realName = name;
 	}
-	
+
 	public void resolve(BlockScope scope) {
-		
+
 		super.resolve(scope);
 		throw new CompletionNodeFound(this, scope);
 	}
-	
+
 	public StringBuffer printAsExpression(int indent, StringBuffer output) {
 		printIndent(indent, output);
 		output.append("<CompleteOnLocalName:"); //$NON-NLS-1$
-		if (type != null)  type.print(0, output).append(' ');
+		if (this.type != null)  this.type.print(0, output).append(' ');
 		output.append(this.realName);
-		if (initialization != null) {
+		if (this.initialization != null) {
 			output.append(" = "); //$NON-NLS-1$
-			initialization.printExpression(0, output); 
+			this.initialization.printExpression(0, output);
 		}
 		return output.append('>');
 	}
 
 	public StringBuffer printStatement(int indent, StringBuffer output) {
-		this.printAsExpression(indent, output);
+		printAsExpression(indent, output);
 		return output.append(';');
-	}	
+	}
 }
 

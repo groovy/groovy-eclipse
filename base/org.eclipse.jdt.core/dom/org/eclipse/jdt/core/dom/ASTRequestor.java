@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
  * <p>
  * <code>ASTRequestor.acceptAST</code> is called for each of the
  * compilation units passed to <code>ASTParser.createASTs</code>.
- * After all the compilation units have been processed, 
+ * After all the compilation units have been processed,
  * <code>ASTRequestor.acceptBindings</code> is called for each
  * of the binding keys passed to <code>ASTParser.createASTs</code>.
  * </p>
@@ -27,12 +27,12 @@ import org.eclipse.jdt.core.ICompilationUnit;
  * AST requestors are serially reusable, but neither reentrant nor
  * thread-safe.
  * </p>
- * 
+ *
  * @see ASTParser#createASTs(ICompilationUnit[], String[], ASTRequestor, org.eclipse.core.runtime.IProgressMonitor)
  * @since 3.1
  */
 public abstract class ASTRequestor {
-	
+
 	/**
 	 * The compilation unit resolver used to resolve bindings, or
 	 * <code>null</code> if none. Note that this field is non-null
@@ -40,14 +40,14 @@ public abstract class ASTRequestor {
 	 * <code>ASTParser.createASTs</code>.
 	 */
 	CompilationUnitResolver compilationUnitResolver = null;
-		
+
 	/**
 	 * Creates a new instance.
 	 */
 	protected ASTRequestor() {
 		// do nothing
 	}
-	
+
 	/**
 	 * Accepts an AST corresponding to the compilation unit.
 	 * That is, <code>ast</code> is an AST for <code>source</code>.
@@ -55,24 +55,24 @@ public abstract class ASTRequestor {
 	 * The default implementation of this method does nothing.
 	 * Clients should override to process the resulting AST.
 	 * </p>
-	 * 
+	 *
 	 * @param source the compilation unit the ast is coming from
 	 * @param ast the requested abtract syntax tree
 	 */
 	public void acceptAST(ICompilationUnit source, CompilationUnit ast) {
 		// do nothing
 	}
-	
+
 	/**
 	 * Accepts a binding corresponding to the binding key.
-	 * That is, <code>binding</code> is the binding for 
+	 * That is, <code>binding</code> is the binding for
 	 * <code>bindingKey</code>; <code>binding</code> is <code>null</code>
 	 * if the key cannot be resolved.
 	 * <p>
 	 * The default implementation of this method does nothing.
 	 * Clients should override to process the resulting binding.
 	 * </p>
-	 * 
+	 *
 	 * @param bindingKey the key of the requested binding
 	 * @param binding the requested binding, or <code>null</code> if none
 	 */
@@ -90,7 +90,7 @@ public abstract class ASTRequestor {
 	 * and only if <code>ASTParser.resolveBindings(true)</code> was specified.
 	 * </p>
 	 * <p>
-	 * Caveat: During an <code>acceptAST</code> callback, there are implementation 
+	 * Caveat: During an <code>acceptAST</code> callback, there are implementation
 	 * limitations concerning the look up of binding keys representing local elements.
 	 * In some cases, the binding is unavailable, and <code>null</code> will be returned.
 	 * This is only an issue during an <code>acceptAST</code> callback, and only
@@ -99,7 +99,7 @@ public abstract class ASTRequestor {
 	 * outside of <code>acceptAST</code> callbacks, or for top-level types and their
 	 * members even within <code>acceptAST</code> callbacks.
 	 * </p>
-	 * 
+	 *
 	 * @param bindingKeys the binding keys to look up
 	 * @return a list of bindings paralleling the <code>bindingKeys</code> parameter,
 	 * with <code>null</code> entries for keys that could not be resolved

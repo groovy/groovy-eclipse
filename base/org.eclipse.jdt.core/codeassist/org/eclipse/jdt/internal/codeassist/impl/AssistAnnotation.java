@@ -23,8 +23,8 @@ public class AssistAnnotation extends Annotation {
 		super(parent, name);
 		this.infoCache = infoCache;
 	}
-	
+
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
-		return infoCache.get(this);
+		return this.infoCache.get(this);
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ public class Javadoc extends ASTNode {
 	public TypeReference[] exceptionReferences; // @throws, @exception
 	public JavadocReturnStatement returnStatement; // @return
 	public Expression[] seeReferences; // @see
-	public long inheritedPositions = -1;
+	public long[] inheritedPositions = null;
 	// bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=51600
 	// Store param references for tag with invalid syntax
 	public JavadocSingleNameReference[] invalidParameters; // @param
@@ -150,13 +150,13 @@ public class Javadoc extends ASTNode {
 		printIndent(indent, output).append("/**\n"); //$NON-NLS-1$
 		if (this.paramReferences != null) {
 			for (int i = 0, length = this.paramReferences.length; i < length; i++) {
-				printIndent(indent + 1, output).append(" * @param "); //$NON-NLS-1$		
+				printIndent(indent + 1, output).append(" * @param "); //$NON-NLS-1$
 				this.paramReferences[i].print(indent, output).append('\n');
 			}
 		}
 		if (this.paramTypeParameters != null) {
 			for (int i = 0, length = this.paramTypeParameters.length; i < length; i++) {
-				printIndent(indent + 1, output).append(" * @param <"); //$NON-NLS-1$		
+				printIndent(indent + 1, output).append(" * @param <"); //$NON-NLS-1$
 				this.paramTypeParameters[i].print(indent, output).append(">\n"); //$NON-NLS-1$
 			}
 		}
@@ -166,13 +166,13 @@ public class Javadoc extends ASTNode {
 		}
 		if (this.exceptionReferences != null) {
 			for (int i = 0, length = this.exceptionReferences.length; i < length; i++) {
-				printIndent(indent + 1, output).append(" * @throws "); //$NON-NLS-1$		
+				printIndent(indent + 1, output).append(" * @throws "); //$NON-NLS-1$
 				this.exceptionReferences[i].print(indent, output).append('\n');
 			}
 		}
 		if (this.seeReferences != null) {
 			for (int i = 0, length = this.seeReferences.length; i < length; i++) {
-				printIndent(indent + 1, output).append(" * @see "); //$NON-NLS-1$		
+				printIndent(indent + 1, output).append(" * @see "); //$NON-NLS-1$
 				this.seeReferences[i].print(indent, output).append('\n');
 			}
 		}
@@ -184,7 +184,16 @@ public class Javadoc extends ASTNode {
 	 * Resolve type javadoc
 	 */
 	public void resolve(ClassScope scope) {
-
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=247037, @inheritDoc tag cannot
+		// be used in the documentation comment for a class or interface.
+		if (this.inheritedPositions != null) {
+			int length = this.inheritedPositions.length;
+			for (int i = 0; i < length; ++i) {
+				int start = (int) (this.inheritedPositions[i] >>> 32);
+				int end = (int) this.inheritedPositions[i];
+				scope.problemReporter().javadocUnexpectedTag(start, end);
+			}
+		}
 		// @param tags
 		int paramTagsSize = this.paramReferences == null ? 0 : this.paramReferences.length;
 		for (int i = 0; i < paramTagsSize; i++) {
@@ -237,64 +246,63 @@ public class Javadoc extends ASTNode {
 	public void resolve(CompilationUnitScope unitScope) {
 		// Do nothing - This is to mimic the SDK's javadoc tool behavior, which neither
 		// sanity checks nor generates documentation using comments at the CU scope 
-		// (unless the unit happens to be package-info.java - in which case we don't come here.)
+		// (unless the unit happens to be package-info.java - in which case we don't come here.) 
 	}
 
 	/*
 	 * Resolve method javadoc
 	 */
 	public void resolve(MethodScope methScope) {
-		
+
 		// get method declaration
 		AbstractMethodDeclaration methDecl = methScope.referenceMethod();
 		boolean overriding = methDecl == null /* field declaration */ || methDecl.binding == null /* compiler error */
 			? false :
 			!methDecl.binding.isStatic() && ((methDecl.binding.modifiers & (ExtraCompilerModifiers.AccImplementing | ExtraCompilerModifiers.AccOverriding)) != 0);
-		
+
 		// @see tags
 		int seeTagsLength = this.seeReferences == null ? 0 : this.seeReferences.length;
 		boolean superRef = false;
 		for (int i = 0; i < seeTagsLength; i++) {
-			
+
 			// Resolve reference
 			resolveReference(this.seeReferences[i], methScope);
-			
+
 			// see whether we can have a super reference
-			if (methDecl != null && (methDecl.isConstructor() || overriding) && !superRef) {
-				if (this.seeReferences[i] instanceof JavadocMessageSend) {
-					JavadocMessageSend messageSend = (JavadocMessageSend) this.seeReferences[i];
-					// if binding is valid then look if we have a reference to an overriden method/constructor
-					if (messageSend.binding != null && messageSend.binding.isValidBinding() && messageSend.actualReceiverType instanceof ReferenceBinding) {
-						ReferenceBinding methodReceiverType = (ReferenceBinding) messageSend.actualReceiverType;
-						if ((methodReceiverType.isSuperclassOf(methDecl.binding.declaringClass) || (methodReceiverType.isInterface() && methDecl.binding.declaringClass.implementsInterface(methodReceiverType, true))) &&
-								CharOperation.equals(messageSend.selector, methDecl.selector) &&
-								(methDecl.binding.returnType.isCompatibleWith(messageSend.binding.returnType))) {
-							if (messageSend.arguments == null && methDecl.arguments == null) {
-								superRef = true;
-							}
-							else if (messageSend.arguments != null && methDecl.arguments != null) {
-								superRef = methDecl.binding.areParameterErasuresEqual(messageSend.binding);
+			if (methDecl != null && !superRef) {
+				if (!methDecl.isConstructor()) {
+					if (overriding && this.seeReferences[i] instanceof JavadocMessageSend) {
+						JavadocMessageSend messageSend = (JavadocMessageSend) this.seeReferences[i];
+						// if binding is valid then look if we have a reference to an overriden method/constructor
+						if (messageSend.binding != null && messageSend.binding.isValidBinding() && messageSend.actualReceiverType instanceof ReferenceBinding) {
+							ReferenceBinding methodReceiverType = (ReferenceBinding) messageSend.actualReceiverType;
+							TypeBinding superType = methDecl.binding.declaringClass.findSuperTypeOriginatingFrom(methodReceiverType);
+							if (superType != null && superType.original() != methDecl.binding.declaringClass && CharOperation.equals(messageSend.selector, methDecl.selector)) {
+								if (methScope.environment().methodVerifier().doesMethodOverride(methDecl.binding, messageSend.binding.original())) {
+									superRef = true;
+								}
 							}
 						}
 					}
-				}
-				else if (this.seeReferences[i] instanceof JavadocAllocationExpression) {
+				} else if (this.seeReferences[i] instanceof JavadocAllocationExpression) {
 					JavadocAllocationExpression allocationExpr = (JavadocAllocationExpression) this.seeReferences[i];
 					// if binding is valid then look if we have a reference to an overriden method/constructor
 					if (allocationExpr.binding != null && allocationExpr.binding.isValidBinding()) {
-						if (methDecl.binding.declaringClass.isCompatibleWith(allocationExpr.resolvedType)) {
-							if (allocationExpr.arguments == null && methDecl.arguments == null) {
-								superRef = true;
+						ReferenceBinding allocType = (ReferenceBinding) allocationExpr.resolvedType.original();
+						ReferenceBinding superType = (ReferenceBinding) methDecl.binding.declaringClass.findSuperTypeOriginatingFrom(allocType);
+						if (superType != null && superType.original() != methDecl.binding.declaringClass) {
+							MethodBinding superConstructor = methScope.getConstructor(superType, methDecl.binding.parameters, allocationExpr);
+							if (superConstructor.isValidBinding() && superConstructor.original() == allocationExpr.binding.original()) {
+								if (superConstructor.areParametersEqual(methDecl.binding)) {
+									superRef = true;
+								}
 							}
-							else if (allocationExpr.arguments != null && methDecl.arguments != null && allocationExpr.arguments.length == methDecl.arguments.length) {
-								superRef = methDecl.binding.areParametersCompatibleWith(allocationExpr.binding.parameters);
-							}
-						}
+						}						
 					}
 				}
 			}
 		}
-		
+
 		// Look at @Override annotations
 		if (!superRef && methDecl != null && methDecl.annotations != null) {
 			int length = methDecl.annotations.length;
@@ -302,13 +310,16 @@ public class Javadoc extends ASTNode {
 				superRef = (methDecl.binding.tagBits & TagBits.AnnotationOverride) != 0;
 			}
 		}
-		
+
 		// Store if a reference exists to an overriden method/constructor or the method is in a local type,
-		boolean reportMissing = methDecl == null || !((overriding && this.inheritedPositions != -1) || superRef || (methDecl.binding.declaringClass != null && methDecl.binding.declaringClass.isLocalType()));
-		if (!overriding && this.inheritedPositions != -1) {
-			int start = (int) (this.inheritedPositions >>> 32);
-			int end = (int) this.inheritedPositions;
-			methScope.problemReporter().javadocUnexpectedTag(start, end);
+		boolean reportMissing = methDecl == null || !((overriding && this.inheritedPositions != null) || superRef || (methDecl.binding.declaringClass != null && methDecl.binding.declaringClass.isLocalType()));
+		if (!overriding && this.inheritedPositions != null) {
+			int length = this.inheritedPositions.length;
+			for (int i = 0; i < length; ++i) {
+				int start = (int) (this.inheritedPositions[i] >>> 32);
+				int end = (int) this.inheritedPositions[i];
+				methScope.problemReporter().javadocUnexpectedTag(start, end);
+			}
 		}
 
 		// @param tags
@@ -346,7 +357,7 @@ public class Javadoc extends ASTNode {
 			this.invalidParameters[i].resolve(methScope, false, false);
 		}
 	}
-	
+
 	private void resolveReference(Expression reference, Scope scope) {
 
 		// Perform resolve
@@ -366,7 +377,7 @@ public class Javadoc extends ASTNode {
 		int scopeModifiers = -1;
 		if (reference instanceof JavadocFieldReference) {
 			JavadocFieldReference fieldRef = (JavadocFieldReference) reference;
-			
+
 			// Verify if this is a method reference
 			// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=51911
 			if (fieldRef.methodBinding != null) {
@@ -375,11 +386,11 @@ public class Javadoc extends ASTNode {
 					if (scopeModifiers == -1) scopeModifiers = scope.getDeclarationModifiers();
 					scope.problemReporter().javadocInvalidValueReference(fieldRef.sourceStart, fieldRef.sourceEnd, scopeModifiers);
 				}
-				else if (fieldRef.receiverType != null) {
-					if (scope.enclosingSourceType().isCompatibleWith(fieldRef.receiverType)) {
+				else if (fieldRef.actualReceiverType != null) {
+					if (scope.enclosingSourceType().isCompatibleWith(fieldRef.actualReceiverType)) {
 						fieldRef.bits |= ASTNode.SuperAccess;
 					}
-					fieldRef.methodBinding = scope.findMethod((ReferenceBinding)fieldRef.receiverType, fieldRef.token, new TypeBinding[0], fieldRef);
+					fieldRef.methodBinding = scope.findMethod((ReferenceBinding)fieldRef.actualReceiverType, fieldRef.token, new TypeBinding[0], fieldRef);
 				}
 			}
 
@@ -392,8 +403,8 @@ public class Javadoc extends ASTNode {
 			}
 
 			// Verify type references
-			if (!hasProblems && fieldRef.binding != null && fieldRef.binding.isValidBinding() && fieldRef.receiverType instanceof ReferenceBinding) {
-				ReferenceBinding resolvedType = (ReferenceBinding) fieldRef.receiverType;
+			if (!hasProblems && fieldRef.binding != null && fieldRef.binding.isValidBinding() && fieldRef.actualReceiverType instanceof ReferenceBinding) {
+				ReferenceBinding resolvedType = (ReferenceBinding) fieldRef.actualReceiverType;
 				verifyTypeReference(fieldRef, fieldRef.receiver, scope, source15, resolvedType, fieldRef.binding.modifiers);
 			}
 
@@ -440,7 +451,7 @@ public class Javadoc extends ASTNode {
 				verifyTypeReference(alloc, alloc.type, scope, source15, resolvedType, alloc.binding.modifiers);
 			}
 		}
-		
+
 		// Verify that there's no type variable reference
 		// (javadoc does not accept them and this is not a referenced bug or requested enhancement)
 		if (reference.resolvedType != null && reference.resolvedType.isTypeVariable()) {
@@ -463,7 +474,7 @@ public class Javadoc extends ASTNode {
 			}
 			return;
 		}
-		
+
 		// If no param tags then report a problem for each method argument
 		int argumentsSize = methodDecl.arguments == null ? 0 : methodDecl.arguments.length;
 		if (paramTagsSize == 0) {
@@ -556,7 +567,7 @@ public class Javadoc extends ASTNode {
 			}
 			return;
 		}
-		
+
 		// If no param tags then report a problem for each declaration type parameter
 		if (parameters != null) {
 			int typeParametersLength = parameters.length;
@@ -608,7 +619,7 @@ public class Javadoc extends ASTNode {
 						scope.problemReporter().javadocMissingParamTag(parameter.name, parameter.sourceStart, parameter.sourceEnd, modifiers);
 					}
 				}
-			
+
 				// Report invalid param
 				for (int i=0; i<paramTypeParamLength; i++) {
 					if (bindings[i] != null) {
@@ -714,7 +725,7 @@ public class Javadoc extends ASTNode {
 							compatible = typeRef.resolvedType.isCompatibleWith(exceptionBinding);
 						}
 					}
-			
+
 					//  If not compatible only complain on unchecked exception
 					if (!compatible && !typeRef.resolvedType.isUncheckedException(false)) {
 						methScope.problemReporter().javadocInvalidThrowsClassName(typeRef, md.binding.modifiers);
@@ -741,7 +752,7 @@ public class Javadoc extends ASTNode {
 					return;
 				}
 			}
-			
+
 			// member types
 			if (resolvedType.isMemberType()) {
 				ReferenceBinding topLevelType = resolvedType;
@@ -755,12 +766,12 @@ public class Javadoc extends ASTNode {
 					topLevelType = topLevelType.enclosingType();
 					computedCompoundName[--idx] = topLevelType.sourceName;
 				}
-				
+
 				// add package information
 				for (int i = packageLength; --i >= 0;) {
 					computedCompoundName[--idx] = topLevelType.fPackage.compoundName[i];
 				}
-										
+
 				ClassScope topLevelScope = scope.classScope();
 				// when scope is not on compilation unit type, then inner class may not be visible...
 				if (topLevelScope.parent.kind != Scope.COMPILATION_UNIT_SCOPE ||
@@ -778,17 +789,20 @@ public class Javadoc extends ASTNode {
 								mainLoop: for (int i=0; i<length; i++) {
 									char[][] compoundName = imports[i].compoundName;
 									int compoundNameLength = compoundName.length;
-									if ((imports[i].onDemand && compoundNameLength == computedCompoundName.length-1) ||
-										(compoundNameLength == computedCompoundName.length))
-									{
+									if ((imports[i].onDemand && compoundNameLength == computedCompoundName.length-1) 
+											|| (compoundNameLength == computedCompoundName.length)) {
 										for (int j = compoundNameLength; --j >= 0;) {
 											if (CharOperation.equals(imports[i].compoundName[j], computedCompoundName[j])) {
 												if (j == 0) {
 													hasValidImport = true;
+													ImportReference importReference = imports[i].reference;
+													if (importReference != null) {
+														importReference.bits |= ASTNode.Used;
+													}
 													break mainLoop;
 												}
 											} else {
-												break;	
+												break;
 											}
 										}
 									}
@@ -825,12 +839,12 @@ public class Javadoc extends ASTNode {
 				this.returnStatement.traverse(visitor, scope);
 			}
 			if (this.exceptionReferences != null) {
-				for (int i = 0, length = this.exceptionReferences.length; i < length; i++) {	
+				for (int i = 0, length = this.exceptionReferences.length; i < length; i++) {
 					this.exceptionReferences[i].traverse(visitor, scope);
 				}
 			}
 			if (this.seeReferences != null) {
-				for (int i = 0, length = this.seeReferences.length; i < length; i++) {	
+				for (int i = 0, length = this.seeReferences.length; i < length; i++) {
 					this.seeReferences[i].traverse(visitor, scope);
 				}
 			}
@@ -853,12 +867,12 @@ public class Javadoc extends ASTNode {
 				this.returnStatement.traverse(visitor, scope);
 			}
 			if (this.exceptionReferences != null) {
-				for (int i = 0, length = this.exceptionReferences.length; i < length; i++) {	
+				for (int i = 0, length = this.exceptionReferences.length; i < length; i++) {
 					this.exceptionReferences[i].traverse(visitor, scope);
 				}
 			}
 			if (this.seeReferences != null) {
-				for (int i = 0, length = this.seeReferences.length; i < length; i++) {	
+				for (int i = 0, length = this.seeReferences.length; i < length; i++) {
 					this.seeReferences[i].traverse(visitor, scope);
 				}
 			}

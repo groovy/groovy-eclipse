@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,16 +23,16 @@ import org.eclipse.jdt.core.util.IConstantPoolEntry;
 public class Annotation extends ClassFileStruct implements IAnnotation {
 
 	private static final IAnnotationComponent[] NO_ENTRIES = new IAnnotationComponent[0];
-	
+
 	private int typeIndex;
 	private char[] typeName;
 	private int componentsNumber;
 	private IAnnotationComponent[] components;
 	private int readOffset;
-	
+
 	/**
 	 * Constructor for Annotation.
-	 * 
+	 *
 	 * @param classFileBytes
 	 * @param constantPool
 	 * @param offset
@@ -42,7 +42,7 @@ public class Annotation extends ClassFileStruct implements IAnnotation {
 			byte[] classFileBytes,
 			IConstantPool constantPool,
 			int offset) throws ClassFormatException {
-		
+
 		final int index = u2At(classFileBytes, 0, offset);
 		this.typeIndex = index;
 		if (index != 0) {
@@ -60,7 +60,7 @@ public class Annotation extends ClassFileStruct implements IAnnotation {
 		if (length != 0) {
 			this.components = new IAnnotationComponent[length];
 			for (int i = 0; i < length; i++) {
-				AnnotationComponent component = new AnnotationComponent(classFileBytes, constantPool, offset + readOffset);
+				AnnotationComponent component = new AnnotationComponent(classFileBytes, constantPool, offset + this.readOffset);
 				this.components[i] = component;
 				this.readOffset += component.sizeInBytes();
 			}
@@ -68,7 +68,7 @@ public class Annotation extends ClassFileStruct implements IAnnotation {
 			this.components = NO_ENTRIES;
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.core.util.IAnnotation#getTypeIndex()
 	 */
@@ -87,7 +87,7 @@ public class Annotation extends ClassFileStruct implements IAnnotation {
 	public IAnnotationComponent[] getComponents() {
 		return this.components;
 	}
-	
+
 	int sizeInBytes() {
 		return this.readOffset;
 	}

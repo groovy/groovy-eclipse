@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,17 +14,17 @@ package org.eclipse.jdt.internal.compiler.lookup;
  * Context used during type inference for a generic method invocation
  */
 public class InferenceContext {
-	
+
 	private TypeBinding[][][] collectedSubstitutes;
 	MethodBinding genericMethod;
 	int depth;
 	int status;
 	TypeBinding expectedType;
 	boolean hasExplicitExpectedType; // indicates whether the expectedType (if set) was explicit in code, or set by default
+    public boolean isUnchecked;
 	TypeBinding[] substitutes;
 	final static int FAILED = 1;
-	final static int RAW_SUBSTITUTION = 2;
-	
+
 public InferenceContext(MethodBinding genericMethod) {
 	this.genericMethod = genericMethod;
 	TypeVariableBinding[] typeVariables = genericMethod.typeVariables;
@@ -32,16 +32,6 @@ public InferenceContext(MethodBinding genericMethod) {
 	this.collectedSubstitutes = new TypeBinding[varLength][3][];
 	this.substitutes = new TypeBinding[varLength];
 }
-
-public boolean checkRawSubstitution() {
-	// only at first level, during inference from arguments
-	if (depth > 0) return false;
-//	if (this.argumentIndex < 0 || this.depth != 0) {
-//		return false;
-//	}
-	this.status = RAW_SUBSTITUTION;
-	return true;
-}		
 
 public TypeBinding[] getSubstitutes(TypeVariableBinding typeVariable, int constraint) {
 	return this.collectedSubstitutes[typeVariable.rank][constraint];
@@ -57,7 +47,7 @@ public boolean hasUnresolvedTypeArgument() {
 		}
 	}
 	return false;
-}		
+}
 
 public void recordSubstitute(TypeVariableBinding typeVariable, TypeBinding actualType, int constraint) {
     TypeBinding[][] variableSubstitutes = this.collectedSubstitutes[typeVariable.rank];
@@ -90,7 +80,7 @@ public String toString() {
 	for (int i = 0, length = this.genericMethod.typeVariables.length; i < length; i++) {
 		buffer.append(this.genericMethod.typeVariables[i]);
 	}
-	buffer.append(this.genericMethod); 
+	buffer.append(this.genericMethod);
 	buffer.append("\n\t[status=");//$NON-NLS-1$
 	switch(this.status) {
 		case 0 :
@@ -98,9 +88,6 @@ public String toString() {
 			break;
 		case FAILED :
 			buffer.append("failed]");//$NON-NLS-1$
-			break;
-		case RAW_SUBSTITUTION :
-			buffer.append("raw-subst]");//$NON-NLS-1$
 			break;
 	}
 	if (this.expectedType == null) {
@@ -130,7 +117,7 @@ public String toString() {
 					}
 					if (constraintCollected[k] != null) {
 						buffer.append(constraintCollected[k].shortReadableName());
-					}					
+					}
 				}
 			}
 		}

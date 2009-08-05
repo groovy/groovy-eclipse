@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,52 +15,52 @@ abstract public class ClassFileStruct {
 	int[] constantPoolOffsets;
 	int structOffset;
 public ClassFileStruct(byte[] classFileBytes, int[] offsets, int offset) {
-	reference = classFileBytes;
-	constantPoolOffsets = offsets;
-	structOffset = offset;
+	this.reference = classFileBytes;
+	this.constantPoolOffsets = offsets;
+	this.structOffset = offset;
 }
 public double doubleAt(int relativeOffset) {
-	return (Double.longBitsToDouble(this.i8At(relativeOffset)));
+	return (Double.longBitsToDouble(i8At(relativeOffset)));
 }
 public float floatAt(int relativeOffset) {
-	return (Float.intBitsToFloat(this.i4At(relativeOffset)));
+	return (Float.intBitsToFloat(i4At(relativeOffset)));
 }
 public int i4At(int relativeOffset) {
-	int position = relativeOffset + structOffset;
-	return ((reference[position++] & 0xFF) << 24) | ((reference[position++] & 0xFF) << 16) | ((reference[position++] & 0xFF) << 8) + (reference[position] & 0xFF);
+	int position = relativeOffset + this.structOffset;
+	return ((this.reference[position++] & 0xFF) << 24) | ((this.reference[position++] & 0xFF) << 16) | ((this.reference[position++] & 0xFF) << 8) + (this.reference[position] & 0xFF);
 }
 public long i8At(int relativeOffset) {
-	int position = relativeOffset + structOffset;
-	return (((long) (reference[position++] & 0xFF)) << 56) 
-					| (((long) (reference[position++] & 0xFF)) << 48) 
-					| (((long) (reference[position++] & 0xFF)) << 40) 
-					| (((long) (reference[position++] & 0xFF)) << 32) 
-					| (((long) (reference[position++] & 0xFF)) << 24) 
-					| (((long) (reference[position++] & 0xFF)) << 16) 
-					| (((long) (reference[position++] & 0xFF)) << 8) 
-					| (reference[position++] & 0xFF);
+	int position = relativeOffset + this.structOffset;
+	return (((long) (this.reference[position++] & 0xFF)) << 56)
+					| (((long) (this.reference[position++] & 0xFF)) << 48)
+					| (((long) (this.reference[position++] & 0xFF)) << 40)
+					| (((long) (this.reference[position++] & 0xFF)) << 32)
+					| (((long) (this.reference[position++] & 0xFF)) << 24)
+					| (((long) (this.reference[position++] & 0xFF)) << 16)
+					| (((long) (this.reference[position++] & 0xFF)) << 8)
+					| (this.reference[position++] & 0xFF);
 }
 protected void reset() {
 	this.reference = null;
 	this.constantPoolOffsets = null;
 }
 public int u1At(int relativeOffset) {
-	return (reference[relativeOffset + structOffset] & 0xFF);
+	return (this.reference[relativeOffset + this.structOffset] & 0xFF);
 }
 public int u2At(int relativeOffset) {
-	int position = relativeOffset + structOffset;
-	return ((reference[position++] & 0xFF) << 8) | (reference[position] & 0xFF);
+	int position = relativeOffset + this.structOffset;
+	return ((this.reference[position++] & 0xFF) << 8) | (this.reference[position] & 0xFF);
 }
 public long u4At(int relativeOffset) {
-	int position = relativeOffset + structOffset;
-	return (((reference[position++] & 0xFFL) << 24) | ((reference[position++] & 0xFF) << 16) | ((reference[position++] & 0xFF) << 8) | (reference[position] & 0xFF));
+	int position = relativeOffset + this.structOffset;
+	return (((this.reference[position++] & 0xFFL) << 24) | ((this.reference[position++] & 0xFF) << 16) | ((this.reference[position++] & 0xFF) << 8) | (this.reference[position] & 0xFF));
 }
 public char[] utf8At(int relativeOffset, int bytesAvailable) {
 	int length = bytesAvailable;
 	char outputBuf[] = new char[bytesAvailable];
 	int outputPos = 0;
 	int readOffset = this.structOffset + relativeOffset;
-	
+
 	while (length != 0) {
 		int x = this.reference[readOffset++] & 0xFF;
 		length--;
