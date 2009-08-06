@@ -1,34 +1,32 @@
-/*******************************************************************************
- * Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ /*
+ * Copyright 2003-2009 the original author or authors.
  *
- * Contributors:
- *     Unattributed        - Initial API and implementation
- *     Andrew Eisenberg - modified for Groovy Eclipse 2.0
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.core.types;
 
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.eclipse.jdt.core.IJavaElement;
+
 /**
- * Type hierarchy - this is internal API for now. Changes are likely possible as things like DLTK are investigated.
+ * 
  * 
  * @author empovazan
+ * @author andrew
  */
-public abstract class Type implements Modifiers, Comparable {
-	public static final int CLASS = 1;
-
-	public static final int MEMBER = 2;
-
-	public static final int LOCAL_VARIABLE = 3;
-
-	public static final int PARAMETER = 4;
-
-	public static final int FIELD = 5;
-
-	public static final int METHOD = 6;
-
+public abstract class GroovyDeclaration implements Modifiers, Comparable {
+    public enum Kind { CLASS, MEMBER, LOCAL_VARIABLE, PARAMETER, FIELD, METHOD }
+    
 	protected String signature;
 
 	protected String name;
@@ -37,18 +35,18 @@ public abstract class Type implements Modifiers, Comparable {
 
 	private boolean inferred;
 
-	public Type(String signature, int modifiers, String name) {
+	public GroovyDeclaration(String signature, int modifiers, String name) {
 		this(signature, modifiers, name, false);
 	}
 	
-	public Type(String signature, int modifiers, String name, boolean inferred) {
+	public GroovyDeclaration(String signature, int modifiers, String name, boolean inferred) {
 		this.signature = signature;
 		this.name = name;
 		this.modifiers = modifiers;
 		this.inferred = inferred;
 	}
 
-	public abstract int getType();
+	public abstract Kind getType();
 
 	public boolean isGroovyType() {
 		return true;
@@ -72,7 +70,7 @@ public abstract class Type implements Modifiers, Comparable {
 		}
 
 		try {
-			Type rhs = (Type) obj;
+			GroovyDeclaration rhs = (GroovyDeclaration) obj;
 			return getType() == rhs.getType() && isGroovyType() == rhs.isGroovyType() && name.equals(rhs.name)
 					&& signature.equals(signature) && modifiers == rhs.modifiers;
 		} catch (ClassCastException e) {
@@ -85,7 +83,7 @@ public abstract class Type implements Modifiers, Comparable {
 	}
 
 	public int compareTo(Object arg) {
-		Type type = (Type) arg;
+		GroovyDeclaration type = (GroovyDeclaration) arg;
 		return name.compareTo(type.name);
 	}
 
@@ -102,4 +100,6 @@ public abstract class Type implements Modifiers, Comparable {
 	public boolean isInferred() {
 		return inferred;
 	}
+	
+	public abstract IJavaElement toJavaElement(GroovyProjectFacade project);
 }

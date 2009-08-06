@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ /*
+ * Copyright 2003-2009 the original author or authors.
  *
- * Contributors:
- *     Edward Povazan   - Initial API and implementation
- *     Andrew Eisenberg - modified for Groovy Eclipse 2.0
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codebrowsing;
 
 import java.util.ArrayList;
@@ -218,10 +222,11 @@ public class DeclarationSearchAssistant implements IDeclarationSearchAssistant {
 				Map<String, List<IDeclarationSearchProcessor>> mapASTClassNameToProcessors = mapContextIdToProcessorMap.get(contextId);
 				List<IDeclarationSearchProcessor> processors = mapASTClassNameToProcessors.get(node.getClass().getName());
 				if (processors != null) {
+				    DeclarationSearchInfo info = new DeclarationSearchInfo(result, facade,
+				            region);
 					for (IDeclarationSearchProcessor processor : processors) {
-					    IJavaElement[] proposals = processor
-								.getProposals(new DeclarationSearchInfo(result, facade,
-										region));
+                        IJavaElement[] proposals = processor
+								.getProposals(info);
 						results.addAll(Arrays.asList(proposals));
 					}
 				}
@@ -238,7 +243,7 @@ public class DeclarationSearchAssistant implements IDeclarationSearchAssistant {
             IRegion expandedRegion = facade.expandRegion(region);
             String identifier = facade.getText(expandedRegion.getOffset(), expandedRegion.getLength());
             ModuleNode moduleNode = facade.getModuleNode();
-            return internalFindProposals(facade, region, identifier, moduleNode);
+            return internalFindProposals(facade, expandedRegion, identifier, moduleNode);
         } catch (BadLocationException e) {
             GroovyCore.logException("Error during Code Select", e);
             return Collections.EMPTY_LIST;

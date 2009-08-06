@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ /*
+ * Copyright 2003-2009 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.debug.ui;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -19,7 +23,6 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -128,28 +131,77 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
     }
     
     public ASTNode findValidBreakpointLocation(ModuleNode module) {
-        try {
-            for (ClassNode classNode : module.getClasses()) {
+        ASTNode candidate = null;
+        for (ClassNode classNode : module.getClasses()) {
+                
+            try {
                 for (PropertyNode pn : classNode.getProperties()) {
                     this.visitProperty(pn);
                 }
-
+            } catch (VisitCompleted vc) { }
+            candidate = returnBetterCandiate(candidate, lastValid);
+            lastValid = null;
+            
+            try {
                 for (FieldNode fn : classNode.getFields()) {
                     this.visitField(fn);
                 }
-
+            } catch (VisitCompleted vc) { }
+            candidate = returnBetterCandiate(candidate, lastValid);
+            lastValid = null;
+            
+            try {
                 for (ConstructorNode cn : classNode.getDeclaredConstructors()) {
                     this.visitConstructor(cn);
                 }
-
+            } catch (VisitCompleted vc) { }
+            candidate = returnBetterCandiate(candidate, lastValid);
+            lastValid = null;
+            
+            // if a class is a script, then it can possibly
+            // have methods declared within the script
+            // so, move the catch block inside the
+            // loop to ensure all methods are explored
+            if (classNode.isScript()) {
                 for (MethodNode mn : classNode.getMethods()) {
-                    this.visitMethod(mn);
+                    try {
+                        this.visitMethod(mn);
+                    } catch (VisitCompleted vc) { }
+                    candidate = returnBetterCandiate(candidate, lastValid);
+                    lastValid = null;
                 }
+            } else {
+                try {
+                    for (MethodNode mn : classNode.getMethods()) {
+                        this.visitMethod(mn);
+                    }
+                } catch (VisitCompleted vc) { }
+                candidate = returnBetterCandiate(candidate, lastValid);
+                lastValid = null;
             }
-        } catch (VisitCompleted vc) { }
-        return lastValid;
+        }
+        return candidate;
     }
     
+
+    /**
+     * compare two ASTNodes and determine which one is closer to the startLine 
+     * 
+     */
+    private ASTNode returnBetterCandiate(ASTNode first, ASTNode second) {
+        if (first != null && second != null) {
+            int firstStartLine = first.getLineNumber();
+            int secondStartLine = second.getLineNumber();
+            
+            int firstDiff = Math.abs(firstStartLine - startLine);
+            int secondDiff = Math.abs(secondStartLine - startLine);
+            return firstDiff < secondDiff ? first : second;
+        } else if (first != null) {
+            return first;
+        } else {
+            return second;
+        }
+    }
 
     /**
      * no breakpoints allowed here

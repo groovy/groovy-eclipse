@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ /*
+ * Copyright 2003-2009 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.core.inference.internal;
 
 import java.util.ArrayList;
@@ -45,8 +49,15 @@ import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ParseException;
 import org.eclipse.jface.text.Region;
 
+/**
+ * 
+ * @author Andrew Eisenberg
+ * @author emp
+ * @created Aug 1, 2009
+ *
+ */
 public class SourceContextInfo {
-    public static SourceContextInfo create(ModuleNode module, GroovyProjectFacade project, int offset, ISourceBuffer buffer) {
+    public static SourceContextInfo create(ModuleNode module, GroovyProjectFacade project, int offset, ISourceBuffer buffer, boolean ignoreFirstParameter) {
            // Fix for GROOVY-1830: oddly no NPE in current release, but cleaning up acceptible completions here too.
         // FUTURE: emp - extend contexts to be aware of the code they are in to deal with scripts vs classes. This would
         // really be easier with a custom parser than hacking around searching for imports. 
@@ -81,7 +92,7 @@ public class SourceContextInfo {
         // Ready to complete - extract the completion prefix and do it.
         String[] parts = finder.splitForCompletion(expression);
         if (parts != null) {
-            IMemberLookup lookup = createMemberLookup(project, contexts);
+            IMemberLookup lookup = createMemberLookup(project, contexts, ignoreFirstParameter);
             if (lookup == null) {
                 return null;
             }
@@ -139,7 +150,7 @@ public class SourceContextInfo {
     public final String expression;
     public final String name;
 
-    public SourceContextInfo(IMemberLookup lookup, EvalResult eval,
+    private SourceContextInfo(IMemberLookup lookup, EvalResult eval,
             String expression, String name) {
         this.lookup = lookup;
         this.eval = eval;
@@ -189,8 +200,10 @@ public class SourceContextInfo {
      * @param inScriptOrClosure 
      * @return The lookup or null if it could not be created.
      */
-    protected static IMemberLookup createMemberLookup(GroovyProjectFacade project, ISourceCodeContext[] contexts) {
+    protected static IMemberLookup createMemberLookup(GroovyProjectFacade project, ISourceCodeContext[] contexts, boolean ignoreFirstParameter) {
         CategoryLookup categoryLookup = new CategoryLookup();
+        categoryLookup.setIgnoreFirstParameter(ignoreFirstParameter);
+        
         GroovyProjectMemberLookup classNodeLookup = new GroovyProjectMemberLookup(project);
             
         IMemberLookup registeredLookups = MemberLookupRegistry.createMemberLookup(contexts);

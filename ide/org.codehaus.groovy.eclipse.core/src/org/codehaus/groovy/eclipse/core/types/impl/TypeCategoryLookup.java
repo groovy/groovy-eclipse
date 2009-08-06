@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ /*
+ * Copyright 2003-2009 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.core.types.impl;
 
 import java.util.ArrayList;
@@ -48,9 +52,12 @@ public class TypeCategoryLookup extends AbstractMemberLookup implements IGroovyP
     // maps categories (class names) to methods mapped by the category type
     private Map<String, List<Method>> mapClassNameToMethods = new HashMap<String,List<Method>>();
     
-    public TypeCategoryLookup(IType categoryType) {
+    /**
+     * Ignore first parameter when doing content assist, but do not do so when doing code select
+     */
+    public TypeCategoryLookup(IType categoryType, boolean ignoreFirstParameter) {
         try {
-            mapCategory(categoryType);
+            mapCategory(categoryType, ignoreFirstParameter);
         } catch (JavaModelException e) {
             GroovyCore.logException("Error creating Cateory map for type: " + categoryType, e);
         }
@@ -69,7 +76,6 @@ public class TypeCategoryLookup extends AbstractMemberLookup implements IGroovyP
             Collection<String> hierarchy = createTypeHierarchy(type);
     
             List<Method> results = new ArrayList<Method>();
-            
             
             for (String typeName : hierarchy) {
                 List<Method> l = mapClassNameToMethods.get(typeName);
@@ -114,7 +120,7 @@ public class TypeCategoryLookup extends AbstractMemberLookup implements IGroovyP
             return types;
         }
         
-        return Collections.emptyList();
+        return Collections.singletonList("java.lang.Object");
     }
     
     
@@ -123,9 +129,10 @@ public class TypeCategoryLookup extends AbstractMemberLookup implements IGroovyP
      * Type that the category applies to.
      * 
      * Map class names of the first arg to a categorized method.
+     * @param ignoreFirstParameter 
      * @throws JavaModelException 
      */
-    private void mapCategory(IType type) throws JavaModelException {
+    private void mapCategory(IType type, boolean ignoreFirstParameter) throws JavaModelException {
         if (type == null) {
             return;
         }
@@ -142,15 +149,30 @@ public class TypeCategoryLookup extends AbstractMemberLookup implements IGroovyP
                 // key is the type of the target of the category (ie- first argument's type)
                 String key = Signature.toString(Signature.getTypeErasure(origParameterTypes[0]));
                 
-                String[] parameterNames = origParameterNames.length > 1 ? new String[origParameterNames.length-1] : NO_PARAMETERS;
-                for (int i = 0; i < parameterNames.length; i++) {
-                    parameterNames[i] = origParameterNames[i+1];
+                String[] parameterNames;
+                String[] parameterTypes;
+                if (ignoreFirstParameter) {
+                    parameterNames = origParameterNames.length > 1 ? new String[origParameterNames.length-1] : NO_PARAMETERS;
+                    for (int i = 0; i < parameterNames.length; i++) {
+                        parameterNames[i] = origParameterNames[i+1];
+                    }
+                    
+                    parameterTypes = origParameterTypes.length > 1 ? new String[origParameterTypes.length-1] : NO_PARAMETERS;
+                    for (int i = 0; i < parameterTypes.length; i++) {
+                        parameterTypes[i] = origParameterTypes[i+1];
+                    }
+                } else {
+                    parameterNames = new String[origParameterNames.length];
+                    for (int i = 0; i < parameterNames.length; i++) {
+                        parameterNames[i] = origParameterNames[i];
+                    }
+                    
+                    parameterTypes = new String[origParameterTypes.length];
+                    for (int i = 0; i < parameterTypes.length; i++) {
+                        parameterTypes[i] = origParameterTypes[i];
+                    }
                 }
                 
-                String[] parameterTypes = origParameterTypes.length > 1 ? new String[origParameterTypes.length-1] : NO_PARAMETERS;
-                for (int i = 0; i < parameterTypes.length; i++) {
-                    parameterTypes[i] = origParameterTypes[i+1];
-                }
                 IType declaringType = method.getDeclaringType();
                 if (!method.isBinary()) {
                     // must convert to fully qualified types for source methods

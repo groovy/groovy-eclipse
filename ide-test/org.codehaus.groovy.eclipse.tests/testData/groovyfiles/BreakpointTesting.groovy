@@ -22,6 +22,10 @@ def x() {
     print "Hi"  // 5
 }
 
+def xx() {
+    print "Hi"  // 16
+}
+
 def p = { g -> print g } // 13
 
 t = [ x: 1, 
@@ -31,3 +35,15 @@ t = [ 1, // 8
       2, // 9
       3] // 10
 t = []; // 11
+
+
+class Class {
+    def m() {
+        here()
+        here() // 14
+        here()
+        here()
+    }
+    
+    def t = { here() } // 15
+}

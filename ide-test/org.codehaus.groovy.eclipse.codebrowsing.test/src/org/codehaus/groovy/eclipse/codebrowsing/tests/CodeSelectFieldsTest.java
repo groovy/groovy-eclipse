@@ -20,10 +20,6 @@ import org.eclipse.jdt.core.IJavaElement;
  * @author Andrew Eisenberg
  * @created Jun 3, 2009
  * 
- * 4 tests are commented out here.  They are failing because a piece of
- * work is not yet implemented.  When the code to select refers to an entity 
- * in another class that is not in this class's hierarchy, the code is not found
- *
  */
 public class CodeSelectFieldsTest extends BrowsingTestCase {
 
@@ -238,7 +234,4 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found local variable 'y'", "y", elt[0].getElementName());
     }
-    
-    
-
 }

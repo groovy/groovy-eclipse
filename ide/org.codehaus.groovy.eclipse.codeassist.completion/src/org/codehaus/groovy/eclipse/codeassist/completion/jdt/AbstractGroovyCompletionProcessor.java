@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2003-2009 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package org.codehaus.groovy.eclipse.codeassist.completion.jdt;
 
 import java.lang.reflect.Array;
@@ -13,21 +28,14 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext;
 import org.codehaus.groovy.eclipse.core.context.impl.SourceCodeContextFactory;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.types.Field;
-import org.codehaus.groovy.eclipse.core.types.IMemberLookup;
+import org.codehaus.groovy.eclipse.core.types.GroovyDeclaration;
 import org.codehaus.groovy.eclipse.core.types.LocalVariable;
 import org.codehaus.groovy.eclipse.core.types.Member;
-import org.codehaus.groovy.eclipse.core.types.MemberLookupRegistry;
 import org.codehaus.groovy.eclipse.core.types.Method;
 import org.codehaus.groovy.eclipse.core.types.Modifiers;
 import org.codehaus.groovy.eclipse.core.types.Parameter;
 import org.codehaus.groovy.eclipse.core.types.Property;
-import org.codehaus.groovy.eclipse.core.types.Type;
-import org.codehaus.groovy.eclipse.core.types.impl.CategoryLookup;
-import org.codehaus.groovy.eclipse.core.types.impl.ClassLoaderMemberLookup;
-import org.codehaus.groovy.eclipse.core.types.impl.CompositeLookup;
-import org.codehaus.groovy.eclipse.core.types.impl.GroovyProjectMemberLookup;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ParseException;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -52,14 +60,14 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 	 * @param types
 	 * @return
 	 */
-    protected Type[] mergeTypes(Type[] types) {
+    protected GroovyDeclaration[] mergeTypes(GroovyDeclaration[] types) {
 		if (types.length < 1) {
 			return types;
 		}
 		
 		Arrays.sort(types);
 		
-		List<Type> results = new ArrayList<Type>();
+		List<GroovyDeclaration> results = new ArrayList<GroovyDeclaration>();
 		results.add(types[0]);
 		for (int i = 1; i < types.length; ++i) {
 			if (!isSimilar(types[i-1], types[i])) {
@@ -75,10 +83,10 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 			cls = cls.getSuperclass();
 		}
 		
-		return (Type[]) results.toArray((Type[])Array.newInstance(cls, results.size()));
+		return (GroovyDeclaration[]) results.toArray((GroovyDeclaration[])Array.newInstance(cls, results.size()));
 	}
 
-    private boolean isSimilar(Type type1, Type type2) {
+    private boolean isSimilar(GroovyDeclaration type1, GroovyDeclaration type2) {
         if (type1 instanceof Method && type2 instanceof Method) {
             Method method1 = (Method) type1;
             Method method2 = (Method) type2;
@@ -108,8 +116,8 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 	 * class$ and super$ and this$ methods must be removed.
 	 * @param results
 	 */
-	protected void removeCompilerMethods(List<Type> results) {
-		for (Iterator<Type> iter  = results.iterator(); iter.hasNext();) {
+	protected void removeCompilerMethods(List<GroovyDeclaration> results) {
+		for (Iterator<GroovyDeclaration> iter  = results.iterator(); iter.hasNext();) {
 			String name = iter.next().getName();
 			if (name.startsWith("<clinit>") || name.startsWith("class$") || name.startsWith("super$") || name.startsWith("this$")) {
 				iter.remove();
@@ -128,7 +136,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
     }
 
 
-	protected Image getImageForType(Type type) {
+	protected Image getImageForType(GroovyDeclaration type) {
 		if (type instanceof LocalVariable) {
 			return JavaPluginImages.get(JavaPluginImages.IMG_OBJS_LOCAL_VARIABLE);
 		}
@@ -168,7 +176,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 		return (flags & mask) != 0;
 	}
 
-	protected String createReplaceString(Type method) {
+	protected String createReplaceString(GroovyDeclaration method) {
 		return method.getName() + "()";
 	}
 	
@@ -219,21 +227,6 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 		return type;
 	}
 
-	/**
-	 * @param javaContext
-	 * @param contexts 
-	 * @param inScriptOrClosure 
-	 * @return The lookup or null if it could not be created.
-	 */
-	protected IMemberLookup createMemberLookup(GroovyProjectFacade project, ISourceCodeContext[] contexts) {
-		CategoryLookup categoryLookup = new CategoryLookup();
-        GroovyProjectMemberLookup classNodeLookup = new GroovyProjectMemberLookup(project);
-            
-        IMemberLookup registeredLookups = MemberLookupRegistry.createMemberLookup(contexts);
-        ClassLoaderMemberLookup classLookup = new ClassLoaderMemberLookup(project.getProjectClassLoader());
-        return new CompositeLookup(new IMemberLookup[] { 
-                classNodeLookup, classLookup, categoryLookup, registeredLookups });
-	}
 	
 	protected String findCompletionExpression(ExpressionFinder finder, int offset, ISourceBuffer buffer) {
 		try{

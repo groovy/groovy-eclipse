@@ -253,6 +253,12 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     protected ModuleNode getModuleNode(ITextEditor editor) throws CoreException {
         IEditorInput editorInput = editor.getEditorInput();
         ICompilationUnit unit = (ICompilationUnit) editorInput.getAdapter(ICompilationUnit.class);
+        if (unit == null) {
+            IFile file = (IFile) editorInput.getAdapter(IFile.class);
+            if (file != null) {
+                unit = JavaCore.createCompilationUnitFrom(file);
+            }
+        }
         if (! (unit instanceof GroovyCompilationUnit)) {
             throw new CoreException(Status.CANCEL_STATUS);
         }

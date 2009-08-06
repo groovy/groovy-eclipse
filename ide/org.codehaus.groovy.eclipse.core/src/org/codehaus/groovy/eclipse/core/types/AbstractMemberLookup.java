@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ /*
+ * Copyright 2003-2009 the original author or authors.
  *
- * Contributors:
- *     Unattributed        - Initial API and implementation
- *     Andrew Eisenberg - modified for Groovy Eclipse 2.0
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.core.types;
 
 import static org.codehaus.groovy.eclipse.core.util.ListUtil.newList;
@@ -33,7 +37,7 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
 			removeInaccessibleTypes(fields, type, staticAccess);
 		}
 		
-		removeNonPrefixed(fields, prefix);
+		removeNonPrefixed(fields, prefix, exact);
 		
 		if (staticAccess) {
 			removeInstanceTypes(fields);
@@ -56,7 +60,7 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
 			removeInstanceTypes(properties);
 		}
 		
-		removeNonPrefixed(properties, prefix);
+		removeNonPrefixed(properties, prefix, exact);
 
 		if (accessible) {
 			removeShadowedTypes(properties);
@@ -64,11 +68,18 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
 		return properties.toArray( new Property[ 0 ] );
 	}
 	
-	private void removeNonPrefixed(List types, String prefix) {
+	private void removeNonPrefixed(List types, String prefix, boolean exact) {
 		for (Iterator iter = types.iterator(); iter.hasNext(); ) {
-			Type type = (Type) iter.next();
-			if (!TypeUtil.looselyMatches(prefix, type.getName())) {
-				iter.remove();
+			GroovyDeclaration type = (GroovyDeclaration) iter.next();
+			
+			if (exact) {
+			    if (!prefix.equals(type.getName())) {
+			        iter.remove();
+			    }
+			} else {
+    			if (!TypeUtil.looselyMatches(prefix, type.getName())) {
+    				iter.remove();
+    			}
 			}
 		}
 	}
@@ -165,7 +176,7 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
 	public Method[] lookupMethods(String type, String prefix, boolean accessible, boolean staticAccess, boolean exact) {
 		List< Method > methods = collectAllMethods(type);
 		
-		removeNonPrefixed(methods, prefix);
+		removeNonPrefixed(methods, prefix, exact);
 		
 		if (accessible) {
 			removeInaccessibleTypes(methods, type, staticAccess);
@@ -186,7 +197,7 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
             final boolean staticAccess, final boolean exact) {
 		List< Method > methods = collectAllMethods(type);
 		
-		removeNonPrefixed(methods, prefix);
+		removeNonPrefixed(methods, prefix, exact);
 		
 		if (accessible) {
 			removeInaccessibleTypes(methods, type, staticAccess);
@@ -210,34 +221,34 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
 		return newList( new Method[ 0 ] );
 	}
 	
-	protected void removeTypesByAnyModifier(List< Type > types, int modifiers) {
-		for (Iterator< Type > iter = types.iterator(); iter.hasNext(); ) {
-			Type type = iter.next();
+	protected void removeTypesByAnyModifier(List< GroovyDeclaration > types, int modifiers) {
+		for (Iterator< GroovyDeclaration > iter = types.iterator(); iter.hasNext(); ) {
+			GroovyDeclaration type = iter.next();
 			if ((type.modifiers & modifiers) != 0) {
 				iter.remove();
 			}
 		}
 	}
 	
-	protected void removeTypesByExactModifiers(List< Type > types, int modifiers) {
-		for (Iterator< Type > iter = types.iterator(); iter.hasNext(); ) {
-			Type type = iter.next();
+	protected void removeTypesByExactModifiers(List< GroovyDeclaration > types, int modifiers) {
+		for (Iterator< GroovyDeclaration > iter = types.iterator(); iter.hasNext(); ) {
+			GroovyDeclaration type = iter.next();
 			if ((type.modifiers & modifiers) != modifiers) {
 				iter.remove();
 			}
 		}
 	}
 	
-	protected void removeInstanceTypes(List< ? extends Type > types) {
-		for (Iterator< ? extends Type > iter = types.iterator(); iter.hasNext(); ) {
-			Type type = iter.next();
+	protected void removeInstanceTypes(List< ? extends GroovyDeclaration > types) {
+		for (Iterator< ? extends GroovyDeclaration > iter = types.iterator(); iter.hasNext(); ) {
+			GroovyDeclaration type = iter.next();
 			if ((type.modifiers & Modifiers.ACC_STATIC) == 0) {
 				iter.remove();
 			}
 		}
 	}
 	
-	protected void removeStaticTypes(List< Type > types) {
+	protected void removeStaticTypes(List< GroovyDeclaration > types) {
 		removeTypesByAnyModifier(types, Modifiers.ACC_STATIC);
 	}
 	
@@ -258,15 +269,15 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
 	}
 	
 	@SuppressWarnings("unchecked")
-    protected void removeShadowedTypes(List< ? extends Type > types) {
+    protected void removeShadowedTypes(List< ? extends GroovyDeclaration > types) {
 		if (types.size() > 0 && types.get(0) instanceof Method) {
 			removeShadowedMethods(types);
 		} else {
 			// Sort - results are by name and hiearchy.
 			Collections.sort(types);
 			for (int i = 1; i < types.size(); ++i) {
-				Type last = types.get(i - 1);
-				Type current = types.get(i);
+				GroovyDeclaration last = types.get(i - 1);
+				GroovyDeclaration current = types.get(i);
 				if (last.name.equals(current.name)) {
 					types.remove(i-- - 1);
 				}
@@ -275,7 +286,7 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
 	}
 	
 	@SuppressWarnings("unchecked")
-    private void removeShadowedMethods(List< ? extends Type > types) {
+    private void removeShadowedMethods(List< ? extends GroovyDeclaration > types) {
 		Collections.sort(types);
 		for (int i = 1; i < types.size(); ++i) {
 			Method last = (Method) types.get(i - 1);

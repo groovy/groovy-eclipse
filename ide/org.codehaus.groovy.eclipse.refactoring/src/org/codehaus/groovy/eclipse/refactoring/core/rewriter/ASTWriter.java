@@ -4,6 +4,17 @@
  * IFS Institute for Software, HSR Rapperswil, Switzerland
  * http://ifs.hsr.ch/
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rewriter;
 
@@ -223,7 +234,8 @@ public class ASTWriter extends CodeVisitorSupport implements
 	/**
 	 * write imports like import static java.lang.Math.*
 	 */
-	private void printStaticStarImports() {
+	@SuppressWarnings("deprecation")
+    private void printStaticStarImports() {
 		if (!root.getStaticImportClasses().isEmpty()) {
 			Iterator iter = root.getStaticImportClasses().values().iterator();
 			while (iter.hasNext()) {
@@ -242,7 +254,8 @@ public class ASTWriter extends CodeVisitorSupport implements
 	/**
 	 * write imports like import static java.lang.Math.PI
 	 */
-	private void printStaticClassImports() {
+	@SuppressWarnings("deprecation")
+    private void printStaticClassImports() {
 		if (!root.getStaticImportAliases().isEmpty()) {
 			Iterator iter = root.getStaticImportAliases().keySet().iterator();
 			while (iter.hasNext()) {

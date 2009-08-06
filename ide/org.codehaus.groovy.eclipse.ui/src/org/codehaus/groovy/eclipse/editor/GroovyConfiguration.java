@@ -1,27 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *     Unattributed        - Initial API and implementation
- *     Andrew Eisenberg - modified for Groovy Eclipse 2.0
- *******************************************************************************/
 package org.codehaus.groovy.eclipse.editor;
 
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput;
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider;
-import org.eclipse.jdt.ui.text.IColorManager;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IAutoEditStrategy;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.presentation.IPresentationReconciler;
+import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.rules.BufferedRuleBasedScanner;
+import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.rules.RuleBasedScanner;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.source.ISourceViewer;
@@ -33,8 +25,8 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
     // FIXADE M2 will need these again for groovy colors in the editor
 //	private ITextDoubleClickStrategy doubleClickStrategy;
-	private GroovyTagScanner tagScanner = new GroovyTagScanner(new GroovyColorManager());
-	private GroovyStringScanner stringScanner = new GroovyStringScanner();
+	private GroovyTagScanner tagScanner;
+	private GroovyStringScanner stringScanner;
 	
 	
 	/**
@@ -46,13 +38,14 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 		}
 	}
 
-	public GroovyConfiguration(IColorManager colorManager, IPreferenceStore preferenceSource, ITextEditor editor) {
+	public GroovyConfiguration(GroovyColorManager colorManager, IPreferenceStore preferenceSource, ITextEditor editor) {
 	    super(colorManager, preferenceSource, editor, IJavaPartitions.JAVA_PARTITIONING);
+	    this.tagScanner = new GroovyTagScanner(colorManager);
+	    this.stringScanner = new GroovyStringScanner(colorManager);
 	}
 
     @Override
     protected RuleBasedScanner getCodeScanner() {
-//        return super.getCodeScanner();
         return tagScanner;
     }
 
@@ -99,4 +92,32 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         return stringScanner;
     }
 
+    @Override
+    public IPresentationReconciler getPresentationReconciler(
+            ISourceViewer sourceViewer) {
+        PresentationReconciler reconciler = (PresentationReconciler) super.getPresentationReconciler(sourceViewer);
+        reconciler
+            .setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
+
+        
+        DefaultDamagerRepairer dr = new DefaultDamagerRepairer(getStringScanner());
+        reconciler.setDamager(dr,
+                GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
+        reconciler.setRepairer(dr,
+                GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
+        return reconciler;
+    }
+    
+    @Override
+    public String[] getConfiguredContentTypes(ISourceViewer sourceViewer) {
+        return new String[] {
+                IDocument.DEFAULT_CONTENT_TYPE,
+                IJavaPartitions.JAVA_DOC,
+                IJavaPartitions.JAVA_MULTI_LINE_COMMENT,
+                IJavaPartitions.JAVA_SINGLE_LINE_COMMENT,
+                IJavaPartitions.JAVA_STRING,
+                IJavaPartitions.JAVA_CHARACTER,
+                GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS
+            };
+    }
 }

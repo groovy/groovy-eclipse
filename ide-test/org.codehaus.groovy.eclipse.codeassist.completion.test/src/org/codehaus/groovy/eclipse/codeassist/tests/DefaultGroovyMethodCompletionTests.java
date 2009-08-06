@@ -11,7 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.completion.jdt.DefaultGroovyMethodProcessor;
+import org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -36,73 +36,73 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
     // should not find dgm here
     public void testDGMInJavaFile() throws Exception {
         ICompilationUnit unit = createJava();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "this."), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "this."), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 0);
     }
 
     // should find dgm here
     public void testDGMInMethodScope() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "this."), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "this."), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 1);
     }
 
     // should find dgm here
     public void testDGMInMethodScopeFromOther() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "new Object()."), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "new Object()."), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 1);
     }
     
     // should find dgm here
     public void testDGMInConstructorScope() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "Class() {\n"), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "Class() {\n"), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 1);
     }
 
     // should find dgm here
     public void testDGMInScriptScope() throws Exception {
         ICompilationUnit unit = createGroovyForScript();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "\n"), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "\n"), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 1);
     }
 
     // should find dgm here
     public void testDGMInScriptOtherClassScope() throws Exception {
         ICompilationUnit unit = createGroovyForScript();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Object()."), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Object()."), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 1);
     }
 
     // should not find dgm here
     public void testDGMInClassScope() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "Class() { }"), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "Class() { }"), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 0);
     }
     // should not find dgm here
     public void testDGMInMethodParamScope() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "void doNothing("), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "void doNothing("), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 0);
     }
     // should not find dgm here
     public void testDGMInConstructorParamScope() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "Class("), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "Class("), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 0);
     }
     // should not find dgm here
     public void testDGMInModuleScope() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "; } }"), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "; } }"), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 0);
     }
     // should find dgm here
     public void testDGMInClosure() throws Exception {
         ICompilationUnit unit = createGroovyForClosure();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CLOSURECONTENTS, " t -> "), DefaultGroovyMethodProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CLOSURECONTENTS, " t -> "), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "identity", 1);
     }
 

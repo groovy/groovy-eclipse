@@ -1,37 +1,26 @@
-/*******************************************************************************
- * Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ /*
+ * Copyright 2003-2009 the original author or authors.
  *
- * Contributors:
- *     Edward Povazan   - Initial API and implementation
- *     Andrew Eisenberg - modified for Groovy Eclipse 2.0
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codebrowsing.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.VariableScope;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
-import org.codehaus.groovy.eclipse.codebrowsing.DeclarationCategory;
 import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchInfo;
 import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchProcessor;
-import org.codehaus.groovy.eclipse.codebrowsing.SourceCodeFinder;
 import org.codehaus.groovy.eclipse.core.DocumentSourceBuffer;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
@@ -60,151 +49,7 @@ import org.eclipse.jface.text.Region;
  */
 public class MethodCallExpressionProcessor implements
 		IDeclarationSearchProcessor {
-	public IJavaElement[] getProposalsOLD(IDeclarationSearchInfo info) {
-		MethodCallExpression expr = (MethodCallExpression) info.getASTNode();
-		ClassNode thisClassNode = info.getClassNode();
-		
-		// is this method call a closure defined in local scope?
-		List<IJavaElement> proposals = createLocalClosureCallProposals(info, expr);
-		
-		// regular method/static method
-		ClassNode receiverClassNode = expr.getObjectExpression().getText().equals("this") ?
-		        thisClassNode : expr.getObjectExpression().getType();
-		proposals.addAll(createMethodCallProposal(DeclarationCategory.METHOD, info,
-				receiverClassNode, expr));
-		
-		// could be a declaration in a superclass
-		String targetClassName = expr.getObjectExpression().getText();
-		if (proposals.size() == 0 && targetClassName.equals("this")) {
-		    ClassNode superClass = thisClassNode.getSuperClass();
-		    while (superClass != null && proposals.size() == 0) {
-		        proposals.addAll(createMethodCallProposal(DeclarationCategory.METHOD, info,
-		                superClass, expr));
-		        superClass = superClass.getSuperClass();
-		    }
-		}
-		
-		
-		return proposals.toArray(new IJavaElement[proposals.size()]);
-	}
-
-    private List<IJavaElement> createMethodCallProposal(String category,
-			IDeclarationSearchInfo info, ClassNode receiverClassNode,
-			MethodCallExpression expr) {
-		
-		IDocumentFacade facade = info.getEditorFacade();
-		IType receiverType = facade.getProjectFacade().groovyClassToJavaType(receiverClassNode);
-		if (receiverType == null) {
-		    return Collections.EMPTY_LIST;
-		}
-
-		String methodName = expr.getMethodAsString();
-		int argsLen = getNumargs(expr);
-
-		
-		List<IJavaElement> results = new ArrayList<IJavaElement>();
-		
-		try {
-            for (IMethod method : receiverType.getMethods()) {
-                if (methodEquals(methodName, argsLen, method)) {
-                    results.add(method);
-                }
-            }
-        } catch (JavaModelException e) {
-            GroovyCore.logException("Exception during content assist", e);
-        }
-
-		return results;
-	}
-
-    private int getNumargs(MethodCallExpression expr) {
-        int argsLen = 0;
-		Expression args = expr.getArguments();
-		if (args instanceof ArgumentListExpression || 
-		        args instanceof NamedArgumentListExpression) {
-		    List<? extends Expression> argExpr = extractArgsExpressions(args);	
-		    argsLen = argExpr.size();
-		}
-        return argsLen;
-    }
-
-    private boolean methodEquals(String methodName, int argsLen, IMethod method) {
-        if (!method.getElementName().equals(methodName)) {
-            return false;
-        }
-        int thisMethodsArgsLen = method.getParameterTypes() == null ? 
-                0 : method.getParameterTypes().length;
-        if (argsLen == thisMethodsArgsLen) {
-            return true;
-        }
-        
-        // TODO check for optional args...this might just work...
-        return false;
-    }
-
-    private List<? extends Expression> extractArgsExpressions(Expression args) {
-        List<? extends Expression> argExpr;
-        if (args instanceof ArgumentListExpression) {
-            ArgumentListExpression argsList = (ArgumentListExpression) args;
-            argExpr = argsList.getExpressions();
-        } else {
-            NamedArgumentListExpression argsList = (NamedArgumentListExpression) args;
-            argExpr = argsList.getMapEntryExpressions();
-        }
-        return argExpr;
-    }
-    
-    /**
-     * Looks for the selected method call expression as a closure 
-     */
-    private List<IJavaElement> createLocalClosureCallProposals(
-            IDeclarationSearchInfo info, MethodCallExpression expr) {
-        List<IJavaElement> proposals = new LinkedList<IJavaElement>();
-        ISourceCodeContext[] allContexts = createContexts(info);
-        ISourceCodeContext sourceContext = allContexts[allContexts.length-1];
-        VariableScope scope = getVariableScope(sourceContext);
-        while (scope != null) {
-            for (Iterator<Variable> varIter = scope.getDeclaredVariablesIterator(); varIter.hasNext();) {
-                Variable var = (Variable) varIter.next();
-                
-                // I *think* it is ok to ignore vars of type DynamicVariable
-                if (var.getName().equals(info.getIdentifier()) && var instanceof ASTNode) {
-                    proposals.add(
-                            SourceCodeFinder.find(scope.getClassScope(), 
-                                    (ASTNode) var, info.getEditorFacade().getFile()));
-                }
-            }
-            scope = scope.getParent();
-        }
-        return proposals;
-    }
-    
-    
-    private VariableScope getVariableScope(ISourceCodeContext sourceContext) {
-        ASTNode astNode = sourceContext.getASTPath()[sourceContext.getASTPath().length-1];
-        if (astNode instanceof MethodNode) {
-            astNode = ((MethodNode) astNode).getCode();
-        } else if (astNode instanceof ClosureExpression) {
-            astNode = ((ClosureExpression) astNode).getCode();
-        } else if (astNode instanceof MethodCallExpression) {
-            ArgumentListExpression ale = (ArgumentListExpression) 
-                    ((MethodCallExpression) astNode).getArguments();
-            if (ale.getExpression(0) instanceof ClosureExpression) {
-                astNode = ((ClosureExpression) ale.getExpression(0)).getCode();
-            }
-        }
-        try {
-            // copied from groovy code that doesn't care abot
-            // static type
-            java.lang.reflect.Method getVariableScopeField = astNode.getClass().getMethod("getVariableScope");
-            return (VariableScope) getVariableScopeField.invoke(astNode);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-
-    protected ISourceCodeContext[] createContexts(IDeclarationSearchInfo info) {
+	protected ISourceCodeContext[] createContexts(IDeclarationSearchInfo info) {
         IDocumentFacade facade = info.getEditorFacade();
         IRegion r = info.getRegion();
         ISourceBuffer buffer = new DocumentSourceBuffer(facade.getDocument());
@@ -218,12 +63,12 @@ public class MethodCallExpressionProcessor implements
         int offset = info.getRegion().getOffset() + info.getRegion().getLength();
         GroovyProjectFacade project = info.getEditorFacade().getProjectFacade();
         
-        SourceContextInfo sourceInfo = SourceContextInfo.create(info.getModuleNode(), project, offset, buffer);
+        SourceContextInfo sourceInfo = SourceContextInfo.create(info.getModuleNode(), project, offset, buffer, false);
         if (sourceInfo != null) {
             // FIXADE M2 we need a way to figure out if we are looking at property on a class or not
             // for now, assume that upper case first letter is a class.
             boolean isClass = Character.isUpperCase(sourceInfo.expression.charAt(0));
-            String targetType = isClass ? sourceInfo.expression : sourceInfo.eval.getName();
+            String targetType = sourceInfo.eval.getName();
             
             List<IJavaElement> elts = new ArrayList<IJavaElement>();
             try {

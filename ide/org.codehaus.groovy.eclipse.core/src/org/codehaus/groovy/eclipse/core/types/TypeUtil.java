@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2007, 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ /*
+ * Copyright 2003-2009 the original author or authors.
  *
- * Contributors:
- *     Unattributed        - Initial API and implementation
- *     Andrew Eisenberg - modified for Groovy Eclipse 2.0
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.core.types;
 
 import static org.codehaus.groovy.eclipse.core.util.ListUtil.newEmptyList;
@@ -74,9 +78,9 @@ public class TypeUtil {
 	}
 
 	public static ClassType newClassType(IType type) throws JavaModelException {
-		String signature = Signature.createTypeSignature(type.getTypeQualifiedName(), true);
+		String signature = Signature.createTypeSignature(type.getFullyQualifiedName(), true);
 		int modifiers = convertFromIMemberModifiers(type);
-		return new ClassType(signature, modifiers, type.getTypeQualifiedName());
+		return new ClassType(signature, modifiers, type.getFullyQualifiedName());
 	}
 
 	public static Method newMethod(ClassType declaringClass, MethodNode methodNode) {
@@ -108,7 +112,7 @@ public class TypeUtil {
 				.getType().getText().equals(OBJECT_TYPE));
 	}
 	
-	public static Type newField(FieldNode fieldNode) {
+	public static GroovyDeclaration newField(FieldNode fieldNode) {
 		return newField(newClassType(fieldNode.getDeclaringClass()), fieldNode);
 	}
 	
@@ -127,14 +131,14 @@ public class TypeUtil {
 		return new Field(signature, modifiers, fieldNode.getName(), declaringClass, !signature.equals(OBJECT_TYPE));
 	}
 	
-	public static Type newField(IField field) throws IllegalArgumentException, JavaModelException {
+	public static GroovyDeclaration newField(IField field) throws IllegalArgumentException, JavaModelException {
 		ClassType declaringClass = newClassType(field.getDeclaringType());
 		String signature = field.getTypeSignature();
 		int modifiers = TypeUtil.convertFromJavaCoreModifiers(field.getFlags());
 		return new Field(signature, modifiers, field.getElementName(), declaringClass, !signature.equals(OBJECT_TYPE));
 	}
 
-	public static Type newLocalVariable(Variable var) {
+	public static GroovyDeclaration newLocalVariable(Variable var) {
 		return new LocalVariable(var.getType().getName(), var.getName());
 	}
 	

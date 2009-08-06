@@ -1,16 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2003, 2009 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Common Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/cpl-v10.html
- * 
- * Contributors:
- *     Erich Gamma (erich_gamma@ch.ibm.com) and
- * 	   Kent Beck (kent@threeriversinstitute.org)
- *     Zohar Melamed 
- *******************************************************************************/
-
+ /*
+ * Copyright 2003-2009 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.test;
 
 import static org.eclipse.jdt.core.search.IJavaSearchConstants.CLASS;
@@ -18,10 +20,12 @@ import static org.eclipse.jdt.core.search.IJavaSearchConstants.WAIT_UNTIL_READY_
 import static org.eclipse.jdt.core.search.SearchEngine.createJavaSearchScope;
 import static org.eclipse.jdt.core.search.SearchPattern.R_CASE_SENSITIVE;
 import static org.eclipse.jdt.core.search.SearchPattern.R_EXACT_MATCH;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
@@ -49,7 +53,6 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
