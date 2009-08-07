@@ -1008,7 +1008,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		if (name.indexOf(".") == -1) {
 			if (typeArguments == null) {
-				return new SingleTypeReference(name.toCharArray(), positionFor(start, end));
+				if (start == 0 && end == 0) {
+					return new SingleTypeReference(name.toCharArray(), 0);
+				} else {
+					return new SingleTypeReference(name.toCharArray(), positionFor(start, end));
+				}
 			} else {
 				// FIXASC (M2) determine when array dimension used in this case,
 				// is it 'A<T[]> or some silliness?
