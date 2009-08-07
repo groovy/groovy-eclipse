@@ -1,0 +1,81 @@
+###############################################################################
+# Copyright 2003-2009 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+###############################################################################
+
+workDir=/opt/j2ee/domains/ci.codehaus.org/bamboo/webapps/atlassian-bamboo/data/atlassian-bamboo-2.1.4/xml-data/build-dir/GRECLIPSE-V2E34
+
+
+# The location of this pluginbuilder project. It provides the base directory for the build scripts.
+# @category localsettings
+# @type Directory
+buildHome=${workDir}/ide/org.codehaus.groovy.eclipse.pluginbuilder
+
+# The directory where the build takes place. This directory WILL BE DELETED before every build.
+# @category localsettings
+# @type Directory
+buildDirectory=${workDir}/build
+
+# The eclipse build host. Must be an Eclipse 3.4 SDK installation with JDT and PDE. And in the case of RCP builds the RCP Delta Pack must be included, too.
+# @category localsettings
+# @type Directory
+eclipseDir=/opt/eclipse/eclipse-rcp-ganymede-SR2-linux-gtk-x86_64
+
+# Environment for the build host.  Do not change these.
+os=*
+ws=*
+arch=*
+
+# Environment for the test host.  Change to your local environment
+#test_os=linux
+#test_ws=gtk
+#test_arch=x86_64
+test_os=linux
+test_ws=gtk
+test_arch=x86_64
+
+eclipse.local.tar.non.server=/opt/eclipse/src/eclipse-java-galileo-linux-gtk-x86_64.tar.gz
+
+
+# location to install the downloaded eclipse into
+eclipse.installation.dir=${workDir}/build/automatedTests
+
+# svn support
+pluginbuilder.svn.user=empty
+pluginbuilder.svn.password=empty
+
+# uncomment if no clean should be performed before build (saves lots of time)
+#do.not.clean=true
+
+# set to false if there should be no svn checkout
+# and instead copy from the workspace specified below
+pluginbuilder.is.svn=false
+
+# Set this property to be the workspace where a 
+# full source version of the groovy-eclipse plugin 
+# can be found.  This is used instead of fetching from svn
+# @type Directory
+workspaceDirBase=${workDir}/base
+workspaceDirBaseTest=${workDir}/base-test
+workspaceDirIde=${workDir}/ide
+workspaceDirIdeTest=${workDir}/ide-test
+
+
+buildType=N
+
+# N for nightly
+# I for integration
+# M for milestone
+# R for release
+buildTypePresentation=e35
