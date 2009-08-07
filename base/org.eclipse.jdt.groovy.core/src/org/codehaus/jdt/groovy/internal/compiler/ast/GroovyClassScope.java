@@ -126,8 +126,11 @@ public class GroovyClassScope extends ClassScope {
 				// FIXASC (M2) safe to do this resolution so early?
 				((SourceTypeBinding) existingMethod.declaringClass).resolveTypesFor(existingMethod);
 				boolean equalParameters = true;
-				if (parameterTypes == null && existingMethod.parameters.length == 0) {
-					// no params, definetly a match
+				if (parameterTypes == null) {
+					// not looking for parameters, if this has none, that is OK
+					if (existingMethod.parameters.length != 0) {
+						equalParameters = false;
+					}
 				} else if (existingMethod.parameters.length == parameterTypes.length) {
 					TypeBinding[] existingParams = existingMethod.parameters;
 					for (int p = 0, max = parameterTypes.length; p < max; p++) {
