@@ -32,6 +32,7 @@ import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
@@ -193,6 +194,22 @@ public class JDTClassNode extends ClassNode {
 				} else {
 					MethodNode mNode = methodBindingToMethodNode(bindings[i]);
 					addMethod(mNode);
+				}
+			}
+		}
+		// Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
+		// different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
+		if (jdtBinding instanceof SourceTypeBinding) {
+			SyntheticMethodBinding[] syntheticMethodBindings = ((SourceTypeBinding) jdtBinding).syntheticMethods();
+			if (syntheticMethodBindings != null) {
+				for (int i = 0; i < syntheticMethodBindings.length; i++) {
+					if (syntheticMethodBindings[i].isConstructor()) {
+						ConstructorNode cNode = constructorBindingToConstructorNode(bindings[i]);
+						addConstructor(cNode);
+					} else {
+						MethodNode mNode = methodBindingToMethodNode(syntheticMethodBindings[i]);
+						addMethod(mNode);
+					}
 				}
 			}
 		}
