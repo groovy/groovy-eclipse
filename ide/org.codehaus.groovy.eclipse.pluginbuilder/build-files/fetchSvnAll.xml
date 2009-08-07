@@ -13,6 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
  -->
+<!-- This file is not used any more.  Delete??? --->
 <project name="Generated">
 	<property name="base.svn.url" value="https://src.springsource.com/svn/incubator/groovyjdt3"/>
 	<property name="base.svn.url.ide" value="${base.svn.url}/ide"/>
@@ -22,10 +23,6 @@
 
   <target name="fetch.svn.all">
 
-  <!--
-  </target>
-  <target name="fetch.svn.allOLD">
-	-->
   	<!-- Features -->
   	<antcall target="svn.co">
       <param name="target" value="features"/>

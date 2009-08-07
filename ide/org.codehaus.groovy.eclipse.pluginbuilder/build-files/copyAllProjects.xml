@@ -34,7 +34,7 @@
 			</fileset>
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.alltests.feature">
-			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.alltests.feature">
+			<fileset dir="${workspaceDirIdeTest}/Feature org.codehaus.groovy.alltests.feature">
 			</fileset>
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.eclipse.sdk">
