@@ -573,7 +573,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			constructorDeclaration.selector = classNode.getNameWithoutPackage().toCharArray();
 			constructorDeclaration.arguments = createArguments(constructorNode.getParameters(), false);
 			if (constructorNode.hasDefaultValue()) {
-				createConstructorVariants(constructorNode, constructorDeclaration, accumulatedMethodDeclarations, compilationResult);
+				createConstructorVariants(constructorNode, constructorDeclaration, accumulatedMethodDeclarations,
+						compilationResult, isEnum);
 			} else {
 				accumulatedMethodDeclarations.add(constructorDeclaration);
 			}
@@ -741,14 +742,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * parameters).
 	 */
 	private void createConstructorVariants(ConstructorNode constructorNode, ConstructorDeclaration constructorDecl,
-			List<AbstractMethodDeclaration> accumulatedDeclarations, CompilationResult compilationResult) {
+			List<AbstractMethodDeclaration> accumulatedDeclarations, CompilationResult compilationResult, boolean isEnum) {
 
 		List<Argument[]> variants = getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments);
 
 		for (Argument[] variant : variants) {
 			ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(compilationResult);
 			constructorDeclaration.annotations = transformAnnotations(constructorNode.getAnnotations());
-			constructorDeclaration.modifiers = ClassFileConstants.AccPublic;
+			constructorDeclaration.modifiers = isEnum ? ClassFileConstants.AccPrivate : ClassFileConstants.AccPublic;
 			constructorDeclaration.selector = constructorDecl.selector;
 			constructorDeclaration.arguments = variant;
 			fixupSourceLocationsForConstructorDeclaration(constructorDeclaration, constructorNode);
