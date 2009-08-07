@@ -26,7 +26,13 @@ public abstract class ParserPluginFactory {
     public static ParserPluginFactory newInstance(boolean useNewParser) {
         if (useNewParser) {
             Class type = null;
+            // FIXASC (groovychange)
+            // oldcode
+            //String name = "org.codehaus.groovy.antlr.AntlrParserPluginFactory";
+            // newcode
             String name = "org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory";
+            // end
+ 
             try {
                 type = Class.forName(name);
             }
@@ -52,7 +58,12 @@ public abstract class ParserPluginFactory {
                     return (ParserPluginFactory) type.newInstance();
                 }
                 catch (Exception e) {
+          	 // FIXASC (groovychange)
+          	 // oldcode
+//                    throw new RuntimeException("Could not create AntlrParserPluginFactory: " + e, e);
+                    // newcode
                     throw new RuntimeException("Could not create ErrorRecoveredCSTParserPluginFactory: " + e, e);
+                    //end
                 }
             }
             // can't find Antlr parser, so lets use the Classic one

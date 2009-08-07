@@ -233,7 +233,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createPackageDeclaration(ModuleNode moduleNode) {
 		if (moduleNode.hasPackageName()) {
-			PackageNode packageNode = moduleNode.getPackageNode();
+			PackageNode packageNode = moduleNode.getPackage();// Node();
 			String packageName = moduleNode.getPackageName();
 			if (packageName.endsWith(".")) {
 				packageName = packageName.substring(0, packageName.length() - 1);
@@ -260,6 +260,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * @return an array of annotations or null if there are none
 	 */
 	private Annotation[] transformAnnotations(List<AnnotationNode> groovyAnnotations) {
+		// FIXASC (M2) positions are crap
 		if (groovyAnnotations != null && groovyAnnotations.size() > 0) {
 			List<Annotation> annotations = new ArrayList<Annotation>();
 			for (AnnotationNode annotationNode : groovyAnnotations) {
@@ -325,7 +326,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							List<Expression> listOfExpressions = listExpression.getExpressions();
 							TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 							annotationReference.sourceStart = annotationNode.getStart();
-							annotationReference.sourceEnd = annotationNode.getEnd();
+							annotationReference.sourceEnd = annotationNode.getEnd() - 1;
 							SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
 									.getStart());
 
@@ -333,21 +334,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
 									.size()];
 							for (int c = 0; c < listOfExpressions.size(); c++) {
-								String v = (String) ((ConstantExpression) listOfExpressions.get(c)).getValue();
+								ConstantExpression cExpression = (ConstantExpression) listOfExpressions.get(c);
+								String v = (String) cExpression.getValue();
 								TypeReference ref = null;
-								int start = annotationReference.sourceStart;
-								int end = annotationReference.sourceEnd;
+								int start = cExpression.getStart();
+								int end = cExpression.getEnd() - 1;
 								if (v.indexOf(".") == -1) {
 									ref = new SingleTypeReference(v.toCharArray(), positionFor(start, end));
+									annotation.declarationSourceEnd = annotation.sourceStart
+											+ annoType.getNameWithoutPackage().length() - 1;
 								} else {
 									char[][] splits = CharOperation.splitOn('.', v.toCharArray());
 									ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
+									annotation.declarationSourceEnd = annotation.sourceStart + annoType.getName().length() - 1;
 								}
-								// FIXASC (M2) positions are crap
 								arrayInitializer.expressions[c] = new StringLiteral(v.toCharArray(), start, end, -1);
 							}
 							annotation.memberValue = arrayInitializer;
-							annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length();
 							annotations.add(annotation);
 						} else {
 							ConstantExpression constantExpression = (ConstantExpression) value;
@@ -356,22 +359,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 								// FIXASC (M2) test positional info for conjured up anno refs
 								TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 								annotationReference.sourceStart = annotationNode.getStart();
-								annotationReference.sourceEnd = annotationNode.getEnd();
+								annotationReference.sourceEnd = annotationNode.getEnd() - 1;
 								SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
 										.getStart());
 								String v = (String) constantExpression.getValue();
 								TypeReference ref = null;
-								int start = annotationReference.sourceStart;
-								int end = annotationReference.sourceEnd;
+								int start = constantExpression.getStart();
+								int end = constantExpression.getEnd() - 1;
 								if (v.indexOf(".") == -1) {
 									ref = new SingleTypeReference(v.toCharArray(), positionFor(start, end));
+									annotation.declarationSourceEnd = annotation.sourceStart
+											+ annoType.getNameWithoutPackage().length() - 1;
 								} else {
 									char[][] splits = CharOperation.splitOn('.', v.toCharArray());
 									ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
+									annotation.declarationSourceEnd = annotation.sourceStart + annoType.getName().length() - 1;
 								}
 								annotation.memberValue = new StringLiteral(v.toCharArray(), start, end, -1);
-								annotation.declarationSourceEnd = annotation.sourceStart
-										+ annoType.getNameWithoutPackage().length();
 								annotations.add(annotation);
 							}
 						}

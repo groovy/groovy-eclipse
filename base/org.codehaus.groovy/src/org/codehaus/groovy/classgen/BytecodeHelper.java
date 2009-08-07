@@ -1,3 +1,18 @@
+/*
+ * Copyright 2003-2007 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.classgen;
 
 import org.codehaus.groovy.ast.*;
@@ -16,7 +31,7 @@ import java.math.BigInteger;
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Revision: 11949 $
+ * @version $Revision: 16296 $
  */
 public class BytecodeHelper implements Opcodes {
 
@@ -72,7 +87,7 @@ public class BytecodeHelper implements Opcodes {
     /**
      * Generates the bytecode to autobox the current value on the stack
      */
-    public void box(Class type) { 
+    public void box(Class type) {
         if (ReflectionCache.getCachedClass(type).isPrimitive && type != void.class) {
             String returnString = "(" + getTypeDescription(type) + ")Ljava/lang/Object;";
             mv.visitMethodInsn(INVOKESTATIC, getClassInternalName(DefaultTypeTransformation.class.getName()), "box", returnString);
@@ -81,9 +96,10 @@ public class BytecodeHelper implements Opcodes {
 
     public void box(ClassNode type) {
         if (type.isPrimaryClassNode()) return;
-        if (type.isPrimitive()) {
-            box(type.getTypeClass());        	
-        }
+        // FIXASC (groovychange)
+        if (type.isPrimitive()) 
+        // end
+        box(type.getTypeClass());
     }
 
     /**
@@ -102,20 +118,21 @@ public class BytecodeHelper implements Opcodes {
 
     public void unbox(ClassNode type) {
         if (type.isPrimaryClassNode()) return;
-        if (type.isPrimitive()) {
-        	unbox(type.getTypeClass());
-        }
+        // FIXASC (groovychange)
+        if (type.isPrimitive()) 
+        // end
+        unbox(type.getTypeClass());
     }
 
     public static String getClassInternalName(ClassNode t) {
         if (t.isPrimaryClassNode()) {
             return getClassInternalName(t.getName());
         }
-        // JDT change start: don't call getTypeClass() unless necessary
-        // old code:
-        // return getClassInternalName(t.getTypeClass());
-        // new code:
-        
+        // FIXASC (groovychange)
+        // oldcode
+//        return getClassInternalName(t.getTypeClass());
+		// newcode
+		// don't call getTypeClass() unless necessary
         // FIXASC (M2) decide if this can ever get into trouble?  the second part of the if was added because of FindInSource.groovy which
         // refered to GroovyModel but that could not be found so we were left with an unresolved import and node in the code - crashed
         // whilst doing the code gen
@@ -128,7 +145,8 @@ public class BytecodeHelper implements Opcodes {
             }
         }
         return name;
-        // JDT change end
+		// end
+		
     }
 
     public static String getClassInternalName(Class t) {
@@ -468,12 +486,33 @@ public class BytecodeHelper implements Opcodes {
      * load the value of the variable on the operand stack. unbox it if it's a reference
      *
      * @param variable
+     * @deprecated use loadVar(Variable,boolean) instead
      */
     public void loadVar(Variable variable) {
         int index = variable.getIndex();
         if (variable.isHolder()) {
             mv.visitVarInsn(ALOAD, index);
             mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Reference", "get", "()Ljava/lang/Object;");
+        } else {
+            load(variable);
+            if (variable != Variable.THIS_VARIABLE && variable != Variable.SUPER_VARIABLE) {
+                box(variable.getType());
+            }
+        }
+    }
+    
+    /**
+     * load the value of the variable on the operand stack. unbox it if it's a reference
+     *
+     * @param variable
+     */
+    public void loadVar(Variable variable, boolean useReferenceDirectly) {
+        int index = variable.getIndex();
+        if (variable.isHolder()) {
+            mv.visitVarInsn(ALOAD, index);
+            if (!useReferenceDirectly) {
+                mv.visitMethodInsn(INVOKEVIRTUAL, "groovy/lang/Reference", "get", "()Ljava/lang/Object;");
+            }
         } else {
             load(variable);
             if (variable != Variable.THIS_VARIABLE && variable != Variable.SUPER_VARIABLE) {

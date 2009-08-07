@@ -15,14 +15,44 @@
  */
 package org.codehaus.groovy.ast;
 
-import org.objectweb.asm.Opcodes;
+// FIXASC (groovychange)
+// old code
 
+/**
+ * Represents a package in the AST.
+ *
+ * @author Paul King
+ */
+ /*
+public class PackageNode extends AnnotatedNode {
+    private String name;
+
+    public PackageNode(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @return the text display of this package definition
+     *
+    public String getText() {
+        return "package " + name;
+    }
+
+    public void visit(GroovyCodeVisitor visitor) {
+    }
+}
+*/
+// newcode
 /**
  * Represents a package declaration
  * 
  * @author Andy Clement
  */
-public class PackageNode extends AnnotatedNode implements Opcodes {
+public class PackageNode extends AnnotatedNode {
 
     private final String packageName;
     
@@ -40,5 +70,9 @@ public class PackageNode extends AnnotatedNode implements Opcodes {
     public String getPackageName() {
     	return packageName;
     }
+    
+    public void visit(GroovyCodeVisitor visitor) {
+    }
 
 }
+// end

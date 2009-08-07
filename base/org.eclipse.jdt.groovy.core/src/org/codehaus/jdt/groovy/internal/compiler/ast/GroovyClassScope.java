@@ -99,15 +99,15 @@ public class GroovyClassScope extends ClassScope {
 				FieldBinding fBinding = typeDeclaration.binding.getField(name.toCharArray(), false);
 				if (!(fBinding.type instanceof MissingTypeBinding)) {
 					String getterName = "get" + MetaClassHelper.capitalize(name);
-					createMethod(getterName, "", null, fBinding.type, groovyMethods, methodBindings);
+					createMethod(getterName, "", /* TypeBinding.NO_TYPES */null, fBinding.type, groovyMethods, methodBindings);
 					if (!fBinding.isFinal()) {
 						String setterName = "set" + MetaClassHelper.capitalize(name);
 						createMethod(setterName, "", new TypeBinding[] { fBinding.type }, TypeBinding.VOID, groovyMethods,
 								methodBindings);
 					}
 					if (fBinding.type == TypeBinding.BOOLEAN) {
-						createMethod("is" + MetaClassHelper.capitalize(name), "", null, fBinding.type, groovyMethods,
-								methodBindings);
+						createMethod("is" + MetaClassHelper.capitalize(name), "", /* TypeBinding.NO_TYPES, */null, fBinding.type,
+								groovyMethods, methodBindings);
 					}
 				}
 			}

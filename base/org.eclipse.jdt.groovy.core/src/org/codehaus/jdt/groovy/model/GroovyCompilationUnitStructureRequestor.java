@@ -23,6 +23,7 @@ import org.eclipse.jdt.internal.core.CompilationUnitStructureRequestor;
  * @author Andrew Eisenberg
  * @created Jun 11, 2009 Stub class that makes the constructor accessible to GroovyCompilationUnit
  */
+@SuppressWarnings("restriction")
 class GroovyCompilationUnitStructureRequestor extends CompilationUnitStructureRequestor {
 
 	@SuppressWarnings("unchecked")

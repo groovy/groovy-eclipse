@@ -109,11 +109,11 @@ public class LazyGenericsType extends GenericsType {
 		}
 	}
 
-	@Override
-	public String toStructureString() {
-		ensureInitialized();
-		return super.toStructureString();
-	}
+	// @Override
+	// public String toStructureString() {
+	// ensureInitialized();
+	// return super.toStructureString();
+	// }
 
 	private void ensureInitialized() {
 		if (!initialized) {

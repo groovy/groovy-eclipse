@@ -27,8 +27,10 @@ public class AnnotatedNode extends ASTNode {
     private List<AnnotationNode> annotations = Collections.emptyList();
     private boolean synthetic;
     ClassNode declaringClass;
+    // FIXASC (groovychange)
 	private int nameEnd;
 	private int nameStart;
+	// end
 
     public AnnotatedNode() {
     }
@@ -95,6 +97,7 @@ public class AnnotatedNode extends ASTNode {
         this.declaringClass = declaringClass;
     }
 
+    // FIXASC (groovychange)
 	public int getNameStart() {
 		return nameStart;
 	}
@@ -110,4 +113,5 @@ public class AnnotatedNode extends ASTNode {
 	public void setNameEnd(int nameEnd) {
 		this.nameEnd = nameEnd;
 	}
+	// end
 }

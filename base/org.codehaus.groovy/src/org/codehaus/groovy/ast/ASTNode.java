@@ -28,8 +28,10 @@ public class ASTNode {
     private int columnNumber = -1;
     private int lastLineNumber = -1;
     private int lastColumnNumber = -1;
+    // FIXASC (groovychange)
     private int start = 0;
     private int end = 0;
+    // end
 
     public void visit(GroovyCodeVisitor visitor) {
         throw new RuntimeException("No visit() method implemented for class: " + getClass().getName());
@@ -70,6 +72,7 @@ public class ASTNode {
     public void setLastColumnNumber(int lastColumnNumber) {
         this.lastColumnNumber = lastColumnNumber;
     }
+    // FIXASC (groovychange)
     public int getStart() {
         return start;
     }
@@ -85,13 +88,16 @@ public class ASTNode {
     public int getLength() {
         return end >= 0 && start >= 0 ? end-start : -1;
     }
+    // end
     
     /**
      * Sets the source position using another ASTNode.
      * The sourcePosition consists of a line/column pair for
      * the start and a line/column pair for the end of the
-     * expression or statement, as well as the absolute
-     * start and end positions in the file
+     * expression or statement 
+     // FIXASC (groovychange)
+     * as well as the absolute start and end positions in the file
+     // end
      * 
      */
     public void setSourcePosition(ASTNode node) {
@@ -99,8 +105,9 @@ public class ASTNode {
         this.lastLineNumber = node.getLastLineNumber();
         this.lastColumnNumber = node.getLastColumnNumber();
         this.lineNumber = node.getLineNumber();
+        // FIXASC (groovychange)
         this.start = node.getStart();
         this.end = node.getEnd();
+        // end
     }
-    
 }

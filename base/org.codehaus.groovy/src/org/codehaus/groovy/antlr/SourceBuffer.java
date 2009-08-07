@@ -28,13 +28,18 @@ import java.util.ArrayList;
 public class SourceBuffer {
     private final List lines;
     private StringBuffer current;
+    // FIXASC (groovychange)
     private final List<Integer> lineEndings;
+    // end
 
     public SourceBuffer() {
         lines = new ArrayList();
         //lines.add(new StringBuffer()); // dummy row for position [0] in the List
+        // FIXASC (groovychange)
         lineEndings = new ArrayList<Integer>();
         lineEndings.add(0);
+        // end
+
         current = new StringBuffer();
         lines.add(current);
     }
@@ -94,6 +99,22 @@ public class SourceBuffer {
         return snippet.toString();
     }
 
+    // FIXASC (groovychange)
+    // oldcode:
+//    /**
+//     * Writes the specified character into the buffer
+//     * @param c
+//     */
+//    public void write(int c) {
+//        if (c != -1) {
+//            current.append((char)c);
+//        }
+//        if (c == '\n') {
+//            current = new StringBuffer();
+//            lines.add(current);
+//        }
+//    }
+    // newcode:
     /**
      * Writes the specified character into the buffer
      * @param c
@@ -140,4 +161,5 @@ public class SourceBuffer {
     	}
     	return new LocationSupport(lineEndingsArray);
     }
+    // end
 }

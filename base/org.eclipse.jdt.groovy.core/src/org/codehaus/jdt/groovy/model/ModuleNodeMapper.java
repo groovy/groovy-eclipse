@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
  * 
  *          One module node is stored per working copy of
  */
+@SuppressWarnings("restriction")
 public class ModuleNodeMapper {
 
 	private static final ModuleNodeMapper INSTANCE = new ModuleNodeMapper();

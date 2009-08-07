@@ -7,7 +7,7 @@
 // groovy/tags/GROOVY_1_5_6/src/main/org/codehaus/groovy/antlr/groovy.g
 
 header {
-package org.codehaus.groovy.eclipse.core.compiler.internal.antlr;
+package org.codehaus.groovy.internal.antlr.parser;
 import org.codehaus.groovy.antlr.*;
 import java.util.*;
 import java.io.InputStream;
@@ -531,8 +531,10 @@ snippetUnit
 
 // Package statement: optional annotations followed by "package" then the package identifier.
 packageDefinition
+        {Token first = LT(1);}
         //TODO? options {defaultErrorHandler = true;} // let ANTLR handle errors
-    :   annotationsOpt p:"package"^ {#p.setType(PACKAGE_DEF);} identifier
+    :   an:annotationsOpt! "package"! id:identifier!
+        {#packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);}
     ;
 
 
@@ -540,11 +542,11 @@ packageDefinition
 importStatement
         //TODO? options {defaultErrorHandler = true;}
         { Token first = LT(1); boolean isStatic = false; }
-    :   "import"! ( "static"! {isStatic=true;} )? is:identifierStar!
+    :   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? is:identifierStar!
         {if (isStatic) 
-            #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),is);
+            #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
          else
-            #importStatement = #(create(IMPORT,"import",first,LT(1)),is);}
+            #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);}
     ;
 
 // TODO REMOVE
@@ -950,7 +952,6 @@ modifiersOpt  {Token first = LT(1);}
     :   (
             // See comment above on hushing warnings.
             options{generateAmbigWarnings=false;}:
-
             modifiersInternal
         )?
         {#modifiersOpt = #(create(MODIFIERS, "MODIFIERS",first,LT(1)), #modifiersOpt);}
@@ -977,10 +978,23 @@ annotation!  {Token first = LT(1);}
         {#annotation = #(create(ANNOTATION,"ANNOTATION",first,LT(1)), i, args);}
     ;
 
+annotationsInternal
+    :   (
+            options{generateAmbigWarnings=false;}:
+            {break; /* go out of the ()* loop*/}
+            AT "interface"
+        |
+            annotation nls!)*
+    ;
+
 annotationsOpt  {Token first = LT(1);}
-    :   (annotation nls!)*
+    :   (
+               // See comment above on hushing warnings.
+               options{generateAmbigWarnings=false;}:
+               annotationsInternal
+        )?
         {#annotationsOpt = #(create(ANNOTATIONS, "ANNOTATIONS", first, LT(1)), #annotationsOpt);}
-;
+    ;
 
 annotationArguments
     :   v:annotationMemberValueInitializer
@@ -1460,7 +1474,7 @@ variableDefinitions[AST mods, AST t] {Token first = cloneToken(LT(1));
         // The parser allows a method definition anywhere a variable definition is accepted.
 
         (   id:IDENT
-        |   qid:STRING_LITERAL          {#qid.setType(IDENT);}  // use for operator defintions, etc.
+        |   qid:STRING_LITERAL          {#qid.setType(IDENT);}  // use for operator definitions, etc.
         )
 
         // parse the formal parameter declarations.
@@ -1817,9 +1831,6 @@ statement[int prevToken]
     |    es:expressionStatement[prevToken]
         //{#statement = #(create(EXPR,"EXPR",first,LT(1)),es);}
 
-    // class definition
-    |    m:modifiersOpt! typeDefinitionInternal[#m]
-
     // If-else statement
     |   "if"! LPAREN! ale:assignmentLessExpression! RPAREN! nlsWarn! ifCbs:compatibleBodyStatement!
         (
@@ -1855,7 +1866,10 @@ statement[int prevToken]
     *OBS*/
 
     // Import statement.  Can be used in any scope.  Has "import x as y" also.
-    |   importStatement
+    |   (annotationsOpt "import") => importStatement
+
+    // class definition
+    |   m:modifiersOpt! typeDefinitionInternal[#m]
 
     // switch/case statement
     |   "switch"! LPAREN! sce=switchSce:strictContextExpression[false]! RPAREN! nlsWarn! LCURLY! nls!
@@ -3041,12 +3055,11 @@ newExpression {Token first = LT(1);}
 
             (
                 options { greedy=true; }:
-                apb1:appendedBlock[#mca]!
-                { #mca = #apb1; }
+                cb:classBlock
             )?
 
             {#mca = #mca.getFirstChild();
-            #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#mca);}
+            #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#mca,#cb);}
 
         //|
         //from blackrag: new Object.f{} matches this part here

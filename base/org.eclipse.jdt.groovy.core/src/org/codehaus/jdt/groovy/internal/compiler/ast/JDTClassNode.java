@@ -233,6 +233,12 @@ public class JDTClassNode extends ClassNode {
 				}
 			}
 			mNode = new MethodNode(name, modifiers, returnType, gParameters, thrownExceptions, null);
+			// FIXASC (M3) likely to need something like this...
+			// if (jdtBinding.isEnum()) {
+			// if (methodBinding.getDefaultValue() != null) {
+			// mNode.setAnnotationDefault(true);
+			// }
+			// }
 		} finally {
 			resolver.popMemberGenerics();
 		}

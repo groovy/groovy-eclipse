@@ -30,6 +30,7 @@ public class GenericsType extends ASTNode {
 	 * but why does the first constructor take a set of parameters that wouldn't seem to make sense together?
 	 * 
 	 */
+	// FIXASC (groovychange) five from private to protected and first two non-final 
     protected ClassNode[] upperBounds;
     protected ClassNode lowerBound;
     protected ClassNode type;
@@ -46,9 +47,10 @@ public class GenericsType extends ASTNode {
         placeholder = false;
         resolved = false;
     }
-    
+    // FIXASC (groovychange)
     public GenericsType() {}
-    
+    // end
+        
     public GenericsType(ClassNode basicType) {
         this(basicType,null,null);
     }
@@ -115,29 +117,7 @@ public class GenericsType extends ASTNode {
         return lowerBound;
     }
     
-    public String toStructureString() {
-    	StringBuilder s = new StringBuilder();
-    	s.append("GenericsType[").append(name);
-    	s.append(":").append("placeholder?").append(placeholder?"y":"n");
-    	s.append(":").append("resolved?").append(resolved?"y":"n");
-    	s.append(":").append("wildcard?").append(wildcard?"y":"n");
-    	s.append("]");
-    	s.append("  type:").append(type.toStructureString());
-    	if (upperBounds!=null) {
-	    	for (int i=0;i<upperBounds.length;i++) {
-	    		s.append("\n");
-	    		s.append("  upperbound(").append(i+1).append("/").append(upperBounds.length).append(")").append(upperBounds[i].toStructureString());
-	    	}
-    	}
-    	if (lowerBound!=null) {
-    		s.append("\n");
-    		s.append("  lowerbound:").append(lowerBound.toStructureString());
-    		
-    	}
-    	return s.toString();
-//        private ClassNode type;
-    }
-
+    // FIXASC (groovychange)
 	public void setUpperBounds(ClassNode[] bounds) {
 		this.upperBounds = bounds;		
 	}
@@ -145,4 +125,5 @@ public class GenericsType extends ASTNode {
 	public void setLowerBound(ClassNode bound) {
 		this.lowerBound = bound;		
 	}
+	// end
 }

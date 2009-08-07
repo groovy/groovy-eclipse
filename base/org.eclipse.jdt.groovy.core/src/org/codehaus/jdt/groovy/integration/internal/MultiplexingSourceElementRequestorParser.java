@@ -36,6 +36,7 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
  * 
  * @author Andrew Eisenberg
  */
+@SuppressWarnings("restriction")
 public class MultiplexingSourceElementRequestorParser extends SourceElementParser {
 
 	ISourceElementRequestor groovyRequestor;

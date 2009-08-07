@@ -34,7 +34,6 @@ import org.codehaus.groovy.transform.ASTTransformationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -50,7 +49,7 @@ import java.util.*;
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Id: CompilationUnit.java 15936 2009-04-08 15:36:44Z blackdrag $
+ * @version $Id: CompilationUnit.java 16296 2009-05-09 12:34:19Z blackdrag $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -168,8 +167,18 @@ public class CompilationUnit extends ProcessingUnit {
             }
         }, Phases.CONVERSION);
         addPhaseOperation(resolve, Phases.SEMANTIC_ANALYSIS);
+        // FIXASC (groovychange)
         addPhaseOperation(checkGenerics, Phases.SEMANTIC_ANALYSIS);
+        // end
         addPhaseOperation(staticImport, Phases.SEMANTIC_ANALYSIS);
+        addPhaseOperation(new PrimaryClassNodeOperation() {
+            @Override
+            public void call(SourceUnit source, GeneratorContext context,
+                             ClassNode classNode) throws CompilationFailedException {
+                InnerClassVisitor iv = new InnerClassVisitor(CompilationUnit.this,source);
+                iv.visitClass(classNode);
+            }
+        }, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
         addPhaseOperation(output);
@@ -482,8 +491,9 @@ public class CompilationUnit extends ProcessingUnit {
 
         errorCollector.failIfErrors();
     }
-    
-    // JDT change start: new method for continuing through phases
+
+// FIXASC (groovychange) need this any more?
+    //  new method for continuing through phases
     public void continueThrough(int throughPhase) throws CompilationFailedException {
         throughPhase = Math.min(throughPhase, Phases.ALL);
 
@@ -515,7 +525,7 @@ public class CompilationUnit extends ProcessingUnit {
 
         errorCollector.failIfErrors();
     }
-    // JDT change end
+    // end
 
     private void sortClasses() throws CompilationFailedException {
         Iterator modules = this.ast.getModules().iterator();
@@ -591,6 +601,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
     };
     
+    // FIXASC (groovychange) new phase split out of previous - still necessary?
     /**
      * Check generics usage
      */
@@ -629,6 +640,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
     };
 
+// FIXASC (groovychange) damaged output phase, need to do this properly!
     private GroovyClassOperation output = new GroovyClassOperation() {
         public void call(GroovyClass gclass) throws CompilationFailedException {
             boolean failures = false;
@@ -671,6 +683,8 @@ public class CompilationUnit extends ProcessingUnit {
 			// }
         }
     };
+    // end
+
 
     /* checks if all needed classes are compiled before generating the bytecode */
     private SourceUnitOperation compileCompleteCheck = new SourceUnitOperation() {
@@ -967,17 +981,25 @@ public class CompilationUnit extends ProcessingUnit {
      * through the current phase.
      */
     public void applyToPrimaryClassNodes(PrimaryClassNodeOperation body) throws CompilationFailedException {
+        // FIXASC (groovychange)
+        // oldcode
+        // ...
+        // newcode
     	List primaryClassNodes = getPrimaryClassNodes(body.needSortedInput());
 		Iterator classNodes = primaryClassNodes.iterator();
+		// end
         while (classNodes.hasNext()) {
             SourceUnit context = null;
             try {
                 ClassNode classNode = (ClassNode) classNodes.next();
                 context = classNode.getModule().getContext();
-                // was:
-                // FIXASC (M2) get to the bottom of this - why are operations running multiple times that should only run once?
+                // FIXASC (groovychange)
+                // oldcode
 //                if (context == null || context.phase <= phase) {
-                if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {
+                // newcode
+                // FIXASC (M2) get to the bottom of this - why are operations running multiple times that should only run once?
+                if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {                
+                // end
                     body.call(context, new GeneratorContext(this.ast), classNode);
                 }
             } catch (CompilationFailedException e) {
@@ -1042,9 +1064,8 @@ public class CompilationUnit extends ProcessingUnit {
     private void changeBugText(GroovyBugError e, SourceUnit context) {
         e.setBugText("exception in phase '" + getPhaseDescription() + "' in source unit '" + ((context != null) ? context.getName() : "?") + "' " + e.getBugText());
     }
-
-
-	public void setResolveVisitor(ResolveVisitor resolveVisitor2) {
+    // FIXASC (groovychange)
+    public void setResolveVisitor(ResolveVisitor resolveVisitor2) {
 		this.resolveVisitor = resolveVisitor2; 
 	}
 
@@ -1060,4 +1081,6 @@ public class CompilationUnit extends ProcessingUnit {
 		}
 		return "CompilationUnit: null";
 	}
+    // end
+    
 }

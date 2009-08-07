@@ -37,8 +37,10 @@ public abstract class ProcessingUnit {
      */
     protected boolean phaseComplete;
 
-    protected int erroredAtPhase = -1;
-    
+
+	// FIXASC (groovychange)
+	protected int erroredAtPhase = -1;
+    // end
     /**
      * Configuration and other settings that control processing
      */
@@ -136,11 +138,15 @@ public abstract class ProcessingUnit {
      * errors.
      */
 
-    public void completePhase() throws CompilationFailedException {       
+    public void completePhase() throws CompilationFailedException {    
+    // FIXASC (groovychange)
+    // oldcode   
+//        errorCollector.failIfErrors();
+// newcode
         if (errorCollector.hasErrors()) {
         	erroredAtPhase = phase;
         }
-//        errorCollector.failIfErrors();
+        // end
         phaseComplete = true;
     }
 
