@@ -13,7 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
  -->
-<!-- This file is not used any more.  Delete??? --->
+<!-- This file is not used any more.  Delete??? -->
 <project name="Generated">
 	<property name="base.svn.url" value="https://src.springsource.com/svn/incubator/groovyjdt3"/>
 	<property name="base.svn.url.ide" value="${base.svn.url}/ide"/>
