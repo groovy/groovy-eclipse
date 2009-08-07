@@ -46,7 +46,7 @@ import org.eclipse.ui.IEditorPart;
  */
 public class GroovyShellLaunchShortcut implements ILaunchShortcut {
 
-	/**
+    /**
 	 * The ID of this groovy launch configuration
 	 */
 	public static final String GROOVY_SHELL_LAUNCH_CONFIG_ID = "org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration" ; 
@@ -110,9 +110,7 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, className);
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getElementName());
             List<String> classpath = ListUtil.newList(JavaRuntime.computeDefaultRuntimeClassPath(project));
-            classpath.add(0, GroovyShellLaunchDelegate.getPathTo("jline-*.jar"));
-            classpath.add(0, GroovyShellLaunchDelegate.getPathTo("antlr-*.jar"));
-            classpath.add(0, GroovyShellLaunchDelegate.getPathTo("commons-cli-*.jar"));
+            classpath.addAll(0, GroovyShellLaunchDelegate.getExtraClasspathElements());
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, classpath);
             
             DebugUITools.launch(launchConfig, "run");

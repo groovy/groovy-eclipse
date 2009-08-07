@@ -15,10 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.core.types;
 
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 
-import org.codehaus.groovy.antlr.GroovySourceAST;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -54,11 +52,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompilerConfigurationBuilder;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilationReporter;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilerConfiguration;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
 import org.codehaus.groovy.eclipse.core.util.UnsupportedVisitException;
 import org.codehaus.groovy.syntax.Types;
 
@@ -87,45 +81,10 @@ public class TypeEvaluator {
 		}
 	}
 	
-	/**
-	 * Internal reporter used to get the AST.
-	 */
-	private static class Reporter implements IGroovyCompilationReporter {
-		ModuleNode moduleNode;
-
-		public void beginReporting() {
-			moduleNode = null;
-		}
-
-		public void beginReporting(String fileName) {
-		}
-
-		public void compilationError(String fileName, int line, int startCol, int endCol, String message,
-				String stackTrace) {
-		}
-
-		public void endReporting() {
-		}
-
-		public void endReporting(String fileName) {
-		}
-
-		public void generatedAST(String fileName, ModuleNode moduleNode) {
-			this.moduleNode = moduleNode;
-		}
-
-		public void generatedCST(String fileName, GroovySourceAST cst) {
-		}
-
-		public void generatedClasses(String fileName, String[] classNames, String[] classFilePaths) {
-		}
-	}
-
-	private final Reporter reporter = new Reporter();
-
 	private final Visitor visitor = new Visitor();
 
 	private final ITypeEvaluationContext context;
+	
 	
 	/**
 	 * Creates a type evaluator for the given evaluation context.
@@ -176,18 +135,20 @@ public class TypeEvaluator {
 	private ModuleNode compileExpression(String expression) {
 		expression = decorateExpression(expression);
 		
-		IGroovyCompiler compiler = new GroovyCompiler();
-		ClassLoader loader = context.getClassLoader();
-		if (loader == null) {
-			loader = Thread.currentThread().getContextClassLoader();
-		}
-		IGroovyCompilerConfiguration config = new GroovyCompilerConfigurationBuilder()
-				.classLoader(loader)
-				.buildAST()
-				.resolveAST()
-				.done();
-		compiler.compile("CompletionExpression", new ByteArrayInputStream(expression.getBytes()), config, reporter);
-		return reporter.moduleNode;
+		GroovySnippetCompiler compiler = new GroovySnippetCompiler(context.getProject());
+		return compiler.compile(expression);
+//		IGroovyCompiler compiler = new GroovyCompiler();
+//		ClassLoader loader = context.getClassLoader();
+//		if (loader == null) {
+//			loader = Thread.currentThread().getContextClassLoader();
+//		}
+//		IGroovyCompilerConfiguration config = new GroovyCompilerConfigurationBuilder()
+//				.classLoader(loader)
+//				.buildAST()
+//				.resolveAST()
+//				.done();
+//		compiler.compile("CompletionExpression", new ByteArrayInputStream(expression.getBytes()), config, reporter);
+//		return reporter.moduleNode;
 	}
 
 	private String decorateExpression(String expression) {

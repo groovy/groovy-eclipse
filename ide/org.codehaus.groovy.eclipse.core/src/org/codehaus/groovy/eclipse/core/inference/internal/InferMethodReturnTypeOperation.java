@@ -144,6 +144,7 @@ public class InferMethodReturnTypeOperation {
 		for (Iterator< Expression > iter = expressions.iterator(); iter.hasNext();) {
 			Expression expr = iter.next();
 			ITypeEvaluationContext context = new TypeEvaluationContextBuilder().typeEvaluationContext(evalContext)
+			        .project(evalContext.getProject())
 					.location(new Region(expr.getStart(), expr.getLength())).done();
 			TypeEvaluator eval = new TypeEvaluator(context);
 			EvalResult result = eval.evaluate(expr);

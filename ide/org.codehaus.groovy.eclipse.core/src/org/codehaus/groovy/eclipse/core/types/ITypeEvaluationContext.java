@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.core.types;
 
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+
 /**
  * A context for type evaluation. The type evaluation context provides a type evaluator with symbol types, fields,
  * properties and methods for use in evaluating expressions.
@@ -34,4 +36,6 @@ public interface ITypeEvaluationContext {
 
 	Method lookupMethod(String type, String name, String[] paramTypes, boolean accessible,
 			boolean staticAccess);
+	
+	GroovyProjectFacade getProject();
 }

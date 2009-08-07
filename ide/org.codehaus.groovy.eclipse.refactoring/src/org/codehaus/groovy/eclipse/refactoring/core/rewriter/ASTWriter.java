@@ -99,6 +99,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ImportResolver;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.objectweb.asm.Opcodes;
@@ -403,7 +404,12 @@ public class ASTWriter extends CodeVisitorSupport implements
         Iterator it = annotionMap.iterator(); 
         while (it.hasNext()) {
             AnnotationNode an = (AnnotationNode) it.next();
-            linesSinceFirstAnnotation += (an.getLastLineNumber() +  1) - an.getLineNumber();
+            
+            // annotations with no member-value pairs are having 
+            // an invalid lastLineNumber.  It is 1 greater than it should be.
+            int extra = an.getMembers().size() == 0 ? 0 : 1;
+                    
+            linesSinceFirstAnnotation += (an.getLastLineNumber() + extra) - an.getLineNumber();
             preVisitStatement(an);
             groovyCode.append("@");
             groovyCode.append(an.getClassNode().getNameWithoutPackage());
@@ -1032,9 +1038,13 @@ public class ASTWriter extends CodeVisitorSupport implements
     	preVisitExpression(expression);
         visitListOfExpressions(expression.getExpressions());
         groovyCode.append("new ");
-        //remove semikolon at the end. Might be here cause it's an Array
-        String className = expression.getType().getNameWithoutPackage().replaceAll(";","");
-        groovyCode.append(className);
+        String typeName = expression.getType().getNameWithoutPackage();
+        if (typeName.startsWith("[")) {
+            // this is an array signature
+            typeName = Signature.getElementType(typeName);
+            typeName = Signature.getSignatureSimpleName(typeName);
+        }
+        groovyCode.append(typeName);
         visitListOfExpressions(expression.getSizeExpression(),"");
         postVisitExpression(expression);
     }

@@ -54,7 +54,7 @@ public class BreakpointLocationTests extends EclipseTestCase {
                  "/testData/groovyfiles/" + BREAKPOINT_SCRIPT_NAME);
          try {
              input = url.openStream();
-             IFile file = testProject.createGroovyTypeAndPackage("shapes",
+             IFile file = testProject.createGroovyTypeAndPackage("",
                      BREAKPOINT_SCRIPT_NAME, input);
              
              unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
@@ -97,11 +97,9 @@ public class BreakpointLocationTests extends EclipseTestCase {
         doBreakpointTest(4);
     }
 
-    // this one is failing because the x() method is defined
-    // within the run() method
-//    public void testBreakpointInScript5() throws Exception {
-//        doBreakpointTest(5);
-//    }
+    public void testBreakpointInScript5() throws Exception {
+        doBreakpointTest(5);
+    }
 
     public void testBreakpointInScript6() throws Exception {
         doBreakpointTest(6);
@@ -148,8 +146,8 @@ public class BreakpointLocationTests extends EclipseTestCase {
     }
     
     private void doBreakpointTest(int i) throws Exception {
-        int location = document.get().indexOf("// " + i);
-        int line = document.getLineOfOffset(location) + 3;  // note that the class creation process adds 3 lines to the top of the file 
+        int location = document.get().indexOf("// " + i)-3;
+        int line = document.getLineOfOffset(location)+1;  
         ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(line);
         ASTNode node = finder.findValidBreakpointLocation(unit.getModuleNode());
         assertNotNull("Could not find a breakpoint for line " + line, node);

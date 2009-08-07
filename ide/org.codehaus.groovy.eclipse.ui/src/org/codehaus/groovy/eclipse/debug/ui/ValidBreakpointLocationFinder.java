@@ -38,6 +38,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -123,8 +124,8 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
                 lastValid = node;
             }
             throw new VisitCompleted();
-        } else if (node.getLastLineNumber() < startLine && node instanceof AnnotatedNode) {
-            // end the visit because continuing on this path is a waste of time
+        } else if (node.getLastLineNumber() < startLine && node instanceof AnnotatedNode && !(node instanceof Expression)) {
+            // end the visit because we have gotten to the next declaration continuing on this path is a waste of time
             throw new NodeNotFound();
         }
         

@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.ui.decorators;
 
 import org.codehaus.groovy.eclipse.GroovyPluginImages;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -54,7 +55,7 @@ public class GroovyImageDecorator implements ILabelDecorator {
         if (element instanceof GroovyCompilationUnit) {
             image = getJavaElementImageDescriptor(image, ((GroovyCompilationUnit) element).getResource());
             isApplicable = true;
-        } else if (element instanceof IResource && ContentTypeUtils.isGroovyLikeFileName(((IResource) element).getName())) {
+        } else if (element instanceof IFile && ContentTypeUtils.isGroovyLikeFileName(((IResource) element).getName())) {
             image = getJavaElementImageDescriptor(image, (IResource) element);
             isApplicable = true;
         }

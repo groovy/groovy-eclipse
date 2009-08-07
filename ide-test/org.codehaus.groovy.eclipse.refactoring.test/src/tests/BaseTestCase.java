@@ -33,6 +33,8 @@ import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
+import org.codehaus.groovy.eclipse.test.TestProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
@@ -70,7 +72,10 @@ public abstract class BaseTestCase extends TestCase {
 
 			selection = getUserSelection();
 		}
-		
+		@Override
+		protected void tearDown() throws Exception {
+		    super.tearDown();
+		}
 		protected void setFile(File file) {
 			this.file = file;
 		}

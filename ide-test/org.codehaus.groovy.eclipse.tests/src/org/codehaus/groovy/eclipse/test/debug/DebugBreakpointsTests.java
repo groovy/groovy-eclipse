@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.debug.ui.actions.ActionDelegateHelper;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
+import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextSelection;
 
@@ -63,7 +64,7 @@ public class DebugBreakpointsTests extends EclipseTestCase {
                  "/testData/groovyfiles/" + BREAKPOINT_SCRIPT_NAME);
          try {
              input = url.openStream();
-             IFile file = testProject.createGroovyTypeAndPackage("shapes",
+             IFile file = testProject.createGroovyTypeAndPackage("",
                      BREAKPOINT_SCRIPT_NAME, input);
              
              unit = JavaCore.createCompilationUnitFrom(file);
@@ -160,7 +161,7 @@ public class DebugBreakpointsTests extends EclipseTestCase {
     }
     
     private void doBreakpointTest(int i) throws Exception {
-        ITextSelection selection = new TextSelection(text.indexOf("// " + i), 3);
+        ITextSelection selection = new TextSelection(new Document(text), text.indexOf("// " + i)-3, 3);
         boolean canToggle = adapter.canToggleLineBreakpoints(editor, selection);
         assertTrue("Should be able to toggle breakpoint at section " + i, canToggle);
         

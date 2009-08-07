@@ -211,6 +211,7 @@ public class InferredTypeEvaluatorTests extends EclipseTestCase {
 		
 		// Set up the evaluation context.
 		ITypeEvaluationContext evalContext = new TypeEvaluationContextBuilder()
+		        .project(new GroovyProjectFacade(testProject.getJavaProject()))
 				.classLoader(Thread.currentThread().getContextClassLoader())
 				.imports(imports)
 				.sourceCodeContext(sourceCodeContexts[sourceCodeContexts.length - 1])

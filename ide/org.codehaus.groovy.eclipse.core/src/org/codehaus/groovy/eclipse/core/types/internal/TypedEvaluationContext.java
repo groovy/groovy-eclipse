@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.core.types.internal;
 
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.types.ClassType;
 import org.codehaus.groovy.eclipse.core.types.Field;
 import org.codehaus.groovy.eclipse.core.types.IMemberLookup;
@@ -40,6 +41,8 @@ public class TypedEvaluationContext implements ITypeEvaluationContext {
 	private static final String OBJECT_TYPE = "java.lang.Object";
 	private static final ClassType DECLARING_CLASS = TypeUtil.newClassType(java.lang.Object.class);
 	
+	private GroovyProjectFacade project;
+	
 	private ClassLoader classLoader;
 
 	private String[] imports = NO_IMPORTS;
@@ -47,6 +50,14 @@ public class TypedEvaluationContext implements ITypeEvaluationContext {
 	private ISymbolTable symbolTable;
 
 	private IMemberLookup memberLookup;
+	
+    public GroovyProjectFacade getProject() {
+        return project;
+    }
+
+    public TypedEvaluationContext(GroovyProjectFacade project) {
+        this.project = project;
+    }
 
 	public void setClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;

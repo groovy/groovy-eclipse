@@ -16,6 +16,8 @@
 package org.codehaus.groovy.eclipse.core.type;
 
 import junit.framework.TestCase;
+
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.types.IMemberLookup;
 import org.codehaus.groovy.eclipse.core.types.ITypeEvaluationContext;
 import org.codehaus.groovy.eclipse.core.types.TypeEvaluationContextBuilder;
@@ -23,8 +25,10 @@ import org.codehaus.groovy.eclipse.core.types.TypeEvaluator;
 import org.codehaus.groovy.eclipse.core.types.TypeEvaluator.EvalResult;
 import org.codehaus.groovy.eclipse.core.types.impl.ClassLoaderMemberLookup;
 import org.codehaus.groovy.eclipse.core.types.impl.MapSymbolTable;
+import org.codehaus.groovy.eclipse.test.EclipseTestCase;
+import org.codehaus.groovy.eclipse.test.TestProject;
 
-public class TypeEvaluatorTests extends TestCase {
+public class TypeEvaluatorTests extends EclipseTestCase {
 	MapSymbolTable symbolTable;
 	IMemberLookup memberLookup;
 	private TypeEvaluator eval;
@@ -35,6 +39,7 @@ public class TypeEvaluatorTests extends TestCase {
 		symbolTable = new MapSymbolTable();
 		memberLookup = new ClassLoaderMemberLookup(TypeEvaluatorTests.class.getClassLoader());
 		ITypeEvaluationContext context = new TypeEvaluationContextBuilder()
+		        .project(new GroovyProjectFacade(testProject.getJavaProject()))
 				.symbolTable(symbolTable).memberLookup(memberLookup)
 				.classLoader(TypeEvaluatorTests.class.getClassLoader())
 				.done();

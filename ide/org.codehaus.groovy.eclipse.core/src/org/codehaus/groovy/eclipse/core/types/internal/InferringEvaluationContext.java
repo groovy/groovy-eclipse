@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.core.types.internal;
 
 import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext;
 import org.codehaus.groovy.eclipse.core.inference.internal.Infer;
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.types.Field;
 import org.codehaus.groovy.eclipse.core.types.LocalVariable;
 import org.codehaus.groovy.eclipse.core.types.Method;
@@ -30,7 +31,12 @@ import org.codehaus.groovy.eclipse.core.types.GroovyDeclaration;
  * @author empovazan
  */
 public class InferringEvaluationContext extends TypedEvaluationContext {
-	protected ISourceCodeContext sourceCodeContext;
+
+    public InferringEvaluationContext(GroovyProjectFacade project) {
+        super(project);
+    }
+
+    protected ISourceCodeContext sourceCodeContext;
 
 	public void setSourceCodeContext(ISourceCodeContext sourceCodeContext) {
 		this.sourceCodeContext = sourceCodeContext;

@@ -37,6 +37,9 @@ import org.osgi.framework.Bundle;
  */
 public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
 
+    public static final String JLINE_JAR = "jline-*.jar";
+
+    
     @Override
     public String[] getClasspath(ILaunchConfiguration configuration)
             throws CoreException {
@@ -44,13 +47,10 @@ public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
         String[] classpath = super.getClasspath(configuration)
         def newClasspath = ListUtil.array(classpath)
         newClasspath.add(getPathTo("jline-*.jar"));
-        newClasspath.add(getPathTo("antlr-*.jar"));
-        newClasspath.add(getPathTo("commons-cli-*.jar"));
         
         return newClasspath.toArray(new String[0])
     }
     
-    @SuppressWarnings("unchecked")
     static String getPathTo(String jarName) throws CoreException, IOException {
         Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy")
         Enumeration<URL> enu = groovyBundle.findEntries("", jarName, false)
@@ -62,4 +62,10 @@ public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
         }
     }
 
+    
+    static List<String> getExtraClasspathElements() {
+        [ GroovyShellLaunchDelegate.getPathTo(GroovyShellLaunchDelegate.JLINE_JAR) ]
+    }
+    
+    
 }

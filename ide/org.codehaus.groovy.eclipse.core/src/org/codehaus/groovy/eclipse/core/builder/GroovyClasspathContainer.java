@@ -79,15 +79,16 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	                attrs, true);
 	        newEntries.add(entry);
 	        
-	        
-	        List<URL> otherJars = getOtherJars();
-	        for (URL otherJar : otherJars) {
-	            IPath otherJarPath = new Path(otherJar.getPath());
-	            newEntries.add(newLibraryEntry(otherJarPath,
-	                    null, null, null,
-	                    new IClasspathAttribute[0], true));
-            }
-	        
+
+	        // don't need to get any other jars now
+//	        List<URL> otherJars = getOtherJars();
+//	        for (URL otherJar : otherJars) {
+//	            IPath otherJarPath = new Path(otherJar.getPath());
+//	            newEntries.add(newLibraryEntry(otherJarPath,
+//	                    null, null, null,
+//	                    new IClasspathAttribute[0], true));
+//            }
+//	        
 	        entries = newEntries.toArray(new IClasspathEntry[0]);
         } catch (Exception e) {
         	GroovyCore.logException("Problem finding groovy runtime", e);
@@ -97,6 +98,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
 
     /*
+     * Don't think we need these...can delete.
      * get the asm-*.jar, asm-tree-*.jar, and antlr-*.jar
      */
     @SuppressWarnings("unchecked")
@@ -120,7 +122,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     
     
     /**
-     * Returns the groovy-*.jar that is used in the Eclipse project. We know
+     * Returns the groovy-all-*.jar that is used in the Eclipse project. We know
      * there should only be one specified in the header for org.codehaus.groovy
      * right now.
      * 
@@ -132,7 +134,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     private URL getExportedGroovyAllJar() {
         try {
         	Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy");
-        	Enumeration<URL> enu = groovyBundle.findEntries("", "groovy-*.jar", false);
+        	Enumeration<URL> enu = groovyBundle.findEntries("", "groovy-all-*.jar", false);
         	while (enu.hasMoreElements()) {
         		URL jar = enu.nextElement();
         		if (jar.getFile().indexOf("-sources") == -1 &&
@@ -146,7 +148,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		throw new RuntimeException("Could not find groovy jar");
+		throw new RuntimeException("Could not find groovy all jar");
     }
     
     public String getDescription() {

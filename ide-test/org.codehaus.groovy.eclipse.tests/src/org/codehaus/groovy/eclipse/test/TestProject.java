@@ -29,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.eclipse.core.internal.events.BuildCommand;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IContainer;
@@ -60,6 +61,8 @@ import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.launching.JavaRuntime;
 
 public class TestProject {
+    public static final String TEST_PROJECT_NAME = "TestProject";
+
     private final IProject project;
 
     private final IJavaProject javaProject;
@@ -68,7 +71,7 @@ public class TestProject {
 
     public TestProject() throws CoreException {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-        project = root.getProject("TestProject");
+        project = root.getProject(TEST_PROJECT_NAME);
         project.create(null);
         project.open(null);
         javaProject = JavaCore.create(project);
@@ -89,6 +92,10 @@ public class TestProject {
 
     public IJavaProject getJavaProject() {
         return javaProject;
+    }
+    
+    public GroovyProjectFacade getGroovyProjectFacade() {
+        return new GroovyProjectFacade(javaProject);
     }
 
     public boolean hasGroovyContainer() throws JavaModelException {
@@ -144,8 +151,10 @@ public class TestProject {
     public IFile createGroovyType(IPackageFragment pack, String cuName,
             String source) throws CoreException {
         StringBuffer buf = new StringBuffer();
-        buf.append("package " + pack.getElementName() + ";\n");
-        buf.append("\n");
+        if (! pack.getElementName().equals("")) {
+            buf.append("package " + pack.getElementName() + ";\n");
+            buf.append("\n");
+        }
         buf.append(source);
 
         IContainer folder = (IContainer) pack.getResource();

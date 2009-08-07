@@ -20,35 +20,48 @@ package core;
 
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.Phases;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompilerConfigurationBuilder;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilerConfiguration;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.groovy.eclipse.test.TestProject;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.Compiler;
+import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
+import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
+import org.eclipse.jdt.internal.core.builder.NameEnvironment;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Class provides a AST ModuleNode (compiled from a sourcefile)
  */
 
 public class ASTProvider {
-	
+    
 	public static final String CLASS_PATH = FilePathHelper.getPathToCoreJar();
 	
-	public static ModuleNode getAST(String source, String sourcePath) {
-		ByteArrayInputStream is = new ByteArrayInputStream(source.getBytes());
-		TestCompilationReporter reporter = new TestCompilationReporter();
-		IGroovyCompiler compiler = new GroovyCompiler();
-		IGroovyCompilerConfiguration config = new GroovyCompilerConfigurationBuilder().buildAST().errorRecovery().classPath(CLASS_PATH).done();
-		compiler.compile(sourcePath, is, config, reporter);
-		ModuleNode root = reporter.moduleNode;
-		return root;
+    public static ModuleNode getAST(String source, String sourcePath) {
+	    return new GroovySnippetCompiler(createProject()).compile(source, sourcePath);
 	}
+
+    private static GroovyProjectFacade createProject() {
+        return new GroovyProjectFacade(JavaCore.create(ResourcesPlugin.getWorkspace().getRoot().getProject(
+                TestProject.TEST_PROJECT_NAME)));
+    }
 	
 	public static Map<String,ModuleNode> getRootNodes(String[] sources, String[] fileNames) {
 		Map<String, ModuleNode> moduleNodes = new HashMap<String, ModuleNode>();

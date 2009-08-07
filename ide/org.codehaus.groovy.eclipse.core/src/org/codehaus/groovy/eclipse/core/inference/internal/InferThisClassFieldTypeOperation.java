@@ -59,7 +59,7 @@ public class InferThisClassFieldTypeOperation {
 
 	private Field evalExpression(Expression expression, InferringEvaluationContext evalContext) {
 		ITypeEvaluationContext newEvalContext = new TypeEvaluationContextBuilder()
-				.typeEvaluationContext(evalContext)
+				.typeEvaluationContext(evalContext).project(evalContext.getProject())
 				.location(new Region(expression.getStart(), expression.getLength()))
 				.done();
 		TypeEvaluator eval = new TypeEvaluator(newEvalContext);

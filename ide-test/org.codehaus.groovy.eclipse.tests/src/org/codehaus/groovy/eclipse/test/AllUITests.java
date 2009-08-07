@@ -28,7 +28,6 @@ import org.codehaus.groovy.eclipse.test.core.types.TypeEvaluatorTestCase;
 import org.codehaus.groovy.eclipse.test.core.util.ExpressionFinderTestCase;
 import org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests;
 import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
-import org.codehaus.groovy.eclipse.test.ui.FoldingPositionProviderTest;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
 import org.eclipse.core.runtime.FileLocator;
 import org.osgi.framework.Bundle;
@@ -62,7 +61,6 @@ public class AllUITests {
 		suite.addTestSuite(GroovyFileAdapterFactoryTestCase.class);
 		suite.addTestSuite(GroovyIFileEditorInputAdapterFactoryTestCase.class);
 		suite.addTestSuite(IsMainTesterTests.class);
-		suite.addTestSuite(FoldingPositionProviderTest.class);
 		suite.addTest(org.codehaus.groovy.eclipse.test.core.types.AllTests.suite());
 		suite.addTest(org.codehaus.groovy.eclipse.test.core.util.AllTests.suite());
 		suite.addTestSuite(TypeEvaluatorTestCase.class);

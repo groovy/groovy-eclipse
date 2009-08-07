@@ -104,7 +104,7 @@ public class SourceContextInfo {
             // There is just an identifier, assume it is a field or method name and add 'this.' or 'ClassName.'.
             if (parts[1] == null) {
                 ISourceCodeContext sourceContext = contexts[contexts.length - 1];
-                if (sourceContext.getId() == ISourceCodeContext.METHOD_SCOPE || sourceContext.getId() == ISourceCodeContext.CLOSURE_SCOPE) {
+                if (sourceContext.getId() == ISourceCodeContext.METHOD_SCOPE || sourceContext.getId() == ISourceCodeContext.CLOSURE_SCOPE || sourceContext.getId() == ISourceCodeContext.CONSTRUCTOR_SCOPE) {
                     ASTNode[] path = sourceContext.getASTPath();
                     for (int i = 0; i < path.length; i++) {
                         if (path[i] instanceof MethodNode) {
@@ -125,6 +125,7 @@ public class SourceContextInfo {
             
             try {
                 ITypeEvaluationContext typeContext = new TypeEvaluationContextBuilder()
+                        .project(project)
                         .sourceCodeContext(contexts[contexts.length - 1])
                         .symbolTable(table)
                         .memberLookup(lookup)

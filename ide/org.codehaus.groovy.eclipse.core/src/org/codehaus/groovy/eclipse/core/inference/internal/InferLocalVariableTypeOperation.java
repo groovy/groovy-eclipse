@@ -43,7 +43,7 @@ public class InferLocalVariableTypeOperation {
 		Expression[] expressions = findAllLocalAssignExpressions(variable, evalContext);
 		if (expressions.length != 0) {
 			ITypeEvaluationContext newEvalContext = new TypeEvaluationContextBuilder()
-					.typeEvaluationContext(evalContext)
+					.typeEvaluationContext(evalContext).project(evalContext.getProject())
 					.location(new Region(expressions[0].getStart(), expressions[0].getLength()))
 					.done();
 			TypeEvaluator eval = new TypeEvaluator(newEvalContext);

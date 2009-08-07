@@ -18,6 +18,9 @@
  */
 package core;
 
+import org.codehaus.groovy.eclipse.test.TestProject;
+import org.eclipse.core.runtime.CoreException;
+
 import formatter.FormatterTestSuite;
 import inlineMethod.InlineMethodTestSuite;
 import junit.framework.Test;
@@ -33,11 +36,18 @@ import tests.SourceCodePointTest;
 import ASTWriter.ASTWriterTestSuite;
 import ExtractMethod.ExtractMethodTestSuite;
 
-public class RefactoringTests extends TestCase{
+public class RefactoringTests extends TestCase {
 
 	public static Test suite() throws Exception {
 		TestSuite suite = new TestSuite("Run of all Refactoring Test");
-		
+		TestProject testProject = null;
+        try {
+            testProject = new TestProject();
+        } catch (CoreException e) {
+            e.printStackTrace();
+            fail("Fail, due to exception: " + e.getMessage());
+        }
+
 		//$JUnit-BEGIN$
 
 			// Insert the files to test
@@ -56,6 +66,7 @@ public class RefactoringTests extends TestCase{
 	         //
 	         //suite.addTestSuite(ArchivedFailingTestSuite.class);
 		
+	     testProject.dispose();
 	         
 		//$JUnit-END$
 		return suite;

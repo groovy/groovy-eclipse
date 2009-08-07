@@ -65,8 +65,8 @@ public class GroovyCoreActivator extends Plugin {
         tracker.open();
         
         // I don't like this, but we need to ensure that the code browsing bundle is
-        // started with the rest of th e
-        Platform.getBundle("org.codehaus.groovy.eclipse.codebrowsing").start();
+        // started before we can get code browsing to work
+//        Platform.getBundle("org.codehaus.groovy.eclipse.codebrowsing").start();
     }
 
     /*

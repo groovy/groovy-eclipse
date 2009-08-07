@@ -26,7 +26,6 @@
 	
 	<property file="${buildHome}/pluginbuilder.config" />
 	
-	<property file="${buildDirectory}/version.properties" />
 	<property name="buildLabel" value="${buildType}-${version.full}" />
 	<property name="buildId" value="${version.full}" />
 	
@@ -43,7 +42,6 @@
 		<equals arg1="${pluginbuilder.is.runtests}" arg2="true"/>
 	</condition>
 	
-	<import file="allElements.xml"/>
 	<import file="subversionSupport.xml"/>
 	<import file="copyAllProjects.xml"/>
 	
@@ -132,9 +130,6 @@
 	</target>
 	
 	<target name="postPackage">
-		<copy todir="${buildResultsDirectory}" flatten="true">
-			<fileset dir="${buildDirectory}" includes="${buildType}-**/*.zip" />
-		</copy>
 	</target>
 
 	<!-- ===================================================================== -->
@@ -142,9 +137,6 @@
 	<!-- ===================================================================== -->
 	<property name="buildResultsDirectory" value="${buildDirectory}/results" />
 	<target name="postBuild" depends="-prepareBuildResultsDirectory" unless="no.postBuild">
-		<condition property="is.External.Postbuild">
-			<available file="${buildHome}/build-files/postBuild.xml"/>
-		</condition>
 		<antcall target="createUpdateSite"/>
 		<antcall target="runTests"/>
 		<copy todir="${buildResultsDirectory}" flatten="true">

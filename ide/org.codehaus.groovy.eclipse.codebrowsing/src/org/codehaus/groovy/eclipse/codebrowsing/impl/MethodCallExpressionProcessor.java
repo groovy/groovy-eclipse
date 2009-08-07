@@ -68,7 +68,7 @@ public class MethodCallExpressionProcessor implements
             // FIXADE M2 we need a way to figure out if we are looking at property on a class or not
             // for now, assume that upper case first letter is a class.
             boolean isClass = Character.isUpperCase(sourceInfo.expression.charAt(0));
-            String targetType = sourceInfo.eval.getName();
+            String targetType = isClass ? sourceInfo.expression : sourceInfo.eval.getName();
             
             List<IJavaElement> elts = new ArrayList<IJavaElement>();
             try {

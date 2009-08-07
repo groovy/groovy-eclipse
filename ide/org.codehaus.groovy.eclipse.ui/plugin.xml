@@ -278,7 +278,7 @@
             targetID="#GroovyCompilationUnitRulerContext"
             id="org.codehaus.groovy.eclipse.ui.CompilationUnitRulerPopupActions">
          <action
-               label="(Groovy) Breakpoint P&amp;roperties..."
+               label="Breakpoint P&amp;roperties..."
                helpContextId="breakpoint_properties_action_context"
                class="org.eclipse.jdt.debug.ui.actions.JavaBreakpointPropertiesRulerActionDelegate"
                menubarPath="group.properties"

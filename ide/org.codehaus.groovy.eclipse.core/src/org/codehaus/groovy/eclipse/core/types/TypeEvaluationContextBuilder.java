@@ -17,8 +17,10 @@ package org.codehaus.groovy.eclipse.core.types;
 
 import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext;
 import org.codehaus.groovy.eclipse.core.context.impl.SourceCodeContextFactory;
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.types.internal.InferringEvaluationContext;
 import org.codehaus.groovy.eclipse.core.types.internal.TypedEvaluationContext;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 
@@ -35,6 +37,8 @@ public class TypeEvaluationContextBuilder {
 	private ISymbolTable symbolTable;
 	private IMemberLookup memberLookup;
 	private IRegion region = new Region(0, 0); // default if left unspecified
+	private GroovyProjectFacade project;
+	
 	
 	/**
 	 * Override the line/column in the current context. The new location must still be within the current context!
@@ -46,6 +50,13 @@ public class TypeEvaluationContextBuilder {
 		return this;
 	}
 
+	public TypeEvaluationContextBuilder project(GroovyProjectFacade project) {
+        this.project = project;
+        return this;
+    }
+
+	
+	
 	public TypeEvaluationContextBuilder classLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 		return this;
@@ -74,9 +85,11 @@ public class TypeEvaluationContextBuilder {
 	public ITypeEvaluationContext done() {
 		checkNonNull("ISymbolTable", symbolTable);
 		checkNonNull("IMemberLookup", memberLookup);
+		
+		Assert.isNotNull(project, "Project must not be null");
 
 		if (sourceCodeContext == null) {
-			TypedEvaluationContext context = new TypedEvaluationContext();
+			TypedEvaluationContext context = new TypedEvaluationContext(project);
 			context.setClassLoader(classLoader);
 			context.setImports(imports);
 			context.setSymbolTable(symbolTable);
@@ -84,7 +97,7 @@ public class TypeEvaluationContextBuilder {
 			return context;
 		} else {
 			sourceCodeContext = new SourceCodeContextFactory().createContext(sourceCodeContext, region);
-			InferringEvaluationContext context = new InferringEvaluationContext();
+			InferringEvaluationContext context = new InferringEvaluationContext(project);
 			context.setClassLoader(classLoader);
 			context.setImports(imports);
 			context.setSourceCodeContext(sourceCodeContext);
