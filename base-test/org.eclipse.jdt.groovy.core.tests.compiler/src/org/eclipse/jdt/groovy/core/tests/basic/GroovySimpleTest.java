@@ -105,7 +105,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"success");		
 	}
 	
-	public void testGenericsPositions_1_GRE267() {
+	public void testGenericsPositions_GRE267_1() {
 		this.runConformTest(new String[] {
 			"X.groovy",
 			"class X {\n" + 
@@ -140,7 +140,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 
-	public void testGenericsPositions_2_GRE267() {
+	public void testGenericsPositions_GRE267_2() {
 		this.runConformTest(new String[] {
 			"X.groovy",
 			"class X {\n" + 
@@ -164,119 +164,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		fDecl = grabField(decl,"setthree");
 		assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Number>",stringify(fDecl.type));
 	}
+
 	
-	public void testNPE_GRE273() {
-		this.runNegativeTest(new String[] {
-			"X.groovy",
-			"import java.util.Map\n"+
-			"import org.andrill.coretools.data.edit.Command\n"+
-			"import org.andrill.coretools.data.edit.EditableProperty\n"+
-			"import org.andrill.coretools.data.Model\n"+
-			"import org.andrill.coretools.data.ModelCollection\n"+
-			"import org.andrill.coretools.data.edit.commands.CompositeCommand\n"+
-			"\n"+
-			"class GProperty implements EditableProperty {\n"+
-			"def source\n"+
-			"String name\n"+
-			"String widgetType\n"+
-			"Map widgetProperties = [:]\n"+
-			"Map constraints = [:]\n"+
-			"def validators = []\n"+
-			"Command command\n"+
-			"\n"+
-			"String getValue() {\n"+
-			"if (source instanceof Model) { return source.modelData[name] } else { return (source.\"$name\" as String) }\n"+
-			"}\n"+
-			"\n"+
-			"boolean isValid(String newValue) {\n"+
-			"try {\n"+
-			"return validators.inject(true) { prev, cur -> prev && cur.call([newValue, source]) }\n"+
-			"} catch (e) { return false }\n"+
-			"}\n"+
-			"\n"+
-			"Command getCommand(String newValue) {\n"+
-			"if (constraints?.linkTo && source instanceof Model) {\n"+
-			"def value = source.\"$name\"\n"+
-			"def links = source.collection.models.findAll { it.class == source.class && it?.\"${constraints.linkTo}\" == value }\n"+
-			"if (links) {\n"+
-			"def commands = []\n"+
-			"commands << new GCommand(source: source, prop: name, value: newValue)\n"+
-			"links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n"+
-			"return new CompositeCommand(\"Change $name\", (commands as Command[]))\n"+
-			"} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
-			"} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
-			"}\n"+
-			"}\n"
-			},
-			"----------\n" + 
-			"1. ERROR in X.groovy (at line 2)\n" + 
-			"	import org.andrill.coretools.data.edit.Command\n" + 
-			"	^^\n" + 
-			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command\n" + 
-			"----------\n" + 
-			"2. ERROR in X.groovy (at line 3)\n" + 
-			"	import org.andrill.coretools.data.edit.EditableProperty\n" + 
-			"	^^\n" + 
-			"Groovy:unable to resolve class org.andrill.coretools.data.edit.EditableProperty\n" + 
-			"----------\n" + 
-			"3. ERROR in X.groovy (at line 4)\n" + 
-			"	import org.andrill.coretools.data.Model\n" + 
-			"	^^\n" + 
-			"Groovy:unable to resolve class org.andrill.coretools.data.Model\n" + 
-			"----------\n" + 
-			"4. ERROR in X.groovy (at line 5)\n" + 
-			"	import org.andrill.coretools.data.ModelCollection\n" + 
-			"	^^\n" + 
-			"Groovy:unable to resolve class org.andrill.coretools.data.ModelCollection\n" + 
-			"----------\n" + 
-			"5. ERROR in X.groovy (at line 6)\n" + 
-			"	import org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
-			"	^^\n" + 
-			"Groovy:unable to resolve class org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
-			"----------\n" + 
-			"6. ERROR in X.groovy (at line 8)\n" + 
-			"	class GProperty implements EditableProperty {\n" + 
-			"	^^\n" + 
-			"Groovy:You are not allowed to implement the class \'org.andrill.coretools.data.edit.EditableProperty\', use extends instead.\n" + 
-			"----------\n" + 
-			"7. WARNING in X.groovy (at line 12)\n" + 
-			"	Map widgetProperties = [:]\n" + 
-			"	^^^\n" + 
-			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
-			"----------\n" + 
-			"8. WARNING in X.groovy (at line 13)\n" + 
-			"	Map constraints = [:]\n" + 
-			"	^^^\n" + 
-			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
-			"----------\n" + 
-			"9. ERROR in X.groovy (at line 15)\n" + 
-			"	Command command\n" + 
-			"	^^\n" + 
-			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command \n" + 
-			"----------\n" + 
-			"10. ERROR in X.groovy (at line 33)\n" + 
-			"	commands << new GCommand(source: source, prop: name, value: newValue)\n" + 
-			"	            ^^\n" + 
-			"Groovy:unable to resolve class GCommand \n" + 
-			"----------\n" + 
-			"11. ERROR in X.groovy (at line 34)\n" + 
-			"	links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n" + 
-			"	                         ^^\n" + 
-			"Groovy:unable to resolve class GCommand \n" + 
-			"----------\n" + 
-			"12. ERROR in X.groovy (at line 36)\n" + 
-			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
-			"	                ^^\n" + 
-			"Groovy:unable to resolve class GCommand \n" + 
-			"----------\n" + 
-			"13. ERROR in X.groovy (at line 37)\n" + 
-			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
-			"	                ^^\n" + 
-			"Groovy:unable to resolve class GCommand \n" + 
-			"----------\n");
-	}
-	
-	public void testGenericsPositions_3_GRE267() {
+	public void testGenericsPositions_GRE267_3() {
 		this.runConformTest(new String[] {
 			"X.groovy",
 			"class X {\n" + 
@@ -453,17 +343,327 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 //		fDecl = grabField(decl,"foo");
 //		assertEquals("(12>14)Set<(16>16)?>",stringify(fDecl.type));
 //	}
-	
 
-	private FieldDeclaration grabField(GroovyCompilationUnitDeclaration decl, String fieldname) {
-		FieldDeclaration[] fDecls = decl.types[0].fields;
-		for (int i=0;i<fDecls.length;i++) { 
-			if (new String(fDecls[i].name).equals(fieldname)) { 
-				return fDecls[i];
-			}
-		}
-		return null;
+	public void testAbstractCovariance_GRE272() {
+		this.runNegativeTest(new String[] {
+				"A.java",
+				"public class A {}",
+				
+				"AA.java",
+				"public class AA extends A{}",
+
+				"I.java",
+				"public interface I { A getA();}",
+				
+				"Impl.java",
+				"public class Impl implements I { public AA getA() {return null;}}",
+				
+				"GImpl.groovy",
+				"class GImpl extends Impl {}"
+		},"");
 	}
+
+	// If GroovyFoo is processed *before* FooBase then the MethodVerifier15 
+	// hasn't had a chance to run on FooBase and create the synthetic bridge method
+	public void testAbstractCovariance_GRE272_2() {
+		this.runNegativeTest(new String[] {
+				"test/Bar.java",
+				"package test;\n"+
+				"public class Bar extends BarBase {}",
+
+				"test/BarBase.java",
+				"package test;\n"+
+				"abstract public class BarBase {}",
+				
+				"test/GroovyFoo.groovy",
+				"package test;\n"+
+				"class GroovyFoo extends FooBase {}",
+
+				"test/FooBase.java",
+				"package test;\n"+
+				"public class FooBase implements IFoo { public Bar foo() {return null;}}",
+								
+
+				"test/IFoo.java",
+				"package test;\n"+
+				"public interface IFoo { BarBase foo();}",
+		},"");
+	}
+
+	public void testAbstractCovariance_GRE272_3() {
+		this.runNegativeTest(new String[] {
+				"test/IFoo.java",
+				"package test;\n"+
+				"public interface IFoo { BarBase foo();}",
+
+				"test/GroovyFoo.groovy",
+				"package test;\n"+
+				"class GroovyFoo extends FooBase {}",
+
+				"test/FooBase.java",
+				"package test;\n"+
+				"public class FooBase implements IFoo { public Bar foo() {return null;}}",
+
+
+				"test/BarBase.java",
+				"package test;\n"+
+				"abstract public class BarBase {}",
+				
+				"test/Bar.java",
+				"package test;\n"+
+				"public class Bar extends BarBase {}",
+
+		},"");
+	}
+
+	public void testAbstractCovariance_GRE272_4() {
+		this.runNegativeTest(new String[] {
+				"test/IFoo.java",
+				"package test;\n"+
+				"public interface IFoo { BarBase foo();}",
+
+				"test/FooBase.java",
+				"package test;\n"+
+				"public class FooBase implements IFoo { public Bar foo() {return null;}}",
+
+				"test/BarBase.java",
+				"package test;\n"+
+				"abstract public class BarBase {}",
+				
+				"test/Bar.java",
+				"package test;\n"+
+				"public class Bar extends BarBase {}",
+				
+				"test/GroovyFoo.groovy",
+				"package test;\n"+
+				"class GroovyFoo extends FooBase {}",
+		},"");
+	}
+
+	public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273() {
+		this.runNegativeTest(new String[] {
+			"X.groovy",
+			"import java.util.Map\n"+
+			"import org.andrill.coretools.data.edit.Command\n"+
+			"import org.andrill.coretools.data.edit.EditableProperty\n"+
+			"import org.andrill.coretools.data.Model\n"+
+			"import org.andrill.coretools.data.ModelCollection\n"+
+			"import org.andrill.coretools.data.edit.commands.CompositeCommand\n"+
+			"\n"+
+			"class GProperty implements EditableProperty {\n"+
+			"def source\n"+
+			"String name\n"+
+			"String widgetType\n"+
+			"Map widgetProperties = [:]\n"+
+			"Map constraints = [:]\n"+
+			"def validators = []\n"+
+			"Command command\n"+
+			"\n"+
+			"String getValue() {\n"+
+			"if (source instanceof Model) { return source.modelData[name] } else { return (source.\"$name\" as String) }\n"+
+			"}\n"+
+			"\n"+
+			"boolean isValid(String newValue) {\n"+
+			"try {\n"+
+			"return validators.inject(true) { prev, cur -> prev && cur.call([newValue, source]) }\n"+
+			"} catch (e) { return false }\n"+
+			"}\n"+
+			"\n"+
+			"Command getCommand(String newValue) {\n"+
+			"if (constraints?.linkTo && source instanceof Model) {\n"+
+			"def value = source.\"$name\"\n"+
+			"def links = source.collection.models.findAll { it.class == source.class && it?.\"${constraints.linkTo}\" == value }\n"+
+			"if (links) {\n"+
+			"def commands = []\n"+
+			"commands << new GCommand(source: source, prop: name, value: newValue)\n"+
+			"links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n"+
+			"return new CompositeCommand(\"Change $name\", (commands as Command[]))\n"+
+			"} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
+			"} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
+			"}\n"+
+			"}\n"
+			},
+			"----------\n" + 
+			"1. ERROR in X.groovy (at line 2)\n" + 
+			"	import org.andrill.coretools.data.edit.Command\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command\n" + 
+			"----------\n" + 
+			"2. ERROR in X.groovy (at line 3)\n" + 
+			"	import org.andrill.coretools.data.edit.EditableProperty\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.edit.EditableProperty\n" + 
+			"----------\n" + 
+			"3. ERROR in X.groovy (at line 4)\n" + 
+			"	import org.andrill.coretools.data.Model\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.Model\n" + 
+			"----------\n" + 
+			"4. ERROR in X.groovy (at line 5)\n" + 
+			"	import org.andrill.coretools.data.ModelCollection\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.ModelCollection\n" + 
+			"----------\n" + 
+			"5. ERROR in X.groovy (at line 6)\n" + 
+			"	import org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
+			"----------\n" + 
+			"6. ERROR in X.groovy (at line 8)\n" + 
+			"	class GProperty implements EditableProperty {\n" + 
+			"	^^\n" + 
+			"Groovy:You are not allowed to implement the class \'org.andrill.coretools.data.edit.EditableProperty\', use extends instead.\n" + 
+			"----------\n" + 
+			"7. WARNING in X.groovy (at line 12)\n" + 
+			"	Map widgetProperties = [:]\n" + 
+			"	^^^\n" + 
+			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
+			"----------\n" + 
+			"8. WARNING in X.groovy (at line 13)\n" + 
+			"	Map constraints = [:]\n" + 
+			"	^^^\n" + 
+			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
+			"----------\n" + 
+			"9. ERROR in X.groovy (at line 15)\n" + 
+			"	Command command\n" + 
+			"	^^\n" + 
+			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command \n" + 
+			"----------\n" + 
+			"10. ERROR in X.groovy (at line 33)\n" + 
+			"	commands << new GCommand(source: source, prop: name, value: newValue)\n" + 
+			"	            ^^\n" + 
+			"Groovy:unable to resolve class GCommand \n" + 
+			"----------\n" + 
+			"11. ERROR in X.groovy (at line 34)\n" + 
+			"	links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n" + 
+			"	                         ^^\n" + 
+			"Groovy:unable to resolve class GCommand \n" + 
+			"----------\n" + 
+			"12. ERROR in X.groovy (at line 36)\n" + 
+			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
+			"	                ^^\n" + 
+			"Groovy:unable to resolve class GCommand \n" + 
+			"----------\n" + 
+			"13. ERROR in X.groovy (at line 37)\n" + 
+			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
+			"	                ^^\n" + 
+			"Groovy:unable to resolve class GCommand \n" + 
+			"----------\n");
+	}
+	
+	public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273_2() {
+		this.runNegativeTest(new String[] {
+				"A.groovy",
+				"class A {\n"+
+				"  String s;"+
+				"  String getS(String foo) { return null;}\n"+
+				"}"
+		},"");
+	}
+
+	public void testConstructorsForEnumWrong_GRE285() {
+		this.runNegativeTest(new String[] {
+				"TestEnum.groovy",
+				"enum TestEnum {\n"+
+				"\n"+
+				"VALUE1(1, 'foo'),\n"+
+				"VALUE2(2)\n"+
+				"\n"+
+				"private final int _value\n"+
+				"private final String _description\n"+
+				"\n"+
+				"private TestEnum(int value, String description = null) {\n"+
+				"	_value = value\n"+
+				"	_description = description\n"+
+				"}\n"+
+				"\n"+
+				"String getDescription() { _description }\n"+
+				"\n"+
+				"int getValue() { _value }\n"+
+				"}"
+				},"");
+	}
+
+	public void testCrashingOnBadCode_GRE290() {
+		this.runNegativeTest(new String[] {
+			"Moo.groovy",
+			"package com.omxgroup.scripting;\n"+
+			"\n"+
+			"public class Moo {\n"+
+			"public static def moo() { println this.class }\n"+
+			"}\n"
+		},
+		"----------\n" + 
+		"1. ERROR in Moo.groovy (at line 4)\n" + 
+		"	public static def moo() { println this.class }\n" + 
+		"	                                  ^^\n" + 
+		"Groovy:class is declared in a dynamic context, but you tried to access it from a static context.\n" + 
+		"----------\n" + 
+		"2. ERROR in Moo.groovy (at line 4)\n" + 
+		"	public static def moo() { println this.class }\n" + 
+		"	                                  ^^\n" + 
+		"Groovy:Non-static variable \'this\' cannot be referenced from the static method moo.\n" + 
+		"----------\n");
+	}
+	
+	public void testCrashingOnBadCode_GRE290_2() {
+		this.runNegativeTest(new String[] {
+			"Moo.groovy",
+			"public class Moo {\n"+
+			"\n"+
+			"public Moo processMoo(final moo) {\n"+
+			"final moo = processMoo(moo)\n"+
+			"return moo\n"+
+			"}\n"+
+			"}\n"
+		},
+		"----------\n" + 
+		"1. ERROR in Moo.groovy (at line 4)\n" + 
+		"	final moo = processMoo(moo)\n" + 
+		"	      ^^\n" + 
+		"Groovy:The current scope already contains a variable of the name moo\n" + 
+		"----------\n"
+		);
+	}
+
+	// 'this' by itself isn't an error
+	public void testCrashingOnBadCode_GRE290_3() {
+		this.runNegativeTest(new String[] {
+			"Moo.groovy",
+			"package com.omxgroup.scripting;\n"+
+			"\n"+
+			"public class Moo {\n"+
+			"public static def moo() { println this }\n"+
+			"}\n"
+		},
+		"");
+	}
+
+	public void testCrashingOnBadCode_GRE290_4() {
+		this.runNegativeTest(new String[] {
+			"p/X.groovy",
+			"words: [].each { final item ->\n" + 
+			"  break words\n"+
+			"  }\n"
+		},"----------\n" + 
+		"1. ERROR in p\\X.groovy (at line 2)\n" + 
+		"	break words\n" + 
+		"	^^\n" + 
+		"Groovy:the break statement with named label is only allowed inside loops\n" + 
+		"----------\n" + 
+		"2. ERROR in p\\X.groovy (at line 2)\n" + 
+		"	break words\n" + 
+		"	^^\n" + 
+		"Groovy:the break statement with named label is only allowed inside loops\n" + 
+		"----------\n" + 
+		"3. ERROR in p\\X.groovy (at line 2)\n" + 
+		"	break words\n" + 
+		"	^^\n" + 
+		"Groovy:break to missing label\n" + 
+		"----------\n");		
+	}
+	
+	// ---
 
 	// The getter for 'description' implements the interface
 	public void testImplementingAnInterfaceViaProperty() {
@@ -641,7 +841,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		checkGCUDeclaration("X.groovy",expectedOutput);
 		
 		expectedOutput = 
-			"// Compiled from X.groovy (version 1.5 : 49.0, no super bit)\n" + 
 			"@p.Anno\n" + 
 			"public class p.X implements groovy.lang.GroovyObject {\n";
 		checkDisassemblyFor("p/X.class", expectedOutput);
@@ -670,7 +869,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		checkGCUDeclaration("X.groovy",expectedOutput);
 				
 		expectedOutput = 
-			"  // Method descriptor #46 ([Ljava/lang/String;)V\n" + 
+			//"  // Method descriptor #46 ([Ljava/lang/String;)V\n" + 
 			"  // Stack: 3, Locals: 2\n" + 
 			"  @p.Anno\n" + 
 			"  public static void main(java.lang.String... argv);\n";
@@ -702,7 +901,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		checkGCUDeclaration("X.groovy",expectedOutput);
 		
 		expectedOutput = 
-			"  // Field descriptor #11 Ljava/lang/String;\n" + 
+			//"  // Field descriptor #11 Ljava/lang/String;\n" + 
 			"  @p.Anno\n" + 
 			"  private java.lang.String s;\n";
 		checkDisassemblyFor("p/X.class", expectedOutput);
@@ -730,7 +929,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"success");
 		
 		String expectedOutput = 
-			"  // Field descriptor #11 Ljava/lang/String;\n" + 
+			//"  // Field descriptor #11 Ljava/lang/String;\n" + 
 			"  @p.Anno\n" + 
 			"  private java.lang.String s;\n";
 		checkDisassemblyFor("p/X.class", expectedOutput);
@@ -758,7 +957,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"success");
 		
 		String expectedOutput = 
-			"  // Field descriptor #11 Ljava/lang/String;\n" + 
+			"  // Field descriptor #9 Ljava/lang/String;\n" + 
 			"  private java.lang.String s;\n";
 		checkDisassemblyFor("p/X.class", expectedOutput);
 	}	
@@ -784,7 +983,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"success");
 		
 		String expectedOutput = 
-			"  // Field descriptor #11 Ljava/lang/String;\n" + 
+			"  // Field descriptor #9 Ljava/lang/String;\n" + 
 			"  private java.lang.String s;\n";
 		checkDisassemblyFor("p/X.class", expectedOutput);
 	}	
@@ -863,7 +1062,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. WARNING in Demo.groovy (at line 3)\n" + 
 		"	@SuppressWarnings(\"unchecked\")\n" + 
-		"	 ^^^^^^^^^^^^^^^^^\n" + 
+		"	                  ^^^^^^^^^^^\n" + 
 		"Unnecessary @SuppressWarnings(\"unchecked\")\n" + 
 		"----------\n");
 	}
@@ -880,7 +1079,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. WARNING in Demo.groovy (at line 3)\n" + 
 		"	@SuppressWarnings(\"unchecked2\")\n" + 
-		"	 ^^^^^^^^^^^^^^^^^\n" + 
+		"	                  ^^^^^^^^^^^^\n" + 
 		"Unsupported @SuppressWarnings(\"unchecked2\")\n" + 
 		"----------\n");
 	}
@@ -907,7 +1106,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"----------\n" + 
 		"1. WARNING in Demo.groovy (at line 3)\n" + 
 		"	@SuppressWarnings([\"unchecked\",\"cast2\"])\n" + 
-		"	 ^^^^^^^^^^^^^^^^^\n" + 
+		"	                               ^^^^^^^\n" + 
 		"Unsupported @SuppressWarnings(\"cast2\")\n" + 
 		"----------\n");
 	}
@@ -928,8 +1127,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"public class X {}\n"
 		},
 		"----------\n" + 
-		"1. ERROR in p\\X.java (at line 2)\n" + 
-		"	public class X {}\n" + 
+		"1. ERROR in p\\X.groovy (at line 2)\n" + 
+		"	public class X {\n" + 
 		"	             ^\n" + 
 		"The type X is already defined\n" + 
 		"----------\n");
@@ -1019,7 +1218,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		checkGCUDeclaration("X.groovy",expectedOutput);
 		
 		expectedOutput = 
-			"  // Method descriptor #18 (Ljava/lang/String;)V\n" + 
+			//"  // Method descriptor #18 (Ljava/lang/String;)V\n" + 
 			"  // Stack: 3, Locals: 3\n" + 
 			"  @p.Anno\n" + 
 			"  public X(java.lang.String s);\n";
@@ -1135,7 +1334,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1168,7 +1367,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1201,7 +1400,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1262,7 +1461,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1295,7 +1494,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1328,7 +1527,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1389,7 +1588,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1422,7 +1621,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1455,7 +1654,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	 ^^\n" + 
+			"	^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -1931,7 +2130,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"1. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
 			"	      ^^\n" +
-			"Groovy:unable to find class for enum\n" +
+			"Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
 			"----------\n" +
 			"2. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
@@ -3537,13 +3736,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n";
 		checkGCUDeclaration("G.groovy",expectedOutput);
 		expectedOutput =
-			"  public G();\n" + 
 			"  \n" + 
 			"  public void m(String s, Integer i);\n" + 
+			"  \n";
+		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+		expectedOutput =
 			"  \n" + 
 			"  public void m(String s);\n" + 
-			"  \n" + 
-			"  protected synthetic MetaClass $getStaticMetaClass();\n" + 
 			"  \n";
 		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
 	}
@@ -3588,17 +3787,23 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		checkGCUDeclaration("G.groovy", expectedOutput);
 		
 		expectedOutput = 
-			"  public G();\n" + 
 			"  \n" + 
 			"  public void m(String s, Integer i, String j, String k, float f, String l);\n" + 
+			"  \n";
+		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+		expectedOutput = 
 			"  \n" + 
 			"  public void m(String s, Integer i, String j, String k, String l);\n" + 
+			"  \n";
+		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+		expectedOutput = 
 			"  \n" + 
 			"  public void m(String s, Integer i, String k, String l);\n" + 
+			"  \n";
+		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+		expectedOutput = 
 			"  \n" + 
 			"  public void m(String s, String k, String l);\n" + 
-			"  \n" + 
-			"  protected synthetic MetaClass $getStaticMetaClass();\n" + 
 			"  \n";
 		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
 	}
@@ -3641,13 +3846,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n";
 		checkGCUDeclaration("G.groovy", expectedOutput );
 		expectedOutput =
-			"  private static synthetic SoftReference $callSiteArray;\n" + 
 			"  \n" + 
 			"  public G(Integer i, String m);\n" + 
+			"  \n";
+		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+		expectedOutput =
 			"  \n" + 
 			"  public G(Integer i);\n" + 
-			"  \n" + 
-			"  public void print(int i);\n" + 
 			"  \n";
 		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
 	}
@@ -5023,6 +5228,17 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		} else {
 			throw new RuntimeException("Dont know how to print "+type.getClass());
 		}
+	}
+
+
+	private FieldDeclaration grabField(GroovyCompilationUnitDeclaration decl, String fieldname) {
+		FieldDeclaration[] fDecls = decl.types[0].fields;
+		for (int i=0;i<fDecls.length;i++) { 
+			if (new String(fDecls[i].name).equals(fieldname)) { 
+				return fDecls[i];
+			}
+		}
+		return null;
 	}
 
 }
