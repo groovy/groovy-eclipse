@@ -447,6 +447,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         // add in unimplemented abstract methods from the interfaces
         for (ClassNode iface : getInterfaces()) {
             Map<String, MethodNode> ifaceMethodsMap = iface.getDeclaredMethodsMap();
+            // FIXASC (optimize) should iterate using Map.Entry perhaps
             for (String methSig : ifaceMethodsMap.keySet()) {
                 if (!result.containsKey(methSig)) {
                     MethodNode methNode = ifaceMethodsMap.get(methSig);
