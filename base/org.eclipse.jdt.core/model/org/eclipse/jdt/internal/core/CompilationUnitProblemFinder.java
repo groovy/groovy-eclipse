@@ -114,21 +114,14 @@ public class CompilationUnitProblemFinder extends Compiler {
 			this.lookupEnvironment.completeTypeBindings(unit);
 		}
 	}
+	
 
-	// GROOVY start
-	// oldcode
-	//protected static CompilerOptions getCompilerOptions(Map settings, boolean creatingAST, boolean statementsRecovery) {
-	// newcode
-	protected static CompilerOptions getCompilerOptions(Map settings, boolean creatingAST, boolean statementsRecovery, JavaProject javaProject) {
-		// GROOVY end
+	protected static CompilerOptions getCompilerOptions(Map settings, boolean creatingAST, boolean statementsRecovery) {
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
 		compilerOptions.performMethodsFullRecovery = statementsRecovery;
 		compilerOptions.performStatementsRecovery = statementsRecovery;
 		compilerOptions.parseLiteralExpressionsAsConstants = !creatingAST; /*parse literal expressions as constants only if not creating a DOM AST*/
 		compilerOptions.storeAnnotations = creatingAST; /*store annotations in the bindings if creating a DOM AST*/
-		// GROOVY start
-		CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject.getProject());
-		// GROOVY end
 		return compilerOptions;
 	}
 
@@ -165,6 +158,11 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CancelableProblemFactory problemFactory = null;
 		CompilationUnitProblemFinder problemFinder = null;
 		try {
+			// GROOVY start
+			// options fetched prior to building problem finder then configured based on project
+			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0));
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project.getProject());
+			// GROOVY end
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
 			problemFinder = new CompilationUnitProblemFinder(
@@ -174,7 +172,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 				// oldcode
 				// getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0)),
 				// newcode
-				getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0),project),
+				compilerOptions,
 				// GROOVY end
 				getRequestor(),
 				problemFactory);
