@@ -262,20 +262,12 @@ class CompilationUnitResolver extends Compiler {
 		return compilationUnit;
 	}
 
-	// GROOVY start
-	// old code
-	//	protected static CompilerOptions getCompilerOptions(Map options, boolean statementsRecovery) {
-	// new code
-	protected static CompilerOptions getCompilerOptions(Map options, boolean statementsRecovery, IJavaProject javaProject) {
-	// GROOVY end
+	protected static CompilerOptions getCompilerOptions(Map options, boolean statementsRecovery) {
 		CompilerOptions compilerOptions = new CompilerOptions(options);
 		compilerOptions.performMethodsFullRecovery = statementsRecovery;
 		compilerOptions.performStatementsRecovery = statementsRecovery;
 		compilerOptions.parseLiteralExpressionsAsConstants = false;
 		compilerOptions.storeAnnotations = true /*store annotations in the bindings*/;
-		// GROOVY start
-		CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject.getProject());
-		// GROOVY end
 		return compilerOptions;
 	}
 	/*
@@ -477,6 +469,10 @@ class CompilationUnitResolver extends Compiler {
 			}
 			environment = new CancelableNameEnvironment(((JavaProject) javaProject), owner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
+			// GROOVY start
+			CompilerOptions compilerOptions = getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject.getProject());
+			// GROOVY end
 			CompilationUnitResolver resolver =
 				new CompilationUnitResolver(
 					environment,
@@ -485,7 +481,7 @@ class CompilationUnitResolver extends Compiler {
 					// old code
 					// getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0),
 					// new code
-					getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY)!=0, javaProject),
+					compilerOptions,
 					// GROOVY end
 					getRequestor(),
 					problemFactory,
@@ -525,6 +521,10 @@ class CompilationUnitResolver extends Compiler {
 		try {
 			environment = new CancelableNameEnvironment(((JavaProject)javaProject), owner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
+			// GROOVY start
+			CompilerOptions compilerOptions = getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject.getProject());
+			// GROOVY end
 			resolver =
 				new CompilationUnitResolver(
 					environment,
@@ -533,7 +533,7 @@ class CompilationUnitResolver extends Compiler {
 					// old code:
 					// getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0),
 					// new code
-					getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0,javaProject),
+					compilerOptions,
 					// GROOVY end					
 					getRequestor(),
 					problemFactory,
