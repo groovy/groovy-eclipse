@@ -80,8 +80,5 @@ buildType=N
 
 buildTypePresentation=e35
 
-# Leave blank to avoid checking logs after build for success (eg- local builds that do not save logs to file)
-logsLocation=/opt/j2ee/domains/ci.codehaus.org/bamboo/webapps/atlassian-bamboo/data/atlassian-bamboo-2.1.4/xml-data/build-dir/GRECLIPSE-V2E34/build_logs/${bamboo.buildKey}-${bamboo.buildNumber}
-
 # Leave blank to avoid publishing (eg- local builds where publishing is not necessary)
 publishLocation=/opt/ci.repository.codehaus.org/greclipse/snapshot/e35

@@ -115,15 +115,19 @@
 	<target name="groovy-main" description="Run the main target of customTargets.xml. Return status 0,1,2 for Success, Build Failure and Test Failure">
 		<property name="buildTarget" value="main"/>
 		<antcall target="-build"/>
+
+		<!-- Only publish if a publish location is set -->
+<!--
 		<antcall target="-check.for.failure"/>
 		
-		<!-- Only publish if a publish location is set -->
 		<condition property="shouldPublish">
 			<not>
 				<equals arg1="${publishLocation}" arg2=""/>
 			</not>
 		</condition>
 		<antcall target="-publish"/>
+
+-->
 	</target>
 	
 	<target name="-check.for.failure">
