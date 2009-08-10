@@ -59,7 +59,12 @@ public class GroovyEditor extends CompilationUnitEditor {
     
     @Override
     public Image getTitleImage() {
-        return decorator.decorateImage(null, getEditorInput().getAdapter(IFile.class));
+        Object element = getEditorInput().getAdapter(IFile.class);
+        if (element == null) {
+            // will be null if coming from a code repository such as svn or cvs
+            element = getEditorInput().getName();
+        }
+        return decorator.decorateImage(null, element);
     }
     
     @Override

@@ -135,14 +135,15 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 			// Patch same last coord to length. This only seems to occur with
 			// this.prop. Not strictly correct, as it should be the entire
 			// expression to be consistent with other property expressions.
+		    int propLength = expr.getPropertyAsString() == null ? 0 : expr.getPropertyAsString().length();
 			if (expr.getLastLineNumber() == expr.getLineNumber()) {
 				expr.setLastLineNumber(expr.getLineNumber()
-						+ expr.getPropertyAsString().length());
+						+ propLength);
 			}
 
 			if (expr.getLastColumnNumber() == expr.getColumnNumber()) {
 				expr.setLastColumnNumber(expr.getColumnNumber()
-						+ expr.getPropertyAsString().length());
+						+ propLength);
 			}
 
 			if (identifier.equals(expr.getProperty())) {

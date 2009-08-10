@@ -50,17 +50,4 @@
          </partition>
       </javaCompletionProposalComputer>
    </extension>
-  <extension
-   			 name="Default Groovy Method Completions"
-   			 id="org.codehaus.groovy.eclipse.codeassist.completion.default"
-         point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
-      <javaCompletionProposalComputer
-            activate="true"
-            categoryId="org.codehaus.groovy.eclipse.codeassist.completion.category"
-            class="org.codehaus.groovy.eclipse.codeassist.completion.jdt.DefaultGroovyMethodProcessor">
-         <partition
-               type="__dftl_partition_content_type">
-         </partition>
-      </javaCompletionProposalComputer>
-   </extension>
 </plugin>

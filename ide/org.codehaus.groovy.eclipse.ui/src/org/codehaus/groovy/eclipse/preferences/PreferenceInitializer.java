@@ -47,10 +47,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 new RGB(102, 204, 255));
 
         // Multiline Comment Prefs
-        store
-                .setDefault(
-                        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED,
-                        true);
+        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED,
+                         true);
         PreferenceConverter
                 .setDefault(
                         store,
@@ -58,24 +56,20 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                         new RGB(204, 0, 0));
 
         // Java Keyword Prefs
-        store
-                .setDefault(
-                        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED,
-                        true);
+        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED,
+                         true);
         PreferenceConverter.setDefault(store,
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
-                new RGB(0, 153, 255));
+                new RGB(151, 44, 120));
 
         // Groovy Keyword Prefs
-        store
-                .setDefault(
-                        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED,
-                        true);
+        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED,
+                         true);
         PreferenceConverter
                 .setDefault(
                         store,
                         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
-                        new RGB(0, 153, 102));
+                        new RGB(151, 44, 120));
 
         // Java Types Prefs
         store.setDefault(
@@ -99,11 +93,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 true);
         PreferenceConverter.setDefault(store,
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
-                new RGB(255, 0, 0));
-
-        // Enable Folding
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_FOLDING_ENABLED,
-                true);
+                new RGB(205, 50, 0));
+        
+        // JUnit Monospace font
+        store.setDefault(
+                PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
+                false);
     }
 
 }

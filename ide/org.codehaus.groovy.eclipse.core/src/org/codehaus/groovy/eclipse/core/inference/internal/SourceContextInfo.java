@@ -22,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -140,7 +141,8 @@ public class SourceContextInfo {
                     return new SourceContextInfo(lookup, result, parts[0], parts[1]);
                 }
             } catch (Exception e) {
-                GroovyCore.logException("Exception while browsing in " + module.getClasses().get(0).getName(), e);
+                ClassNode node = module.getClasses().get(0);
+                GroovyCore.logException("Exception while browsing in " + (node!=null ? node.getName() : module.getScriptClassDummy()), e);
             }
         }
         return null;

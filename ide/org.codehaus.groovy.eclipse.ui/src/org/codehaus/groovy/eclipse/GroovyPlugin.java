@@ -18,19 +18,27 @@ import java.io.IOException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.templates.ContextTypeRegistry;
 import org.eclipse.jface.text.templates.persistence.TemplateStore;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IPageListener;
+import org.eclipse.ui.IPartService;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry;
 import org.eclipse.ui.editors.text.templates.ContributionTemplateStore;
+import org.eclipse.ui.internal.UIPlugin;
+import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -43,11 +51,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	 * The single plugin instance
 	 */
 	private static GroovyPlugin plugin;
-	
-	/**
-	 * Resource bundle unique id. 
-	 */
-	private ResourceBundle resourceBundle;
 	
 	static boolean trace;
 
@@ -62,6 +65,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	private ContributionContextTypeRegistry fContextTypeRegistry;
 	    
 	private ContributionTemplateStore fTemplateStore;
+
+    private EnsureJUnitFont ensure;
 	
 	static {
 		String value = Platform
@@ -76,12 +81,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	public GroovyPlugin() {
 		super();
 		plugin = this;
-		try {
-			resourceBundle = ResourceBundle
-					.getBundle("org.codehaus.groovy.eclipse.TestNatureAndBuilderPluginResources");
-		} catch (MissingResourceException x) {
-			resourceBundle = null;
-		}
     }
 
 	/**
@@ -91,22 +90,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
 		return plugin;
 	}
 
-	/**
-	 * Gets a string from the resource bundle
-	 * 
-	 * @param key
-	 * @return Returns the string from the plugin's resource bundle, or 'key' if not
-	 * found.
-	 */
-	public static String getResourceString(String key) {
-		ResourceBundle bundle = GroovyPlugin.getDefault().getResourceBundle();
-		try {
-			return (bundle != null ? bundle.getString(key) : key);
-		} catch (MissingResourceException e) {
-			return key;
-		}
-	}
-	
 	public static Shell getActiveWorkbenchShell() {
 		IWorkbenchWindow workBenchWindow= getActiveWorkbenchWindow();
 		if (workBenchWindow == null)
@@ -126,13 +109,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
 		if (workBench == null)
 			return null;
 		return workBench.getActiveWorkbenchWindow();
-	}
-
-	/**
-	 * @return Returns the plugin's resource bundle.
-	 */
-	public ResourceBundle getResourceBundle() {
-		return resourceBundle;
 	}
 
 	/**
@@ -197,7 +173,33 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		textTools = new GroovyTextTools();
+		addMonospaceFontListener();
 	}
+
+    private void addMonospaceFontListener() {
+        ensure = new EnsureJUnitFont();
+
+        // if JUnit window already open, force monospace if that is desired
+        ensure.maybeForceMonospaceFont();
+        try {
+            Workbench.getInstance().getActiveWorkbenchWindow().addPageListener(new IPageListener() {
+                public void pageOpened(IWorkbenchPage page) {
+                    IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
+                    service.addPartListener(ensure);
+                }
+                
+                public void pageClosed(IWorkbenchPage page) {
+                }
+                
+                public void pageActivated(IWorkbenchPage page) {
+                }
+            });
+        } catch (NullPointerException e) {
+            // ignore, UI has not been initialized yet
+        }
+        
+        getPreferenceStore().addPropertyChangeListener(ensure);
+    }
 	
 	@Override
 	public void stop(BundleContext context) throws Exception {
@@ -207,7 +209,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	}
 
 	
-	public GroovyTextTools getTextTools() {
+    public GroovyTextTools getTextTools() {
         return textTools;
     }
 	

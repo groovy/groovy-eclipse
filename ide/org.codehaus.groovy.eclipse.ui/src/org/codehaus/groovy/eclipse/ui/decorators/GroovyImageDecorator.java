@@ -58,6 +58,10 @@ public class GroovyImageDecorator implements ILabelDecorator {
         } else if (element instanceof IFile && ContentTypeUtils.isGroovyLikeFileName(((IResource) element).getName())) {
             image = getJavaElementImageDescriptor(image, (IResource) element);
             isApplicable = true;
+        } else if (element instanceof String) {
+            // a request where an IResource cannot be found (probably from opening an svn or cvs file)
+            image = getImageLabel(new JavaElementImageDescriptor(GroovyPluginImages.DESC_GROOVY_FILE, 0, JavaElementImageProvider.SMALL_SIZE));
+            isApplicable = true;
         }
         
         if (isApplicable) {

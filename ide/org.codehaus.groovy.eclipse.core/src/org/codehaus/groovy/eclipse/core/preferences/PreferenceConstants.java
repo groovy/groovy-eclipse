@@ -43,9 +43,6 @@ public class PreferenceConstants {
 	public static final String GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED = "groovy.editor.highlight.numbers.enabled"; //$NON-NLS-1$
 	public static final String GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR = "groovy.editor.highlight.numbers.color"; //$NON-NLS-1$
 
-	//	public static final String GROOVY_GENERATE_CLASS_FILES = "groovy.generate.class.files";
-	//    public static final String GROOVY_COMPILER_OUTPUT_PATH = "groovy.compiler.output.path";
-	//    public static final String GROOVY_COMPILER_DEFAULT_OUTPUT_PATH = "groovy.compiler.output.defaultPath";
 	// this preference will add the plugin trace statements to the error in order
 	// to make it easier to track down problems at runtime
 	public static final String GROOVY_LOG_TRACE_MESSAGES_ENABLED = "groovy.log.trace.messages.enabled"; //$NON-NLS-1$
@@ -61,16 +58,7 @@ public class PreferenceConstants {
 
 	public static final String GROOVY_EDITOR_FOLDING_ENABLED = "groovy.editor.folding.enabled"; //$NON-NLS-1$
 	
-	
-	    public static final String GROOVY_DONT_GENERATE_CLASS_FILES = "groovy.dont.generate.class.files";
-	    public static final String GROOVY_COMPILER_OUTPUT_PATH = "groovy.compiler.output.path";
-	    public static final String GROOVY_COMPILER_DEFAULT_OUTPUT_PATH = "groovy.compiler.output.defaultPath";
-	    public static final String GROOVY_DONT_CHECK_PACKAGE_VS_SRC_PATH = "groovy.dont.check.package.vs.src.path";
-	    
-	    public static final String GROOVY_SHOW_RECONCILER_PROBLEMS = "groovy.developer.reconciler.problems.visible";
-	    
-	    public static final String GROOVY_ADD_NATURE = "groovy.add.nature";
-	    
-	    public static final String GROOVY_RUNTIME_SOURCE = "groovy.runtime.lib.source";
+	public static final String GROOVY_RUNTIME_SOURCE = "groovy.runtime.lib.source";
 
+	public static final String GROOVY_JUNIT_MONOSPACE_FONT = "groovy.junit.monospace.font";
 }

@@ -56,41 +56,8 @@ public class GroovyProjectPreferencePage extends FieldEditorOverlayPage
      * editor knows how to save and restore itself.
      */
     public void createFieldEditors() {
-        // Groovy compiler project output preference
-        addField(new StringFieldEditor(
-                PreferenceConstants.GROOVY_COMPILER_OUTPUT_PATH,
-                "&Groovy compiler output location", getFieldEditorParent()) {
-            // This is a hack to allow the Field Editor to be disabled, but the
-            // project's
-            // groovy output location to be updated.
-            public void setEnabled(final boolean enabled, final Composite parent) {
-                if (!enabled) {
-                    super.setEnabled(true, parent);
-                    super
-                            .setStringValue(GroovyCore
-                                    .getPreferenceStore()
-                                    .getString(
-                                            PreferenceConstants.GROOVY_COMPILER_OUTPUT_PATH));
-                }
-                super.setEnabled(enabled, parent);
-            }
-        });
 
-        // Generate Class File Pref
-        final BooleanFieldEditor classFilePrefEditor = new BooleanFieldEditor(
-                PreferenceConstants.GROOVY_DONT_GENERATE_CLASS_FILES,
-                "&Disable Groovy Compiler Generating Class Files",
-                getFieldEditorParent());
-        classFilePrefEditor.setPreferenceStore(getPreferenceStore());
-        addField(classFilePrefEditor);
 
-        // Check package path versus source path in project preference
-        final BooleanFieldEditor checkPackagePrefEditor = new BooleanFieldEditor(
-                PreferenceConstants.GROOVY_DONT_CHECK_PACKAGE_VS_SRC_PATH,
-                "&Disable Check Package Matches Source Directory",
-                getFieldEditorParent());
-        checkPackagePrefEditor.setPreferenceStore(getPreferenceStore());
-        addField(checkPackagePrefEditor);
     }
 
     /*

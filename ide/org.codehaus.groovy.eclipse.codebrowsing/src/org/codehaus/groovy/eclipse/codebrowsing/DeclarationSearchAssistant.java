@@ -80,44 +80,48 @@ public class DeclarationSearchAssistant implements IDeclarationSearchAssistant {
 		IExtensionRegistry reg = Platform.getExtensionRegistry();
 		IExtensionPoint ep = reg
 				.getExtensionPoint("org.codehaus.groovy.eclipse.codebrowsing.declarationSearch");
-		IExtension[] extensions = ep.getExtensions();
-		for (int i = 0; i < extensions.length; i++) {
-			IExtension extension = extensions[i];
-			IConfigurationElement[] configElements = extension
-					.getConfigurationElements();
-
-			// First get all the contexts.
-			for (int j = 0; j < configElements.length; j++) {
-				try {
-					IConfigurationElement element = configElements[j];
-					if (element.getName().equals("searchContext")) {
-						IDeclarationSearchContext context = (IDeclarationSearchContext) element
-								.createExecutableExtension("class");
-						String contextId = element.getAttribute("contextId");
-						registerContext(contextId, context);
-					}
-				} catch (CoreException e) {
-                    GroovyCore.logException("Exception when initializing search assistant processors", e);
-				}
-			}
-
-			// Now get all the processors.
-			for (int j = 0; j < configElements.length; j++) {
-				try {
-					IConfigurationElement element = configElements[j];
-					if (element.getName().equals("searchProcessor")) {
-						String contextId = element.getAttribute("contextId");
-						String astNodeClassName = element
-								.getAttribute("astNodeClass");
-						IDeclarationSearchProcessor processor = (IDeclarationSearchProcessor) element
-								.createExecutableExtension("class");
-						registerProcessor(contextId, astNodeClassName,
-								processor);
-					}
-				} catch (CoreException e) {
-				    GroovyCore.logException("Exception when initializing search assistant processors", e);
-				}
-			}
+		// might be null if no extensions are registered.
+		if (ep != null) {
+		    IExtension[] extensions = ep.getExtensions();
+		    for (int i = 0; i < extensions.length; i++) {
+		        IExtension extension = extensions[i];
+		        IConfigurationElement[] configElements = extension
+		        .getConfigurationElements();
+		        
+		        // First get all the contexts.
+		        for (int j = 0; j < configElements.length; j++) {
+		            try {
+		                IConfigurationElement element = configElements[j];
+		                if (element.getName().equals("searchContext")) {
+		                    IDeclarationSearchContext context = (IDeclarationSearchContext) element
+		                    .createExecutableExtension("class");
+		                    String contextId = element.getAttribute("contextId");
+		                    registerContext(contextId, context);
+		                }
+		            } catch (CoreException e) {
+		                GroovyCore.logException("Exception when initializing search assistant processors", e);
+		            }
+		        }
+		        
+		        // Now get all the processors.
+		        for (int j = 0; j < configElements.length; j++) {
+		            try {
+		                IConfigurationElement element = configElements[j];
+		                if (element.getName().equals("searchProcessor")) {
+		                    String contextId = element.getAttribute("contextId");
+		                    String astNodeClassName = element
+		                    .getAttribute("astNodeClass");
+		                    IDeclarationSearchProcessor processor = (IDeclarationSearchProcessor) element
+		                    .createExecutableExtension("class");
+		                    registerProcessor(contextId, astNodeClassName,
+		                            processor);
+		                }
+		            } catch (CoreException e) {
+		                GroovyCore.logException("Exception when initializing search assistant processors", e);
+		            }
+		        }
+		    }
+		    
 		}
 	}
 

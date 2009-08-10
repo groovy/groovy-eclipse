@@ -15,17 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.preferences;
 
-import org.eclipse.jface.preference.PreferencePage;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-public class GroovyPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
+public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
     public GroovyPreferencePage() {
+        super(GRID);
+        setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
     }
     
 
@@ -39,10 +39,19 @@ public class GroovyPreferencePage extends PreferencePage implements IWorkbenchPr
 
 
     @Override
-    protected Control createContents(Composite parent) {
-        Label messageLabel = new Label(parent, SWT.WRAP);
-        messageLabel.setText("Select a preference page below to configure Groovy preferences");
-        return messageLabel;
+    protected void createFieldEditors() {
+        // JUnit Monospace
+        final BooleanFieldEditor classFilePrefEditor = new BooleanFieldEditor(
+                PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
+                "&Use monospace font in the JUnit results pane.\n" +
+                "This is particularly useful for testing frameworks\n" +
+                "that use a formatted output such as Spock",
+                getFieldEditorParent());
+        classFilePrefEditor.setPreferenceStore(getPreferenceStore());
+        addField(classFilePrefEditor);
+        
     }
+    
+    
 
 }

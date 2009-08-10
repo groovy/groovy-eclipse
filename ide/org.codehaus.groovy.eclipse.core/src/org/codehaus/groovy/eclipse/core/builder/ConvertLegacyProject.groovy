@@ -16,6 +16,7 @@ import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.internal.events.BuildCommand;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
@@ -62,4 +63,8 @@ public class ConvertLegacyProject {
         project.setDescription(desc, null)
     }
     
+    IProject[] getAllOldProjects() {
+        IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+        projects.findAll
+    }
 }

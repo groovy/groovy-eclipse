@@ -163,11 +163,6 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 
 		addField(groovyDocLinkColor);
 
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_FOLDING_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_folding"), getFieldEditorParent())); //$NON-NLS-1$
-
 		Button javaColorButton = new Button(super.getFieldEditorParent(),
 				SWT.BUTTON1);
 

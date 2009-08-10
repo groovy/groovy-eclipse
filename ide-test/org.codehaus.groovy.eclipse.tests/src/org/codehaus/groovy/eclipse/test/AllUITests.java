@@ -28,6 +28,7 @@ import org.codehaus.groovy.eclipse.test.core.types.TypeEvaluatorTestCase;
 import org.codehaus.groovy.eclipse.test.core.util.ExpressionFinderTestCase;
 import org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests;
 import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
+import org.codehaus.groovy.eclipse.test.ui.ErrorLogTest;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
 import org.eclipse.core.runtime.FileLocator;
 import org.osgi.framework.Bundle;
@@ -56,6 +57,7 @@ public class AllUITests {
 		final TestSuite suite = new TestSuite("Test for "
 				+ AllUITests.class.getPackage().getName());
 		// $JUnit-BEGIN$
+		suite.addTestSuite(ErrorLogTest.class);
 		suite.addTestSuite(GroovyLaunchShortuctTestCase.class);
 		suite.addTestSuite(GroovyNatureActionTestCase.class);
 		suite.addTestSuite(GroovyFileAdapterFactoryTestCase.class);
