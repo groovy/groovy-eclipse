@@ -3,10 +3,8 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Groovy core plugin tests
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.tests;singleton:=true
 Bundle-Version: 2.0.0.qualifier
-Bundle-ClassPath: lib/utmj.jar,
- .
+Bundle-ClassPath: .
 Bundle-Activator: org.codehaus.groovy.eclipse.test.Activator
-Bundle-Localization: plugin
 Export-Package: org.codehaus.groovy.eclipse.test,
  org.codehaus.groovy.eclipse.test.actions,
  org.codehaus.groovy.eclipse.test.adapters

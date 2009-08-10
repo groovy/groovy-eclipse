@@ -44,6 +44,8 @@ public class ErrorLogTest extends TestCase {
     private static final String KNOWN_MSG2 = "The following is a complete list"; //$NON-NLS-1$
 
     private static final String KNOWN_MSG3 = "One or more bundles"; //$NON-NLS-1$
+    
+    private static final String KNOWN_MSG4 = "org.eclipse.equinox.p2.directorywatcher"; //$NON-NLS-1$
 
     private boolean matchesMsg1(String msg) {
         return msg.startsWith(KNOWN_MSG1);
@@ -55,6 +57,10 @@ public class ErrorLogTest extends TestCase {
 
     private boolean matchesMsg3(String msg) {
         return msg.startsWith(KNOWN_MSG3);
+    }
+
+    private boolean matchesMsg4(String msg) {
+        return msg.startsWith(KNOWN_MSG4);
     }
 
     public void testNoWarningsOnStartup() throws Exception {
@@ -71,7 +77,7 @@ public class ErrorLogTest extends TestCase {
                 if (entry.getSeverity() == IStatus.ERROR
                         || entry.getSeverity() == IStatus.WARNING) {
                     String msg = entry.getMessage();
-                    if (!matchesMsg2(msg) && !matchesMsg3(msg) && !matchesMsg1(msg)) {
+                    if (!matchesMsg1(msg) && !matchesMsg2(msg) && !matchesMsg3(msg) && !matchesMsg4(msg)) {
                         // ignore messages about missing bundles that are not from Groovy
                         errorsAndWarnings.add(logs[i]);
                     }
