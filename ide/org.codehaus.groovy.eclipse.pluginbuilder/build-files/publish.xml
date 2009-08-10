@@ -24,7 +24,10 @@
 			</fileset>
 		</delete>
 
-  	<copy dir="${buildDirectory}/updateSite" todir="${publishLocation}"/>
+  	<copy todir="${publishLocation}">
+  		<fileset dir="${buildDirectory}/updateSite">
+  		</fileset>
+  	</copy>
   	<copy file="${buildDirectory}/finalPluginsVersions.properties" todir="${publishLocation}"/>
   </target>
 
