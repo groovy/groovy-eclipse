@@ -140,7 +140,7 @@ public class LocalVariableProcessor extends AbstractGroovyCompletionProcessor {
             String replaceName = nameType.getKey();
             CompletionProposal proposal = CompletionProposal.create(CompletionProposal.LOCAL_VARIABLE_REF, offset);
             proposal.setCompletion(replaceName.toCharArray());
-            proposal.setReplaceRange(offset - replaceLength, offset);
+            proposal.setReplaceRange(offset, offset + replaceLength);
             proposal.setSignature(Signature.createTypeSignature(nameType.getValue().getName(), true).toCharArray());
             
             proposals.add(new LazyJavaCompletionProposal(proposal, context));

@@ -168,14 +168,6 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+I">
       </key>
-<!--
-      <key
-            commandId="org.codehaus.groovy.eclipse.refactoring.typehierarchy"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="F4">
-      </key>
--->
    </extension>
       <extension
          point="org.eclipse.ltk.core.refactoring.renameParticipants">
@@ -199,8 +191,8 @@
                id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring"
                targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor">
             <menu
-                  id="org.codehaus.groovy.eclipse.refactoring.refactoringMenue"
-                  label="Refac&amp;tor"
+                  id="org.codehaus.groovy.eclipse.refactoring.refactoringMenu"
+                  label="Groovy Refac&amp;tor"
                   path="edit">
                <groupMarker
                      name="content">
@@ -211,7 +203,7 @@
             </menu>
             <menu
                   id="org.codehaus.groovy.eclipse.refactoring.format"
-                  label="Format"
+                  label="Groovy Format"
                   path="edit">
                <groupMarker
                      name="content">
@@ -225,21 +217,21 @@
                   definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
                   id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
                   label="Inline Method..."
-                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenue/content">
+                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content">
             </action>
             <action
                   class="org.codehaus.groovy.eclipse.refactoring.popup.actions.ExtractMethodAction"
                   definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
                   id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
                   label="Extract Method..."
-                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenue/content">
+                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content">
             </action>
             <action
                   class="org.codehaus.groovy.eclipse.refactoring.popup.actions.RenameDispatcherAction"
                   definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
                   id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
                   label="Rename..."
-                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenue/content">
+                  menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content">
             </action>
             <action
                class="org.codehaus.groovy.eclipse.refactoring.popup.actions.FormatAction"

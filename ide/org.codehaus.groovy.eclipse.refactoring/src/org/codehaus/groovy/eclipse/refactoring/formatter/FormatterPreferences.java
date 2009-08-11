@@ -19,7 +19,7 @@
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
 import org.codehaus.groovy.eclipse.refactoring.preferences.PreferenceConstants;
-import org.eclipse.core.runtime.Preferences;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * @author Mike Klenk mklenk@hsr.ch
@@ -41,7 +41,7 @@ public class FormatterPreferences {
 	public int maxLineLength = 80;
 
 	
-	public FormatterPreferences(Preferences preferences) {
+	public FormatterPreferences(IPreferenceStore preferences) {
 		
 		if(preferences != null) {
 		String pTab = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_INDENTATION);

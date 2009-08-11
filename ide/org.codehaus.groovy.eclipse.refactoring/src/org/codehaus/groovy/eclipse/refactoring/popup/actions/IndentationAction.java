@@ -29,10 +29,10 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
@@ -50,7 +50,8 @@ public class IndentationAction extends EditingAction {
 		
 
 		if(initFormatting()) {			
-			Preferences preferences = GroovyPlugin.getDefault().getPluginPreferences();
+            IPreferenceStore preferences = GroovyPlugin.getDefault()
+                    .getPreferenceStore();
 			DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(getTextSelection(),getDocument(), preferences, true);
 			formatter.format().apply(getDocument());
 		}

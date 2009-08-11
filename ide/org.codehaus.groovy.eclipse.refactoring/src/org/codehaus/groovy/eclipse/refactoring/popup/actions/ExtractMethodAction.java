@@ -24,13 +24,15 @@ import org.codehaus.groovy.eclipse.refactoring.core.extractMethod.ExtractMethodP
 import org.codehaus.groovy.eclipse.refactoring.core.extractMethod.ExtractMethodInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.extractMethod.ExtractMethodRefactoring;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 public class ExtractMethodAction extends GroovyRefactoringAction {
 
 	public void run(IAction action) {
 
 		if (initRefactoring()) {
-			ExtractMethodProvider extractMethodProvider = new ExtractMethodProvider(docProvider, selection, GroovyPlugin.getDefault().getPluginPreferences());
+		    IPreferenceStore preferences = GroovyPlugin.getDefault().getPreferenceStore();
+			ExtractMethodProvider extractMethodProvider = new ExtractMethodProvider(docProvider, selection, preferences);
 			ExtractMethodInfo info = new ExtractMethodInfo(extractMethodProvider);
 			GroovyRefactoring groovyRefactoring = new ExtractMethodRefactoring(info);
 			openRefactoringWizard(groovyRefactoring);

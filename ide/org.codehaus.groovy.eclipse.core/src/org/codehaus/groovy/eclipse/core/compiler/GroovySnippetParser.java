@@ -11,39 +11,67 @@
 
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
-import org.eclipse.jdt.internal.core.builder.NameEnvironment;
+import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.objectweb.asm.Opcodes;
 
 
 /**
  * @author Andrew Eisenberg
- * @created Aug 6, 2009
+ * @created Aug 11, 2009
  *
  *
- * This class is used to compile a snippet of groovy source code into a module node
+ * This class is used to parse a snippet of groovy source code into a module node
+ * The module node is not resolved
  */
-public class GroovySnippetCompiler {
+public class GroovySnippetParser {
+    
+    private static class MockCompilationUnit implements ICompilationUnit {
+        
+        private char[] contents;
+        private char[] fileName;
+
+        MockCompilationUnit(char[] contents, char[] fileName) {
+            this.contents = contents;
+            this.fileName = fileName;
+        }
+        
+        public char[] getContents() {
+            return contents;
+        }
+
+        public char[] getMainTypeName() {
+            return new char[0];
+        }
+
+        public char[][] getPackageName() {
+            return new char[0][];
+        }
+
+        public char[] getFileName() {
+            return fileName;
+        }
+        
+    }
     
     /**
      * 
      * @author Andrew Eisenberg
-     * @created Aug 6, 2009
+     * @created Aug 11, 2009
      * Provide an empty requestor, no compilation results required
      */
     private static class Requestor implements ICompilerRequestor {
@@ -53,11 +81,6 @@ public class GroovySnippetCompiler {
     
 
     
-    private final GroovyProjectFacade project;
-    
-    public GroovySnippetCompiler(GroovyProjectFacade project) {
-        this.project = project;
-    }
     
     /**
      * Compiles source code into a ModuleNode.  Source code 
@@ -65,27 +88,23 @@ public class GroovySnippetCompiler {
      * and import statements.
      * 
      * @param source the groovy source code to compile
-     * @param sourcePath the path including file name to compile.  Can be null
      */
-    public ModuleNode compile(String source, String sourcePath) {
-        if (sourcePath == null) {
-            sourcePath = "Nothing.groovy";
-        } else if (! ContentTypeUtils.isGroovyLikeFileName(sourcePath)) {
-            sourcePath = sourcePath.concat(".groovy");
-        }
+    public ModuleNode parse(String source) {
         
-        sourcePath = sourcePath.concat(".groovy");
-        Map options = JavaCore.getOptions();
-        options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        Compiler compiler = new Compiler(
-                new NameEnvironment(project.getProject()), 
-                DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-                options, 
-                new Requestor(), 
+        Hashtable table = JavaCore.getOptions();
+        table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+        CompilerOptions options = new CompilerOptions(table);
+        ProblemReporter reporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
                 new DefaultProblemFactory());
+
+        GroovyParser parser = new GroovyParser(null, reporter);
+        ICompilationUnit unit = new MockCompilationUnit(source.toCharArray(), "Hello.groovy".toCharArray());
+        CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
+
+        
         GroovyCompilationUnitDeclaration decl =
             (GroovyCompilationUnitDeclaration)
-            compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);
+            parser.dietParse(unit, compilationResult);
         ModuleNode node = decl.getModuleNode();
         
         // Remove any remaining synthetic methods
@@ -98,14 +117,5 @@ public class GroovySnippetCompiler {
             }
         }
         return node;
-    }
-    
-
-    /**
-     * Compile source code into a module node when
-     * there is no file name
-     */
-    public ModuleNode compile(String source) {
-        return compile(source, null);
     }
 }

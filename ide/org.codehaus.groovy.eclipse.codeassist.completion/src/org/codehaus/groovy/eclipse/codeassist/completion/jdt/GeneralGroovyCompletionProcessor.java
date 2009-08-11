@@ -43,7 +43,6 @@ import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
-import org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.ParameterGuessingProposal;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext;
@@ -167,7 +166,6 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
 			            name + "." + expression);
 			}
 		}
-		
 		return results;
 	}
 
@@ -220,23 +218,24 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
 		for (int i = 0; i < methods.length; ++i) {
 			String replaceString = createReplaceString(methods[i]);
 			if (replaceString.indexOf('$') == -1) {
-                CompletionProposal proposal = CompletionProposal.create(CompletionProposal.METHOD_REF, offset);
+                CompletionProposal proposal = CompletionProposal.create(CompletionProposal.METHOD_REF, offset+replaceLength);
                 proposal.setCompletion(replaceString.toCharArray());
                 proposal.setDeclarationSignature(new char[0]);
                 proposal.setDeclarationSignature(getTypeSignature(methods[i].getDeclaringClass().getSignature()).toCharArray());
                 proposal.setName(methods[i].getName().toCharArray());
                 proposal.setParameterNames(createParameterNames((Method) methods[i]));
                 ReflectionUtils.setPrivateField(InternalCompletionProposal.class, "parameterTypeNames", proposal, createParameterTypeNames(methods[i]));
-                proposal.setReplaceRange(offset - replaceLength, offset);
+                proposal.setReplaceRange(offset, offset + replaceLength);
                 proposal.setFlags(methods[i].getModifiers());
                 proposal.setKey(methods[i].getSignature().toCharArray());
                 proposal.setAdditionalFlags(CompletionFlags.Default);
                 proposal.setSignature(getMethodSignature(methods[i]));  // this one might be a real type signature
                 proposal.setRelevance(getRelevance(proposal.getName()));  // should set lower
-                if (isGuessArguments) {
+                if (false) {
+//                if (isGuessArguments) {
                     proposals.add(ParameterGuessingProposal.createProposal(proposal, javaContext, isGuessArguments));
                 } else {
-                    proposals.add(new JavaMethodCompletionProposal(proposal, javaContext));
+                    proposals.add(new GroovyMethodCompletionProposal(proposal, javaContext));
                 }
 			}
 		}
@@ -275,7 +274,16 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
 
     private String getTypeSignature(String typeName) {
         String typeSig;
-        if (typeName.startsWith("[") || typeName.startsWith("L")) {  // XXX ACK!!! what if the name really starts with L?
+        // check to see if we have a type signature, or a type name
+        boolean isTypeSignature;
+        try {
+            Signature.getSignatureSimpleName(typeName);
+            isTypeSignature = true;
+        } catch (IllegalArgumentException e) {
+            isTypeSignature = false;
+        }
+        
+        if (isTypeSignature) {  
             typeSig = typeName;
         } else {
             typeSig = Signature.createTypeSignature(typeName, false);

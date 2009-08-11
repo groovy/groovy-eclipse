@@ -39,7 +39,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.IncludesClosurePredicate;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.SourceCodePredicate;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
-import org.eclipse.core.runtime.Preferences;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -77,7 +77,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	 * @param indentendOnly if true, the code will only be indentended not formatted
 	 */
 	public DefaultGroovyFormatter(ITextSelection sel, IDocument doc,
-			Preferences preferences, boolean indentendOnly) {
+			IPreferenceStore preferences, boolean indentendOnly) {
 		super(sel, doc);
 		this.indentendOnly = indentendOnly;
 		pref = new FormatterPreferences(preferences);
@@ -91,7 +91,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 		}
 	}
 	public DefaultGroovyFormatter(IDocument doc,
-			Preferences preferences, int indentationLevel) {
+	        IPreferenceStore preferences, int indentationLevel) {
 		this(new TextSelection(0,0),doc,preferences,true);
 		this.indentationLevel = indentationLevel;
 	}

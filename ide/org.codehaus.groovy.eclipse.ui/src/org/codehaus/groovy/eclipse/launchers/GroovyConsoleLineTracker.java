@@ -55,8 +55,7 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
 //			int closeParenIndexAt = -1;
 			// match
 			if (m.matches()) {
-			    
-//			    throw new RuntimeException("Not implemented yet");
+			    System.out.println("match: " + m);
 			    
 //				consoleLine = m.group(0);
 //				openParenIndexAt = consoleLine.indexOf("(");

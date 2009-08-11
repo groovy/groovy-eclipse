@@ -18,16 +18,16 @@
  */
 package core;
 
-import org.codehaus.groovy.eclipse.test.TestProject;
-import org.eclipse.core.runtime.CoreException;
-
 import formatter.FormatterTestSuite;
 import inlineMethod.InlineMethodTestSuite;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.codehaus.groovy.eclipse.test.TestProject;
+import org.eclipse.core.runtime.CoreException;
+
 import rename.RenameTestSuite;
-import tests.ASTBuilderTest;
 import tests.ASTToolsTest;
 import tests.FilePartReaderTest;
 import tests.GroovyConventionBuilderTest;
@@ -58,7 +58,6 @@ public class RefactoringTests extends TestCase {
 	         suite.addTestSuite(GroovyConventionBuilderTest.class);
 	         suite.addTestSuite(SourceCodePointTest.class);
 	         suite.addTestSuite(ASTToolsTest.class);
-	         suite.addTestSuite(ASTBuilderTest.class);
 	         suite.addTest(RenameTestSuite.suite());
 	         suite.addTest(FormatterTestSuite.suite());
 	         suite.addTestSuite(HierarchyTreeTestCase.class);

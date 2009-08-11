@@ -22,6 +22,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -49,7 +50,7 @@ import org.codehaus.groovy.syntax.Types;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Preferences;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -84,7 +85,7 @@ public class ExtractMethodProvider extends SingleFileRefactoringProvider {
 	private Document codeOfTheNewMethod;
 	private Map<String, String> variablesToRename;
 	
-	protected Preferences pref;
+	protected IPreferenceStore pref;
 
 	
 
@@ -92,7 +93,7 @@ public class ExtractMethodProvider extends SingleFileRefactoringProvider {
 	 * @param docProvider
 	 * @param selection
 	 */
-	public ExtractMethodProvider(IGroovyDocumentProvider docProvider, UserSelection selection, Preferences preferences) {
+	public ExtractMethodProvider(IGroovyDocumentProvider docProvider, UserSelection selection, IPreferenceStore preferences) {
 		super(docProvider, selection);
 		pref = preferences;
 		methodCode = new StatementFinder(getSelection(), getDocument(), getRootNode());

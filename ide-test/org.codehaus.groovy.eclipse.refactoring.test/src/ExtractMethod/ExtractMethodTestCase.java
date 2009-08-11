@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Preferences;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.objectweb.asm.Opcodes;
 import tests.RefactoringTestCase;
@@ -48,7 +49,7 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
 	
 	@Override
     public void preAction() {
-		Preferences pref = TestPrefInitializer.initializePreferences(properties);
+		IPreferenceStore pref = TestPrefInitializer.initializePreferences(properties);
 		ExtractMethodProvider provider = new ExtractMethodProvider(getDocumentProvider(),selection,pref);
 		info = new ExtractMethodInfo(provider);
 	}

@@ -79,7 +79,6 @@ public class GroovyCompiler implements IGroovyCompiler {
     /**
      * Reporter that will collect CST errors when error recovery is active.
      */
-    @SuppressWarnings("unchecked")
     static class CSTReporter implements ICSTReporter {
         final Map<String, GroovySourceAST> mapFileNameToCST = newMap();
 
@@ -518,7 +517,6 @@ public class GroovyCompiler implements IGroovyCompiler {
      * @param e
      * @return A mapping from a file name to a list of exceptions.
      */
-    @SuppressWarnings("unchecked")
     private static Map mapFileNamesToExceptions(final String[] fileNames,
             final MultipleCompilationErrorsException e) {
         final Map<String, List<Exception>> mapFileNamesToExceptions = newMap();

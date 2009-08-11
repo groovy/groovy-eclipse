@@ -48,11 +48,11 @@ public class ImportResolver {
 	    		}
 	    	}
 	    	//check if class is imported as package like foo.* and class is in package foo
-	    	List<String> packageImports = root.getImportPackages();
-	    	for (String packageName : packageImports) {
+	    	List<ImportNode> packageImports = root.getStarImports();
+	    	for (ImportNode packageName : packageImports) {
 	    		//if Class is imported write class without package
 	    		String classPackage = classType.getPackageName() + ".";
-	    		if (packageName.equals(classPackage)) {
+	    		if (packageName.getPackageName().equals(classPackage)) {
 	    			return classType.getNameWithoutPackage();
 	    		}
 	    	}

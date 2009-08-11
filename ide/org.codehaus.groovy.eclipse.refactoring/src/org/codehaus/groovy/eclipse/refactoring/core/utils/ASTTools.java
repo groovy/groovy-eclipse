@@ -31,6 +31,8 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.compiler.GroovyCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.GroovyCompilerConfigurationBuilder;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
 import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilerConfiguration;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
@@ -257,12 +259,9 @@ public class ASTTools {
 	}
 	
 	public static ModuleNode getASTNodeFromSource(String source) {
-		ByteArrayInputStream is = new ByteArrayInputStream(source.getBytes());
-		GroovyCompilationReporter reporter = new GroovyCompilationReporter();
-		IGroovyCompiler compiler = new GroovyCompiler();
-		IGroovyCompilerConfiguration config = new GroovyCompilerConfigurationBuilder().buildAST().doNotResolveAST().done();
-		compiler.compile("", is, config, reporter);
-		return reporter.moduleNode;
+		GroovySnippetParser parser = new GroovySnippetParser();
+		ModuleNode node = parser.parse(source);
+		return node;
 	}
 	
 	public static boolean hasMultipleReturnStatements(Statement statement) {

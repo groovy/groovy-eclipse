@@ -18,15 +18,17 @@
  */
 package formatter;
 
-import core.TestPrefInitializer;
 import java.io.File;
+
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
-import org.eclipse.core.runtime.Preferences;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.text.edits.MalformedTreeException;
+
 import tests.BaseTestCase;
+import core.TestPrefInitializer;
 
 /**
  * Test Case to test the Groovy Formatter
@@ -52,7 +54,7 @@ public class FormatterTestCase extends BaseTestCase {
 		}
 		
 		boolean indentendOnly = false;
-		Preferences pref = null;
+		IPreferenceStore pref = null;
 
 		if (properties.get("setPreferences") != null && properties.get("setPreferences").equals("true")) {
 			try {

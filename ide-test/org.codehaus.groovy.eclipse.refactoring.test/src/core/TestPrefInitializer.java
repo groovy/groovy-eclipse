@@ -22,7 +22,8 @@ package core;
 import java.util.HashMap;
 
 import org.codehaus.groovy.eclipse.refactoring.preferences.PreferenceConstants;
-import org.eclipse.core.runtime.Preferences;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceStore;
 
 /**
  * 
@@ -30,8 +31,8 @@ import org.eclipse.core.runtime.Preferences;
  */
 public class TestPrefInitializer {
 	
-	public static Preferences initializePreferences(HashMap<String, String> properties) {
-		Preferences pref = new Preferences();
+	public static IPreferenceStore initializePreferences(HashMap<String, String> properties) {
+	    IPreferenceStore pref = new PreferenceStore();
 		
 		String ind = properties.get("indentation");
 		if(ind != null)

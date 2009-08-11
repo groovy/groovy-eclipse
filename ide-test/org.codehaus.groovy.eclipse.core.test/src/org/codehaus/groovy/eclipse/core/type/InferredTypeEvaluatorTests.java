@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.CoreTestsActivator;
 import org.codehaus.groovy.eclipse.core.compiler.GroovyCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.GroovyCompilerConfigurationBuilder;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilationReporter;
 import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilerConfiguration;
@@ -250,12 +251,8 @@ public class InferredTypeEvaluatorTests extends EclipseTestCase {
 	}
 
 	private ModuleNode compileTestSource() {
-		ByteArrayInputStream is = new ByteArrayInputStream(sourceCode.getBytes());
-		TestCompilationReporter reporter = new TestCompilationReporter();
-		IGroovyCompiler compiler = new GroovyCompiler();
-		IGroovyCompilerConfiguration config = new GroovyCompilerConfigurationBuilder().buildAST().done();
-		compiler.compile("ContextTestCode.groovy", is, config, reporter);
-		return reporter.moduleNode;
+	    GroovySnippetCompiler compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade());
+	    return compiler.compile(sourceCode, "ContextTestCode.groovy");
 	}
 
 	@Override

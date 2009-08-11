@@ -39,11 +39,14 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.CoreTestsActivator;
 import org.codehaus.groovy.eclipse.core.compiler.GroovyCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.GroovyCompilerConfigurationBuilder;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
 import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilationReporter;
 import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilerConfiguration;
 import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext;
 import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
+import org.codehaus.groovy.eclipse.test.TestProject;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -198,12 +201,8 @@ public abstract class GroovyContextFactoryTests extends TestCase {
 	}
 
 	private ModuleNode compileTestSource() {
-		ByteArrayInputStream is = new ByteArrayInputStream(sourceCode.getBytes());
-		TestCompilationReporter reporter = new TestCompilationReporter();
-		IGroovyCompiler compiler = new GroovyCompiler();
-		IGroovyCompilerConfiguration config = new GroovyCompilerConfigurationBuilder().buildAST().done();
-		compiler.compile("ContextTestCode.groovy", is, config, reporter);
-		return reporter.moduleNode;
+		GroovySnippetParser parser = new GroovySnippetParser();
+		return parser.parse(sourceCode);
 	}
 	
 	protected void setSourceCode(String sourceCode) throws Exception {

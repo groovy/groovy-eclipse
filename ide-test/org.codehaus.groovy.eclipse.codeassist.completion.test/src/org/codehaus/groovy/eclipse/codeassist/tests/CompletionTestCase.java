@@ -29,6 +29,7 @@ import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -147,6 +148,27 @@ public abstract class CompletionTestCase extends BuilderTests {
         }
     }
     
+    protected void checkReplacementString(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
+        int foundCount = 0;
+        for (ICompletionProposal proposal : proposals) {
+            AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
+            String replacement = javaProposal.getReplacementString();
+            if (replacement.equals(expectedReplacement)) {
+                foundCount ++;
+            }
+        }
+        
+        if (foundCount != expectedCount) {
+            StringBuffer sb = new StringBuffer();
+            for (ICompletionProposal proposal : proposals) {
+                AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
+                sb.append("\n" + javaProposal.getReplacementString());
+            }
+            fail("Expected to find proposal '" + expectedReplacement + "' " + expectedCount + " times, but found it " + foundCount + " times.\nAll Proposals:" + sb);
+        }
+    }
+
+    
     protected void validateProposal(CompletionProposal proposal, String name) {
         assertEquals(proposal.getName(), name);
     }
@@ -154,12 +176,4 @@ public abstract class CompletionTestCase extends BuilderTests {
     protected int getIndexOf(String contents, String lookFor) {
         return contents.indexOf(lookFor)+lookFor.length();
     }
-
-    
-    private IContentAssistant getContentAssistant(ISourceViewer viewer) throws Exception {
-        Field fContentAssistant = SourceViewer.class.getDeclaredField("fContentAssistant");
-        fContentAssistant.setAccessible(true);
-        return (IContentAssistant) fContentAssistant.get(viewer);
-    }
-
 }
