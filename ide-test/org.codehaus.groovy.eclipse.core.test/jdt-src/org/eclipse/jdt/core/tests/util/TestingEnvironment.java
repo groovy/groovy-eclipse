@@ -1176,8 +1176,8 @@ public void cleanBuild() {
         addExternalJar(projectPath, FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar")).getFile());
         addExternalJar(projectPath, FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar")).getFile());
     }   
-    public void addJUnitJar(IPath projectPath) throws JavaModelException {
-        addExternalJar(projectPath,new java.io.File("../org.codehaus.groovy.eclipse.tests/lib/junit-4.3.1.jar").getAbsolutePath());
+    public void addJUnitJar(IPath projectPath) throws Exception {
+        addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.codehaus.groovy.eclipse.core.test").getEntry("lib/junit-4.3.1.jar")).getFile());
     }   
     
 }

@@ -144,6 +144,13 @@ public abstract class GroovyContextFactoryTests extends TestCase {
 	// Mapping from test case method name to an array of line/column info.
 	Map<String, RegionInfo[]> mapTestCaseNameToLineColInfos;
 
+	@Override
+	protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+	    super.setUp();
+	}
+	
 	void checkContextCount(String testName, Class countContextClass) {
 		StringSourceBuffer buffer = new StringSourceBuffer(sourceCode);
 		SourceCodeContextFactory factory = new SourceCodeContextFactory();

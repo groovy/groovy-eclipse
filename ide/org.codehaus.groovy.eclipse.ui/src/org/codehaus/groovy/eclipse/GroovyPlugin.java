@@ -214,10 +214,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
     }
 	
 
-    public IPreferenceStore getPreferenceStore() {
-        return super.getPreferenceStore();
-    }
-    
 	public IWorkbenchPage getActivePage() {
 		IWorkbenchWindow window= getWorkbench().getActiveWorkbenchWindow();
 		if (window == null) {

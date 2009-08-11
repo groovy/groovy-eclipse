@@ -26,6 +26,13 @@ import junit.framework.*;
  */
 public class ExpressionFinderTestCase extends TestCase {
 
+    @Override
+    protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+        super.setUp();
+    }
+    
 	public void test_identifierExpression() throws Exception {
 		ExpressionFinder finder = new ExpressionFinder();
 		String source = "class Test { public testFunction() { bbbb. } }";

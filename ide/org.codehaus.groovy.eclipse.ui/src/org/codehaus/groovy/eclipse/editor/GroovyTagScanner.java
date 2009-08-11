@@ -219,7 +219,7 @@ public class GroovyTagScanner extends RuleBasedScanner {
 		
 		},plainCode); 
 		// add gjdk to the java keyword rule
-		Preferences prefs = GroovyPlugin.getDefault().getPluginPreferences();
+		IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
 		IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED)) {
 			RGB gjdkRGB = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);

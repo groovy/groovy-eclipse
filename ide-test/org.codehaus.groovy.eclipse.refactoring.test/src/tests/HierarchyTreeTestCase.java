@@ -39,6 +39,8 @@ public class HierarchyTreeTestCase extends TestCase {
 
 	@Override
     protected void setUp(){
+	    System.out.println("------------------------------");
+	    System.out.println("Starting: " + getName());
 		try {
 			super.setUp();
 		} catch (Exception e) {

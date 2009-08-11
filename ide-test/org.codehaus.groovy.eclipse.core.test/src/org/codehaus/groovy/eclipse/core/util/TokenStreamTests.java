@@ -43,6 +43,13 @@ public class TokenStreamTests extends TestCase {
 	
 	static int LINE_BREAK = Token.LINE_BREAK;
 
+	@Override
+	protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+	    super.setUp();
+	}
+	
 	void doTest(String sample, int off, int[] expected) {
 	    int offset = off;
 		if (offset == -1) {

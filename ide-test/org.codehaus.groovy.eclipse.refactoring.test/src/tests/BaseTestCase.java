@@ -19,8 +19,6 @@
  */
 package tests;
 
-import core.SelectionHelper;
-import core.TestDocumentProvider;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -28,15 +26,18 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import junit.framework.TestCase;
+
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
-import org.codehaus.groovy.eclipse.test.TestProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
+
+import core.SelectionHelper;
+import core.TestDocumentProvider;
 
 /**
 * @autor Michael Klenk mklenk@hsr.ch

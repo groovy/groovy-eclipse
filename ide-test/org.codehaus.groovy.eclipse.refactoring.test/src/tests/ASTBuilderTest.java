@@ -31,7 +31,14 @@ import junit.framework.TestCase;
 public class ASTBuilderTest extends TestCase{
 	
 	private final static String GROOVY_CODE = "def a = new unknownClass()";
-	
+
+	@Override
+    protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+        super.setUp();
+    }
+
 	private void generateAST(IGroovyCompilerConfiguration config){
 		ByteArrayInputStream is = new ByteArrayInputStream(GROOVY_CODE.getBytes());
 		GroovyCompilationReporter reporter = new GroovyCompilationReporter();

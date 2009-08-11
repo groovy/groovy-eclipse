@@ -36,6 +36,13 @@ import org.eclipse.jface.text.Document;
  */
 public class ASTToolsTest extends TestCase {
 
+    @Override
+    protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+        super.setUp();
+    }
+
 	/**
 	 * Test method for {@link org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools#getPositionOfBlockStatements(org.codehaus.groovy.ast.stmt.BlockStatement, org.eclipse.jface.text.IDocument)}.
 	 */

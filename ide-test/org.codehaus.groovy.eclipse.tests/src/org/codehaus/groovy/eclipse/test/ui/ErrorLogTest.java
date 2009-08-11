@@ -35,13 +35,20 @@ import org.eclipse.ui.internal.views.log.LogView;
  */
 public class ErrorLogTest extends TestCase {
 
+    @Override
+    protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+        super.setUp();
+    }
+
     private static final String[] KNOWN_MSGS = new String[] { 
         "Could not locate the running profile instance.",
         "The following is a complete list",
         "One or more bundles",
-        "org.eclipse.equinox.p2.directorywatcher",
         "Monitor UI start failed",
         "was not resolved",
+        "org.eclipse.test.performance.win32.translated_host_properties"
     };
     
     private boolean canIgnoreMessage(String msg) {

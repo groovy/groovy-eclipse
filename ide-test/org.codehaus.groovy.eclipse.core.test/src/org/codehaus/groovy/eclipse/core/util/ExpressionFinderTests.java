@@ -23,6 +23,13 @@ import org.codehaus.groovy.eclipse.core.util.TokenStreamException;
 import junit.framework.TestCase;
 
 public class ExpressionFinderTests extends TestCase {
+    
+    @Override
+    protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+        super.setUp();
+    }
 	/**
 	 * Tests the given expression, assuming the cursor is at end if the test string.
 	 * 

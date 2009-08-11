@@ -31,8 +31,10 @@ public class SourceCodePointTest extends TestCase {
 
 	@Override
     protected void setUp() throws Exception {
+	    System.out.println("------------------------------");
+	    System.out.println("Starting: " + getName());
 		super.setUp();
-		 document = new Document("My Document\nToTest");
+		document = new Document("My Document\nToTest");
 
 	}
 

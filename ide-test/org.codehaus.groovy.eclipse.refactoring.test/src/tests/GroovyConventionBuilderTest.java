@@ -33,6 +33,12 @@ import org.eclipse.core.runtime.IStatus;
  */
 public class GroovyConventionBuilderTest extends TestCase {
 	
+    @Override
+    protected void setUp() throws Exception {
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+        super.setUp();
+    }
 
 	public void testValidateEmptyName() {
 		assertTrue("Empty name returns not an Error",new GroovyConventionsBuilder("",null).done().matches(IStatus.ERROR));

@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.junit.ui.FailureTrace;
 import org.eclipse.jdt.internal.junit.ui.TestRunnerViewPart;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -78,7 +79,7 @@ public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener 
 
     private boolean isMonospace() {
         try {
-            Preferences prefs = GroovyPlugin.getDefault().getPluginPreferences();
+            IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
             return prefs.getBoolean(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT);
         } catch (Exception e) {
             return false;

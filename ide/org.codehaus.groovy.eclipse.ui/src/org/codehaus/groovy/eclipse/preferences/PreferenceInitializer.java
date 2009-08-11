@@ -100,5 +100,73 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
                 false);
     }
+    
+    public void reset() {
+        IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
+
+        store.setValue(PreferenceConstants.GROOVY_LOG_TRACE_MESSAGES_ENABLED,
+                false);
+
+        // GJDK Prefs
+        store.setValue(
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED, true);
+        PreferenceConverter.setValue(store,
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
+                new RGB(102, 204, 255));
+
+        // Multiline Comment Prefs
+        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED,
+                         true);
+        PreferenceConverter
+                .setValue(
+                        store,
+                        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR,
+                        new RGB(204, 0, 0));
+
+        // Java Keyword Prefs
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED,
+                         true);
+        PreferenceConverter.setValue(store,
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
+                new RGB(151, 44, 120));
+
+        // Groovy Keyword Prefs
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED,
+                         true);
+        PreferenceConverter
+                .setValue(
+                        store,
+                        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
+                        new RGB(151, 44, 120));
+
+        // Java Types Prefs
+        store.setValue(
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_ENABLED,
+                true);
+        PreferenceConverter.setValue(store,
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
+                new RGB(151, 44, 120));
+
+        // String Prefs
+        store.setValue(
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED,
+                true);
+        PreferenceConverter.setValue(store,
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
+                new RGB(255, 0, 204));
+
+        // Number Prefs
+        store.setValue(
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED,
+                true);
+        PreferenceConverter.setValue(store,
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
+                new RGB(205, 50, 0));
+        
+        // JUnit Monospace font
+        store.setValue(
+                PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
+                false);
+    }
 
 }

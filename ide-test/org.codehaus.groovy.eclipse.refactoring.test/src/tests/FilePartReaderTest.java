@@ -32,10 +32,12 @@ public class FilePartReaderTest extends TestCase {
 	
 	@Override
 	protected void setUp() throws Exception {
+	    System.out.println("------------------------------");
+	    System.out.println("Starting: " + getName());
 		super.setUp();
 		doc = new Document(words);
 	}
-	
+
 	public void testReadForward() {
 		String word;
 		word = FilePartReader.readForwardFromCoordinate(doc, new LineColumn(1,5));
