@@ -11,15 +11,15 @@
   	-->
   	
   	<mkdir dir="${publishLocation}/old"/>
-  	<zip destfile="archive-${org.codehaus.groovy.eclipse.ui}.zip">
+  	<zip destfile="${publishLocation}/old/archive-${org.codehaus.groovy.eclipse.ui}.zip">
   		<zipfileset dir="${publishLocation}">
   			 <include name="**/*"/>
   			 <exclude name="old"/>
   		</zipfileset>
   	</zip>
+
   	<delete>
 			<fileset dir="${publishLocation}">
-			    <include name="**/*"/>
 			    <exclude name="old"/>
 			</fileset>
 		</delete>
