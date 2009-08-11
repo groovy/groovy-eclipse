@@ -77,7 +77,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 true);
         PreferenceConverter.setDefault(store,
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
-                new RGB(0, 153, 255));
+                new RGB(151, 44, 120));
 
         // String Prefs
         store.setDefault(

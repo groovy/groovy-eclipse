@@ -62,7 +62,7 @@ public class GroovyTagScannerTests extends TestCase {
         tryString("def", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR);
     }
     public void testJavaColor() throws Exception {
-        tryString("boolean", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
+        tryString("int", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
     }
     public void testStringColor() throws Exception {
         tryString("/fafdsads adsfds/", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);

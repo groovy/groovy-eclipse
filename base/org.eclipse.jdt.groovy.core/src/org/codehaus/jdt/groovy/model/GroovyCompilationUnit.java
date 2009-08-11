@@ -348,12 +348,17 @@ public class GroovyCompilationUnit extends CompilationUnit {
 					throw e;
 				} catch (IllegalArgumentException e) {
 					// if necessary, we can do some better reporting here.
-					Util.log(e, "Problem with build structure: Offset for AST node is incorrect in "
-							+ this.getParent().getElementName() + "." + getElementName());
+					Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " //$NON-NLS-1$
+							+ this.getParent().getElementName() + "." + getElementName()); //$NON-NLS-1$
 				} catch (Exception e) {
-					Util.log(e, "Problem with build structure"); //$NON-NLS-1$
+					Util.log(e, "Problem with build structure for " + this.getElementName()); //$NON-NLS-1$
 				}
 			}
+		} catch (Exception e) {
+			// GROOVY: The groovy compiler does not handle broken code well in many situations
+			// use this general catch clause so that exceptions thrown by broken code
+			// do not bubble up the stack.
+			Util.log(e, "Problem with build structure for " + this.getElementName()); //$NON-NLS-1$
 		} finally {
 			if (compilationUnitDeclaration != null) {
 				compilationUnitDeclaration.cleanUp();
