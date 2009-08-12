@@ -15,13 +15,14 @@
   		<zipfileset dir="${publishLocation}">
   			 <include name="**/*"/>
   			 <exclude name="old"/>
+		    <exclude name="old/*"/>
   		</zipfileset>
   	</zip>
 
   	<delete verbose="true">
 			<fileset dir="${publishLocation}">
 			    <exclude name="old"/>
-			    <exclude name="old/**/*"/>
+			    <exclude name="old/*"/>
 			</fileset>
 		</delete>
 
