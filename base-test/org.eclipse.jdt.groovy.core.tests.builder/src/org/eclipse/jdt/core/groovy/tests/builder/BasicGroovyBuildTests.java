@@ -118,11 +118,11 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"  }\n"+
 				"}\n");
 		
-		// TODO (asc) this variant of the above seemed to crash groovy:
-		//		"def run(n) \n"+
-		//		"  OtherGroovy.iterate (3) {\n"+
-		//		"  print it*2\n"+
-		//		"  }\n");
+		// FIXASC this variant of the above seemed to crash groovy:
+//				"def run(n) \n"+
+//				"  OtherGroovy.iterate (3) {\n"+
+//				"  print it*2\n"+
+//				"  }\n");
 
 		env.addGroovyClass(root, "pkg", "OtherGroovy",
 				"def static iterate(Integer n, closure) {\n"+

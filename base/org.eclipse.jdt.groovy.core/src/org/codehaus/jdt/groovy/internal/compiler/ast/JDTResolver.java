@@ -298,8 +298,23 @@ public class JDTResolver extends ResolveVisitor {
 					newNode.setGenericsPlaceHolder(true);
 					return newNode;
 				}
-				throw new GroovyEclipseBug("Cannot find type variable on source type declaring element "
-						+ typeVariableBinding.declaringElement);
+
+				// What does it means if we are here?
+				// it means we've encountered a type variable but this class doesn't declare it.
+				// So far this has been seen in the case where a synthetic binding is created for
+				// a bridge method from a supertype. It appears what we can do here is collapse
+				// that type variable to its bound (as this is meant to be a bridge method)
+				// But what if it was bound by something a little higher up?
+				// What other cases are there to worry about?
+
+				if (typeVariableBinding.firstBound == null) {
+					return ClassHelper.OBJECT_TYPE;
+				} else {
+					// c'est vrai?
+					return convertToClassNode(typeVariableBinding.firstBound);
+				}
+				// throw new GroovyEclipseBug("Cannot find type variable on source type declaring element "
+				// + typeVariableBinding.declaringElement);
 			} else if (typeVariableBinding.declaringElement instanceof BinaryTypeBinding) {
 				GenericsType[] genericTypes = convertToClassNode(((BinaryTypeBinding) typeVariableBinding.declaringElement))
 						.getGenericsTypes();

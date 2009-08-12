@@ -533,8 +533,16 @@ private void createMethods(IBinaryMethod[] iMethods, long sourceLevel, char[][][
 	int[] toSkip = null;
 	if (iMethods != null) {
 		total = initialTotal = iMethods.length;
-		boolean keepBridgeMethods = sourceLevel < ClassFileConstants.JDK1_5
-			&& this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_5;
+		// GROOVY start
+		// oldcode:
+//		boolean keepBridgeMethods = sourceLevel < ClassFileConstants.JDK1_5
+//			&& this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_5;
+		// newcode:
+			boolean keepBridgeMethods = (sourceLevel < ClassFileConstants.JDK1_5
+			&& this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_5) ||
+			this.environment.globalOptions.buildGroovyFiles==2;
+		// GROOVY end
+			
 		for (int i = total; --i >= 0;) {
 			IBinaryMethod method = iMethods[i];
 			if ((method.getModifiers() & ClassFileConstants.AccSynthetic) != 0) {

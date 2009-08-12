@@ -145,6 +145,8 @@ public class JDTClassNode extends ClassNode {
 				}
 				this.setGenericsTypes(generics);
 			}
+			// make the redirect for this parameterized type the generic type
+			this.setRedirect(resolver.convertToClassNode(ptb.original()));
 		} else {
 			// SourceTB, BinaryTB, TypeVariableB, WildcardB
 			TypeVariableBinding[] typeVariables = jdtBinding.typeVariables();
@@ -169,9 +171,11 @@ public class JDTClassNode extends ClassNode {
 	// FIXASC (M2) confusing (and problematic?) that the superclass is setup after the generics information
 	void initialize() {
 		resolver.pushTypeGenerics(getGenericsTypes());
-		ReferenceBinding superClass = jdtBinding.superclass();
-		if (superClass != null) {
-			setUnresolvedSuperClass(resolver.convertToClassNode(superClass));
+		if (!jdtBinding.isInterface()) {
+			ReferenceBinding superClass = jdtBinding.superclass();
+			if (superClass != null) {
+				setUnresolvedSuperClass(resolver.convertToClassNode(superClass));
+			}
 		}
 
 		ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
@@ -242,7 +246,7 @@ public class JDTClassNode extends ClassNode {
 			}
 			ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
 			Parameter[] gParameters = convertJdtParametersToGroovyParameters(methodBinding.parameters);
-			ClassNode[] thrownExceptions = new ClassNode[0];
+			ClassNode[] thrownExceptions = new ClassNode[0]; // FIXASC (M2) use constant of size 0
 			if (methodBinding.thrownExceptions != null) {
 				thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
 				for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
@@ -250,6 +254,7 @@ public class JDTClassNode extends ClassNode {
 				}
 			}
 			mNode = new MethodNode(name, modifiers, returnType, gParameters, thrownExceptions, null);
+
 			// FIXASC (M3) likely to need something like this...
 			// if (jdtBinding.isEnum()) {
 			// if (methodBinding.getDefaultValue() != null) {

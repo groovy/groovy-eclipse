@@ -309,7 +309,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						int start = annotationReference.sourceStart;
 						int end = annotationReference.sourceEnd;
 						if (v.indexOf(".") == -1) {
-							ref = new SingleTypeReference(v.toCharArray(), positionFor(start, end));
+							ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
 						} else {
 							char[][] splits = CharOperation.splitOn('.', v.toCharArray());
 							ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
@@ -340,7 +340,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 								int start = cExpression.getStart();
 								int end = cExpression.getEnd() - 1;
 								if (v.indexOf(".") == -1) {
-									ref = new SingleTypeReference(v.toCharArray(), positionFor(start, end));
+									ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
 									annotation.declarationSourceEnd = annotation.sourceStart
 											+ annoType.getNameWithoutPackage().length() - 1;
 								} else {
@@ -367,7 +367,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 								int start = constantExpression.getStart();
 								int end = constantExpression.getEnd() - 1;
 								if (v.indexOf(".") == -1) {
-									ref = new SingleTypeReference(v.toCharArray(), positionFor(start, end));
+									ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
 									annotation.declarationSourceEnd = annotation.sourceStart
 											+ annoType.getNameWithoutPackage().length() - 1;
 								} else {
@@ -598,19 +598,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// parameterTypeReference = new ArrayTypeReference("String".toCharArray(), 1,
 			// (parameterTypeReference.sourceStart << 32) | parameterTypeReference.sourceEnd);
 			// }
-			arguments[i] = new Argument(parameter.getName().toCharArray(), positionFor(parameter.getStart(), parameter.getEnd()),
+
+			arguments[i] = new Argument(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1),
 					parameterTypeReference, ClassFileConstants.AccPublic);
 			arguments[i].declarationSourceStart = parameter.getStart();
-			// The ASTConverter requires that if the sourceStart of an element
-			// is -1, then its sourceEnd must be one less that
-			// see ASTConverter.convert(Argument)
-			// FIXASC (M2) needs a proper position
-			if (arguments[i].sourceStart == -1) {
-				arguments[i].sourceEnd = -2;
-			}
 		}
-		if (// !isMain &&
-		isVargs(ps)) {
+		if (isVargs(ps) /* && !isMain */) {
 			arguments[ps.length - 1].type.bits |= ASTNode.IsVarArgs;
 		}
 		return arguments;
@@ -881,11 +874,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		return result;
 	}
 
-	// callers change to toPos() which does mess with end position - it is the callers responsibility
-	private long positionFor(long start, long end) {
-		return ((start << 32) | (end - 1));
-	}
-
 	/**
 	 * Convert from a signature form to a type reference. For example "C" for character "[[Z" for array of array of boolean
 	 */
@@ -914,11 +902,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		throw new GroovyEclipseBug("Unable to convert signature to reference.  Signature was '" + signature + "'");
 	}
 
+	// because 'length' is computed as 'end-start+1' and start==-1 indicates it does not exist, then
+	// to have a length of 0 the end must be -2.
+	private static long NON_EXISTENT_POSITION = toPos(-1, -2);
+
 	/**
 	 * Pack start and end positions into a long - no adjustments are made to the values passed in, the caller must make any required
 	 * adjustments.
 	 */
-	private long toPos(long start, long end) {
+	private static long toPos(long start, long end) {
+		if (start == 0 && end <= 0) {
+			return NON_EXISTENT_POSITION;
+		}
 		return ((start << 32) | end);
 	}
 
@@ -1008,15 +1003,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		if (name.indexOf(".") == -1) {
 			if (typeArguments == null) {
-				if (start == 0 && end == 0) {
-					return new SingleTypeReference(name.toCharArray(), 0);
-				} else {
-					return new SingleTypeReference(name.toCharArray(), positionFor(start, end));
-				}
+				return verify(new SingleTypeReference(name.toCharArray(), toPos(start, end - 1)));
 			} else {
 				// FIXASC (M2) determine when array dimension used in this case,
 				// is it 'A<T[]> or some silliness?
-				long l = positionFor(start, end);
+				long l = toPos(start, end - 1);
 				return new ParameterizedSingleTypeReference(name.toCharArray(), typeArguments
 						.toArray(new TypeReference[typeArguments.size()]), 0, l);
 			}
@@ -1519,4 +1510,36 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		aqtr.sourceEnd = end - 1;
 		return aqtr;
 	}
+
+	/**
+	 * Check the supplied TypeReference. If there are problems with the construction of a TypeReference then these may not surface
+	 * until it is used later, perhaps when reconciling. The easiest way to check there will not be problems later is to check it at
+	 * construction time.
+	 * 
+	 * @param toVerify the type reference to check
+	 * @param does the type reference really exist in the source or is it conjured up based on the source
+	 * @return the verified type reference
+	 * @throws IllegalStateException if the type reference is malformed
+	 */
+	private TypeReference verify(TypeReference toVerify) {
+		if (GroovyCheckingControl.checkTypeReferences) {
+			if (toVerify.getClass().equals(SingleTypeReference.class)) {
+				SingleTypeReference str = (SingleTypeReference) toVerify;
+				if (str.sourceStart == -1) {
+					if (str.sourceEnd != -2) {
+						throw new IllegalStateException("TypeReference '" + new String(str.token) + " should end at -2");
+					}
+				} else {
+					if (str.sourceEnd < str.sourceStart) {
+						throw new IllegalStateException("TypeReference '" + new String(str.token) + " should end at "
+								+ str.sourceStart + " or later");
+					}
+				}
+			} else {
+				throw new IllegalStateException("Cannot verify type reference of this class " + toVerify.getClass());
+			}
+		}
+		return toVerify;
+	}
+
 }
