@@ -105,27 +105,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"success");		
 	}
 	
-	public void testAbstractClass_GRE274() {
-		this.runNegativeTest(new String[] {
-			"p/Foo.groovy",
-			"class Foo {\n" + 
-			"  public static void main(String[] argv) {\n"+
-			"    new C();\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/C.java",
-			"package p;\n" + 
-			"public abstract class C {\n" + 
-			"}\n",
-		},
-		"----------\n" + 
-		"1. ERROR in p\\Foo.groovy (at line 3)\n" + 
-		"	new C();\n" + 
-		"	^^\n" + 
-		"Groovy:unable to resolve class C \n" + 
-		"----------\n");		
-	}
 	
 	
 	
@@ -584,6 +563,53 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"}"
 		},"");
 	}
+	
+/*
+	public void testAbstractClass_GRE274() {
+		this.runNegativeTest(new String[] {
+			"p/Foo.groovy",
+			"class Foo {\n" + 
+			"  public static void main(String[] argv) {\n"+
+			"    new C();\n"+
+			"  }\n"+
+			"}\n",
+
+			"p/C.java",
+			"package p;\n" + 
+			"public abstract class C {\n" + 
+			"}\n",
+		},
+		"----------\n" + 
+		"1. ERROR in p\\Foo.groovy (at line 3)\n" + 
+		"	new C();\n" + 
+		"	^^\n" + 
+		"Groovy:unable to resolve class C \n" + 
+		"----------\n");		
+	}
+
+	
+	public void testAbstractClass_GRE274_2() {
+		this.runNegativeTest(new String[] {
+			"p/Foo.groovy",
+			"class Foo {\n" + 
+			"  public static void main(String[] argv) {\n"+
+			"    new Wibble();\n"+
+			"  }\n"+
+			"}\n",
+
+			"Wibble.groovy",
+			"@SuppressWarnings(\"cast\")\n"+
+			"public class Wibble implements Comparable<String> {\n" + 
+			"}\n",
+		},
+		"----------\n" + 
+		"1. ERROR in Wibble.groovy (at line 1)\n" + 
+		"	@SuppressWarnings(\"cast\")\n" + 
+		"	 ^^ WRONG\n" + 
+		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Wibble\' must be declared abstract or the method \'int compareTo(java.lang.Object)\' must be implemented.\n" + 
+		"----------\n");		
+	}
+*/
 
 	// FIXASC (M2) line number wrong for the errors
 	public void testGenericsAndGroovyJava_GRE278_1() {
@@ -1287,6 +1313,43 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n");		
 	}
 	
+	public void testMissingContext_GRE308() {
+		this.runNegativeTest(new String[] {
+			"DibDabs.groovy",
+			"	def run(n) {\n"+
+			"\n"+		
+			"		  OtherGroovy.iterate (3) {\n"+
+			"		  print it*2\n"+
+			"	  }  \n"+
+			"//		  		NOT RECORDED AGAINST THIS FILE??\n"+
+			"		  int i        "},
+			"----------\n" + 
+			"1. ERROR in DibDabs.groovy (at line 7)\n" + 
+			"	int i        \n" + 
+			"	            ^\n" + 
+			"Groovy:expecting \'}\', found \'\' @ line 7, column 17.\n" + 
+			"----------\n");
+		}
+
+    // FIXASC (RC1) less than ideal underlining for error location
+	public void testMissingContext_GRE308_2() {
+		this.runNegativeTest(new String[] {
+			"DibDabs.groovy",
+			"	def run(n) {\n"+
+			"\n"+		
+			"		  OtherGroovy.iterate (3) {\n"+
+			"		  print it*2\n"+
+			"	  }  \n"+
+			"//		  		NOT RECORDED AGAINST THIS FILE??\n"+
+			"		  int i        \n"},
+			"----------\n" + 
+			"1. ERROR in DibDabs.groovy (at line 7)\n" + 
+			"	int i        \n" + 
+			"\n" + 
+			"	             ^\n" + 
+			"Groovy:expecting \'}\', found \'\' @ line 7, column 18.\n" + 
+			"----------\n");
+		}
 	// ---
 
 	// The getter for 'description' implements the interface

@@ -433,7 +433,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(compilationResult, classNode);
 			try {
 				pushTypeDecl(typeDeclaration);
-
 				typeDeclaration.annotations = transformAnnotations(classNode.getAnnotations());
 				typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
 
@@ -1157,6 +1156,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 			int soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
 			int eoffset = getOffset(compilationResult.lineSeparatorPositions, line, ecol);
+			if (soffset > sourceEnd) {
+				soffset = sourceEnd;
+				eoffset = sourceEnd - 1;
+			}
 			CategorizedProblem p = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[] { msg }, 0,
 					new String[] { msg }, sev, soffset, eoffset, line, scol);
 			this.problemReporter.record(p, compilationResult, this);
@@ -1186,9 +1189,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * Try to get the source locations for type declarations to be as correct as possible
 	 */
 	private void fixupSourceLocationsForTypeDeclaration(GroovyTypeDeclaration typeDeclaration, ClassNode classNode) {
-		// TODO (groovy) each area marked with a '*' is only approximate
-		// and can be revisited to make more precise
-
 		// start and end of the name of class
 		typeDeclaration.sourceStart = classNode.getNameStart();
 		typeDeclaration.sourceEnd = classNode.getNameEnd();
