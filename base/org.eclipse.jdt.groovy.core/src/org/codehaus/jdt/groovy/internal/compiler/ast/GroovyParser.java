@@ -52,6 +52,7 @@ public class GroovyParser {
 			gcl.addClasspath(path);
 		}
 		this.groovyCompilationUnit = new CompilationUnit(gcl);
+		this.groovyCompilationUnit.removeOutputPhaseOperation();
 		// this.lookupEnvironment = lookupEnvironment;
 		this.problemReporter = problemReporter;
 		this.resolver = new JDTResolver(groovyCompilationUnit);

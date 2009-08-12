@@ -211,6 +211,11 @@ public class CompilationUnit extends ProcessingUnit {
         phaseOperations[Phases.OUTPUT].addFirst(op);
     }
 
+    // FIXASC (groovychange) can be called to prevent classfile output (so only use if something else is taking charge of output)
+    public boolean removeOutputPhaseOperation() {
+        return phaseOperations[Phases.OUTPUT].remove(output);
+    }
+    // FIXASC (groovychange)
 
     /**
      * Configures its debugging mode and classloader classpath from a given compiler configuration.
@@ -640,50 +645,43 @@ public class CompilationUnit extends ProcessingUnit {
         }
     };
 
-// FIXASC (groovychange) damaged output phase, need to do this properly!
-    private GroovyClassOperation output = new GroovyClassOperation() {
+ private GroovyClassOperation output = new GroovyClassOperation() {
         public void call(GroovyClass gclass) throws CompilationFailedException {
             boolean failures = false;
-            // FIXASC (M3:groovyc) Correctly remove this output operation from the CU, rather than hacking the operation
             String name = gclass.getName().replace('.', File.separatorChar) + ".class";
-            //File path = new File("f:/workspaces/grooyruntimews/JavaOne/bin");
-            // path = new File(path,name);//configuration.getTargetDirectory(), name);
-            // TODOASC needs to point to the project output location
+            File path = new File(configuration.getTargetDirectory(), name);
 
-			//
-			// //
-			// // Ensure the path is ready for the file
-			// //
-			// File directory = path.getParentFile();
-			// if (directory != null && !directory.exists()) {
-			// directory.mkdirs();
-			// }
-			//
+            //
+            // Ensure the path is ready for the file
+            //
+            File directory = path.getParentFile();
+            if (directory != null && !directory.exists()) {
+                directory.mkdirs();
+            }
+
             //
             // Create the file and write out the data
             //
-			byte[] bytes = gclass.getBytes();
+            byte[] bytes = gclass.getBytes();
 
-			// FileOutputStream stream = null;
-			// try {
-			// stream = new FileOutputStream(path);
-			// stream.write(bytes, 0, bytes.length);
-			// } catch (IOException e) {
-			// getErrorCollector().addError(Message.create(e.getMessage(),
-			// CompilationUnit.this));
-			// failures = true;
-			// } finally {
-			// if (stream != null) {
-			// try {
-			// stream.close();
-			// } catch (Exception e) {
-			// // Ignore
-			// }
-			// }
-			// }
+            FileOutputStream stream = null;
+            try {
+                stream = new FileOutputStream(path);
+                stream.write(bytes, 0, bytes.length);
+            } catch (IOException e) {
+                getErrorCollector().addError(Message.create(e.getMessage(), CompilationUnit.this));
+                failures = true;
+            } finally {
+                if (stream != null) {
+                    try {
+                        stream.close();
+                    } catch (Exception e) {
+                        // Ignore
+                    }
+                }
+            }
         }
     };
-    // end
 
 
     /* checks if all needed classes are compiled before generating the bytecode */
