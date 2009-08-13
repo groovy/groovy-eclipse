@@ -11,13 +11,7 @@
   	-->
   	
   	<exec executable="curl">
-  		<arg line="-u ${webdav.user}:${webdav.password} -l https://dav.codehaus.org/user/werdna/vpd.properties"/>
-  	</exec>
-  	<exec executable="curl">
-  		<arg line="-u ${webdav.user}:${webdav.password} -G -XDELETE https://dav.codehaus.org/user/werdna/vpd.properties"/>
-  	</exec>
-  	<exec executable="curl">
-  		<arg line="-u ${webdav.user}:${webdav.password} -G -XDELETE https://dav.codehaus.org/user/werdna/vpd.properties"/>
+  		<arg line="-u ${webdav.user}:${webdav.password} -G -XDELETE https://dav.codehaus.org/user/werdna/bashrc*"/>
   	</exec>
   	
   	<mkdir dir="${publishLocation}/old"/>
@@ -42,6 +36,14 @@
   	</copy>
   	<copy file="${buildDirectory}/finalPluginsVersions.properties" todir="${publishLocation}"/>
   </target>
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: -webdav-delete
+         - - - - - - - - - - - - - - - - - -->
+    <target name="-webdav-delete" description="Deletes the current udpate site on the server">
+        
+    </target>
+
 
 	
 	<!-- - - - - - - - - - - - - - - - - - 
