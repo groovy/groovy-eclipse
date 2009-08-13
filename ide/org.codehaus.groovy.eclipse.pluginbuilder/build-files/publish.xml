@@ -10,6 +10,7 @@
   	3. copy the new
   	-->
   	
+  	<echo message="curl -u ${webdav.user}:${webdav.password} -l https://dav.codehaus.org/user/werdna/vpd.properties"/>
   	<exec executable="curl">
   		<arg line="-u ${webdav.user}:${webdav.password} -l https://dav.codehaus.org/user/werdna/vpd.properties"/>
   	</exec>
