@@ -46,6 +46,8 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.syntax.PreciseSyntaxException;
+import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -1133,17 +1135,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// FIXASC (M2) poor way to get the errors attached to the files
 		// FIXASC (M2) does groovy ever produce warnings? How are they treated here?
 		for (Iterator<?> iterator = errors.iterator(); iterator.hasNext();) {
+			SyntaxException syntaxException = null;
 			Message message = (Message) iterator.next();
 			StringWriter sw = new StringWriter();
 			message.write(new PrintWriter(sw));
 			String msg = sw.toString();
+			CategorizedProblem p = null;
 			int line = 0;
 			int sev = 0;
 			int scol = 0;
 			int ecol = 0;
 			if (message instanceof SyntaxErrorMessage) {
 				SyntaxErrorMessage errorMessage = (SyntaxErrorMessage) message;
-				line = errorMessage.getCause().getLine();
+				syntaxException = errorMessage.getCause();
 				sev |= ProblemSeverities.Error;
 				// FIXASC (M2) in the short term, prefixed groovy to indicate
 				// where it came from
@@ -1151,17 +1155,37 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				if (msg.indexOf("\n") != -1) {
 					msg = msg.substring(0, msg.indexOf("\n"));
 				}
+				line = syntaxException.getLine();
 				scol = errorMessage.getCause().getStartColumn();
-				ecol = errorMessage.getCause().getEndColumn();
+				ecol = errorMessage.getCause().getEndColumn() - 1;
 			}
-			int soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
-			int eoffset = getOffset(compilationResult.lineSeparatorPositions, line, ecol);
+			int soffset = -1;
+			int eoffset = -1;
+			if (syntaxException instanceof PreciseSyntaxException) {
+				soffset = ((PreciseSyntaxException) syntaxException).getStartOffset();
+				eoffset = ((PreciseSyntaxException) syntaxException).getEndOffset();
+				// need to work out the line again as it may be wrong
+				line = 0;
+				while (compilationResult.lineSeparatorPositions[line] < soffset
+						&& line < compilationResult.lineSeparatorPositions.length) {
+					line++;
+				}
+				;
+				line++; // from an array index to a real 'line number'
+			} else {
+				soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
+				eoffset = getOffset(compilationResult.lineSeparatorPositions, line, ecol);
+			}
+			if (soffset > eoffset) {
+				eoffset = soffset;
+			}
 			if (soffset > sourceEnd) {
 				soffset = sourceEnd;
-				eoffset = sourceEnd - 1;
+				eoffset = sourceEnd;
 			}
-			CategorizedProblem p = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[] { msg }, 0,
-					new String[] { msg }, sev, soffset, eoffset, line, scol);
+
+			p = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[] { msg }, 0, new String[] { msg }, sev,
+					soffset, eoffset, line, scol);
 			this.problemReporter.record(p, compilationResult, this);
 			System.err.println(new String(compilationResult.getFileName()) + ": " + line + " " + msg);
 		}

@@ -588,6 +588,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         innerClassCounter = oldClassCount;
     }
 
+   
+
 
     protected void objectBlock(AST objectBlock) {
         for (AST node = objectBlock.getFirstChild(); node != null; node = node.getNextSibling()) {
@@ -1154,7 +1156,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         AST node = annotationNode.getFirstChild();
         String name = qualifiedName(node);
         AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(name));
+        // FIXASC (groovychange)
+        // oldcode:
         configureAST(annotatedNode, annotationNode);
+        // newcode:
+        configureAnnotationAST(annotatedNode, annotationNode);
+        // end
         while (true) {
             node = node.getNextSibling();
             if (isType(ANNOTATION_MEMBER_VALUE_PAIR, node)) {
@@ -2969,6 +2976,63 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // TODO we could one day store the Antlr AST on the Groovy AST
         // node.setCSTNode(ast);
     }
+
+    // FIXASC (groovychange) new method for correctly configuring the position of the annotation - based on configureAST
+    protected void configureAnnotationAST(ASTNode node, AST ast) {
+        if (ast == null) {
+        	throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure "+node.getClass().getName()+" with null Node");
+        }
+        if (ast instanceof GroovySourceAST) {
+        	// Structure of incoming parameter 'ast':
+        	// ANNOTATION
+        	// - down='annotationName' (IDENT:84)
+            GroovySourceAST correctAst = (GroovySourceAST) ast;
+            correctAst = (GroovySourceAST)correctAst.getFirstChild();
+            setPositions(node,correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
+        } else {
+            int startcol = ast.getColumn();
+            int startline = ast.getLine();
+            node.setColumnNumber(startcol);
+            node.setLineNumber(startline);
+            int startoffset = locations.findOffset(startline,startcol);
+            node.setStart(startoffset);
+        }
+    }
+    
+    private void configureClassNodeForClassDefAST(ASTNode node, AST ast) {
+        if (ast == null) {
+        	throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure "+node.getClass().getName()+" with null Node");
+        }
+        if (ast instanceof GroovySourceAST) {
+            // Structure of the AST from Antlr:
+            // CLASS_DEF (13)
+            // - down=MODIFIERS (5)
+            //   - right=typename (84==IDENT)
+            //     - down
+            //     - right=EXTENDS_CLAUSE (17)
+            GroovySourceAST theAst = (GroovySourceAST) ast;
+            theAst = (GroovySourceAST)theAst.getFirstChild().getNextSibling();
+            setPositions(node,theAst.getColumn(),theAst.getLine(),theAst.getColumnLast(),theAst.getLineLast());
+        } else {
+        	int startcol = ast.getColumn();
+        	int startline = ast.getLine();
+        	node.setColumnNumber(startcol);
+        	node.setLineNumber(startline);
+        	int startoffset = locations.findOffset(startline,startcol);
+        	node.setStart(startoffset);        	
+        }
+    }
+    
+    private void setPositions(ASTNode node, int scol, int sline, int ecol, int eline) {
+        node.setColumnNumber(scol);
+        node.setLineNumber(sline);
+        node.setStart(locations.findOffset(sline,scol));
+        node.setLastColumnNumber(ecol);
+        node.setLastLineNumber(eline);
+        node.setEnd(locations.findOffset(eline,ecol)-1);	
+    }
+    // end
+    
 
     protected static Token makeToken(int typeCode, AST node) {
         return Token.newSymbol(typeCode, node.getLine(), node.getColumn());

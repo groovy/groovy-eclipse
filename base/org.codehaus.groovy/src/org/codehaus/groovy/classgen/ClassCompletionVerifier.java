@@ -72,7 +72,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         if (abstractMethods == null) return;
         for (Iterator iter = abstractMethods.iterator(); iter.hasNext();) {
             MethodNode method = (MethodNode) iter.next();
-            addError("Can't have an abstract method in a non-abstract class." +
+            // FIXASC (groovychange) record a type error
+            addTypeError("Can't have an abstract method in a non-abstract class." +
                     " The " + getDescription(node) + " must be declared abstract or" +
                     " the " + getDescription(method) + " must be implemented.", node);
         }
@@ -144,13 +145,15 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     private void checkImplementsAndExtends(ClassNode node) {
         ClassNode cn = node.getSuperClass();
         if (cn.isInterface() && !node.isInterface()) {
-            addError("You are not allowed to extend the " + getDescription(cn) + ", use implements instead.", node);
+            // FIXASC (groovychange) record a type error
+            addTypeError("You are not allowed to extend the " + getDescription(cn) + ", use implements instead.", node);
         }
         ClassNode[] interfaces = node.getInterfaces();
         for (int i = 0; i < interfaces.length; i++) {
             cn = interfaces[i];
             if (!cn.isInterface()) {
-                addError("You are not allowed to implement the " + getDescription(cn) + ", use extends instead.", node);
+                // FIXASC (groovychange) record a type error
+                addTypeError("You are not allowed to implement the " + getDescription(cn) + ", use extends instead.", node);
             }
         }
     }

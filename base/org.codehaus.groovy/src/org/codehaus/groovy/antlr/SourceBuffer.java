@@ -122,6 +122,7 @@ public class SourceBuffer {
     
     private boolean prevWasCarriageReturn = false;
     private int col = 0;
+    // FIXASC (RC1) tidy this up, looks slow
     public void write(int c) {
         if (c != -1) {
         	col++;
@@ -137,7 +138,8 @@ public class SourceBuffer {
         		// back out previous line and add a \n to the line
         		current = new StringBuffer();
         		((StringBuffer) lines.get(lines.size()-1)).append('\n');
-        		// no need to back out the column number
+        		lineEndings.remove(lineEndings.size()-1);
+        		lineEndings.add(col);
         	}
         }
         // handle carriage returns as well as newlines

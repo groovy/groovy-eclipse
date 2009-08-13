@@ -24,6 +24,7 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.SyntaxException;
+import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -175,10 +176,23 @@ public class ExtendedVerifier implements GroovyClassVisitor {
     }
 
     protected void addError(String msg, ASTNode expr) {
+    	// FIXASC (RC1) tidy this up
+    	// FIXASC (groovychange) use new form of error message that has an end column
+    	if (expr instanceof AnnotationNode) {
+    		AnnotationNode aNode = (AnnotationNode)expr;
+    		this.source.getErrorCollector().addErrorAndContinue(
+                    new SyntaxErrorMessage(
+                            new PreciseSyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(),aNode.getStart(),aNode.getEnd()), this.source)
+            );
+    	} else {
+    	// end
         this.source.getErrorCollector().addErrorAndContinue(
                 new SyntaxErrorMessage(
-                        new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber()), this.source)
+                 new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber()), this.source)
         );
+        // FIXASC (groovychange)
+    	}
+    	//end
     }
 
     // TODO use it or lose it
