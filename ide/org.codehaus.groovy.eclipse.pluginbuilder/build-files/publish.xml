@@ -11,7 +11,7 @@
   	-->
   	
   	<exec executable="curl">
-  		<arg line="-u ${webdav.user}:${webdav.password} -G -XDELETE https://dav.codehaus.org/user/werdna/bashrc*"/>
+  		<arg line="-u ${webdav.user}:${webdav.password} -G -XDELETE https://dav.codehaus.org/user/werdna/tt"/>
   	</exec>
   	
   	<mkdir dir="${publishLocation}/old"/>
