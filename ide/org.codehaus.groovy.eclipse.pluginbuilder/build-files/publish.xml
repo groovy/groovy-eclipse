@@ -10,9 +10,13 @@
   	3. copy the new
   	-->
   	
+  	<exec command="curl">
+  		<arg line="-u ${webdav.user}:${webdav.password} -l https://dav.codehaus.org/user/werdna/vpd.properties"/>
+  	</exec>
+  	
   	<mkdir dir="${publishLocation}/old"/>
   	<zip destfile="${publishLocation}/old/archive-${org.codehaus.groovy.eclipse.ui}.zip">
-  		<zipfileset dir="${publishLocation}">
+  		<zipfileset dir="${buildDirectory}/updateSite">
   			 <include name="**/*"/>
   			 <exclude name="old"/>
 		    <exclude name="old/*"/>
@@ -39,7 +43,7 @@
     - - - - - - - - - - - - - - - - - -->
   <target name="-init">
   	<property file="../build_local.properties"/>
-  	<property file="${publishLocation}/finalPluginsVersions.properties"/>
+  	<property file="${buildDirectory}/finalPluginsVersions.properties"/>
   </target>
 
 
