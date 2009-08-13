@@ -205,6 +205,19 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		assertEquals("(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Number[][][]>",stringify(fDecl.type));
 	}
 	
+
+	
+//	class One {
+//		List myListOfStrings;
+//
+//		Map<String,List<Integer>> getComplicatedGenericallySpecifiedMap() {
+//			
+//		}
+//
+//		Stack plates;
+//	}
+
+	
 //	// FIXASC (M2) appears to be a groovy bug - the java.util.Set is missing generics info - as if it had none
 //	public void testGenericsPositions_4_GRE267() {
 //		this.runConformTest(new String[] {
@@ -489,32 +502,32 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in X.groovy (at line 2)\n" + 
 			"	import org.andrill.coretools.data.edit.Command\n" + 
-			"	^^\n" + 
+			"	^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command\n" + 
 			"----------\n" + 
 			"2. ERROR in X.groovy (at line 3)\n" + 
 			"	import org.andrill.coretools.data.edit.EditableProperty\n" + 
-			"	^^\n" + 
+			"	^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.edit.EditableProperty\n" + 
 			"----------\n" + 
 			"3. ERROR in X.groovy (at line 4)\n" + 
 			"	import org.andrill.coretools.data.Model\n" + 
-			"	^^\n" + 
+			"	^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.Model\n" + 
 			"----------\n" + 
 			"4. ERROR in X.groovy (at line 5)\n" + 
 			"	import org.andrill.coretools.data.ModelCollection\n" + 
-			"	^^\n" + 
+			"	^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.ModelCollection\n" + 
 			"----------\n" + 
 			"5. ERROR in X.groovy (at line 6)\n" + 
 			"	import org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
-			"	^^\n" + 
+			"	^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
 			"----------\n" + 
 			"6. ERROR in X.groovy (at line 8)\n" + 
 			"	class GProperty implements EditableProperty {\n" + 
-			"	^^\n" + 
+			"	      ^^^^^^^^^\n" + 
 			"Groovy:You are not allowed to implement the class \'org.andrill.coretools.data.edit.EditableProperty\', use extends instead.\n" + 
 			"----------\n" + 
 			"7. WARNING in X.groovy (at line 12)\n" + 
@@ -529,27 +542,27 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"9. ERROR in X.groovy (at line 15)\n" + 
 			"	Command command\n" + 
-			"	^^\n" + 
+			"	^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command \n" + 
 			"----------\n" + 
 			"10. ERROR in X.groovy (at line 33)\n" + 
 			"	commands << new GCommand(source: source, prop: name, value: newValue)\n" + 
-			"	            ^^\n" + 
+			"	            ^\n" + 
 			"Groovy:unable to resolve class GCommand \n" + 
 			"----------\n" + 
 			"11. ERROR in X.groovy (at line 34)\n" + 
 			"	links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n" + 
-			"	                         ^^\n" + 
+			"	                         ^\n" + 
 			"Groovy:unable to resolve class GCommand \n" + 
 			"----------\n" + 
 			"12. ERROR in X.groovy (at line 36)\n" + 
 			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
-			"	                ^^\n" + 
+			"	                ^\n" + 
 			"Groovy:unable to resolve class GCommand \n" + 
 			"----------\n" + 
 			"13. ERROR in X.groovy (at line 37)\n" + 
 			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
-			"	                ^^\n" + 
+			"	                ^\n" + 
 			"Groovy:unable to resolve class GCommand \n" + 
 			"----------\n");
 	}
@@ -564,7 +577,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"");
 	}
 	
-/*
+
 	public void testAbstractClass_GRE274() {
 		this.runNegativeTest(new String[] {
 			"p/Foo.groovy",
@@ -582,7 +595,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in p\\Foo.groovy (at line 3)\n" + 
 		"	new C();\n" + 
-		"	^^\n" + 
+		"	^\n" + 
 		"Groovy:unable to resolve class C \n" + 
 		"----------\n");		
 	}
@@ -603,12 +616,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 		},
 		"----------\n" + 
-		"1. ERROR in Wibble.groovy (at line 1)\n" + 
-		"	@SuppressWarnings(\"cast\")\n" + 
-		"	 ^^ WRONG\n" + 
+		"1. ERROR in Wibble.groovy (at line 2)\n" + 
+		"	public class Wibble implements Comparable<String> {\n" + 
+		"	             ^^^^^^\n" + 
 		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Wibble\' must be declared abstract or the method \'int compareTo(java.lang.Object)\' must be implemented.\n" + 
 		"----------\n");		
-	}*/
+	}
 
 	// FIXASC (M2) line number wrong for the errors
 	public void testGenericsAndGroovyJava_GRE278_1() {
@@ -796,14 +809,14 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 
 		},"----------\n" + 
-		"1. ERROR in p\\StructureBase.groovy (at line 5)\n" + 
-		"	@SuppressWarnings(\"unchecked\")\n" + 
-		"	^^\n" + 
+		"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+		"	public class StructureBase implements Structure {\n" + 
+		"	             ^^^^^^^^^^^^^\n" + 
 		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
 		"----------\n" + 
-		"2. ERROR in p\\StructureBase.groovy (at line 5)\n" + 
-		"	@SuppressWarnings(\"unchecked\")\n" + 
-		"	^^\n" + 
+		"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+		"	public class StructureBase implements Structure {\n" + 
+		"	             ^^^^^^^^^^^^^\n" + 
 		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
 		"----------\n");		
 	}
@@ -1245,12 +1258,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in Moo.groovy (at line 4)\n" + 
 		"	public static def moo() { println this.class }\n" + 
-		"	                                  ^^\n" + 
+		"	                                  ^\n" + 
 		"Groovy:class is declared in a dynamic context, but you tried to access it from a static context.\n" + 
 		"----------\n" + 
 		"2. ERROR in Moo.groovy (at line 4)\n" + 
 		"	public static def moo() { println this.class }\n" + 
-		"	                                  ^^\n" + 
+		"	                                  ^\n" + 
 		"Groovy:Non-static variable \'this\' cannot be referenced from the static method moo.\n" + 
 		"----------\n");
 	}
@@ -1269,7 +1282,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in Moo.groovy (at line 4)\n" + 
 		"	final moo = processMoo(moo)\n" + 
-		"	      ^^\n" + 
+		"	      ^\n" + 
 		"Groovy:The current scope already contains a variable of the name moo\n" + 
 		"----------\n"
 		);
@@ -1297,21 +1310,21 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"----------\n" + 
 		"1. ERROR in p\\X.groovy (at line 2)\n" + 
 		"	break words\n" + 
-		"	^^\n" + 
+		"	^\n" + 
 		"Groovy:the break statement with named label is only allowed inside loops\n" + 
 		"----------\n" + 
 		"2. ERROR in p\\X.groovy (at line 2)\n" + 
 		"	break words\n" + 
-		"	^^\n" + 
+		"	^\n" + 
 		"Groovy:the break statement with named label is only allowed inside loops\n" + 
 		"----------\n" + 
 		"3. ERROR in p\\X.groovy (at line 2)\n" + 
 		"	break words\n" + 
-		"	^^\n" + 
+		"	^\n" + 
 		"Groovy:break to missing label\n" + 
 		"----------\n");		
 	}
-	/* disabled to get a build - prob a \n\r issue
+
 	public void testMissingContext_GRE308() {
 		this.runNegativeTest(new String[] {
 			"DibDabs.groovy",
@@ -1350,7 +1363,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n");
 		}
 	// ---
-*/
+
 	// The getter for 'description' implements the interface
 	public void testImplementingAnInterfaceViaProperty() {
 		this.runConformTest(new String[] {
@@ -1430,7 +1443,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"----------\n" + 
 		"1. ERROR in T.groovy (at line 3)\n" + 
 		"	this \"\"\n" + 
-		"	     ^^\n" + 
+		"	     ^\n" + 
 		"Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" + 
 		"----------\n");
 	}
@@ -1448,7 +1461,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in p\\X.groovy (at line 2)\n" + 
 		"	public class X extends I {\n" + 
-		"	^^\n" + 
+		"	             ^\n" + 
 		"Groovy:You are not allowed to extend the interface \'p.I\', use implements instead.\n" + 
 		"----------\n");
 	}
@@ -1499,7 +1512,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in p\\X.groovy (at line 2)\n" + 
 		"	import a.b.c.D;\n" + 
-		"	^^\n" + 
+		"	^\n" + 
 		"Groovy:unable to resolve class a.b.c.D\n" + 
 		"----------\n");
 	}
@@ -1703,7 +1716,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"3. ERROR in Demo.groovy (at line 10)\n" + 
 		"	class MyMap<K,V> extends Map {\n" + 
-		"	^^\n" + 
+		"	      ^^^^^\n" + 
 		"Groovy:You are not allowed to extend the interface \'java.util.Map\', use implements instead.\n" + 
 		"----------\n" + 
 		"4. WARNING in Demo.groovy (at line 10)\n" + 
@@ -2020,7 +2033,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2053,7 +2066,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2086,7 +2099,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2147,7 +2160,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2180,7 +2193,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2213,7 +2226,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2274,7 +2287,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2307,7 +2320,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2340,7 +2353,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	@Anno(p.Foo.class)\n" + 
-			"	^^\n" + 
+			"	 ^^^^\n" + 
 			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" + 
 			"----------\n"
 			);
@@ -2623,7 +2636,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			},"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	public class X extends Wibble<Foo> {\n" + 
-			"	                       ^^\n" + 
+			"	                       ^\n" + 
 			"Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" + 
 			"----------\n");		
 	}
@@ -2815,12 +2828,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" +
 			"1. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
-			"	      ^^\n" +
+			"	      ^\n" +
 			"Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
 			"----------\n" +
 			"2. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
-			"	      ^^\n" +
+			"	      ^\n" +
 			"Groovy:Only classes can be used for attribute 'value' in @p.Anno\n" +
 			"----------\n");
 	}
@@ -2838,7 +2851,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in p\\X.groovy (at line 2)\n" + 
 		"	public class X extends List<String> {\n" + 
-		"	^^\n" + 
+		"	             ^\n" + 
 		"Groovy:You are not allowed to extend the interface \'java.util.List\', use implements instead.\n" + 
 		"----------\n");		
 	}
@@ -3131,7 +3144,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\B.groovy (at line 2)\n" + 
 			"	public class B extends A<String> {\n" + 
-			"	                       ^^\n" + 
+			"	                       ^\n" + 
 			"Groovy:The type String is not a valid substitute for the bounded parameter <T extends p.I>\n" + 
 			"----------\n" 
 		);			
@@ -3704,7 +3717,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\C.groovy (at line 2)\n" + 
 			"	public class C implements I<String> {\n" + 
-			"	                          ^^\n" + 
+			"	                          ^\n" + 
 			"Groovy:The type String is not a valid substitute for the bounded parameter <T extends java.lang.Number>\n" + 
 			"----------\n");
 	}
@@ -3804,7 +3817,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\C.groovy (at line 8)\n" + 
 			"	public static void callitOne(A a) { }\n" + 
-			"	                             ^^\n" + 
+			"	                             ^\n" + 
 			"Groovy:unable to resolve class A \n" + 
 			"----------\n");		
 	}
@@ -4599,7 +4612,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in p\\Code.groovy (at line 5)\n" + 
 		"	public void m(String s, Integer i =3) {}\n" + 
-		"	^^\n" + 
+		"	^\n" + 
 		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined..\n" + 
 		"----------\n"
 		);
@@ -4991,20 +5004,19 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"123");
 	}
 	
-	// temporary
-//	public void testScriptWithError() {
-//		this.runNegativeTest(new String[] {
-//			"Foo.groovy",
-//			"print Coolio!",
-//		},		
-//		"----------\n" + 
-//		"1. ERROR in Foo.groovy (at line 1)\n" + 
-//		"	print Coolio!\n" + 
-//		"	             \n" + 
-//		"Groovy:expecting EOF, found \'!\' @ line 1, column 13.\n" + 
-//		"----------\n"
-//		);
-//	}
+	public void testScriptWithError() {
+		this.runNegativeTest(new String[] {
+			"Foo.groovy",
+			"print Coolio!",
+		},		
+		"----------\n" + 
+		"1. ERROR in Foo.groovy (at line 1)\n" + 
+		"	print Coolio!\n" + 
+		"	            ^\n" + 
+		"Groovy:expecting EOF, found \'!\' @ line 1, column 13.\n" + 
+		"----------\n"
+		);
+	}
 
 	public void testScript() {
 		this.runConformTest(new String[] {
@@ -5677,7 +5689,48 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"012012");		
 	}
 
-	// FIXASC1) test varargs with default parameter values (methods/ctors)
+	public void testPositions() {
+		this.runNegativeTest(new String[] {
+			"One.groovy",
+			"class One {\n" + 
+			"		/*a*/			Stack plates;\n"+
+			"  /*b*/ Stack plates2;\n"+
+			"}\n",
+		},"----------\n" + 
+		"1. WARNING in One.groovy (at line 2)\n" + 
+		"	/*a*/			Stack plates;\n" + 
+		"	     			^^^^^\n" + 
+		"Stack is a raw type. References to generic type Stack<E> should be parameterized\n" + 
+		"----------\n" + 
+		"2. WARNING in One.groovy (at line 3)\n" + 
+		"	/*b*/ Stack plates2;\n" + 
+		"	      ^^^^^\n" + 
+		"Stack is a raw type. References to generic type Stack<E> should be parameterized\n" + 
+		"----------\n");		
+
+	}
+	
+	public void testPositions_2() {
+		this.runNegativeTest(new String[] {
+			"One.groovy",
+			"class One {\r\n" + 
+			"		/*a*/			Stack plates;\r\n"+
+			"  /*b*/ Stack plates2;\n"+
+			"}\n",
+		},"----------\n" + 
+		"1. WARNING in One.groovy (at line 2)\n" + 
+		"	/*a*/			Stack plates;\n" + 
+		"	     			^^^^^\n" + 
+		"Stack is a raw type. References to generic type Stack<E> should be parameterized\n" + 
+		"----------\n" + 
+		"2. WARNING in One.groovy (at line 3)\n" + 
+		"	/*b*/ Stack plates2;\n" + 
+		"	      ^^^^^\n" + 
+		"Stack is a raw type. References to generic type Stack<E> should be parameterized\n" + 
+		"----------\n");		
+	}
+	
+	// FIXASC test varargs with default parameter values (methods/ctors)
 
 	// static imports
 	public void testStaticImports_JtoG() {
