@@ -407,7 +407,8 @@ public class ASTWriter extends CodeVisitorSupport implements
             
             // annotations with no member-value pairs are having 
             // an invalid lastLineNumber.  It is 1 greater than it should be.
-            int extra = an.getMembers().size() == 0 ? 0 : 1;
+            // ASC no longer an issue when annotation position is fixed...
+            int extra = 1;//an.getMembers().size() == 0 ? 0 : 1;
                     
             linesSinceFirstAnnotation += (an.getLastLineNumber() + extra) - an.getLineNumber();
             preVisitStatement(an);
