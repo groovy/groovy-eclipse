@@ -15,103 +15,69 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
 
 public class ErrorRecoveryTests extends EclipseTestCase {
-	private GroovyCompiler compiler;
-
-	private Reporter reporter;
-	
-	private IGroovyCompilerConfiguration config;
+	private GroovySnippetCompiler compiler;
 
 	@Override
     protected void setUp() throws Exception {
 		super.setUp();
-		compiler = new GroovyCompiler();
-		reporter = new Reporter();
 		GroovyRuntime.addGroovyRuntime(testProject.getProject());
-		config = new GroovyCompilerConfigurationBuilder().classLoader(new GroovyProjectFacade(testProject.getJavaProject()).getProjectClassLoader())
-			.buildCST()
-			.errorRecovery()
-			.resolveAST()
-			.buildAST()
-			.done();
+		compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade());
 	}
 	
-	public void compileScript(String script) {
-		InputStream is = textToInputStream(script);
-		compiler.compile("test", is, config, reporter);
+	public CompilationResult compileScript(String script) {
+	    long start = System.currentTimeMillis();
+	    CompilationResult result = compiler.compileForErrors(script, "Test");
+	    System.out.println("Time to compile: " + (System.currentTimeMillis() - start) + " ms");
+		return result;
 	}
 
 	public void testDotNothing1() {
-		compileScript("s.");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
+	    CompilationResult result = compileScript("s.");
+	    assertEquals(1, result.getAllProblems().length);
 	}
 	
 	public void testDotNothing2() {
-		compileScript("s.a.");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
+		CompilationResult result = compileScript("s.a.");
+        assertEquals(1, result.getAllProblems().length);
 	}
 	
 	public void testDotNothing3() {
-		compileScript("s[10].");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
+		CompilationResult result = compileScript("s[10].");
+        assertEquals(1, result.getAllProblems().length);
 	}
 	
 	public void testDotNothing4() {
-		compileScript("s().");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
+		CompilationResult result = compileScript("s().");
+        assertEquals(1, result.getAllProblems().length);
 	}
 	
 	public void testDotNothing5() {
-		compileScript("s { it }.");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
+		CompilationResult result = compileScript("s { it }.");
+        assertEquals(1, result.getAllProblems().length);
 	}
 	
 	public void testDotNothing6() {
-		compileScript("String s = 'hello'; s.");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
+		CompilationResult result = compileScript("String s = 'hello'; s.");
+        assertEquals(1, result.getAllProblems().length);
 	}
 	
 	public void testSpreadDotNothing() {
-		compileScript("s*.");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
+		CompilationResult result = compileScript("s*.");
+        assertEquals(1, result.getAllProblems().length);
 	}
 	
 	public void testOptionalDotNothing() {
-		compileScript("s?.");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
+		CompilationResult result = compileScript("s?.");
+        assertEquals(1, result.getAllProblems().length);
 	}
 
 	public void testDotLBrace() {
-		compileScript("String s = 'hello'; s.{");
-		assertEquals(1, reporter.mapFileNameToErrorMessages.size());
-		assertEquals(1, reporter.mapFileNameToCST.size());
-		assertEquals(1, reporter.mapFileNameToAST.size());
-	}
-	
-	private InputStream textToInputStream(String text) {
-		return new ByteArrayInputStream(text.getBytes());
+		CompilationResult result = compileScript("String s = 'hello'; s.{");
+        assertEquals(1, result.getAllProblems().length);
 	}
 }

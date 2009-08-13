@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.core.type;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -30,16 +29,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.codehaus.groovy.antlr.GroovySourceAST;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.CoreTestsActivator;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompilerConfigurationBuilder;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilationReporter;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilerConfiguration;
 import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext;
 import org.codehaus.groovy.eclipse.core.context.impl.SourceCodeContextFactory;
 import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
@@ -148,40 +141,6 @@ public class InferredTypeEvaluatorTests extends EclipseTestCase {
 			sb.append(":").append(expected).append(" [").append(line).append(',').append(startCol).append("..").append(
 					endCol).append("]");
 			return sb.toString();
-		}
-	}
-
-	/**
-	 * Reporter to get the AST from.
-	 */
-	static class TestCompilationReporter implements IGroovyCompilationReporter {
-		public ModuleNode moduleNode;
-
-		public void beginReporting() {
-		}
-
-		public void beginReporting(String fileName) {
-		}
-
-		public void compilationError(String fileName, int line, int startCol, int endCol, String message,
-				String stackTrace) {
-			throw new IllegalStateException(message + "\n" + stackTrace);
-		}
-
-		public void endReporting() {
-		}
-
-		public void endReporting(String fileName) {
-		}
-
-		public void generatedAST(String fileName, ModuleNode moduleNode) {
-			this.moduleNode = moduleNode;
-		}
-
-		public void generatedCST(String fileName, GroovySourceAST cst) {
-		}
-
-		public void generatedClasses(String fileName, String[] classNames, String[] classFilePaths) {
 		}
 	}
 

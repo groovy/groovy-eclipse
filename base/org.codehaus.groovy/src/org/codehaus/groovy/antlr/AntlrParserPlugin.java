@@ -551,9 +551,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode superClass = null;
         if (isType(EXTENDS_CLAUSE, node)) {
             superClass = makeTypeWithArguments(node);
-            // FIXASC (groovychange)
-            configureAST(superClass,node);
-            // end
             node = node.getNextSibling();
         }
 

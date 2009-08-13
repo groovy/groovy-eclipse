@@ -18,23 +18,18 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.utils;
 
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompilerConfigurationBuilder;
-import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilerConfiguration;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;

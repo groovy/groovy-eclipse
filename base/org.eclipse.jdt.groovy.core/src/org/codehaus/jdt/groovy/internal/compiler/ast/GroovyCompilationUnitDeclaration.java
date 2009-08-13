@@ -1185,6 +1185,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		return groovySourceUnit == null ? null : groovySourceUnit.getAST();
 	}
 
+	public SourceUnit getSourceUnit() {
+		return groovySourceUnit;
+	}
+
 	/**
 	 * Try to get the source locations for type declarations to be as correct as possible
 	 */

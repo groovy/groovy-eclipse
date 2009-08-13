@@ -13,13 +13,22 @@ package org.codehaus.groovy.eclipse.core.compiler;
 
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 
+import org.codehaus.groovy.antlr.AntlrParserPlugin;
+import org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory;
+import org.codehaus.groovy.antlr.GroovySourceAST;
+import org.codehaus.groovy.antlr.ICSTReporter;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.control.ParserPlugin;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.syntax.CSTNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
@@ -106,7 +115,7 @@ public class GroovySnippetParser {
             (GroovyCompilationUnitDeclaration)
             parser.dietParse(unit, compilationResult);
         ModuleNode node = decl.getModuleNode();
-        
+
         // Remove any remaining synthetic methods
         for (ClassNode classNode : node.getClasses()) {
             for (Iterator<MethodNode> methodIter = classNode.getMethods().iterator(); methodIter.hasNext();) {
@@ -117,5 +126,31 @@ public class GroovySnippetParser {
             }
         }
         return node;
+    }
+    
+    
+    
+    public GroovySourceAST parseForCST(String source) {
+        Hashtable table = JavaCore.getOptions();
+        table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+        CompilerOptions options = new CompilerOptions(table);
+        ProblemReporter reporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
+                new DefaultProblemFactory());
+
+        GroovyParser parser = new GroovyParser(null, reporter);
+        ICompilationUnit unit = new MockCompilationUnit(source.toCharArray(), "Hello.groovy".toCharArray());
+        CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
+
+        
+        GroovyCompilationUnitDeclaration decl =
+            (GroovyCompilationUnitDeclaration)
+            parser.dietParse(unit, compilationResult);
+        SourceUnit sourceUnit = decl.getSourceUnit();
+        ParserPlugin parserPlugin = (ParserPlugin) ReflectionUtils.getPrivateField(SourceUnit.class, "parserPlugin", sourceUnit);
+        if (parserPlugin instanceof AntlrParserPlugin) {
+            return (GroovySourceAST) ReflectionUtils.getPrivateField(AntlrParserPlugin.class, "ast", parserPlugin);
+        } else {
+            return null;
+        }
     }
 }

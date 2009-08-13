@@ -48,7 +48,8 @@ public class ErrorLogTest extends TestCase {
         "One or more bundles",
         "Monitor UI start failed",
         "was not resolved",
-        "org.eclipse.test.performance.win32.translated_host_properties"
+        "org.eclipse.test.performance.win32.translated_host_properties",
+        "Listener failed"
     };
     
     private boolean canIgnoreMessage(String msg) {

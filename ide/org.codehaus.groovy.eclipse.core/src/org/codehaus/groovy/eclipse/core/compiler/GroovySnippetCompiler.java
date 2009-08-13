@@ -68,24 +68,8 @@ public class GroovySnippetCompiler {
      * @param sourcePath the path including file name to compile.  Can be null
      */
     public ModuleNode compile(String source, String sourcePath) {
-        if (sourcePath == null) {
-            sourcePath = "Nothing.groovy";
-        } else if (! ContentTypeUtils.isGroovyLikeFileName(sourcePath)) {
-            sourcePath = sourcePath.concat(".groovy");
-        }
-        
-        sourcePath = sourcePath.concat(".groovy");
-        Map options = JavaCore.getOptions();
-        options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        Compiler compiler = new Compiler(
-                new NameEnvironment(project.getProject()), 
-                DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-                options, 
-                new Requestor(), 
-                new DefaultProblemFactory());
-        GroovyCompilationUnitDeclaration decl =
-            (GroovyCompilationUnitDeclaration)
-            compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);
+        GroovyCompilationUnitDeclaration decl = internalCompile(source,
+                sourcePath);
         ModuleNode node = decl.getModuleNode();
         
         // Remove any remaining synthetic methods
@@ -98,6 +82,33 @@ public class GroovySnippetCompiler {
             }
         }
         return node;
+    }
+
+    public CompilationResult compileForErrors(String source, String sourcePath) {
+        GroovyCompilationUnitDeclaration unit = internalCompile(source, sourcePath);
+        return unit.compilationResult();
+    }
+
+    private GroovyCompilationUnitDeclaration internalCompile(String source,
+            String sourcePath) {
+        if (sourcePath == null) {
+            sourcePath = "Nothing.groovy";
+        } else if (! ContentTypeUtils.isGroovyLikeFileName(sourcePath)) {
+            sourcePath = sourcePath.concat(".groovy");
+        }
+        
+        Map options = JavaCore.getOptions();
+        options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+        Compiler compiler = new Compiler(
+                new NameEnvironment(project.getProject()), 
+                DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
+                options, 
+                new Requestor(), 
+                new DefaultProblemFactory());
+        GroovyCompilationUnitDeclaration decl =
+            (GroovyCompilationUnitDeclaration)
+            compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);
+        return decl;
     }
     
 

@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.core.context.impl;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,19 +33,11 @@ import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
 
-import org.codehaus.groovy.antlr.GroovySourceAST;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.CoreTestsActivator;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.GroovyCompilerConfigurationBuilder;
-import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilationReporter;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompiler;
-import org.codehaus.groovy.eclipse.core.compiler.IGroovyCompilerConfiguration;
 import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext;
 import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
-import org.codehaus.groovy.eclipse.test.TestProject;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -107,39 +98,6 @@ public abstract class GroovyContextFactoryTests extends TestCase {
 		}
 	}
 
-	/**
-	 * Reporter to get the AST from.
-	 */
-	static class TestCompilationReporter implements IGroovyCompilationReporter {
-		public ModuleNode moduleNode;
-
-		public void beginReporting() {
-		}
-
-		public void beginReporting(String fileName) {
-		}
-
-		public void compilationError(String fileName, int line, int startCol, int endCol, String message,
-				String stackTrace) {
-			throw new IllegalStateException(message + "\n" + stackTrace);
-		}
-
-		public void endReporting() {
-		}
-
-		public void endReporting(String fileName) {
-		}
-
-		public void generatedAST(String fileName, ModuleNode moduleNode) {
-			this.moduleNode = moduleNode;
-		}
-
-		public void generatedCST(String fileName, GroovySourceAST cst) {
-		}
-
-		public void generatedClasses(String fileName, String[] classNames, String[] classFilePaths) {
-		}
-	}
 
 	// The source code with tabs replaces with spaces.
 	String sourceCode;

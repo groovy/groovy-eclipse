@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.internal.junit.util.JUnitStatus;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
 
@@ -55,4 +57,23 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
         }
     }
 
+    /**
+     * Ensure that GroovyTestCase is seen as OK 
+     * to have in the super class field even if
+     * JUnit 3 is not yet on the classpath
+     */
+    @Override
+    protected IStatus superClassChanged() {
+        // replaces the super class validation of of the normal type wizard
+        if (isJUnit4()) {
+            return super.superClassChanged();
+        }
+
+        String superClassName= getSuperClass();
+        if (GROOVY_TEST_CASE.equals(superClassName)) {
+            return new JUnitStatus();
+        }
+
+        return super.superClassChanged();
+    }
 }

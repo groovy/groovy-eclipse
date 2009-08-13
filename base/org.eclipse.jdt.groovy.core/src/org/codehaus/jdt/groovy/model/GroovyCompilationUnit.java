@@ -354,6 +354,10 @@ public class GroovyCompilationUnit extends CompilationUnit {
 					Util.log(e, "Problem with build structure for " + this.getElementName()); //$NON-NLS-1$
 				}
 			}
+		} catch (OperationCanceledException e) {
+			// catch this exception so as to not enter the catch(RuntimeException e) below
+			// might need to do the same for AbortCompilation
+			throw e;
 		} catch (Exception e) {
 			// GROOVY: The groovy compiler does not handle broken code well in many situations
 			// use this general catch clause so that exceptions thrown by broken code
