@@ -1708,7 +1708,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"4. WARNING in Demo.groovy (at line 10)\n" + 
 		"	class MyMap<K,V> extends Map {\n" + 
-		"	                 ^^^^^^^^^^^^\n" + 
+		"	                         ^^^\n" + 
 		"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
 		"----------\n");
 	}
@@ -2623,7 +2623,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			},"----------\n" + 
 			"1. ERROR in p\\X.groovy (at line 2)\n" + 
 			"	public class X extends Wibble<Foo> {\n" + 
-			"	               ^^\n" + 
+			"	                       ^^\n" + 
 			"Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" + 
 			"----------\n");		
 	}
@@ -3131,7 +3131,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in p\\B.groovy (at line 2)\n" + 
 			"	public class B extends A<String> {\n" + 
-			"	               ^^\n" + 
+			"	                       ^^\n" + 
 			"Groovy:The type String is not a valid substitute for the bounded parameter <T extends p.I>\n" + 
 			"----------\n" 
 		);			
