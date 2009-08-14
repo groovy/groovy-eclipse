@@ -26,9 +26,13 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
+import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MemberTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
@@ -204,6 +208,15 @@ public class JDTClassNode extends ClassNode {
 		// Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
 		// different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
 		if (jdtBinding instanceof SourceTypeBinding) {
+			SourceTypeBinding jdtSourceTypeBinding = (SourceTypeBinding) jdtBinding;
+			ClassScope classScope = jdtSourceTypeBinding.scope;
+			// a null scope indicates it has already been 'cleaned up' so nothing to do (CUDeclaration.cleanUp())
+			if (classScope != null) {
+				CompilationUnitScope cuScope = classScope.compilationUnitScope();
+				LookupEnvironment environment = classScope.environment();
+				MethodVerifier verifier = environment.methodVerifier();
+				cuScope.verifyMethods(verifier);
+			}
 			SyntheticMethodBinding[] syntheticMethodBindings = ((SourceTypeBinding) jdtBinding).syntheticMethods();
 			if (syntheticMethodBindings != null) {
 				for (int i = 0; i < syntheticMethodBindings.length; i++) {
