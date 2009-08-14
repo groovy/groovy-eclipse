@@ -22,13 +22,10 @@ import java.util.List;
  */
 public class GroovyUtils {
 
-	// FIXASC (M2) don't use this any more
+	// FIXASC (M2) don't use this any more?
 	public static int[] getSourceLineSeparatorsIn(char[] code) {
 		List<Integer> lineSeparatorsCollection = new ArrayList<Integer>();
 		for (int i = 0, max = code.length; i < max; i++) {
-
-			// FIXASC (M2) groovy what about \r
-
 			if (code[i] == '\r') {
 				if ((i + 1) < max && code[i + 1] == '\n') {// \r\n
 					lineSeparatorsCollection.add(i + 1); // add the position of the \n
