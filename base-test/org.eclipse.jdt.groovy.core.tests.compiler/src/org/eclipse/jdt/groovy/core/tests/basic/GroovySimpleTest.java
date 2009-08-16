@@ -48,7 +48,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		return buildUniqueComplianceTestSuite(testClass(),F_1_5);
 //		return buildAllCompliancesTestSuite(testClass());
 //		return buildMinimalComplianceTestSuite(testClass(),F_1_5);
-	}
+	} 
 	
 	
 	protected void setUp() throws Exception {
