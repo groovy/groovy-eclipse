@@ -106,6 +106,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	
+//	public void testBrokenPackage() {
+//		this.runNegativeTest(new String[] {
+//				"Foo.groovy",
+//				"package ;\n"+
+//				"class Name extends GroovyTestCase { }\n"},"");
+//	}
 	
 	
 	public void testGenericsPositions_GRE267_1() {
@@ -207,20 +213,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	
 
 	
-//	class One {
-//		List myListOfStrings;
-//
-//		Map<String,List<Integer>> getComplicatedGenericallySpecifiedMap() {
-//			
-//		}
-//
-//		Stack plates;
-//	}
-
 	
-//	// FIXASC (M2) appears to be a groovy bug - the java.util.Set is missing generics info - as if it had none
+	// FIXASC (M2) appears to be a groovy bug - the java.util.Set is missing generics info - as if it had none
 //	public void testGenericsPositions_4_GRE267() {
-//		this.runConformTest(new String[] {
+//		this.runConformTest(new String[] { 
 //			"X.groovy",
 //			"class X {\n" + 
 ////			"  java.util.Set<?> setone;\n"+
@@ -1362,6 +1358,263 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"Groovy:expecting \'}\', found \'\' @ line 7, column 18.\n" + 
 			"----------\n");
 		}
+	
+	
+	// a valid script, no '.' after session2
+	public void testInvalidScripts_GRE323_1() {
+		this.runNegativeTest(new String[] {
+			"Two.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"moo {\n" + 
+			"  final session2 = null\n" + 
+		    "  \n" + 
+			"  // Define scenarios\n" + 
+			"  def secBoardRep = session2\n" + 
+			"  def x\n" + 
+			"}\n"
+		},"");		
+	}
+
+	public void testInvalidScripts_GRE323_1b() {
+		this.runConformTest(new String[] {
+			"Two.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"moo {\n" + 
+			"  final session2 = null\n" + 
+		    "  \n" + 
+			"  // Define scenarios\n" + 
+			"  def secBoardRep = session2\n" + 
+			"  def x\n" + 
+			"}\n"
+		},"");		
+	}
+
+	// '.' added, command line gives:
+	//	One.groovy: 10: expecting '}', found 'x' @ line 10, column 7.
+	//    def x
+	//        ^
+	public void testInvalidScripts_GRE323_2() {
+		this.runNegativeTest(new String[] {
+			"One.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"moo {\n" + 
+			"  final session2 = null\n" + 
+		    "  \n" + 
+			"  // Define scenarios\n" + 
+			"  def secBoardRep = session2.\n" + 
+			"  def x\n" + 
+			"}\n"
+		},
+		"----------\n" + 
+		"1. ERROR in One.groovy (at line 10)\n" + 
+		"	def x\n" + 
+		"	    ^\n" + 
+		"Groovy:expecting \'}\', found \'x\' @ line 10, column 7.\n" + 
+		"----------\n");		
+	}
+	
+	// removed surrounding method
+	public void testInvalidScripts_GRE323_3() {
+		this.runNegativeTest(new String[] {
+			"Three.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"  final session2 = null\n" + 
+		    "  \n" + 
+			"  // Define scenarios\n" + 
+			"  def secBoardRep = session2\n" + 
+			"  def x\n"
+		},"");		
+	}
+
+	public void testInvalidScripts_GRE323_3b() {
+		this.runConformTest(new String[] {
+			"Three.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"  final session2 = null\n" + 
+		    "  \n" + 
+			"  // Define scenarios\n" + 
+			"  def secBoardRep = session2\n" + 
+			"  def x\n"
+		},"");		
+	}
+	
+	// no assignment for session2
+	public void testInvalidScripts_GRE323_4() {
+		this.runNegativeTest(new String[] {
+			"Four.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"moo {\n" + 
+			"  final session2 = null\n" + 
+		    "  \n" + 
+			"  // Define scenarios\n" + 
+			"  session2.\n" + 
+			"  def x\n"+
+			"}\n"
+		},"");
+	}
+
+	public void testInvalidScripts_GRE323_4b() {
+		this.runConformTest(new String[] {
+			"Run.java",
+			"public class Run {\n"+
+			"  public static void main(String[]argv) {\n"+
+			"   try {\n"+
+			"    Four.main(null);\n"+
+			"   } catch (Throwable t) {\n"+
+			"    System.out.println(t.getMessage());\n"+
+			"   }\n"+
+			"}\n"+
+			"}",
+			"Four.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"moo {\n" + 
+			"  final session2 = null\n" + 
+		    "  \n" + 
+			"  // Define scenarios\n" + 
+			"  session2.\n" + 
+			"  def x\n"+
+			"}\n"
+		},"No such property: x for class: Four");
+// actual exception:
+//		"[ERR]:groovy.lang.MissingPropertyException: No such property: x for class: Four\n"+
+//		"	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.unwrap(ScriptBytecodeAdapter.java:49)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.PogoGetPropertySite.getProperty(PogoGetPropertySite.java:49)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callGroovyObjectGetProperty(AbstractCallSite.java:241)\n"+
+//		"	at Four$_run_closure1.doCall(Four.groovy:9)\n"+
+//		"	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n"+
+//		"	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)\n"+
+//		"	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)\n"+
+//		"	at java.lang.reflect.Method.invoke(Method.java:585)\n"+
+//		"	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:86)\n"+
+//		"	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:234)\n"+
+//		"	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:272)\n"+
+//		"	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:880)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.PogoMetaClassSite.callCurrent(PogoMetaClassSite.java:66)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:44)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:143)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:151)\n"+
+//		"	at Four$_run_closure1.doCall(Four.groovy)\n"+
+//		"	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n"+
+//		"	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)\n"+
+//		"	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)\n"+
+//		"	at java.lang.reflect.Method.invoke(Method.java:585)\n"+
+//		"	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:86)\n"+
+//		"	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:234)\n"+
+//		"	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:272)\n"+
+//		"	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:880)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.PogoMetaClassSite.call(PogoMetaClassSite.java:39)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCall(CallSiteArray.java:40)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:117)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:121)\n"+
+//		"	at Four.moo(Four.groovy:2)\n"+
+//		"	at Four$moo.callCurrent(Unknown Source)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:44)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:143)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callCurrent(AbstractCallSite.java:151)\n"+
+//		"	at Four.run(Four.groovy:5)\n"+
+//		"	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n"+
+//		"	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)\n"+
+//		"	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)\n"+
+//		"	at java.lang.reflect.Method.invoke(Method.java:585)\n"+
+//		"	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:86)\n"+
+//		"	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:234)\n"+
+//		"	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1049)\n"+
+//		"	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:880)\n"+
+//		"	at org.codehaus.groovy.runtime.InvokerHelper.invokePogoMethod(InvokerHelper.java:745)\n"+
+//		"	at org.codehaus.groovy.runtime.InvokerHelper.invokeMethod(InvokerHelper.java:728)\n"+
+//		"	at org.codehaus.groovy.runtime.InvokerHelper.runScript(InvokerHelper.java:383)\n"+
+//		"	at org.codehaus.groovy.runtime.InvokerHelper$runScript.call(Unknown Source)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCall(CallSiteArray.java:40)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:117)\n"+
+//		"	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:129)\n"+
+//		"	at Four.main(Four.groovy)\n"+
+//		"	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n"+
+//		"	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)\n"+
+//		"	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)\n"+
+//		"	at java.lang.reflect.Method.invoke(Method.java:585)\n"+
+//		"	at \n"
+	}
+	
+	public void testInvalidScripts_GRE323_5() {
+		this.runNegativeTest(new String[] {
+			"Five.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"moo {\n" + 
+			"  final session2 = [\"def\": { println \"DEF\" }]\n" + 
+		    "  \n" + 
+		    "  final x = 1\n"+
+			"  // Define scenarios\n" + 
+			"  session2.\n" + 
+			"  def x\n"+
+			"}\n"
+		},"");		
+	}
+
+	public void testInvalidScripts_GRE323_5b() {
+		this.runConformTest(new String[] {
+			"Five.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"moo {\n" + 
+			"  final session2 = [\"def\": { println \"DEF\" }]\n" + 
+		    "  \n" + 
+		    "  final x = 1\n"+
+			"  // Define scenarios\n" + 
+			"  session2.\n" + 
+			"  def x\n"+
+			"}\n"
+		},"DEF");		
+	}
+	
+	public void testInvalidScripts_GRE323_6() {
+		this.runNegativeTest(new String[] {
+			"Six.groovy",
+			"def moo(closure) {\n" + 
+			"  closure();\n" + 
+			"}\n" + 
+			"\n" + 
+			"moo {\n" + 
+			"  final session2 = [\"def\": { println \"DEF\" }]\n" + 
+		    "  \n" + 
+		    "  final x = 1\n"+
+			"  // Define scenarios\n" + 
+			"  final y = session2.def x\n" + 
+			"}\n"
+		},
+		"----------\n" + 
+		"1. ERROR in Six.groovy (at line 10)\n" + 
+		"	final y = session2.def x\n" + 
+		"	                       ^\n" + 
+		"Groovy:expecting \'}\', found \'x\' @ line 10, column 26.\n" + 
+		"----------\n");		
+	}
+
 	// ---
 
 	// The getter for 'description' implements the interface

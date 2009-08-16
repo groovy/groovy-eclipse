@@ -2365,6 +2365,9 @@ pathElement[AST prefix] {Token operator = LT(1);}
         // RECOVERY: a.{
         exception
         catch [RecognitionException e] {
+        	if (pathElement_AST==null) {
+				throw e;
+			}
         	reportError(e);
         }
     |

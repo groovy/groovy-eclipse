@@ -11231,6 +11231,9 @@ inputState.guessing--;
 		catch (RecognitionException e) {
 			if (inputState.guessing==0) {
 				
+					if (pathElement_AST==null) {
+								throw e;
+							}
 					reportError(e);
 				
 			} else {
