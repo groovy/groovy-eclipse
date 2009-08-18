@@ -3,6 +3,9 @@
    <feature url="features/org.codehaus.groovy.eclipse.feature.source_0.0.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature.source" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature>
+   <feature url="features/org.codehaus.groovy.jdt.patch.source_0.0.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch.source" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.eclipse.sdk"/>
+   </feature>
    <feature url="features/org.codehaus.groovy.eclipse.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>

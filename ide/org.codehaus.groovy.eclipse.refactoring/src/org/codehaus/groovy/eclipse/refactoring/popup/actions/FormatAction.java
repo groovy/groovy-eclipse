@@ -44,7 +44,7 @@ public class FormatAction extends EditingAction {
 
 	@Override
     public void doAction(IAction action) throws BadLocationException {
-
+	    
 		if (initFormatting()) {
 			IPreferenceStore preferences = GroovyPlugin.getDefault()
 					.getPreferenceStore();

@@ -19,6 +19,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
+import org.codehaus.groovy.eclipse.editor.GroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -54,6 +55,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	
 	static boolean trace;
 
+	private GroovyDocumentProvider documentProvider;
 
 	private GroovyTextTools textTools;
 	
@@ -110,6 +112,13 @@ public class GroovyPlugin extends AbstractUIPlugin {
 			return null;
 		return workBench.getActiveWorkbenchWindow();
 	}
+	
+	public GroovyDocumentProvider getDocumentProvider() {
+	    if (documentProvider == null) {
+	        documentProvider = new GroovyDocumentProvider();
+	    }
+        return documentProvider;
+    }
 
 	/**
 	 * Logs an exception

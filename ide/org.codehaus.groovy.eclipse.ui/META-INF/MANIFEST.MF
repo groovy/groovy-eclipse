@@ -39,6 +39,9 @@ Require-Bundle: org.eclipse.core.resources,
  org.codehaus.groovy;bundle-version="1.5.0",
  org.eclipse.jdt.groovy.core;bundle-version="1.0.0",
  org.eclipse.ui.workbench,
- org.eclipse.jdt.junit;bundle-version="3.4.0"
+ org.eclipse.jdt.junit;bundle-version="3.4.0",
+ org.eclipse.ltk.core.refactoring;bundle-version="3.5.0",
+ org.eclipse.ltk.ui.refactoring;bundle-version="3.4.100",
+ org.eclipse.jdt.core.manipulation;bundle-version="1.3.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

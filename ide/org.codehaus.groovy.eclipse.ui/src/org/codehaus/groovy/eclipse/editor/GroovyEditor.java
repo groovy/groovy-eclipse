@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.editor;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.editor.actions.OrganizeGroovyImportsAction;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IImportDeclaration;
@@ -24,7 +25,11 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
+import org.eclipse.jdt.ui.actions.GenerateActionGroup;
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.graphics.Image;
@@ -37,6 +42,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     
     public GroovyEditor() {
 		super();
+		setDocumentProvider(GroovyPlugin.getDefault().getDocumentProvider());
         setRulerContextMenuId("#GroovyCompilationUnitRulerContext"); //$NON-NLS-1$  
 	}
 
@@ -116,6 +122,23 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
     
     
+    @Override
+    protected void createActions() {
+        super.createActions();
+        
+        
+        // use our Organize Imports instead
+        GenerateActionGroup group = getGenerateActionGroup();
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, new OrganizeGroovyImportsAction(this));
+        
+        IAction organizeImports = new OrganizeGroovyImportsAction(this);
+        organizeImports
+                .setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
+        setAction("OrganizeImports", organizeImports); //$NON-NLS-1$
+
+    }
+    
+    // Causes class cast exceptions when setting preferences, so don't use
 //    /*
 //     * @see org.eclipse.jdt.internal.ui.javaeditor.JavaEditor#createJavaSourceViewer(org.eclipse.swt.widgets.Composite, org.eclipse.jface.text.source.IVerticalRuler, org.eclipse.jface.text.source.IOverviewRuler, boolean, int)
 //     */

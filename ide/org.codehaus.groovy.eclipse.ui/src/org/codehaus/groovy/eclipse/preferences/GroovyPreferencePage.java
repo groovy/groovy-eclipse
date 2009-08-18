@@ -18,6 +18,11 @@ package org.codehaus.groovy.eclipse.preferences;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
@@ -46,7 +51,38 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                 "&Use monospace font in the JUnit results pane.\n" +
                 "This is particularly useful for testing frameworks\n" +
                 "that use a formatted output such as Spock",
-                getFieldEditorParent());
+                getFieldEditorParent()) {
+            
+            Label myLabel;
+            
+            // override so we can set line wrap
+            @Override
+            public Label getLabelControl(Composite parent) {
+                if (myLabel == null) {
+                    myLabel = new Label(parent, SWT.LEFT | SWT.WRAP);
+                    myLabel.setFont(parent.getFont());
+                    String text = getLabelText();
+                    if (text != null) {
+                        myLabel.setText(text);
+                    }
+                    myLabel.addDisposeListener(new DisposeListener() {
+                        public void widgetDisposed(DisposeEvent event) {
+                            myLabel = null;
+                        }
+                    });
+                } else {
+                    checkParent(myLabel, parent);
+                }
+                return myLabel;
+            }
+            
+            @Override
+            protected Label getLabelControl() {
+                return myLabel;
+            }
+            
+            
+        };
         classFilePrefEditor.setPreferenceStore(getPreferenceStore());
         addField(classFilePrefEditor);
         
