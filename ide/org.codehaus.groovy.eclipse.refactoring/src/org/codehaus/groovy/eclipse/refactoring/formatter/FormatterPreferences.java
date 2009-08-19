@@ -18,7 +18,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import org.codehaus.groovy.eclipse.refactoring.preferences.PreferenceConstants;
+import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 /**

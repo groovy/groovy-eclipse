@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.codehaus.groovy.eclipse.editor.actions;
+package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.Map;
 

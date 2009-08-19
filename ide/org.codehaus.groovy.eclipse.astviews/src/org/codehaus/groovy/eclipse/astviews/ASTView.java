@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -49,6 +50,7 @@ import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 /**
  * A view into the Groovy AST. Anyone who needs to manipulate the AST will find
@@ -289,15 +291,10 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 
 					ASTNode node = (ASTNode) value;
 					if (node.getLineNumber() != -1) {
-						EditorPartFacade facade = new EditorPartFacade(editor);
-						try {
-							int offset0 = facade.getOffset(node.getLineNumber() - 1, node.getColumnNumber() - 1);
-							int offset1 = facade
-									.getOffset(node.getLastLineNumber() - 1, node.getLastColumnNumber() - 1);
-							// editor.setHighlightRange(offset0, offset1 -
-							// offset0, true);
-							facade.select(offset0, offset1 - offset0);
-						} catch (BadLocationException e) {
+						int offset0 = node.getStart();
+						int offset1 = node.getEnd();
+						if (editor instanceof ITextEditor) {
+						    ((ITextEditor) editor).getSelectionProvider().setSelection(new TextSelection(offset0, offset1-offset0));
 						}
 					}
 				}

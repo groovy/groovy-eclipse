@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.impl;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -27,7 +30,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.ASTSearchResult;
 import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchInfo;
 import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchProcessor;
 import org.codehaus.groovy.eclipse.codebrowsing.SourceCodeFinder;
-import org.codehaus.groovy.eclipse.codebrowsing.TextUtils;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.model.IDocumentFacade;
@@ -148,7 +150,7 @@ public class VariableExpressionProcessor implements IDeclarationSearchProcessor 
 					.getLastColumnNumber() - 1);
 			String text = facade.getText(offset0, offset1 - offset0 + 1);
 
-			int identOffset = TextUtils.findIdentifierOffset(text, param
+			int identOffset = findIdentifierOffset(text, param
 					.getName());
 			if (identOffset != -1) {
 				Region region = new Region(offset0 + identOffset, param
@@ -185,4 +187,26 @@ public class VariableExpressionProcessor implements IDeclarationSearchProcessor 
                 new Annotation[0]);
         return var;
     }
+    
+    /**
+     * Given some text, find the offset to the first match of some identifier in
+     * the text.
+     * 
+     * @param text
+     * @param identifier
+     * @return The offset, or -1 if there is no match.
+     */
+    private int findIdentifierOffset(String text, String identifier) {
+        String notIdent = "[^a-zA-Z0-9_]";
+
+        Pattern pattern = Pattern.compile("(^|" + notIdent + ")(" + identifier + ")("
+                                + notIdent + "|$)");
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            return matcher.start(2);
+        }
+        
+        return -1;
+    }
+
 }

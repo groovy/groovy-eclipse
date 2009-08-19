@@ -21,7 +21,7 @@ package core;
 
 import java.util.HashMap;
 
-import org.codehaus.groovy.eclipse.refactoring.preferences.PreferenceConstants;
+import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 

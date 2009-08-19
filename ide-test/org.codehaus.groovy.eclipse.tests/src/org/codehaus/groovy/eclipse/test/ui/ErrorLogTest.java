@@ -49,7 +49,8 @@ public class ErrorLogTest extends TestCase {
         "Monitor UI start failed",
         "was not resolved",
         "org.eclipse.test.performance.win32.translated_host_properties",
-        "Listener failed"
+        "Listener failed",
+        "org.eclipse.mylyn.tasks.core"
     };
     
     private boolean canIgnoreMessage(String msg) {

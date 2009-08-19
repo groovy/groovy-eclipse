@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.codehaus.groovy.eclipse.editor.actions;
+package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package org.codehaus.groovy.eclipse.editor.actions;
+package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction.FormatKind;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.fix.CodeFormatCleanUp;
 import org.eclipse.jdt.internal.ui.fix.ImportsCleanUp;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
 import org.eclipse.jdt.ui.cleanup.ICleanUp;
@@ -40,13 +42,23 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
     @Override
     protected ICleanUp[] getCleanUps(Map settings, Set ids) {
         ICleanUp[] result= JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
+        boolean doImports = false;
+        boolean doFormat = false;
         for (int i= 0; i < result.length; i++) {
             if (result[i] instanceof ImportsCleanUp) {
-                GroovyImportsCleanup cleanup = new GroovyImportsCleanup(settings);
-                return new ICleanUp[] { cleanup };
+                doImports = true;
+            } else if (result[i] instanceof CodeFormatCleanUp) {
+                doFormat = true;
             }
         }
-
-        return new ICleanUp[0];
+        if (doImports && doFormat) {
+            return new ICleanUp[] { new GroovyImportsCleanup(settings), new GroovyCodeFormatCleanUp(FormatKind.FORMAT) };
+        } else if (doImports) {
+            return new ICleanUp[] { new GroovyImportsCleanup(settings) };
+        } else if (doFormat) {
+            return new ICleanUp[] { new GroovyCodeFormatCleanUp(FormatKind.FORMAT) };
+        } else {
+            return new ICleanUp[0];
+        }
     }
 }

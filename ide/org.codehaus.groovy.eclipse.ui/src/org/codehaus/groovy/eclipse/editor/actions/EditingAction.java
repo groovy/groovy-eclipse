@@ -37,14 +37,14 @@ import org.eclipse.ui.IEditorPart;
  * 
  * @author emp
  */
-public abstract class EditingAction extends EditorPartFacade implements IEditorActionDelegate {
+public abstract class EditingAction implements IEditorActionDelegate {
 	protected ISelection selection;
-
+	protected IEditorPart editor;
 	public EditingAction() {
 	}
-
+	
 	public void setActiveEditor(IAction action, IEditorPart targetEditor) {
-		super.setEditor(targetEditor);
+		editor = targetEditor;
 	}
 
 	public void selectionChanged(IAction action, ISelection selection) {

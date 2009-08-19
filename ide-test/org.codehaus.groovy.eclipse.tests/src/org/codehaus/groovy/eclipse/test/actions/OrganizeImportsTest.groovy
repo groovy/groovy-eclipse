@@ -8,11 +8,10 @@ import org.eclipse.text.edits.TextEdit;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
-import org.codehaus.groovy.eclipse.editor.actions.OrganizeGroovyImports;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.core.resources.IncrementalProjectBuilder;;
-
+import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports;
 
 /**
  * @author Andrew Eisenberg

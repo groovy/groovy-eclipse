@@ -21,7 +21,6 @@ import java.util.List;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jface.text.IRegion;
-import org.eclipse.ui.IEditorPart;
 
 /**
  * The interface to get IDeclarationProposals with.
@@ -32,6 +31,5 @@ import org.eclipse.ui.IEditorPart;
  * @author emp
  */
 public interface IDeclarationSearchAssistant {
-    List<IJavaElement> getProposals(IEditorPart editor, IRegion region);
 	List<IJavaElement> getProposals(ICompilationUnit unit, IRegion region);
 }

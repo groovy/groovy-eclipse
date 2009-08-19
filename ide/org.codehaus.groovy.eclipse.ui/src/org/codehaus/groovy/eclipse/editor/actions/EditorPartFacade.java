@@ -100,9 +100,13 @@ public class EditorPartFacade implements IDocumentFacade {
 	}
 
 	public IDocument getDocument() {
-		IDocumentProvider provider = getTextEditor().getDocumentProvider();
+	    ITextEditor textEditor = getTextEditor();
+        if (textEditor == null) {
+	        return null;
+	    }
+		IDocumentProvider provider = textEditor.getDocumentProvider();
 		if (provider != null)
-			return provider.getDocument(getTextEditor().getEditorInput());
+			return provider.getDocument(textEditor.getEditorInput());
 		return null;
 	}
 
@@ -115,7 +119,11 @@ public class EditorPartFacade implements IDocumentFacade {
 	}
 
 	public ITextSelection getTextSelection() {
-		return (ITextSelection) getTextEditor().getSelectionProvider()
+        ITextEditor textEditor = getTextEditor();
+        if (textEditor == null) {
+            return null;
+        }
+		return (ITextSelection) textEditor.getSelectionProvider()
 				.getSelection();
 	}
 

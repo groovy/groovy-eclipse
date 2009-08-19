@@ -182,25 +182,6 @@ public class DeclarationSearchAssistant implements IDeclarationSearchAssistant {
 				new FieldNodeProcessor());
 	}
 
-	public List<IJavaElement> getProposals(IEditorPart editor,
-			IRegion region) {
-		// Setup
-		EditorPartFacade facade = new EditorPartFacade(editor);
-		String identifier;
-		try {
-			identifier = facade.getDocument().get(region.getOffset(),
-					region.getLength());
-		} catch (BadLocationException e) {
-			GroovyPlugin.getDefault().logException("Should not happen", e);
-			return null;
-		}
-
-		ModuleNode moduleNode = (ModuleNode) facade.adapt(ModuleNode.class);
-		if (moduleNode == null)
-			return null;
-
-		return internalFindProposals(facade, region, identifier, moduleNode);
-	}
 
     private List<IJavaElement> internalFindProposals(IDocumentFacade facade,
             IRegion region, String identifier, ModuleNode moduleNode) {

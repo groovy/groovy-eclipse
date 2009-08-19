@@ -1,6 +1,6 @@
 package org.codehaus.groovy.eclipse.editor;
 
-import org.codehaus.groovy.eclipse.editor.actions.GroovyCleanupPostSaveListener;
+import org.codehaus.groovy.eclipse.refactoring.actions.GroovyCleanupPostSaveListener;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener;

@@ -368,6 +368,12 @@
             id="org.codehaus.groovy.eclipse.preferences.template"
             name="Templates">
       </page>
+       <page
+             category="org.codehaus.groovy.eclipse.preferences"
+             class="org.codehaus.groovy.eclipse.preferences.FormatterPreferencesPage"
+             id="org.codehaus.groovy.eclipse.preferences.formatter"
+             name="Formatter">
+       </page>
    </extension>
    
    <extension
@@ -441,9 +447,11 @@
 	<extension
        point="org.eclipse.core.runtime.preferences">
     	<initializer class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer"/>
- 	</extension>
- 
-<extension
+         <initializer
+               class="org.codehaus.groovy.eclipse.preferences.FormatterPreferenceInitializer">
+         </initializer>
+	 	</extension>
+	<extension
         point="org.eclipse.jdt.ui.classpathContainerPage">
     <classpathContainerPage
           class="org.codehaus.groovy.eclipse.ui.cpcontainer.GroovyClasspathContainerPage"

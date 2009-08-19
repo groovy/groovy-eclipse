@@ -15,25 +15,38 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.editor.actions.OrganizeGroovyImportsAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction.FormatKind;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
+import org.eclipse.jdt.internal.ui.refactoring.actions.RefactoringActions;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
+import org.eclipse.jdt.ui.actions.RefactorActionGroup;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.FileEditorInput;
 
 public class GroovyEditor extends CompilationUnitEditor {
     public static final String EDITOR_ID = "org.codehaus.groovy.eclipse.editor.GroovyEditor";
@@ -126,16 +139,37 @@ public class GroovyEditor extends CompilationUnitEditor {
     protected void createActions() {
         super.createActions();
         
+        GenerateActionGroup group = getGenerateActionGroup();
         
         // use our Organize Imports instead
-        GenerateActionGroup group = getGenerateActionGroup();
         ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, new OrganizeGroovyImportsAction(this));
-        
         IAction organizeImports = new OrganizeGroovyImportsAction(this);
         organizeImports
                 .setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
         setAction("OrganizeImports", organizeImports); //$NON-NLS-1$
-
+        
+        // use our Format instead
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fFormatAll", group, new FormatAllGroovyAction(this.getEditorSite(), FormatKind.FORMAT));
+        IAction formatAction = new FormatAllGroovyAction(this.getEditorSite(), FormatKind.FORMAT);
+        formatAction
+                .setActionDefinitionId(IJavaEditorActionDefinitionIds.FORMAT);
+        setAction("Format", formatAction); //$NON-NLS-1$
+        PlatformUI.getWorkbench().getHelpSystem().setHelp(formatAction, IJavaHelpContextIds.FORMAT_ACTION);
+        
+        // use our Indent instead
+        IAction indentAction = new FormatAllGroovyAction(this.getEditorSite(), FormatKind.INDENT_ONLY);
+        indentAction
+                .setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT);
+        setAction("Indent", indentAction); //$NON-NLS-1$
+        PlatformUI.getWorkbench().getHelpSystem().setHelp(indentAction, IJavaHelpContextIds.INDENT_ACTION);
+        
+        // now remove some actions:
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fAddGetterSetter", group, null);
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fCleanUp", group, null);
+        
+        // remove most refactorings since they are not yet really supported
+        RefactorActionGroup group2 = getRefactorActionGroup();
+        
     }
     
     // Causes class cast exceptions when setting preferences, so don't use
@@ -162,4 +196,46 @@ public class GroovyEditor extends CompilationUnitEditor {
         return super.getInputJavaElement();
     }
 
+    private IFile getFile() {
+        IEditorInput input = getEditorInput();
+        if (input instanceof FileEditorInput) {
+            return ((FileEditorInput) input).getFile();
+        } else {
+            return null;
+        }
+    }
+    
+    private GroovyCompilationUnit getGroovyCompilationUnit() {
+        IFile file = getFile();
+        if (file != null) {
+            return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        } else {
+            return null;
+        }
+    }
+    
+    private ModuleNode getModuleNode() {
+        GroovyCompilationUnit unit = getGroovyCompilationUnit();
+        if (unit != null) {
+            return unit.getModuleNode();
+        } else {
+            return null;
+        }
+    }
+    
+    @Override
+    public Object getAdapter(Class required) {
+        if (IResource.class == required || IFile.class == required) {
+            return this.getFile();
+        }
+        if (GroovyCompilationUnit.class == required || ICompilationUnit.class == required || CompilationUnit.class == required) {
+            return this.getGroovyCompilationUnit();
+        }
+        
+        if (ModuleNode.class == required) {
+            return this.getModuleNode();
+        }
+        return super.getAdapter(required);
+    }
+    
 }
