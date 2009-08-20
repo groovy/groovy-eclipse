@@ -266,8 +266,19 @@ void checkInheritedMethods(MethodBinding inheritedMethod, MethodBinding otherInh
 			? inheritedMethod.areParametersEqual(otherInheritedMethod)
 			: inheritedMethod.areParameterErasuresEqual(otherInheritedMethod);
 		if (areDuplicates) {
-			problemReporter().duplicateInheritedMethods(this.type, inheritedMethod, otherInheritedMethod);
-			return;
+			// GROOVY start - necessary because BinaryTypeBindings have been changed to allow bridge methods through (@see BTB.createMethods())
+			boolean reportProblem = true;
+			if (this.environment!=null && this.environment.globalOptions.buildGroovyFiles==2) {
+				// Dont report if one of them is a bridge
+				reportProblem = !(inheritedMethod.isBridge() || otherInheritedMethod.isBridge());
+			}
+			if (reportProblem) {
+			// end
+				problemReporter().duplicateInheritedMethods(this.type, inheritedMethod, otherInheritedMethod);
+				return;
+			// GROOVY start
+			}
+			// end
 		}
 	}
 

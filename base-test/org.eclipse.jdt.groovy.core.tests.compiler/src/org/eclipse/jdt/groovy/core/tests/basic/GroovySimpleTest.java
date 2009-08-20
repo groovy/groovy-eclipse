@@ -149,6 +149,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 
+	
+
 	public void testGenericsPositions_GRE267_2() {
 		this.runConformTest(new String[] {
 			"X.groovy",
@@ -1614,6 +1616,34 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"Groovy:expecting \'}\', found \'x\' @ line 10, column 26.\n" + 
 		"----------\n");		
 	}
+	
+	public void testBridgeMethods_GRE336() {
+		this.runNegativeTest(new String[] {
+			"my/example/EnumBooleanMap.java",
+			"package my.example;\n"+
+			"\n"+
+			"import java.util.EnumMap;\n"+
+			"\n"+
+			"@SuppressWarnings(\"serial\")\n"+
+			"public class EnumBooleanMap<E extends Enum<E>> extends EnumMap<E, Boolean> {\n"+
+			"	\n"+
+			"	public EnumBooleanMap(Class<E> keyType) {\n"+
+			"		super(keyType);\n"+
+			"	}\n"+
+			"\n"+
+			"	public EnumBooleanMap(EnumBooleanMap<E> m) {\n"+
+			"		super(m);\n"+
+			"	}\n"+
+			"\n"+
+			"	@Override\n"+
+			"	public Boolean get(Object key) {\n"+
+			"		Boolean value = super.get(key);\n"+
+			"		return value != null ? value : false;\n"+
+			"	}\n"+
+			"}\n"
+		},"");
+	}
+
 
 	// ---
 
