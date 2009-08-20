@@ -23,7 +23,6 @@ import junit.framework.TestSuite;
 public class AllJUnitTests {
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite("Run of all JUnit Tests");
-        suite.addTestSuite(GroovyResourcePropertyTests.class);
         suite.addTestSuite(JUnit3TestFinderTests.class);
         suite.addTestSuite(JUnit4TestFinderTests.class);
         return suite;

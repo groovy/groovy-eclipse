@@ -20,6 +20,7 @@
       <viewerContribution
             targetID="#GroovyEditorContext"
             id="org.codehaus.groovy.eclipse.refactoring.RefactoringContext">
+<!--
          <menu
                id="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu"
                label="Refac&amp;tor"
@@ -52,7 +53,6 @@
                label="Rename..."
                menubarPath="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu/content">
          </action>
-<!--
          <action
                class="org.codehaus.groovy.eclipse.refactoring.popup.actions.TypeHierarchyAction"
                definitionId="org.codehaus.groovy.eclipse.refactoring.typehierarchy"
@@ -212,6 +212,7 @@
                      name="additions">
                </separator>
             </menu>
+            <!--
             <action
                   class="org.codehaus.groovy.eclipse.refactoring.popup.actions.InlineMethodAction"
                   definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
@@ -247,21 +248,7 @@
                   label="Correct Indentation"
                   menubarPath="org.codehaus.groovy.eclipse.refactoring.format/content">
             </action>
+		      -->
          </editorContribution>
-      </extension>
-      <extension
-            point="org.eclipse.ui.preferencePages">
-         <page
-               category="org.codehaus.groovy.eclipse.preferences"
-               class="org.codehaus.groovy.eclipse.refactoring.preferences.FormatterPreferencesPage"
-               id="org.codehaus.groovy.eclipse.preferences.formatter"
-               name="Formatter">
-         </page>
-      </extension>
-      <extension
-            point="org.eclipse.core.runtime.preferences">
-         <initializer
-               class="org.codehaus.groovy.eclipse.refactoring.preferences.PreferenceInitializer">
-         </initializer>
       </extension>
 </plugin>

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -35,20 +37,73 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
+import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
-import org.eclipse.jdt.internal.ui.refactoring.actions.RefactoringActions;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
 import org.eclipse.jdt.ui.actions.RefactorActionGroup;
+import org.eclipse.jdt.ui.cleanup.ICleanUp;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IWorkbenchSite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
 
 public class GroovyEditor extends CompilationUnitEditor {
+    /**
+     * 
+     * @author Andrew Eisenberg
+     * @created Aug 20, 2009
+     * ensure that this class is a noop
+     */
+    private class NoopCleanUpsAction extends AllCleanUpsAction {
+    
+        public NoopCleanUpsAction(IWorkbenchSite site) {
+            super(site);
+        }
+    
+        @Override
+        public void dispose() {
+        }
+    
+        @Override
+        protected ICleanUp[] getCleanUps(ICompilationUnit[] units) {
+            return new ICleanUp[0];
+        }
+    
+        @Override
+        protected void performRefactoring(ICompilationUnit[] cus,
+                ICleanUp[] cleanUps) throws InvocationTargetException {
+        }
+    
+        @Override
+        public ICompilationUnit[] getCompilationUnits(
+                IStructuredSelection selection) {
+            return new ICompilationUnit[0];
+        }
+    
+        @Override
+        public void run(IStructuredSelection selection) {
+        }
+    
+        @Override
+        public void run(ITextSelection selection) {
+        }
+    
+        @Override
+        public void selectionChanged(IStructuredSelection selection) {
+        }
+    
+        @Override
+        public void selectionChanged(ITextSelection selection) {
+        }
+    }
+
     public static final String EDITOR_ID = "org.codehaus.groovy.eclipse.editor.GroovyEditor";
 
     private GroovyImageDecorator decorator = new GroovyImageDecorator();
@@ -165,20 +220,12 @@ public class GroovyEditor extends CompilationUnitEditor {
         
         // now remove some actions:
         ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fAddGetterSetter", group, null);
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fCleanUp", group, null);
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fCleanUp", group, new NoopCleanUpsAction(getEditorSite()));
         
         // remove most refactorings since they are not yet really supported
         RefactorActionGroup group2 = getRefactorActionGroup();
         
     }
-    
-    // Causes class cast exceptions when setting preferences, so don't use
-//    /*
-//     * @see org.eclipse.jdt.internal.ui.javaeditor.JavaEditor#createJavaSourceViewer(org.eclipse.swt.widgets.Composite, org.eclipse.jface.text.source.IVerticalRuler, org.eclipse.jface.text.source.IOverviewRuler, boolean, int)
-//     */
-//    protected ISourceViewer createJavaSourceViewer(Composite parent, IVerticalRuler verticalRuler, IOverviewRuler overviewRuler, boolean isOverviewRulerVisible, int styles, IPreferenceStore store) {
-//        return new GroovySourceViewer(this, parent, verticalRuler, overviewRuler, isOverviewRulerVisible, styles, store);
-//    }
     
     /*
      * Make accessible to source viewer
@@ -210,7 +257,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         if (file != null) {
             return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
         } else {
-            return null;
+            return null;    
         }
     }
     
@@ -223,6 +270,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public Object getAdapter(Class required) {
         if (IResource.class == required || IFile.class == required) {

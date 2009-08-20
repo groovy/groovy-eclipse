@@ -201,69 +201,87 @@
    
     <extension point="org.eclipse.ui.popupMenus">
   		<objectContribution id="org.codehaus.groovy.eclipse.groovyContributions"
-			     			objectClass="org.eclipse.jdt.core.IJavaProject">
-   <action
-         class="org.codehaus.groovy.eclipse.actions.RemoveGroovyNatureAction"
-         enablesFor="1"
-         id="org.codehaus.groovy.eclipse.removenature.action"
-         label="Remove Groovy nature"
-         menubarPath="groovy/nature">
-   </action>
-   <action
-         class="org.codehaus.groovy.eclipse.actions.ImportLibs"
-         enablesFor="1"
-         id="org.codehaus.groovy.eclipse.importlibs.action"
-         label="Add Groovy libs to classpath"
-         menubarPath="groovy/libs">
-   </action>
-   <visibility>
-      <objectState
-            name="nature"
-            value="org.eclipse.jdt.groovy.core.groovyNature">
-      </objectState>
-   </visibility>
+   			adaptable="true"
+   			objectClass="org.eclipse.core.resources.IProject">
+			   <action
+			         class="org.codehaus.groovy.eclipse.actions.RemoveGroovyNatureAction"
+			         enablesFor="1"
+			         id="org.codehaus.groovy.eclipse.removenature.action"
+			         label="Remove Groovy nature"
+			         menubarPath="groovy/nature">
+			   </action>
+			   <action
+			         class="org.codehaus.groovy.eclipse.actions.ImportLibs"
+			         enablesFor="1"
+			         id="org.codehaus.groovy.eclipse.importlibs.action"
+			         label="Add Groovy libs to classpath"
+			         menubarPath="groovy/libs">
+			   </action>
+			   <visibility>
+			      <objectState
+			            name="nature"
+			            value="org.eclipse.jdt.groovy.core.groovyNature">
+			      </objectState>
+			   </visibility>
 		</objectContribution>
+
+		<!--
+		Restrict selection to be a project with a Groovy nature.
+		Specifying an "IJavaProject" objectClass would mean that
+		this contribution would become unavailable for web and EJB
+		projects in IBM Rational 6.x tools.
+		--> 
    		<objectContribution id="org.codehaus.groovy.eclipse.groovymenu"
-   			objectClass="org.eclipse.jdt.core.IJavaProject">
+   			adaptable="true"
+   			objectClass="org.eclipse.core.resources.IProject">
 	        <menu
 	              id="groovy"
 	              label="Groovy"
 	              path="additions">
 	           <separator name="defaultGroup"/>
 	           <separator name="nature"/>
-            <separator name="libs"/>
-	        </menu>
+             <separator name="libs"/>
+        </menu>
+        <visibility>
+           <objectState
+                 name="nature"
+                 value="org.eclipse.jdt.groovy.core.groovyNature">
+           </objectState>
+        </visibility>
 		</objectContribution>
-     <objectContribution
-           adaptable="false"
+
+		<!-- In "Configure" sub-menu -->
+    <objectContribution
+           adaptable="true"
            id="org.codehaus.groovy.eclipse.nonGroovyContributions"
-           objectClass="org.eclipse.jdt.core.IJavaProject">
+           objectClass="org.eclipse.core.resources.IProject">
         <action
               class="org.codehaus.groovy.eclipse.actions.AddGroovyNatureAction"
               enablesFor="1"
               id="org.codehaus.groovy.eclipse.addnature.action"
-              label="Add Groovy nature"
-              menubarPath="groovy/nature">
+              label="Convert to Groovy Project"
+              menubarPath="org.eclipse.ui.projectConfigure/additions">
         </action>
         <visibility>
-           <not>
-              <objectState
-                    name="nature"
-                    value="org.eclipse.jdt.groovy.core.groovyNature">
-              </objectState>
-           </not>
+         	<and>
+	         	<objectState name="nature" value="org.eclipse.jdt.core.javanature"/>
+	         	<not>
+		         	<objectState name="nature" value="org.eclipse.jdt.groovy.core.groovyNature"/>
+		        </not>
+		        <objectState name="open" value="true"/>
+		      </and>
         </visibility>
      </objectContribution>
      <objectContribution
-           adaptable="false"
+           adaptable="true"
            id="org.codehaus.groovy.eclipse.legacyContributions"
-           objectClass="org.eclipse.jdt.core.IJavaProject">
+           objectClass="org.eclipse.core.resources.IProject">
         <action
               class="org.codehaus.groovy.eclipse.actions.ConvertLegacyProjectAction"
               enablesFor="1"
               id="org.codehaus.groovy.eclipse.addnature.action"
               label="Convert Legacy Groovy Project"
-              menubarPath="groovy/nature">
+              menubarPath="org.eclipse.ui.projectConfigure/additions">
         </action>
         <visibility>
            <objectState
@@ -338,6 +356,14 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>					
 			</perspectiveExtension>
+    	<perspectiveExtension 
+ 			  targetID="org.eclipse.jst.j2ee.J2EEPerspective">
+					<actionSet id="ajelementCreation"/>
+						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
+						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>					
+    	</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.pde.ui.PDEPerspective">
 						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
@@ -422,19 +448,6 @@
 			processType="groovy"
 			id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"/>
 	</extension>
-	<extension point="org.eclipse.core.runtime.adapters">
-  		<factory adaptableType="org.eclipse.ui.IFileEditorInput"
-        	class="org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory">
-     		<adapter type="org.codehaus.groovy.ast.ClassNode"/>
-	  	</factory>
-    <factory
-          adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
-          class="org.codehaus.groovy.eclipse.adapters.GroovyEditorAdapterFactory">
-       <adapter
-             type="org.codehaus.groovy.ast.ModuleNode">
-       </adapter>
-    </factory>
-	</extension>
 	<extension
 		point="org.eclipse.core.expressions.propertyTesters">
 		<propertyTester
@@ -486,6 +499,17 @@
             adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor">
             <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
          </factory>
+  		<factory adaptableType="org.eclipse.ui.IFileEditorInput"
+        	class="org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory">
+     		<adapter type="org.codehaus.groovy.ast.ClassNode"/>
+	  	</factory>
+    <factory
+          adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
+          class="org.codehaus.groovy.eclipse.adapters.GroovyEditorAdapterFactory">
+       <adapter
+             type="org.codehaus.groovy.ast.ModuleNode">
+       </adapter>
+    </factory>
     </extension>
  <extension
        point="org.eclipse.ui.editorActions">

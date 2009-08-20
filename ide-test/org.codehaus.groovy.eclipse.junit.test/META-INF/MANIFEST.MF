@@ -13,3 +13,4 @@ Require-Bundle: org.codehaus.groovy.eclipse.core.test;bundle-version="1.6.3",
  org.eclipse.jdt.junit;bundle-version="3.4.0",
  org.codehaus.groovy.eclipse.ui;bundle-version="2.0.0"
 Export-Package: org.codehaus.groovy.eclipse.junit.test
+Bundle-RequiredExecutionEnvironment: J2SE-1.5

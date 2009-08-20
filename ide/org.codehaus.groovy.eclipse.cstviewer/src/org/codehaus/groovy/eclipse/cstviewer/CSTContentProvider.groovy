@@ -92,7 +92,7 @@ class CSTContentProvider implements ITreeContentProvider {
 			return parent instanceof GroovySourceAST || parent instanceof Exception
 		}
 
-		private List getProperties(Object parent){
+		private List<String> getProperties(Object parent){
 			def children =  parent?.class.methods.collect{ method -> 
 				if( method.name.startsWith('get') && method.parameterTypes.length == 0 ){
 					def name = method.name[3..-1]
@@ -105,7 +105,7 @@ class CSTContentProvider implements ITreeContentProvider {
 			return children.findAll{ it != null }
 		}
 		
-		private List getChildren(GroovySourceAST ast){
+		private List<GroovySourceAST> getChildren(GroovySourceAST ast){
 			def children = [] 
 			for( i in 0..ast.numberOfChildren - 1 ){
 				children << ast.childAt( i )

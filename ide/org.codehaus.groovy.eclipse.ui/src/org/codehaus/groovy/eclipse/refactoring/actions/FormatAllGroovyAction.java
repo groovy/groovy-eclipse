@@ -16,19 +16,34 @@
 
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Hashtable;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
+import org.eclipse.jdt.internal.corext.util.Messages;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.actions.ActionMessages;
+import org.eclipse.jdt.internal.ui.actions.ActionUtil;
+import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
 import org.eclipse.jdt.internal.ui.actions.MultiFormatAction;
+import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
+import org.eclipse.jdt.internal.ui.util.ElementValidator;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jdt.ui.actions.FormatAllAction;
 import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
 import org.eclipse.jdt.ui.cleanup.ICleanUp;
+import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPart;
@@ -51,6 +66,55 @@ public class FormatAllGroovyAction extends FormatAllAction {
             this.kind = kind;
         }
 
+        private void showUnexpectedError(CoreException e) {
+            String message2= Messages.format(ActionMessages.CleanUpAction_UnexpectedErrorMessage, e.getStatus().getMessage());
+            IStatus status= new Status(IStatus.ERROR, JavaUI.ID_PLUGIN, IStatus.ERROR, message2, null);
+            ErrorDialog.openError(getShell(), getActionName(), null, status);
+        }
+
+        
+        // Copied from super, but comment out section to test if on classpath
+        private void run(ICompilationUnit cu) {
+//            if (!ActionUtil.isEditable(fEditor, getShell(), cu))
+//                return;
+            if (cu.isReadOnly()) {
+                return;
+            }
+            
+            
+            ICleanUp[] cleanUps= getCleanUps(new ICompilationUnit[] {
+                cu
+            });
+            if (cleanUps == null)
+                return;
+
+            if (!ElementValidator.check(cu, getShell(), getActionName(), true /* always in editor */))
+                return;
+
+            try {
+                performRefactoring(new ICompilationUnit[] {
+                    cu
+                }, cleanUps);
+            } catch (InvocationTargetException e) {
+                JavaPlugin.log(e);
+                if (e.getCause() instanceof CoreException)
+                    showUnexpectedError((CoreException)e.getCause());
+            }
+        }
+
+        @Override
+        public void run(IStructuredSelection selection) {
+            ICompilationUnit[] cus= getCompilationUnits(selection);
+            if (cus.length == 0) {
+                MessageDialog.openInformation(getShell(), getActionName(), ActionMessages.CleanUpAction_EmptySelection_description);
+            } else if (cus.length == 1) {
+                run(cus[0]);
+            } else {
+                ReflectionUtils.executePrivateMethod(CleanUpAction.class, "runOnMultuple", new Class[] { ICompilationUnit.class }, this, new Object[] { cus });
+            }
+        }
+
+
         /*
          * @see org.eclipse.jdt.internal.ui.actions.CleanUpAction#createCleanUps(org.eclipse.jdt.core.ICompilationUnit[])
          */
@@ -68,6 +132,15 @@ public class FormatAllGroovyAction extends FormatAllAction {
     public FormatAllGroovyAction(IWorkbenchSite site, FormatKind kind) {
         super(site);
         ReflectionUtils.setPrivateField(FormatAllAction.class, "fCleanUpDelegate", this, new GroovyMultiFormatAction(site, kind));
+        
+        if (kind == FormatKind.INDENT_ONLY) {
+            setText("Indent");
+            setToolTipText("Indent Groovy file");
+            setDescription("Indent Groovy file");
+        } else if (kind == FormatKind.FORMAT) {
+            setToolTipText("Format Groovy file");
+            setDescription("Format Groovy file");
+        }
     }
     
     /* (non-Javadoc)

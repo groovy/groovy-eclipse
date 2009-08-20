@@ -37,7 +37,9 @@ public class ConvertLegacyProject {
     public static final String OLD_BUILDER = "org.codehaus.groovy.eclipse.groovyBuilder"
     
     def convertProjects(projects) {
-        projects.each( { it -> convertProject(it) } )
+        projects.each( { it -> if (it.isAccessible()) {
+            convertProject(it) 
+        }} )
     }
     
     
@@ -63,8 +65,9 @@ public class ConvertLegacyProject {
         project.setDescription(desc, null)
     }
     
-    IProject[] getAllOldProjects() {
+    public IProject[] getAllOldProjects() {
         IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-        projects.findAll
+        def legacyProjects = projects.findAll { IProject it -> it.isAccessible() && it.hasNature(OLD_NATURE) }
+        legacyProjects.toArray new IProject[0]
     }
 }

@@ -19,7 +19,6 @@ package org.codehaus.groovy.eclipse.debug.ui;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.junit.ui.FailureTrace;
 import org.eclipse.jdt.internal.junit.ui.TestRunnerViewPart;
@@ -101,7 +100,9 @@ public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener 
     private void internalForceMonospaceFont(IWorkbenchPartReference partRef) {
         if (partRef.getId().equals(JUNIT_RESULT_VIEW)) {
             TestRunnerViewPart view = (TestRunnerViewPart) partRef.getPage().findView(JUNIT_RESULT_VIEW);
-            internalSetMonospaceFont(isMonospace(), view);
+            if (view != null) {
+                internalSetMonospaceFont(isMonospace(), view);
+            }
         }
     }
 
