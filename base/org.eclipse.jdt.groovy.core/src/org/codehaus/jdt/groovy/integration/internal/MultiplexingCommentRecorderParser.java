@@ -16,7 +16,7 @@ import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 
@@ -33,18 +33,19 @@ public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 
 	// FIXASC (M2) how often is the LanguageSupport impl looked up? should be once then
 	// we remember what happened
-	public MultiplexingCommentRecorderParser(LookupEnvironment lookupEnvironment, ProblemReporter problemReporter,
+	public MultiplexingCommentRecorderParser(CompilerOptions compilerOptions, ProblemReporter problemReporter,
 			boolean optimizeStringLiterals) {
 		super(problemReporter, optimizeStringLiterals);
 		// The superclass that is extended is in charge of parsing .java files
-		groovyParser = new GroovyParser(lookupEnvironment, problemReporter);
+		groovyParser = new GroovyParser(compilerOptions, problemReporter);
 	}
 
 	@Override
 	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
 		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
 			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-			return new GroovyParser(null, this.groovyParser.problemReporter).dietParse(sourceUnit, compilationResult);
+			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter).dietParse(
+					sourceUnit, compilationResult);
 			// return groovyParser.dietParse(sourceUnit, compilationResult);
 		} else {
 			return super.dietParse(sourceUnit, compilationResult);

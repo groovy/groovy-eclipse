@@ -732,7 +732,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 		// old
 		// this.parser = new Parser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
 		// new
-		this.parser = LanguageSupportFactory.getParser(this.lookupEnvironment,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 1);
+		this.parser = LanguageSupportFactory.getParser(this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 1);
 		// GROOVY end
 	}
 

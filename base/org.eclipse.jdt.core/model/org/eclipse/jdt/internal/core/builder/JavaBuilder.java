@@ -39,8 +39,8 @@ public static final String SOURCE_ID = "JDT"; //$NON-NLS-1$
 
 // GROOVY start
 // make sure these are false for proper (non test) builds
-public static boolean DEBUG = false;
-public static boolean SHOW_STATS = false;
+public static boolean DEBUG = true;
+public static boolean SHOW_STATS = true;
 //GROOVY end
 
 /**

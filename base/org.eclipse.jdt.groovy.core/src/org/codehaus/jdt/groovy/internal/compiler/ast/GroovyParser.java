@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import java.io.File;
+
 import groovy.lang.GroovyClassLoader;
 
 import org.codehaus.groovy.control.CompilationUnit;
@@ -23,7 +25,7 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
 /**
@@ -41,16 +43,19 @@ public class GroovyParser {
 	private JDTResolver resolver;
 	private String gclClasspath;
 	public static IGroovyDebugRequestor debugRequestor;
+	private CompilerOptions compilerOptions;
 
-	public GroovyParser(LookupEnvironment lookupEnvironment, ProblemReporter problemReporter) {
-		// FIXASC (M2) can probably just pass in the compiler options rather than environment
-		String path = (lookupEnvironment == null ? null : lookupEnvironment.globalOptions.groovyClassLoaderPath);
+	// FIXASC (RC1) review callers who pass null for options
+	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
+		String path = (options == null ? null : options.groovyClassLoaderPath);
+//		if (options == null) {
+//			throw new RuntimeException("Dont do that");
+//		}
 		// FIXASC (M2) set parent of the loader to system or context class loader?
 		GroovyClassLoader gcl = new GroovyClassLoader();
 		this.gclClasspath = path;
-		if (path != null) {
-			gcl.addClasspath(path);
-		}
+		this.compilerOptions = options;
+		configureClasspath(gcl, path);
 		this.groovyCompilationUnit = new CompilationUnit(gcl);
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
 		// this.lookupEnvironment = lookupEnvironment;
@@ -58,6 +63,30 @@ public class GroovyParser {
 		this.resolver = new JDTResolver(groovyCompilationUnit);
 		groovyCompilationUnit.setClassLoader(gcl);
 		groovyCompilationUnit.setResolveVisitor(resolver);
+	}
+
+	// FIXASC (RC1) perf ok?
+	private void configureClasspath(GroovyClassLoader gcl, String path) {
+		if (path != null) {
+			if (path.indexOf(File.pathSeparator) != -1) {
+				int pos = 0;
+				while (pos != -1) {
+					int nextSep = path.indexOf(File.pathSeparator, pos);
+					if (nextSep == -1) {
+						// last piece
+						String p = path.substring(pos);
+						gcl.addClasspath(p);
+						pos = -1;
+					} else {
+						String p = path.substring(pos, nextSep);
+						gcl.addClasspath(p);
+						pos = nextSep + 1;
+					}
+				}
+			} else {
+				gcl.addClasspath(path);
+			}
+		}
 	}
 
 	/**
@@ -98,12 +127,13 @@ public class GroovyParser {
 
 	public void reset() {
 		GroovyClassLoader gcl = new GroovyClassLoader();
-		if (gclClasspath != null) {
-			gcl.addClasspath(gclClasspath);
-		}
+		configureClasspath(gcl, gclClasspath);
 		this.groovyCompilationUnit = new CompilationUnit(gcl);
 		this.resolver = new JDTResolver(groovyCompilationUnit);
 		this.groovyCompilationUnit.setResolveVisitor(resolver);
 	}
 
+	public CompilerOptions getCompilerOptions() {
+		return compilerOptions;
+	}
 }

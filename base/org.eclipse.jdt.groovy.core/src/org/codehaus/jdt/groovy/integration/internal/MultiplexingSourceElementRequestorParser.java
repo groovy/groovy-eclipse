@@ -79,7 +79,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 			CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
 
 			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-			CompilationUnitDeclaration cud = new GroovyParser(null, problemReporter).dietParse(unit, compilationResult);
+			CompilationUnitDeclaration cud = new GroovyParser(this.options, problemReporter).dietParse(unit, compilationResult);
 
 			// CompilationUnitDeclaration cud groovyParser.dietParse(sourceUnit, compilationResult);
 			HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);

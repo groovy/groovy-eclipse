@@ -18,6 +18,7 @@ import java.util.Map;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -52,6 +53,7 @@ import org.eclipse.jdt.internal.compiler.util.Messages;
 import org.eclipse.jdt.internal.core.BinaryMember;
 import org.eclipse.jdt.internal.core.CancelableNameEnvironment;
 import org.eclipse.jdt.internal.core.CancelableProblemFactory;
+import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.SourceRefElement;
@@ -305,7 +307,7 @@ class CompilationUnitResolver extends Compiler {
 		// old
 		// this.parser = new CommentRecorderParser(this.problemReporter, false);
 		// new
-		this.parser = LanguageSupportFactory.getParser(this.lookupEnvironment,this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant);
+		this.parser = LanguageSupportFactory.getParser(this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant);
 		// GROOVY end
 	}
 	public void process(CompilationUnitDeclaration unit, int i) {
@@ -471,7 +473,7 @@ class CompilationUnitResolver extends Compiler {
 			problemFactory = new CancelableProblemFactory(monitor);
 			// GROOVY start
 			CompilerOptions compilerOptions = getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
-			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject.getProject());
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
 			// GROOVY end
 			CompilationUnitResolver resolver =
 				new CompilationUnitResolver(
@@ -521,9 +523,9 @@ class CompilationUnitResolver extends Compiler {
 		try {
 			environment = new CancelableNameEnvironment(((JavaProject)javaProject), owner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
-			// GROOVY start
+			// GROOVY start	
 			CompilerOptions compilerOptions = getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
-			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject.getProject());
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject); 
 			// GROOVY end
 			resolver =
 				new CompilationUnitResolver(

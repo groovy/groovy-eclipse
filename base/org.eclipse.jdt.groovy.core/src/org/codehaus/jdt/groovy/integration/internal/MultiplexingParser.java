@@ -16,7 +16,7 @@ import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
@@ -33,10 +33,10 @@ public class MultiplexingParser extends Parser {
 
 	// FIXASC (M2) how often is the LanguageSupport impl looked up? should be once then
 	// we remember what happened
-	public MultiplexingParser(LookupEnvironment lookupEnvironment, ProblemReporter problemReporter, boolean optimizeStringLiterals) {
+	public MultiplexingParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean optimizeStringLiterals) {
 		super(problemReporter, optimizeStringLiterals);
 		// The superclass that is extended is in charge of parsing .java files
-		groovyParser = new GroovyParser(lookupEnvironment, problemReporter);
+		groovyParser = new GroovyParser(compilerOptions, problemReporter);
 	}
 
 	@Override

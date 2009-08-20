@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
@@ -29,7 +29,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 class DefaultLanguageSupport implements LanguageSupport {
 
-	public Parser getParser(LookupEnvironment lookupEnvironment, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
+	public Parser getParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
 		if (variant==1) {
 			return new Parser(problemReporter, parseLiteralExpressionsAsConstants);
 		} else { // if (variant==2) {

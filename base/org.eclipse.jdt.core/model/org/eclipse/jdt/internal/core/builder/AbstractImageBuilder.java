@@ -542,7 +542,7 @@ protected Compiler newCompiler() {
 	compilerOptions.performMethodsFullRecovery = true;
 	compilerOptions.performStatementsRecovery = true;
 	// GROOVY start: make it behave in a groovier way if this project has the right nature
-	CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaBuilder.getProject());
+	CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaBuilder.javaProject);
 	// GROOVY end
 	Compiler newCompiler = new Compiler(
 		this.nameEnvironment,

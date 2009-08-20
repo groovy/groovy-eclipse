@@ -126,7 +126,7 @@ public class SourceTypeConverter extends TypeConverter {
 		// FIXASC (M2) think about doing the necessary rewrite below rather than this - does it make things too slow?
 		if (new String(compilationResult.getFileName()).endsWith(".groovy")) {			
 			try {
-				return LanguageSupportFactory.getParser(null, problemReporter, true, 1).dietParse(this.cu, compilationResult);
+				return LanguageSupportFactory.getParser(problemReporter.options, problemReporter, true, 1).dietParse(this.cu, compilationResult);
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}

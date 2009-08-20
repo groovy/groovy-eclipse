@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -33,8 +34,8 @@ public class LanguageSupportFactory {
 	
 	public static final int CommentRecorderParserVariant = 2;
 	
-	public static Parser getParser(LookupEnvironment lookupEnvironment, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
-		return getLanguageSupport().getParser(lookupEnvironment,problemReporter,parseLiteralExpressionsAsConstants, variant);
+	public static Parser getParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
+		return getLanguageSupport().getParser(compilerOptions,problemReporter,parseLiteralExpressionsAsConstants, variant);
 	}
 	
 	public static CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {

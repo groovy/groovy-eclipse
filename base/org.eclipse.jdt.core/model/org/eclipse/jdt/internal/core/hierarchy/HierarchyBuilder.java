@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -78,12 +79,21 @@ public abstract class HierarchyBuilder {
 			unitsToLookInside = workingCopies;
 		}
 		if (project != null) {
+			// GROOVY start - pulled out of the call
+			Map optionMap = project.getOptions(true);
+			CompilerUtils.configureOptionsBasedOnNature(optionMap, project);
+			// GROOVY end
 			SearchableEnvironment searchableEnvironment = project.newSearchableNameEnvironment(unitsToLookInside);
 			this.nameLookup = searchableEnvironment.nameLookup;
 			this.hierarchyResolver =
 				new HierarchyResolver(
 					searchableEnvironment,
-					project.getOptions(true),
+					// GROOVY start
+					// old code
+//					project.getOptions(true),
+					// new code
+					optionMap,
+					// GROOVY end
 					this,
 					new DefaultProblemFactory());
 		}

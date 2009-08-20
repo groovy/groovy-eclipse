@@ -30,13 +30,13 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.util.Util;
-
 
 /**
  * The groovy implementation of LanguageSupport. This class is dynamically loaded by jdt.core (so referenced by name from jdt.core)
@@ -48,12 +48,12 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings("restriction")
 public class GroovyLanguageSupport implements LanguageSupport {
 
-	public Parser getParser(LookupEnvironment lookupEnvironment, ProblemReporter problemReporter,
+	public Parser getParser(CompilerOptions compilerOptions, ProblemReporter problemReporter,
 			boolean parseLiteralExpressionsAsConstants, int variant) {
 		if (variant == 1) {
-			return new MultiplexingParser(lookupEnvironment, problemReporter, parseLiteralExpressionsAsConstants);
+			return new MultiplexingParser(compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
 		} else { // variant==2
-			return new MultiplexingCommentRecorderParser(lookupEnvironment, problemReporter, parseLiteralExpressionsAsConstants);
+			return new MultiplexingCommentRecorderParser(compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
 		}
 	}
 

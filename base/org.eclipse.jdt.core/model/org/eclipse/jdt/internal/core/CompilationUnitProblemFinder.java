@@ -161,7 +161,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 			// GROOVY start
 			// options fetched prior to building problem finder then configured based on project
 			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0));
-			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project.getProject());
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
 			// GROOVY end
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
@@ -265,7 +265,7 @@ public class CompilationUnitProblemFinder extends Compiler {
         // old
         // this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
         // new
-        this.parser = LanguageSupportFactory.getParser(this.lookupEnvironment,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, LanguageSupportFactory.CommentRecorderParserVariant);
+        this.parser = LanguageSupportFactory.getParser(this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, LanguageSupportFactory.CommentRecorderParserVariant);
         // GROOVY end
 	}
 }

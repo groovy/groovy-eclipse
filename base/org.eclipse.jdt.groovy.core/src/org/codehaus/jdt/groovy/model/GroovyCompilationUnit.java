@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -247,10 +248,15 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
 		}
 
+		// FIXASC (M2) deal with the case of project==null to reduce duplication in this next line and call to setGroovyClasspath
 		// Required for Groovy, but not for Java
 		options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 
 		CompilerOptions compilerOptions = new CompilerOptions(options);
+
+		if (project != null) {
+			CompilerUtils.setGroovyClasspath(compilerOptions, project);
+		}
 
 		// Required for Groovy, but not for Java
 		ProblemReporter reporter = new ProblemReporter(new GroovyErrorHandlingPolicy(!computeProblems), compilerOptions,
