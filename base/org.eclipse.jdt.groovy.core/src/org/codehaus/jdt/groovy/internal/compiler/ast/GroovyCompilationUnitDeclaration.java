@@ -45,6 +45,7 @@ import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.control.messages.Message;
+import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
@@ -1145,6 +1146,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			int sev = 0;
 			int scol = 0;
 			int ecol = 0;
+			if (message instanceof SimpleMessage) {
+				SimpleMessage simpleMessage = (SimpleMessage) message;
+				sev |= ProblemSeverities.Error;
+				msg = "Groovy:" + simpleMessage.getMessage();
+				if (msg.indexOf("\n") != -1) {
+					msg = msg.substring(0, msg.indexOf("\n"));
+				}
+			}
 			if (message instanceof SyntaxErrorMessage) {
 				SyntaxErrorMessage errorMessage = (SyntaxErrorMessage) message;
 				syntaxException = errorMessage.getCause();
