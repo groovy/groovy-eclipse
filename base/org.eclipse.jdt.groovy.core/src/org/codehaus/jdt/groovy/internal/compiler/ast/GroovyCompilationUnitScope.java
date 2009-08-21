@@ -26,6 +26,8 @@ import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
@@ -171,6 +173,28 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 			// }
 			return newNode;
 		}
+		// FIXASC (RC1) better to look it up properly as a member type rather than catch the problem and unwrap!
+		// FIXASC (RC1) make sure enough thinking has gone into verifying this is reasonable.
+		// FIXASC (RC1) think about renaming the method due to it now using BTBs
+		// on an incremental build we see BTBs for what we previously saw STBs
+		if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
+			ClassNode newNode = jdtResolver.convertToClassNode(jdtBinding);
+			return newNode;
+		}
+
+		if (jdtBinding != null && (jdtBinding instanceof ProblemReferenceBinding)) {
+			ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
+			if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
+				jdtBinding = prBinding.closestMatch();
+				// FIXASC (M2) caching for this too
+				if (jdtBinding != null && (jdtBinding instanceof SourceTypeBinding)) {
+					return jdtResolver.convertToClassNode(jdtBinding);
+				}
+				if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
+					return jdtResolver.convertToClassNode(jdtBinding);
+				}
+			}
+		}
 		return null;
 	}
 
@@ -190,6 +214,17 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 			// jdtBinaryBindingCache.put(typename, newNode);
 			// }
 			return newNode;
+		}
+
+		if (jdtBinding != null && (jdtBinding instanceof ProblemReferenceBinding)) {
+			ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
+			if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
+				jdtBinding = prBinding.closestMatch();
+				// FIXASC (M2) caching for this too
+				if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
+					return jdtResolver.convertToClassNode(jdtBinding);
+				}
+			}
 		}
 		return null;
 	}

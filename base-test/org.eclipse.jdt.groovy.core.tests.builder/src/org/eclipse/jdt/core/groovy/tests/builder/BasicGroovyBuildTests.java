@@ -407,6 +407,45 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "pkg.GHello", "abc", "");
 
 	}
+	
+	public void testInnerClasses_GRE339() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(root, "", "Outer",
+			"public interface Outer {\n"+
+			"  interface Inner { static String VAR=\"value\";}\n"+
+			"}\n"
+			);
+
+		env.addGroovyClass(root, "", "script",
+			"print Outer.Inner.VAR\n"
+			);
+			
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Outer","Outer$Inner","script");
+		expectingNoProblems();
+		executeClass(projectPath, "script", "value", "");
+
+		// whitespace change to groovy file
+		env.addGroovyClass(root, "", "script",
+				"print Outer.Inner.VAR \n"
+				);
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("script");
+		expectingNoProblems();
+		executeClass(projectPath, "script", "value", null);
+
+	}
 
 
 	// TODO test for this - package disagrees with file, shouldn't npe in binding locating code

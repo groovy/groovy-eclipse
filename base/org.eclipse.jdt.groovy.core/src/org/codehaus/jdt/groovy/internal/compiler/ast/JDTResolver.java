@@ -166,6 +166,16 @@ public class JDTResolver extends ResolveVisitor {
 		// FIXASC (M3) anything special for inner types?
 	}
 
+	// @Override
+	// protected boolean resolveStaticInner(ClassNode type) {
+	// boolean foundit = super.resolveStaticInner(type);
+	// recordDependency(type.getName());
+	// if (debug) {
+	// log("resolveStaticInner", type, foundit);
+	// }
+	// return foundit;
+	// }
+
 	/**
 	 * resolveFromClassCache() - no point in asking, the cache does not get populated.
 	 */
@@ -483,6 +493,9 @@ public class JDTResolver extends ResolveVisitor {
 			throw geb;
 		}
 		activeScope = (GroovyCompilationUnitScope) gtDeclaration.scope.compilationUnitScope();
+		if (debug) {
+			System.err.println("Resolver: commencing resolution for " + this.currentClass.getName());
+		}
 	}
 
 	private GroovyCompilationUnitScope getScope() {

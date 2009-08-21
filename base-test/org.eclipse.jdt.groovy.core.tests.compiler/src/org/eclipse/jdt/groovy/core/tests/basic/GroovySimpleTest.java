@@ -1644,6 +1644,55 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"");
 	}
 
+	public void testInnerTypeReferencing_GRE339() {
+		this.runConformTest(new String[] {
+				"Script.groovy",
+				"class Script {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    print Outer.Inner.VAR\n"+
+				"  }\n"+
+				"}",
+				"Outer.java",
+				"public class Outer {\n"+
+				"	  static class Inner {\n"+
+				"	    static String VAR = \"value\";\n"+
+				"	  }\n"+
+				"	}\n"},
+			"value");
+	}
+	
+	// interface
+	public void testInnerTypeReferencing_GRE339_2() {
+		this.runConformTest(new String[] {
+				"Script.groovy",
+				"class Script {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    print Outer.Inner.VAR\n"+
+				"  }\n"+
+				"}",
+				"Outer.java",
+				"public interface Outer {\n"+
+				"	  interface Inner {\n"+
+				"	    static String VAR = \"value\";\n"+
+				"	  }\n"+
+				"	}\n"},
+			"value");
+	}
+	
+	// pure script
+	public void testInnerTypeReferencing_GRE339_3() {
+		this.runConformTest(new String[] {
+				"script.groovy",
+				"print Outer.Inner.VAR\n",
+				"Outer.java",
+				"public interface Outer {\n"+
+				"	  interface Inner {\n"+
+				"	    static String VAR = \"value\";\n"+
+				"	  }\n"+
+				"	}\n"},
+			"value");
+	}
+	
 
 	// ---
 
@@ -4154,7 +4203,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"q.A.run");		
 	}
 	
-	// FIXASC1) need to look at all other kinds of import - statics/double nested static classes/etc
+	// FIXASC need to look at all other kinds of import - statics/double nested static classes/etc
 
 	public void testImportInnerClass01_GroovyCase() {
 		this.runConformTest(new String[] {
