@@ -1322,6 +1322,23 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"Groovy:break to missing label\n" + 
 		"----------\n");		
 	}
+	
+	public void testNPE_GRE291() {
+		this.runNegativeTest(new String[] {
+				"ContinueTestCase.groovy",
+			"public class ContinueTestCase {\n" + 
+			"\n" + 
+			"	public ContinueTestCase() {\n" + 
+			"		continue;\n" + 
+			"	}\n" + 
+			"}\n" },
+			"----------\n" + 
+			"1. ERROR in ContinueTestCase.groovy (at line 4)\n" + 
+			"	continue;\n" + 
+			"	^\n" + 
+			"Groovy:the continue statement is only allowed inside loops\n" + 
+			"----------\n");
+	}
 
 	public void testMissingContext_GRE308() {
 		this.runNegativeTest(new String[] {

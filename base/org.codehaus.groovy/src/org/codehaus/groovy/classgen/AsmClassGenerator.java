@@ -1194,6 +1194,11 @@ public class AsmClassGenerator extends ClassGenerator {
         Label continueLabel = compileStack.getContinueLabel();
         if (name != null) continueLabel = compileStack.getNamedContinueLabel(name);
         compileStack.applyFinallyBlocks(continueLabel, false);
+        // FIXASC (groovychange) bad code GRE291
+        if (continueLabel == null) {
+        	return;
+        }
+        // end
         mv.visitJumpInsn(GOTO, continueLabel);
     }
 
