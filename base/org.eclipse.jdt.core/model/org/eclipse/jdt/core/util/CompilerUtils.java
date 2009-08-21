@@ -125,7 +125,7 @@ public class CompilerUtils {
 	
 	private static String calculateClasspath(IJavaProject javaProject) {
 		try {
-			StringBuilder path = new StringBuilder();
+			StringBuffer path = new StringBuffer();
 			IProject project = javaProject.getProject();
 			String projectName = project.getName();
 			IClasspathEntry[] cpes = javaProject.getResolvedClasspath(true);
