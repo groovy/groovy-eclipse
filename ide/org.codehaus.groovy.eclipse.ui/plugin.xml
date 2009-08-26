@@ -236,6 +236,50 @@
 			      </objectState>
 			   </visibility>
 		</objectContribution>
+		
+		<objectContribution id="org.codehaus.groovy.eclipse.groovyContributions"
+ 			adaptable="true"
+ 			objectClass="org.eclipse.core.resources.IFile">
+			   <action
+			         class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
+			         enablesFor="*"
+			         id="org.codehaus.groovy.eclipse.convertToGroovy.action"
+			         label="Convert file extension to Groovy"
+			         menubarPath="groovyfile/defaultGroup">
+         <enablement>
+            <objectState
+                  name="extension"
+                  value="java">
+            </objectState>
+         </enablement>
+			   </action>
+			   <action
+			         class="org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction"
+			         enablesFor="*"
+			         id="org.codehaus.groovy.eclipse.convertToJava.action"
+			         label="Convert file extension to Java"
+			         menubarPath="groovyfile/defaultGroup">
+         <enablement>
+            <objectState
+                  name="extension"
+                  value="groovy">
+            </objectState>
+         </enablement>
+			   </action>
+		      <menu
+            id="groovyfile"
+            label="Groovy"
+            path="additions">
+         <separator
+               name="defaultGroup">
+         </separator>
+      </menu>
+      <visibility>
+         <objectState 
+            name="projectNature" 
+            value="org.eclipse.jdt.groovy.core.groovyNature"/>
+      </visibility>
+		</objectContribution>
 
 		<!--
 		Restrict selection to be a project with a Groovy nature.
@@ -251,8 +295,9 @@
 	              label="Groovy"
 	              path="additions">
 	           <separator name="defaultGroup"/>
-	           <separator name="nature"/>
-             <separator name="libs"/>
+             <separator
+                  name="libs">
+            </separator>
         </menu>
         <visibility>
            <objectState

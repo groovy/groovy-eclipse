@@ -20,6 +20,7 @@ import java.io.IOException;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.eclipse.test.actions.ConvertToJavaOrGroovyActionTest;
 import org.codehaus.groovy.eclipse.test.actions.GroovyNatureActionTestCase;
 import org.codehaus.groovy.eclipse.test.actions.OrganizeImportsTest;
 import org.codehaus.groovy.eclipse.test.actions.SaveParticipantRegistryTest;
@@ -74,6 +75,7 @@ public class AllUITests {
 		suite.addTestSuite(BreakpointLocationTests.class);
 		suite.addTestSuite(OrganizeImportsTest.class);
 		suite.addTestSuite(SaveParticipantRegistryTest.class);
+		suite.addTestSuite(ConvertToJavaOrGroovyActionTest.class);
 		
 		// $JUnit-END$
 		
