@@ -23,7 +23,6 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
-    // FIXADE M2 will need these again for groovy colors in the editor
 //	private ITextDoubleClickStrategy doubleClickStrategy;
 	private GroovyTagScanner tagScanner;
 	private GroovyStringScanner stringScanner;

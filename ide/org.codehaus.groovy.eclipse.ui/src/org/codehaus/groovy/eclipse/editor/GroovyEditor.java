@@ -21,7 +21,9 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction.FormatKind;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -47,6 +49,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
@@ -110,7 +113,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     
     public GroovyEditor() {
 		super();
-		setDocumentProvider(GroovyPlugin.getDefault().getDocumentProvider());
+//		setDocumentProvider(GroovyPlugin.getDefault().getDocumentProvider());
         setRulerContextMenuId("#GroovyCompilationUnitRulerContext"); //$NON-NLS-1$  
 	}
 
@@ -138,7 +141,9 @@ public class GroovyEditor extends CompilationUnitEditor {
             // will be null if coming from a code repository such as svn or cvs
             element = getEditorInput().getName();
         }
-        return decorator.decorateImage(null, element);
+        Image image = decorator.decorateImage(null, element);
+        // cannot return null GRECLIPSE-257
+        return image != null? image : super.getTitleImage();
     }
     
     @Override
@@ -223,7 +228,42 @@ public class GroovyEditor extends CompilationUnitEditor {
         ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fCleanUp", group, new NoopCleanUpsAction(getEditorSite()));
         
         // remove most refactorings since they are not yet really supported
-        RefactorActionGroup group2 = getRefactorActionGroup();
+        removeRefactoringAction("fSelfEncapsulateField");
+        removeRefactoringAction("fMoveAction");
+        removeRefactoringAction("fRenameAction");
+        removeRefactoringAction("fModifyParametersAction");
+        // fPullUpAction
+        // fPushDownAction
+        removeRefactoringAction("fIntroduceParameterAction");
+        removeRefactoringAction("fIntroduceParameterObjectAction");
+        removeRefactoringAction("fIntroduceFactoryAction");
+        removeRefactoringAction("fExtractMethodAction");
+        removeRefactoringAction("fExtractInterfaceAction");
+        removeRefactoringAction("fExtractClassAction");
+        removeRefactoringAction("fExtractSupertypeAction");
+        removeRefactoringAction("fChangeTypeAction");
+        removeRefactoringAction("fConvertNestedToTopAction");
+        removeRefactoringAction("fInferTypeArgumentsAction");
+        removeRefactoringAction("fConvertLocalToFieldAction");
+        removeRefactoringAction("fConvertAnonymousToNestedAction");
+        removeRefactoringAction("fIntroduceIndirectionAction");
+        // fInlineAction
+        removeRefactoringAction("fUseSupertypeAction");
+        
+        // use our Rename action instead
+        IAction renameAction = new GroovyRenameAction(this);
+        renameAction
+                .setActionDefinitionId(IJavaEditorActionDefinitionIds.RENAME_ELEMENT);
+        setAction("RenameElement", renameAction); //$NON-NLS-1$
+
+    }
+    
+    private void removeRefactoringAction(String actionFieldName) {
+        RefactorActionGroup group = getRefactorActionGroup();
+        ISelectionChangedListener action = (ISelectionChangedListener) 
+                ReflectionUtils.getPrivateField(RefactorActionGroup.class, actionFieldName, group);
+        getSite().getSelectionProvider().removeSelectionChangedListener(action);
+        ReflectionUtils.setPrivateField(RefactorActionGroup.class, actionFieldName, group, null);
         
     }
     

@@ -21,19 +21,19 @@ package org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.*;
 
-public class AssignementAndCall implements IASTNodePredicate {
+public class AssignmentAndCall implements IASTNodePredicate {
 
 	public ASTNode evaluate(ASTNode input) {
 
 		if (input instanceof ClosureExpression) {
 			return input;
-		} else if (isAssignement(input) || isMethodCall(input)) {
+		} else if (isAssignment(input) || isMethodCall(input)) {
 			return input;
 		}
 		return null;
 	}
 
-	public static boolean isAssignement(ASTNode node) {
+	public static boolean isAssignment(ASTNode node) {
 		if (node instanceof DeclarationExpression) {
 			return true;
 		} else if (node instanceof BinaryExpression) {

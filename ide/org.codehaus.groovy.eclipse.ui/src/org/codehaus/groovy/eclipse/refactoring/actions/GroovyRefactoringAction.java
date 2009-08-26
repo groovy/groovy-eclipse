@@ -19,6 +19,7 @@
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
+import org.codehaus.groovy.eclipse.refactoring.Activator;
 import org.codehaus.groovy.eclipse.refactoring.core.*;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
@@ -29,7 +30,10 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
@@ -70,8 +74,14 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 					WorkspaceDocumentProvider currDocProv = (WorkspaceDocumentProvider) dp;
 					IMarker[] markers = currDocProv.getFile().findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_ONE);
 					if (markers.length > 0) {
-						displayErrorDialog(GroovyRefactoringMessages.GroovyRefactoringAction_Syntax_Errors);
-						return false;
+					    for (int i = 0; i < markers.length; i++) {
+                            if (markers[i].getAttribute(IMarker.SEVERITY, 0) >= IMarker.SEVERITY_ERROR) {
+                                displayErrorDialog(GroovyRefactoringMessages.bind(
+                                        GroovyRefactoringMessages.GroovyRefactoringAction_Syntax_Errors, 
+                                        markers[i].getResource().getFullPath().toPortableString()));
+                                return false;
+                            }
+                        }
 					}
 				}
 			}
@@ -87,9 +97,10 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 	}
 
 	protected void displayErrorDialog(String message) {
-		MessageBox error = new MessageBox(PlatformUI.getWorkbench().getDisplay().getActiveShell(), SWT.OK);
-		error.setText("Refactoring"); //$NON-NLS-1$
-		error.setMessage(message);
+	    ErrorDialog error = new ErrorDialog(
+	            editor.getSite().getShell(), "Groovy Refactoring error", message, 
+	            new Status(IStatus.ERROR, Activator.PLUGIN_ID, message), 
+	            IStatus.ERROR | IStatus.WARNING);
 		error.open();
 	}
 
@@ -97,7 +108,7 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 		
 		GroovyRefactoringWizard wizard = new GroovyRefactoringWizard(refactoring, getUIFlags());
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
-		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		Shell shell = editor.getSite().getShell();
 		String titleForFailedChecks = "Refactoring"; //$NON-NLS-1$
 		
 		try {

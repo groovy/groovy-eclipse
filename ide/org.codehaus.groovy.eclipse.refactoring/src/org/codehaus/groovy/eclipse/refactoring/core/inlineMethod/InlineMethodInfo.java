@@ -23,35 +23,36 @@ import org.codehaus.groovy.eclipse.refactoring.core.RefactoringInfo;
 
 public class InlineMethodInfo extends RefactoringInfo {
 	
-	private InlineMethodProvider provider;
-
 	public InlineMethodInfo(InlineMethodProvider provider) {
 		super(provider);
-		this.provider = provider;
 	}
 	
 	public boolean isInlineAllInvocations() {
-		return provider.isInlineAllInvocations();
+		return inlineMethodProvider().isInlineAllInvocations();
 	}
 
 	public void setInlineAllInvocations(boolean inlineAllInvocations) {
-		provider.setInlineAllInvocations(inlineAllInvocations);
+		inlineMethodProvider().setInlineAllInvocations(inlineAllInvocations);
 	}
 
 	public boolean isDeleteMethod() {
-		return provider.isDeleteMethod();
+		return inlineMethodProvider().isDeleteMethod();
 	}
 
 	public void setDeleteMethod(boolean deleteMethod) {
-		provider.setDeleteMethod(deleteMethod);
+		inlineMethodProvider().setDeleteMethod(deleteMethod);
 	}
 
 	public boolean isMethodDeclarationSelected() {
-		return provider.isMethodDeclarationSelected();
+		return inlineMethodProvider().isMethodDeclarationSelected();
 	}
 
 	public void setMethodDeclarationSelected(boolean methodDeclarationSelected) {
-		provider.setMethodDeclarationSelected(methodDeclarationSelected);
+		inlineMethodProvider().setMethodDeclarationSelected(methodDeclarationSelected);
+	}
+	
+	private InlineMethodProvider inlineMethodProvider() {
+	    return (InlineMethodProvider) provider;
 	}
 	
 }

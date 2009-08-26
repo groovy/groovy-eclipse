@@ -48,9 +48,8 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         Label myLabel;
 
         private MonospaceFieldEditor() {
-            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font in the JUnit results pane.\n" +
-                    "This is particularly useful for testing frameworks\n" +
-                    "that use a formatted output such as Spock", getFieldEditorParent());
+            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit", 
+                    getFieldEditorParent());
         }
 
         // override so we can set line wrap
@@ -103,6 +102,11 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         final BooleanFieldEditor monospaceEditor = new MonospaceFieldEditor();
         monospaceEditor.setPreferenceStore(getPreferenceStore());
         addField(monospaceEditor);
+        Label monoLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
+        monoLabel.setText(
+                    "This option is particularly useful for testing frameworks\n" +
+                    "that use a formatted output such as Spock\n\n");
+        
         
         // legacy projects
         ConvertLegacyProject convert = new ConvertLegacyProject();

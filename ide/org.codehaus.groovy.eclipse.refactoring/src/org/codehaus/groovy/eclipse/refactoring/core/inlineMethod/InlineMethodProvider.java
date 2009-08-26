@@ -34,7 +34,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.DocumentHelpers;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTNodeInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.AssignementAndCall;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.AssignmentAndCall;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.MethodPattern;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
 import org.eclipse.core.runtime.CoreException;
@@ -60,7 +60,7 @@ public class InlineMethodProvider extends SingleFileRefactoringProvider {
 	public InlineMethodProvider(IGroovyDocumentProvider docProvider, UserSelection selecion) {
 		super(docProvider, selecion);
 		finder = new FindMethod(getSelection(), getDocument(), getRootNode());
-		scanner = new ASTScanner(getRootNode(),new AssignementAndCall(),getDocument());
+		scanner = new ASTScanner(getRootNode(), new AssignmentAndCall(), getDocument());
 		scanner.startASTscan();
 
 
@@ -148,7 +148,7 @@ public class InlineMethodProvider extends SingleFileRefactoringProvider {
 		ASTNodeInfo info = scanner.getInfo(node);
 		ASTNode surroundingNode = null;
 		while(info.getParent() != null) {
-			if(AssignementAndCall.isAssignement(info.getParent()) || AssignementAndCall.isMethodCall(info.getParent()))
+			if(AssignmentAndCall.isAssignment(info.getParent()) || AssignmentAndCall.isMethodCall(info.getParent()))
 				surroundingNode = info.getParent();		
 			info = scanner.getInfo(info.getParent());
 		}

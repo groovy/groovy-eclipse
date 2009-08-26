@@ -158,6 +158,10 @@ public class TokenStream {
 		    nextChar();
 		    return new Token(Token.SAFE_DEREF, offset + 1, offset + 3, buffer
                     .subSequence(offset + 1, offset + 3).toString());
+		} if (ch == '*') {
+		    nextChar();
+            return new Token(Token.SPREAD, offset + 1, offset + 3, buffer
+                    .subSequence(offset + 1, offset + 3).toString());
 		}
 		return new Token(Token.DOT, offset + 1, offset + 2, buffer.subSequence(
 				offset + 1, offset + 2).toString());

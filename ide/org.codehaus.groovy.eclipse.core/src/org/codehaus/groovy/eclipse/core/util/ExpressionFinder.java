@@ -65,7 +65,7 @@ public class ExpressionFinder {
 			
 			// if the offset is a whitespace, then content assist should be on a blank expression unless
 			// there is a '.', '..', or '?.'
-			if (offsetIsWhitespace && token.type != Token.DOT && token.type != Token.DOUBLE_DOT && token.type != Token.SAFE_DEREF) {
+			if (offsetIsWhitespace && token.type != Token.DOT && token.type != Token.DOUBLE_DOT && token.type != Token.SAFE_DEREF && token.type != Token.SPREAD) {
 				return "";
 			}
 			
@@ -77,6 +77,7 @@ public class ExpressionFinder {
 				case Token.DOT:
 				case Token.DOUBLE_DOT:
 				case Token.SAFE_DEREF:
+				case Token.SPREAD:
 					token = dot(stream);
 					break;
 				case Token.IDENT:
@@ -136,7 +137,7 @@ public class ExpressionFinder {
 			skipLineBreaksAndComments(stream);
 			token2 = stream.next();
 
-			if ((token0.type == Token.DOT || token0.type == Token.SAFE_DEREF) && isValidBeforeDot(token1.type)) {
+			if ((token0.type == Token.DOT || token0.type == Token.SAFE_DEREF || token0.type == Token.SPREAD) && isValidBeforeDot(token1.type)) {
 				ret[0] = expression.substring(0, token1.endOffset);
 				ret[1] = "";
 			} else if (token0.type == Token.IDENT && token1.type == Token.DOT && isValidBeforeDot(token2.type)) {
@@ -215,7 +216,7 @@ public class ExpressionFinder {
 			case Token.LINE_BREAK:
 				skipLineBreaksAndComments(stream);
 				token = stream.peek();
-				if (token.type != Token.DOT && token.type != Token.SAFE_DEREF) {
+				if (token.type != Token.DOT && token.type != Token.SAFE_DEREF && token.type != Token.SPREAD) {
 					return new Token(Token.EOF, last.startOffset, last.endOffset, null);
 				}
 				stream.next();
@@ -223,6 +224,7 @@ public class ExpressionFinder {
 			case Token.DOUBLE_DOT:
 			    return new Token(Token.EOF, last.startOffset, last.endOffset, null);
 			case Token.SAFE_DEREF:
+			case Token.SPREAD:
 			case Token.DOT: {
 				stream.next();
 				return dot(stream);

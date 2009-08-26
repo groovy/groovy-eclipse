@@ -43,6 +43,7 @@ import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 
 /**
@@ -63,24 +64,24 @@ public class OrganizeGroovyImports {
         
         @Override
         public void visitCastExpression(CastExpression expression) {
-            handleType(expression.getType());
+            handleType(expression.getType(), false);
         }
         
         @Override
         public void visitClassExpression(ClassExpression expression) {
-            handleType(expression.getType());
+            handleType(expression.getType(), false);
         }
         
         @Override
         public void visitConstructorCallExpression(
                 ConstructorCallExpression call) {
-            handleType(call.getType());
+            handleType(call.getType(), false);
         }
         
         @Override
         public void visitVariableExpression(VariableExpression expression) {
             // here, we might be able to look at
-            handleType(expression.getType());
+            handleType(expression.getType(), false);
         }
         
         @Override
@@ -88,7 +89,7 @@ public class OrganizeGroovyImports {
             // can't check for synthetic here because 
             // it seems that non-synthetic nodes are being marked as synthetic
             if (! node.getName().startsWith("_") && !node.getName().startsWith("$")) {
-                handleType(node.getType());
+                handleType(node.getType(), false);
             }
             super.visitField(node);
         }
@@ -96,9 +97,9 @@ public class OrganizeGroovyImports {
         @Override
         public void visitMethod(MethodNode node) {
             if (!node.isSynthetic()) {
-                handleType(node.getReturnType());
+                handleType(node.getReturnType(), false);
                 for (Parameter param : node.getParameters()) {
-                    handleType(param.getType());
+                    handleType(param.getType(), false);
                 }
             }
             super.visitMethod(node);
@@ -108,9 +109,9 @@ public class OrganizeGroovyImports {
         public void visitClass(ClassNode node) {
             current = node;
             if (!node.isSynthetic()) {
-                handleType(node.getSuperClass());
+                handleType(node.getSuperClass(), false);
                 for (ClassNode impls : node.getInterfaces()) {
-                    handleType(impls);
+                    handleType(impls, false);
                 }
             }
             super.visitClass(node);
@@ -119,7 +120,7 @@ public class OrganizeGroovyImports {
         @Override
         public void visitClosureExpression(ClosureExpression node) {
             for (Parameter param : node.getParameters()) {
-                handleType(param.getType());
+                handleType(param.getType(), false);
             }
             super.visitClosureExpression(node);
         }
@@ -127,7 +128,7 @@ public class OrganizeGroovyImports {
         @Override
         public void visitAnnotations(AnnotatedNode node) {
             for (AnnotationNode an : node.getAnnotations()) {
-                handleType(an.getClassNode());
+                handleType(an.getClassNode(), true);
             }
             super.visitAnnotations(node);
         }
@@ -137,7 +138,7 @@ public class OrganizeGroovyImports {
          * add the type name to missingTypes if it is not resolved
          * ensure that we don't remove the import if the type is resolved
          */
-        private void handleType(ClassNode node) {
+        private void handleType(ClassNode node, boolean isAnnotation) {
             if (!node.isResolved() && node != current) {
                 // there may be a partial qualifier if
                 // the type referenced is an inner type.
@@ -149,8 +150,13 @@ public class OrganizeGroovyImports {
                     semiQualifiedName = node.getName();
                 }
                 String simpleName = semiQualifiedName.split("\\.")[0];
-                missingTypeNames.put(simpleName, 
-                        new SourceRange(node.getStart(), node.getEnd()-node.getStart()));
+                if (isAnnotation) {
+                    missingAnnotationTypeNames.put(simpleName, 
+                            new SourceRange(node.getStart(), node.getEnd()-node.getStart()));
+                } else {
+                    missingTypeNames.put(simpleName, 
+                            new SourceRange(node.getStart(), node.getEnd()-node.getStart()));
+                }
             } else {
                 // FIXADE M2 We don't know exactly what the
                 // text is.  We just know how it resolves
@@ -183,6 +189,7 @@ public class OrganizeGroovyImports {
 
     private final GroovyCompilationUnit unit;
     private HashMap<String, ISourceRange> missingTypeNames;
+    private HashMap<String, ISourceRange> missingAnnotationTypeNames;
     private HashMap<String, ImportNode> importsSlatedForRemoval;
     
     private IChooseImportQuery query;
@@ -193,10 +200,16 @@ public class OrganizeGroovyImports {
     }
     
     public TextEdit calculateMissingImports() {
+        ModuleNode node = unit.getModuleNode();
+        if (node.getClasses() == null || node.getClasses().size() == 0) {
+            // no AST probably a syntax error...do nothing
+            return new MultiTextEdit();
+        }
+        
         missingTypeNames = new HashMap<String,ISourceRange>();
+        missingAnnotationTypeNames = new HashMap<String,ISourceRange>();
         importsSlatedForRemoval = new HashMap<String, ImportNode>();
         FindUnresolvedReferencesVisitor visitor = new FindUnresolvedReferencesVisitor();
-        ModuleNode node = unit.getModuleNode();
         
         for (ImportNode imp : node.getImports()) {
             importsSlatedForRemoval.put(imp.getClassName(), imp);
@@ -248,8 +261,22 @@ public class OrganizeGroovyImports {
         List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<TypeNameMatch>();
         List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<TypeNameMatch[]>();
         List<ISourceRange> ranges = new ArrayList<ISourceRange>();
+        
+        // find regular types
         for (Entry<String, ISourceRange> missingType : missingTypeNames.entrySet()) {
-            TypeNameMatch[] resolved = resolveType(missingType.getKey(), lookup);
+            TypeNameMatch[] resolved = resolveType(missingType.getKey(), lookup, false);
+            if (resolved == null || resolved.length == 0) {
+                continue;
+            } else if (resolved.length == 1) {
+                missingTypesNoChoiceRequired.add(resolved[0]);
+            } else {
+                missingTypesChoiceRequired.add(resolved);
+                ranges.add(missingType.getValue());
+            }
+        }
+        // find annotation types
+        for (Entry<String, ISourceRange> missingType : missingAnnotationTypeNames.entrySet()) {
+            TypeNameMatch[] resolved = resolveType(missingType.getKey(), lookup, true);
             if (resolved == null || resolved.length == 0) {
                 continue;
             } else if (resolved.length == 1) {
@@ -303,7 +330,7 @@ public class OrganizeGroovyImports {
      */
     // FIXADE use search engine instead of NameLookup.  This will provide ability to find all names at
     // once as well as ability to find inner types
-    private TypeNameMatch[] resolveType(String missingType, NameLookup lookup) {
+    private TypeNameMatch[] resolveType(String missingType, NameLookup lookup, boolean lookForAnnotation) {
         final List<TypeNameMatch> resolved = new LinkedList<TypeNameMatch>();
         IJavaElementRequestor requestor = new IJavaElementRequestor() {
             boolean canceled = false;
@@ -334,7 +361,8 @@ public class OrganizeGroovyImports {
             public void acceptField(IField field) { }
         };
        
-        lookup.seekTypes(missingType, null, false, NameLookup.ACCEPT_ALL, requestor);
+        int searchFor = lookForAnnotation ? NameLookup.ACCEPT_ANNOTATIONS : NameLookup.ACCEPT_ALL;
+        lookup.seekTypes(missingType, null, false, searchFor, requestor);
         return resolved.toArray(new TypeNameMatch[0]);
     }
     

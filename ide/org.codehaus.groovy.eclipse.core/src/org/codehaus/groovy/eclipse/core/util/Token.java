@@ -63,8 +63,11 @@ public class Token implements Serializable {
 	/** range definition 10..23, 10..<23 */
 	public static final int DOUBLE_DOT = 11;
 
-	/** safe navigation operator */
+	/** safe navigation operator ?. */
 	public static final int SAFE_DEREF = 12;
+	
+	/** spread operator *. */
+	public static final int SPREAD = 13;
 	
 	
 

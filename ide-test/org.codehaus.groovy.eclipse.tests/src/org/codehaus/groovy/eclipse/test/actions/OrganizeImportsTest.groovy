@@ -188,6 +188,16 @@ public class OrganizeImportsTest extends EclipseTestCase {
             """ 
             import other.SecondClass
             """
+            // should not delete imports because operation is a no-op when there are no classes
+            doDeleteImportTest(contents, 0)
+    }
+    void testRemoveImport1a() {
+        String contents = 
+            """ 
+            import other.SecondClass
+            a
+            """
+            // should not delete imports because operation is a no-op when there are no classes
             doDeleteImportTest(contents, 1)
     }
 

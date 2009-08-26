@@ -21,6 +21,7 @@ import java.util.ResourceBundle;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
 import org.codehaus.groovy.eclipse.editor.GroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
+import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -183,6 +184,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 		super.start(context);
 		textTools = new GroovyTextTools();
 		addMonospaceFontListener();
+		DelegatingCleanUpPostSaveListener.installCleanUp();
 	}
 
     private void addMonospaceFontListener() {

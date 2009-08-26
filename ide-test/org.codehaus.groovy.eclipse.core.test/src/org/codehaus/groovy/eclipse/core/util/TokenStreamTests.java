@@ -42,6 +42,10 @@ public class TokenStreamTests extends TestCase {
 	static int BLOCK_COMMENT = Token.BLOCK_COMMENT;
 	
 	static int LINE_BREAK = Token.LINE_BREAK;
+	
+	static int SAFE_DEREF = Token.SAFE_DEREF;
+	
+	static int SPREAD = Token.SPREAD;
 
 	@Override
 	protected void setUp() throws Exception {
@@ -216,7 +220,14 @@ public class TokenStreamTests extends TestCase {
 		doTest("/*\nThis is a block comment\n*/\n'hello'", -1, new int[] { QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF });
 	}
 	
+	public void testSafeDeref() {
+	    doTest("foo?.bar", -1, new int[] { IDENT, SAFE_DEREF, IDENT, EOF });
+	}
 
+	public void testSpread() {
+	    doTest("foo*.bar", -1, new int[] { IDENT, SPREAD, IDENT, EOF });
+	}
+	
 	public void testError1() {
 		StringSourceBuffer sb = new StringSourceBuffer("0..1]");
 		TokenStream stream = new TokenStream(sb, "0..1]".length() - 1);

@@ -22,6 +22,7 @@ import junit.framework.TestSuite;
 
 import org.codehaus.groovy.eclipse.test.actions.GroovyNatureActionTestCase;
 import org.codehaus.groovy.eclipse.test.actions.OrganizeImportsTest;
+import org.codehaus.groovy.eclipse.test.actions.SaveParticipantRegistryTest;
 import org.codehaus.groovy.eclipse.test.adapters.GroovyFileAdapterFactoryTestCase;
 import org.codehaus.groovy.eclipse.test.adapters.GroovyIFileEditorInputAdapterFactoryTestCase;
 import org.codehaus.groovy.eclipse.test.adapters.IsMainTesterTests;
@@ -72,6 +73,7 @@ public class AllUITests {
 		suite.addTestSuite(DebugBreakpointsTests.class);
 		suite.addTestSuite(BreakpointLocationTests.class);
 		suite.addTestSuite(OrganizeImportsTest.class);
+		suite.addTestSuite(SaveParticipantRegistryTest.class);
 		
 		// $JUnit-END$
 		

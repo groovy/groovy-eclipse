@@ -26,10 +26,6 @@
             modes="run,debug"
             name="Groovy"
             sourceLocatorId="org.codehaus.groovy.eclipse.editor.groovySourceLocator">
-         <fileExtension
-               default="true"
-               extension="groovy">
-         </fileExtension>
       </launchConfigurationType>
       <launchConfigurationType
             delegate="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchDelegate"
@@ -90,6 +86,14 @@
               </with>
            </enablement>
         </contextualLaunch>
+         <description
+               description="Run a groovy class or script"
+               mode="run">
+         </description>
+         <description
+               description="Debug a groovy class or script"
+               mode="debug">
+         </description>
       </shortcut>
       <shortcut
             class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchShortcut"
@@ -114,6 +118,14 @@
                </with>
             </enablement>
          </contextualLaunch>
+         <description
+               description="Run a groovy shell for the current project"
+               mode="run">
+         </description>
+         <description
+               description="Debug a groovy shell for the current project"
+               mode="debug">
+         </description>
       </shortcut>
    </extension>
    <extension
@@ -317,6 +329,47 @@
                id="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate">
          </action>
      </viewerContribution>
+     
+     <!-- Groovy Refactorings -->
+     <viewerContribution
+               id="org.codehaus.groovy.viewer.refactorings"
+               targetID="#CompilationUnitEditorContext">
+         		<menu
+               label="Groovy Refac&amp;toring"
+               id="org.codehaus.groovy.refactoring.menu">
+            <separator
+               name="refactoring"/>
+             </menu>
+            <action
+                  class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
+                  definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+                  id="org.codehaus.groovy.eclipse.refactoring.renameMethodViewer"
+                  label="Rename..."
+                  menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+                  style="push"
+                  tooltip="Rename a groovy element">
+            </action>
+           <action
+                 class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
+                 definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+                 id="org.codehaus.groovy.eclipse.refactoring.extractMethodViewer"
+                 label="Extract Method..."
+                 menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+                 style="push"
+                 tooltip="Extract a groovy method from an expression">
+           </action>
+           <action
+                 class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
+                 definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+                 id="org.codehaus.groovy.eclipse.refactoring.inlineMethodViewer"
+                 label="Inline Method..."
+                 menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+                 style="push"
+                 tooltip="Inline a groovy method">
+           </action>
+     </viewerContribution>
+     
+     
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -333,6 +386,48 @@
                tooltip="New Groovy Project">
          </action>
         </actionSet>
+       <actionSet
+             id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring"
+             label="Groovy Refactoring Action Set">
+          <menu
+                id="org.codehaus.groovy.eclipse.refactoring.refactoringMenu"
+                label="Groovy Refac&amp;toring"
+                path="edit">
+             <groupMarker
+                   name="content">
+             </groupMarker>
+             <separator
+                   name="additions">
+             </separator>
+          </menu>
+          <action
+                class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
+                definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+                id="org.codehaus.groovy.eclipse.refactoring.renameMethodMenu"
+                label="Rename..."
+                menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
+                style="push"
+                tooltip="Rename a groovy element">
+          </action>
+          <action
+                class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
+                definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+                id="org.codehaus.groovy.eclipse.refactoring.inlineMethodMenu"
+                label="Inline Method..."
+                menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
+                style="push"
+                tooltip="Inline a groovy method">
+          </action>
+          <action
+                class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
+                definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+                id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
+                label="Extract Method..."
+                menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
+                style="push"
+                tooltip="Extract a groovy method from an expression">
+          </action>
+       </actionSet>
    </extension>
    <extension point="org.eclipse.ui.perspectiveExtensions">
 	   		<perspectiveExtension 
@@ -341,28 +436,39 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring">
+      </actionSet>
 	    	</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.jdt.ui.JavaBrowsingPerspective">
 						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>					
+						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring">
+      </actionSet>					
 			</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.jdt.ui.JavaHierarchyPerspective">
 						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>					
+						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring">
+      </actionSet>					
 			</perspectiveExtension>
     	<perspectiveExtension 
  			  targetID="org.eclipse.jst.j2ee.J2EEPerspective">
-					<actionSet id="ajelementCreation"/>
 						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>					
+						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring">
+      </actionSet>					
     	</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.pde.ui.PDEPerspective">
@@ -524,6 +630,7 @@
          </action>
       </editorContribution>
  </extension>
+ <!--
  <extension
        point="org.eclipse.ui.editors.documentProviders">
     <provider
@@ -532,4 +639,5 @@
           id="org.codehaus.groovy.eclipse.ui.provider">
     </provider>
  </extension>
+ -->
 </plugin>
