@@ -195,6 +195,8 @@
 			<fileset dir="${updateSiteDir}/plugins">
 			    <include name="*tests_*"/>
 			    <include name="*test_*"/>
+			    <include name="*tests.builder_*"/>
+			    <include name="*tests.compiler_*"/>
 			    <include name="*performance_*"/>
 			</fileset>
 		</delete>
