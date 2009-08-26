@@ -26,7 +26,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jface.text,
  org.eclipse.jface,
  org.codehaus.groovy.eclipse.refactoring,
- org.eclipse.jdt.core;bundle-version="3.5.9",
+ org.eclipse.jdt.core;bundle-version="3.5.0",
  org.junit;bundle-version="3.8.2",
  org.codehaus.groovy,
  org.codehaus.groovy.eclipse.tests;bundle-version="2.0.0"
