@@ -160,6 +160,10 @@ public class DebugBreakpointsTests extends EclipseTestCase {
         doBreakpointTest(16);
     }
     
+    public void testBreakpointInScript17() throws Exception {
+        doBreakpointTest(17);
+    }
+    
     private void doBreakpointTest(int i) throws Exception {
         ITextSelection selection = new TextSelection(new Document(text), text.indexOf("// " + i)-3, 3);
         boolean canToggle = adapter.canToggleLineBreakpoints(editor, selection);

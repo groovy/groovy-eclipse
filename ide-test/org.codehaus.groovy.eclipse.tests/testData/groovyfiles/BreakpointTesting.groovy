@@ -46,4 +46,8 @@ class Class {
     }
     
     def t = { here() } // 15
+    
+    static h = {
+    	here() // 17
+    }
 }

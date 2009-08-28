@@ -431,48 +431,6 @@
                tooltip="New Groovy Project">
          </action>
         </actionSet>
-       <actionSet
-             id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring"
-             label="Groovy Refactoring Action Set">
-          <menu
-                id="org.codehaus.groovy.eclipse.refactoring.refactoringMenu"
-                label="Groovy Refac&amp;toring"
-                path="edit">
-             <groupMarker
-                   name="content">
-             </groupMarker>
-             <separator
-                   name="additions">
-             </separator>
-          </menu>
-          <action
-                class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
-                definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
-                id="org.codehaus.groovy.eclipse.refactoring.renameMethodMenu"
-                label="Rename..."
-                menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
-                style="push"
-                tooltip="Rename a groovy element">
-          </action>
-          <action
-                class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
-                definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
-                id="org.codehaus.groovy.eclipse.refactoring.inlineMethodMenu"
-                label="Inline Method..."
-                menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
-                style="push"
-                tooltip="Inline a groovy method">
-          </action>
-          <action
-                class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
-                definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-                id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
-                label="Extract Method..."
-                menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
-                style="push"
-                tooltip="Extract a groovy method from an expression">
-          </action>
-       </actionSet>
    </extension>
    <extension point="org.eclipse.ui.perspectiveExtensions">
 	   		<perspectiveExtension 
@@ -672,6 +630,44 @@
                class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
                actionID="RulerDoubleClick"
                id="org.groovy.codehaus.eclipse.ui.actions.ManageBreakpointRulerAction">
+         </action>
+         <menu
+               id="org.codehaus.groovy.eclipse.refactoring.refactoringMenu"
+               label="Groovy Refac&amp;toring"
+               path="edit">
+            <groupMarker
+                  name="content">
+            </groupMarker>
+            <separator
+                  name="additions">
+            </separator>
+         </menu>
+         <action
+               class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
+               definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+               id="org.codehaus.groovy.eclipse.refactoring.renameMethodMenu"
+               label="Rename..."
+               menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
+               style="push"
+               tooltip="Rename a groovy element">
+         </action>
+         <action
+               class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
+               definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+               id="org.codehaus.groovy.eclipse.refactoring.inlineMethodMenu"
+               label="Inline Method..."
+               menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
+               style="push"
+               tooltip="Inline a groovy method">
+         </action>
+         <action
+               class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
+               definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+               id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
+               label="Extract Method..."
+               menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
+               style="push"
+               tooltip="Extract a groovy method from an expression">
          </action>
       </editorContribution>
  </extension>

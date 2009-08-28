@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -71,6 +72,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.IfStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.stmt.SwitchStatement;
 import org.codehaus.groovy.ast.stmt.SynchronizedStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
@@ -136,6 +138,14 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
         for (ClassNode classNode : module.getClasses()) {
                 
             try {
+                for (Statement initializer : classNode.getObjectInitializerStatements()) {
+                    this.visitStatement(initializer);
+                }
+            } catch (VisitCompleted vc) { }
+            candidate = returnBetterCandiate(candidate, lastValid);
+            lastValid = null;
+            
+            try {
                 for (PropertyNode pn : classNode.getProperties()) {
                     this.visitProperty(pn);
                 }
@@ -179,6 +189,18 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
                 } catch (VisitCompleted vc) { }
                 candidate = returnBetterCandiate(candidate, lastValid);
                 lastValid = null;
+                
+                // check the <clinit> method to catch static initializers
+                // and initializations of static methods
+                MethodNode clinit = classNode.getMethod("<clinit>", new Parameter[0]);
+                if (clinit != null) {
+                    // visit the body only.
+                    try {
+                        clinit.getCode().visit(this);
+                    } catch (VisitCompleted vc) { }
+                    candidate = returnBetterCandiate(candidate, lastValid);
+                    lastValid = null;
+                }
             }
         }
         return candidate;
