@@ -244,7 +244,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			long start = startOffset(packageNode);
 			long end = endOffset(packageNode);
 			char[][] packageReference = CharOperation.splitOn('.', packageName.toCharArray());
-			currentPackage = new ImportReference(packageReference, positionsFor(packageReference, start, end), false,
+			currentPackage = new ImportReference(packageReference, positionsFor(packageReference, start, end), true,
 					ClassFileConstants.AccDefault);
 			currentPackage.declarationSourceStart = currentPackage.sourceStart;
 			currentPackage.declarationSourceEnd = currentPackage.sourceEnd;
@@ -1227,8 +1227,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void fixupSourceLocationsForTypeDeclaration(GroovyTypeDeclaration typeDeclaration, ClassNode classNode) {
 		// start and end of the name of class
-		typeDeclaration.sourceStart = classNode.getNameStart();
-		typeDeclaration.sourceEnd = classNode.getNameEnd();
+		// scripts do not have a name, so use start instead
+		typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
+		typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart());
 
 		// start and end of the entire declaration including Javadoc
 		// and ending at the last close bracket
@@ -1236,7 +1237,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		typeDeclaration.declarationSourceEnd = classNode.getEnd();
 
 		// * start at the opening brace and end at the closing brace
-		typeDeclaration.bodyStart = classNode.getNameEnd();
+		// except that scripts do not have a name, use the start instead
+		typeDeclaration.bodyStart = Math.max(classNode.getNameEnd(), classNode.getStart());
 
 		// seems to be the same as declarationSourceEnd
 		typeDeclaration.bodyEnd = classNode.getEnd();
@@ -1272,8 +1274,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * Try to get the source locations for method declarations to be as correct as possible
 	 */
 	private void fixupSourceLocationsForMethodDeclaration(MethodDeclaration methodDeclaration, MethodNode methodNode) {
-		methodDeclaration.sourceStart = methodNode.getNameStart();
-		methodDeclaration.sourceEnd = methodNode.getNameEnd();
+		// run() method for scripts has no name, so use the start of the method instead
+		methodDeclaration.sourceStart = Math.max(methodNode.getNameStart(), methodNode.getStart());
+		methodDeclaration.sourceEnd = Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
 		// start and end of method declaration including JavaDoc
 		// ending with closing '}' or ';' if abstract
@@ -1284,7 +1287,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		methodDeclaration.modifiersSourceStart = methodNode.getStart();
 
 		// opening bracket
-		methodDeclaration.bodyStart = methodNode.getNameEnd();
+		// run() method for script has no opening bracket
+		methodDeclaration.bodyStart = Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
 		// closing bracket or ';' same as declarationSourceEnd
 		methodDeclaration.bodyEnd = methodNode.getEnd();
