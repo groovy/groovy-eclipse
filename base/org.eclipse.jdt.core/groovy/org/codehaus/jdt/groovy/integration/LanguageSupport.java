@@ -13,7 +13,11 @@ package org.codehaus.jdt.groovy.integration;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.IProblemFactory;
+import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -21,11 +25,16 @@ import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
+import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
 public interface LanguageSupport {
 
 	Parser getParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant);
 
+	IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, 
+			boolean optimizeStringLiterals, boolean useSourceJavadocParser);
+	
     CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner);
     
     CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit unit, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength);
@@ -53,5 +62,30 @@ public interface LanguageSupport {
      *  be passed to the compiler to produce byte code
      */
     boolean isSourceFile(String fileName, boolean isInterestingProject);
+
+	/**
+	 * Determines if the file name requires special language support.  This method does not
+	 * examine the project nature and so will return true if the file name is interesting 
+	 * regardless of whether or not the containing project itself is interesting.
+	 * 
+	 * @param fileName
+	 * @return true iff the file name is one that requires special language support.
+	 */
+	boolean isInterestingSourceFile(String fileName);
+
+	/**
+	 * Maybe perform a search for the possible match using special language support.
+	 * Returns true if the search was completed by the special language support. 
+	 * Even if the search document requires special language support
+	 * (i.e., {@link LanguageSupport#isInterestingSourceFile(String)}  returns true),
+	 * this method may not perform the search.  The kind of search pattern will determine
+	 * if a special search is required.
+	 * The results of the search are sent to the SearchRequestor that is passed in.
+	 * @param possibleMatch the possible match to look for
+	 * @param pattern
+	 * @param requestor the requestor to send any completed search results to 
+	 * @return true iff the search was performed
+	 */
+	boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor);
 
 }

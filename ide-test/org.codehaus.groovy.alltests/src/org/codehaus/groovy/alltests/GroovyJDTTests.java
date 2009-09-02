@@ -15,6 +15,8 @@ import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests;
 import org.eclipse.jdt.core.groovy.tests.compiler.LocationSupportTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyCompilationUnitTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyContentTypeTests;
+import org.eclipse.jdt.core.groovy.tests.search.FieldReferenceSearchTests;
+import org.eclipse.jdt.core.groovy.tests.search.TypeReferenceSearchTests;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
 
 import junit.framework.Test;
@@ -41,6 +43,11 @@ public class GroovyJDTTests {
         
         // Compiler tests
         suite.addTest(GroovySimpleTest.suite());
+        
+        // Search tests
+        suite.addTestSuite(TypeReferenceSearchTests.class);
+        suite.addTestSuite(FieldReferenceSearchTests.class);
+        
         
         return suite;
     }

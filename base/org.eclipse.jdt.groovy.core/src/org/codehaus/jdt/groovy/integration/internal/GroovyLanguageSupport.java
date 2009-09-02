@@ -24,18 +24,27 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.search.ITypeRequestor;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.IProblemFactory;
+import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
+import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -55,6 +64,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
 		} else { // variant==2
 			return new MultiplexingCommentRecorderParser(compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
 		}
+	}
+
+	public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
+			CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+		return new MultiplexingIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals,
+				useSourceJavadocParser);
 	}
 
 	public CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
@@ -118,4 +133,21 @@ public class GroovyLanguageSupport implements LanguageSupport {
 		}
 	}
 
+	public boolean isInterestingSourceFile(String fileName) {
+		return ContentTypeUtils.isGroovyLikeFileName(fileName);
+	}
+
+	public boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
+		String prop = System.getProperty("use.enhanced.groovy.search");
+		if (Boolean.TRUE.toString().equals(prop)) {
+			ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch, pattern, requestor);
+			if (typeRequestor != null) {
+				TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(typeRequestor,
+						possibleMatch, pattern, requestor);
+				visitor.visitCompilationUnit(typeRequestor);
+				return true;
+			}
+		}
+		return false;
+	}
 }

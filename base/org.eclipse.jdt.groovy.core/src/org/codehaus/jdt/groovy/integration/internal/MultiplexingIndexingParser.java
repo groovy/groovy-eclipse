@@ -6,18 +6,21 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *     Andy Clement        - Initial API and implementation
- *     Andrew Eisenberg - Additional work
+ *     Andrew Eisenberg - Initial API and implementation
+ *     Andy Clement     - Additional work
  *******************************************************************************/
 package org.codehaus.jdt.groovy.integration.internal;
 
 import java.util.Collections;
 
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
+import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementNotifier;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
@@ -26,47 +29,39 @@ import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
-import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
+import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
 
 /**
- * The multiplexing parser can delegate file parsing to multiple parsers. In this scenario it subtypes 'Parser' (which is the Java
- * parser) but is also aware of a groovy parser. Depending on what kind of file is to be parsed, it will invoke the relevant parser.
- * 
  * @author Andrew Eisenberg
+ * @created Aug 27, 2009
+ * 
  */
-@SuppressWarnings("restriction")
-public class MultiplexingSourceElementRequestorParser extends SourceElementParser {
-
-	ISourceElementRequestor groovyRequestor;
-
+public class MultiplexingIndexingParser extends IndexingParser {
 	SourceElementNotifier notifier;
-
 	boolean groovyReportReferenceInfo;
+	ISourceElementRequestor requestor;
 
-	public MultiplexingSourceElementRequestorParser(ProblemReporter problemReporter, ISourceElementRequestor requestor,
-			IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations,
-			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+	public MultiplexingIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options,
+			boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
 		super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
-		// The superclass that is extended is in charge of parsing .java files
-		this.groovyRequestor = requestor;
-		this.notifier = new SourceElementNotifier(requestor, reportLocalDeclarations);
+		// FIXADE (M2) this code is copied from MultiplexingSourceElementParser. Should combine
+		this.notifier = (SourceElementNotifier) ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
 		this.groovyReportReferenceInfo = reportLocalDeclarations;
+		this.requestor = requestor;
 	}
 
-	public MultiplexingSourceElementRequestorParser(ProblemReporter problemReporter, ISourceElementRequestor requestor,
-			IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals) {
-		super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals);
-		// The superclass that is extended is in charge of parsing .java files
-		this.groovyRequestor = requestor;
-		this.notifier = new SourceElementNotifier(requestor, reportLocalDeclarations);
+	@Override
+	public void setRequestor(ISourceElementRequestor requestor) {
+		super.setRequestor(requestor);
+		this.requestor = requestor;
 	}
 
 	@Override
 	public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit unit, boolean fullParse, IProgressMonitor pm) {
-
 		if (ContentTypeUtils.isGroovyLikeFileName(unit.getFileName())) {
+			// FIXADE (M2) this code is copied from MultiplexingSourceElementParser. Should combine
+
 			// ASSUMPTIONS:
 			// 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
 			// 2) parsing is for the entire CU (ie- from character 0, to unit.getContents().length)
@@ -75,10 +70,17 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 			CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
 
 			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-			CompilationUnitDeclaration cud = new GroovyParser(this.options, problemReporter).dietParse(unit, compilationResult);
+			GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration) new GroovyParser(this.options,
+					problemReporter).dietParse(unit, compilationResult);
 
 			// CompilationUnitDeclaration cud groovyParser.dietParse(sourceUnit, compilationResult);
 			HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);
+			GroovyIndexingVisitor visitor = new GroovyIndexingVisitor(requestor);
+			visitor.doVisit(cud.getModuleNode(), cud.currentPackage);
+			// cud.types[0].sourceStart = 25;
+			// cud.types[0].sourceEnd = 35;
+			// cud.types[0].methods[3].sourceStart = 30;
+			// cud.types[0].methods[3].sourceEnd = 68;
 
 			notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, sourceEnds,
 			/* We don't care about the @category tag, so pass empty map */Collections.EMPTY_MAP);
@@ -88,6 +90,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		}
 	}
 
+	// FIXADE (M2) this code is copied from MultiplexingSourceElementParser. Should combine
 	// FIXADE (M2) This should be calculated in GroovyCompilationUnitDeclaration
 	private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
 		HashtableOfObjectToInt table = new HashtableOfObjectToInt();
@@ -99,6 +102,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		return table;
 	}
 
+	// FIXADE (M2) this code is copied from MultiplexingSourceElementParser. Should combine
 	// FIXADE (M2) This should be calculated in GroovyCompilationUnitDeclaration
 	private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
 		table.put(tDecl, tDecl.sourceEnd);

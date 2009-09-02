@@ -15,16 +15,21 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.IProblemFactory;
+import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
-import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
+import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.osgi.framework.Bundle;
 
@@ -36,6 +41,11 @@ public class LanguageSupportFactory {
 	
 	public static Parser getParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
 		return getLanguageSupport().getParser(compilerOptions,problemReporter,parseLiteralExpressionsAsConstants, variant);
+	}
+	
+	public static IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, 
+			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+		return getLanguageSupport().getIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
 	}
 	
 	public static CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
@@ -52,6 +62,22 @@ public class LanguageSupportFactory {
 	public static boolean isSourceFile(String fileName, boolean isInterestingProject) {
 	    return getLanguageSupport().isSourceFile(fileName, isInterestingProject);
 	}
+	
+	/**
+	 * Does this file name require special language support?
+	 * This method does not look at project natures and will return true or false
+	 * independent of any natures attached to the project that contains this source file
+	 * @param fileName the file name to look at.
+	 * @return true iff the file name is one that requires special language support.
+	 */
+	public static boolean isInterestingSourceFile(String fileName) {
+		return getLanguageSupport().isInterestingSourceFile(fileName);
+	}
+	
+	public static boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
+		return getLanguageSupport().maybePerformDelegatedSearch(possibleMatch, pattern, requestor);
+	}
+	
 	
 	//FIXASC (M2) static state issues?
 	private static LanguageSupport getLanguageSupport() {

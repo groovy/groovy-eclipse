@@ -13,7 +13,11 @@ package org.codehaus.jdt.groovy.integration;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.IProblemFactory;
+import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -21,6 +25,8 @@ import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
+import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -37,7 +43,14 @@ class DefaultLanguageSupport implements LanguageSupport {
 		}
 	}
 	
-    public CompilationUnit newCompilationUnit(PackageFragment parent,
+    public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
+			CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals,
+			boolean useSourceJavadocParser) {
+		return new IndexingParser(requestor, problemFactory, options, reportLocalDeclarations, 
+				optimizeStringLiterals, useSourceJavadocParser);
+	}
+
+	public CompilationUnit newCompilationUnit(PackageFragment parent,
             String name, WorkingCopyOwner owner) {
         return new CompilationUnit(parent, name, owner);
     }
@@ -57,5 +70,12 @@ class DefaultLanguageSupport implements LanguageSupport {
         return Util.isJavaLikeFileName(fileName);
     }
 
-	
+	public boolean isInterestingSourceFile(String fileName) {
+		return false;
+	}
+
+	public boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern,
+			SearchRequestor requestor) {
+		return false;
+	}
 }

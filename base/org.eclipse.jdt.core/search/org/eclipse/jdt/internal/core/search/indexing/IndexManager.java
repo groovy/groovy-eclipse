@@ -14,6 +14,8 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.CRC32;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupport;
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -181,13 +183,25 @@ public SourceElementParser getSourceElementParser(IJavaProject project, ISourceE
 	Map options = project.getOptions(true);
 	options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
 
-	SourceElementParser parser = new IndexingParser(
-		requestor,
-		new DefaultProblemFactory(Locale.getDefault()),
-		new CompilerOptions(options),
-		true, // index local declarations
-		true, // optimize string literals
-		false); // do not use source javadoc parser to speed up parsing
+    // GROOVY start
+    // old
+	//	SourceElementParser parser = new IndexingParser(
+	//			requestor,
+	//			new DefaultProblemFactory(Locale.getDefault()),
+	//			new CompilerOptions(options),
+	//			true, // index local declarations
+	//			true, // optimize string literals
+	//			false); // do not use source javadoc parser to speed up parsing
+    // new
+	SourceElementParser parser = LanguageSupportFactory.getIndexingParser(
+			requestor,
+			new DefaultProblemFactory(Locale.getDefault()),
+			new CompilerOptions(options),
+			true, // index local declarations
+			true, // optimize string literals
+			false); // do not use source javadoc parser to speed up parsing
+	// GROOVY end
+	
 	parser.reportOnlyOneSyntaxError = true;
 
 	// Always check javadoc while indexing

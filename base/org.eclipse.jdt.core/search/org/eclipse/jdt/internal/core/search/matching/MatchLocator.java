@@ -16,10 +16,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipFile;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
@@ -35,25 +40,87 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.compiler.*;
-import org.eclipse.jdt.core.search.*;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.compiler.InvalidInputException;
+import org.eclipse.jdt.core.search.FieldDeclarationMatch;
+import org.eclipse.jdt.core.search.FieldReferenceMatch;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.LocalVariableDeclarationMatch;
+import org.eclipse.jdt.core.search.LocalVariableReferenceMatch;
+import org.eclipse.jdt.core.search.MethodDeclarationMatch;
+import org.eclipse.jdt.core.search.MethodReferenceMatch;
+import org.eclipse.jdt.core.search.PackageDeclarationMatch;
+import org.eclipse.jdt.core.search.PackageReferenceMatch;
+import org.eclipse.jdt.core.search.SearchDocument;
+import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.core.search.TypeDeclarationMatch;
+import org.eclipse.jdt.core.search.TypeParameterDeclarationMatch;
+import org.eclipse.jdt.core.search.TypeParameterReferenceMatch;
+import org.eclipse.jdt.core.search.TypeReferenceMatch;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
-import org.eclipse.jdt.internal.compiler.ast.*;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
+import org.eclipse.jdt.internal.compiler.ast.Annotation;
+import org.eclipse.jdt.internal.compiler.ast.Argument;
+import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ImportReference;
+import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
+import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
-import org.eclipse.jdt.internal.compiler.env.*;
+import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
+import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ITypeRequestor;
-import org.eclipse.jdt.internal.compiler.lookup.*;
-import org.eclipse.jdt.internal.compiler.parser.*;
-import org.eclipse.jdt.internal.compiler.problem.*;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
+import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
+import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
+import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
+import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
+import org.eclipse.jdt.internal.compiler.parser.Parser;
+import org.eclipse.jdt.internal.compiler.parser.Scanner;
+import org.eclipse.jdt.internal.compiler.parser.SourceTypeConverter;
+import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
+import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
+import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.Messages;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
-import org.eclipse.jdt.internal.core.hierarchy.HierarchyResolver;
 import org.eclipse.jdt.internal.core.BinaryMember;
 import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.ClassFile;
@@ -71,8 +138,13 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SourceMapper;
 import org.eclipse.jdt.internal.core.SourceMethod;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
+import org.eclipse.jdt.internal.core.hierarchy.HierarchyResolver;
 import org.eclipse.jdt.internal.core.index.Index;
-import org.eclipse.jdt.internal.core.search.*;
+import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
+import org.eclipse.jdt.internal.core.search.HierarchyScope;
+import org.eclipse.jdt.internal.core.search.IndexQueryRequestor;
+import org.eclipse.jdt.internal.core.search.IndexSelector;
+import org.eclipse.jdt.internal.core.search.JavaSearchDocument;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -961,6 +1033,12 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMatches, int start, int length) throws CoreException {
 	initialize(javaProject, length);
 
+	// GROOVY start
+//	boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(javaProject.getProject());
+//	Set alreadyMatched = new HashSet();
+	// GROOVY end
+
+	
 	// create and resolve binding (equivalent to beginCompilation() in Compiler)
 	boolean mustResolvePattern = this.pattern.mustResolve;
 	boolean mustResolve = mustResolvePattern;
@@ -969,6 +1047,16 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 	try {
 		for (int i = start, maxUnits = start + length; i < maxUnits; i++) {
 			PossibleMatch possibleMatch = possibleMatches[i];
+			// GROOVY start
+//			if (isInterestingProject && LanguageSupportFactory.isInterestingSourceFile(possibleMatch.document.getPath())) {
+//				boolean matchPerformed = LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor);
+//				if (matchPerformed) {
+//					// FIXADE (M2) determine how much to update the progress monitor by.
+//					alreadyMatched.add(possibleMatch);
+//					continue;
+//				}
+//			}
+			// GROOVY end
 			try {
 				if (!parseAndBuildBindings(possibleMatch, mustResolvePattern)) continue;
 				// Currently we only need to resolve over pattern flag if there's potential parameterized types
@@ -1034,7 +1122,14 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 		PossibleMatch possibleMatch = this.matchesToProcess[i];
 		this.matchesToProcess[i] = null; // release reference to processed possible match
 		try {
-			process(possibleMatch, bindingsWereCreated);
+			// GROOVY start
+			// old 
+			 process(possibleMatch, bindingsWereCreated);
+			// new
+//			if (!alreadyMatched.contains(possibleMatch)) {
+//				process(possibleMatch, bindingsWereCreated);
+//			}
+			// GROOVY end
 		} catch (AbortCompilation e) {
 			// problem with class path: it could not find base classes
 			// continue and try next matching openable reporting innacurate matches (since bindings will be null)

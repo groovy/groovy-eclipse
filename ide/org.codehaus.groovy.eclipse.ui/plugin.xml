@@ -497,12 +497,14 @@
             class="org.codehaus.groovy.eclipse.preferences.GroovyEditorPreferencesPage"
             id="org.codehaus.groovy.eclipse.preferences.editor"
             name="Editor"/>
+            <!--
       <page
             category="org.codehaus.groovy.eclipse.preferences"
             class="org.codehaus.groovy.eclipse.preferences.TemplatesPreferencePage"
             id="org.codehaus.groovy.eclipse.preferences.template"
             name="Templates">
       </page>
+            -->
        <page
              category="org.codehaus.groovy.eclipse.preferences"
              class="org.codehaus.groovy.eclipse.preferences.FormatterPreferencesPage"
