@@ -2797,8 +2797,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         
         if (typeArgumentList.size()>0) {
             basicType.setGenericsTypes(typeArgumentList.toArray(new GenericsType[typeArgumentList.size()]));
-        }
-        configureAST(basicType, rootNode);
+        } else {
+        	// super type source locations is not right, so set them here
+        	// FIXADE M2 what to do about generics?
+      	    configureAST(basicType, rootNode);
+      	}
         return basicType;
     }
     
