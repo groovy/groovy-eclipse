@@ -106,7 +106,15 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	
+	
 //	public void testBrokenPackage() {
+//		this.runNegativeTest(new String[] {
+//				"Foo.groovy",
+//				"package \n"+
+//				"class Name extends GroovyTestCase { }\n"},"");
+//	}
+//	
+//	public void testBrokenPackage2() {
 //		this.runNegativeTest(new String[] {
 //				"Foo.groovy",
 //				"package ;\n"+
@@ -1708,6 +1716,29 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"	  }\n"+
 				"	}\n"},
 			"value");
+	}
+	
+
+	public void testStaticProperties_GRE364() {
+		this.runConformTest(new String[] {
+				"Foo.groovy",
+				"public class Foo { static String fubar }\n",
+				"Bar.java",
+				"public class Bar {\n"+
+				"	  String fubar = Foo.getFubar();\n"+
+				"	}\n"},
+			"");
+	}
+
+	public void testStaticProperties_GRE364_2() {
+		this.runConformTest(new String[] {
+				"Bar.java",
+				"public class Bar {\n"+
+				"	  String fubar = Foo.getFubar();\n"+
+				"	}\n",
+				"Foo.groovy",
+				"public class Foo { static String fubar }\n"},
+			"");
 	}
 	
 

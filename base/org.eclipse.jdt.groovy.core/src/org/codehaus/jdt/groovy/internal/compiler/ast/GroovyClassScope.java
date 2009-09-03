@@ -77,12 +77,13 @@ public class GroovyClassScope extends ClassScope {
 		// FIXASC (M2) check visibility - which should be synthetic?
 
 		List<MethodBinding> groovyMethods = new ArrayList<MethodBinding>();
-		createMethod("invokeMethod", "", new TypeBinding[] { bindingJLS, bindingJLO }, bindingJLO, groovyMethods, methodBindings);
-		createMethod("getProperty", "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings);
-		createMethod("setProperty", "", new TypeBinding[] { bindingJLS, bindingJLO }, TypeBinding.VOID, groovyMethods,
+		createMethod("invokeMethod", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, bindingJLO, groovyMethods,
 				methodBindings);
-		createMethod("getMetaClass", "", null, bindingGLM, groovyMethods, methodBindings);
-		createMethod("setMetaClass", "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods, methodBindings);
+		createMethod("getProperty", false, "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings);
+		createMethod("setProperty", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, TypeBinding.VOID, groovyMethods,
+				methodBindings);
+		createMethod("getMetaClass", false, "", null, bindingGLM, groovyMethods, methodBindings);
+		createMethod("setMetaClass", false, "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods, methodBindings);
 
 		// FIXASC (M2) decide what difference this makes - should we not be adding anything at all?
 		// will not be an instance of GroovyTypeDeclaration if created through
@@ -99,15 +100,16 @@ public class GroovyClassScope extends ClassScope {
 				FieldBinding fBinding = typeDeclaration.binding.getField(name.toCharArray(), false);
 				if (!(fBinding.type instanceof MissingTypeBinding)) {
 					String getterName = "get" + MetaClassHelper.capitalize(name);
-					createMethod(getterName, "", /* TypeBinding.NO_TYPES */null, fBinding.type, groovyMethods, methodBindings);
+					createMethod(getterName, property.isStatic(), "", /* TypeBinding.NO_TYPES */null, fBinding.type, groovyMethods,
+							methodBindings);
 					if (!fBinding.isFinal()) {
 						String setterName = "set" + MetaClassHelper.capitalize(name);
-						createMethod(setterName, "", new TypeBinding[] { fBinding.type }, TypeBinding.VOID, groovyMethods,
-								methodBindings);
+						createMethod(setterName, property.isStatic(), "", new TypeBinding[] { fBinding.type }, TypeBinding.VOID,
+								groovyMethods, methodBindings);
 					}
 					if (fBinding.type == TypeBinding.BOOLEAN) {
-						createMethod("is" + MetaClassHelper.capitalize(name), "", /* TypeBinding.NO_TYPES, */null, fBinding.type,
-								groovyMethods, methodBindings);
+						createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", /* TypeBinding.NO_TYPES, */
+						null, fBinding.type, groovyMethods, methodBindings);
 					}
 				}
 			}
@@ -118,8 +120,8 @@ public class GroovyClassScope extends ClassScope {
 		return newMethodBindings;
 	}
 
-	private void createMethod(String name, String signature, TypeBinding[] parameterTypes, TypeBinding returnType,
-			List<MethodBinding> groovyMethods, MethodBinding[] existingMethods) {
+	private void createMethod(String name, boolean isStatic, String signature, TypeBinding[] parameterTypes,
+			TypeBinding returnType, List<MethodBinding> groovyMethods, MethodBinding[] existingMethods) {
 		boolean found = false;
 		for (MethodBinding existingMethod : existingMethods) {
 			if (new String(existingMethod.selector).equals(name)) {
@@ -151,6 +153,9 @@ public class GroovyClassScope extends ClassScope {
 		}
 		if (!found) {
 			int modifiers = ClassFileConstants.AccPublic;
+			if (isStatic) {
+				modifiers |= ClassFileConstants.AccStatic;
+			}
 			if (this.referenceContext.binding.isInterface()) {
 				modifiers |= ClassFileConstants.AccAbstract;
 			}
