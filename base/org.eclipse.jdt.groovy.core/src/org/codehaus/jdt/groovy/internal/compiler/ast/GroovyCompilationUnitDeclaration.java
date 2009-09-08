@@ -765,7 +765,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
 		// AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
 		int modifiers = methodNode.getModifiers();
-		modifiers &= ~ClassFileConstants.AccSynthetic;
+		modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
 		methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
 		methodDeclaration.modifiers = modifiers;
 		methodDeclaration.selector = methodNode.getName().toCharArray();
@@ -786,7 +786,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			TypeReference returnType, CompilationResult compilationResult) {
 		MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
 		int modifiers = methodNode.getModifiers();
-		modifiers &= ~ClassFileConstants.AccSynthetic;
+		modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
 		methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
 		methodDeclaration.modifiers = modifiers;
 		methodDeclaration.selector = methodNode.getName().toCharArray();

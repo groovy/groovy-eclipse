@@ -1742,6 +1742,16 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 
+	public void testTransientMethod_GRE370() {
+		this.runConformTest(new String[] {
+				"Foo.groovy",
+				"public class Foo {\n"+
+				"  public transient void foo() {}\n"+
+				"}\n"},
+			"");
+	}
+	
+
 	// ---
 
 	// The getter for 'description' implements the interface
