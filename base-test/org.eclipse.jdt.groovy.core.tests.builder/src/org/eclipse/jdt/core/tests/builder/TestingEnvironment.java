@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.core.JavaProject;
 
 
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 
 public class TestingEnvironment {
@@ -1173,8 +1174,16 @@ public void cleanBuild() {
 	}
 
 	public void addGroovyJars(IPath projectPath) throws Exception {
-        addExternalJar(projectPath, FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar")).getFile());
-        addExternalJar(projectPath, FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar")).getFile());
+		URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar");
+		if (groovyJar==null) {
+			groovyJar =Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.6.4.jar");
+		}
+        addExternalJar(projectPath, FileLocator.resolve(groovyJar).getFile());
+        URL asmJar =Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar");
+		if (asmJar==null) {
+			asmJar=Platform.getBundle("org.codehaus.groovy").getEntry("asm-2.2.3.jar");
+		}
+        addExternalJar(projectPath, FileLocator.resolve(asmJar).getFile());
 	}	
 
 }
