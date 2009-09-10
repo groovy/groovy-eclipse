@@ -11,6 +11,7 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +56,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		super.setUp();
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
+		groovyLevel=17;
+    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar");
+    	if (groovyJar==null) {
+    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.6.4.jar");
+    		groovyLevel=16;
+    	}
 	}
 
 	public static Class testClass() {
@@ -66,6 +73,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyParser.debugRequestor = null; 
 	}
 
+	protected int groovyLevel;
 	
 	/** 
      * Include the groovy runtime jars on the classpath that is used.
@@ -78,8 +86,18 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-            newcps[newcps.length-1] = FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar")).getFile();
-            newcps[newcps.length-2] = FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar")).getFile();
+        	groovyLevel=17;
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar");
+        	if (groovyJar==null) {
+        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.6.4.jar");
+        		groovyLevel=16;
+        	}
+            newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
+        	URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar");
+        	if (asmJar==null) {
+        		asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("asm-2.2.3.jar");
+        	}
+            newcps[newcps.length-2] = FileLocator.resolve(asmJar).getFile();
 	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
 	        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
 	        // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
@@ -90,6 +108,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
             fail("IOException thrown " + e.getMessage());
         }
         return newcps;
+    }
+    
+    protected boolean isGroovy16() {
+    	return groovyLevel==16;
     }
 	
 	// WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
@@ -2046,7 +2068,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"success");
 		
 		String expectedOutput = 
-			"  // Field descriptor #9 Ljava/lang/String;\n" + 
+			//"  // Field descriptor #9"+  descriptor number varies across compilers (1.6/1.7)
+			"Ljava/lang/String;\n" + 
 			"  private java.lang.String s;\n";
 		checkDisassemblyFor("p/X.class", expectedOutput);
 	}	
@@ -2072,7 +2095,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"success");
 		
 		String expectedOutput = 
-			"  // Field descriptor #9 Ljava/lang/String;\n" + 
+//			"  // Field descriptor #9 "+ // descriptor number varies across compiler versions
+			"Ljava/lang/String;\n" + 
 			"  private java.lang.String s;\n";
 		checkDisassemblyFor("p/X.class", expectedOutput);
 	}	
@@ -3219,7 +3243,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"1. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
 			"	      ^\n" +
-			"Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
+			(isGroovy16()?
+			"Groovy:unable to find class for enum\n":
+			"Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n") +
 			"----------\n" +
 			"2. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
