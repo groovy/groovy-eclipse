@@ -97,9 +97,22 @@ public class CompilerUtils {
 					}
 				}
 			} catch (IOException ioe) {
+				System.err.println("Problem configuring groovy classloader classpath");
 				ioe.printStackTrace();
 			} catch (CoreException ce) {
+				System.err.println("Problem configuring groovy classloader classpath");
 				ce.printStackTrace();
+			} catch (Throwable t) {
+				System.err.println("Problem configuring groovy classloader classpath");
+				t.printStackTrace();
+			}
+		} else {
+			try {
+				String classpath = calculateClasspath(javaProject);
+				optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath,classpath);
+			} catch (Throwable t) {
+				System.err.println("Problem configuring groovy classloader classpath (not using groovy.properties)");
+				t.printStackTrace();				
 			}
 		}
 	}
