@@ -32,6 +32,8 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
+import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
 
 /**
  * A subtype of CompilationUnitScope that allows us to override some methods and prevent JDT doing some checks that groovy will be
@@ -162,7 +164,16 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		// return node;
 		// }
 		char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());
-		TypeBinding jdtBinding = getType(compoundName, compoundName.length);
+		TypeBinding jdtBinding = null;
+		try {
+			jdtBinding = getType(compoundName, compoundName.length);
+		} catch (AbortCompilation t) {
+			if (t.silentException instanceof AbortIncrementalBuildException) {
+				jdtBinding = null;
+			} else {
+				throw t;
+			}
+		}
 
 		if (jdtBinding != null && (jdtBinding instanceof SourceTypeBinding)) {
 			// log("GCUScope.lookupClassNodeForSource: JDTBinding for '" + typename + "' found to be "
