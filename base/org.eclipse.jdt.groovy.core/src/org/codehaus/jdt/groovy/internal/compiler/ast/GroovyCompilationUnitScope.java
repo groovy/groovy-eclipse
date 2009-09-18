@@ -24,7 +24,6 @@ import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.MethodVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
@@ -240,9 +239,10 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		return null;
 	}
 
-	@Override
-	public void verifyMethods(MethodVerifier verifier) {
-	}
+    // let it run to create synthetic methods
+	// @Override
+	// public void verifyMethods(MethodVerifier verifier) {
+	// }
 
 	// FIXASC (M2) Policing this might avoid the problem of JUnit not finding tests because the typename differs from the filename
 	@Override

@@ -45,6 +45,8 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 
 	boolean groovyReportReferenceInfo;
 
+	private GroovyParser parser;
+
 	public MultiplexingSourceElementRequestorParser(ProblemReporter problemReporter, ISourceElementRequestor requestor,
 			IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations,
 			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
@@ -53,6 +55,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		this.groovyRequestor = requestor;
 		this.notifier = new SourceElementNotifier(requestor, reportLocalDeclarations);
 		this.groovyReportReferenceInfo = reportLocalDeclarations;
+		this.parser = new GroovyParser(this.options, problemReporter);
 	}
 
 	public MultiplexingSourceElementRequestorParser(ProblemReporter problemReporter, ISourceElementRequestor requestor,
@@ -61,6 +64,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		// The superclass that is extended is in charge of parsing .java files
 		this.groovyRequestor = requestor;
 		this.notifier = new SourceElementNotifier(requestor, reportLocalDeclarations);
+		this.parser = new GroovyParser(this.options, problemReporter);
 	}
 
 	@Override
@@ -75,7 +79,10 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 			CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
 
 			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
+			// FIXASC (M2) ought to reuse to ensure types end up in same groovy CU
 			CompilationUnitDeclaration cud = new GroovyParser(this.options, problemReporter).dietParse(unit, compilationResult);
+
+			// CompilationUnitDeclaration cud = parser.dietParse(unit, compilationResult);
 
 			// CompilationUnitDeclaration cud groovyParser.dietParse(sourceUnit, compilationResult);
 			HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);
@@ -88,6 +95,15 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		}
 	}
 
+	@Override
+	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
+		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
+			return parser.dietParse(sourceUnit, compilationResult);
+		} else {
+			return super.dietParse(sourceUnit, compilationResult);
+		}
+	}
+
 	// FIXADE (M2) This should be calculated in GroovyCompilationUnitDeclaration
 	private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
 		HashtableOfObjectToInt table = new HashtableOfObjectToInt();
@@ -97,6 +113,11 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 			}
 		}
 		return table;
+	}
+
+	@Override
+	public void reset() {
+		parser.reset();
 	}
 
 	// FIXADE (M2) This should be calculated in GroovyCompilationUnitDeclaration

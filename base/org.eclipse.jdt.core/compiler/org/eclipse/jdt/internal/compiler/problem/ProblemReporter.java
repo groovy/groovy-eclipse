@@ -605,6 +605,12 @@ public void abstractMethodInConcreteClass(SourceTypeBinding type) {
 	}
 }
 public void abstractMethodMustBeImplemented(SourceTypeBinding type, MethodBinding abstractMethod) {
+    // GROOVY start: fired off by method verifier
+	if (type.scope!=null && !type.scope.shouldReport(IProblem.IncompatibleReturnType)) {
+		return;
+	}
+	// GROOVY end
+
 	if (type.isEnum() && type.isLocalType()) {
 		FieldBinding field = type.scope.enclosingMethodScope().initializedField;
 		FieldDeclaration decl = field.sourceField();
@@ -2591,6 +2597,14 @@ public void incompatibleExceptionInThrowsClause(SourceTypeBinding type, MethodBi
 			type.sourceEnd());
 }
 public void incompatibleReturnType(MethodBinding currentMethod, MethodBinding inheritedMethod) {
+    // GROOVY start: fired off by method verifier
+	if (currentMethod.declaringClass instanceof SourceTypeBinding) {
+		SourceTypeBinding stb = (SourceTypeBinding)currentMethod.declaringClass;
+		if (stb.scope!=null && !stb.scope.shouldReport(IProblem.IncompatibleReturnType)) {
+			return;
+		}
+	}
+	// GROOVY end
 	StringBuffer methodSignature = new StringBuffer();
 	methodSignature
 		.append(inheritedMethod.declaringClass.readableName())
@@ -4896,6 +4910,14 @@ public void methodMustOverride(AbstractMethodDeclaration method) {
 }
 
 public void methodNameClash(MethodBinding currentMethod, MethodBinding inheritedMethod) {
+    // GROOVY start: fired off by method verifier
+	if (currentMethod.declaringClass instanceof SourceTypeBinding) {
+		SourceTypeBinding stb = (SourceTypeBinding)currentMethod.declaringClass;
+		if (stb.scope!=null && !stb.scope.shouldReport(IProblem.MethodNameClash)) {
+			return;
+		}
+	}
+	// GROOVY end
 	this.handle(
 		IProblem.MethodNameClash,
 		new String[] {

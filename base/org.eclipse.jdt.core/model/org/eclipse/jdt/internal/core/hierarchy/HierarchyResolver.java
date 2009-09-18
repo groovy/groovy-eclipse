@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupport;
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
@@ -626,7 +628,13 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		}
 
 		// build type bindings
-		Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
+		
+		// GROOVY start: ensure downstream groovy parses share the same compilationunit
+		// oldcode:
+		// Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
+		// newcode
+		Parser parser = LanguageSupportFactory.getParser(this.lookupEnvironment.globalOptions, this.lookupEnvironment.problemReporter, true, 1);
+		// GROOVY end
 		for (int i = 0; i < openablesLength; i++) {
 			Openable openable = openables[i];
 			if (openable instanceof org.eclipse.jdt.core.ICompilationUnit) {

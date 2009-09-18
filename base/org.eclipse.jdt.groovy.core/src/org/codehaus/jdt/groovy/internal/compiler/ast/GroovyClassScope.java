@@ -171,6 +171,15 @@ public class GroovyClassScope extends ClassScope {
 		if (problem == IProblem.SuperclassMustBeAClass) {
 			return false;
 		}
+		if (problem == IProblem.IncompatibleReturnType) {
+			return false;
+		}
+		if (problem == IProblem.AbstractMethodMustBeImplemented) {
+			return false;
+		}
+		if (problem == IProblem.MethodNameClash) {
+			return false;
+		}
 		return true;
 	}
 
