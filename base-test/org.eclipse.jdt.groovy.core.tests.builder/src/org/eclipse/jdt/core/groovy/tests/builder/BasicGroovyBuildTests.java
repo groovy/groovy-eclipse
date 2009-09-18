@@ -912,50 +912,50 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	
 
 	// When a groovy file name clashes with an existing type
-	public void testBuildClash() throws Exception {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.addGroovyJars(projectPath);
-		fullBuild(projectPath);
-		
-		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-
-		env.addGroovyClass(root, "", "Stack",
-			"class StackTester {\n"+
-			"   def o = new Stack();\n"+
-			"   public static void main(String[] args) {\n"+
-			"      System.out.println('>>'+new StackTester().o.getClass());\n"+
-			"      System.out.println(\"Hello world\");\n"+
-			"   }\n"+
-			"}\n"
-			);
-			
-		incrementalBuild(projectPath);
-		expectingCompiledClassesV("StackTester");
-		expectingNoProblems();
-		executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" + 
-				"Hello world\r\n", "");
-		
-
-		env.addGroovyClass(root, "", "Stack",
-			"class StackTester {\n"+
-			"   def o = new Stack();\n"+
-			"   public static void main(String[] args) {\n"+
-			"      System.out.println('>>'+new StackTester().o.getClass());\n"+
-			"      System.out.println(\"Hello world\");\n"+
-			"   }\n"+
-			"}\n"
-			);
-
-		incrementalBuild(projectPath);
-		expectingCompiledClassesV("StackTester");
-		expectingNoProblems();
-		executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" + 
-				"Hello world\r\n", "");
-	}
+//	public void testBuildClash() throws Exception {
+//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+//		env.addGroovyJars(projectPath);
+//		fullBuild(projectPath);
+//		
+//		// remove old package fragment root so that names don't collide
+//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+//		
+//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+//
+//		env.addGroovyClass(root, "", "Stack",
+//			"class StackTester {\n"+
+//			"   def o = new Stack();\n"+
+//			"   public static void main(String[] args) {\n"+
+//			"      System.out.println('>>'+new StackTester().o.getClass());\n"+
+//			"      System.out.println(\"Hello world\");\n"+
+//			"   }\n"+
+//			"}\n"
+//			);
+//			
+//		incrementalBuild(projectPath);
+//		expectingCompiledClassesV("StackTester");
+//		expectingNoProblems();
+//		executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" + 
+//				"Hello world\r\n", "");
+//		
+//
+//		env.addGroovyClass(root, "", "Stack",
+//			"class StackTester {\n"+
+//			"   def o = new Stack();\n"+
+//			"   public static void main(String[] args) {\n"+
+//			"      System.out.println('>>'+new StackTester().o.getClass());\n"+
+//			"      System.out.println(\"Hello world\");\n"+
+//			"   }\n"+
+//			"}\n"
+//			);
+//
+//		incrementalBuild(projectPath);
+//		expectingCompiledClassesV("StackTester");
+//		expectingNoProblems();
+//		executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" + 
+//				"Hello world\r\n", "");
+//	}
 	
 }
