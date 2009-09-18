@@ -11,6 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.completion.jdt.LocalVariableProcessor;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -28,7 +29,9 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
     private static final String CONTENTS = "class LocalsClass { public LocalsClass() {\n }\n void doNothing(int x) { def xxx\n def xx\n def y = { t -> print t\n }\n } }";
     private static final String SCRIPTCONTENTS = "def xx = 9\ndef xxx\ndef y = { t -> print t\n }\n";
     private static final String SCRIPTCONTENTS2 = "def xx = 9\ndef xxx\ndef y = { t -> print t\n.toString() }\n";
-
+    private static final String SELFREFERENCINGSCRIPT = "def xx = 9\nxx = xx\nxx.abs()";
+    
+    
     public LocalVariableCompletionTests(String name) {
         super(name);
     }
@@ -88,6 +91,14 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "y", 1);
     }
 
+    // should not have a stack overflow here
+    // see GRECLIPSE-369
+    public void testSelfReferencingLocalVar() throws Exception {
+        ICompilationUnit unit = createGroovyForSelfReferencingScript();
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(SELFREFERENCINGSCRIPT, "xx."), GeneralGroovyCompletionProcessor.class);
+        proposalExists(proposals, "abs", 1);
+    }
+    
     private ICompilationUnit createJava() throws Exception {
         IPath projectPath = createGenericProject();
         IPath src = projectPath.append("src");
@@ -117,6 +128,14 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
         IPath projectPath = createGenericProject();
         IPath src = projectPath.append("src");
         IPath pathToJavaClass = env.addGroovyClass(src, "LocalsScript2", SCRIPTCONTENTS2);
+        incrementalBuild();
+        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
+        return unit;
+    }
+    private ICompilationUnit createGroovyForSelfReferencingScript() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath src = projectPath.append("src");
+        IPath pathToJavaClass = env.addGroovyClass(src, "SelfRefScripr", SELFREFERENCINGSCRIPT);
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         return unit;

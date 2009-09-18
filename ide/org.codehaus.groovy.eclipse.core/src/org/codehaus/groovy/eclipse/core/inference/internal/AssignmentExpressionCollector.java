@@ -274,7 +274,8 @@ class AssignmentExpressionCollector {
         public void visitBinaryExpression(BinaryExpression expr) {
 			Expression left = expr.getLeftExpression();
 			Expression right = expr.getRightExpression();
-			if (left.getStart() < sourceCodeContext.getOffset()) {
+//            if (left.getStart() < sourceCodeContext.getOffset()) {
+			if (right.getEnd() < sourceCodeContext.getOffset()) {
 				if (expr.getOperation().getType() == Types.EQUALS 
 						&& left.getClass() == VariableExpression.class
 						&& !right.getText().equals("null")) {
