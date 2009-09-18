@@ -75,7 +75,7 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
 	 * @see ILaunchShortcut#launch
 	 */
 	public void launch(ISelection selection, String mode)  {
-		if (selection instanceof IStructuredSelection && ((IStructuredSelection) selection).getFirstElement() instanceof ICompilationUnit) {
+		if (selection instanceof IStructuredSelection && ((IStructuredSelection) selection).getFirstElement() instanceof IJavaElement) {
 			IStructuredSelection structredSelection = (IStructuredSelection) selection;
 			IJavaElement elt = (IJavaElement) structredSelection.getFirstElement(); 
 			launchGroovy(elt.getJavaProject(), mode);
