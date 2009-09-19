@@ -176,4 +176,7 @@ public abstract class CompletionTestCase extends BuilderTests {
     protected int getIndexOf(String contents, String lookFor) {
         return contents.indexOf(lookFor)+lookFor.length();
     }
+    protected int getLastIndexOf(String contents, String lookFor) {
+        return contents.lastIndexOf(lookFor)+lookFor.length();
+    }
 }
