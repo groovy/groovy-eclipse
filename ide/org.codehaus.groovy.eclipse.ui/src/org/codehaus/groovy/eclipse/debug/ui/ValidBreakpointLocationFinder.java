@@ -135,10 +135,10 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
     
     public ASTNode findValidBreakpointLocation(ModuleNode module) {
         ASTNode candidate = null;
-        for (ClassNode classNode : module.getClasses()) {
+        for (ClassNode classNode : (Iterable<ClassNode>) module.getClasses()) {
                 
             try {
-                for (Statement initializer : classNode.getObjectInitializerStatements()) {
+                for (Statement initializer : (Iterable<Statement>) classNode.getObjectInitializerStatements()) {
                     this.visitStatement(initializer);
                 }
             } catch (VisitCompleted vc) { }
@@ -146,7 +146,7 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
             lastValid = null;
             
             try {
-                for (PropertyNode pn : classNode.getProperties()) {
+                for (PropertyNode pn : (Iterable<PropertyNode>) classNode.getProperties()) {
                     this.visitProperty(pn);
                 }
             } catch (VisitCompleted vc) { }
@@ -162,7 +162,7 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
             lastValid = null;
             
             try {
-                for (ConstructorNode cn : classNode.getDeclaredConstructors()) {
+                for (ConstructorNode cn : (Iterable<ConstructorNode>) classNode.getDeclaredConstructors()) {
                     this.visitConstructor(cn);
                 }
             } catch (VisitCompleted vc) { }

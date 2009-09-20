@@ -19,6 +19,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.codehaus.groovy.antlr.LocationSupport;
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -64,12 +65,12 @@ public class LocationSupportTests extends TestCase {
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getStatementBlock().getStart());
         assertEquals(content.length(), module.getStatementBlock().getEnd());
-        assertEquals("".length(), module.getStatementBlock().getStatements().get(0).getStart());
-        assertEquals("def x = 7".length(), module.getStatementBlock().getStatements().get(0).getEnd());
-        assertEquals("def x = 7\n  ".length(), module.getStatementBlock().getStatements().get(1).getStart());
-        assertEquals("def x = 7\n  x++".length(), module.getStatementBlock().getStatements().get(1).getEnd());
-        assertEquals("def x = 7\n  x++\n  ".length(), module.getStatementBlock().getStatements().get(2).getStart());
-        assertEquals("def x = 7\n  x++\n  def y = []".length(), module.getStatementBlock().getStatements().get(2).getEnd());
+        assertEquals("".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
+        assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
+        assertEquals("def x = 7\n  ".length(), ((ASTNode) module.getStatementBlock().getStatements().get(1)).getStart());
+        assertEquals("def x = 7\n  x++".length(), ((ASTNode) module.getStatementBlock().getStatements().get(1)).getEnd());
+        assertEquals("def x = 7\n  x++\n  ".length(), ((ASTNode) module.getStatementBlock().getStatements().get(2)).getStart());
+        assertEquals("def x = 7\n  x++\n  def y = []".length(), ((ASTNode) module.getStatementBlock().getStatements().get(2)).getEnd());
     }
     
     public void testParserSourceLocationsEmpty() throws Exception {
@@ -97,8 +98,8 @@ public class LocationSupportTests extends TestCase {
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getStatementBlock().getStart());
         assertEquals(content.length(), module.getStatementBlock().getEnd());
-        assertEquals("".length(), module.getStatementBlock().getStatements().get(0).getStart());
-        assertEquals("def x = 7".length(), module.getStatementBlock().getStatements().get(0).getEnd());
+        assertEquals("".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
+        assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
     }
     public void testParserSourceLocationsNewLine() throws Exception {
         String content = "def x = 7\n";
@@ -113,8 +114,8 @@ public class LocationSupportTests extends TestCase {
         assertEquals(content.length(), module.getEnd());
         assertEquals("".length(), module.getStatementBlock().getStart());
         assertEquals("def x = 7".length(), module.getStatementBlock().getEnd());
-        assertEquals("".length(), module.getStatementBlock().getStatements().get(0).getStart());
-        assertEquals("def x = 7".length(), module.getStatementBlock().getStatements().get(0).getEnd());
+        assertEquals("".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
+        assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
     }
     public void testParserSourceLocationsClass() throws Exception {
         String content = "class X {\n }";
@@ -127,8 +128,8 @@ public class LocationSupportTests extends TestCase {
         // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
-        assertEquals(0, module.getClasses().get(0).getStart());
-        assertEquals(content.length(), module.getClasses().get(0).getEnd());
+        assertEquals(0, ((ASTNode) module.getClasses().get(0)).getStart());
+        assertEquals(content.length(), ((ASTNode) module.getClasses().get(0)).getEnd());
     }
     
     public void testParserSourceLocationsMethod() throws Exception {
@@ -142,8 +143,8 @@ public class LocationSupportTests extends TestCase {
         // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
-        assertEquals(0, module.getMethods().get(0).getStart());
-        assertEquals(content.length(), module.getMethods().get(0).getEnd());
+        assertEquals(0, ((ASTNode) module.getMethods().get(0)).getStart());
+        assertEquals(content.length(), ((ASTNode) module.getMethods().get(0)).getEnd());
     }
     
     public void testParserSourceLocationsClassMethodStatement() throws Exception {
@@ -160,17 +161,17 @@ public class LocationSupportTests extends TestCase {
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getStatementBlock().getStart());
         assertEquals("def x = 7\n  x++\n  def y = []".length(), module.getStatementBlock().getEnd());
-        assertEquals("".length(), module.getStatementBlock().getStatements().get(0).getStart());
-        assertEquals("def x = 7".length(), module.getStatementBlock().getStatements().get(0).getEnd());
-        assertEquals("def x = 7\n  ".length(), module.getStatementBlock().getStatements().get(1).getStart());
-        assertEquals("def x = 7\n  x++".length(), module.getStatementBlock().getStatements().get(1).getEnd());
-        assertEquals("def x = 7\n  x++\n  ".length(), module.getStatementBlock().getStatements().get(2).getStart());
-        assertEquals("def x = 7\n  x++\n  def y = []".length(), module.getStatementBlock().getStatements().get(2).getEnd());
-        assertEquals("def x = 7\n  x++\n  def y = []\n".length(), module.getMethods().get(0).getStart());
-        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}".length(), module.getMethods().get(0).getEnd());
+        assertEquals("".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
+        assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
+        assertEquals("def x = 7\n  ".length(), ((ASTNode) module.getStatementBlock().getStatements().get(1)).getStart());
+        assertEquals("def x = 7\n  x++".length(), ((ASTNode) module.getStatementBlock().getStatements().get(1)).getEnd());
+        assertEquals("def x = 7\n  x++\n  ".length(), ((ASTNode) module.getStatementBlock().getStatements().get(2)).getStart());
+        assertEquals("def x = 7\n  x++\n  def y = []".length(), ((ASTNode) module.getStatementBlock().getStatements().get(2)).getEnd());
+        assertEquals("def x = 7\n  x++\n  def y = []\n".length(), ((ASTNode) module.getMethods().get(0)).getStart());
+        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}".length(), ((ASTNode) module.getMethods().get(0)).getEnd());
         // use index of 1 because zero index is of Foo
-        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\n".length(), module.getClasses().get(1).getStart());
-        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n }".length(), module.getClasses().get(1).getEnd());
+        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\n".length(), ((ASTNode) module.getClasses().get(1)).getStart());
+        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n }".length(), ((ASTNode) module.getClasses().get(1)).getEnd());
 
     }
 }

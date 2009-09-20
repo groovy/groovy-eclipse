@@ -55,6 +55,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IWorkbenchSite;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.FileEditorInput;
 
 public class GroovyEditor extends CompilationUnitEditor {
@@ -255,7 +256,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         renameAction
                 .setActionDefinitionId(IJavaEditorActionDefinitionIds.RENAME_ELEMENT);
         setAction("RenameElement", renameAction); //$NON-NLS-1$
-
     }
     
     private void removeRefactoringAction(String actionFieldName) {
@@ -264,7 +264,6 @@ public class GroovyEditor extends CompilationUnitEditor {
                 ReflectionUtils.getPrivateField(RefactorActionGroup.class, actionFieldName, group);
         getSite().getSelectionProvider().removeSelectionChangedListener(action);
         ReflectionUtils.setPrivateField(RefactorActionGroup.class, actionFieldName, group, null);
-        
     }
     
     /*

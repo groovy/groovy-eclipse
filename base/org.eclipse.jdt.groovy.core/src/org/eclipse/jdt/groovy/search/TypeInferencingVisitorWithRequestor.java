@@ -133,6 +133,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
+	public void visitPackage(PackageNode p) {
+		// do nothing for now
+	}
+
 	public void visitJDT(IType type, ITypeRequestor requestor) {
 		IJavaElement oldEnclosing = enclosingElement;
 		ASTNode oldEnclosingNode = enclosingDeclarationNode;
@@ -256,7 +260,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 
-		for (Statement element : node.getObjectInitializerStatements()) {
+		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
 			element.visit(this);
 		}
 
@@ -309,15 +313,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitAnnotations(AnnotatedNode node) {
-		for (AnnotationNode annotation : node.getAnnotations()) {
+		for (AnnotationNode annotation : (Iterable<AnnotationNode>) node.getAnnotations()) {
 			visitAnnotation(annotation);
 		}
 		super.visitAnnotations(node);
 	}
 
-	@Override
 	public void visitImports(ModuleNode node) {
-		for (ImportNode imp : node.getImports()) {
+		for (ImportNode imp : (Iterable<ImportNode>) node.getImports()) {
 			TypeLookupResult result = null;
 			for (ITypeLookup lookup : lookups) {
 				result = lookup.lookupType(imp);
@@ -335,13 +338,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					throw new VisitCompleted();
 			}
 		}
-		super.visitImports(node);
-	}
-
-	@Override
-	public void visitPackage(PackageNode node) {
-		// TODO Auto-generated method stub
-		super.visitPackage(node);
 	}
 
 	private boolean handleExpression(Expression node) {
@@ -771,7 +767,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	private ClassNode findClassWithName(String simpleName) {
-		for (ClassNode clazz : getModuleNode().getClasses()) {
+		for (ClassNode clazz : (Iterable<ClassNode>) getModuleNode().getClasses()) {
 			if (clazz.getNameWithoutPackage().equals(simpleName)) {
 				return clazz;
 			}

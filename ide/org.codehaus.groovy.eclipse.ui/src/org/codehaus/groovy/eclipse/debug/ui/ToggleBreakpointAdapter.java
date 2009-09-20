@@ -171,7 +171,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                             resource = getResource(editorPart);
                             if (editorPart instanceof ITextEditor) {
                                 ModuleNode node = getModuleNode((ITextEditor) editorPart);
-                                for (ClassNode clazz : node.getClasses()) {
+                                for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
                                     int begin = clazz.getStart();
                                     int end = clazz.getEnd();
                                     if (offset >= begin && offset <= end && !clazz.isInterface()) {

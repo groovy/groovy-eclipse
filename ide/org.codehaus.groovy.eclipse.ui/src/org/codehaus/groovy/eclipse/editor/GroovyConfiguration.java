@@ -12,6 +12,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
+import org.eclipse.jface.text.quickassist.IQuickAssistAssistant;
 import org.eclipse.jface.text.rules.BufferedRuleBasedScanner;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.rules.RuleBasedScanner;
@@ -119,4 +120,13 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                 GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS
             };
     }
+    
+    @Override
+    public IQuickAssistAssistant getQuickAssistAssistant(
+            ISourceViewer sourceViewer) {
+        // disable quick assist
+        return null;
+    }
+    
+    
 }

@@ -141,8 +141,10 @@ public class SourceContextInfo {
                     return new SourceContextInfo(lookup, result, parts[0], parts[1]);
                 }
             } catch (Exception e) {
-                ClassNode node = module.getClasses().get(0);
-                GroovyCore.logException("Exception while browsing in " + (node!=null ? node.getName() : module.getScriptClassDummy()), e);
+                List classes = module.getClasses();
+                GroovyCore.logException("Exception while browsing in " + (classes.size() > 0 ? 
+                        ((ClassNode) classes.get(0)).getName() : 
+                            module.getDescription()), e);
             }
         }
         return null;

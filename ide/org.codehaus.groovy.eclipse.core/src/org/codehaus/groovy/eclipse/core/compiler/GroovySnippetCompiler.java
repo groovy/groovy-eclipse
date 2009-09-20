@@ -73,7 +73,7 @@ public class GroovySnippetCompiler {
         ModuleNode node = decl.getModuleNode();
         
         // Remove any remaining synthetic methods
-        for (ClassNode classNode : node.getClasses()) {
+        for (ClassNode classNode : (Iterable<ClassNode>) node.getClasses()) {
             for (Iterator<MethodNode> methodIter = classNode.getMethods().iterator(); methodIter.hasNext();) {
                 MethodNode method = methodIter.next();
                 if ((method.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0) {

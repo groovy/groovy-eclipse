@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchInfo;
 import org.codehaus.groovy.eclipse.codebrowsing.IDeclarationSearchProcessor;
@@ -84,7 +85,7 @@ public class MethodCallExpressionProcessor implements
                     }
                 }
             } catch (JavaModelException e) {
-                GroovyCore.logException("Error while code browsing on " + info.getModuleNode().getClasses().get(0).getName(), e);
+                GroovyCore.logException("Error while code browsing on " + getMainClassName(info), e);
             }
 
             try {
@@ -123,7 +124,7 @@ public class MethodCallExpressionProcessor implements
                     }
                 }
             } catch (JavaModelException e) {
-                GroovyCore.logException("Error while code browsing on " + info.getModuleNode().getClasses().get(0).getName(), e);
+                GroovyCore.logException("Error while code browsing on " + getMainClassName(info), e);
             }
             
             try {
@@ -139,12 +140,24 @@ public class MethodCallExpressionProcessor implements
                     }
                 }
             } catch (JavaModelException e) {
-                GroovyCore.logException("Error while code browsing on " + info.getModuleNode().getClasses().get(0).getName(), e);
+                GroovyCore.logException("Error while code browsing on " + getMainClassName(info), e);
             }
             
             return elts.toArray(new IJavaElement[0]);
         } else {
             return new IJavaElement[0];
+        }
+    }
+
+    /**
+     * @param info
+     */
+    private String getMainClassName(IDeclarationSearchInfo info) {
+        try {
+            return ((ClassNode) info.getModuleNode().getClasses().get(0)).getName();
+        } catch (Exception e) {
+            // probably no classes in this module node
+            return info.getModuleNode().getPackageName();
         }
     }
     

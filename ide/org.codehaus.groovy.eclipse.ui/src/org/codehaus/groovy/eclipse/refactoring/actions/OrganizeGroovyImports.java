@@ -127,7 +127,7 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitAnnotations(AnnotatedNode node) {
-            for (AnnotationNode an : node.getAnnotations()) {
+            for (AnnotationNode an : (Iterable<AnnotationNode>) node.getAnnotations()) {
                 handleType(an.getClassNode(), true);
             }
             super.visitAnnotations(node);
@@ -211,14 +211,14 @@ public class OrganizeGroovyImports {
         importsSlatedForRemoval = new HashMap<String, ImportNode>();
         FindUnresolvedReferencesVisitor visitor = new FindUnresolvedReferencesVisitor();
         
-        for (ImportNode imp : node.getImports()) {
+        for (ImportNode imp : (Iterable<ImportNode>) node.getImports()) {
             importsSlatedForRemoval.put(imp.getClassName(), imp);
         }
         
 
         // find all missing types
         // find all imports that are not referenced
-        for (ClassNode clazz : node.getClasses()) {
+        for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
             visitor.visitClass(clazz);
         }
         

@@ -66,7 +66,7 @@ public class FindSurroundingClosure extends ClassCodeVisitorSupport {
 			BlockStatement block = (BlockStatement)expression.getCode();
 			int line0 = expression.getLineNumber();
 			int line1 = 0;
-			for (Statement statement : block.getStatements()) {
+			for (Statement statement : (Iterable<Statement>) block.getStatements()) {
 				line1 = statement.getLastLineNumber();
 			}
 			

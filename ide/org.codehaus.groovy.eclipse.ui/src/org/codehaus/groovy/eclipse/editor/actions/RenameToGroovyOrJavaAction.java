@@ -31,7 +31,7 @@ import org.eclipse.ui.actions.WorkspaceModifyDelegatingOperation;
 /**
  * Rename the file extension of a file to groovy or to java
  */
-public abstract class RenameToGroovyOrGroovyAction implements IActionDelegate {
+public abstract class RenameToGroovyOrJavaAction implements IActionDelegate {
 
 	public static final String GROOVY = ".groovy";
 	public static final String JAVA = ".java";
@@ -39,7 +39,7 @@ public abstract class RenameToGroovyOrGroovyAction implements IActionDelegate {
 
     private String javaOrGroovy;
     
-    public RenameToGroovyOrGroovyAction(String javaOrGroovy) {
+    public RenameToGroovyOrJavaAction(String javaOrGroovy) {
         this.javaOrGroovy = javaOrGroovy;
     }
     

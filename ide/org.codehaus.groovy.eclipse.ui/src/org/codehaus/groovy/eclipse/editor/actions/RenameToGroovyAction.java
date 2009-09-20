@@ -21,7 +21,7 @@ package org.codehaus.groovy.eclipse.editor.actions;
  * @created Aug 26, 2009
  *
  */
-public class RenameToGroovyAction extends RenameToGroovyOrGroovyAction {
+public class RenameToGroovyAction extends RenameToGroovyOrJavaAction {
     public RenameToGroovyAction() {
         super(GROOVY);
     }

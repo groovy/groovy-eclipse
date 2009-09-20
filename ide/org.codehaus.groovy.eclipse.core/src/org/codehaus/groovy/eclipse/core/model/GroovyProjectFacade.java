@@ -146,14 +146,16 @@ public class GroovyProjectFacade {
      }
      
      GroovyCompilationUnit groovyModuleToCompilationUnit(ModuleNode node) {
-         ClassNode classNode = node.getClasses().get(0);
-         IType type = groovyClassToJavaType(classNode);
-         if (type instanceof SourceType) {
-             return (GroovyCompilationUnit) type.getCompilationUnit();
-         } else {
-             GroovyCore.logWarning("Trying to get GroovyCompilationUnit for non-groovy module: " + classNode.getName());
-             return null;
-         } 
+    	 List classes = node.getClasses();
+         ClassNode classNode = classes.size() > 0 ? (ClassNode) classes.get(0) : null;
+         if (classNode != null) {
+             IType type = groovyClassToJavaType(classNode);
+             if (type instanceof SourceType) {
+                 return (GroovyCompilationUnit) type.getCompilationUnit();
+             }
+         }
+         GroovyCore.logWarning("Trying to get GroovyCompilationUnit for non-groovy module: " + node.getDescription());
+         return null;
      }
      
      /**

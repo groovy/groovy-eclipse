@@ -121,7 +121,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 		analyseStaticFieldImport();
 		
 		if (!rootNode.getStatementBlock().isEmpty()) {
-			for (Statement statement : rootNode.getStatementBlock().getStatements()) {
+			for (Statement statement : (Iterable<Statement>) rootNode.getStatementBlock().getStatements()) {
 				statement.visit(this);
 			}
 		}

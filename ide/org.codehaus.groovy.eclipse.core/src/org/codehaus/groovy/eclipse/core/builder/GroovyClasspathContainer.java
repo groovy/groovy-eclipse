@@ -135,6 +135,9 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         try {
         	Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy");
         	Enumeration<URL> enu = groovyBundle.findEntries("", "groovy-all-*.jar", false);
+        	if (enu == null) {
+        	    enu = groovyBundle.findEntries("lib", "groovy-all-*.jar", false);
+        	}
         	while (enu.hasMoreElements()) {
         		URL jar = enu.nextElement();
         		if (jar.getFile().indexOf("-sources") == -1 &&

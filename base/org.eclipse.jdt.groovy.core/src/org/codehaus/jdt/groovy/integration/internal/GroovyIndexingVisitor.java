@@ -11,9 +11,6 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.integration.internal;
 
-import java.util.Map;
-import java.util.Stack;
-
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -47,10 +44,6 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	private ISourceElementRequestor requestor;
 
-	// keep track of all variables as they are you seen.
-	// Store a type for them. Null means type is unknown
-	private Stack<Map<String, String>> variableTypeStack = new Stack<Map<String, String>>();
-
 	public GroovyIndexingVisitor(ISourceElementRequestor requestor) {
 		this.requestor = requestor;
 	}
@@ -69,36 +62,26 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 		// }
 		this.visitImports(node);
 
-		for (ClassNode clazz : node.getClasses()) {
+		for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
 			this.visitClass(clazz);
 		}
 	}
 
-	@Override
 	public void visitImports(ModuleNode node) {
 		if (node != null) {
-			for (ImportNode importNode : node.getImports()) {
+			for (ImportNode importNode : (Iterable<ImportNode>) node.getImports()) {
 				visitAnnotations(importNode);
 				importNode.visit(this);
-				// handleType(importNode.getType(), false, true);
+				handleType(importNode.getType(), false, true);
 			}
-			for (ImportNode importStarNode : node.getStarImports()) {
-				visitAnnotations(importStarNode);
-				importStarNode.visit(this);
-
-				// what goes here?
+			for (ClassNode staticImportClasses : (Iterable<ClassNode>) node.getStaticImportClasses().values()) {
+				handleType(staticImportClasses, false, true);
 			}
-			for (ImportNode importStaticNode : node.getStaticImports().values()) {
-				visitAnnotations(importStaticNode);
-				importStaticNode.visit(this);
-
-				// what goes here?
+			for (ClassNode staticImportAliases : (Iterable<ClassNode>) node.getStaticImportAliases().values()) {
+				handleType(staticImportAliases, false, true);
 			}
-			for (ImportNode importStaticStarNode : node.getStaticStarImports().values()) {
-				visitAnnotations(importStaticStarNode);
-				importStaticStarNode.visit(this);
-
-				// what goes here?
+			for (String fieldName : (Iterable<String>) node.getStaticImportFields().values()) {
+				requestor.acceptUnknownReference(fieldName.toCharArray(), 0);
 			}
 		}
 	}
@@ -173,6 +156,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 	@Override
 	public void visitClass(ClassNode node) {
 		if (!node.isSynthetic()) {
+			handleType(node, false, false);
 			handleType(node.getSuperClass(), false, true);
 			for (ClassNode impls : node.getInterfaces()) {
 				handleType(impls, false, true);
@@ -183,7 +167,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 		// super.visitClass(node);
 		visitAnnotations(node);
 		node.visitContents(this);
-		for (Statement element : node.getObjectInitializerStatements()) {
+		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
 			element.visit(this);
 		}
 
@@ -199,7 +183,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	@Override
 	public void visitAnnotations(AnnotatedNode node) {
-		for (AnnotationNode an : node.getAnnotations()) {
+		for (AnnotationNode an : (Iterable<AnnotationNode>) node.getAnnotations()) {
 			handleType(an.getClassNode(), true, true);
 		}
 		super.visitAnnotations(node);
@@ -218,7 +202,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	private char[][] splitName(ClassNode node, boolean useQualifiedName) {
 		String name = useQualifiedName ? node.getName() : node.getNameWithoutPackage();
-		String[] nameArr = name.split("\\.");
+		String[] nameArr = name.split("\\."); //$NON-NLS-1$
 		char[][] nameCharArr = new char[nameArr.length][];
 		for (int i = 0; i < nameArr.length; i++) {
 			nameCharArr[i] = nameArr[i].toCharArray();
