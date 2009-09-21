@@ -26,6 +26,7 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
@@ -201,6 +202,18 @@ public class JDTClassNode extends ClassNode {
 					addConstructor(cNode);
 				} else {
 					MethodNode mNode = methodBindingToMethodNode(bindings[i]);
+					addMethod(mNode);
+				}
+			}
+		}
+		if (jdtBinding instanceof BinaryTypeBinding) {
+			MethodBinding[] infraBindings = ((BinaryTypeBinding) jdtBinding).infraMethods();
+			for (int i = 0; i < infraBindings.length; i++) {
+				if (infraBindings[i].isConstructor()) {
+					ConstructorNode cNode = constructorBindingToConstructorNode(infraBindings[i]);
+					addConstructor(cNode);
+				} else {
+					MethodNode mNode = methodBindingToMethodNode(infraBindings[i]);
 					addMethod(mNode);
 				}
 			}

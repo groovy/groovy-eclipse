@@ -38,6 +38,10 @@ public class BinaryTypeBinding extends ReferenceBinding {
 	protected ReferenceBinding[] superInterfaces;
 	protected FieldBinding[] fields;
 	protected MethodBinding[] methods;
+	// GROOVY start
+	private boolean infraMethodsComplete = false;
+	protected MethodBinding[] infraMethods = Binding.NO_METHODS;
+	// GROOVY end
 	protected ReferenceBinding[] memberTypes;
 	protected TypeVariableBinding[] typeVariables;
 
@@ -533,16 +537,8 @@ private void createMethods(IBinaryMethod[] iMethods, long sourceLevel, char[][][
 	int[] toSkip = null;
 	if (iMethods != null) {
 		total = initialTotal = iMethods.length;
-		// GROOVY start
-		// oldcode:
-//		boolean keepBridgeMethods = sourceLevel < ClassFileConstants.JDK1_5
-//			&& this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_5;
-		// newcode:
-			boolean keepBridgeMethods = (sourceLevel < ClassFileConstants.JDK1_5
-			&& this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_5) ||
-			this.environment.globalOptions.buildGroovyFiles==2;
-		// GROOVY end
-			
+		boolean keepBridgeMethods = sourceLevel < ClassFileConstants.JDK1_5
+			&& this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_5;			
 		for (int i = total; --i >= 0;) {
 			IBinaryMethod method = iMethods[i];
 			if ((method.getModifiers() & ClassFileConstants.AccSynthetic) != 0) {
@@ -590,6 +586,24 @@ private void createMethods(IBinaryMethod[] iMethods, long sourceLevel, char[][][
 				this.methods[index++] = method;
 			}
 		}
+		// GROOVY start
+		// hold onto the skipped methods, groovy will want to see them
+		if (this.environment.globalOptions.buildGroovyFiles==2) {
+			int skipped = initialTotal-this.methods.length-(iClinit==-1?0:1);
+			if (skipped==0) {
+				this.infraMethods = Binding.NO_METHODS;
+			} else {
+				this.infraMethods = new MethodBinding[skipped];
+				for (int i = 0, index = 0; i < initialTotal; i++) {
+					if (iClinit != i && (toSkip != null && toSkip[i] == -1)) {
+						// this is a skipped method
+						MethodBinding method = createMethod(iMethods[i], sourceLevel, missingTypeNames);
+						this.infraMethods[index++]= method;
+					}
+				}
+			}
+		}
+		// GROOVY end
 	}
 }
 
@@ -936,6 +950,17 @@ public ReferenceBinding[] memberTypes() {
 	this.tagBits &= ~TagBits.HasUnresolvedMemberTypes;
 	return this.memberTypes;
 }
+// GROOVY start
+public MethodBinding[] infraMethods() {
+	if (!infraMethodsComplete) {
+		for (int i = this.infraMethods.length; --i >= 0;) {
+			resolveTypesFor(this.infraMethods[i]);
+		}
+		infraMethodsComplete=true;
+	}
+	return infraMethods;
+}
+// GROOVY end
 // NOTE: the return type, arg & exception types of each method of a binary type are resolved when needed
 public MethodBinding[] methods() {
 	if ((this.tagBits & TagBits.AreMethodsComplete) != 0)
