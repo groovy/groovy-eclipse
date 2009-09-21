@@ -197,7 +197,28 @@ public class TypeUtil {
 	    return new Field(signature, modifiers, field.getElementName(), declaringClass, !signature.equals(OBJECT_TYPE));
 	}
 
-	public static GroovyDeclaration newLocalVariable(Variable var) {
+	/**
+     * @param typeName
+     * @param string
+     * @return
+     */
+    public static Field newField(String fieldName, String typeSignature, String declaringType, int modifiers) {
+        ClassType declaringClass = newClassType(declaringType);
+        return new Field(typeSignature, modifiers, fieldName, declaringClass, !typeSignature.equals(OBJECT_TYPE));
+    }
+
+    
+    
+    /**
+     * @param name
+     * @return
+     */
+    public static ClassType newClassType(String name) {
+        String typeSig = Signature.createTypeSignature(name, true);
+        return new ClassType(typeSig, Opcodes.ACC_PUBLIC, name);
+    }
+
+    public static GroovyDeclaration newLocalVariable(Variable var) {
 		return new LocalVariable(var.getType().getName(), var.getName());
 	}
 	

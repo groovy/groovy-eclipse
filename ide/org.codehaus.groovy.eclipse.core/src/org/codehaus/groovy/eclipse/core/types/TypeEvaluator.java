@@ -137,18 +137,6 @@ public class TypeEvaluator {
 		
 		GroovySnippetCompiler compiler = new GroovySnippetCompiler(context.getProject());
 		return compiler.compile(expression);
-//		IGroovyCompiler compiler = new GroovyCompiler();
-//		ClassLoader loader = context.getClassLoader();
-//		if (loader == null) {
-//			loader = Thread.currentThread().getContextClassLoader();
-//		}
-//		IGroovyCompilerConfiguration config = new GroovyCompilerConfigurationBuilder()
-//				.classLoader(loader)
-//				.buildAST()
-//				.resolveAST()
-//				.done();
-//		compiler.compile("CompletionExpression", new ByteArrayInputStream(expression.getBytes()), config, reporter);
-//		return reporter.moduleNode;
 	}
 
 	private String decorateExpression(String expression) {

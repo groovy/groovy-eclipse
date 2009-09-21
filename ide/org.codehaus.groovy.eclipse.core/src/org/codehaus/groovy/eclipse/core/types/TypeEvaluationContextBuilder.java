@@ -37,6 +37,7 @@ public class TypeEvaluationContextBuilder {
 	private IMemberLookup memberLookup;
 	private IRegion region = new Region(0, 0); // default if left unspecified
 	private GroovyProjectFacade project;
+    private boolean forceUseThisContext = false;
 	
 	
 	/**
@@ -87,7 +88,9 @@ public class TypeEvaluationContextBuilder {
 			context.setMemberLookup(memberLookup);
 			return context;
 		} else {
-			sourceCodeContext = new SourceCodeContextFactory().createContext(sourceCodeContext, region);
+		    if (!forceUseThisContext) {
+		        sourceCodeContext = new SourceCodeContextFactory().createContext(sourceCodeContext, region);
+		    }
 			InferringEvaluationContext context = new InferringEvaluationContext(project);
 			context.setImports(imports);
 			context.setSourceCodeContext(sourceCodeContext);
@@ -97,6 +100,11 @@ public class TypeEvaluationContextBuilder {
 		}
 	}
 
+	public TypeEvaluationContextBuilder forceUseThisContext() {
+	    this.forceUseThisContext = true;
+	    return this;
+	}
+	
 	private void checkNonNull(String message, Object object) {
 		if (object == null) {
 			throw new IllegalStateException("Object cannot be null: " + message);

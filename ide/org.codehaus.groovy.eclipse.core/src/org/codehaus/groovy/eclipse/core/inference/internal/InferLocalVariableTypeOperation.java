@@ -15,7 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.core.inference.internal;
 
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.eclipse.core.context.ISourceCodeContext;
+import org.codehaus.groovy.eclipse.core.context.impl.ClosureScopeContext;
+import org.codehaus.groovy.eclipse.core.context.impl.SourceCodeContextFactory;
 import org.codehaus.groovy.eclipse.core.types.ITypeEvaluationContext;
 import org.codehaus.groovy.eclipse.core.types.LocalVariable;
 import org.codehaus.groovy.eclipse.core.types.TypeEvaluationContextBuilder;
@@ -42,9 +46,16 @@ public class InferLocalVariableTypeOperation {
 	public LocalVariable getLocalVariable() {
 		Expression[] expressions = findAllLocalAssignExpressions(variable, evalContext);
 		if (expressions.length != 0) {
-			ITypeEvaluationContext newEvalContext = new TypeEvaluationContextBuilder()
+		    
+		    Region region = new Region(expressions[0].getStart(), expressions[0].getLength());
+		    
+		    ISourceCodeContext[] contexts = new SourceCodeContextFactory().createContexts(evalContext.getSourceCodeContext().getBuffer(), 
+		            (ModuleNode) evalContext.getSourceCodeContext().getASTPath()[0], region);
+		    
+		    
+            ITypeEvaluationContext newEvalContext = new TypeEvaluationContextBuilder()
 					.typeEvaluationContext(evalContext).project(evalContext.getProject())
-					.location(new Region(expressions[0].getStart(), expressions[0].getLength()))
+					.location(region).sourceCodeContext(contexts[contexts.length-1]).forceUseThisContext()
 					.done();
 			TypeEvaluator eval = new TypeEvaluator(newEvalContext);
 			return new LocalVariable(eval.evaluate(expressions[0]).getName(), variable.getName(), true);

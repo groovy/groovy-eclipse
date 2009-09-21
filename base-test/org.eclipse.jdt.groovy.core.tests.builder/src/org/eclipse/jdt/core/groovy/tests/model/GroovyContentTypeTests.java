@@ -15,6 +15,7 @@ import junit.framework.Test;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -142,6 +143,9 @@ public class GroovyContentTypeTests extends BuilderTests {
     }
     private void checkJavaProject(IProject proj) throws CoreException {
         expectingNoProblems();
+        
+        // force waiting for build to complete
+        ResourcesPlugin.getWorkspace().getRoot().refreshLocal(IResource.DEPTH_INFINITE, null);
         
         // check that HelloJava.class and HelloJavatest.class exist,
         // but HelloGroovy and HelloGroovytest do not

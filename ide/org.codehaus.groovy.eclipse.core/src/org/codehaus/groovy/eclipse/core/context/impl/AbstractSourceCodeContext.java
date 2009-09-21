@@ -55,4 +55,8 @@ public abstract class AbstractSourceCodeContext implements ISourceCodeContext {
 	public int getLength() {
 		return region.getLength();
 	}
+	
+	public ISourceBuffer getBuffer() {
+        return buffer;
+    }
 }

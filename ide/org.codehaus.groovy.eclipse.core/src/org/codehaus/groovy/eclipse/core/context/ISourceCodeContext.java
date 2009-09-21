@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.core.context;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.context.impl.SourceCodeContextFactory;
 import org.eclipse.jface.text.IRegion;
 
@@ -86,4 +87,6 @@ public interface ISourceCodeContext {
 	public int getOffset();
 
 	public int getLength();
+	
+	public ISourceBuffer getBuffer();
 }

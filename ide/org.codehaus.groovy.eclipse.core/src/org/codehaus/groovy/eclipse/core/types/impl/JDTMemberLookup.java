@@ -17,11 +17,7 @@
 package org.codehaus.groovy.eclipse.core.types.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.IGroovyProjectAware;
@@ -36,6 +32,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
+import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg
@@ -57,6 +54,12 @@ IGroovyProjectAware {
     @Override
     protected List<Field> collectAllFields(String typeName) {
         List<Field> fields = new ArrayList<Field>();
+
+        // if typeName is an array, then treat as Object and add the length field
+        if (typeName.charAt(0) == '[') {
+            fields.add(TypeUtil.newField("length", "I", typeName, Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL));
+            typeName = "java.lang.Object";
+        }
         try {
             for (IType toFind : getAllTypes(typeName)) {
                 for (IField field : toFind.getFields()) {
@@ -72,6 +75,10 @@ IGroovyProjectAware {
     @Override
     protected List<Method> collectAllMethods(String typeName) {
         List<Method> methods = new ArrayList<Method>();
+        // if typeName is an array, then treat as Object and add the length field
+        if (typeName.charAt(0) == '[') {
+            typeName = "java.lang.Object";
+        }
         try {
             for (IType toFind : getAllTypes(typeName)) {
                 for (IMethod method : toFind.getMethods()) {

@@ -79,7 +79,19 @@ public class InferencingCompletionTests extends CompletionTestCase {
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         unit.becomeWorkingCopy(null);
-        ICompletionProposal[] proposals = performContentAssist(unit, CONTENTS_SCRIPT.indexOf("t.st") + "t.ts".length(), GeneralGroovyCompletionProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, CONTENTS_SCRIPT.indexOf("t.st") + "t.st".length(), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "startsWith", 2);
+    }
+    
+    public void testInferenceInClosure() throws Exception {
+        String contents = "def file = new File(\"/tmp/some-file.txt\")\ndef writer = file.newWriter()\nnew URL(url).eachLine { line ->\nwriter.close()\n}";
+        IPath projectPath = createGenericProject();
+        IPath pack = projectPath.append("src");
+        IPath pathToJavaClass = env.addGroovyClass(pack, "ClosureTest", contents);
+        incrementalBuild();
+        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
+        unit.becomeWorkingCopy(null);
+        ICompletionProposal[] proposals = performContentAssist(unit, contents.indexOf("writer.clos") + "writer.clos".length(), GeneralGroovyCompletionProcessor.class);
+        proposalExists(proposals, "close", 1);
     }
 }
