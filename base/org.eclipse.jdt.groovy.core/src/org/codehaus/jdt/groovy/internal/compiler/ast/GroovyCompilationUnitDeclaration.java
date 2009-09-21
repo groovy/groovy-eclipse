@@ -48,6 +48,7 @@ import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
+import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -1136,6 +1137,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	// here be dragons
 	private void recordProblems(List<?> errors) {
+		// FIXASC (M2) look at this error situation (described below), surely we need to do it?
+		// Due to the nature of driving all groovy entities through compilation together, we can accumulate messages for other
+		// compilation units whilst processing the one we wanted to. Per GRE396 this can manifest as recording the wrong thing
+		// against the wrong type. That is the only case I have seen of it, so I'm not putting in the general mechanism for all
+		// errors yet, I'm just dealing with RuntimeParserExceptions. The general strategy would be to compare the ModuleNode
+		// for each message with the ModuleNode currently being processed - if they differ then this isn't a message for this
+		// unit and so we ignore it. If we do deal with it then we remember that we did (in errorsRecorded) and remove it from
+		// the list of those to process.
+
+		List errorsRecorded = new ArrayList();
 		// FIXASC (M2) poor way to get the errors attached to the files
 		// FIXASC (M2) does groovy ever produce warnings? How are they treated here?
 		for (Iterator<?> iterator = errors.iterator(); iterator.hasNext();) {
@@ -1173,6 +1184,32 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 			int soffset = -1;
 			int eoffset = -1;
+			if (message instanceof ExceptionMessage) {
+				ExceptionMessage em = (ExceptionMessage) message;
+				if (em.getCause() instanceof RuntimeParserException) {
+					RuntimeParserException rpe = (RuntimeParserException) em.getCause();
+					sev |= ProblemSeverities.Error;
+					msg = "Groovy:" + rpe.getMessage();
+					if (msg.indexOf("\n") != -1) {
+						msg = msg.substring(0, msg.indexOf("\n"));
+					}
+					ModuleNode errorModuleNode = rpe.getModule();
+					ModuleNode thisModuleNode = this.getModuleNode();
+					if (!errorModuleNode.equals(thisModuleNode)) {
+						continue;
+					}
+					soffset = rpe.getNode().getStart();
+					eoffset = rpe.getNode().getEnd();
+					// need to work out the line again as it may be wrong
+					line = 0;
+					while (compilationResult.lineSeparatorPositions[line] < soffset
+							&& line < compilationResult.lineSeparatorPositions.length) {
+						line++;
+					}
+
+					line++; // from an array index to a real 'line number'
+				}
+			}
 			if (syntaxException instanceof PreciseSyntaxException) {
 				soffset = ((PreciseSyntaxException) syntaxException).getStartOffset();
 				eoffset = ((PreciseSyntaxException) syntaxException).getEndOffset();
@@ -1196,12 +1233,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				eoffset = sourceEnd;
 			}
 
-			p = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[] { msg }, 0, new String[] { msg }, sev,
-					soffset, eoffset, line, scol);
+			char[] filename = getFileName();
+			p = new DefaultProblemFactory().createProblem(filename, 0, new String[] { msg }, 0, new String[] { msg }, sev, soffset,
+					eoffset, line, scol);
 			this.problemReporter.record(p, compilationResult, this);
+			errorsRecorded.add(message);
 			System.err.println(new String(compilationResult.getFileName()) + ": " + line + " " + msg);
 		}
-		errors.clear();
+		errors.removeAll(errorsRecorded);
 	}
 
 	private int getOffset(int[] lineSeparatorPositions, int line, int col) {

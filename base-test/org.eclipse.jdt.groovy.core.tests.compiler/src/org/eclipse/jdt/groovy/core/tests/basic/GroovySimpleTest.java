@@ -1773,6 +1773,59 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"");
 	}
 	
+	public void testNotSeriousEnough_GRE396() {
+		this.runNegativeTest(new String[]{
+			
+			"TrivialBugTest.groovy",
+			"package org.sjb.sjblib.cmdline;\n"+
+			"public class TrivialBugTest {\n"+
+			"	void func2() {\n"+
+			"		tb = new TrivialBug()\n"+
+			"	}\n"+
+			"}\n",
+			"TrivialBug.groovy",
+			"package org.sjb.sjblib.cmdline;\n"+
+			"public class TrivialBug {\n"+
+			"	void func() {\n"+
+			"		return 5\n"+
+			"	}\n"+
+			"}\n",},
+			"----------\n" + 
+			"1. ERROR in TrivialBug.groovy (at line 4)\n" + 
+			"	void func() {\n" + 
+			"		return 5\n" + 
+			"	             ^\n" + 
+			"Groovy:Cannot use return statement with an expression on a method that returns void.\n" + 
+			"----------\n"
+		);
+	}
+	
+	public void testNotSeriousEnough_GRE396_2() {
+		this.runNegativeTest(new String[]{
+			"TrivialBug.groovy",
+			"package org.sjb.sjblib.cmdline;\n"+
+			"public class TrivialBug {\n"+
+			"	void func() {\n"+
+			"		return 5\n"+
+			"	}\n"+
+			"}\n",
+			"TrivialBugTest.groovy",
+			"package org.sjb.sjblib.cmdline;\n"+
+			"public class TrivialBugTest {\n"+
+			"	void func2() {\n"+
+			"		tb = new TrivialBug()\n"+
+			"	}\n"+
+			"}\n",},
+			"----------\n" + 
+			"1. ERROR in TrivialBug.groovy (at line 4)\n" + 
+			"	void func() {\n" + 
+			"		return 5\n" + 
+			"	             ^\n" + 
+			"Groovy:Cannot use return statement with an expression on a method that returns void.\n" + 
+			"----------\n"
+		);
+	}
+	
 
 	// ---
 
