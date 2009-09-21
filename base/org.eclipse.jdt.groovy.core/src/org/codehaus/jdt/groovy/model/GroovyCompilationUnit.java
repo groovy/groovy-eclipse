@@ -506,6 +506,22 @@ public class GroovyCompilationUnit extends CompilationUnit {
 					realElts.add(elt);
 				}
 			}
+
+			// a common scenario is that JDT will find the declaring type, while Groovy will
+			// find the actual type or method. Here we handle this case
+			// really, this should not be happening in the first place, but
+			// this will work for now.
+			if (realElts.size() == 2) {
+				Iterator<IJavaElement> iter = realElts.iterator();
+				IJavaElement first = iter.next();
+				IJavaElement second = iter.next();
+				if (second.equals(first.getParent())) {
+					realElts.remove(second);
+				}
+				if (first.equals(second.getParent())) {
+					realElts.remove(first);
+				}
+			}
 		}
 
 		return realElts.toArray(new IJavaElement[realElts.size()]);

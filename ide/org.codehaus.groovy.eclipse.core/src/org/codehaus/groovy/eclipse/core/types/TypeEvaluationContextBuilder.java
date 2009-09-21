@@ -31,7 +31,6 @@ import org.eclipse.jface.text.Region;
  */
 public class TypeEvaluationContextBuilder {
 	private static final String[] NO_IMPORTS = new String[0];
-	private ClassLoader classLoader;
 	private String[] imports = NO_IMPORTS;
 	private ISourceCodeContext sourceCodeContext;
 	private ISymbolTable symbolTable;
@@ -54,13 +53,6 @@ public class TypeEvaluationContextBuilder {
         this.project = project;
         return this;
     }
-
-	
-	
-	public TypeEvaluationContextBuilder classLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader;
-		return this;
-	}
 	
 	public TypeEvaluationContextBuilder imports(String[] imports) {
 		this.imports = imports;
@@ -90,7 +82,6 @@ public class TypeEvaluationContextBuilder {
 
 		if (sourceCodeContext == null) {
 			TypedEvaluationContext context = new TypedEvaluationContext(project);
-			context.setClassLoader(classLoader);
 			context.setImports(imports);
 			context.setSymbolTable(symbolTable);
 			context.setMemberLookup(memberLookup);
@@ -98,7 +89,6 @@ public class TypeEvaluationContextBuilder {
 		} else {
 			sourceCodeContext = new SourceCodeContextFactory().createContext(sourceCodeContext, region);
 			InferringEvaluationContext context = new InferringEvaluationContext(project);
-			context.setClassLoader(classLoader);
 			context.setImports(imports);
 			context.setSourceCodeContext(sourceCodeContext);
 			context.setSymbolTable(symbolTable);
@@ -125,7 +115,6 @@ public class TypeEvaluationContextBuilder {
 			sourceCodeContext(inferringContext.getSourceCodeContext());
 		}
 		
-		classLoader = typedContext.getClassLoader();
 		imports = typedContext.getImports();
 		symbolTable = typedContext.getSymbolTable();
 		memberLookup = typedContext.getMemberLookup();

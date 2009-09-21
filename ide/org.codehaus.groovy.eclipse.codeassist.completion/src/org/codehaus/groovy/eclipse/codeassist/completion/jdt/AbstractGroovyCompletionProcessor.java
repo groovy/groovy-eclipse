@@ -401,18 +401,6 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 		return new StyledString(sb.toString());
 	}
 
-	protected String createParameterListString(Method method) {
-		StringBuffer sb = new StringBuffer();
-		Parameter[] parameter = method.getParameters();
-		if (parameter.length == 0) {
-			return "";
-		}
-		for (int i = 0; i < parameter.length; ++i) {
-			sb.append(toSimpleTypeName(parameter[i].getSignature())).append(" ").append(parameter[i].getName())
-					.append(", ");
-		}
-		return sb.substring(0, sb.length() - 2);
-	}
 
 	protected String toSimpleTypeName( final String t ) {
 	    String type = t;

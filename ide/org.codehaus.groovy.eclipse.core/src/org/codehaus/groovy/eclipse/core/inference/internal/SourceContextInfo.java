@@ -43,9 +43,9 @@ import org.codehaus.groovy.eclipse.core.types.TypeEvaluationContextBuilder;
 import org.codehaus.groovy.eclipse.core.types.TypeEvaluator;
 import org.codehaus.groovy.eclipse.core.types.TypeEvaluator.EvalResult;
 import org.codehaus.groovy.eclipse.core.types.impl.CategoryLookup;
-import org.codehaus.groovy.eclipse.core.types.impl.ClassLoaderMemberLookup;
 import org.codehaus.groovy.eclipse.core.types.impl.CompositeLookup;
 import org.codehaus.groovy.eclipse.core.types.impl.GroovyProjectMemberLookup;
+import org.codehaus.groovy.eclipse.core.types.impl.JDTMemberLookup;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ParseException;
 import org.eclipse.jface.text.Region;
@@ -130,7 +130,6 @@ public class SourceContextInfo {
                         .sourceCodeContext(contexts[contexts.length - 1])
                         .symbolTable(table)
                         .memberLookup(lookup)
-                        .classLoader(project.getProjectClassLoader())
                         .imports(imports)
                         .location(new Region(start, expression.length()))
                         .done();
@@ -212,7 +211,7 @@ public class SourceContextInfo {
         GroovyProjectMemberLookup classNodeLookup = new GroovyProjectMemberLookup(project);
             
         IMemberLookup registeredLookups = MemberLookupRegistry.createMemberLookup(contexts);
-        ClassLoaderMemberLookup classLookup = new ClassLoaderMemberLookup(project.getProjectClassLoader());
+        JDTMemberLookup classLookup = new JDTMemberLookup(project);
         return new CompositeLookup(new IMemberLookup[] { 
                 classNodeLookup, classLookup, categoryLookup, registeredLookups });
     }

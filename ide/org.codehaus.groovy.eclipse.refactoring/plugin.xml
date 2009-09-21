@@ -135,27 +135,6 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+M">
       </key>
-      <key
-            commandId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
-            platform="carbon"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+I">
-      </key>
-      <key
-            commandId="org.codehaus.groovy.eclipse.refactoring.command.rename"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
-            platform="carbon"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+R">
-      </key>
-      <key
-            commandId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
-            platform="carbon"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+M">
-      </key>
        <key
             commandId="org.codehaus.groovy.eclipse.editor.commands.Format"
             contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"

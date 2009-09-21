@@ -45,9 +45,9 @@ import org.codehaus.groovy.eclipse.core.types.SymbolTableRegistry;
 import org.codehaus.groovy.eclipse.core.types.TypeEvaluationContextBuilder;
 import org.codehaus.groovy.eclipse.core.types.TypeEvaluator;
 import org.codehaus.groovy.eclipse.core.types.TypeEvaluator.EvalResult;
-import org.codehaus.groovy.eclipse.core.types.impl.ClassLoaderMemberLookup;
 import org.codehaus.groovy.eclipse.core.types.impl.CompositeLookup;
 import org.codehaus.groovy.eclipse.core.types.impl.GroovyProjectMemberLookup;
+import org.codehaus.groovy.eclipse.core.types.impl.JDTMemberLookup;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -165,14 +165,13 @@ public class InferredTypeEvaluatorTests extends EclipseTestCase {
 
 		GroovyProjectFacade groovyProject = new GroovyProjectFacade(testProject.getJavaProject());
 		IMemberLookup projectLookup = new GroovyProjectMemberLookup(groovyProject);
-		IMemberLookup classloaderLookup = new ClassLoaderMemberLookup(Thread.currentThread().getContextClassLoader()); 
-		IMemberLookup memberLookup = new CompositeLookup(new IMemberLookup[] { projectLookup, classloaderLookup });
+		IMemberLookup jdtMemberLookup = new JDTMemberLookup(groovyProject); 
+		IMemberLookup memberLookup = new CompositeLookup(new IMemberLookup[] { projectLookup, jdtMemberLookup });
 		String expression = sourceCode.substring(info.region.getOffset(), info.region.getOffset() + info.region.getLength()).toString();
 		
 		// Set up the evaluation context.
 		ITypeEvaluationContext evalContext = new TypeEvaluationContextBuilder()
 		        .project(new GroovyProjectFacade(testProject.getJavaProject()))
-				.classLoader(Thread.currentThread().getContextClassLoader())
 				.imports(imports)
 				.sourceCodeContext(sourceCodeContexts[sourceCodeContexts.length - 1])
 				.symbolTable(symbolTable)

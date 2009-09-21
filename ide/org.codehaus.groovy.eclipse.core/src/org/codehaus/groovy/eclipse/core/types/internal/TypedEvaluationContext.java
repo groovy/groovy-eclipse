@@ -39,12 +39,10 @@ public class TypedEvaluationContext implements ITypeEvaluationContext {
 	private static final String[] NO_IMPORTS = new String[0];
 	private static final Parameter[] NO_PARAMETERS = new Parameter[0];
 	private static final String OBJECT_TYPE = "java.lang.Object";
-	private static final ClassType DECLARING_CLASS = TypeUtil.newClassType(java.lang.Object.class);
+	private static final ClassType DECLARING_CLASS = TypeUtil.newObjectClassType();
 	
 	private GroovyProjectFacade project;
 	
-	private ClassLoader classLoader;
-
 	private String[] imports = NO_IMPORTS;
 
 	private ISymbolTable symbolTable;
@@ -59,10 +57,6 @@ public class TypedEvaluationContext implements ITypeEvaluationContext {
         this.project = project;
     }
 
-	public void setClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader;
-	}
-
 	public void setImports(String[] imports) {
 		this.imports = imports;
 	}
@@ -73,10 +67,6 @@ public class TypedEvaluationContext implements ITypeEvaluationContext {
 
 	public void setMemberLookup(IMemberLookup memberLookup) {
 		this.memberLookup = memberLookup;
-	}
-
-	public ClassLoader getClassLoader() {
-		return classLoader;
 	}
 
 	public String[] getImports() {

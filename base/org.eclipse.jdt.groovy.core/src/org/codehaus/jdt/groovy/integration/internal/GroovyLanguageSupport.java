@@ -138,15 +138,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
 	}
 
 	public boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
-		String prop = System.getProperty("use.enhanced.groovy.search");
-		if (Boolean.TRUE.toString().equals(prop)) {
-			ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch, pattern, requestor);
-			if (typeRequestor != null) {
-				TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(typeRequestor,
-						possibleMatch, pattern, requestor);
-				visitor.visitCompilationUnit(typeRequestor);
-				return true;
-			}
+		ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch, pattern, requestor);
+		if (typeRequestor != null) {
+			TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(typeRequestor,
+					possibleMatch, pattern, requestor);
+			visitor.visitCompilationUnit(typeRequestor);
+			return true;
 		}
 		return false;
 	}

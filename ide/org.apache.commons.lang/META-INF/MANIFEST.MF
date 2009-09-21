@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Apache Commons Lang Plug-in
 Bundle-SymbolicName: org.apache.commons.lang
-Bundle-Version: 2.4.0
+Bundle-Version: 2.4.0.qualifier
 Bundle-ClassPath: commons-lang-2.4.jar
 Bundle-Vendor: http://commons.apache.org
 Export-Package: org.apache.commons.lang,

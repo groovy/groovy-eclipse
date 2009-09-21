@@ -15,13 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.core.types;
 
+
 import static org.codehaus.groovy.eclipse.core.util.ListUtil.newEmptyList;
-import static org.codehaus.groovy.eclipse.core.util.MapUtil.newMap;
 
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -31,24 +30,13 @@ import org.codehaus.groovy.ast.Variable;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.objectweb.asm.Opcodes;
 
 public class TypeUtil {
-	private static final Map< String, String > mapPrimitiveToClass = newMap();
-	
-	static {
-		mapPrimitiveToClass.put("byte", Byte.class.getName());
-		mapPrimitiveToClass.put("char", Character.class.getName());
-		mapPrimitiveToClass.put("short", Short.class.getName());
-		mapPrimitiveToClass.put("int", Integer.class.getName());
-		mapPrimitiveToClass.put("long", Long.class.getName());
-		mapPrimitiveToClass.put("float", Float.class.getName());
-		mapPrimitiveToClass.put("double", Double.class.getName());
-		mapPrimitiveToClass.put("boolean", Boolean.class.getName());
-	}
 
 	public static final Field[] NO_FIELDS = new Field[0];
 
@@ -65,18 +53,18 @@ public class TypeUtil {
 		int modifiers = convertFromASTModifiers(classNode.getModifiers());
 		return new ClassType(signature, modifiers, classNode.getName());
 	}
+
+    public static ClassType newObjectClassType() {
+        String signature = Signature.createTypeSignature("java.lang.Object",
+                true);
+        int modifiers = Opcodes.ACC_PUBLIC;
+        return new ClassType(signature, modifiers, "java.lang.Object");
+    }
 	
     public static ClassType newClassType(ClassNode node, int modifiers) {
         return new ClassType(Signature.createTypeSignature(node.getName(), true), node.getModifiers(), node.getName());
     }
 	
-	
-	public static ClassType newClassType(Class cls) {
-		String signature = cls.getName();
-		int modifiers = convertFromJavaModifiers(cls.getModifiers());
-		return new ClassType(signature, modifiers, cls.getCanonicalName());
-	}
-
 	public static ClassType newClassType(IType type) throws JavaModelException {
 		String signature = Signature.createTypeSignature(type.getFullyQualifiedName(), true);
 		int modifiers = convertFromIMemberModifiers(type);
@@ -91,17 +79,89 @@ public class TypeUtil {
 				.equals(OBJECT_TYPE));
 	}
 	
-	public static Method newMethod(java.lang.reflect.Method method) {
-		int modifiers = TypeUtil.convertFromJavaModifiers(method.getModifiers());
-		Parameter[] parameters = createParameterList(method.getParameterTypes());
-		String returnType = method.getReturnType().getName();
-		if (returnType.charAt(0) != '[') {
-			returnType = method.getReturnType().getName();
-		}
-		ClassType declaringClass = TypeUtil.newClassType(method.getDeclaringClass());
-		return new JavaMethod(modifiers, method.getName(), parameters, returnType, declaringClass);
+	public static Method newMethod(IMethod method, IType jdtDeclaringClass) throws JavaModelException {
+	    int modifiers = TypeUtil.convertFromIMemberModifiers(method);
+	    String[] typeSigs = getParameterTypes(method);
+	    // convert to fully qualified name and must resolve if dealing with a source type
+	    boolean doResolve = !jdtDeclaringClass.isReadOnly();
+	    for (int i = 0; i < typeSigs.length; i++) {
+	        // if an array, then use the type signature, not the name
+	        if (typeSigs[i].charAt(0) != '[') {
+                String resolvedType = Signature.toString(Signature.getTypeErasure(typeSigs[i]));
+                if (doResolve) {
+                    try {
+                        resolvedType = join(jdtDeclaringClass.resolveType(resolvedType)[0], ".");
+                    } catch (NullPointerException e) {
+                        // ignore
+                    }
+                }
+                typeSigs[i] = resolvedType;
+	        }
+        }
+	    
+        Parameter[] parameters = createParameterList(typeSigs, getParameterNames(method));
+        String returnType = getReturnType(method);
+        // if an array, then use the type signature, not the name
+        ClassType declaringClass = TypeUtil.newClassType(jdtDeclaringClass);
+        return new JavaMethod(modifiers, method.getElementName(), parameters, returnType, declaringClass);
 	}
 
+    /**
+     * @param method
+     * @return
+     */
+    private static String[] getParameterTypes(IMethod method) {
+        String[] origParamTypes = method.getParameterTypes();
+        String[] copy = new String[origParamTypes.length];
+        System.arraycopy(origParamTypes, 0, copy, 0, origParamTypes.length);
+        return copy;
+    }
+
+    /**
+     * @param method
+     * @return
+     * @throws JavaModelException
+     */
+    private static String getReturnType(IMethod method)
+            throws JavaModelException {
+        try {
+            String returnType = method.getReturnType();
+            if (returnType.charAt(0) != '[') {
+                returnType = Signature.toString(Signature.getTypeErasure(returnType));
+                if (!method.isBinary()) {
+                    try {
+                        returnType = join(method.getDeclaringType().resolveType(returnType)[0], ".");
+                    } catch (NullPointerException e) {
+                        // ignore
+                    }
+                }
+            }
+            return returnType;
+        } catch (StringIndexOutOfBoundsException e) {
+            return "java.lang.Object";
+        }
+    }
+
+    /**
+     * @param method
+     * @return
+     * @throws JavaModelException
+     */
+    private static String[] getParameterNames(IMethod method)
+            throws JavaModelException {
+        try {
+            return method.getParameterNames();
+        } catch (StringIndexOutOfBoundsException e) {
+            // sometimes this happens for class files without debug info
+            int count = getParameterTypes(method).length;
+            String[] names = new String[count];
+            for (int i = 0; i < count; i++) {
+                names[i] = "arg" + i;
+            }
+            return names;
+        }
+    }
+	
 	public static Property newProperty(ClassType declaringClass, PropertyNode propertyNode) {
 		String signature = propertyNode.getType().getName();
 		int modifiers = TypeUtil.convertFromASTModifiers(propertyNode.getModifiers());
@@ -112,18 +172,10 @@ public class TypeUtil {
 				.getType().getText().equals(OBJECT_TYPE));
 	}
 	
-	public static GroovyDeclaration newField(FieldNode fieldNode) {
+	public static Field newField(FieldNode fieldNode) {
 		return newField(newClassType(fieldNode.getDeclaringClass()), fieldNode);
 	}
 	
-
-	public static Field newField(java.lang.reflect.Field field) {
-		int modifiers = TypeUtil.convertFromJavaModifiers(field.getModifiers());
-		ClassType declaringClass = TypeUtil.newClassType(field.getDeclaringClass());
-		String signature = field.getType().getName();
-		return new JavaField(signature, modifiers, field.getName(), declaringClass);
-	}
-
 	public static Field newField(ClassType declaringClass, FieldNode fieldNode) {
 		int modifiers = TypeUtil.convertFromASTModifiers(fieldNode.getModifiers());
 		String signature = fieldNode.getType() == null ? 
@@ -131,26 +183,24 @@ public class TypeUtil {
 		return new Field(signature, modifiers, fieldNode.getName(), declaringClass, !signature.equals(OBJECT_TYPE));
 	}
 	
-	public static GroovyDeclaration newField(IField field) throws IllegalArgumentException, JavaModelException {
+	public static Field newField(IField field) throws IllegalArgumentException, JavaModelException {
 		ClassType declaringClass = newClassType(field.getDeclaringType());
 		String signature = field.getTypeSignature();
 		int modifiers = TypeUtil.convertFromJavaCoreModifiers(field.getFlags());
 		return new Field(signature, modifiers, field.getElementName(), declaringClass, !signature.equals(OBJECT_TYPE));
+	}
+	
+	public static Field newField(IField field, IType declaringType) throws IllegalArgumentException, JavaModelException {
+	    ClassType declaringClass = newClassType(declaringType);
+	    String signature = field.getTypeSignature();
+	    int modifiers = TypeUtil.convertFromJavaCoreModifiers(field.getFlags());
+	    return new Field(signature, modifiers, field.getElementName(), declaringClass, !signature.equals(OBJECT_TYPE));
 	}
 
 	public static GroovyDeclaration newLocalVariable(Variable var) {
 		return new LocalVariable(var.getType().getName(), var.getName());
 	}
 	
-	/**
-	 * Convert a primitive to class wrapper.
-	 * @param name
-	 * @return
-	 */
-	public static String convertPrimitiveToWrapper(String name) {
-		String newType = mapPrimitiveToClass.get(name);
-		return newType != null ? newType : name;
-	}
 	
 	/**
 	 * Convert flags from an ast representation to a GroovyEclipse one.
@@ -307,4 +357,16 @@ public class TypeUtil {
 		Collections.reverse(parts);
 		return parts.toArray(new String[parts.size()]);
 	}
+	
+    private static String join(final String[] strings, final String delim) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < strings.length; i++) {
+            sb.append(strings[i]);
+            if (i < strings.length-1) {
+                sb.append(delim);
+            }
+        }
+        return sb.toString();
+    }
+
 }

@@ -24,8 +24,6 @@ import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
  * @author empovazan
  */
 public interface ITypeEvaluationContext {
-	ClassLoader getClassLoader();
-	
 	String[] getImports();
 	
 	GroovyDeclaration lookupSymbol(String name);

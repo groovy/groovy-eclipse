@@ -101,7 +101,7 @@ public class MethodCallExpressionProcessor implements
                         String[] paramTypeSigsArr;
                         if (!type.isReadOnly()) {
                             // source type, must convert method type signatures to be unresolved
-                            //  FIXADE M2 this could be a problem for source types that do not use qualified names
+                            // FIXADE M2 this could be a problem for source types that do not use qualified names
                             // maybe need to do a different way of finding method
                             paramTypeSigsArr = paramTypeSigs.toArray(new String[0]);
                             for (int i = 0; i < paramTypeSigsArr.length; i++) {

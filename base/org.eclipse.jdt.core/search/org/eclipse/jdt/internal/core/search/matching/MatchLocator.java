@@ -1034,8 +1034,8 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 	initialize(javaProject, length);
 
 	// GROOVY start
-//	boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(javaProject.getProject());
-//	Set alreadyMatched = new HashSet();
+	boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(javaProject.getProject());
+	Set alreadyMatched = new HashSet();
 	// GROOVY end
 
 	
@@ -1048,14 +1048,14 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 		for (int i = start, maxUnits = start + length; i < maxUnits; i++) {
 			PossibleMatch possibleMatch = possibleMatches[i];
 			// GROOVY start
-//			if (isInterestingProject && LanguageSupportFactory.isInterestingSourceFile(possibleMatch.document.getPath())) {
-//				boolean matchPerformed = LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor);
-//				if (matchPerformed) {
-//					// FIXADE (M2) determine how much to update the progress monitor by.
-//					alreadyMatched.add(possibleMatch);
-//					continue;
-//				}
-//			}
+			if (isInterestingProject && LanguageSupportFactory.isInterestingSourceFile(possibleMatch.document.getPath())) {
+				boolean matchPerformed = LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor);
+				if (matchPerformed) {
+					// FIXADE (M2) determine how much to update the progress monitor by.
+					alreadyMatched.add(possibleMatch);
+					continue;
+				}
+			}
 			// GROOVY end
 			try {
 				if (!parseAndBuildBindings(possibleMatch, mustResolvePattern)) continue;
@@ -1124,11 +1124,11 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 		try {
 			// GROOVY start
 			// old 
-			 process(possibleMatch, bindingsWereCreated);
+//			 process(possibleMatch, bindingsWereCreated);
 			// new
-//			if (!alreadyMatched.contains(possibleMatch)) {
-//				process(possibleMatch, bindingsWereCreated);
-//			}
+			if (!alreadyMatched.contains(possibleMatch)) {
+				process(possibleMatch, bindingsWereCreated);
+			}
 			// GROOVY end
 		} catch (AbortCompilation e) {
 			// problem with class path: it could not find base classes

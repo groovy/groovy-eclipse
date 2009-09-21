@@ -22,8 +22,8 @@ package org.codehaus.groovy.eclipse.editor.actions;
  *
  */
 public class RenameToGroovyAction extends RenameToGroovyOrJavaAction {
+    public static String COMMAND_ID = "org.codehaus.groovy.eclipse.ui.convertToGroovy";
     public RenameToGroovyAction() {
         super(GROOVY);
     }
-
 }
