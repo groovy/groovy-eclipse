@@ -93,7 +93,7 @@ IGroovyProjectAware {
             targetType = typeName;
             createHierarchy(typeName);
         }
-        return cachedHierarchy.getAllTypes();
+        return cachedHierarchy != null ? cachedHierarchy.getAllTypes() : new IType[0];
     }
 
     /**
@@ -104,6 +104,8 @@ IGroovyProjectAware {
             IType type = project.getProject().findType(typeName, new NullProgressMonitor());
             if (type != null) {
                 cachedHierarchy = type.newSupertypeHierarchy(new NullProgressMonitor());
+            } else {
+                cachedHierarchy = null;
             }
         } catch (JavaModelException e) {
             GroovyCore.logException("Error creating type hierarchy for " + typeName, e);
