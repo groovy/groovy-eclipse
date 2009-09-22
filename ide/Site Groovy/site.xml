@@ -12,6 +12,9 @@
    <feature url="features/org.codehaus.groovy.jdt.patch_0.0.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="0.0.0.qualifier" patch="true">
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>
+   <feature url="features/org.codehaus.groovy16.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy16.feature" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.eclipse"/>
+   </feature>
    <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
       <description>
          Optional feature that provides source code for the Groovy-Eclipse plugin

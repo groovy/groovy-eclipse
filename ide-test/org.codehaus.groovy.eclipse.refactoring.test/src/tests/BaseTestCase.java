@@ -33,8 +33,10 @@ import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
+import org.osgi.framework.Bundle;
 
 import core.SelectionHelper;
 import core.TestDocumentProvider;
@@ -47,12 +49,13 @@ public abstract class BaseTestCase extends TestCase {
 	
 		protected File file;
 		private final String newLine;
-		private final Pattern origRegExp, expRegExp, propertiesRegExp;
+		private final Pattern origRegExp, expRegExp, exp16RegExp, propertiesRegExp;
 		private final String name;
 		private final IGroovyDocumentProvider docProvider;
 		protected boolean shouldFail = false;
 		protected HashMap<String, String> properties;
 		protected UserSelection selection;
+		protected final boolean isUsingGroovy16;
 		
 		protected BaseTestCase(String name, File fileToTest) {
 			setFile(fileToTest);
@@ -60,12 +63,23 @@ public abstract class BaseTestCase extends TestCase {
 			newLine = FilePartReader.getLineDelimiter(file);
 			origRegExp = Pattern.compile("###src" + newLine + "(.*)" + newLine + "###exp",Pattern.DOTALL);
 			expRegExp = Pattern.compile("###exp" + newLine + "(.*)" + newLine + "###end",Pattern.DOTALL);
+			exp16RegExp = Pattern.compile("###end" + newLine + "(.*)" + newLine + "###endexp16",Pattern.DOTALL);
 			propertiesRegExp = Pattern.compile("###prop" + newLine + "(.*)" + newLine + "###src",Pattern.DOTALL);
 			properties = getFileProperties();
 			docProvider = new TestDocumentProvider(getOrigin(),file.getAbsolutePath());
+			
+			isUsingGroovy16 = getGroovyVersion();
 		}
 		
-		@Override
+		/**
+         * @return
+         */
+        private boolean getGroovyVersion() {
+            Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy");
+            return groovyBundle.getVersion().getMajor() == 1 && groovyBundle.getVersion().getMinor() == 6;
+        }
+
+        @Override
         protected void setUp() throws Exception {
 			super.setUp();
 	        System.out.println("------------------------------");
@@ -98,6 +112,17 @@ public abstract class BaseTestCase extends TestCase {
 		*/
 		public IDocument getExpected() {
 			return getArea(expRegExp);
+		}
+		
+		/*
+		 * Return a String with the expected content for Groovy 1.6
+		 */
+		public IDocument getExpected16() {
+		    IDocument d = getArea(exp16RegExp);
+		    if (d.get().length() == 0) {
+		        d = getArea(expRegExp);
+		    }
+		    return d;
 		}
 		
 		/*

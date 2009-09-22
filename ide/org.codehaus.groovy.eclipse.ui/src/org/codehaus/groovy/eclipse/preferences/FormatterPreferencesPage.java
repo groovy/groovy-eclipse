@@ -70,7 +70,7 @@ implements IWorkbenchPreferencePage
 
 	@Override
 	protected String getPageId() {
-		return "Formatter";
+		return "GroovyFormatter";
 	}
 
 	public void init(IWorkbench workbench) {

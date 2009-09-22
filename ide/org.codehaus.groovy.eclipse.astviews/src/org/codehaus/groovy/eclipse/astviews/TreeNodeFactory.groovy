@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.astviews
 
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.eclipse.core.util.JVM1_4Util
 
 /**
  * Factory to create tree nodes.

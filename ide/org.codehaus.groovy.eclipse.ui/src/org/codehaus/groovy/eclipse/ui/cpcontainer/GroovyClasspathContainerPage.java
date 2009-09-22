@@ -18,8 +18,6 @@ package org.codehaus.groovy.eclipse.ui.cpcontainer;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.eclipse.core.ClasspathVariableInitializer;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
@@ -73,7 +71,7 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
                 return false;
             final String preference = getPreference();
             if (versionCombo.getSelectionIndex() == 0) {
-                if (StringUtils.isBlank(preference)) {
+                if (preference == null || preference.trim().length() == 0) {
                     return true;
                 }
                 prefStore.setToDefault(
@@ -81,7 +79,7 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
                 prefStore.save();
                 return true;
             }
-            if (StringUtils.equals(preference, "GROOVY_HOME"))
+            if (nullEquals(preference, "GROOVY_HOME"))
                 return true;
             prefStore.setValue(PreferenceConstants.GROOVY_RUNTIME_SOURCE,
                     "GROOVY_HOME");
@@ -123,7 +121,7 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
         options.add("Plugin Embedded Lib: " + embeddedJar.lastSegment());
         final IPath runtimePath = ClasspathVariableInitializer
                 .getCPVarEmbeddablePath();
-        if (!ObjectUtils.equals(GroovyCore.getEmbeddedGroovyRuntimeHome(),
+        if (!nullEquals(GroovyCore.getEmbeddedGroovyRuntimeHome(),
                 runtimePath)) {
             final IPath groovyHomeJar = ClasspathVariableInitializer
                     .getEmbeddedJar(runtimePath);
@@ -132,7 +130,8 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
         }
         versionCombo.setItems(options.toArray(new String[0]));
         versionCombo.setFont(composite.getFont());
-        if (StringUtils.isNotBlank(getPreference()))
+        String pref = getPreference();
+        if (pref != null || pref.trim().length() > 0)
             versionCombo.select(1);
         final GridData data = new GridData(GridData.BEGINNING, GridData.CENTER,
                 false, false, 1, 1);
@@ -162,5 +161,14 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
                 "org.codehaus.groovy.eclipse.preferences" );
     }
 
+    public boolean nullEquals(Object object1, Object object2) {
+        if (object1 == object2) {
+            return true;
+        }
+        if ((object1 == null) || (object2 == null)) {
+            return false;
+        }
+        return object1.equals(object2);
+    }
 
 }

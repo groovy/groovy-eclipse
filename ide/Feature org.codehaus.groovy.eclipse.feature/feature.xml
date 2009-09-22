@@ -28,7 +28,7 @@
    </license>
 
    <url>
-      <update label="%updateSiteName" url="http://dist.codehaus.org/groovy/distributions/update/"/>
+      <update label="%updateSiteName" url="http://dist.codehaus.org/groovy/distributions/greclipse/snapshot/e3.5/"/>
    </url>
 
    <includes
@@ -65,8 +65,6 @@
       <import plugin="org.eclipse.core.variables" version="3.1.0" match="compatible"/>
       <import plugin="org.eclipse.jdt.junit4.runtime"/>
       <import plugin="org.eclipse.jdt.junit.runtime" version="3.2.0" match="compatible"/>
-      <import plugin="org.apache.commons.lang"/>
-      <import plugin="org.apache.commons.collections"/>
    </requires>
 
    <plugin
@@ -135,19 +133,5 @@
          download-size="0"
          install-size="0"
          version="0.0.0"/>
-
-   <plugin
-         id="org.apache.commons.collections"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.apache.commons.lang"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
 
 </feature>

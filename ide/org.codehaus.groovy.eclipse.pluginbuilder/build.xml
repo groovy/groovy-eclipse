@@ -115,64 +115,9 @@
 	<target name="groovy-main" description="Run the main target of customTargets.xml. Return status 0,1,2 for Success, Build Failure and Test Failure">
 		<property name="buildTarget" value="main"/>
 		<antcall target="-build"/>
-
-		<!-- Only publish if a publish location is set -->
-<!--
-		<antcall target="-check.for.failure"/>
-		
-		<condition property="shouldPublish">
-			<not>
-				<equals arg1="${publishLocation}" arg2=""/>
-			</not>
-		</condition>
-		<antcall target="-publish"/>
-
--->
 	</target>
 	
-	<target name="-check.for.failure">
-		<!-- If the java command itself failed - unlikely -->
-  	<fail message="PDE Build failed" if="is.build.error" status="1"/>
-			
-		<!-- Load the log file and look for "Build Failed" -->
-		<loadfile srcFile="${logsLocation}" property="logs.file"/>
-		<condition property="is.build.failed" value="true">
-			<and>
-				<isset property="${logs.file}"/>
-				<contains string="${logs.file}" substring="BUILD FAILED"/>
-			</and>
-		</condition>
-		<fail message="Build failed" if="is.build.failed" status="2"/>
-		
-		<!-- Load the Groovy test logs and check for successful tests -->
-		<loadfile srcFile="${eclipse.installation.dir}/eclipse/results/org.codehaus.groovy.alltests.AllGroovyTests.xml" 
-							property="is.allGroovyTests.passed"/>
-		<condition property="is.allGroovyTests.passed" value="true">
-			<contains string="${build.stderr}" substring="testsuite errors=&quot;0&quot; failures=&quot;1&quot;"/>
-		</condition>
-		<fail message="Tests failed" unless="is.allGroovyTests.passed" status="2"/>
 
-		<loadfile srcFile="${eclipse.installation.dir}/eclipse/results/org.codehaus.groovy.alltests.GroovyJDTTests.xml" 
-							property="is.groovyJDTTests.passed"/>
-		<condition property="is.groovyJDTTests.passed" value="true">
-			<contains string="${build.stderr}" substring="testsuite errors=&quot;0&quot; failures=&quot;1&quot;"/>
-		</condition>
-		<fail message="Tests failed" unless="is.groovyJDTTests.passed" status="2"/>
-	</target>
-
-	<target name="-publish" if="shouldPublish">
-		<delete dir="${publishLocation}"/>
-		<mkdir dir="${publishLocation}"/>
-		<copy todir="${publishLocation}">
-			<fileset dir="${buildDirectory}/updateSite"/>
-		</copy>
-		<copy todir="${publishLocation}">
-			<fileset dir="${buildDirectory}">
-				<include name="${buildType}-*-${buildTypePresentation}"/>		
-			</fileset>
-		</copy>
-	</target>
-	
 	<target name="buildProperties" description="Print out derived properties for the current build." depends="-properties">
 		<fail message="You have to set the property 'buildPropertiesFile' if calling buildProperties" unless="buildPropertiesFile"/>
 		<condition property="subdir" value="nightly" else="releases">

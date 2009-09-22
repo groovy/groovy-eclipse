@@ -40,7 +40,7 @@ public class ASTWriterTestCase extends BaseTestCase {
 	
 	private void doTest() {
 	    if (this.getName().equals("AST_Writer_Test_import_static_class_used_expl_Class.txt")) {
-	        // this test is failing...need to look into it
+	        // FIXADE M2 this test is failing...need to look into it
 	        return;
 	    }
 		String modifier = properties.get("modifier");
@@ -59,7 +59,7 @@ public class ASTWriterTestCase extends BaseTestCase {
 		rewriter.setStartOffset(startOffset);
 		rewriter.visitRoot();
 		String result = rewriter.getGroovyCode(); 
-		String expected = getExpected().get();
+		String expected = isUsingGroovy16 ? getExpected16().get() : getExpected().get();
 		
 		assertEquals(expected, result);
 	}

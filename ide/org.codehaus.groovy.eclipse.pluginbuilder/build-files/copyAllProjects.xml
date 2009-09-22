@@ -22,11 +22,15 @@
 	<property name="featuresDestDir" value="${buildDirectory}/features"/>
 	<property name="pluginsDestDir" value="${buildDirectory}/plugins"/>
 
-  <target name="copyToBuildDirectory" if="isCVSOrCopy" 
+  <target name="copyToBuildDirectory"
   	description="Copies from the workspace to the build directory when not fetching from svn">
   	<!-- Features -->
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.eclipse.feature">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.eclipse.feature">
+			</fileset>
+		</copy>
+		<copy todir="${featuresDestDir}/org.codehaus.groovy16.feature">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy16.feature">
 			</fileset>
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.jdt.patch">
@@ -52,6 +56,11 @@
   	<!-- Base Plugins -->
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy">
 			<fileset dir="${workspaceDirBase}/org.codehaus.groovy">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy16">
+			<fileset dir="${workspaceDirBase}/org.codehaus.groovy16">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
@@ -131,16 +140,6 @@
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.ant">
 			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.ant">
-					<exclude name="**/bin"/>
-			</fileset>
-		</copy>
-		<copy todir="${pluginsDestDir}/org.apache.commons.collections">
-			<fileset dir="${workspaceDirIde}/org.apache.commons.collections">
-					<exclude name="**/bin"/>
-			</fileset>
-		</copy>
-		<copy todir="${pluginsDestDir}/org.apache.commons.lang">
-			<fileset dir="${workspaceDirIde}/org.apache.commons.lang">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>

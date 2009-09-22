@@ -14,13 +14,16 @@ package org.codehaus.groovy.eclipse.junit.test;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.core.internal.jobs.JobManager;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.junit.launcher.JUnit3TestFinder;
 
 
@@ -153,7 +156,6 @@ public class JUnit3TestFinderTests extends JUnitTestCase {
         Set<IType> testTypes = new HashSet<IType>();
         IProject project = getProject(projectPath);
         
-//        new JUnit3TestFinder().findTestsInContainer(new Object[] {project }, testTypes, new NullProgressMonitor());
         new JUnit3TestFinder().findTestsInContainer(JavaCore.create(project), testTypes, new NullProgressMonitor());
         
         assertEquals("Should have found 3 test classes", 3, testTypes.size());

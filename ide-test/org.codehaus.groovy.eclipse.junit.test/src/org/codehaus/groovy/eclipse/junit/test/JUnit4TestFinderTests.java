@@ -226,7 +226,6 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
         Set<IType> testTypes = new HashSet<IType>();
         IProject project = getProject(projectPath);
         
-//        new JUnit4TestFinder().findTestsInContainer(new Object[] {project }, testTypes, new NullProgressMonitor());
         new JUnit4TestFinder().findTestsInContainer(JavaCore.create(project), testTypes, new NullProgressMonitor());
         
         assertEquals("Should have found 6 test classes", 6, testTypes.size());

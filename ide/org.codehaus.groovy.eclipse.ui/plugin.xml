@@ -501,6 +501,12 @@
              id="org.codehaus.groovy.eclipse.preferences.formatter"
              name="Formatter">
        </page>
+       <page
+             category="org.codehaus.groovy.eclipse.preferences"
+             class="org.codehaus.groovy.eclipse.preferences.CompilerPreferencesPage"
+             id="org.codehaus.groovy.eclipse.preferences.compiler"
+             name="Compiler">
+       </page>
    </extension>
    
    <extension
@@ -520,18 +526,6 @@
             description="Debug Groovy File"
             id="org.codehaus.groovy.eclipse.debug.ui.groovyShortcut.debug"
             name="Debug Groovy"/>
-         <commandParameter
-               id="org.codehaus.groovy.eclipse.ui.commandParameter1"
-               name="name"
-               optional="true">
-         </commandParameter>
-         <defaultHandler
-               class="org.eclipse.jface.commands.ActionHandler">
-            <parameter
-                  name="action"
-                  value="org.codehaus.groovy.eclipse.ui.parameter1">
-            </parameter>
-         </defaultHandler>
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
             description="Converts a file with a groovy extension to a file with a java extension"

@@ -13,6 +13,7 @@ package org.eclipse.jdt.core.tests.util;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -1173,8 +1174,16 @@ public void cleanBuild() {
 	}
 
     public void addGroovyJars(IPath projectPath) throws Exception {
-        addExternalJar(projectPath, FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar")).getFile());
-        addExternalJar(projectPath, FileLocator.resolve(Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar")).getFile());
+        URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar");
+        if (groovyJar==null) {
+            groovyJar =Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.4.jar");
+        }
+        addExternalJar(projectPath, FileLocator.resolve(groovyJar).getFile());
+        URL asmJar =Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar");
+        if (asmJar==null) {
+            asmJar=Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
+        }
+        addExternalJar(projectPath, FileLocator.resolve(asmJar).getFile());
     }   
     public void addJUnitJar(IPath projectPath) throws Exception {
         addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.codehaus.groovy.eclipse.core.test").getEntry("lib/junit-4.3.1.jar")).getFile());

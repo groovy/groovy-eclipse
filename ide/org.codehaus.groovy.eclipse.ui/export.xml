@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="plugin_export" name="build">
+	<target name="plugin_export">
+		<pde.exportPlugins destination="/Users/andrew/Desktop" exportSource="false" exportType="directory" plugins="org.codehaus.groovy.eclipse.ui" qualifier="xx-20090922-0800-e35" useJARFormat="true"/>
+	</target>
+</project>

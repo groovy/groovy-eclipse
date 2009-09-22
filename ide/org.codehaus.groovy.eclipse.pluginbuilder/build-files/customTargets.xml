@@ -42,7 +42,6 @@
 		<equals arg1="${pluginbuilder.is.runtests}" arg2="true"/>
 	</condition>
 	
-	<import file="subversionSupport.xml"/>
 	<import file="copyAllProjects.xml"/>
 	
 	<import file="allElements.xml" />
@@ -63,19 +62,7 @@
 	<!-- Steps to do before setup -->
 	<!-- ===================================================================== -->
 	<target name="preSetup">	
-		<condition property="isFetch" value="true">
-			<equals arg1="${target}" arg2="fetchElement"/>
-		</condition>
-	  <condition property="is.svn.fetch" value="true">
-	 		<and>
-		 		<equals arg1="${target}" arg2="fetchElement"/>
-				<equals arg1="${pluginbuilder.is.svn}" arg2="true"/>
-			</and>
-	  </condition>
-	
-		<!-- based on properties only one of the below will do work, the other will be no-op -->
 		<antcall target="copyToBuildDirectory"/>
-		<antcall target="fetchSubversion"/>
 	</target>
 	<!-- ===================================================================== -->
 	<!-- Steps to do after setup but before starting the build proper -->

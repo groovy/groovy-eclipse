@@ -14,11 +14,12 @@
     limitations under the License.
  -->
 <project name="Shared build targets">
-	<!-- the following properties must be set from the calling script 
+	<!-- 
+	  the following properties must be set from the calling script 
     eclipse.installation.dir
     eclipse.local.tar.non.server
     eclipse.download.cache
-    -->
+  -->
     
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${buildHome}/build-files/ant-contrib.jar" />
 	

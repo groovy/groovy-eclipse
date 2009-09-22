@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.eclipse.core.internal.events.BuildCommand;
@@ -177,12 +176,23 @@ public class TestProject {
         final String[] ids = description.getNatureIds();
         for (int i = 0; i < ids.length; ++i) {
             if (ids[i].equals(natureId)) {
-                final String[] newIds = (String[]) ArrayUtils.remove(ids, i);
+                final String[] newIds = remove(ids, i);
                 description.setNatureIds(newIds);
                 project.setDescription(description, null);
                 return;
             }
         }
+    }
+
+    private String[] remove(String[] ids, int index) {
+        String[] newIds = new String[ids.length-1];
+        for (int i = 0, j = 0; i < ids.length; i++) {
+            if (i != index) {
+                newIds[j] = ids[i];
+                j++;
+            }
+        }
+        return newIds;
     }
 
     public void addBuilder(String newBuilder) throws CoreException {

@@ -71,7 +71,12 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 		if (node != null) {
 			for (ImportNode importNode : (Iterable<ImportNode>) node.getImports()) {
 				visitAnnotations(importNode);
-				importNode.visit(this);
+				try {
+					importNode.visit(this);
+				} catch (RuntimeException e) {
+					// ImportNode.visit() not implemented in Groovy16
+					visitClass(importNode.getType());
+				}
 				handleType(importNode.getType(), false, true);
 			}
 			for (ClassNode staticImportClasses : (Iterable<ClassNode>) node.getStaticImportClasses().values()) {

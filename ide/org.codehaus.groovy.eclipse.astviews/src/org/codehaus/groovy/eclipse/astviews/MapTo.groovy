@@ -19,7 +19,6 @@ package org.codehaus.groovy.eclipse.astviews
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
-import org.codehaus.groovy.eclipse.core.util.JVM1_4Util
 
 class MapTo {
 	// TODO: no syntax errors in Eclipse if the package for the below is not imported. Why?

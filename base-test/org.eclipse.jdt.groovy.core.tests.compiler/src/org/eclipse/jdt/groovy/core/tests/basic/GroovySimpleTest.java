@@ -89,13 +89,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         	groovyLevel=17;
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar");
         	if (groovyJar==null) {
-        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.6.4.jar");
+        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.4.jar");
         		groovyLevel=16;
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
         	URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar");
         	if (asmJar==null) {
-        		asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("asm-2.2.3.jar");
+        		asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
         	}
             newcps[newcps.length-2] = FileLocator.resolve(asmJar).getFile();
 	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
