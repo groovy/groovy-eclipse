@@ -1033,6 +1033,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected void commencingResolution() {
     	// template method
     }
+    protected void finishedResolution() {
+    	// template method
+    }
     // end
 
     private void checkAnnotationMemberValue(Expression newValue) {
@@ -1102,6 +1105,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         super.visitClass(node);
 
         currentClass = oldNode;
+        // FIXASC (groovychange)
+        finishedResolution();
+        // end
     }
 
     public void visitCatchStatement(CatchStatement cs) {

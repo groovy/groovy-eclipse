@@ -498,6 +498,11 @@ public class JDTResolver extends ResolveVisitor {
 		}
 	}
 
+	@Override
+	protected void finishedResolution() {
+		scopes.remove(this.currentClass);
+	}
+
 	private GroovyCompilationUnitScope getScope() {
 		return activeScope;
 	}
