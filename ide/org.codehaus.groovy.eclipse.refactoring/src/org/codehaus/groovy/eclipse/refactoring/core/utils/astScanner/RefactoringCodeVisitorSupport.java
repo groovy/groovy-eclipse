@@ -216,13 +216,17 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 			GenericsType[] generics = node.getGenericsTypes();
 			for (int i = 0; i < generics.length; i++) {
 				GenericsType genericType = generics[i];
-				analyzeType(genericType.getType());
-				clear(genericType.getType());
-				if (genericType.getLowerBound() != null) {
-					analyzeType(genericType.getLowerBound());
-					clear(genericType.getLowerBound());
+				
+				// bottoms out recursion when a type parameter refers to itself, eg- java.lang.Enum
+				if (! node.getName().equals(genericType.getType().getName())) {
+    				analyzeType(genericType.getType());
+    				clear(genericType.getType());
+    				if (genericType.getLowerBound() != null) {
+    					analyzeType(genericType.getLowerBound());
+    					clear(genericType.getLowerBound());
+    				}
+    				analyzeTypes(genericType.getUpperBounds());
 				}
-				analyzeTypes(genericType.getUpperBounds());
 			}
 		}
 	}

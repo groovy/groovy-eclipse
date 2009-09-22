@@ -441,9 +441,6 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
-      <actionSet
-            id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring">
-      </actionSet>
 	    	</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.jdt.ui.JavaBrowsingPerspective">
@@ -451,9 +448,6 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
-      <actionSet
-            id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring">
-      </actionSet>					
 			</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.jdt.ui.JavaHierarchyPerspective">
@@ -461,9 +455,6 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
-      <actionSet
-            id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring">
-      </actionSet>					
 			</perspectiveExtension>
     	<perspectiveExtension 
  			  targetID="org.eclipse.jst.j2ee.J2EEPerspective">
@@ -471,9 +462,6 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
-      <actionSet
-            id="org.codehaus.groovy.eclipse.refactoring.editorContribRefactoring">
-      </actionSet>					
     	</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.pde.ui.PDEPerspective">
@@ -598,11 +586,11 @@
 		<consoleLineTracker
 			class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
 			processType="java"
-			id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"/>
+			id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForJava"/>
 		<consoleLineTracker
 			class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
 			processType="groovy"
-			id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"/>
+			id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForGroovy"/>
 	</extension>
 	<extension
 		point="org.eclipse.core.expressions.propertyTesters">

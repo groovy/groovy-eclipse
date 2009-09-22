@@ -275,6 +275,26 @@ public class TestProject {
         javaProject.setRawClasspath(newEntries, null);
         return root;
     }
+    public IPackageFragmentRoot createOtherSourceFolder() throws CoreException {
+        IFolder folder = project.getFolder("other");
+        if (!folder.exists())
+            folder.create(false, true, null);
+        final IClasspathEntry[] entries = javaProject
+        .getResolvedClasspath(false);
+        final IPackageFragmentRoot root = javaProject
+        .getPackageFragmentRoot(folder);
+        for (int i = 0; i < entries.length; i++) {
+            final IClasspathEntry entry = entries[i];
+            if (entry.getPath().equals(folder.getFullPath()))
+                return root;
+        }
+        IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
+        IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
+        System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
+        newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath());
+        javaProject.setRawClasspath(newEntries, null);
+        return root;
+    }
 
     private void addSystemLibraries() throws JavaModelException {
         IClasspathEntry[] oldEntries = javaProject.getRawClasspath();

@@ -30,6 +30,7 @@ import org.codehaus.groovy.eclipse.test.adapters.IsMainTesterTests;
 import org.codehaus.groovy.eclipse.test.core.types.TypeEvaluatorTestCase;
 import org.codehaus.groovy.eclipse.test.core.util.ExpressionFinderTestCase;
 import org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests;
+import org.codehaus.groovy.eclipse.test.debug.ConsoleLineTrackerTests;
 import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
 import org.codehaus.groovy.eclipse.test.ui.ErrorLogTest;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
@@ -76,6 +77,7 @@ public class AllUITests {
 		suite.addTestSuite(OrganizeImportsTest.class);
 		suite.addTestSuite(SaveParticipantRegistryTest.class);
 		suite.addTestSuite(ConvertToJavaOrGroovyActionTest.class);
+		suite.addTestSuite(ConsoleLineTrackerTests.class);
 		
 		// $JUnit-END$
 		
