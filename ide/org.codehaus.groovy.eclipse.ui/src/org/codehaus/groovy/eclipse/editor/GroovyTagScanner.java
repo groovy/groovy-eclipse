@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jdt.ui.text.IColorManager;
 import org.eclipse.jdt.ui.text.IJavaColorConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -109,15 +108,6 @@ public class GroovyTagScanner extends RuleBasedScanner {
 		"test",
 		"using",
 		"in",
-		
-		// for EasyB, probably shouldn't keep
-		"after",
-		"before",
-		"scenario",
-		"then",
-		"given",
-		"and",
-		"when"
 	};
 	
 	private static String[] gjdkWords = {
@@ -186,6 +176,7 @@ public class GroovyTagScanner extends RuleBasedScanner {
 		"toList",
 		"tokenize",
 		"upto",
+		"use",
 		"waitForOrKill",
 		"withPrintWriter",
 		"withReader",
@@ -197,6 +188,16 @@ public class GroovyTagScanner extends RuleBasedScanner {
 	};
 
 	public GroovyTagScanner(IColorManager manager) {
+	    this(manager, null, null);
+	}
+	
+	
+	/**
+	 * @param manager the color manager
+	 * @param additionalRules Additional scanner rules for sub-types to add new kinds of partitioning
+	 * @param additionalGroovyKeywords Additional keywords for sub-types to add new kinds of syntax highlighting
+	 */
+	public GroovyTagScanner(IColorManager manager, List<IRule> additionalRules, List<String> additionalGroovyKeywords) {
 		List<IRule> rules = new ArrayList<IRule>();
 
 		// Add generic whitespace rule.
@@ -228,6 +229,8 @@ public class GroovyTagScanner extends RuleBasedScanner {
 				keywordsRule.addWord(gjdkWords[j],gjdkToken);
 			}
 		}
+		
+		
 		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED)) {
 			RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
 			IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
@@ -240,6 +243,12 @@ public class GroovyTagScanner extends RuleBasedScanner {
 			IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
 			for (int j = 0; j < groovyKeywords.length; ++j) {
 				keywordsRule.addWord(groovyKeywords[j],token);
+			}
+            // additional keywords
+			if (additionalGroovyKeywords != null) {
+			    for (String additional : additionalGroovyKeywords) {
+			        keywordsRule.addWord(additional,token);
+                }
 			}
 		}
 		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_ENABLED)) {
@@ -266,10 +275,13 @@ public class GroovyTagScanner extends RuleBasedScanner {
             IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.ITALIC));
             rules.add( new SingleLineRule("/", "/", token, '\\'));
         }
-        
-		
-
 		rules.add(keywordsRule); 
+		
+		// additional rules
+		if (additionalRules != null) {
+		    rules.addAll(additionalRules);
+		}
+		
 		// convert rules list to array and return
 		IRule[] ruleArray = new IRule[rules.size()];
 		rules.toArray(ruleArray);
