@@ -190,9 +190,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
     private void addMonospaceFontListener() {
         ensure = new EnsureJUnitFont();
 
-        // if JUnit window already open, force monospace if that is desired
-        ensure.maybeForceMonospaceFont();
         try {
+            // listen for activations of the JUnit view and ensure monospace font if requested.
             Workbench.getInstance().getActiveWorkbenchWindow().addPageListener(new IPageListener() {
                 public void pageOpened(IWorkbenchPage page) {
                     IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
