@@ -49,7 +49,7 @@ public abstract class BaseTestCase extends TestCase {
 	
 		protected File file;
 		private final String newLine;
-		private final Pattern origRegExp, expRegExp, exp16RegExp, propertiesRegExp;
+		private final Pattern origRegExp, expRegExp, exp16RegExp /* for when the output under 1.6 is different from 1.7, eg- AST_Writer_Test_import_Class_multi.txt*/, propertiesRegExp;
 		private final String name;
 		private final IGroovyDocumentProvider docProvider;
 		protected boolean shouldFail = false;
