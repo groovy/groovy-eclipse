@@ -29,10 +29,12 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.eclipse.feature">
 			</fileset>
 		</copy>
+  	<!--
 		<copy todir="${featuresDestDir}/org.codehaus.groovy16.feature">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy16.feature">
 			</fileset>
 		</copy>
+		-->
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.jdt.patch">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.jdt.patch">
 			</fileset>
@@ -59,11 +61,13 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
+  	<!--
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy16">
 			<fileset dir="${workspaceDirBase}/org.codehaus.groovy16">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
+		-->
 		<copy todir="${pluginsDestDir}/org.eclipse.jdt.core">
 			<fileset dir="${workspaceDirBase}/org.eclipse.jdt.core">
 					<exclude name="**/bin"/>

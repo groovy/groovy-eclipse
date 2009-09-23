@@ -433,6 +433,41 @@
                tooltip="New Groovy Project">
          </action>
         </actionSet>
+       <actionSet
+             description="Converts between groovy and java file extensions"
+             id="org.codehaus.groovy.eclipse.conversion"
+             label="Convert to or from groovy file extension"
+             visible="false">
+          <action
+                class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
+                definitionId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
+                enablesFor="*"
+                id="org.codehaus.groovy.eclipse.convertToGroovy.action"
+                label="Convert file extension to Groovy"
+                menubarPath="groovyfile/defaultGroup">
+             <enablement>
+                <objectState
+                      name="extension"
+                      value="java">
+                </objectState>
+             </enablement>
+          </action>
+          <action
+                class="org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction"
+                definitionId="org.codehaus.groovy.eclipse.ui.convertToJava"
+                enablesFor="*"
+                id="org.codehaus.groovy.eclipse.convertToJava.action"
+                label="Convert file extension to Java"
+                menubarPath="groovyfile/defaultGroup"
+                tooltip="Convert file to having a *.java extension">
+             <enablement>
+                <objectState
+                      name="extension"
+                      value="groovy">
+                </objectState>
+             </enablement>
+          </action>
+       </actionSet>
    </extension>
    <extension point="org.eclipse.ui.perspectiveExtensions">
 	   		<perspectiveExtension 
@@ -441,6 +476,9 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.conversion">
+      </actionSet>
 	    	</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.jdt.ui.JavaBrowsingPerspective">
@@ -448,6 +486,9 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.conversion">
+      </actionSet>
 			</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.jdt.ui.JavaHierarchyPerspective">
@@ -455,6 +496,9 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.conversion">
+      </actionSet>
 			</perspectiveExtension>
     	<perspectiveExtension 
  			  targetID="org.eclipse.jst.j2ee.J2EEPerspective">
@@ -462,10 +506,16 @@
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
 						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.conversion">
+      </actionSet>
     	</perspectiveExtension>
 			<perspectiveExtension 
 				targetID="org.eclipse.pde.ui.PDEPerspective">
 						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+      <actionSet
+            id="org.codehaus.groovy.eclipse.conversion">
+      </actionSet>
 			</perspectiveExtension>
    </extension>
    <extension
@@ -531,18 +581,6 @@
             description="Converts a file with a groovy extension to a file with a java extension"
             id="org.codehaus.groovy.eclipse.ui.convertToJava"
             name="Convert to Java">
-         <defaultHandler
-               class="org.eclipse.jface.commands.ActionHandler">
-            <parameter
-                  name="action"
-                  value="org.codehaus.groovy.eclipse.ui.parameter1">
-            </parameter>
-         </defaultHandler>
-         <commandParameter
-               id="org.codehaus.groovy.eclipse.ui.commandParameter1"
-               name="name"
-               optional="true">
-         </commandParameter>
       </command>
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
@@ -569,10 +607,12 @@
             sequence="M2+M3+D G"/>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToJava"
+            contextId="org.eclipse.ui.globalScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+G J"/>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
+            contextId="org.eclipse.ui.globalScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+J G"/>
    </extension>
