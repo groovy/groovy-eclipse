@@ -6,7 +6,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -23,12 +22,12 @@ import org.eclipse.ui.internal.Workbench;
 public class CompilerPreferencesPage extends PreferencePage implements
         IWorkbenchPreferencePage {
 
-    protected final boolean isUsingGroovy16;
+    protected final boolean isGroovy17Disabled;
     
     public CompilerPreferencesPage() {
         super("Compiler");
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
-        isUsingGroovy16 = CompilerUtils.isUsingGroovy16();
+        isGroovy17Disabled = CompilerUtils.isGroovy17DisabledOrMissing();
     }
 
     @Override
@@ -57,9 +56,12 @@ public class CompilerPreferencesPage extends PreferencePage implements
                     
                 if (result) {
                     // change compiler
-                    IStatus status = CompilerUtils.switchVersions(!isUsingGroovy16);
+                    IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
                     if (status == Status.OK_STATUS) {
-                        Workbench.getInstance().restart();
+                        if (MessageDialog.openQuestion(page.getShell(), "Restart?", "Do you want to restart now?\n\n" +
+                        		"It is strongly recommended that you do so.")) {
+                            Workbench.getInstance().restart();
+                        }
                     } else {
                         ErrorDialog error = new ErrorDialog(page.getShell(), 
                                 "Error occurred", "Error occurred when trying to enable Groovy " + CompilerUtils.getOtherVersion(), 

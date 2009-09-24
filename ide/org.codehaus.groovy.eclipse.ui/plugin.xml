@@ -443,8 +443,7 @@
                 definitionId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
                 enablesFor="*"
                 id="org.codehaus.groovy.eclipse.convertToGroovy.action"
-                label="Convert file extension to Groovy"
-                menubarPath="groovyfile/defaultGroup">
+                label="Convert file extension to Groovy">
              <enablement>
                 <objectState
                       name="extension"
@@ -458,7 +457,6 @@
                 enablesFor="*"
                 id="org.codehaus.groovy.eclipse.convertToJava.action"
                 label="Convert file extension to Java"
-                menubarPath="groovyfile/defaultGroup"
                 tooltip="Convert file to having a *.java extension">
              <enablement>
                 <objectState

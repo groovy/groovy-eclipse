@@ -27,6 +27,7 @@ import java.util.Enumeration;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -97,29 +98,6 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     }
 
 
-    /*
-     * Don't think we need these...can delete.
-     * get the asm-*.jar, asm-tree-*.jar, and antlr-*.jar
-     */
-    @SuppressWarnings("unchecked")
-    private List<URL> getOtherJars() throws IOException {
-        Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy");
-        Enumeration<URL> enu = groovyBundle.findEntries("", "asm-*.jar", false);
-        List<URL> urls = new ArrayList<URL>(2);
-
-        while (enu.hasMoreElements()) {
-            urls.add(resolve(enu.nextElement()));
-        }
-        
-        enu = groovyBundle.findEntries("", "antlr-*.jar", false);
-        if (enu.hasMoreElements()) {
-            urls.add(resolve(enu.nextElement()));
-        } else {
-            throw new RuntimeException("Could not find antlr jar");
-        }
-        return urls;
-    }
-    
     
     /**
      * Returns the groovy-all-*.jar that is used in the Eclipse project. We know
@@ -133,9 +111,10 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     @SuppressWarnings("unchecked")
     private URL getExportedGroovyAllJar() {
         try {
-        	Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy");
+        	Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         	Enumeration<URL> enu = groovyBundle.findEntries("", "groovy-all-*.jar", false);
         	if (enu == null) {
+        	    // in some versions of the plugin, the groovy-all jar is in the lib directory
         	    enu = groovyBundle.findEntries("lib", "groovy-all-*.jar", false);
         	}
         	while (enu.hasMoreElements()) {

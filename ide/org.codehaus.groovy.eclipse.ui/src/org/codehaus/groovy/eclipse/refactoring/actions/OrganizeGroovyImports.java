@@ -250,7 +250,9 @@ public class OrganizeGroovyImports {
     
     public void calculateAndApplyMissingImports() throws JavaModelException {
         TextEdit edit = calculateMissingImports();
-        unit.applyTextEdit(edit, null);
+        if (edit != null) {
+            unit.applyTextEdit(edit, null);
+        }
     }
     
 

@@ -26,14 +26,16 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionDelegate;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.actions.WorkspaceModifyDelegatingOperation;
 
 /**
  * Rename the file extension of a file to groovy or to java
  */
-public abstract class RenameToGroovyOrJavaAction implements IActionDelegate {
+public abstract class RenameToGroovyOrJavaAction implements IActionDelegate, IWorkbenchWindowActionDelegate {
 
-	public static final String GROOVY = ".groovy";
+    public static final String GROOVY = ".groovy";
 	public static final String JAVA = ".java";
     private ISelection selection;
 
@@ -96,5 +98,11 @@ public abstract class RenameToGroovyOrJavaAction implements IActionDelegate {
 	public void selectionChanged(IAction action, ISelection selection) {
 		this.selection = selection;
 	}
+
+    public void dispose() {
+        selection = null;
+    }
+
+    public void init(IWorkbenchWindow window) {}
 
 }
