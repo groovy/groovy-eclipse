@@ -131,6 +131,7 @@ public class CompilerOptions {
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
 	public static final String OPTIONG_BuildGroovyFiles = "org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyFlags = "org.eclipse.jdt.core.compiler.groovy.projectFlags"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyClassLoaderPath = "org.eclipse.jdt.core.compiler.groovy.groovyClassLoaderPath"; //$NON-NLS-1$
 	// GROOVY end
 	
@@ -341,6 +342,7 @@ public class CompilerOptions {
 	public boolean generateClassFiles;
 	// GROOVY start
 	public int buildGroovyFiles = 0; // 0=dontknow 1=no 2=yes
+	public int groovyFlags = 0; // 0x01 == IsGrails
 	
 	public String groovyClassLoaderPath = null;
 	// GROOVY end
@@ -1411,8 +1413,16 @@ public class CompilerOptions {
 			if (ENABLED.equals(optionValue)) {
 				this.buildGroovyFiles = 2;
 				this.storeAnnotations = true; // force it on
+				// will need proper bit manipulation when second flag comes up
+				String s = (String)optionsMap.get(OPTIONG_GroovyFlags);
+				if (s!=null && s.equals("1")) {
+					this.groovyFlags = 0x01;
+				} else {
+					this.groovyFlags = 0;
+				}
 			} else if (DISABLED.equals(optionValue)) {
 				this.buildGroovyFiles = 1;
+				this.groovyFlags = 0;
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyClassLoaderPath)) != null) {
@@ -1514,6 +1524,7 @@ public class CompilerOptions {
 		buf.append("\n\t- dead code in trivial if statement: ").append(this.reportDeadCodeInTrivialIfStatement ? ENABLED : DISABLED); //$NON-NLS-1$
 		// GROOVY start
 		buf.append("\n\t- build groovy files: ").append((buildGroovyFiles==0)?"dontknow":(buildGroovyFiles==1?"no":"yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(groovyFlags)); //$NON-NLS-1$
 		buf.append("\n\t- groovyclassloader path: ").append(groovyClassLoaderPath); //$NON-NLS-1$
 		// GROOVY end
 		return buf.toString();

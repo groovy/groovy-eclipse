@@ -2604,6 +2604,8 @@ public void configure(String[] argv) {
 	}
 
 	// GROOVY start
+	// FIXASC (m2) grails 1.1 batch builds need the extra phase
+	//optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"1");
 	if (encounteredGroovySourceFile) {
 		this.options.put(
 				CompilerOptions.OPTIONG_BuildGroovyFiles,

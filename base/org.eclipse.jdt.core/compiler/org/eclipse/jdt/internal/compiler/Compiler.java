@@ -268,6 +268,8 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 			// demoted to error message, groovy disabled
 			System.err.println("Build groovy files option has not been set one way or the other: use 'options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);'");//$NON-NLS-1$
 			this.options.buildGroovyFiles=1;
+			this.options.groovyFlags = 0;
+
 //			throw new RuntimeException("Build groovy files option has not been set one way or the other: use 'options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);'"); //$NON-NLS-1$
 		}
 		// GROOVY end

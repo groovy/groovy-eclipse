@@ -48,9 +48,9 @@ public class GroovyParser {
 	// FIXASC (RC1) review callers who pass null for options
 	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
 		String path = (options == null ? null : options.groovyClassLoaderPath);
-//		if (options == null) {
-//			throw new RuntimeException("Dont do that");
-//		}
+		// if (options == null) {
+		// throw new RuntimeException("Dont do that");
+		// }
 		// FIXASC (M2) set parent of the loader to system or context class loader?
 		GroovyClassLoader gcl = new GroovyClassLoader();
 		this.gclClasspath = path;
@@ -58,6 +58,11 @@ public class GroovyParser {
 		configureClasspath(gcl, path);
 		this.groovyCompilationUnit = new CompilationUnit(gcl);
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
+		if ((options.groovyFlags & 0x01) != 0) {
+			// its probably grails!
+			// nothing up my sleeve, abracadabra!
+			this.groovyCompilationUnit.addPhaseOperation(new GrailsInjector(gcl), Phases.CANONICALIZATION);
+		}
 		// this.lookupEnvironment = lookupEnvironment;
 		this.problemReporter = problemReporter;
 		this.resolver = new JDTResolver(groovyCompilationUnit);

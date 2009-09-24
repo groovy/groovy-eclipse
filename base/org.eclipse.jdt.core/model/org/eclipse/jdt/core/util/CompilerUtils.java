@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.PropertyResourceBundle;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -36,11 +37,18 @@ public class CompilerUtils {
 				compilerOptions.storeAnnotations=true;
 				compilerOptions.buildGroovyFiles=2;
 				setGroovyClasspath(compilerOptions, javaProject);
+				if (isProbablyGrailsProject(project)) {
+					compilerOptions.groovyFlags = IsGrails;
+				} else {
+					compilerOptions.groovyFlags = 0;					
+				}
 			} else {
 				compilerOptions.buildGroovyFiles=1;
+				compilerOptions.groovyFlags = 0;
 			}
 		} catch (CoreException e) {
 			compilerOptions.buildGroovyFiles=1;
+			compilerOptions.groovyFlags = 0;
 		}
 	}
 	
@@ -54,14 +62,37 @@ public class CompilerUtils {
 			if (isGroovyNaturedProject(project)) {
 				optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 				setGroovyClasspath(optionMap, javaProject);
+				if (isProbablyGrailsProject(project)) {
+					// will need bit manipulation here when another flag added
+					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(IsGrails));
+				} else {
+					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0");
+				}
 			} else {
 				optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
+				optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0");
 			}
 		} catch (CoreException e) {
+			e.printStackTrace();
 			optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
+			optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0");
 		}
 	}
 	
+	public static final int IsGrails = 0x0001;
+	
+	/**
+	 * Crude way to determine it...
+	 */
+	private static boolean isProbablyGrailsProject(IProject project) {
+	    try {
+	    	IFolder folder = project.getFolder("grails-app");
+			return folder.exists();
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
 	/**
 	 * There are currently two points of configuration here.  The first is the java project which will have its own classpath.
 	 * The second is the groovy.properties file.  Due to the 'power' of just going with the java project, because it will cause
