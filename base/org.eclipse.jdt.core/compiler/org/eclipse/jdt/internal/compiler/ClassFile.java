@@ -346,7 +346,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		// add signature attribute
 		char[] genericSignature = this.referenceBinding.genericSignature();
-		if (genericSignature != null && this.targetJDK >= ClassFileConstants.JDK1_5) {
+		if (genericSignature != null) {
 			// check that there is enough space to write all the bytes for the field info corresponding
 			// to the @fieldBinding
 			if (this.contentsOffset + 8 >= this.contents.length) {
@@ -652,7 +652,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		// add signature attribute
 		char[] genericSignature = fieldBinding.genericSignature();
-		if (genericSignature != null && this.targetJDK >= ClassFileConstants.JDK1_5) {
+		if (genericSignature != null) {
 			// check that there is enough space to write all the bytes for the field info corresponding
 			// to the @fieldBinding
 			if (this.contentsOffset + 8 >= this.contents.length) {
@@ -6269,7 +6269,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		// add signature attribute
 		char[] genericSignature = methodBinding.genericSignature();
-		if (genericSignature != null && this.targetJDK >= ClassFileConstants.JDK1_5) {
+		if (genericSignature != null) {
 			// check that there is enough space to write all the bytes for the field info corresponding
 			// to the @fieldBinding
 			if (this.contentsOffset + 8 >= this.contents.length) {

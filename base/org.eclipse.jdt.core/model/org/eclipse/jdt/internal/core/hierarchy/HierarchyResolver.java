@@ -653,7 +653,12 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 				CompilationUnitDeclaration parsedUnit = null;
 				if (cu.isOpen()) {
 					// create parsed unit from source element infos
-					CompilationResult result = new CompilationResult(((ICompilationUnit)cu).getFileName(), i, openablesLength, this.options.maxProblemsPerUnit);
+					// As part of fix for https://bugs.eclipse.org/bugs/show_bug.cgi?id=254738
+					// Since we have the handle to the ICompilationUnit, instead of the name pass the ICompilationUnit, which is required if we were 
+					// to get through Parser.getMethodBodies(), which is invoked later in this method. Note that as part of this fix,
+					// ASTNode.HasAllMethodBodies flag - which was being set earlier - has been removed. As a design feature, only the Parser 
+					// is supposed to handle this particular bit.
+					CompilationResult result = new CompilationResult((ICompilationUnit)cu, i, openablesLength, this.options.maxProblemsPerUnit);
 					SourceTypeElementInfo[] typeInfos = null;
 					try {
 						IType[] topLevelTypes = cu.getTypes();
@@ -676,7 +681,6 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 							flags,
 							this.lookupEnvironment.problemReporter,
 							result);
-					if (containsLocalType) 	parsedUnit.bits |= ASTNode.HasAllMethodBodies;
 				} else {
 					// create parsed unit from file
 					IFile file = (IFile) cu.getResource();

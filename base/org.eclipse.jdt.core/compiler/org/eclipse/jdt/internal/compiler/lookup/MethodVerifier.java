@@ -568,10 +568,17 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 				continue nextMethod;
 			MethodBinding[] existingMethods = (MethodBinding[]) this.inheritedMethods.get(inheritedMethod.selector);
 			if (existingMethods != null) {
-				for (int i = 0, length = existingMethods.length; i < length; i++) {
-					if (existingMethods[i].declaringClass != inheritedMethod.declaringClass && areMethodsCompatible(existingMethods[i], inheritedMethod)) {
-						if (inheritedMethod.isDefault() && inheritedMethod.isAbstract())
+				existing : for (int i = 0, length = existingMethods.length; i < length; i++) {
+					MethodBinding existingMethod = existingMethods[i];
+					if (existingMethod.declaringClass != inheritedMethod.declaringClass && areMethodsCompatible(existingMethod, inheritedMethod)) {
+						if (inheritedMethod.isDefault()) {
+							if (inheritedMethod.isAbstract()) {
 							checkPackagePrivateAbstractMethod(inheritedMethod);
+							} else if (existingMethod.declaringClass.fPackage != inheritedMethod.declaringClass.fPackage) {
+								if (this.type.fPackage == inheritedMethod.declaringClass.fPackage && !areReturnTypesCompatible(inheritedMethod, existingMethod))
+									continue existing; // may need to record incompatible return type
+							}
+						}
 						continue nextMethod;
 					}
 				}
@@ -755,6 +762,7 @@ int[] findOverriddenInheritedMethods(MethodBinding[] methods, int length) {
 		}
 		if (!declaringClass2.isInterface()) {
 			// skip all methods from different superclasses
+			if (declaringClass.fPackage != declaringClass2.fPackage && methods[i].isDefault()) return null;
 			toSkip = new int[length];
 			do {
 				toSkip[i] = -1;
@@ -881,13 +889,25 @@ ReferenceBinding[] resolvedExceptionTypesFor(MethodBinding method) {
 	return exceptions;
 }
 
-void verify(SourceTypeBinding someType) {
-	this.type = someType;
+void verify() {
 	computeMethods();
 	computeInheritedMethods();
 	checkMethods();
 	if (this.type.isClass())
 		checkForMissingHashCodeMethod();
+}
+
+void verify(SourceTypeBinding someType) {
+	if (this.type == null) {
+		try {
+			this.type = someType;
+			verify();
+		} finally {
+			this.type = null;
+		}
+	} else {
+		this.environment.newMethodVerifier().verify(someType);
+	}
 }
 
 public String toString() {

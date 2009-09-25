@@ -495,6 +495,10 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		private boolean insertAfterSeparator(ASTNode node) {
 			return !isInsertBoundToPrevious(node);
 		}
+		
+		protected boolean mustRemoveSeparator(int originalOffset, int nodeIndex) {
+			return true;
+		}
 
 		public final int rewriteList(ASTNode parent, StructuralPropertyDescriptor property, int offset, String keyword) {
 			this.startPos= offset;
@@ -592,7 +596,9 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 						// remove element and next separator
 						int end= getStartOfNextNode(nextIndex, currEnd); // start of next
 						doTextRemoveAndVisit(currPos, currEnd - currPos, node, getEditGroup(currEvent)); // remove node
-						doTextRemove(currEnd, end - currEnd, editGroup); // remove separator
+						if (mustRemoveSeparator(currPos, i)) {
+							doTextRemove(currEnd, end - currEnd, editGroup); // remove separator
+						}
 						currPos= end;
 						prevEnd= currEnd;
 						separatorState= NEW;
@@ -931,6 +937,43 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 				}
 			}
 			return 0;
+		}
+		
+		protected boolean mustRemoveSeparator(int originalOffset, int nodeIndex) {
+			// Do not remove separator if the previous non removed node is on the same line and the next node is on another line
+			int previousNonRemovedNodeIndex = nodeIndex - 1;
+			while (previousNonRemovedNodeIndex >= 0 && this.list[previousNonRemovedNodeIndex].getChangeKind() == RewriteEvent.REMOVED) {
+				previousNonRemovedNodeIndex--;
+			}
+			
+			if (previousNonRemovedNodeIndex > -1) {
+				LineInformation lineInformation = getLineInformation();
+				
+				RewriteEvent prevEvent = this.list[previousNonRemovedNodeIndex];
+				int prevKind = prevEvent.getChangeKind();
+				if (prevKind == RewriteEvent.UNCHANGED || prevKind == RewriteEvent.REPLACED) {
+					ASTNode prevNode = (ASTNode) this.list[previousNonRemovedNodeIndex].getOriginalValue();
+					int prevEndPosition = prevNode.getStartPosition() + prevNode.getLength();
+					int prevLine = lineInformation.getLineOfOffset(prevEndPosition);
+					int line = lineInformation.getLineOfOffset(originalOffset);
+					
+					if (prevLine == line && nodeIndex + 1 < this.list.length) {
+						RewriteEvent nextEvent = this.list[nodeIndex + 1];
+						int nextKind = nextEvent.getChangeKind();
+						
+						if (nextKind == RewriteEvent.UNCHANGED || prevKind == RewriteEvent.REPLACED) {
+							ASTNode nextNode = (ASTNode) nextEvent.getOriginalValue();
+							int nextStartPosition = nextNode.getStartPosition();
+							int nextLine = lineInformation.getLineOfOffset(nextStartPosition);
+							
+							return nextLine == line;
+						}
+						return false;
+					}
+				}
+			}
+			
+			return true;
 		}
 	}
 
@@ -2762,6 +2805,29 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		
 		protected void updateIndent(int prevMark, int originalOffset, int nodeIndex, TextEditGroup editGroup) {
 			if (prevMark != RewriteEvent.UNCHANGED && prevMark != RewriteEvent.REPLACED) return;
+			
+			// Do not change indent if the previous non removed node is on the same line
+			int previousNonRemovedNodeIndex = nodeIndex - 1;
+			while (previousNonRemovedNodeIndex >= 0 && this.list[previousNonRemovedNodeIndex].getChangeKind() == RewriteEvent.REMOVED) {
+				previousNonRemovedNodeIndex--;
+			}
+			
+			if (previousNonRemovedNodeIndex > -1) {
+				LineInformation lineInformation = getLineInformation();
+				
+				RewriteEvent prevEvent = this.list[previousNonRemovedNodeIndex];
+				int prevKind = prevEvent.getChangeKind();
+				if (prevKind == RewriteEvent.UNCHANGED || prevKind == RewriteEvent.REPLACED) {
+					ASTNode prevNode = (ASTNode) this.list[previousNonRemovedNodeIndex].getOriginalValue();
+					int prevEndPosition = prevNode.getStartPosition() + prevNode.getLength();
+					int prevLine = lineInformation.getLineOfOffset(prevEndPosition);
+					int line = lineInformation.getLineOfOffset(originalOffset);
+					
+					if (prevLine == line) {
+						return;
+					}
+				}
+			}
 			
 			int total = this.list.length;
 			while (nodeIndex < total && this.list[nodeIndex].getChangeKind() == RewriteEvent.REMOVED) {

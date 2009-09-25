@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1118,6 +1118,18 @@ public class SourceMapper
 				case Signature.C_DOT:
 					start = ++i;
 					break;
+				case Signature.C_BOOLEAN :
+				case Signature.C_BYTE :
+				case Signature.C_CHAR :
+				case Signature.C_DOUBLE :
+				case Signature.C_FLOAT :
+				case Signature.C_INT :
+				case Signature.C_LONG :
+				case Signature.C_SHORT :
+					if (!sigStart) {
+						unqualifiedTypeSig.append(current);
+						return i+1;
+					}
 			}
 		}
 		switch (firstChar) {

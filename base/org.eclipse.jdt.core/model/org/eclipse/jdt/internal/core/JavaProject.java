@@ -1365,7 +1365,12 @@ public class JavaProject
 		Map rootPathToResolvedEntries = perProjectInfo.rootPathToResolvedEntries;
 		if (rootPathToResolvedEntries == null)
 			return null;
-		return (IClasspathEntry) rootPathToResolvedEntries.get(path);
+		IClasspathEntry classpathEntry = (IClasspathEntry) rootPathToResolvedEntries.get(path);
+		if (classpathEntry == null) {
+			path = getProject().getWorkspace().getRoot().getLocation().append(path);
+			classpathEntry = (IClasspathEntry) rootPathToResolvedEntries.get(path);
+		}
+		return classpathEntry;
 	}
 
 	/*
@@ -2171,6 +2176,13 @@ public class JavaProject
 			if (entryPath.equals(exactPath)) { // package fragment roots must match exactly entry pathes (no exclusion there)
 				return true;
 			}
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=276373
+			// When a classpath entry is absolute, convert the resource's relative path to a file system path and compare
+			// e.g - /P/lib/variableLib.jar and /home/P/lib/variableLib.jar when compared should return true
+			if (entryPath.isAbsolute()
+					&& entryPath.equals(ResourcesPlugin.getWorkspace().getRoot().getLocation().append(exactPath))) {
+				return true;
+			}
 			if (entryPath.isPrefixOf(path)
 					&& !Util.isExcluded(path, ((ClasspathEntry)entry).fullInclusionPatternChars(), ((ClasspathEntry)entry).fullExclusionPatternChars(), isFolderPath)) {
 				return true;
@@ -2189,6 +2201,11 @@ public class JavaProject
 			if (entryPath.isPrefixOf(elementPath)
 					&& !Util.isExcluded(elementPath, ((ClasspathEntry)entry).fullInclusionPatternChars(), ((ClasspathEntry)entry).fullExclusionPatternChars(), isFolderPath))
 				return true;
+		}
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=276373
+		if (entryPath.isAbsolute()
+				&& entryPath.equals(ResourcesPlugin.getWorkspace().getRoot().getLocation().append(elementPath))) {
+			return true;
 		}
 		return false;
 	}

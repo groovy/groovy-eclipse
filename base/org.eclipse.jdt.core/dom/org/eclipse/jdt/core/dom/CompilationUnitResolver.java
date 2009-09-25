@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -313,7 +313,7 @@ class CompilationUnitResolver extends Compiler {
 	public void process(CompilationUnitDeclaration unit, int i) {
 		// don't resolve a second time the same unit (this would create the same binding twice)
 		char[] fileName = unit.compilationResult.getFileName();
-		if (!this.requestedKeys.containsKey(fileName) && !this.requestedSources.containsKey(fileName))
+		if (this.requestedKeys.get(fileName) == null && this.requestedSources.get(fileName) == null)
 			super.process(unit, i);
 	}
 	/*
@@ -701,15 +701,14 @@ class CompilationUnitResolver extends Compiler {
 		astRequestor.compilationUnitResolver = this;
 		this.bindingTables = new DefaultBindingResolver.BindingTables();
 		CompilationUnitDeclaration unit = null;
-		int i = 0;
 		try {
 			int length = compilationUnits.length;
 			org.eclipse.jdt.internal.compiler.env.ICompilationUnit[] sourceUnits = new org.eclipse.jdt.internal.compiler.env.ICompilationUnit[length];
 			System.arraycopy(compilationUnits, 0, sourceUnits, 0, length);
 			beginToCompile(sourceUnits, bindingKeys);
 			// process all units (some more could be injected in the loop by the lookup environment)
-			for (; i < this.totalUnits; i++) {
-				if (this.requestedSources.size() == 0 && this.requestedKeys.size() == 0) {
+			for (int i = 0; i < this.totalUnits; i++) {
+				if (resolvedRequestedSourcesAndKeys(i)) {
 					// no need to keep resolving if no more ASTs and no more binding keys are needed
 					// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=114935
 					// cleanup remaining units
@@ -748,10 +747,14 @@ class CompilationUnitResolver extends Compiler {
 						astRequestor.acceptAST(source, compilationUnit);
 
 						worked(1);
+
+						// remove at the end so that we don't resolve twice if a source and a key for the same file name have been requested
+						this.requestedSources.put(fileName, null); // mark it as removed
 					}
 
 					// requested binding
 					Object key = this.requestedKeys.get(fileName);
+					if (key != null) {
 					if (key instanceof BindingKeyResolver) {
 						reportBinding(key, astRequestor, owner, unit);
 						worked(1);
@@ -764,8 +767,8 @@ class CompilationUnitResolver extends Compiler {
 					}
 
 					// remove at the end so that we don't resolve twice if a source and a key for the same file name have been requested
-					this.requestedSources.removeKey(fileName);
-					this.requestedKeys.removeKey(fileName);
+						this.requestedKeys.put(fileName, null); // mark it as removed
+					}
 				} finally {
 					// cleanup compilation unit result
 					unit.cleanUp();
@@ -938,6 +941,19 @@ class CompilationUnitResolver extends Compiler {
 			verifyMethods,
 			analyzeCode,
 			generateCode);
+	}
+
+	boolean resolvedRequestedSourcesAndKeys(int unitIndexToProcess) {
+		if (unitIndexToProcess < this.requestedSources.size() && unitIndexToProcess < this.requestedKeys.size())
+			return false; // must process at least this many units before checking to see if all are done
+
+		Object[] sources = this.requestedSources.valueTable;
+		for (int i = 0, l = sources.length; i < l; i++)
+			if (sources[i] != null) return false;
+		Object[] keys = this.requestedKeys.valueTable;
+		for (int i = 0, l = keys.length; i < l; i++)
+			if (keys[i] != null) return false;
+		return true;
 	}
 
 	/*

@@ -447,7 +447,7 @@ private IProject[] getRequiredProjects(boolean includeBinaryPrerequisites) {
 						p = null;
 					break;
 				case IClasspathEntry.CPE_LIBRARY :
-					if (includeBinaryPrerequisites && path.segmentCount() > 1) {
+					if (includeBinaryPrerequisites && path.segmentCount() > 0) {
 						// some binary resources on the class path can come from projects that are not included in the project references
 						IResource resource = this.workspaceRoot.findMember(path.segment(0));
 						if (resource instanceof IProject) {

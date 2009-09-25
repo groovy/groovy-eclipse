@@ -45,6 +45,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	return  ((Reference) this.lhs).analyseAssignment(currentScope, flowContext, flowInfo, this, true).unconditionalInits();
 }
 
+	public boolean checkCastCompatibility() {
+		return true;
+	}
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 
 		// various scenarii are possible, setting an array reference,
@@ -161,6 +164,15 @@ public int nullStatus(FlowInfo flowInfo) {
 				// <int | boolean> += <String> is illegal
 				if ((lhsType.isNumericType() || lhsID == T_boolean) && !expressionType.isNumericType()){
 					scope.problemReporter().invalidOperator(this, lhsType, expressionType);
+					return null;
+				}
+			}
+		}
+		TypeBinding resultType = TypeBinding.wellKnownType(scope, result & 0x0000F);
+		if (checkCastCompatibility()) {
+			if (originalLhsType.id != T_JavaLangString && resultType.id != T_JavaLangString) {
+				if (!checkCastTypesCompatibility(scope, originalLhsType, resultType, null)) {
+					scope.problemReporter().invalidOperator(this, originalLhsType, expressionType);
 					return null;
 				}
 			}

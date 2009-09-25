@@ -166,14 +166,13 @@ private IMemberValuePair[] getRetentionPolicy(long tagBits) {
 	if ((tagBits & TagBits.AnnotationRetentionMASK) == 0)
 		return Annotation.NO_MEMBER_VALUE_PAIRS;
 	String retention = null;
-	if ((tagBits & TagBits.AnnotationClassRetention) != 0) {
-		retention = new String(CharOperation.concatWith(TypeConstants.JAVA_LANG_ANNOTATION_RETENTIONPOLICY, '.')) + '.' + new String(TypeConstants.UPPER_CLASS);
-	}
-	if ((tagBits & TagBits.AnnotationRuntimeRetention) != 0) {
+	if ((tagBits & TagBits.AnnotationRuntimeRetention) == TagBits.AnnotationRuntimeRetention) {
+		// TagBits.AnnotationRuntimeRetention combines both TagBits.AnnotationClassRetention & TagBits.AnnotationSourceRetention
 		retention = new String(CharOperation.concatWith(TypeConstants.JAVA_LANG_ANNOTATION_RETENTIONPOLICY, '.')) + '.' + new String(TypeConstants.UPPER_RUNTIME);
-	}
-	if ((tagBits & TagBits.AnnotationSourceRetention) != 0) {
+	} else if ((tagBits & TagBits.AnnotationSourceRetention) != 0) {
 		retention = new String(CharOperation.concatWith(TypeConstants.JAVA_LANG_ANNOTATION_RETENTIONPOLICY, '.')) + '.' + new String(TypeConstants.UPPER_SOURCE);
+	} else {
+		retention = new String(CharOperation.concatWith(TypeConstants.JAVA_LANG_ANNOTATION_RETENTIONPOLICY, '.')) + '.' + new String(TypeConstants.UPPER_CLASS);
 	}
 	final String value = retention;
 	return 

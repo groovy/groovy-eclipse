@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,7 +34,12 @@ ClasspathDirectory(File directory, String encoding, int mode,
 		AccessRuleSet accessRuleSet, String destinationPath) {
 	super(accessRuleSet, destinationPath);
 	this.mode = mode;
-	this.path = directory.getAbsolutePath();
+	try {
+		this.path = directory.getCanonicalPath();
+	} catch (IOException e) {
+		// should not happen as we know that the file exists
+		this.path = directory.getAbsolutePath();
+	}
 	if (!this.path.endsWith(File.separator))
 		this.path += File.separator;
 	this.directoryCache = new Hashtable(11);

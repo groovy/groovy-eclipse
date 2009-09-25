@@ -47,6 +47,14 @@ public class ClassScope extends Scope {
 		if (supertype.isInterface()) {
 			anonymousType.superclass = getJavaLangObject();
 			anonymousType.superInterfaces = new ReferenceBinding[] { supertype };
+			TypeReference typeReference = this.referenceContext.allocation.type;
+			if (typeReference != null) {
+				if ((supertype.tagBits & TagBits.HasDirectWildcard) != 0) {
+					problemReporter().superTypeCannotUseWildcard(anonymousType, typeReference, supertype);
+					anonymousType.tagBits |= TagBits.HierarchyHasProblems;
+					anonymousType.superInterfaces = Binding.NO_SUPERINTERFACES;
+				}
+			}
 		} else {
 			anonymousType.superclass = supertype;
 			anonymousType.superInterfaces = Binding.NO_SUPERINTERFACES;

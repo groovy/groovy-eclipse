@@ -416,8 +416,18 @@ private MethodBinding createMethod(IBinaryMethod method, long sourceLevel, char[
 			}
 		}
 
-		// Ignore synthetic argument for member types.
-		int startIndex = (method.isConstructor() && isMemberType() && !isStatic()) ? 1 : 0;
+		// Ignore synthetic argument for member types or enum types.
+		int startIndex = 0;
+		if (method.isConstructor()) {
+			if (isMemberType() && !isStatic()) {
+				// enclosing type
+				startIndex++;
+			}
+			if (isEnum()) {
+				// synthetic arguments (String, int)
+				startIndex += 2;
+			}
+		}
 		int size = numOfParams - startIndex;
 		if (size > 0) {
 			parameters = new TypeBinding[size];
@@ -435,7 +445,7 @@ private MethodBinding createMethod(IBinaryMethod method, long sourceLevel, char[
 					// 'paramAnnotations' line up with 'parameters'
 					// int parameter to method.getParameterAnnotations() include the synthetic arg
 					if (paramAnnotations != null)
-						paramAnnotations[i - startIndex] = createAnnotations(method.getParameterAnnotations(i), this.environment, missingTypeNames);
+						paramAnnotations[i - startIndex] = createAnnotations(method.getParameterAnnotations(i - startIndex), this.environment, missingTypeNames);
 				}
 				index = end + 1;
 			}
@@ -866,6 +876,47 @@ public MethodBinding[] getMethods(char[] selector) {
 		for (int i = start, index = 0; i <= end; i++, index++)
 			result[index] = resolveTypesFor(this.methods[i]);
 		return result;
+	}
+	return Binding.NO_METHODS;
+}
+// Answer methods named selector, which take no more than the suggestedParameterLength.
+// The suggested parameter length is optional and may not be guaranteed by every type.
+public MethodBinding[] getMethods(char[] selector, int suggestedParameterLength) {
+	if ((this.tagBits & TagBits.AreMethodsComplete) != 0)
+		return getMethods(selector);
+	// lazily sort methods
+	if ((this.tagBits & TagBits.AreMethodsSorted) == 0) {
+		int length = this.methods.length;
+		if (length > 1)
+			ReferenceBinding.sortMethods(this.methods, 0, length);
+		this.tagBits |= TagBits.AreMethodsSorted;
+	}
+	long range;
+	if ((range = ReferenceBinding.binarySearch(selector, this.methods)) >= 0) {
+		int start = (int) range, end = (int) (range >> 32);
+		int length = end - start + 1;
+		int count = 0;
+		for (int i = start; i <= end; i++) {
+			int len = this.methods[i].parameters.length;
+			if (len <= suggestedParameterLength || (this.methods[i].isVarargs() && len == suggestedParameterLength + 1))
+				count++;
+		}
+		if (count == 0) {
+			MethodBinding[] result = new MethodBinding[length];
+			// iterate methods to resolve them
+			for (int i = start, index = 0; i <= end; i++)
+				result[index++] = resolveTypesFor(this.methods[i]);
+			return result;
+		} else {
+			MethodBinding[] result = new MethodBinding[count];
+			// iterate methods to resolve them
+			for (int i = start, index = 0; i <= end; i++) {
+				int len = this.methods[i].parameters.length;
+				if (len <= suggestedParameterLength || (this.methods[i].isVarargs() && len == suggestedParameterLength + 1))
+					result[index++] = resolveTypesFor(this.methods[i]);
+			}
+			return result;
+		}
 	}
 	return Binding.NO_METHODS;
 }

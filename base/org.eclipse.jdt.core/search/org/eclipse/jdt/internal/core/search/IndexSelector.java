@@ -50,6 +50,7 @@ public static boolean canSeeFocus(SearchPattern pattern, IPath projectOrJarPath)
 		IJavaModel model = JavaModelManager.getJavaModelManager().getJavaModel();
 		IJavaProject project = getJavaProject(projectOrJarPath, model);
 		IJavaElement[] focuses = getFocusedElements(pattern, project);
+		if (focuses.length == 0) return false;
 		if (project != null) {
 			return canSeeFocus(focuses, (JavaProject) project);
 		}
@@ -123,7 +124,7 @@ private static IJavaElement[] getFocusedElements(SearchPattern pattern, IJavaEle
 		IType[] allTypes = superHierarchy.getAllSupertypes(type);
 		int length = allTypes.length;
 		SimpleSet focusSet = new SimpleSet(length+1);
-		focusSet.add(focusElement);
+		if (focusElement != null) focusSet.add(focusElement);
 		for (int i=0; i<length; i++) {
 			IMethod[] methods = allTypes[i].getMethods();
 			int mLength = methods.length;
@@ -146,6 +147,7 @@ private static IJavaElement[] getFocusedElements(SearchPattern pattern, IJavaEle
 		}
 		return focuses;
 	}
+	if (focusElement == null) return new IJavaElement[0];
 	return new IJavaElement[] { focusElement };
 }
 

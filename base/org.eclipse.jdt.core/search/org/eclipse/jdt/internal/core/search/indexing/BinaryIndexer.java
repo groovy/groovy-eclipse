@@ -137,13 +137,11 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 	private void addBinaryRetentionAnnotation(long bits) {
 		char[][] compoundName = TypeConstants.JAVA_LANG_ANNOTATION_RETENTIONPOLICY;
 		addTypeReference(compoundName[compoundName.length-1]);
-		if ((bits & TagBits.AnnotationRuntimeRetention) != 0) {
+		if ((bits & TagBits.AnnotationRuntimeRetention) == TagBits.AnnotationRuntimeRetention) {
 			addFieldReference(TypeConstants.UPPER_RUNTIME);
-		}
-		else if ((bits & TagBits.AnnotationClassRetention) != 0) {
+		} else if ((bits & TagBits.AnnotationClassRetention) != 0) {
 			addFieldReference(TypeConstants.UPPER_CLASS);
-		}
-		else if ((bits & TagBits.AnnotationSourceRetention) != 0) {
+		} else if ((bits & TagBits.AnnotationSourceRetention) != 0) {
 			addFieldReference(TypeConstants.UPPER_SOURCE);
 		}
 	}

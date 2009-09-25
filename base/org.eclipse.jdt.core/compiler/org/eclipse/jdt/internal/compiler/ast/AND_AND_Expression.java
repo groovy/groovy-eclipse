@@ -267,7 +267,8 @@ public class AND_AND_Expression extends BinaryExpression {
 		// check whether comparing identical expressions
 		Binding leftDirect = Expression.getDirectBinding(this.left);
 		if (leftDirect != null && leftDirect == Expression.getDirectBinding(this.right)) {
-			scope.problemReporter().comparingIdenticalExpressions(this);
+			if (!(this.right instanceof Assignment))
+				scope.problemReporter().comparingIdenticalExpressions(this);
 		}
 		return result;
 	}

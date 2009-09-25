@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
 import org.eclipse.jdt.internal.core.search.IRestrictedAccessConstructorRequestor;
 import org.eclipse.jdt.internal.core.search.IRestrictedAccessTypeRequestor;
+import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -407,8 +408,31 @@ public class SearchableEnvironment
 			int matchRule = SearchPattern.R_PREFIX_MATCH;
 			if (camelCaseMatch) matchRule |= SearchPattern.R_CAMELCASE_MATCH;
 			if (monitor != null) {
-				found : while (true) { //the loop will finish if the search request ends or is cancelled
+				IndexManager indexManager = JavaModelManager.getIndexManager();
+				if (indexManager.awaitingJobsCount() == 0) {
+					// indexes were already there, so perform an immediate search to avoid any index rebuilt
+					new BasicSearchEngine(this.workingCopies).searchAllTypeNames(
+						qualification,
+						SearchPattern.R_EXACT_MATCH,
+						simpleName,
+						matchRule, // not case sensitive
+						searchFor,
+						getSearchScope(),
+						typeRequestor,
+						FORCE_IMMEDIATE_SEARCH,
+						progressMonitor);
+				} else {
+					// indexes were not ready, give the indexing a chance to finish small jobs by sleeping 100ms...
 					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// Do nothing
+					}
+					if (monitor.isCanceled()) {
+						throw new OperationCanceledException();
+					}
+					if (indexManager.awaitingJobsCount() == 0) {
+						// indexes are now ready, so perform an immediate search to avoid any index rebuilt
 						new BasicSearchEngine(this.workingCopies).searchAllTypeNames(
 							qualification,
 							SearchPattern.R_EXACT_MATCH,
@@ -417,19 +441,14 @@ public class SearchableEnvironment
 							searchFor,
 							getSearchScope(),
 							typeRequestor,
-							CANCEL_IF_NOT_READY_TO_SEARCH,
+							FORCE_IMMEDIATE_SEARCH,
 							progressMonitor);
-						break found;
-					} catch (OperationCanceledException e) {
-						if (monitor.isCanceled()) {
-							throw e;
-						} else {
-							try {
-								Thread.sleep(50); // indexes are not ready. sleep 50ms and retry the search request
-							} catch (InterruptedException e1) {
-								// Do nothing
-							}
-						}
+					} else {
+						// Indexes are still not ready, so look for types in the model instead of a search request
+						findTypes(
+							new String(prefix),
+							storage,
+							convertSearchFilterToModelFilter(searchFor));
 					}
 				}
 			} else {
@@ -562,29 +581,25 @@ public class SearchableEnvironment
 			int matchRule = SearchPattern.R_PREFIX_MATCH;
 			if (camelCaseMatch) matchRule |= SearchPattern.R_CAMELCASE_MATCH;
 			if (monitor != null) {
-				found : while (true) { //the loop will finish if the search request ends or is cancelled
+				IndexManager indexManager = JavaModelManager.getIndexManager();
+				while (indexManager.awaitingJobsCount() > 0) {
 					try {
-						new BasicSearchEngine(this.workingCopies).searchAllConstructorDeclarations(
-								qualification,
-								simpleName,
-								matchRule,
-								getSearchScope(),
-								constructorRequestor,
-								CANCEL_IF_NOT_READY_TO_SEARCH,
-								progressMonitor);
-						break found;
-					} catch (OperationCanceledException e) {
-						if (monitor.isCanceled()) {
-							throw e;
-						} else {
-							try {
-								Thread.sleep(50); // indexes are not ready. sleep 50ms and retry the search request
-							} catch (InterruptedException e1) {
-								// Do nothing
-							}
-						}
+						Thread.sleep(50); // indexes are not ready,  sleep 50ms...
+					} catch (InterruptedException e) {
+						// Do nothing
+					}
+					if (monitor.isCanceled()) {
+						throw new OperationCanceledException();
 					}
 				}
+				new BasicSearchEngine(this.workingCopies).searchAllConstructorDeclarations(
+						qualification,
+						simpleName,
+						matchRule,
+						getSearchScope(),
+						constructorRequestor,
+						FORCE_IMMEDIATE_SEARCH,
+						progressMonitor);
 			} else {
 				try {
 					new BasicSearchEngine(this.workingCopies).searchAllConstructorDeclarations(

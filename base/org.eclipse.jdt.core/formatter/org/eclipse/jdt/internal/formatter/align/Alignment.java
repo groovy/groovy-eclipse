@@ -379,12 +379,26 @@ public class Alignment {
 
 	public String toString() {
 		StringBuffer buffer = new StringBuffer(10);
+		String className = getClass().getName();
+		className = className.substring(className.lastIndexOf('.')+1);
 		buffer
-			.append(getClass().getName())
-			.append(':')
-			.append("<name: ")	//$NON-NLS-1$
+			.append(className)
+			.append(":<name: ")	//$NON-NLS-1$
 			.append(this.name)
 			.append(">");	//$NON-NLS-1$
+		int indentLength = className.length()+1;
+		buffer.append('\n');
+		for (int i=0; i<indentLength; i++) {
+			buffer.append(' ');
+		}
+		buffer
+			.append("<depth=")	//$NON-NLS-1$
+			.append(depth())
+			.append("><breakIndent=")	//$NON-NLS-1$
+			.append(this.breakIndentationLevel)
+			.append("><shiftBreakIndent=")	//$NON-NLS-1$
+			.append(this.shiftBreakIndentationLevel)
+			.append('>');
 		if (this.enclosing != null) {
 			buffer
 				.append("<enclosingName: ")	//$NON-NLS-1$

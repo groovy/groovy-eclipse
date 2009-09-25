@@ -21,7 +21,9 @@ public PostfixExpression(Expression lhs, Expression expression, int operator, in
 	this.sourceStart = lhs.sourceStart;
 	this.sourceEnd = pos;
 }
-
+public boolean checkCastCompatibility() {
+	return false;
+}
 /**
  * Code generation for PostfixExpression
  *

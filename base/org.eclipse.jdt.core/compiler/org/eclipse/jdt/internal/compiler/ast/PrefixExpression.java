@@ -26,7 +26,9 @@ public PrefixExpression(Expression lhs, Expression expression, int operator, int
 	this.sourceStart = pos;
 	this.sourceEnd = lhs.sourceEnd;
 }
-
+public boolean checkCastCompatibility() {
+	return false;
+}
 public String operatorToString() {
 	switch (this.operator) {
 		case PLUS :

@@ -543,6 +543,14 @@ public TypeDeclaration updatedTypeDeclaration(int depth, Set knownTypes){
 		for (int i = 0; i < this.fieldCount; i++){
 			fieldDeclarations[existingCount + i] = this.fields[i].updatedFieldDeclaration(depth, knownTypes);
 		}
+		
+		for (int i = this.fieldCount - 1; 0 < i; i--) {
+			if (fieldDeclarations[existingCount + i - 1].declarationSourceStart == fieldDeclarations[existingCount + i].declarationSourceStart) {
+				fieldDeclarations[existingCount + i - 1].declarationSourceEnd = fieldDeclarations[existingCount + i].declarationSourceEnd;
+				fieldDeclarations[existingCount + i - 1].declarationEnd = fieldDeclarations[existingCount + i].declarationEnd;
+			}
+		}
+		
 		this.typeDeclaration.fields = fieldDeclarations;
 		if(fieldDeclarations[fieldDeclarations.length - 1].declarationSourceEnd > lastEnd) {
 			lastEnd = fieldDeclarations[fieldDeclarations.length - 1].declarationSourceEnd;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -65,11 +65,7 @@ public class JavadocSingleTypeReference extends SingleTypeReference {
 			Binding binding = scope.getTypeOrPackage(tokens);
 			if (binding instanceof PackageBinding) {
 				this.packageBinding = (PackageBinding) binding;
-				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=211054
-				// allow references to current package only. All other package references should be reported as invalid
-				if (scope.compilationUnitScope().fPackage != this.packageBinding) {
-					scope.problemReporter().javadocInvalidReference(this.sourceStart, this.sourceEnd);
-				}
+				// Valid package references are allowed in Javadoc (https://bugs.eclipse.org/bugs/show_bug.cgi?id=281609)
 			} else {
 				if (this.resolvedType.problemId() == ProblemReasons.NonStaticReferenceInStaticContext) {
 					TypeBinding closestMatch = this.resolvedType.closestMatch();

@@ -27,7 +27,7 @@ public interface TagBits {
 	long AnonymousTypeMask = LocalTypeMask | IsAnonymousType | ContainsNestedTypeReferences;
 	long IsBinaryBinding = ASTNode.Bit7;
 
-	// set for all bindings either represeting a missing type (type), or directly referencing a missing type (field/method/variable)
+	// set for all bindings either representing a missing type (type), or directly referencing a missing type (field/method/variable)
 	long HasMissingType = ASTNode.Bit8;
 
 	// for method
@@ -60,7 +60,7 @@ public interface TagBits {
 	// test bit to identify if the type's type variables have been connected
 	long TypeVariablesAreConnected = ASTNode.Bit19;
 
-	// set for parameterized type with successfull bound check
+	// set for parameterized type with successful bound check
 	long PassedBoundCheck = ASTNode.Bit23;
 
 	// set for parameterized type NOT of the form X<?,?>

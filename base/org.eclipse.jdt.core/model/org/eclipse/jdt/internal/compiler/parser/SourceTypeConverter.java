@@ -134,8 +134,11 @@ public class SourceTypeConverter extends TypeConverter {
 		// GROOVY end
 		
 		if (this.has1_5Compliance && ((CompilationUnitElementInfo) ((JavaElement) this.cu).getElementInfo()).annotationNumber > 10) { // experimental value
-			// if more than 10 annotations, diet parse as this is faster
-			return new Parser(this.problemReporter, true).dietParse(this.cu, compilationResult);
+			// If more than 10 annotations, diet parse as this is faster, but not if
+			// the client wants local and anonymous types to be converted (https://bugs.eclipse.org/bugs/show_bug.cgi?id=254738) 
+			if ((this.flags & LOCAL_TYPE) == 0) {
+				return new Parser(this.problemReporter, true).dietParse(this.cu, compilationResult);
+			}
 		}
 
 		/* only positions available */

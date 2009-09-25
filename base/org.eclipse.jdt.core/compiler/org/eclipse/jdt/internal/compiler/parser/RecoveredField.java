@@ -48,6 +48,26 @@ public RecoveredField(FieldDeclaration fieldDeclaration, RecoveredElement parent
 	this.alreadyCompletedFieldInitialization = fieldDeclaration.initialization != null;
 }
 /*
+ * Record a field declaration
+ */
+public RecoveredElement add(FieldDeclaration addedfieldDeclaration, int bracketBalanceValue) {
+
+	/* default behavior is to delegate recording to parent if any */
+	resetPendingModifiers();
+	if (this.parent == null) return this; // ignore
+	
+	if (this.fieldDeclaration.declarationSourceStart == addedfieldDeclaration.declarationSourceStart) {
+		if (this.fieldDeclaration.initialization != null) {
+			this.updateSourceEndIfNecessary(this.fieldDeclaration.initialization.sourceEnd);
+		} else {
+			this.updateSourceEndIfNecessary(this.fieldDeclaration.sourceEnd);
+		}
+	} else {
+		this.updateSourceEndIfNecessary(previousAvailableLineEnd(addedfieldDeclaration.declarationSourceStart - 1));
+	}
+	return this.parent.add(addedfieldDeclaration, bracketBalanceValue);
+}
+/*
  * Record an expression statement if field is expecting an initialization expression,
  * used for completion inside field initializers.
  */

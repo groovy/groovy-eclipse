@@ -42,7 +42,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public final static int Bit17 = 0x10000;			// compound assigned (reference lhs) | unchecked (msg, alloc, explicit constr call)
 	public final static int Bit18 = 0x20000;			// non null (expression) | onDemand (import reference)
 	public final static int Bit19 = 0x40000;			// didResolve (parameterized qualified type ref/parameterized single type ref)  | empty (javadoc return statement) | needReceiverGenericCast (msg/fieldref)
-	public final static int Bit20 = 0x80000;
+	public final static int Bit20 = 0x80000;			// contains syntax errors (method declaration, type declaration, field declarations, initializer)
 	public final static int Bit21 = 0x100000;
 	public final static int Bit22 = 0x200000;			// parenthesis count (expression) | used (import reference)
 	public final static int Bit23 = 0x400000;			// parenthesis count (expression)
@@ -225,6 +225,9 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 
 	// for annotation reference
 	public static final int IsRecovered = Bit6;
+
+	// for type declaration, initializer and method declaration
+	public static final int HasSyntaxErrors = Bit20;
 
 	// constants used when checking invocation arguments
 	public static final int INVOCATION_ARGUMENT_OK = 0;

@@ -330,7 +330,10 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 							if (isDomParser || isFormatterParser) {
 								if (lineHasStar) {
 									this.lineStarted = true;
-									if (this.textStart == -1) this.textStart = previousPosition;
+									if (this.textStart == -1) {
+										this.textStart = previousPosition;
+										if (this.index <= this.javadocTextEnd) textEndPosition = this.index;
+									}
 								}
 								if (!this.lineStarted) {
 									lineHasStar = true;

@@ -186,6 +186,9 @@ public class InternalNamingConventions {
 		if (endIndex > 0) {
 			nameParts[++namePartsPtr] = CharOperation.subarray(sourceName, 0, endIndex);
 		}
+		if (namePartsPtr == -1) {
+			return new char[][] { sourceName };
+		}
 		
 		if (isConstantField) {
 			return generateConstantName(nameParts, namePartsPtr, onlyLongest);

@@ -815,15 +815,20 @@ public void parseMethods(Parser parser, CompilationUnitDeclaration unit) {
 	//members
 	if (this.memberTypes != null) {
 		int length = this.memberTypes.length;
-		for (int i = 0; i < length; i++)
-			this.memberTypes[i].parseMethods(parser, unit);
+		for (int i = 0; i < length; i++) {
+			TypeDeclaration typeDeclaration = this.memberTypes[i];
+			typeDeclaration.parseMethods(parser, unit);
+			this.bits |= (typeDeclaration.bits & ASTNode.HasSyntaxErrors);
+		}
 	}
 
 	//methods
 	if (this.methods != null) {
 		int length = this.methods.length;
 		for (int i = 0; i < length; i++) {
-			this.methods[i].parseStatements(parser, unit);
+			AbstractMethodDeclaration abstractMethodDeclaration = this.methods[i];
+			abstractMethodDeclaration.parseStatements(parser, unit);
+			this.bits |= (abstractMethodDeclaration.bits & ASTNode.HasSyntaxErrors);
 		}
 	}
 
@@ -835,6 +840,7 @@ public void parseMethods(Parser parser, CompilationUnitDeclaration unit) {
 			switch(fieldDeclaration.getKind()) {
 				case AbstractVariableDeclaration.INITIALIZER:
 					((Initializer) fieldDeclaration).parseStatements(parser, this, unit);
+					this.bits |= (fieldDeclaration.bits & ASTNode.HasSyntaxErrors);
 					break;
 			}
 		}

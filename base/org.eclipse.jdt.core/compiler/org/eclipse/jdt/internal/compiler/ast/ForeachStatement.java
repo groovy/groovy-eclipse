@@ -62,7 +62,7 @@ public class ForeachStatement extends Statement {
 
 	int postCollectionInitStateIndex = -1;
 	int mergedInitStateIndex = -1;
-	
+
 	public ForeachStatement(
 		LocalDeclaration elementVariable,
 		int start) {
@@ -97,7 +97,7 @@ public class ForeachStatement extends Statement {
 		actionInfo.markAsDefinitelyUnknown(this.elementVariable.binding);
 		FlowInfo exitBranch;
 		if (!(this.action == null || (this.action.isEmptyBlock()
-		        	&& currentScope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_3))) {
+				&& currentScope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_3))) {
 
 			if (this.action.complainIfUnreachable(actionInfo, this.scope, initialComplaintLevel) < Statement.COMPLAINED_UNREACHABLE) {
 				actionInfo = this.action.analyseCode(this.scope, loopingContext, actionInfo).unconditionalCopy();
@@ -105,7 +105,7 @@ public class ForeachStatement extends Statement {
 
 			// code generation can be optimized when no need to continue in the loop
 			exitBranch = flowInfo.unconditionalCopy().
-				addInitializationsFrom(condInfo.initsWhenFalse());
+			addInitializationsFrom(condInfo.initsWhenFalse());
 			// TODO (maxime) no need to test when false: can optimize (same for action being unreachable above)
 			if ((actionInfo.tagBits & loopingContext.initsOnContinue.tagBits &
 					FlowInfo.UNREACHABLE) != 0) {
@@ -122,8 +122,8 @@ public class ForeachStatement extends Statement {
 		// we need the variable to iterate the collection even if the
 		// element variable is not used
 		final boolean hasEmptyAction = this.action == null
-				|| this.action.isEmptyBlock()
-				|| ((this.action.bits & IsUsefulEmptyStatement) != 0);
+		|| this.action.isEmptyBlock()
+		|| ((this.action.bits & IsUsefulEmptyStatement) != 0);
 
 		switch(this.kind) {
 			case ARRAY :
@@ -146,13 +146,13 @@ public class ForeachStatement extends Statement {
 
 		FlowInfo mergedInfo = FlowInfo.mergedOptimizedBranches(
 				(loopingContext.initsOnBreak.tagBits &
-					FlowInfo.UNREACHABLE) != 0 ?
-					loopingContext.initsOnBreak :
-					flowInfo.addInitializationsFrom(loopingContext.initsOnBreak), // recover upstream null info
-				false,
-				exitBranch,
-				false,
-				true /*for(;;){}while(true); unreachable(); */);
+						FlowInfo.UNREACHABLE) != 0 ?
+								loopingContext.initsOnBreak :
+									flowInfo.addInitializationsFrom(loopingContext.initsOnBreak), // recover upstream null info
+									false,
+									exitBranch,
+									false,
+									true /*for(;;){}while(true); unreachable(); */);
 		this.mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(mergedInfo);
 		return mergedInfo;
 	}
@@ -379,10 +379,12 @@ public class ForeachStatement extends Statement {
 		TypeBinding elementType = this.elementVariable.type.resolvedType;
 		TypeBinding collectionType = this.collection == null ? null : this.collection.resolveType(this.scope);
 
+		TypeBinding expectedCollectionType = null;
 		if (elementType != null && collectionType != null) {
 			if (collectionType.isArrayType()) { // for(E e : E[])
 				this.kind = ARRAY;
-				this.collection.computeConversion(this.scope,collectionType, collectionType);
+				expectedCollectionType = upperScope.createArrayType(elementType, 1);
+				this.collection.computeConversion(this.scope, expectedCollectionType, collectionType);
 				this.collectionElementType = ((ArrayBinding) collectionType).elementsType();
 				if (!this.collectionElementType.isCompatibleWith(elementType)
 						&& !this.scope.isBoxingCompatibleWith(this.collectionElementType, elementType)) {
@@ -391,6 +393,7 @@ public class ForeachStatement extends Statement {
 				// in case we need to do a conversion
 				int compileTimeTypeID = this.collectionElementType.id;
 				if (elementType.isBaseType()) {
+					expectedCollectionType = null;
 					if (!this.collectionElementType.isBaseType()) {
 						compileTimeTypeID = this.scope.environment().computeBoxingType(this.collectionElementType).id;
 						this.elementVariableImplicitWidening = UNBOXING;
@@ -401,30 +404,29 @@ public class ForeachStatement extends Statement {
 					} else {
 						this.elementVariableImplicitWidening = (elementType.id << 4) + compileTimeTypeID;
 					}
-				} else {
-					if (this.collectionElementType.isBaseType()) {
-						int boxedID = this.scope.environment().computeBoxingType(this.collectionElementType).id;
-						this.elementVariableImplicitWidening = BOXING | (compileTimeTypeID << 4) | compileTimeTypeID; // use primitive type in implicit conversion
-						compileTimeTypeID = boxedID;
-						this.scope.problemReporter().autoboxing(this.collection, this.collectionElementType, elementType);
-					}
+				} else if (this.collectionElementType.isBaseType()) {
+					expectedCollectionType = null;
+					int boxedID = this.scope.environment().computeBoxingType(this.collectionElementType).id;
+					this.elementVariableImplicitWidening = BOXING | (compileTimeTypeID << 4) | compileTimeTypeID; // use primitive type in implicit conversion
+					compileTimeTypeID = boxedID;
+					this.scope.problemReporter().autoboxing(this.collection, this.collectionElementType, elementType);
 				}
 			} else if (collectionType instanceof ReferenceBinding) {
-			    ReferenceBinding iterableType = ((ReferenceBinding)collectionType).findSuperTypeOriginatingFrom(T_JavaLangIterable, false /*Iterable is not a class*/);
-			    checkIterable: {
-			    	if (iterableType == null) break checkIterable;
+				ReferenceBinding iterableType = ((ReferenceBinding)collectionType).findSuperTypeOriginatingFrom(T_JavaLangIterable, false /*Iterable is not a class*/);
+				checkIterable: {
+					if (iterableType == null) break checkIterable;
 
 					this.iteratorReceiverType = collectionType.erasure();
 					if (((ReferenceBinding)this.iteratorReceiverType).findSuperTypeOriginatingFrom(T_JavaLangIterable, false) == null) {
 						this.iteratorReceiverType = iterableType; // handle indirect inheritance thru variable secondary bound
-	   					this.collection.computeConversion(this.scope, iterableType, collectionType);
+						this.collection.computeConversion(this.scope, iterableType, collectionType);
 					} else {
-	   					this.collection.computeConversion(this.scope, collectionType, collectionType);
+						this.collection.computeConversion(this.scope, collectionType, collectionType);
 					}
 
-			    	TypeBinding[] arguments = null;
-			    	switch (iterableType.kind()) {
-			    		case Binding.RAW_TYPE : // for(Object o : Iterable)
+					TypeBinding[] arguments = null;
+					switch (iterableType.kind()) {
+						case Binding.RAW_TYPE : // for(Object o : Iterable)
 							this.kind = RAW_ITERABLE;
 							this.collectionElementType = this.scope.getJavaLangObject();
 							if (!this.collectionElementType.isCompatibleWith(elementType)
@@ -432,20 +434,20 @@ public class ForeachStatement extends Statement {
 								this.scope.problemReporter().notCompatibleTypesErrorInForeach(this.collection, this.collectionElementType, elementType);
 							}
 							// no conversion needed as only for reference types
-			    			break checkIterable;
+							break checkIterable;
 
-			    		case Binding.GENERIC_TYPE : // for (T t : Iterable<T>) - in case used inside Iterable itself
-			    			arguments = iterableType.typeVariables();
-			    			break;
+						case Binding.GENERIC_TYPE : // for (T t : Iterable<T>) - in case used inside Iterable itself
+							arguments = iterableType.typeVariables();
+							break;
 
-			    		case Binding.PARAMETERIZED_TYPE : // for(E e : Iterable<E>)
-			    			arguments = ((ParameterizedTypeBinding)iterableType).arguments;
-			    			break;
+						case Binding.PARAMETERIZED_TYPE : // for(E e : Iterable<E>)
+							arguments = ((ParameterizedTypeBinding)iterableType).arguments;
+							break;
 
-			    		default:
-			    			break checkIterable;
-			    	}
-			    	// generic or parameterized case
+						default:
+							break checkIterable;
+					}
+					// generic or parameterized case
 					if (arguments.length != 1) break checkIterable; // per construction can only be one
 					this.kind = GENERIC_ITERABLE;
 
@@ -473,7 +475,7 @@ public class ForeachStatement extends Statement {
 							compileTimeTypeID = boxedID;
 						}
 					}
-			    }
+				}
 			}
 			switch(this.kind) {
 				case ARRAY :
@@ -481,13 +483,16 @@ public class ForeachStatement extends Statement {
 					this.indexVariable = new LocalVariableBinding(SecretIndexVariableName, TypeBinding.INT, ClassFileConstants.AccDefault, false);
 					this.scope.addLocalVariable(this.indexVariable);
 					this.indexVariable.setConstant(Constant.NotAConstant); // not inlinable
-
 					// allocate #max secret variable
 					this.maxVariable = new LocalVariableBinding(SecretMaxVariableName, TypeBinding.INT, ClassFileConstants.AccDefault, false);
 					this.scope.addLocalVariable(this.maxVariable);
 					this.maxVariable.setConstant(Constant.NotAConstant); // not inlinable
 					// add #array secret variable (of collection type)
-					this.collectionVariable = new LocalVariableBinding(SecretCollectionVariableName, collectionType, ClassFileConstants.AccDefault, false);
+					if (expectedCollectionType == null) {
+						this.collectionVariable = new LocalVariableBinding(SecretCollectionVariableName, collectionType, ClassFileConstants.AccDefault, false);
+					} else {
+						this.collectionVariable = new LocalVariableBinding(SecretCollectionVariableName, expectedCollectionType, ClassFileConstants.AccDefault, false);
+					}
 					this.scope.addLocalVariable(this.collectionVariable);
 					this.collectionVariable.setConstant(Constant.NotAConstant); // not inlinable
 					break;

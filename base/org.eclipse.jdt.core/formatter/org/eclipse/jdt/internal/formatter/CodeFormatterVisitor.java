@@ -4114,17 +4114,19 @@ public class CodeFormatterVisitor extends ASTVisitor {
 			}
 			this.scribe.scanner.resetTo(methodDeclaration.declarationSourceEnd + 1, this.scribe.scannerEndPosition - 1);
 			this.scribe.printTrailingComment();
-			switch(this.scribe.scanner.source[this.scribe.scanner.currentPosition]) {
-				case '\n' :
-					this.scribe.scanner.currentPosition++;
-					this.scribe.lastNumberOfNewLines = 1;
-					break;
-				case '\r' :
-					this.scribe.scanner.currentPosition++;
-					if (this.scribe.scanner.source[this.scribe.scanner.currentPosition] == '\n') {
+			if (!this.scribe.scanner.atEnd()) {
+				switch(this.scribe.scanner.source[this.scribe.scanner.currentPosition]) {
+					case '\n' :
 						this.scribe.scanner.currentPosition++;
-					}
-					this.scribe.lastNumberOfNewLines = 1;
+						this.scribe.lastNumberOfNewLines = 1;
+						break;
+					case '\r' :
+						this.scribe.scanner.currentPosition++;
+						if (this.scribe.scanner.source[this.scribe.scanner.currentPosition] == '\n') {
+							this.scribe.scanner.currentPosition++;
+						}
+						this.scribe.lastNumberOfNewLines = 1;
+				}
 			}
 			return false;
 		}

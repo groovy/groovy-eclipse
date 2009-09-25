@@ -1274,10 +1274,14 @@ boolean isPackage(char[][] compoundName, char[] name) {
 // The method verifier is lazily initialized to guarantee the receiver, the compiler & the oracle are ready.
 public MethodVerifier methodVerifier() {
 	if (this.verifier == null)
-		this.verifier = this.globalOptions.sourceLevel < ClassFileConstants.JDK1_5
+		this.verifier = newMethodVerifier();
+	return this.verifier;
+}
+
+public MethodVerifier newMethodVerifier() {
+	return this.globalOptions.sourceLevel < ClassFileConstants.JDK1_5
 			? new MethodVerifier(this)
 			: new MethodVerifier15(this); // covariance only if sourceLevel is >= 1.5
-	return this.verifier;
 }
 
 public void releaseClassFiles(org.eclipse.jdt.internal.compiler.ClassFile[] classFiles) {

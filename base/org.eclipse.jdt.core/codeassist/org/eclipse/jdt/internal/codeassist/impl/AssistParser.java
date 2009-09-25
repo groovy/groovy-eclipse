@@ -1285,6 +1285,7 @@ public void parseBlockStatements(ConstructorDeclaration cd, CompilationUnitDecla
 	}
 
 	if (this.lastAct == ERROR_ACTION) {
+		cd.bits |= ASTNode.HasSyntaxErrors;
 		return;
 	}
 
@@ -1352,6 +1353,7 @@ public void parseBlockStatements(
 	}
 
 	if (this.lastAct == ERROR_ACTION) {
+		initializer.bits |= ASTNode.HasSyntaxErrors;
 		return;
 	}
 
@@ -1408,6 +1410,7 @@ public void parseBlockStatements(MethodDeclaration md, CompilationUnitDeclaratio
 	}
 
 	if (this.lastAct == ERROR_ACTION) {
+		md.bits |= ASTNode.HasSyntaxErrors;
 		return;
 	}
 

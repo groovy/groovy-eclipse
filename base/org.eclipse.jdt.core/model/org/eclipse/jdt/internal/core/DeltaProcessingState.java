@@ -472,6 +472,10 @@ public class DeltaProcessingState implements IResourceChangeListener {
 			// TODO (jerome) see 47631, may want to get rid of following so as to reuse delta processor ?
 			if (event.getType() == IResourceChangeEvent.POST_CHANGE) {
 				this.deltaProcessors.set(null);
+			} else {
+				// If we are going to reuse the delta processor of this thread, don't hang on to state
+				// that isn't meant to be reused. https://bugs.eclipse.org/bugs/show_bug.cgi?id=273385
+				getDeltaProcessor().overridenEventType = -1;
 			}
 		}
 

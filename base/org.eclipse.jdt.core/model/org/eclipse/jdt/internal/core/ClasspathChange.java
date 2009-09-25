@@ -73,7 +73,8 @@ public class ClasspathChange {
 	private int classpathContains(IClasspathEntry[] list, IClasspathEntry entry) {
 		IPath[] exclusionPatterns = entry.getExclusionPatterns();
 		IPath[] inclusionPatterns = entry.getInclusionPatterns();
-		nextEntry: for (int i = 0; i < list.length; i++) {
+		int listLen = list == null ? 0 : list.length;
+		nextEntry: for (int i = 0; i < listLen; i++) {
 			IClasspathEntry other = list[i];
 			if (other.getContentKind() == entry.getContentKind()
 				&& other.getEntryKind() == entry.getEntryKind()
@@ -456,7 +457,7 @@ public class ClasspathChange {
 		DeltaProcessingState state = manager.deltaState;
 
 		int newLength = newResolvedClasspath.length;
-		int oldLength = this.oldResolvedClasspath.length;
+		int oldLength = this.oldResolvedClasspath == null ? 0 : this.oldResolvedClasspath.length;
 		for (int i = 0; i < oldLength; i++) {
 			int index = classpathContains(newResolvedClasspath, this.oldResolvedClasspath[i]);
 			if (index == -1) {

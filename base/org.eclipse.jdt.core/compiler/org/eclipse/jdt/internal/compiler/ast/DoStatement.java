@@ -25,6 +25,7 @@ public class DoStatement extends Statement {
 
 	// for local variables table attributes
 	int mergedInitStateIndex = -1;
+	int preConditionInitStateIndex = -1;
 
 public DoStatement(Expression condition, Statement action, int sourceStart, int sourceEnd) {
 
@@ -89,6 +90,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			(this.action == null
 				? actionInfo
 				: (actionInfo.mergedWith(loopingContext.initsOnContinue))).copy());
+	this.preConditionInitStateIndex = currentScope.methodScope().recordInitializationStates(actionInfo);
 	if (!isConditionOptimizedFalse && this.continueLabel != null) {
 		loopingContext.complainOnDeferredFinalChecks(currentScope, condInfo);
 		condLoopContext.complainOnDeferredFinalChecks(currentScope, condInfo);
@@ -145,6 +147,11 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	// continue label (135602)
 	if (hasContinueLabel) {
 		this.continueLabel.place();
+		// May loose some local variable initializations : affecting the local variable attributes
+		if (this.preConditionInitStateIndex != -1) {
+			codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.preConditionInitStateIndex);
+			codeStream.addDefinitelyAssignedVariables(currentScope, this.preConditionInitStateIndex);
+		}
 		// generate condition
 		Constant cst = this.condition.optimizedBooleanConstant();
 		boolean isConditionOptimizedFalse = cst != Constant.NotAConstant && cst.booleanValue() == false;

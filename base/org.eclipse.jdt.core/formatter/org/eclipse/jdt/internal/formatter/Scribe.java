@@ -14,12 +14,16 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Map;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
@@ -316,17 +320,22 @@ public class Scribe implements IJavaDocTagConstants {
 					    	int linesCount = linesOutside >= linesReplaced ? linesReplaced : linesOutside;
 					    	if (linesCount > 0) {
 					    		int idx=0;
-					    		while (idx < length) {
+					    		loop: while (idx < length) {
 					    			char ch = edit.replacement.charAt(idx);
-					    			if (ch == '\n') {
-					    				linesCount--;
-					    				if (linesCount == 0) {
-					    					idx++;
+					    			switch (ch) {
+					    				case '\n':
+						    				linesCount--;
+						    				if (linesCount == 0) {
+						    					idx++;
+						    					break loop;
+						    				}
+						    				break;
+					    				case '\r':
+					    				case ' ':
+					    				case '\t':
 					    					break;
-					    				}
-					    			}
-					    			else if (ch != '\r') {
-					    				break;
+					    				default:
+					    					break loop;
 					    			}
 					    			idx++;
 					    		}
@@ -934,10 +943,12 @@ public class Scribe implements IJavaDocTagConstants {
 		if (count == 0) {
 			// preserve line breaks in wrapping if specified
 			// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=198074
-			if (this.currentAlignment != null && this.memberAlignment != null && !this.formatter.preferences.join_wrapped_lines) {
-				if (this.memberAlignment.depth() <= this.currentAlignment.depth()) {
-					int savedIndentation = this.indentationLevel;
+			if (this.currentAlignment != null && !this.formatter.preferences.join_wrapped_lines) {
+				// insert a new line only if it has not been already done before
+				// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=283476
+				if (this.lastNumberOfNewLines == 0) {
 					StringBuffer buffer = new StringBuffer(getNewLine());
+					int savedIndentation = this.indentationLevel;
 					this.indentationLevel = this.currentAlignment.breakIndentationLevel;
 					printIndentationIfNecessary(buffer);
 					this.indentationLevel = savedIndentation;
@@ -1855,46 +1866,52 @@ public class Scribe implements IJavaDocTagConstants {
 			return;
 		}
 
-		// 3 - process snippet (@see JavaDocRegion#formatCodeSnippet)
+		// 3 - format snippet (@see JavaDocRegion#formatCodeSnippet)
 		// include comments in case of line comments are present in the snippet
 		String formattedSnippet = convertedSnippet;
-		TextEdit edit= CommentFormatterUtil.format2(CodeFormatter.K_UNKNOWN | CodeFormatter.F_INCLUDE_COMMENTS, convertedSnippet, 0, this.lineSeparator, this.formatter.preferences.getMap());
-		if (edit != null) {
-			formattedSnippet= CommentFormatterUtil.evaluateFormatterEdit(convertedSnippet, edit, null);
+		Map options = this.formatter.preferences.getMap();
+		if (this.scanner.sourceLevel > ClassFileConstants.JDK1_3) {
+			options.put(JavaCore.COMPILER_SOURCE, CompilerOptions.versionFromJdkLevel(this.scanner.sourceLevel));
+		}
+		TextEdit edit= CommentFormatterUtil.format2(CodeFormatter.K_UNKNOWN | CodeFormatter.F_INCLUDE_COMMENTS, convertedSnippet, 0, this.lineSeparator, options);
+		if (edit == null) {
+			// 3.a - not a valid code to format, keep initial buffer
+			formattedSnippet = inputBuffer.toString();
+		} else {
+			// 3.b - valid code formatted
+			// 3.b.i - get the result
+			formattedSnippet = CommentFormatterUtil.evaluateFormatterEdit(convertedSnippet, edit, null);
+
+			// 3.b.ii- convert back to HTML (@see JavaDocRegion#convertJava2Html)
+			Java2HTMLEntityReader javaReader= new Java2HTMLEntityReader(new StringReader(formattedSnippet));
+			buf= new char[256];
+			StringBuffer conversionBuffer= new StringBuffer();
+			int l;
+			try {
+				do {
+					l= javaReader.read(buf);
+					if (l != -1)
+						conversionBuffer.append(buf, 0, l);
+				} while (l > 0);
+				formattedSnippet = conversionBuffer.toString();
+			} catch (IOException e) {
+				// should not happen
+				CommentFormatterUtil.log(e);
+				return;
+			}
 		}
 
 		// 4 - add the content prefix (@see JavaDocRegion#postprocessCodeSnippet)
-		StringBuffer outputBuffer= new StringBuffer();
-		tracker= new DefaultLineTracker();
+		StringBuffer outputBuffer = new StringBuffer();
+		tracker = new DefaultLineTracker();
 		this.column = 1;
 		printIndentationIfNecessary(outputBuffer); // append indentation
 		outputBuffer.append(BLOCK_LINE_PREFIX);
 		String linePrefix = outputBuffer.toString();
 		outputBuffer.setLength(0);
-
-		// 5 - convert back to HTML (@see JavaDocRegion#convertJava2Html)
-		Java2HTMLEntityReader javaReader= new Java2HTMLEntityReader(new StringReader(formattedSnippet));
-		buf= new char[256];
-		StringBuffer conversionBuffer= new StringBuffer();
-		int l;
-		try {
-			do {
-				l= javaReader.read(buf);
-				if (l != -1)
-					conversionBuffer.append(buf, 0, l);
-			} while (l > 0);
-			formattedSnippet = conversionBuffer.toString();
-		} catch (IOException e) {
-			// should not happen
-			CommentFormatterUtil.log(e);
-			return;
-		}
-
 		outputBuffer.append(formattedSnippet);
-
 		tracker.set(outputBuffer.toString());
-
-		for (int lines= tracker.getNumberOfLines() - 1; lines > 0; lines--) {
+		for (int lines=tracker.getNumberOfLines() - 1; lines > 0; lines--) {
 			try {
 				outputBuffer.insert(tracker.getLineOffset(lines), linePrefix);
 			} catch (BadLocationException e) {
@@ -1903,7 +1920,8 @@ public class Scribe implements IJavaDocTagConstants {
 				return;
 			}
 		}
-		// replace old text with the formatted snippet
+
+		// 5 - replace old text with the formatted snippet
 		addReplaceEdit(startPosition, endPosition, outputBuffer.toString());
 	}
 
@@ -2142,7 +2160,7 @@ public class Scribe implements IJavaDocTagConstants {
 		int indentLevel = this.indentationLevel;
 		int indentations = this.numberOfIndentations;
 		this.indentationLevel = getNextIndentationLevel(firstColumn);
-		this.numberOfIndentations = this.indentationLevel / this.indentationSize;
+		this.numberOfIndentations = this.indentationSize==0 ? 0 : this.indentationLevel / this.indentationSize;
 
 		// Consume the comment prefix
 		this.scanner.resetTo(commentStart, commentEnd);

@@ -294,9 +294,10 @@ public final boolean canBeSeenBy(Scope scope) {
 		//    OR previous assertions are true for one of the enclosing type
 		if (invocationType.fPackage == this.fPackage) return true;
 
-		TypeBinding currentType = invocationType.erasure();
-		TypeBinding declaringClass = enclosingType().erasure(); // protected types always have an enclosing one
+		TypeBinding declaringClass = enclosingType(); // protected types always have an enclosing one
 		if (declaringClass == null) return false; // could be null if incorrect top-level protected type
+		declaringClass = declaringClass.erasure();// erasure cannot be null
+		TypeBinding currentType = invocationType.erasure();
 		// int depth = 0;
 		do {
 			if (declaringClass == invocationType) return true;
@@ -770,6 +771,12 @@ public ReferenceBinding getMemberType(char[] typeName) {
 
 public MethodBinding[] getMethods(char[] selector) {
 	return Binding.NO_METHODS;
+}
+
+// Answer methods named selector, which take no more than the suggestedParameterLength.
+// The suggested parameter length is optional and may not be guaranteed by every type.
+public MethodBinding[] getMethods(char[] selector, int suggestedParameterLength) {
+	return getMethods(selector);
 }
 
 /**
