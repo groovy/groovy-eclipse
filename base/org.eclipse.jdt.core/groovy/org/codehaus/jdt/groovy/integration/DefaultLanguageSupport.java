@@ -41,7 +41,7 @@ class DefaultLanguageSupport implements LanguageSupport {
 		} else { // if (variant==2) {
 			return new CommentRecorderParser(problemReporter, parseLiteralExpressionsAsConstants);
 		}
-	}
+	} 
 	
     public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
 			CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals,
