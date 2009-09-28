@@ -9,11 +9,9 @@
  ******************************************************************************/
 package org.codehaus.groovy.eclipse.debug.ui;
 
-import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate;
-import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.ui.IEditorActionDelegate;
@@ -30,24 +28,7 @@ public class GroovyBreakpointRulerActionDelegate extends RulerToggleBreakpointAc
 	 * @see IEditorActionDelegate#setActiveEditor(bIAction, IEditorPart)
 	 */
 	public void setActiveEditor(IAction callerAction, IEditorPart targetEditor) {
-		// only care about compilation unit and class file editors
 		fEditorPart = targetEditor;
-		if (targetEditor != null) {
-			String id= targetEditor.getSite().getId();
-//			System.err.println("ID="+id);
-//			System.err.println("JavaUI.ID_CU_EDITOR="+JavaUI.ID_CU_EDITOR);
-//			System.err.println("JavaUI.ID_CF_EDITOR="+JavaUI.ID_CF_EDITOR);
-
-// ASC - This is a copy of the JDT internal class, but the if() has been
-// extended to allow for our Groovy CompilationUnitEditor - this CUE is
-// the same as the ID_CU_EDITOR but for Aspects, to ensure breakpoints
-// are handled the same by the Groovy editor as they are by the ID_CU_EDITOR
-// we have to ensure the targetEditor below is not nulled out.
-			if (!id.equals(JavaUI.ID_CU_EDITOR) && !id.equals(JavaUI.ID_CF_EDITOR) 
-			&& 
-			!id.equals(GroovyEditor.EDITOR_ID))
-				targetEditor= null;
-		}
 		super.setActiveEditor(callerAction, targetEditor);
 	}
 
@@ -67,7 +48,7 @@ public class GroovyBreakpointRulerActionDelegate extends RulerToggleBreakpointAc
 						fEditorPart);
 			}
 		}
-		//	else: use jdts action
+		//	else: use jdt's action
 		return super.createAction(editor, rulerInfo);
 	}
 

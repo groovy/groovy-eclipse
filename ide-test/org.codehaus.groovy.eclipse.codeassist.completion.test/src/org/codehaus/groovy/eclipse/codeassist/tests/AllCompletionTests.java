@@ -29,6 +29,7 @@ public class AllCompletionTests {
         suite.addTestSuite(InferencingCompletionTests.class);
         suite.addTestSuite(FieldCompletionTests.class);
         suite.addTestSuite(GroovyLikeCompletionTests.class);
+        suite.addTestSuite(OtherCompletionTests.class);
         
         return suite;
     }

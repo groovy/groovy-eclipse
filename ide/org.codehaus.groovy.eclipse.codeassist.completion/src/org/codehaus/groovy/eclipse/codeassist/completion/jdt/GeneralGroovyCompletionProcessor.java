@@ -231,6 +231,7 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
                 proposal.setAdditionalFlags(CompletionFlags.Default);
                 proposal.setSignature(getMethodSignature(methods[i]));  // this one might be a real type signature
                 proposal.setRelevance(getRelevance(proposal.getName()));  // should set lower
+                // we don't support guessing arguments yet.
                 if (false) {
 //                if (isGuessArguments) {
                     proposals.add(ParameterGuessingProposal.createProposal(proposal, javaContext, isGuessArguments));
@@ -247,14 +248,17 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
         char[][] typeNames = new char[method.getParameters().length][];
         int i = 0;
         for (Parameter param : method.getParameters()) {
-        	try {
-        		typeNames[i] = Signature.getSignatureSimpleName(param.getSignature().toCharArray());
-        	} catch (IllegalArgumentException e) {
-        		// this is a plain old qualified name
-        		String sig = param.getSignature();
-        		String[] splits = sig.split("\\.");
-        		typeNames[i] = (splits.length > 0 ? splits[splits.length-1] : sig).toCharArray();
-        	}
+        	// Type signatures are used for array types only.
+        	// all others uses type names
+    		if (Signature.getArrayCount(param.getSignature()) > 0) {
+    		    typeNames[i] = Signature.getSignatureSimpleName(param.getSignature().toCharArray());
+    		} else {
+    		    // this is a plain old qualified name
+    		    String sig = param.getSignature();
+    		    String[] splits = sig.split("\\.");
+    		    typeNames[i] = (splits.length > 0 ? splits[splits.length-1] : sig).toCharArray();
+    			
+    		}
             i++;
         }
         return typeNames;
@@ -275,11 +279,14 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
     private String getTypeSignature(String typeName) {
         String typeSig;
         // check to see if we have a type signature, or a type name
+        // will be a type signature if the typeName is an array
         boolean isTypeSignature;
         try {
             Signature.getSignatureSimpleName(typeName);
             isTypeSignature = true;
         } catch (IllegalArgumentException e) {
+            isTypeSignature = false;
+        } catch (ArrayIndexOutOfBoundsException e) {
             isTypeSignature = false;
         }
         
