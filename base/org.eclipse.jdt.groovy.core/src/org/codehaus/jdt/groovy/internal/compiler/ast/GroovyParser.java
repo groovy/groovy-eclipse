@@ -12,6 +12,10 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.io.File;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -44,6 +48,7 @@ public class GroovyParser {
 	private String gclClasspath;
 	public static IGroovyDebugRequestor debugRequestor;
 	private CompilerOptions compilerOptions;
+	private static Map<String, GroovyClassLoader> cache = Collections.synchronizedMap(new HashMap<String, GroovyClassLoader>());
 
 	// FIXASC (RC1) review callers who pass null for options
 	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
@@ -51,12 +56,22 @@ public class GroovyParser {
 		// if (options == null) {
 		// throw new RuntimeException("Dont do that");
 		// }
+
+		// FIXASC (M2) classloader cache - is this going to bite me later...
+		// FIXASC (M2) need a control on cache size
 		// FIXASC (M2) set parent of the loader to system or context class loader?
-		GroovyClassLoader gcl = new GroovyClassLoader();
+
+		GroovyClassLoader gcl = (path == null ? null : cache.get(path));
+		if (gcl == null) {
+			gcl = new GroovyClassLoader();
+			configureClasspath(gcl, path);
+			cache.put(path, gcl);
+		}
 		this.gclClasspath = path;
 		this.compilerOptions = options;
-		configureClasspath(gcl, path);
-		this.groovyCompilationUnit = new CompilationUnit(gcl);
+		// FIXASC (M2) Grab support
+		GroovyClassLoader grabbyLoader = null;// avoid this for now: new GrapeAwareGroovyClassLoader();
+		this.groovyCompilationUnit = new CompilationUnit(null, null, grabbyLoader, gcl);
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
 		if ((options.groovyFlags & 0x01) != 0) {
 			// its probably grails!
@@ -66,8 +81,20 @@ public class GroovyParser {
 		// this.lookupEnvironment = lookupEnvironment;
 		this.problemReporter = problemReporter;
 		this.resolver = new JDTResolver(groovyCompilationUnit);
-		groovyCompilationUnit.setClassLoader(gcl);
+		// groovyCompilationUnit.setClassLoader(gcl);
 		groovyCompilationUnit.setResolveVisitor(resolver);
+	}
+
+	static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
+
+		public boolean grabbed = false;
+
+		@Override
+		public void addURL(URL url) {
+			this.grabbed = true;
+			super.addURL(url);
+		}
+
 	}
 
 	// FIXASC (RC1) perf ok?
@@ -104,7 +131,7 @@ public class GroovyParser {
 		// groovyCompilerConfig.setPluginFactory(new ErrorRecoveredCSTParserPluginFactory(null));
 		ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilerConfig);
 		SourceUnit groovySourceUnit = new SourceUnit(new String(sourceUnit.getFileName()), new String(sourceCode),
-				groovyCompilerConfig, null, errorCollector);
+				groovyCompilerConfig, groovyCompilationUnit.getClassLoader(), errorCollector);
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
 				sourceCode.length, groovyCompilationUnit, groovySourceUnit);
 		// FIXASC (M2) get this from the Antlr parser

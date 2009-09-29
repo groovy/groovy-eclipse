@@ -166,12 +166,27 @@ public class CompilerUtils {
 		return project.hasNature("org.eclipse.jdt.groovy.core.groovyNature"); //$NON-NLS-1$
 	}
 	
+	private static String pathToString(IPath path, IProject project) {
+		String realLocation = null;
+		if (path!=null) {
+			String prefix = path.segment(0);
+			if (prefix.equals(project.getName())) {
+				realLocation =  project.getFile(path.removeFirstSegments(1)).getRawLocation().toOSString();
+			} else {
+				realLocation = path.toOSString();
+			}
+		}
+		return realLocation;
+	}
 	
 	private static String calculateClasspath(IJavaProject javaProject) {
 		try {
 			StringBuffer path = new StringBuffer();
 			IProject project = javaProject.getProject();
 			String projectName = project.getName();
+			IPath defaultOutputPath = javaProject.getOutputLocation();
+			String defaultOutputLocation = pathToString(defaultOutputPath,project);
+
 			IClasspathEntry[] cpes = javaProject.getResolvedClasspath(true);
 			if (cpes!=null) {
 				for (int i=0,max=cpes.length;i<max;i++) {
@@ -196,6 +211,8 @@ public class CompilerUtils {
 					path.append(pathElement);
 					path.append(File.pathSeparator);
 				}
+				path.append(defaultOutputLocation); // for picking up transforms built earlier in the process
+				path.append(File.pathSeparator);
 				String classpath = path.toString();
 //				System.out.println("Project classpath for '"+projectName+"' is "+classpath);
 				return classpath;
