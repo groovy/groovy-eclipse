@@ -231,6 +231,15 @@
     	  </classpath>
     </java>
   	
+  	<!-- fix feature patch version -->
+  	<!-- Ensure that feature patch can be installed on multiple versions of Eclipse -->
+  	<!-- See http://aniefer.blogspot.com/2009/06/patching-features-part-2.html -->
+  	<property name="orig.jdt.feature.version.range" value="[3.5.0.v20090527-2000-7r88FEeFJePyvYeA33DjZ_c1,3.5.0.v20090527-2000-7r88FEeFJePyvYeA33DjZ_c1]"/>
+  	<property name="new.jdt.feature.version.range" value="[3.5.0.v20090527-2000-7r88FEeFJePyvYeA33DjZ_c1,3.5.2)"/>
+  	<replace file="${updateSiteDir}/content.xml" summary="yes"
+	    token="${orig.jdt.feature.version.range}" value="${new.jdt.feature.version.range}"/>
+
+  	
   	<!-- Zip up the update site -->
 		<zip destfile="${updateSiteDir}/../groovy-update-site-${org.codehaus.groovy.eclipse.feature}.zip">
 			<fileset dir="${updateSiteDir}">
