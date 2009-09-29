@@ -9,5 +9,6 @@
 	<classpathentry exported="true" kind="lib" path="lib/groovy-1.6.4.jar" sourcepath="lib/groovy-1.6.4-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-2.2.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-tree-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/ivy-2.1.0-rc2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

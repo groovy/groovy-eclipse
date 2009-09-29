@@ -9,6 +9,7 @@ Bundle-ClassPath: groovy-eclipse-1.6.4.jar,
  lib/antlr-2.7.7.jar,
  lib/commons-cli-1.0.jar,
  lib/bsf.jar,
+ lib/ivy-2.1.0-rc2.jar,
  lib/groovy-1.6.4.jar
 Groovy-Runtime-Jars: groovy.jar
 Export-Package: antlr,

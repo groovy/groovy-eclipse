@@ -9,5 +9,6 @@
 	<classpathentry exported="true" kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="commons-cli-1.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="bsf.jar" sourcepath="/net.sf.groovyMonkey/lib/bsf-src-2.4.0.zip"/>
+	<classpathentry kind="lib" path="ivy-2.1.0-rc2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
