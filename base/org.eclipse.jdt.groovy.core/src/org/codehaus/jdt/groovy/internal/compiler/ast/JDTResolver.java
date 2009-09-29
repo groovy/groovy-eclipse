@@ -197,9 +197,32 @@ public class JDTResolver extends ResolveVisitor {
 		if (node != null) {
 			type.setRedirect(node);
 			return true;
-		} else {
-			return false;
 		}
+		// FIXASC (M2) Grab support
+		// GroovyClassLoader loader = compilationUnit.getClassLoader();
+		// if (loader instanceof GrapeAwareGroovyClassLoader) {
+		// GrapeAwareGroovyClassLoader gagc = (GrapeAwareGroovyClassLoader) loader;
+		// if (gagc.grabbed) {
+		// Class cls;
+		// try {
+		// // NOTE: it's important to do no lookup against script files
+		// // here since the GroovyClassLoader would create a new CompilationUnit
+		// cls = loader.loadClass(type.getName(), false, true);
+		// } catch (ClassNotFoundException cnfe) {
+		// // cachedClasses.put(name, SCRIPT);
+		// return false;
+		// } catch (CompilationFailedException cfe) {
+		// // compilationUnit.getErrorCollector().addErrorAndContinue(new ExceptionMessage(cfe, true, source));
+		// return false;
+		// }
+		// if (cls == null)
+		// return false;
+		// node = ClassHelper.make(cls);
+		// type.setRedirect(node);
+		// return true;
+		// }
+		// }
+		return false;
 		// boolean foundit = super.resolveToClass(type);
 		// if (debug) {
 		// log("resolveToClass", type, foundit);
