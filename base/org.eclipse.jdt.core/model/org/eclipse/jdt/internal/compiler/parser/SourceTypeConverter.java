@@ -23,6 +23,7 @@ package org.eclipse.jdt.internal.compiler.parser;
  *
  */
 
+import org.codehaus.jdt.groovy.integration.LanguageSupport;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
@@ -32,6 +33,7 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
@@ -124,7 +126,10 @@ public class SourceTypeConverter extends TypeConverter {
 		// trying to avoid building an incorrect TypeDeclaration below (when it should be a GroovyTypeDeclaration).
 		// similar to code below that creates the Parser and calls dietParse
 		// FIXASC (M2) think about doing the necessary rewrite below rather than this - does it make things too slow?
-		if (new String(compilationResult.getFileName()).endsWith(".groovy")) {			
+
+//		final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(compilationResult.getCompilationUnit().getjavaBuilder.getProject());
+		// FIXASC (M2) should be 'true' here?
+		if (LanguageSupportFactory.isInterestingSourceFile(new String(compilationResult.getFileName()))) {
 			try {
 				return LanguageSupportFactory.getParser(problemReporter.options, problemReporter, true, 1).dietParse(this.cu, compilationResult);
 			} catch (Throwable t) {
