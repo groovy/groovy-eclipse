@@ -122,8 +122,8 @@ public class TestProject {
     public IType createJavaType(IPackageFragment pack, String cuName,
             String source) throws JavaModelException {
         StringBuffer buf = new StringBuffer();
-        buf.append("package " + pack.getElementName() + ";\n");
-        buf.append("\n");
+        buf.append("package " + pack.getElementName() + ";" + System.getProperty("line.separator"));
+        buf.append(System.getProperty("line.separator"));
         buf.append(source);
         ICompilationUnit cu = pack.createCompilationUnit(cuName,
                 buf.toString(), false, null);
@@ -151,8 +151,8 @@ public class TestProject {
             String source) throws CoreException {
         StringBuffer buf = new StringBuffer();
         if (! pack.getElementName().equals("")) {
-            buf.append("package " + pack.getElementName() + ";\n");
-            buf.append("\n");
+            buf.append("package " + pack.getElementName() + ";" + System.getProperty("line.separator"));
+            buf.append(System.getProperty("line.separator"));
         }
         buf.append(source);
 
@@ -243,6 +243,7 @@ public class TestProject {
                 }
             }
         }
+        System.gc();
         project.delete(true, true, null);
     }
 
