@@ -169,5 +169,11 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
             MessageDialog.openError(getShell(), "Error converting projects", "There has been an error converting the projects.  See the error log.");
         }
     }
+    
+    @Override
+    protected void performDefaults() {
+        super.performDefaults();
+        new PreferenceInitializer().reset();
+    }
 
 }

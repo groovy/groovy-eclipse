@@ -99,6 +99,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(
                 PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
                 false);
+        
+        // Ask to convert Legacy Projects at startup
+        store.setDefault(
+                PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS,
+                true);
+        
     }
     
     public void reset() {
@@ -167,6 +173,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(
                 PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
                 false);
+        
+        // Ask to convert Legacy Projects at startup
+        store.setValue(
+                PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS,
+                true);
+
     }
 
 }

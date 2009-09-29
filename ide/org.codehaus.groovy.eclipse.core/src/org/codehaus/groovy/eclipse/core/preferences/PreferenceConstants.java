@@ -19,6 +19,10 @@ package org.codehaus.groovy.eclipse.core.preferences;
  * Constant definitions for plug-in preferences
  */
 public class PreferenceConstants {
+    
+    private PreferenceConstants() {
+        // uninstantiable
+    }
 
 	public static final String P_PATH = "pathPreference"; //$NON-NLS-1$
 
@@ -66,4 +70,6 @@ public class PreferenceConstants {
 	
 	// Store the last version number so that we can check to see if the number has been upgraded since last startup
 	public static final String GROOVY_PLUGIN_LAST_VERSION_NUMBER = "groovy.plugin.version";
+	
+	public static final String GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS = "groovy.plugin.ask.to.convert";
 }

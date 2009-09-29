@@ -15,20 +15,16 @@
  */
 package org.codehaus.groovy.eclipse;
 import java.io.IOException;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
 import org.codehaus.groovy.eclipse.editor.GroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
+import org.codehaus.groovy.eclipse.preferences.AskToConvertLegacyProjects;
 import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.preferences.DefaultScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.IScopeContext;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.templates.ContextTypeRegistry;
 import org.eclipse.jface.text.templates.persistence.TemplateStore;
 import org.eclipse.swt.widgets.Shell;
@@ -39,7 +35,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry;
 import org.eclipse.ui.editors.text.templates.ContributionTemplateStore;
-import org.eclipse.ui.internal.UIPlugin;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -56,10 +51,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	
 	static boolean trace;
 
-	private GroovyDocumentProvider documentProvider;
-
 	private GroovyTextTools textTools;
-	
 
 	public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.ui";
 
@@ -95,9 +87,14 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
 	public static Shell getActiveWorkbenchShell() {
 		IWorkbenchWindow workBenchWindow= getActiveWorkbenchWindow();
-		if (workBenchWindow == null)
+		if (workBenchWindow == null) {
 			return null;
-		return workBenchWindow.getShell();
+		}
+		Shell shell = workBenchWindow.getShell();
+		if (shell == null) {
+		    shell = plugin.getWorkbench().getDisplay().getActiveShell();
+		}
+		return shell;
 	}
 
 	/**
@@ -106,21 +103,16 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	 * @return the active workbench window
 	 */
 	public static IWorkbenchWindow getActiveWorkbenchWindow() {
-		if (plugin == null)
+		if (plugin == null) {
 			return null;
+		}
 		IWorkbench workBench= plugin.getWorkbench();
-		if (workBench == null)
-			return null;
+		if (workBench == null) {
+		    return null;
+		}
 		return workBench.getActiveWorkbenchWindow();
 	}
 	
-	public GroovyDocumentProvider getDocumentProvider() {
-	    if (documentProvider == null) {
-	        documentProvider = new GroovyDocumentProvider();
-	    }
-        return documentProvider;
-    }
-
 	/**
 	 * Logs an exception
 	 * 
@@ -209,9 +201,22 @@ public class GroovyPlugin extends AbstractUIPlugin {
         }
         
         getPreferenceStore().addPropertyChangeListener(ensure);
+        
+        maybeAskToConvertLegacyProjects();
     }
 	
-	@Override
+	/**
+     * 
+     */
+    private void maybeAskToConvertLegacyProjects() {
+        AskToConvertLegacyProjects ask = new AskToConvertLegacyProjects();
+        if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS) 
+                && ask.hasOldProjects()) {
+            ask.schedule();
+        }
+    }
+
+    @Override
 	public void stop(BundleContext context) throws Exception {
 	    super.stop(context);
 	    textTools.dispose();
@@ -224,14 +229,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
     }
 	
 
-	public IWorkbenchPage getActivePage() {
-		IWorkbenchWindow window= getWorkbench().getActiveWorkbenchWindow();
-		if (window == null) {
-			return null;
-		}
-		return window.getActivePage();
-	}
-	
 	public ContextTypeRegistry getContextTypeRegistry() {
 		if (fContextTypeRegistry == null) {
 			fContextTypeRegistry = new ContributionContextTypeRegistry();
