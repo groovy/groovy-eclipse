@@ -1066,10 +1066,17 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         super.visitClass(node);
 
         currentClass = oldNode;
+        // FIXASC (groovychange)
+        finishedResolution();
+        // end
     }
 
     // FIXASC (groovychange)
     protected void commencingResolution() {
+    	// template method
+    }
+    
+    protected void finishedResolution() {
     	// template method
     }
     // end
