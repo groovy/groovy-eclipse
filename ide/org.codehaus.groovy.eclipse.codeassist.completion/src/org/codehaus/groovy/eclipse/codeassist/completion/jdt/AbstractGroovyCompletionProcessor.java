@@ -198,7 +198,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 
                     fArgumentOffsets[i]= buffer.length();
                     
-                    if (new String(parameterTypes[i]).equals("Lgroovy.lang.Closure;")) {
+                    if (new String(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {
                         buffer.append("{ }");
                         fArgumentLengths[i] = 3;
                         if (i == 0) {
