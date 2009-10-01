@@ -27,10 +27,6 @@ public class Method extends Member implements Comparable {
 
 	private final Parameter[] parameters;
 
-	public Method(int modifiers, String name, Parameter[] parameters, String returnType, ClassType declaringClass) {
-		this(modifiers, name, parameters, returnType, declaringClass, false);
-	}
-	
 	public Method(int modifiers, String name, Parameter[] parameters, String returnType, ClassType declaringClass, boolean inferred) {
 		super(Signature.createMethodSignature(collectParameterSignatures(parameters), returnType),
 				modifiers, name, declaringClass, inferred);

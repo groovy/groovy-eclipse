@@ -220,8 +220,7 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
 			if (replaceString.indexOf('$') == -1) {
                 CompletionProposal proposal = CompletionProposal.create(CompletionProposal.METHOD_REF, offset+replaceLength);
                 proposal.setCompletion(replaceString.toCharArray());
-                proposal.setDeclarationSignature(new char[0]);
-                proposal.setDeclarationSignature(getTypeSignature(methods[i].getDeclaringClass().getSignature()).toCharArray());
+                proposal.setDeclarationSignature(methods[i].getDeclaringClass().getSignature().toCharArray());
                 proposal.setName(methods[i].getName().toCharArray());
                 proposal.setParameterNames(createParameterNames((Method) methods[i]));
                 ReflectionUtils.setPrivateField(InternalCompletionProposal.class, "parameterTypeNames", proposal, createParameterTypeNames(methods[i]));
@@ -266,12 +265,10 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
 
     private char[] getMethodSignature(Method method) {
         String returnTypeSig = getTypeSignature(method.getReturnType());
-//        String returnTypeSig = method.getReturnType();
         Parameter[] params = method.getParameters();
         String[] paramTypeSigs = new String[params.length];
         for (int i = 0; i < paramTypeSigs.length; i++) {
             paramTypeSigs[i] = getTypeSignature(params[i].getSignature());
-//            paramTypeSigs[i] = params[i].getSignature();
         }
         return Signature.createMethodSignature(paramTypeSigs, returnTypeSig).toCharArray();
     }
@@ -280,10 +277,11 @@ public class GeneralGroovyCompletionProcessor extends AbstractGroovyCompletionPr
         String typeSig;
         // check to see if we have a type signature, or a type name
         // will be a type signature if the typeName is an array
-        boolean isTypeSignature;
+        boolean isTypeSignature ;
         try {
-            Signature.getSignatureSimpleName(typeName);
-            isTypeSignature = true;
+            // may raise an exception if not proper signature
+            int arrayCount = Signature.getArrayCount(typeName);
+            isTypeSignature = arrayCount > 0;
         } catch (IllegalArgumentException e) {
             isTypeSignature = false;
         } catch (ArrayIndexOutOfBoundsException e) {

@@ -81,7 +81,25 @@ public class TypeUtil {
 	
 	public static Method newMethod(IMethod method, IType jdtDeclaringClass) throws JavaModelException {
 	    int modifiers = TypeUtil.convertFromIMemberModifiers(method);
-	    String[] typeSigs = getParameterTypes(method);
+        String[] origTypeSigs = getParameterTypes(method);
+	    String[] typeNames = convertFromTypeSignaturesToQualifiedNames(origTypeSigs,
+                jdtDeclaringClass);
+	    
+        Parameter[] parameters = createParameterList(typeNames, getParameterNames(method));
+        String returnType = getReturnType(method);
+        // if an array, then use the type signature, not the name
+        ClassType declaringClass = TypeUtil.newClassType(jdtDeclaringClass);
+        return new JavaMethod(modifiers, method.getElementName(), parameters, returnType, declaringClass);
+	}
+
+    /**
+     * @param method
+     * @param jdtDeclaringClass
+     * @return
+     * @throws JavaModelException
+     */
+    public static String[] convertFromTypeSignaturesToQualifiedNames(
+            String[] typeSigs, IType jdtDeclaringClass) throws JavaModelException {
 	    // convert to fully qualified name and must resolve if dealing with a source type
 	    boolean doResolve = !jdtDeclaringClass.isReadOnly();
 	    for (int i = 0; i < typeSigs.length; i++) {
@@ -98,13 +116,8 @@ public class TypeUtil {
                 typeSigs[i] = resolvedType;
 	        }
         }
-	    
-        Parameter[] parameters = createParameterList(typeSigs, getParameterNames(method));
-        String returnType = getReturnType(method);
-        // if an array, then use the type signature, not the name
-        ClassType declaringClass = TypeUtil.newClassType(jdtDeclaringClass);
-        return new JavaMethod(modifiers, method.getElementName(), parameters, returnType, declaringClass);
-	}
+        return typeSigs;
+    }
 
     /**
      * @param method
@@ -302,9 +315,7 @@ public class TypeUtil {
 		for (int i = 0; i < parameters.length; ++i) {
 			String typeName = parameters[i].getType().getName();
 			String name = parameters[i].getName();
-			result[i] = new Parameter(
-			        typeName.charAt(0) == '[' ? typeName : Signature.createTypeSignature(typeName, true), 
-			        name);
+			result[i] = new Parameter(typeName, name);
 		}
 
 		return result;

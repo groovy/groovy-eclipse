@@ -192,6 +192,9 @@ public class TypeCategoryLookup extends AbstractMemberLookup implements IGroovyP
                         }
                     }
                 }
+                
+                // now must convert to type names from type signatures
+                parameterTypes = TypeUtil.convertFromTypeSignaturesToQualifiedNames(parameterTypes, type);
                 Parameter[] parameters = TypeUtil.createParameterList(parameterTypes, parameterNames);
                 int modifiers = TypeUtil.convertFromJavaCoreModifiers(method.getFlags());
                 String returnType = Signature.toString(Signature.getTypeErasure(method.getReturnType()));
