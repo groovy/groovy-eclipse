@@ -98,6 +98,11 @@ public class GroovyClassScope extends ClassScope {
 			for (PropertyNode property : properties) {
 				String name = property.getName();
 				FieldBinding fBinding = typeDeclaration.binding.getField(name.toCharArray(), false);
+				if (fBinding == null) {
+					// Why did groovy tell us there was a property when there is no field?
+					throw new GroovyEclipseBug("Property analysis: could not find field " + new String(name.toCharArray())
+							+ " in type " + typeDeclaration.binding.debugName());
+				}
 				if (!(fBinding.type instanceof MissingTypeBinding)) {
 					String getterName = "get" + MetaClassHelper.capitalize(name);
 					createMethod(getterName, property.isStatic(), "", /* TypeBinding.NO_TYPES */null, fBinding.type, groovyMethods,
