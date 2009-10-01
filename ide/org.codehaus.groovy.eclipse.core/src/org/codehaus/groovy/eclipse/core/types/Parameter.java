@@ -20,6 +20,13 @@ import static org.codehaus.groovy.eclipse.core.types.GroovyDeclaration.Kind.*;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.eclipse.jdt.core.IJavaElement;
 
+/**
+ * Represents a parameter on a method declaration
+ * 
+ * Paramter types are type signatures if an array type or 
+ * fully qualified names otherwise
+ *
+ */
 public class Parameter extends GroovyDeclaration {
 	Method method;
 	

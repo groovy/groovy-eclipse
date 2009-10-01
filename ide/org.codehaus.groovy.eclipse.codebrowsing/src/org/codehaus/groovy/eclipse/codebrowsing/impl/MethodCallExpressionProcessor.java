@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 
@@ -94,25 +95,7 @@ public class MethodCallExpressionProcessor implements
                     ClassType declaring = method.getDeclaringClass();
                     IType type = project.getProject().findType(declaring.getName(), new NullProgressMonitor());
                     if (type != null && type.exists()) {
-                        List<String> paramTypeSigs = new ArrayList<String>(method.getParameters().length);
-                        for (Parameter param : method.getParameters()) {
-                            paramTypeSigs.add(param.getSignature());
-                        }
-                        String[] paramTypeSigsArr;
-                        if (!type.isReadOnly()) {
-                            // source type, must convert method type signatures to be unresolved
-                            // FIXADE M2 this could be a problem for source types that do not use qualified names
-                            // maybe need to do a different way of finding method
-                            paramTypeSigsArr = paramTypeSigs.toArray(new String[0]);
-                            for (int i = 0; i < paramTypeSigsArr.length; i++) {
-                                if (paramTypeSigsArr[i].charAt(0) == 'L') {
-                                    paramTypeSigsArr[i] = "Q" + paramTypeSigsArr[i].substring(1);
-                                }
-                            }
-                        } else {
-                            paramTypeSigsArr = paramTypeSigs.toArray(new String[0]);
-                        }
-                         
+                        String[] paramTypeSigsArr = createParameterTypeSignatures(method, type.isReadOnly());
                         IMethod javaMethod = type.getMethod(method.getName(), paramTypeSigsArr);
                         if (javaMethod.exists()) {
                             elts.add(javaMethod);
@@ -164,5 +147,37 @@ public class MethodCallExpressionProcessor implements
     protected ISourceCodeContext[] createContexts(ModuleNode moduleNode, ISourceBuffer buffer, int offset) {
         SourceCodeContextFactory factory = new SourceCodeContextFactory();
         return factory.createContexts(buffer, moduleNode, new Region(offset, 0));
+    }
+
+
+    /**
+     * convert parameter types from qual names to type signatures
+     * @param method
+     * @return
+     */
+    private String[] createParameterTypeSignatures(Method method, boolean isSource) {
+        String[] typeNames = new String[method.getParameters().length];
+        int i = 0;
+        for (Parameter param : method.getParameters()) {
+            // Type signatures are used for array types only.
+            // all others uses type names
+            boolean signatureDone = false;
+            try {
+                if (Signature.getArrayCount(param.getSignature()) > 0) {
+                    typeNames[i] = param.getSignature();
+                    signatureDone = true;
+                } 
+            } catch (Exception e) {
+                // can throw Illegal argument exception, or array index out of bounds exception
+                // for certain kinds of names
+            }
+                
+            if (!signatureDone) {
+                // this is a plain old qualified name
+                typeNames[i] = Signature.createTypeSignature(param.getSignature(), isSource);
+            }
+            i++;
+        }
+        return typeNames;
     }
 }
