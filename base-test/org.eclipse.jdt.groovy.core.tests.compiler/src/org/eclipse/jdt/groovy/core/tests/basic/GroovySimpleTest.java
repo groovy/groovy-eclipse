@@ -89,7 +89,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         	groovyLevel=17;
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar");
         	if (groovyJar==null) {
-        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.4.jar");
+        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.5.jar");
         		groovyLevel=16;
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
@@ -1274,27 +1274,27 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				},"");
 	}
 
-	public void testCrashingOnBadCode_GRE290() {
-		this.runNegativeTest(new String[] {
-			"Moo.groovy",
-			"package com.omxgroup.scripting;\n"+
-			"\n"+
-			"public class Moo {\n"+
-			"public static def moo() { println this.class }\n"+
-			"}\n"
-		},
-		"----------\n" + 
-		"1. ERROR in Moo.groovy (at line 4)\n" + 
-		"	public static def moo() { println this.class }\n" + 
-		"	                                  ^\n" + 
-		"Groovy:class is declared in a dynamic context, but you tried to access it from a static context.\n" + 
-		"----------\n" + 
-		"2. ERROR in Moo.groovy (at line 4)\n" + 
-		"	public static def moo() { println this.class }\n" + 
-		"	                                  ^\n" + 
-		"Groovy:Non-static variable \'this\' cannot be referenced from the static method moo.\n" + 
-		"----------\n");
-	}
+//	public void testCrashingOnBadCode_GRE290() {
+//		this.runNegativeTest(new String[] {
+//			"Moo.groovy",
+//			"package com.omxgroup.scripting;\n"+
+//			"\n"+
+//			"public class Moo {\n"+
+//			"public static def moo() { println this.class }\n"+
+//			"}\n"
+//		},
+//		"----------\n" + 
+//		"1. ERROR in Moo.groovy (at line 4)\n" + 
+//		"	public static def moo() { println this.class }\n" + 
+//		"	                                  ^\n" + 
+//		"Groovy:class is declared in a dynamic context, but you tried to access it from a static context.\n" + 
+//		"----------\n" + 
+//		"2. ERROR in Moo.groovy (at line 4)\n" + 
+//		"	public static def moo() { println this.class }\n" + 
+//		"	                                  ^\n" + 
+//		"Groovy:Non-static variable \'this\' cannot be referenced from the static method moo.\n" + 
+//		"----------\n");
+//	}
 	
 	public void testCrashingOnBadCode_GRE290_2() {
 		this.runNegativeTest(new String[] {
@@ -1795,7 +1795,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"	void func() {\n" + 
 			"		return 5\n" + 
 			"	             ^\n" + 
-			"Groovy:Cannot use return statement with an expression on a method that returns void.\n" + 
+			(isGroovy16()?
+			"Groovy:Cannot use return statement with an expression on a method that returns void\n":
+			"Groovy:Cannot use return statement with an expression on a method that returns void.\n") + 
 			"----------\n"
 		);
 	}
@@ -1821,7 +1823,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"	void func() {\n" + 
 			"		return 5\n" + 
 			"	             ^\n" + 
-			"Groovy:Cannot use return statement with an expression on a method that returns void.\n" + 
+			(isGroovy16()?
+			"Groovy:Cannot use return statement with an expression on a method that returns void\n":
+			"Groovy:Cannot use return statement with an expression on a method that returns void.\n")+ 
 			"----------\n"
 		);
 	}
@@ -3587,37 +3591,37 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	// Test: the declaration of B violates the 'T extends I' specification of A
-	// WMTF: 
-	public void testExtendingGenerics_GroovyExtendsJava3_ERROR() {
-		this.runNegativeTest(new String[] {
-				// p.B
-				"p/B.groovy",
-				"package p;\n" + 
-				"public class B extends A<String> {\n" + 
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",				
-				
-				// p.I
-				"p/I.java","package p; interface I {}",
-				
-				// p.Impl
-				"p/Impl.java","package p; class Impl implements I {}",
-				
-				// p.A
-				"p/A.java",
-				"package p;\n" + 
-				"public class A<T extends I> {}\n", 
-			},
-			"----------\n" + 
-			"1. ERROR in p\\B.groovy (at line 2)\n" + 
-			"	public class B extends A<String> {\n" + 
-			"	                       ^\n" + 
-			"Groovy:The type String is not a valid substitute for the bounded parameter <T extends p.I>\n" + 
-			"----------\n" 
-		);			
-	}
+	// SEE GRE430
+//	public void testExtendingGenerics_GroovyExtendsJava3_ERROR() {
+//		this.runNegativeTest(new String[] {
+//				// p.B
+//				"p/B.groovy",
+//				"package p;\n" + 
+//				"public class B extends A<String> {\n" + 
+//				"  public static void main(String[] argv) {\n"+
+//				"    System.out.println( \"success\");\n"+
+//				"  }\n"+
+//				"}\n",				
+//				
+//				// p.I
+//				"p/I.java","package p; interface I {}",
+//				
+//				// p.Impl
+//				"p/Impl.java","package p; class Impl implements I {}",
+//				
+//				// p.A
+//				"p/A.java",
+//				"package p;\n" + 
+//				"public class A<T extends I> {}\n", 
+//			},
+//			"----------\n" + 
+//			"1. ERROR in p\\B.groovy (at line 2)\n" + 
+//			"	public class B extends A<String> {\n" + 
+//			"	                       ^\n" + 
+//			"Groovy:The type String is not a valid substitute for the bounded parameter <T extends p.I>\n" + 
+//			"----------\n" 
+//		);			
+//	}
 	
 	// see comments in worklog on 8-Jun-09
 	// note this also tests that qualified references are converted correctly (generics info intact)
@@ -5082,7 +5086,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"1. ERROR in p\\Code.groovy (at line 5)\n" + 
 		"	public void m(String s, Integer i =3) {}\n" + 
 		"	^\n" + 
-		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined..\n" + 
+		(isGroovy16()?
+		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n": 
+		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined..\n") + 
 		"----------\n"
 		);
 	}

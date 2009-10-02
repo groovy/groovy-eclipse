@@ -1176,7 +1176,7 @@ public void cleanBuild() {
 	public void addGroovyJars(IPath projectPath) throws Exception {
 		URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("groovy-1.7-beta-1-SNAPSHOT.jar");
 		if (groovyJar==null) {
-			groovyJar =Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.4.jar");
+			groovyJar =Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.5.jar");
 		}
         addExternalJar(projectPath, FileLocator.resolve(groovyJar).getFile());
         URL asmJar =Platform.getBundle("org.codehaus.groovy").getEntry("asm-3.1.jar");
