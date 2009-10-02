@@ -42,7 +42,7 @@ import java.util.*;
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href='mailto:the[dot]mindstorm[at]gmail[dot]com'>Alex Popescu</a>
  * @author Alex Tkachman
- * @version $Revision: 17138 $
+ * @version $Revision: 17795 $
  */
 public class AsmClassGenerator extends ClassGenerator {
 
@@ -150,8 +150,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
     // exception blocks list
     private List exceptionBlocks = new ArrayList();
-
-    private Set referencedClasses = new HashSet();
+    private Map<String,ClassNode> referencedClasses = new HashMap<String,ClassNode>();
     private boolean passingClosureParams;
 
     private ConstructorNode constructorNode;
@@ -2621,6 +2620,9 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private boolean isStaticContext() {
+        if (compileStack!=null && compileStack.getScope()!=null) {
+            return compileStack.getScope().isInStaticContext();
+        }
         if (!isInClosure()) return false;
         if (constructorNode != null) return false;
         return classNode.isStaticClass() || methodNode.isStatic();
@@ -2967,18 +2969,13 @@ public class AsmClassGenerator extends ClassGenerator {
 
         addInnerClass(interfaceClassLoadingClass);
 
-        for (Iterator iter = referencedClasses.iterator(); iter.hasNext();) {
-            ClassRef ref = (ClassRef) iter.next();
-            String staticFieldName = getStaticFieldName(ref.type);
-            // generate a field node
-            interfaceClassLoadingClass.addField(staticFieldName, ACC_STATIC + ACC_SYNTHETIC, ClassHelper.CLASS_Type, new ClassExpression(ref.type));
+        for (String staticFieldName : referencedClasses.keySet()) {            // generate a field node
+            interfaceClassLoadingClass.addField(staticFieldName, ACC_STATIC + ACC_SYNTHETIC, ClassHelper.CLASS_Type, new ClassExpression(referencedClasses.get(staticFieldName)));
         }
     }
 
     protected void createSyntheticStaticFields() {
-        for (Iterator iter = referencedClasses.iterator(); iter.hasNext();) {
-            ClassRef ref = (ClassRef) iter.next();
-            String staticFieldName = getStaticFieldName(ref.type);
+        for (String staticFieldName : referencedClasses.keySet()) {
             // generate a field node
             FieldNode fn = classNode.getDeclaredField(staticFieldName);
             if (fn != null) {
@@ -3005,7 +3002,7 @@ public class AsmClassGenerator extends ClassGenerator {
             Label l0 = new Label();
             mv.visitJumpInsn(IFNONNULL,l0);
             mv.visitInsn(POP);
-            mv.visitLdcInsn(BytecodeHelper.getClassLoadingTypeDescription(ref.type));
+            mv.visitLdcInsn(BytecodeHelper.getClassLoadingTypeDescription(referencedClasses.get(staticFieldName)));
             mv.visitMethodInsn(INVOKESTATIC,internalClassName,"class$","(Ljava/lang/String;)Ljava/lang/Class;");
             mv.visitInsn(DUP);
             mv.visitFieldInsn(PUTSTATIC,internalClassName,staticFieldName,"Ljava/lang/Class;");
@@ -3053,8 +3050,7 @@ public class AsmClassGenerator extends ClassGenerator {
             mv.visitFieldInsn(GETSTATIC, BytecodeHelper.getClassInternalName(objectType), "TYPE", "Ljava/lang/Class;");
         } else {
             String staticFieldName = getStaticFieldName(type);
-
-            referencedClasses.add(new ClassRef(type));
+            referencedClasses.put(staticFieldName,type);
 
             String internalClassName = this.internalClassName;
             if (classNode.isInterface()) {
@@ -4341,24 +4337,6 @@ public class AsmClassGenerator extends ClassGenerator {
 
         final String target = getCompileUnit().getConfig().getTargetBytecode();
         return CompilerConfiguration.POST_JDK5.equals(target) ? Opcodes.V1_5 : Opcodes.V1_3;
-    }
-
-    private static class ClassRef {
-        private final ClassNode type;
-
-        public ClassRef(ClassNode type) {
-            this.type = type;
-        }
-
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            ClassRef classRef = (ClassRef) o;
-            return type.getName().equals(classRef.type.getName());
-        }
-
-        public int hashCode() {
-            return type.getName().hashCode();
-        }
     }
 
     private class MyMethodAdapter extends MethodAdapter {

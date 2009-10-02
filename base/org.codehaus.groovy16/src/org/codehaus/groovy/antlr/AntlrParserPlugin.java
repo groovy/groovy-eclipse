@@ -217,6 +217,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // FIXASC (groovychange)
             fixModuleNodeLocations();
             // end
+            if(output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
+            	output.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
+            }
         }
         catch (ASTRuntimeException e) {
             throw new ASTParserException(e.getMessage() + ". File: " + sourceUnit.getName(), e);
@@ -1330,9 +1333,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         AST node = variableDef.getFirstChild();
         ClassNode type = null;
         List annotations = new ArrayList();
+        boolean staticVariable = false;
+        AST modifierNode = null;
         if (isType(MODIFIERS, node)) {
             // force check of modifier conflicts
-            modifiers(node, annotations, 0);
+            int modifiers = modifiers(node, annotations, 0);
+            if((modifiers & Opcodes.ACC_STATIC) != 0) {
+                modifierNode = node;
+                staticVariable = true;
+            }
             node = node.getNextSibling();
         }
         if (isType(TYPE, node)) {
@@ -1357,6 +1366,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             right = node.getNextSibling();
             if (right != null) rightExpression = expression(right);
         } else {
+            if(staticVariable) {
+                throw new ASTRuntimeException(modifierNode, "Variable definition has an incorrect modifier 'static'.");
+            }
             String name = identifier(node);
             leftExpression = new VariableExpression(name, type);
             right = node.getNextSibling();
@@ -2753,6 +2765,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 answer = makeType(node).makeArray();
             } else {
                 answer = ClassHelper.make(qualifiedName(node));
+                if(answer.isUsingGenerics()) {
+                    ClassNode newAnswer = ClassHelper.makeWithoutCaching(answer.getName());
+                    newAnswer.setRedirect(answer);
+                    answer = newAnswer;
+                }
             }
             configureAST(answer,node);
         }

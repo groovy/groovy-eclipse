@@ -1118,7 +1118,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         currentClass.setUsingGenerics(true);
         for (int i = 0; i < types.length; i++) {
             ClassNode type = types[i].getType();
-            String name = type.getName();
+            String name = types[i].getName();
             ClassNode[] bounds = types[i].getUpperBounds();
             if (bounds != null) {
                 boolean nameAdded = false;
@@ -1170,6 +1170,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             resolveOrFail(genericsType.getLowerBound(), genericsType);
         }
         resolveGenericsTypes(type.getGenericsTypes());
-        genericsType.setResolved(true);
+        genericsType.setResolved(genericsType.getType().isResolved());
     }
 }

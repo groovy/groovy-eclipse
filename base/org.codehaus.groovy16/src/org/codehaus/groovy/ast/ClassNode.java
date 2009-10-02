@@ -16,10 +16,13 @@
 package org.codehaus.groovy.ast;
 
 import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.control.CompilePhase;
@@ -29,6 +32,7 @@ import org.codehaus.groovy.vmplugin.VMPluginFactory;
 import org.objectweb.asm.Opcodes;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 import groovy.lang.GroovyObject;
@@ -93,7 +97,7 @@ import groovy.lang.GroovyObject;
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Jochen Theodorou
- * @version $Revision: 16733 $
+ * @version $Revision: 17614 $
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
     private static class MapOfLists {
@@ -339,8 +343,18 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
         }
 
-        if ((modifiers & ACC_INTERFACE) == 0)
-          addField("$ownClass", ACC_STATIC|ACC_PUBLIC|ACC_FINAL|ACC_SYNTHETIC, ClassHelper.CLASS_Type, new ClassExpression(this)).setSynthetic(true);
+        if ((modifiers & ACC_INTERFACE) == 0) {
+        	ClassNode ownClassType;
+        	if(!name.equals("Class")) {
+        		// The following is done to get rid of the generics from the type of field $ownClass
+        		// With generics, type info in bytecode gets written as Class<T>. It should be just Class.
+            	ownClassType = ClassHelper.makeWithoutCaching("Class");
+            	ownClassType.setRedirect(ClassHelper.CLASS_Type);
+        	} else {
+        		ownClassType = this;
+        	}
+            addField("$ownClass", ACC_STATIC|ACC_PUBLIC|ACC_FINAL|ACC_SYNTHETIC, ownClassType, new ClassExpression(this)).setSynthetic(true);
+        }
     }
 
     private void getTransformInstancesLazy() {
@@ -775,7 +789,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return objectInitializers;
     }
 
-    public void addStaticInitializerStatements(List staticStatements, boolean fieldInit) {
+    private MethodNode getOrAddStaticConstructorNode() {
         MethodNode method = null;
         List declaredMethods = getDeclaredMethods("<clinit>");
         if (declaredMethods.isEmpty()) {
@@ -786,6 +800,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         else {
             method = (MethodNode) declaredMethods.get(0);
         }
+        return method;
+    }
+    public void addStaticInitializerStatements(List staticStatements, boolean fieldInit) {
+        MethodNode method = getOrAddStaticConstructorNode();
         BlockStatement block = null;
         Statement statement = method.getCode();
         if (statement == null) {
@@ -813,6 +831,32 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
     }
 
+    public void positionStmtsAfterEnumInitStmts(List<Statement> staticFieldStatements) {
+        MethodNode method = getOrAddStaticConstructorNode();
+        Statement statement = method.getCode();
+        if (statement instanceof BlockStatement) {
+        	BlockStatement block = (BlockStatement) statement;
+        	// add given statements for explicitly declared static fields just after enum-special fields
+        	// are found - the $VALUES binary expression marks the end of such fields.
+        	List<Statement> blockStatements = block.getStatements();
+        	ListIterator<Statement> litr = blockStatements.listIterator();
+        	while(litr.hasNext()) {
+        		Statement stmt = litr.next();
+        		if(stmt instanceof ExpressionStatement && 
+        				((ExpressionStatement)stmt).getExpression() instanceof BinaryExpression) {
+        			BinaryExpression bExp = (BinaryExpression) ((ExpressionStatement)stmt).getExpression();
+        			if (bExp.getLeftExpression() instanceof FieldExpression) {
+        				FieldExpression fExp = (FieldExpression) bExp.getLeftExpression();
+        				if(fExp.getFieldName().equals("$VALUES")) {
+        					for(Statement tmpStmt : staticFieldStatements) {
+        						litr.add(tmpStmt);
+        					}
+        				}
+        			}
+        		}
+        	}
+        }
+    }
     /**
      * This methods returns a list of all methods of the given name
      * defined in the current class
@@ -877,6 +921,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return true if this node is derived from the given ClassNode
      */
     public boolean isDerivedFrom(ClassNode type) {
+    	if(this.equals(ClassHelper.VOID_TYPE)) {
+    		return type.equals(ClassHelper.VOID_TYPE) ? true : false;
+    	}
         if (type.equals(ClassHelper.OBJECT_TYPE)) return true;
         ClassNode node = this;
         while (node != null) {
@@ -1134,7 +1181,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         do {
             for (Object o : getMethods(name)) {
                 MethodNode method = (MethodNode) o;
-                if (method.getParameters().length == count) {
+                if (method.getParameters().length == count && !Modifier.isStatic(method.getModifiers())) {
                     return true;
                 }
             }
@@ -1381,7 +1428,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public void renameField(String oldName, String newName) {
         final Map index = redirect().getFieldIndexLazy();
         index.put(newName, index.remove(oldName));
-    }     
+    }    
+     
+    public boolean isEnum() {
+        return (getModifiers()&Opcodes.ACC_ENUM) != 0;
+    }
+    
      // FIXASC (groovychange)
 	public String getClassInternalName() {
 		if (redirect!=null) return redirect().getClassInternalName();

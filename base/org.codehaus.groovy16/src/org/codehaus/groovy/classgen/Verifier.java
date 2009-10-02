@@ -40,7 +40,7 @@ import java.util.*;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 16690 $
+ * @version $Revision: 17819 $
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
@@ -422,25 +422,35 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         };
         Statement s = node.getCode();
         //todo why can a statement can be null?
-        if (s == null) return;
+        if (s != null) {
+            s.visit(new VerifierCodeVisitor(this));
+        } else {
+            return;
+        }
         s.visit(checkSuper);
     }
 
     public void visitMethod(MethodNode node) {
         this.methodNode = node;
+        adjustTypesIfStaticMainMethod(node);
         addReturnIfNeeded(node);
-        Statement statement;
+        Statement statement = node.getCode();
+        if (statement!=null) statement.visit(new VerifierCodeVisitor(this));
+    }
+    
+    private void adjustTypesIfStaticMainMethod(MethodNode node) {
         if (node.getName().equals("main") && node.isStatic()) {
             Parameter[] params = node.getParameters();
             if (params.length == 1) {
                 Parameter param = params[0];
                 if (param.getType() == null || param.getType()==ClassHelper.OBJECT_TYPE) {
                     param.setType(ClassHelper.STRING_TYPE.makeArray());
+                    if(node.getReturnType() == ClassHelper.OBJECT_TYPE) {
+                        node.setReturnType(ClassHelper.VOID_TYPE);
                 }
             }
         }
-        statement = node.getCode();
-        if (statement!=null) statement.visit(new VerifierCodeVisitor(this));
+    }
     }
 
     protected void addReturnIfNeeded(MethodNode node) {
@@ -502,10 +512,16 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             return ifs;
         }
 
-//        if (statement instanceof SwitchStatement) {
-//            SwitchStatement swi = (SwitchStatement) statement;
-//            return swi;
-//        }
+        if (statement instanceof SwitchStatement) {
+            SwitchStatement swi = (SwitchStatement) statement;
+            List caseList = swi.getCaseStatements();
+            for (Iterator iter = caseList.iterator(); iter.hasNext(); ) {
+                CaseStatement caseStatement = (CaseStatement) iter.next();
+                caseStatement.setCode(adjustSwitchCaseCode(caseStatement.getCode(), scope));
+            }
+            swi.setDefaultStatement(adjustSwitchCaseCode(swi.getDefaultStatement(), scope)); 
+            return swi;
+        }
 
         if (statement instanceof TryCatchStatement) {
             TryCatchStatement trys = (TryCatchStatement) statement;
@@ -549,6 +565,21 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
     }
 
+    private Statement adjustSwitchCaseCode(Statement statement, VariableScope scope) {
+        if(statement instanceof BlockStatement) {
+            final List list = ((BlockStatement)statement).getStatements();
+            if (!list.isEmpty()) {
+                int idx = list.size() - 1;
+                Statement last = (Statement) list.get(idx);
+                if(last instanceof BreakStatement) {
+                    list.remove(idx);
+                    return addReturnsIfNeeded(statement, scope);
+                }
+            }
+        }
+        return statement;
+    }
+
     private boolean statementReturns(Statement last) {
         return (
                 last instanceof ReturnStatement ||
@@ -579,10 +610,18 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     public void visitProperty(PropertyNode node) {
         String name = node.getName();
         FieldNode field = node.getField();
+        int propNodeModifiers = node.getModifiers();
 
         String getterName = "get" + capitalize(name);
         String setterName = "set" + capitalize(name);
 
+        // GROOVY-3726: clear volatile, transient modifiers so that they don't get applied to methods
+        if((propNodeModifiers & Modifier.VOLATILE) != 0) {
+        	propNodeModifiers = propNodeModifiers - Modifier.VOLATILE; 
+        }
+        if((propNodeModifiers & Modifier.TRANSIENT) != 0) {
+        	propNodeModifiers = propNodeModifiers - Modifier.TRANSIENT; 
+        }
         Statement getterBlock = node.getGetterBlock();
         if (getterBlock == null) {
             MethodNode getter = classNode.getGetterMethod(getterName);
@@ -598,7 +637,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (setterBlock == null) {
             MethodNode setter = classNode.getSetterMethod(setterName);
             if ( !node.isPrivate() && 
-                 (node.getModifiers()&ACC_FINAL)==0 && 
+                 (propNodeModifiers & ACC_FINAL)==0 && 
                  methodNeedsReplacement(setter)) 
             {
                 setterBlock = createSetterBlock(node, field);
@@ -607,7 +646,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
         if (getterBlock != null) {
             MethodNode getter =
-                new MethodNode(getterName, node.getModifiers(), node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+                new MethodNode(getterName, propNodeModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
             getter.setSynthetic(true);
             addPropertyMethod(getter);
             visitMethod(getter);
@@ -615,7 +654,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             if (ClassHelper.boolean_TYPE==node.getType() || ClassHelper.Boolean_TYPE==node.getType()) {
                 String secondGetterName = "is" + capitalize(name);
                 MethodNode secondGetter =
-                    new MethodNode(secondGetterName, node.getModifiers(), node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+                    new MethodNode(secondGetterName, propNodeModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
                 secondGetter.setSynthetic(true);
                 addPropertyMethod(secondGetter);
                 visitMethod(secondGetter);
@@ -624,7 +663,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (setterBlock != null) {
             Parameter[] setterParameterTypes = { new Parameter(node.getType(), "value")};
             MethodNode setter =
-                new MethodNode(setterName, node.getModifiers(), ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);
+                new MethodNode(setterName, propNodeModifiers, ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);
             setter.setSynthetic(true);
             addPropertyMethod(setter);
             visitMethod(setter);
@@ -701,7 +740,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     Parameter parameter = parameters[i];
                     if (parameter != null && parameter.hasInitialExpression()) {
                         paramValues.add(Integer.valueOf(i));
-                        paramValues.add(parameter.getInitialExpression());
+                        paramValues.add(
+                                new CastExpression(
+                                        parameter.getType(),
+                                        parameter.getInitialExpression()
+                                )
+                        );
                         counter++;
                     }
                 }
@@ -713,17 +757,32 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     int k = 1;
                     for (int i = 0; i < parameters.length; i++) {
                         if (k > counter - j && parameters[i] != null && parameters[i].hasInitialExpression()) {
-                            arguments.addExpression(parameters[i].getInitialExpression());
+                            arguments.addExpression(
+                                    new CastExpression(
+                                            parameters[i].getType(),
+                                            parameters[i].getInitialExpression()
+                                    )
+                            );
                             k++;
                         }
                         else if (parameters[i] != null && parameters[i].hasInitialExpression()) {
                             newParams[index++] = parameters[i];
-                            arguments.addExpression(new VariableExpression(parameters[i].getName()));
+                            arguments.addExpression(
+                                    new CastExpression(
+                                            parameters[i].getType(),
+                                            new VariableExpression(parameters[i].getName())
+                                    )
+                            );
                             k++;
                         }
                         else {
                             newParams[index++] = parameters[i];
-                            arguments.addExpression(new VariableExpression(parameters[i].getName()));
+                            arguments.addExpression(
+                                    new CastExpression(
+                                            parameters[i].getType(),
+                                            new VariableExpression(parameters[i].getName())
+                                    )
+                            );
                         }
                     }
                     action.call(arguments,newParams,method);
@@ -756,10 +815,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         
         List statements = new ArrayList();
         List staticStatements = new ArrayList();
-        final boolean isEnumClassNode = isEnum(node);
-        List initStmtsAfterEnumValuesInit = new ArrayList();
+        final boolean isEnum = node.isEnum();
+        List<Statement> initStmtsAfterEnumValuesInit = new ArrayList<Statement>();
         Set explicitStaticPropsInEnum = new HashSet();
-        if(isEnumClassNode) {
+        if(isEnum) {
         	for (Iterator iter = node.getProperties().iterator(); iter.hasNext();) {
         		PropertyNode propNode = (PropertyNode) iter.next();
         		if(!propNode.isSynthetic() && propNode.getField().isStatic()) {
@@ -769,7 +828,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
         for (Iterator iter = node.getFields().iterator(); iter.hasNext();) {
         	addFieldInitialization(statements, staticStatements, 
-        			(FieldNode) iter.next(), isEnumClassNode, 
+        			(FieldNode) iter.next(), isEnum, 
         			initStmtsAfterEnumValuesInit, explicitStaticPropsInEnum);
         }
         statements.addAll(node.getObjectInitializerStatements());
@@ -798,7 +857,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
 
         if (!staticStatements.isEmpty()) {
-        	if(isEnumClassNode) {
+        	if(isEnum) {
         		/*
         		 * GROOVY-3161: initialize statements for explicitly declared static fields 
         		 * inside an enum should come after enum values are initialized
@@ -806,7 +865,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         		staticStatements.removeAll(initStmtsAfterEnumValuesInit);
         		node.addStaticInitializerStatements(staticStatements, true);
         		if(!initStmtsAfterEnumValuesInit.isEmpty()) {
-        			node.addStaticInitializerStatements(initStmtsAfterEnumValuesInit, false);
+        			node.positionStmtsAfterEnumInitStmts(initStmtsAfterEnumValuesInit);
         		}
         	} else {
         		node.addStaticInitializerStatements(staticStatements, true);
@@ -814,10 +873,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
     }
     
-    private boolean isEnum(ClassNode node) {
-    	return (node.getModifiers() & Opcodes.ACC_ENUM) != 0;
-    }
-
     private ConstructorCallExpression getFirstIfSpecialConstructorCall(Statement code) {
         if (code == null || !(code instanceof ExpressionStatement)) return null;
 

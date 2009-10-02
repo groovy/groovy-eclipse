@@ -49,7 +49,7 @@ import java.util.*;
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Id: CompilationUnit.java 15935 2009-04-08 15:23:17Z blackdrag $
+ * @version $Id: CompilationUnit.java 17753 2009-09-26 09:40:50Z roshandawrani $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -168,7 +168,7 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.CONVERSION);
         addPhaseOperation(resolve, Phases.SEMANTIC_ANALYSIS);
         // FIXASC (groovychange)
-        addPhaseOperation(checkGenerics, Phases.SEMANTIC_ANALYSIS);
+//        addPhaseOperation(checkGenerics, Phases.SEMANTIC_ANALYSIS);
         // end
         addPhaseOperation(staticImport, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
@@ -730,6 +730,10 @@ public class CompilationUnit extends ProcessingUnit {
 
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
 
+            if(!classNode.isSynthetic()) {
+                GenericsVisitor genericsVisitor = new GenericsVisitor(source);
+                genericsVisitor.visitClass(classNode);
+            }
             //
             // Run the Verifier on the outer class
             //
@@ -1061,15 +1065,6 @@ public class CompilationUnit extends ProcessingUnit {
 
 	public ResolveVisitor getResolveVisitor() {
 		return this.resolveVisitor;
-	}
-	
-	public String toString() {
-		if (sources==null || sources.isEmpty()) return super.toString();
-		Set s = sources.keySet();
-		for (Object o: s) {
-			return "CompilationUnit: source is " + o.toString();
-		}
-		return "CompilationUnit: null";
 	}
     // end
     
