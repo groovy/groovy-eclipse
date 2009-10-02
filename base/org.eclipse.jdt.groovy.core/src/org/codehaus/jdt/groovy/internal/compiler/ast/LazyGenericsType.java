@@ -120,14 +120,21 @@ public class LazyGenericsType extends GenericsType {
 			if (tvBinding.firstBound == null) {
 				type = ClassHelper.OBJECT_TYPE;
 			} else {
-				type = resolver.convertToClassNode(tvBinding.firstBound);
+				type = ClassHelper.OBJECT_TYPE;
+				// new ClassNode(Object.class);
+				// resolver.convertToClassNode(tvBinding.firstBound);
+				// GenericsType gt = new GenericsType();
+				// gt.setName(name);
+				// type.setGenericsTypes(new GenericsType[] { gt });
+				type.setRedirect(ClassHelper.OBJECT_TYPE);
+				ClassNode firstBoundType = resolver.convertToClassNode(tvBinding.firstBound);
 				TypeBinding[] otherUpperBounds = tvBinding.otherUpperBounds();
 				if (otherUpperBounds.length == 0) {
-					upperBounds = new ClassNode[] { type };
+					upperBounds = new ClassNode[] { firstBoundType };
 				} else {
 					ClassNode[] nodes = new ClassNode[1 + otherUpperBounds.length];
 					int idx = 0;
-					nodes[idx++] = type;
+					nodes[idx++] = firstBoundType;
 					for (TypeBinding typeBinding : otherUpperBounds) {
 						nodes[idx++] = resolver.convertToClassNode(typeBinding);
 					}
