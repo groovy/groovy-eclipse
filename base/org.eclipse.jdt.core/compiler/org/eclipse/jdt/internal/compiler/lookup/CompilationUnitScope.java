@@ -951,7 +951,7 @@ public boolean checkTargetCompatibility() {
 public boolean scannerAvailable() {
 	return true;
 }
-public boolean reportInvalidType() {
+public boolean reportInvalidType(TypeReference typeReference, TypeBinding resolvedType) {
 	return true;
 }
 public boolean canSeeEverything() {

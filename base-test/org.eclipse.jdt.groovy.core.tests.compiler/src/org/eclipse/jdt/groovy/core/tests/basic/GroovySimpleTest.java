@@ -1830,6 +1830,24 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		);
 	}
 	
+	public void testStarImports_GRE421() {
+		this.runNegativeTest(new String[]{
+				"a/b/c/Process.java",
+				"package a.b.c;\n"+
+				"public class Process {}\n",
+				"Wibble.groovy",
+				"import a.b.c.*;\n"+
+				"class Wibble {\n"+
+				"	 Process process\n"+
+				"}\n"},
+				"----------\n" + 
+				"1. ERROR in Wibble.groovy (at line 3)\n" + 
+				"	Process process\n" + 
+				"	^^^^^^^\n" + 
+				"The type Process is ambiguous\n" + 
+				"----------\n");
+	}
+	
 
 	// ---
 

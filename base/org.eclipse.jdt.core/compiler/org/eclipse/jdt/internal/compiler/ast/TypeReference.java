@@ -175,7 +175,7 @@ protected void reportInvalidType(Scope scope) {
 	// GROOVY start: don't report this, let groovy do it
 	if (scope!=null) {
 		CompilationUnitScope cuScope = scope.compilationUnitScope();
-		if (!cuScope.reportInvalidType()) {
+		if (!cuScope.reportInvalidType(this, this.resolvedType)) {
 			return;
 		}
 	}

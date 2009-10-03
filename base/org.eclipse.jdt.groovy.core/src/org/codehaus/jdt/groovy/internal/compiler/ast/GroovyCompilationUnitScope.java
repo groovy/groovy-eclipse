@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
@@ -239,7 +240,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		return null;
 	}
 
-    // let it run to create synthetic methods
+	// let it run to create synthetic methods
 	// @Override
 	// public void verifyMethods(MethodVerifier verifier) {
 	// }
@@ -263,7 +264,13 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	}
 
 	@Override
-	public boolean reportInvalidType() {
+	public boolean reportInvalidType(TypeReference typeReference, TypeBinding resolvedType) {
+		if (resolvedType instanceof ProblemReferenceBinding) {
+			ProblemReferenceBinding problemRefBinding = (ProblemReferenceBinding) resolvedType;
+			if (problemRefBinding.problemId() == ProblemReasons.Ambiguous) {
+				return true;
+			}
+		}
 		return false;
 	}
 
