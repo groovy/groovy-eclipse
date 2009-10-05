@@ -109,6 +109,7 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
             
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, className);
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getElementName());
+            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "-Djline.terminal=jline.UnsupportedTerminal");
             List<String> classpath = ListUtil.newList(JavaRuntime.computeDefaultRuntimeClassPath(project));
             classpath.addAll(0, GroovyShellLaunchDelegate.getExtraClasspathElements());
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, classpath);
