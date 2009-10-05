@@ -98,6 +98,11 @@
 		</copy>
   	
   	<!-- IDE Plugins -->
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.core">
 			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.core">
 					<exclude name="**/bin"/>

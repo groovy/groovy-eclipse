@@ -1,0 +1,9 @@
+# about.mappings
+# contains fill-ins for about.properties
+# java.io.Properties file (ISO 8859-1 with "\" escapes)
+# This file does not need to be translated.
+
+# VERSION-STRING
+# Inserted by the build process
+0=@GROOVYVERSION@
+

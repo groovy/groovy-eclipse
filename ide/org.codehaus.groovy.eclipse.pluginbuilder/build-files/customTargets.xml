@@ -92,8 +92,14 @@
 	</target>
 	<!-- ===================================================================== -->
 	<!-- Steps to do before running the build.xmls for the elements being built. -->
+	<!-- Add the correct version number to about.mappings -->	
 	<!-- ===================================================================== -->
 	<target name="preProcess">
+		<echo message="Setting groovy mapping property"></echo>
+		<property file="${buildDirectory}/finalPluginsVersions.properties"/>
+		<replace file="${buildDirectory}/plugins/org.codehaus.groovy.eclipse/about.mappings"
+		                        token="@GROOVYVERSION@" value="org.codehaus.groovy"/>
+		<echo message="Groovy mapping property set"></echo>
 	</target>
 	<!-- ===================================================================== -->
 	<!-- Steps to do after running the build.xmls for the elements being built. -->
