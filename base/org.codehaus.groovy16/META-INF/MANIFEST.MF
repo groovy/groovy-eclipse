@@ -110,3 +110,4 @@ Require-Bundle: org.apache.ant,
 Bundle-Vendor: Codehaus.org
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator

@@ -16,10 +16,14 @@
 
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
+import org.eclipse.core.internal.registry.osgi.OSGIUtils;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.osgi.internal.baseadaptor.StateManager;
+import org.eclipse.osgi.internal.resolver.SystemState;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.DisabledInfo;
 import org.eclipse.osgi.service.resolver.State;
@@ -91,27 +95,23 @@ public class CompilerUtils {
         
         
         try {
-            State state = Platform.getPlatformAdmin().getState(false);
+            State state = ((StateManager) Platform.getPlatformAdmin()).getSystemState();
             if (toVersion17) {
                 BundleDescription disabled17 = getDisabled17BundleDescription();
                 if (disabled17 != null) {
-                    // remove the disabled info so that we can find it
+                    // remove the disabled info so that we can find the 1.7 version of the plugin
                     DisabledInfo info = createDisabledInfo(state, disabled17.getBundleId());
-                    Platform.getPlatformAdmin().removeDisabledInfo(info);
-                    // just in case this bundle was disabled from pde, we need to create another
-                    // kind of disabled info
-                    info = createDisabledInfoForPDE(state, disabled17.getBundleId());
                     Platform.getPlatformAdmin().removeDisabledInfo(info);
                 }
             }
             
             Bundle[] toDisable = Platform.getBundles("org.codehaus.groovy", (toVersion17 ? version16 : version17));
-            Bundle[] toEnable  = Platform.getBundles("org.codehaus.groovy", (toVersion17 ? version17 : version16));
+            Bundle toEnable  = toVersion17 ? getHighestVersion(state, 7) : getHighestVersion(state, 6);
 
             if (toDisable == null || toDisable.length == 0) {
                 throw new Exception("Could not find any " + (toVersion17 ? "1.6" : "1.7") + " groovy version to disable");
             }
-            if (toEnable == null || toEnable.length == 0) {
+            if (toEnable == null) {
                 throw new Exception("Could not find any " + (toVersion17 ? "1.7" : "1.6") + " groovy version to enable");
             }
             
@@ -122,14 +122,48 @@ public class CompilerUtils {
                     Platform.getPlatformAdmin().addDisabledInfo(info);
                 }
             }
-            toEnable[0].start();
+            toEnable.start();
+            
+            // Now, make sure that all cached references to bundle and package exports and imports
+            Bundle[] allChangedBundles = new Bundle[1 + toDisable.length];
+            allChangedBundles[0] = toEnable;
+            System.arraycopy(toDisable, 0, allChangedBundles, 1, toDisable.length);
+            OSGIUtils.getDefault().getPackageAdmin().refreshPackages(allChangedBundles);
             
             return Status.OK_STATUS;
         } catch (Exception e) {
+            GroovyCore.logException(e.getMessage(), e);
             return new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID,
                             e.getMessage()
                             + "\n\nSee the error log for more information.", e);
         }
+    }
+
+    /**
+     * @param state the SystemState object
+     * @param minorVersion 
+     * @return the highest version of the org.codehause.groovy bundle with
+     * the specified minor version number
+     */
+    private static Bundle getHighestVersion(State state, int minorVersion) {
+        BundleDescription[] allGroovyBundles = state.getBundles("org.codehaus.groovy");
+        BundleDescription highestMinorVersion = null;
+        for (BundleDescription groovyBundle : allGroovyBundles) {
+            if (groovyBundle.getVersion().getMinor() == minorVersion) {
+                if (highestMinorVersion == null) {
+                    highestMinorVersion = groovyBundle;
+                } else {
+                    highestMinorVersion = highestMinorVersion.getVersion()
+                        .compareTo(groovyBundle.getVersion()) == 1 ? 
+                                highestMinorVersion : groovyBundle;
+                }
+            }
+        }
+        
+        if (highestMinorVersion == null) {
+            return null;
+        }
+        return Platform.getBundle("org.codehaus.groovy").getBundleContext().getBundle(highestMinorVersion.getBundleId());
     }
 
     /**
@@ -138,13 +172,6 @@ public class CompilerUtils {
      * @return
      */
     private static DisabledInfo createDisabledInfo(State state, long bundleId) {
-        BundleDescription desc = state.getBundle(bundleId);
-        DisabledInfo info = new DisabledInfo(
-                "org.eclipse.pde.ui", //$NON-NLS-1$
-                "Disabled via PDE", desc); //$NON-NLS-1$
-        return info;
-    }
-    private static DisabledInfo createDisabledInfoForPDE(State state, long bundleId) {
         BundleDescription desc = state.getBundle(bundleId);
         DisabledInfo info = new DisabledInfo(
                 "org.eclipse.pde.ui", //$NON-NLS-1$
