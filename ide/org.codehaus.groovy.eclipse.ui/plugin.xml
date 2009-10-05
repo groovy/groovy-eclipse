@@ -25,14 +25,16 @@
             id="org.codehaus.groovy.eclipse.groovyLaunchConfiguration"
             modes="run,debug"
             name="Groovy"
-            sourceLocatorId="org.codehaus.groovy.eclipse.editor.groovySourceLocator">
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
       </launchConfigurationType>
       <launchConfigurationType
             delegate="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchDelegate"
             id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
             modes="run,debug"
             name="Groovy Shell"
-            sourceLocatorId="org.codehaus.groovy.eclipse.editor.groovySourceLocator">
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
       </launchConfigurationType>
    </extension>
    <extension
@@ -338,7 +340,7 @@
         <action
               class="org.codehaus.groovy.eclipse.actions.ConvertLegacyProjectAction"
               enablesFor="1"
-              id="org.codehaus.groovy.eclipse.addnature.action"
+              id="org.codehaus.groovy.eclipse.convert.action"
               label="Convert Legacy Groovy Project"
               menubarPath="org.eclipse.ui.projectConfigure/additions">
         </action>
@@ -515,14 +517,6 @@
             id="org.codehaus.groovy.eclipse.conversion">
       </actionSet>
 			</perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.debug.core.sourceLocators">
-      <sourceLocator
-            name="Groovy Source Locator"
-            class="org.codehaus.groovy.eclipse.launchers.GroovySourceLocator"
-            id="org.codehaus.groovy.eclipse.editor.groovySourceLocator">
-      </sourceLocator>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">

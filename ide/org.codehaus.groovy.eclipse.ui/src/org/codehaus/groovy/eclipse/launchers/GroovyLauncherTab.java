@@ -103,20 +103,4 @@ public class GroovyLauncherTab extends JavaMainTab {
 		super.activated(workingCopy);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
-	 * The buttons are private in Eclipse 3.2
-	public void createControl(Composite parent) {
-		super.createControl(parent);
-		fSearchExternalJarsCheckButton.setVisible(false);
-		fStopInMainCheckButton.setVisible(false);
-	}*/
-
-    /* (non-Javadoc)
-     * @see org.eclipse.debug.ui.ILaunchConfigurationTab#setDefaults(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
-     */
-    public void setDefaults(ILaunchConfigurationWorkingCopy config) {
-        super.setDefaults(config);
-        config.setAttribute(ILaunchConfiguration.ATTR_SOURCE_LOCATOR_ID, GroovySourceLocator.ID);
-    }
 }
