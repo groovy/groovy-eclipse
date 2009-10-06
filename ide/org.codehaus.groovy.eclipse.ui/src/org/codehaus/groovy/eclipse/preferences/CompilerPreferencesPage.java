@@ -52,16 +52,14 @@ public class CompilerPreferencesPage extends PreferencePage implements
         public void widgetSelected(SelectionEvent e) {
             boolean result = MessageDialog.openQuestion(page.getShell(), "Change compiler and restart?", 
                     "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
-                    " the compiler will be changed and Eclipse will be restarted.");
+                    " the compiler will be changed and Eclipse will be restarted.\n\n" +
+                    "Make sure all your work is saved before clicking \"Yes\".");
                     
                 if (result) {
                     // change compiler
                     IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
                     if (status == Status.OK_STATUS) {
-                        if (MessageDialog.openQuestion(page.getShell(), "Restart?", "Do you want to restart now?\n\n" +
-                        		"It is strongly recommended that you do so.")) {
-                            Workbench.getInstance().restart();
-                        }
+                        Workbench.getInstance().restart();
                     } else {
                         ErrorDialog error = new ErrorDialog(page.getShell(), 
                                 "Error occurred", "Error occurred when trying to enable Groovy " + CompilerUtils.getOtherVersion(), 

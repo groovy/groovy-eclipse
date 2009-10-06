@@ -232,7 +232,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
 
     private void createLineBreakpoint(IResource resource, String typeName, int offset, int lineNumber, int charStart, int charEnd, int hitCount, boolean register, Map attributes, IDocument document, boolean bestMatch, IType type, IEditorPart editorPart) throws CoreException {
         IJavaLineBreakpoint breakpoint = JDIDebugModel.createLineBreakpoint(resource, typeName, lineNumber, charStart, charEnd, hitCount, register, attributes);
-        new BreakpointLocationVerifierJob(document, breakpoint, offset, lineNumber, typeName, type, resource, editorPart).schedule();
+        new BreakpointLocationVerifierJob(breakpoint, lineNumber, typeName, type, resource, editorPart).schedule();
     }
 
     public boolean canToggleLineBreakpoints(IWorkbenchPart part, ISelection selection) {

@@ -58,8 +58,17 @@ public class DelegatingCleanUpPostSaveListener implements IPostSaveListener {
                 DelegatingCleanUpPostSaveListener delegatingCleanUp = new DelegatingCleanUpPostSaveListener(jdtCleanUp, groovyCleanUp);
                 ReflectionUtils.setPrivateField(SaveParticipantDescriptor.class, "fPostSaveListener", descriptor, delegatingCleanUp);
             }
+            
         } catch (Exception e) {
-            // if an exceptino is thrown, then the groovy post save listener will not be used.
+            // a classcaseexception can be thrown when changing compilers, so ignore it
+            if (e instanceof ClassCastException) {
+                if (e.getStackTrace()[0].getLineNumber() == 55) {
+                    // ignore
+                    return;
+                }
+            }
+            
+            // if an exception is thrown, then the groovy post save listener will not be used.
             GroovyCore.logException("Exception thrown while trying to install GroovyCleanUpPostSaveListener", e);
         }
     }

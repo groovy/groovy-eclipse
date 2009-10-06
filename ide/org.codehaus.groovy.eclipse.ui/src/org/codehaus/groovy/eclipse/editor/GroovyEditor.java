@@ -16,6 +16,8 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
+import java.util.List;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -23,12 +25,13 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
-import org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction.FormatKind;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.ISourceRange;
@@ -38,9 +41,11 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
+import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
 import org.eclipse.jdt.ui.actions.RefactorActionGroup;
@@ -48,15 +53,19 @@ import org.eclipse.jdt.ui.cleanup.ICleanUp;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.source.IAnnotationModel;
+import org.eclipse.jface.text.source.IOverviewRuler;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.text.source.IVerticalRuler;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IWorkbenchSite;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel;
 
 public class GroovyEditor extends CompilationUnitEditor {
     /**
@@ -324,5 +333,54 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
         return super.getAdapter(required);
     }
+
+    /**
+     * Override this method so that we can get access to the newly initialized
+     * annotation model
+     */
+    @Override
+    public void createPartControl(Composite parent) {
+        super.createPartControl(parent);
+        unsetJavaBreakpointUpdater();
+    }
     
+    
+    /**
+     * Override this method so that we can get access to the newly initialized
+     * annotation model
+     */
+    @Override
+    protected void doSetInput(IEditorInput input) throws CoreException {
+        super.doSetInput(input);
+        unsetJavaBreakpointUpdater();
+    }
+    
+    /**
+     * Ensure that the Java breakpoint updater is removed because we need to use
+     * Groovy's breakpoint updater instead
+     */
+    @SuppressWarnings("unchecked")
+    private void unsetJavaBreakpointUpdater() {
+        ISourceViewer viewer = getSourceViewer();
+        if (viewer != null) {
+            IAnnotationModel model = viewer.getAnnotationModel();
+            if (model instanceof AbstractMarkerAnnotationModel) {
+                // force instantiation of the extension points 
+                ReflectionUtils.executePrivateMethod(AbstractMarkerAnnotationModel.class, "installMarkerUpdaters", 
+                        new Class<?>[0], model, new Object[0]);
+                // remove the marker updater for Java breakpoints, the groovy one will be used instead
+                List<IConfigurationElement> updaterSpecs = (List<IConfigurationElement>) 
+                        ReflectionUtils.getPrivateField(AbstractMarkerAnnotationModel.class, 
+                        "fMarkerUpdaterSpecifications", model);
+                for (Iterator<IConfigurationElement> specIter = updaterSpecs.iterator(); specIter
+                        .hasNext();) {
+                    IConfigurationElement spec = specIter.next();
+                    if (spec.getAttribute("class").equals(BreakpointMarkerUpdater.class.getCanonicalName())) {
+                        specIter.remove();
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }

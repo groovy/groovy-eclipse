@@ -732,6 +732,14 @@
          </action>
       </editorContribution>
  </extension>
+ <extension
+       point="org.eclipse.ui.editors.markerUpdaters">
+    <updater
+          class="org.codehaus.groovy.eclipse.debug.ui.BreakpointUpdater"
+          id="org.codehaus.groovy.eclipse.breakpointUpdater"
+          markerType="org.eclipse.debug.core.breakpointMarker">
+    </updater>
+ </extension>
  <!--
  <extension
        point="org.eclipse.ui.editors.documentProviders">

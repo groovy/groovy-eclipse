@@ -50,11 +50,6 @@ import org.eclipse.ui.texteditor.IEditorStatusLine;
 public class BreakpointLocationVerifierJob extends Job {
 
     public final static Object FAMILY = new Object();
-    
-	/**
-	 * The document which contains the code source.
-	 */
-	private IDocument fDocument;
 	
 	/**
 	 * The temporary breakpoint that has been set. Can be <code>null</code> if the callee was not able
@@ -89,19 +84,14 @@ public class BreakpointLocationVerifierJob extends Job {
 	 */
 	private IEditorStatusLine fStatusLine;
 
-	private int fOffset;
-	
-	public BreakpointLocationVerifierJob(IDocument document, IJavaLineBreakpoint breakpoint, int offset, int lineNumber, String typeName, IType type, IResource resource, IEditorPart editorPart) {
+	public BreakpointLocationVerifierJob(IJavaLineBreakpoint breakpoint, int lineNumber, String typeName, IType type, IResource resource, IEditorPart editorPart) {
 		super(ActionMessages.BreakpointLocationVerifierJob_breakpoint_location); 
-		fDocument= document;
 		fBreakpoint= breakpoint;
-		fOffset = offset;
 		fLineNumber= lineNumber;
 		fTypeName= typeName;
 		fType= type;
 		fResource= resource;
 		fStatusLine= (IEditorStatusLine) editorPart.getAdapter(IEditorStatusLine.class);
-//		setSystem(true);
 	}
 	
 	public IStatus run(IProgressMonitor monitor) {
