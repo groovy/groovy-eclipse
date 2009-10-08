@@ -113,6 +113,57 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     protected boolean isGroovy16() {
     	return groovyLevel==16;
     }
+    
+    // demonstrates the incorrect use of closure syntax on groovy 1.6 that compiles OK.
+    // On 1.7 it is recognized as incorrect (it is too similar to the inner class syntax)
+    public void testClosureSyntax() {
+    	if (isGroovy16()) {
+	    	this.runConformTest(new String[]{
+		    	"Foo.groovy",
+		    	"class A {\n"+
+		    	"	A(closure) {\n"+
+		    	"		closure()\n"+
+		    	"	}\n"+
+		    	"}\n"+
+		    	"abc = {println 'abc'\n"+
+		    	"}\n"+
+		
+		    	"new A({\n"+
+		    	"	abc()\n"+
+		    	"}) //works properly\n"+
+		
+		    	"new A() {   \n"+
+		    	"	abc()\n"+
+		    	"} // throw error: unexpected token: abc at line: 13, column: 5\n"},
+		    	"abc\n" + 
+				"abc"
+	    		); 
+    	} else {
+    		this.runNegativeTest(new String[]{
+    	    	"Foo.groovy",
+    	    	"class A {\n"+
+    	    	"	A(closure) {\n"+
+    	    	"		closure()\n"+
+    	    	"	}\n"+
+    	    	"}\n"+
+    	    	"abc = {println 'abc'\n"+
+    	    	"}\n"+
+
+    	    	"new A({\n"+
+    	    	"	abc()\n"+
+    	    	"}) //works properly\n"+
+
+    	    	"new A() {   \n"+
+    	    	"	abc()\n"+
+    	    	"} // throw error: unexpected token: abc at line: 13, column: 5\n"},
+    	    	"----------\n" + 
+    			"1. ERROR in Foo.groovy (at line 12)\n" + 
+    			"	abc()\n" + 
+    			"	^\n" + 
+    			"Groovy:unexpected token: abc @ line 12, column 2.\n" + 
+    			"----------\n"); 
+    	}
+    }
 	
 	// WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
 	public void testStandaloneGroovyFile() {
@@ -127,23 +178,53 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"success");		
 	}
 	
+	public void testBrokenPackage() {
+		this.runNegativeTest(new String[] {
+				"Foo.groovy",
+				"package \n"+
+				"class Name { }\n"},
+				"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 1)\n" + 
+				"	package \n" + 
+				"	 ^\n" + 
+				"Groovy:Invalid package specification @ line 1, column 1.\n" + 
+				"----------\n");
+	}
 	
-	
-//	public void testBrokenPackage() {
-//		this.runNegativeTest(new String[] {
-//				"Foo.groovy",
-//				"package \n"+
-//				"class Name extends GroovyTestCase { }\n"},"");
-//	}
-//	
-//	public void testBrokenPackage2() {
-//		this.runNegativeTest(new String[] {
-//				"Foo.groovy",
-//				"package ;\n"+
-//				"class Name extends GroovyTestCase { }\n"},"");
-//	}
-	
-	
+	public void testBrokenPackage2() {
+		this.runNegativeTest(new String[] {
+				"Foo.groovy",
+				"package ;\n"+
+				"class Name { }\n"},
+				"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 1)\n" + 
+				"	package ;\n" + 
+				"	 ^\n" + 
+				"Groovy:Invalid package specification @ line 1, column 1.\n" + 
+				"----------\n");
+	}
+
+	// does the second error now get reported after the package problem
+	public void testBrokenPackage3() {
+		this.runNegativeTest(new String[] {
+				"Foo.groovy",
+				"package ;\n"+
+				"class Name { \n" +
+				"  asdf\n"+
+				"}\n"},
+				"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 1)\n" + 
+				"	package ;\n" + 
+				"	 ^\n" + 
+				"Groovy:Invalid package specification @ line 1, column 1.\n" + 
+				"----------\n" + 
+				"2. ERROR in Foo.groovy (at line 3)\n" + 
+				"	asdf\n" + 
+				"	^\n" + 
+				"Groovy:unexpected token: asdf @ line 3, column 3.\n" + 
+				"----------\n");
+	}
+		
 	public void testGenericsPositions_GRE267_1() {
 		this.runConformTest(new String[] {
 			"X.groovy",

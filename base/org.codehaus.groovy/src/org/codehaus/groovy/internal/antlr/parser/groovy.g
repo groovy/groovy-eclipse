@@ -391,6 +391,18 @@ tokens {
     }
     
     /**
+     * Report a recovered error and specify the token.
+     */
+    public void reportError(String message, Token lt) {
+        Map row = new HashMap();
+        row.put("error" ,message);
+        row.put("filename", getFilename());
+        row.put("line", new Integer(lt.getLine()));
+        row.put("column", new Integer(lt.getColumn()));
+        errorList.add(row);
+    }
+    
+    /**
      * Report a recovered exception.
      */
     public void reportError(RecognitionException e) {
@@ -533,8 +545,14 @@ snippetUnit
 packageDefinition
         {Token first = LT(1);}
         //TODO? options {defaultErrorHandler = true;} // let ANTLR handle errors
-    :   an:annotationsOpt! "package"! id:identifier!
-        {#packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);}
+    :   an:annotationsOpt! "package"! (id:identifier!)?
+        { // error recovery for missing package name
+            if (id_AST==null) {
+				reportError("Invalid package specification",LT(0));
+			} else {
+                #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);
+			}
+        }
     ;
 
 

@@ -333,6 +333,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             }
             node = node.getNextSibling();
         }
+        // FIXASC (groovychange) - cope with a parsed 'null' package (GRE439)
+        if (node==null) {
+        	return;
+        }
+        // end
         String name = qualifiedName(node);
         // FIXASC (groovychange)
         // oldcode:
