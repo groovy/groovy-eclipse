@@ -36,6 +36,10 @@
          id="org.codehaus.groovy.jdt.patch"
          version="0.0.0"/>
 
+   <includes
+         id="org.codehaus.groovy16.feature"
+         version="0.0.0"/>
+
    <requires>
       <import plugin="org.eclipse.jface"/>
       <import plugin="org.eclipse.text"/>
