@@ -50,7 +50,8 @@ public class ErrorLogTest extends TestCase {
         "was not resolved",
         "org.eclipse.test.performance.win32.translated_host_properties",
         "Listener failed",
-        "org.eclipse.mylyn.tasks.core"
+        "org.eclipse.mylyn.tasks.core",
+        "Unable to run embedded server"
     };
     
     private boolean canIgnoreMessage(String msg) {

@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.test;
 
-import java.io.IOException;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -34,29 +32,11 @@ import org.codehaus.groovy.eclipse.test.debug.ConsoleLineTrackerTests;
 import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
 import org.codehaus.groovy.eclipse.test.ui.ErrorLogTest;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
-import org.eclipse.core.runtime.FileLocator;
-import org.osgi.framework.Bundle;
 
 /**
- * 
  * Suite needs to be run as eclipse plugin test
- *
  */
-
 public class AllUITests {
-	public static final Bundle BUNDLE = Activator.bundle();
-	public static String BUNDLE_ROOT = null;
-	static {
-		try {
-			BUNDLE_ROOT = FileLocator.resolve(BUNDLE.getEntry("/")).getFile();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	public static final String PACKAGE_ROOT = BUNDLE_ROOT + "/src/"
-			+ AllUITests.class.getPackage().getName().replaceAll("\\.", "/")
-			+ "/";
-
 	public static Test suite() throws Exception {
 		final TestSuite suite = new TestSuite("Test for "
 				+ AllUITests.class.getPackage().getName());
