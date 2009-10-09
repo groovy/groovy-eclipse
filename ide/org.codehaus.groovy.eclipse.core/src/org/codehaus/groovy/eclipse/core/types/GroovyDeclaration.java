@@ -48,10 +48,6 @@ public abstract class GroovyDeclaration implements Modifiers, Comparable {
 
 	public abstract Kind getType();
 
-	public boolean isGroovyType() {
-		return true;
-	}
-
 	public String getSignature() {
 		return signature;
 	}
@@ -71,7 +67,7 @@ public abstract class GroovyDeclaration implements Modifiers, Comparable {
 
 		try {
 			GroovyDeclaration rhs = (GroovyDeclaration) obj;
-			return getType() == rhs.getType() && isGroovyType() == rhs.isGroovyType() && name.equals(rhs.name)
+			return getType() == rhs.getType() && name.equals(rhs.name)
 					&& signature.equals(signature) && modifiers == rhs.modifiers;
 		} catch (ClassCastException e) {
 			return false;
@@ -79,7 +75,7 @@ public abstract class GroovyDeclaration implements Modifiers, Comparable {
 	}
 
 	public int hashCode() {
-		return name.hashCode() + signature.hashCode() + modifiers + (isGroovyType() ? 1 : 0);
+		return name.hashCode() + signature.hashCode() + modifiers;
 	}
 
 	public int compareTo(Object arg) {

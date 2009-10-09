@@ -140,35 +140,20 @@ public abstract class AbstractMemberLookup implements IMemberLookup {
 		}
 
 		if (property == null) {
-			if (method.isGroovyType()) {
-				property = new Property(method.getReturnType(), method.getModifiers(), propertyName, readable,
-						writable, method.getDeclaringClass());
-			} else {
-				property = new JavaProperty(method.getReturnType(), method.getModifiers(), propertyName, readable,
-						writable, method.getDeclaringClass());
-			}
+			property = new Property(method.getReturnType(), method.getModifiers(), propertyName, readable,
+					writable, method.getDeclaringClass());
 			mapNameToProperty.put(propertyName, property);
 		} else if (readable) {
 			// FUTURE: emp - should modifiers be separate for read/write? Yes. But doesn't matter for now.
 			int modifiers = property.getModifiers();
-			if (method.isGroovyType()) {
-				property = new Property(returnType, property.getModifiers() | modifiers, propertyName, true, property
-						.isWritable(), property.getDeclaringClass());
-			} else {
-				property = new JavaProperty(returnType, property.getModifiers() | modifiers, propertyName, true,
-						property.isWritable(), property.getDeclaringClass());
-			}
+			property = new Property(returnType, property.getModifiers() | modifiers, propertyName, true, property
+					.isWritable(), property.getDeclaringClass());
 
 			mapNameToProperty.put(propertyName, property);
 		} else { // writable
 			int modifiers = property.getModifiers();
-			if (method.isGroovyType()) {
-				property = new Property(returnType, property.getModifiers() | modifiers, propertyName, property
-						.isWritable(), true, property.getDeclaringClass());
-			} else {
-				property = new JavaProperty(returnType, property.getModifiers() | modifiers, propertyName, property
-						.isWritable(), true, property.getDeclaringClass());
-			}
+			property = new Property(returnType, property.getModifiers() | modifiers, propertyName, property
+					.isWritable(), true, property.getDeclaringClass());
 			mapNameToProperty.put(propertyName, property);
 		}
 	}

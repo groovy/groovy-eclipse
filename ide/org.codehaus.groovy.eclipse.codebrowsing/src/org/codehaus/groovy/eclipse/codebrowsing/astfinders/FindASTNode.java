@@ -39,6 +39,7 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.codebrowsing.SourceCodeFinder;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.ASTUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IRegion;
@@ -93,7 +94,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 	@Override
     public void visitFieldExpression(FieldExpression expr) {
 		if (validCoords(expr) && identifier.equals(expr.getFieldName())) {
-			System.out.println("Field: " + expr.getFieldName());
+		    GroovyCore.trace("Field: " + expr.getFieldName());
 			testForMatch(expr);
 		}
 		super.visitFieldExpression(expr);
@@ -147,7 +148,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 			}
 
 			if (identifier.equals(expr.getProperty())) {
-				System.out.println("Property: " + expr.getProperty());
+			    GroovyCore.trace("Property: " + expr.getProperty());
 				testForMatch(expr);
 			} else if (expr.getObjectExpression() instanceof ClassExpression) {
 				patchClassExpressionLineColumn(expr, expr.getObjectExpression());
@@ -177,7 +178,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 			if (identifier.equals(expr.getName())
 					|| identifier
 							.equals(expr.getType().getNameWithoutPackage())) {
-				System.out.println("Variable: " + expr.getName());
+			    GroovyCore.trace("Variable: " + expr.getName());
 				testForMatch(expr);
 			}
 		}
@@ -189,7 +190,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
             if (identifier.equals(expr.getValue())
                     || identifier
                             .equals(expr.getType().getNameWithoutPackage())) {
-                System.out.println("Variable: " + expr.getValue());
+                GroovyCore.trace("Variable: " + expr.getValue());
                 testForMatch(expr);
             }
         }
@@ -210,7 +211,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
     public void visitMethodCallExpression(MethodCallExpression call) {
 		if (validCoords(call)) {
 			if (identifier.equals(call.getMethod().getText())) {
-				System.out.println("Method call: " + call.getMethod());
+			    GroovyCore.trace("Method call: " + call.getMethod());
 				// Strange - columns can be equal sometimes
 				if (call.getLineNumber() == call.getLastLineNumber()
 						&& call.getColumnNumber() == call.getLastColumnNumber()) {
@@ -237,7 +238,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 	@Override
     public void visitClassExpression(ClassExpression expr) {
 		if (validCoords(expr)) {
-			System.out.println("Class expr: " + expr.getText());
+		    GroovyCore.trace("Class expr: " + expr.getText());
 			testForMatch(expr);
 		}
 		super.visitClassExpression(expr);
@@ -245,9 +246,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 
 	@Override
     public void visitClass(ClassNode node) {
-		// TODO: find the real "class Blah" length
 		if (validCoords(node) && ASTUtils.isInsideNode(node, region.getOffset())) {
-			// TODO: want qualified identifier.
 			if (identifier.equals(node.getNameWithoutPackage())) {
 				throw new ASTNodeFoundException(moduleNode, classNode, node,
 						identifier, region);
@@ -292,7 +291,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 	@Override
     public void visitMethodPointerExpression(MethodPointerExpression expr) {
 		if (validCoords(expr) && identifier.equals(expr.getMethodName())) {
-			System.out.println("Method Pointer: " + expr.getMethodName());
+		    GroovyCore.trace("Method Pointer: " + expr.getMethodName());
 			testForMatch(expr);
 		}
 		super.visitMethodPointerExpression(expr);
@@ -301,7 +300,6 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 	@Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression call) {
 		if (validCoords(call) && identifier.equals(call.getMethod())) {
-			System.out.println("Static method call: " + call.getMethod());
 			testForMatch(call);
 		}
 		super.visitStaticMethodCallExpression(call);
@@ -316,7 +314,7 @@ public class FindASTNode extends ClassCodeVisitorSupport {
 	}
 
 	private void printNodeText(ASTNode node) {
-		System.out.println("Text [" + node.getLineNumber() + ","
+		GroovyCore.trace("Text [" + node.getLineNumber() + ","
 				+ node.getColumnNumber() + "]: " + node.getText());
 	}
 

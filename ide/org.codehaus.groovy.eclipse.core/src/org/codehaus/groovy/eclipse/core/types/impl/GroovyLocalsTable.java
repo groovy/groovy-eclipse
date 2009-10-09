@@ -33,10 +33,9 @@ import org.codehaus.groovy.eclipse.core.context.impl.ClosureScopeContext;
 import org.codehaus.groovy.eclipse.core.context.impl.ConstructorScopeContext;
 import org.codehaus.groovy.eclipse.core.context.impl.MethodScopeContext;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
-import org.codehaus.groovy.eclipse.core.types.ISymbolTable;
-import org.codehaus.groovy.eclipse.core.types.JavaLocalVariable;
-import org.codehaus.groovy.eclipse.core.types.LocalVariable;
 import org.codehaus.groovy.eclipse.core.types.GroovyDeclaration;
+import org.codehaus.groovy.eclipse.core.types.ISymbolTable;
+import org.codehaus.groovy.eclipse.core.types.LocalVariable;
 
 /**
  * Groovy local variables symbol table. It is only to be used in a
@@ -81,11 +80,6 @@ public class GroovyLocalsTable implements ISymbolTable,
             }
             final String type = var.getType().getName();
             if (!type.equals("java.lang.Object")) {
-                // If an array type or a type not in the Groovy project, then
-                // make it a Java type.
-                if (type.charAt(0) == '['
-                        || project.getClassNodeForName(type) == null)
-                    return new JavaLocalVariable(type, var.getName());
                 new LocalVariable(type, var.getName());
             }
             return newLocalVariable(var);

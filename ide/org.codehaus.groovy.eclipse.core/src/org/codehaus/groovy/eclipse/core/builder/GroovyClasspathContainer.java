@@ -22,7 +22,6 @@ import static org.eclipse.jdt.core.JavaCore.newLibraryEntry;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -30,7 +29,6 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -79,17 +77,6 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	        		srcJarPath, null, null,
 	                attrs, true);
 	        newEntries.add(entry);
-	        
-
-	        // don't need to get any other jars now
-//	        List<URL> otherJars = getOtherJars();
-//	        for (URL otherJar : otherJars) {
-//	            IPath otherJarPath = new Path(otherJar.getPath());
-//	            newEntries.add(newLibraryEntry(otherJarPath,
-//	                    null, null, null,
-//	                    new IClasspathAttribute[0], true));
-//            }
-//	        
 	        entries = newEntries.toArray(new IClasspathEntry[0]);
         } catch (Exception e) {
         	GroovyCore.logException("Problem finding groovy runtime", e);
@@ -112,10 +99,10 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     private URL getExportedGroovyAllJar() {
         try {
         	Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-        	Enumeration<URL> enu = groovyBundle.findEntries("", "groovy-all-*.jar", false);
+        	Enumeration<URL> enu = groovyBundle.findEntries("lib", "groovy-all-*.jar", false);
         	if (enu == null) {
-        	    // in some versions of the plugin, the groovy-all jar is in the lib directory
-        	    enu = groovyBundle.findEntries("lib", "groovy-all-*.jar", false);
+        	    // in some versions of the plugin, the groovy-all jar is in the base directory of the plugins
+        	    enu = groovyBundle.findEntries("", "groovy-all-*.jar", false);
         	}
         	while (enu.hasMoreElements()) {
         		URL jar = enu.nextElement();

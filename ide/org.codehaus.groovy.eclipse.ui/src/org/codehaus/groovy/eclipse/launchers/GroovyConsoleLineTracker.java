@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -33,21 +34,15 @@ import org.eclipse.debug.ui.console.IConsole;
 import org.eclipse.debug.ui.console.IConsoleLineTracker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.JavaModel;
 import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jdt.internal.debug.ui.console.JavaStackTraceHyperlink;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IHyperlink;
-import org.eclipse.ui.console.TextConsole;
 import org.eclipse.ui.dialogs.ListDialog;
-import org.eclipse.ui.internal.console.ConsoleManager;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 /**
@@ -139,7 +134,7 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
 			int closeParenIndexAt = -1;
 			// match
 			if (m.matches()) {
-			    System.out.println("match: " + m);
+				GroovyCore.trace("match: " + m);
 			    
 				consoleLine = m.group(0);
 				openParenIndexAt = consoleLine.indexOf("(");

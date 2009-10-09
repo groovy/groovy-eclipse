@@ -22,17 +22,31 @@
          point="org.eclipse.debug.core.launchConfigurationTypes">
       <launchConfigurationType
             delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
-            id="org.codehaus.groovy.eclipse.groovyLaunchConfiguration"
+            delegateDescription="Launches a Groovy application"
+            delegateName="Groovy Application Launcher"
+            id="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration"
             modes="run,debug"
-            name="Groovy"
+            name="Groovy Application"
             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
       </launchConfigurationType>
       <launchConfigurationType
             delegate="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchDelegate"
+            delegateDescription="Launches a Groovy shell using the current project as its classpath"
+            delegateName="Groovy Shell Launcher"
             id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
             modes="run,debug"
             name="Groovy Shell"
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+      </launchConfigurationType>
+      <launchConfigurationType
+            delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
+            delegateDescription="Launches an uncompiled groovy script"
+            delegateName="Groovy Script Launcher"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration"
+            modes="run,debug"
+            name="Groovy Script"
             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
       </launchConfigurationType>
@@ -41,22 +55,27 @@
          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
       <launchConfigurationTypeImage
             icon="icons/run_groovy_class.gif"
-            configTypeID="org.codehaus.groovy.eclipse.groovyLaunchConfiguration"
-            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyClass">
+            configTypeID="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration"
+            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyApplication">
       </launchConfigurationTypeImage>
       <launchConfigurationTypeImage
             configTypeID="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
             icon="icons/run_groovy_class.gif"
             id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyShell">
       </launchConfigurationTypeImage>
+      <launchConfigurationTypeImage
+            configTypeID="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration"
+            icon="icons/run_groovy_class.gif"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfigurationImage.groovyApp">
+      </launchConfigurationTypeImage>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
-            class="org.codehaus.groovy.eclipse.launchers.GroovyLaunchConfigurationTabGroup"
-            description="Launch a Groovy Class or Script"
-            id="org.codehaus.groovy.eclipse.groovyLaunchConfiguration.tabGroup"
-            type="org.codehaus.groovy.eclipse.groovyLaunchConfiguration">
+            class="org.codehaus.groovy.eclipse.launchers.GroovyApplicationLaunchConfigurationTabGroup"
+            description="Launch a Groovy Application"
+            id="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration.tabGroup"
+            type="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration">
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
             class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchConfigurationTabGroup"
@@ -64,15 +83,21 @@
             id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.tabGroup"
             type="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration">
       </launchConfigurationTabGroup>
+      <launchConfigurationTabGroup
+            class="org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchConfigurationTabGroup"
+            description="Launch a Groovy Script"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.tabGroup"
+            type="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration">
+      </launchConfigurationTabGroup>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
-            class="org.codehaus.groovy.eclipse.launchers.GroovyLaunchShortcut"
-            description="Run a Groovy class or script"
+            class="org.codehaus.groovy.eclipse.launchers.GroovyApplicationLaunchShortcut"
+            description="Run a Groovy application"
             icon="icons/run_groovy_class.gif"
-            id="org.codehaus.groovy.eclipse.debug.ui.groovyShortcut"
-            label="Groovy"
+            id="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration"
+            label="Groovy Application"
             modes="run,debug">
          <contextualLaunch>
            <enablement>
@@ -82,18 +107,17 @@
                  <test property="org.eclipse.debug.ui.projectNature" value="org.eclipse.jdt.groovy.core.groovyNature"/>
                  <or>
 					<test property="org.codehaus.groovy.eclipse.ui.hasMain"/>
-					<test property="org.codehaus.groovy.eclipse.ui.isTest"/>
 	             </or>
               </iterate>
               </with>
            </enablement>
         </contextualLaunch>
          <description
-               description="Run a groovy class or script"
+               description="Run a Groovy application"
                mode="run">
          </description>
          <description
-               description="Debug a groovy class or script"
+               description="Debug a Groovy application"
                mode="debug">
          </description>
       </shortcut>
@@ -101,7 +125,7 @@
             class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchShortcut"
             description="Launch an interactive Groovy Shell in the given project"
             icon="icons/run_groovy_class.gif"
-            id="org.codehaus.groovy.eclipse.debug.ui.groovyShellShortcut"
+            id="org.codehaus.groovy.eclipse.debug.ui.groovyShellLaunchShortcut"
             label="Groovy Shell"
             modes="run,debug">
          <contextualLaunch>
@@ -121,11 +145,48 @@
             </enablement>
          </contextualLaunch>
          <description
-               description="Run a groovy shell for the current project"
+               description="Run a Groovy shell for the current project"
                mode="run">
          </description>
          <description
-               description="Debug a groovy shell for the current project"
+               description="Debug a Groovy shell for the current project"
+               mode="debug">
+         </description>
+      </shortcut>
+      <shortcut
+            class="org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut"
+            description="Run a Groovy script"
+            icon="icons/run_groovy_class.gif"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut"
+            label="Groovy Script"
+            modes="run,debug">
+         <contextualLaunch>
+            <enablement>
+               <with
+                     variable="selection">
+                  <count
+                        value="1">
+                  </count>
+                  <iterate>
+                     <test
+                           property="org.eclipse.debug.ui.projectNature"
+                           value="org.eclipse.jdt.groovy.core.groovyNature">
+                     </test>
+                     <or>
+                        <test
+                              property="org.codehaus.groovy.eclipse.ui.isScript">
+                        </test>
+                     </or>
+                  </iterate>
+               </with>
+            </enablement>
+         </contextualLaunch>
+         <description
+               description="Run a Groovy script"
+               mode="run">
+         </description>
+         <description
+               description="Debug a Groovy script"
                mode="debug">
          </description>
       </shortcut>
@@ -382,40 +443,41 @@
      <!-- Groovy Refactorings -->
      <viewerContribution
                id="org.codehaus.groovy.viewer.refactorings"
-               targetID="#CompilationUnitEditorContext">
-         		<menu
-               label="Groovy Refac&amp;toring"
-               id="org.codehaus.groovy.refactoring.menu">
-            <separator
-               name="refactoring"/>
-             </menu>
-            <action
-                  class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
-                  definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
-                  id="org.codehaus.groovy.eclipse.refactoring.renameMethodViewer"
-                  label="Rename..."
-                  menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-                  style="push"
-                  tooltip="Rename a groovy element">
-            </action>
-           <action
-                 class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
-                 definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-                 id="org.codehaus.groovy.eclipse.refactoring.extractMethodViewer"
-                 label="Extract Method..."
-                 menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-                 style="push"
-                 tooltip="Extract a groovy method from an expression">
-           </action>
-           <action
-                 class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
-                 definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
-                 id="org.codehaus.groovy.eclipse.refactoring.inlineMethodViewer"
-                 label="Inline Method..."
-                 menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-                 style="push"
-                 tooltip="Inline a groovy method">
-           </action>
+               targetID="#GroovyCompilationUnitEditorContext">
+        <action
+              class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
+              definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+              id="org.codehaus.groovy.eclipse.refactoring.inlineMethodViewer"
+              label="Inline Method..."
+              menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+              style="push"
+              tooltip="Inline a groovy method">
+        </action>
+        <action
+              class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
+              definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+              id="org.codehaus.groovy.eclipse.refactoring.renameMethodViewer"
+              label="Rename..."
+              menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+              style="push"
+              tooltip="Rename a groovy element">
+        </action>
+        <action
+              class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
+              definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+              id="org.codehaus.groovy.eclipse.refactoring.extractMethodViewer"
+              label="Extract Method..."
+              menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+              style="push"
+              tooltip="Extract a groovy method from an expression">
+        </action>
+        <menu
+              id="org.codehaus.groovy.refactoring.menu"
+              label="Groovy Refac&amp;tor">
+           <separator
+                 name="refactoring">
+           </separator>
+        </menu>
      </viewerContribution>
      
      
@@ -599,12 +661,12 @@
             sequence="M2+M3+D G"/>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToJava"
-            contextId="org.eclipse.ui.globalScope"
+            contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+G J"/>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
-            contextId="org.eclipse.ui.globalScope"
+            contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+J G"/>
    </extension>
@@ -624,7 +686,7 @@
           class="org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester"
           id="org.codehaus.groovy.eclipse.ui.groovyResourcePropertyTester"
           namespace="org.codehaus.groovy.eclipse.ui"
-          properties="isTest,hasMain"
+          properties="isTest,hasMain,isScript"
           type="org.eclipse.core.runtime.IAdaptable"/>
 	</extension>
 	<extension
@@ -694,7 +756,7 @@
          </action>
          <menu
                id="org.codehaus.groovy.eclipse.refactoring.refactoringMenu"
-               label="Groovy Refac&amp;toring"
+               label="Refac&amp;tor"
                path="edit">
             <groupMarker
                   name="content">

@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.test;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.codehaus.groovy.eclipse.launchers.GroovyLaunchShortcut;
+import org.codehaus.groovy.eclipse.launchers.GroovyApplicationLaunchShortcut;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
@@ -36,7 +36,7 @@ public class GroovyLaunchShortuctTestCase extends EclipseTestCase {
 	private final String FULL_CLASS_NAME = "org.codehaus.groovy.GroovyTest" ;
 	private final String PROJECT_NAME = "GroovyProject" ;
 	private final String ARGUMENTS = "arg0" ;
-	private GroovyLaunchShortcut launchShortcut ; 
+	private GroovyApplicationLaunchShortcut launchShortcut ; 
 	
 	/**
 	 * @see org.codehaus.groovy.eclipse.test.EclipseTestCase#setUp()
@@ -44,18 +44,27 @@ public class GroovyLaunchShortuctTestCase extends EclipseTestCase {
 	@Override
     public void setUp() throws Exception {
 		super.setUp() ; 
-		launchShortcut = new GroovyLaunchShortcut();
+		launchShortcut = new GroovyApplicationLaunchShortcut();
 	}
 	
 	@Override
     public void tearDown() throws Exception {
-		ILaunchConfigurationType configType = GroovyLaunchShortcut.getGroovyLaunchConfigType();
-		ILaunchConfiguration[] configs = GroovyLaunchShortcut.getLaunchManager().getLaunchConfigurations(configType);
+		ILaunchConfigurationType configType = 
+		    getLaunchConfig();
+		ILaunchConfiguration[] configs = GroovyApplicationLaunchShortcut.getLaunchManager().getLaunchConfigurations(configType);
 		for (int i = 0; i < configs.length; i++) {
-			configs[i].delete() ; 
+			configs[i].delete(); 
 		}
-		super.tearDown() ;
+		super.tearDown();
 	}
+
+    /**
+     * @return
+     */
+    private ILaunchConfigurationType getLaunchConfig() {
+        return GroovyApplicationLaunchShortcut.getLaunchManager().getLaunchConfigurationType(
+                GroovyApplicationLaunchShortcut.GROOVY_APP_LAUNCH_CONFIG_ID);
+    }
 	
 	/**
 	 * Test
@@ -127,8 +136,7 @@ public class GroovyLaunchShortuctTestCase extends EclipseTestCase {
 		createConfig("Launch3", "org.eclipse.NotMyTest", PROJECT_NAME, ARGUMENTS);
 	}
 	private void createConfig(String name, String mainType, String projectName, String arguments) throws Exception {
-		ILaunchConfigurationWorkingCopy config = 
-			GroovyLaunchShortcut.getGroovyLaunchConfigType().newInstance(null, name ) ;
+		ILaunchConfigurationWorkingCopy config = getLaunchConfig().newInstance(null, name);
 		config.setAttribute(projectName, arguments) ;
 		config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, mainType );
 		config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName );
@@ -143,7 +151,4 @@ public class GroovyLaunchShortuctTestCase extends EclipseTestCase {
 		returnValue.put(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, ARGUMENTS ) ;
 		return returnValue ; 
 	}
-
-	
-	
 }

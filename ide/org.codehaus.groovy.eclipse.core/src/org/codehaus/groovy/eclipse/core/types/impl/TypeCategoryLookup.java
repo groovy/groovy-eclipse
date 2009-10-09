@@ -28,7 +28,6 @@ import org.codehaus.groovy.eclipse.core.IGroovyProjectAware;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.types.AbstractMemberLookup;
 import org.codehaus.groovy.eclipse.core.types.ClassType;
-import org.codehaus.groovy.eclipse.core.types.JavaMethod;
 import org.codehaus.groovy.eclipse.core.types.Method;
 import org.codehaus.groovy.eclipse.core.types.Parameter;
 import org.codehaus.groovy.eclipse.core.types.Property;
@@ -200,7 +199,7 @@ public class TypeCategoryLookup extends AbstractMemberLookup implements IGroovyP
                 String returnType = Signature.toString(Signature.getTypeErasure(method.getReturnType()));
                 ClassType declaringClass = TypeUtil.newClassType(method.getDeclaringType());
                 
-                JavaMethod javaMethod = new JavaMethod(modifiers, method.getElementName(), parameters, returnType, declaringClass);
+                Method javaMethod = new Method(modifiers, method.getElementName(), parameters, returnType, declaringClass, true);
                 List<Method> list = mapClassNameToMethods.get(key);
                 if (list == null) { 
                     list = new LinkedList<Method>(); 

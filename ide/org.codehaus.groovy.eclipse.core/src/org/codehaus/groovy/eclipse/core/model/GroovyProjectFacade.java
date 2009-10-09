@@ -156,22 +156,32 @@ public class GroovyProjectFacade {
          try {
             IType type = project.findType(name, new NullProgressMonitor());
              if (type instanceof SourceType) { 
-                 ICompilationUnit unit = type.getCompilationUnit();
-                 if (unit instanceof GroovyCompilationUnit) {
-                     ModuleNode module = ((GroovyCompilationUnit) unit).getModuleNode();
-                     List<ClassNode> classes = module.getClasses();
-                     for (ClassNode classNode : classes) {
-                        if (classNode.getName().equals(name)) {
-                            return classNode;
-                        }
-                    }
-                 }
+                 return javaTypeToGroovyClass(type);
              }
         } catch (JavaModelException e) {
             GroovyCore.logException(e.getMessage(), e);
         }
-         return null;
+        return null;
      }
+
+    /**
+     * @param name
+     * @param type
+     * @return
+     */
+    private ClassNode javaTypeToGroovyClass(IType type) {
+        ICompilationUnit unit = type.getCompilationUnit();
+         if (unit instanceof GroovyCompilationUnit) {
+             ModuleNode module = ((GroovyCompilationUnit) unit).getModuleNode();
+             List<ClassNode> classes = module.getClasses();
+             for (ClassNode classNode : classes) {
+                if (classNode.getName().equals(type.getElementName())) {
+                    return classNode;
+                }
+            }
+         }
+         return null;
+    }
 
     
     public List<IType> findAllRunnableTypes() throws JavaModelException {
@@ -273,5 +283,63 @@ public class GroovyProjectFacade {
 
     public IJavaProject getProject() {
         return project;
+    }
+
+    /**
+     * @param iType
+     * @return
+     */
+    public boolean isGroovyScript(IType type) {
+        ClassNode node = javaTypeToGroovyClass(type);
+        if (node != null) {
+            return node.isScript();
+        }
+        return false;
+    }
+
+    /**
+     * @return
+     * @throws JavaModelException 
+     */
+    public List<IType> findAllScripts() throws JavaModelException {
+        final List<IType> results = newList();
+        IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
+        for (IPackageFragmentRoot root : roots) {
+            if (!root.isReadOnly()) {
+                IJavaElement[] children = root.getChildren();
+                for (IJavaElement child : children) {
+                    if (child.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
+                        ICompilationUnit[] units = ((IPackageFragment) child).getCompilationUnits();
+                        for (ICompilationUnit unit : units) {
+                            if (unit instanceof GroovyCompilationUnit) {
+                                for (IType type : unit.getTypes()) {
+                                    if (isGroovyScript(type)) {
+                                        results.add(type);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
+    /**
+     * @param unit
+     * @return
+     */
+    public boolean isGroovyScript(ICompilationUnit unit) {
+        try {
+            for (IType type : unit.getTypes()) {
+                if (isGroovyScript(type)) {
+                    return true;
+                }
+            }
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Exception when looking for Groovy Scripts", e);
+        }
+        return false;
     }
 }

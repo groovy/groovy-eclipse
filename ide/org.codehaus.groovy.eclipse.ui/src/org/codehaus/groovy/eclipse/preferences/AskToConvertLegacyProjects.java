@@ -38,20 +38,17 @@ import org.eclipse.ui.progress.UIJob;
  */
 public class AskToConvertLegacyProjects extends UIJob {
     
-    private ConvertLegacyProject legacy;
-    
     public AskToConvertLegacyProjects() {
         super("Convert Legacy Projects");
-        legacy = new ConvertLegacyProject();
     }
     
-    public boolean hasOldProjects() {
-        return legacy.getAllOldProjects().length > 0;
-    }
-
 
     @Override
     public IStatus runInUIThread(IProgressMonitor monitor) {
+        ConvertLegacyProject legacy = new ConvertLegacyProject();
+        if (legacy.getAllOldProjects().length == 0) {
+            return Status.OK_STATUS;
+        }
         Shell shell = this.getDisplay().getActiveShell();
         boolean shouldDispose = false;
         if (shell == null) {

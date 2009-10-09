@@ -107,6 +107,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
  * @created Aug 17, 2009
  *
  */
+@SuppressWarnings("unchecked")
 public class CleanUpPostSaveListener implements IPostSaveListener {
 
 	private static class CleanUpSaveUndo extends TextFileChange {
@@ -269,7 +270,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void saved(ICompilationUnit unit, IRegion[] changedRegions, IProgressMonitor monitor) throws CoreException {
+    public void saved(ICompilationUnit unit, IRegion[] changedRegions, IProgressMonitor monitor) throws CoreException {
 		if (monitor == null)
 			monitor= new NullProgressMonitor();
 

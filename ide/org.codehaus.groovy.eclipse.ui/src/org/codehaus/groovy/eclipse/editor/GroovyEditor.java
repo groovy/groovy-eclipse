@@ -45,7 +45,6 @@ import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
-import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
 import org.eclipse.jdt.ui.actions.RefactorActionGroup;
@@ -54,9 +53,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.source.IAnnotationModel;
-import org.eclipse.jface.text.source.IOverviewRuler;
 import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.text.source.IVerticalRuler;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.graphics.Image;
@@ -123,8 +120,8 @@ public class GroovyEditor extends CompilationUnitEditor {
     
     public GroovyEditor() {
 		super();
-//		setDocumentProvider(GroovyPlugin.getDefault().getDocumentProvider());
         setRulerContextMenuId("#GroovyCompilationUnitRulerContext"); //$NON-NLS-1$  
+        setEditorContextMenuId("#GroovyCompilationUnitEditorContext"); //$NON-NLS-1$  
 	}
 
     protected void setPreferenceStore(IPreferenceStore store) {

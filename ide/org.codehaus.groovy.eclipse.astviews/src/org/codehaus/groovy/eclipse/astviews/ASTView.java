@@ -19,7 +19,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.groovy.eclipse.editor.actions.EditorPartFacade;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.ElementChangedEvent;
@@ -30,7 +29,6 @@ import org.eclipse.jdt.core.IJavaElementDelta;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -80,8 +78,7 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 			if (! (inputElement instanceof ModuleNode)) {
 				return new Object[0];
 			}
-			root = TreeNodeFactory.createTreeNode(null, (ModuleNode) inputElement, "Module Nodes");
-			System.out.println(inputElement);
+			root = TreeNodeFactory.createTreeNode(null, (ModuleNode) inputElement, "Module Nodes"); //$NON-NLS-1$
 			Object[] children = root.getChildren();
 			return children;
 		}
@@ -172,7 +169,7 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 						}
 					}
 				} catch (Exception e) {
-					GroovyCore.logException("Error updating AST Viewer", e);
+					GroovyCore.logException("Error updating AST Viewer", e); //$NON-NLS-1$
 				}
 				editor = null;
 				// This is a guard - the content provider should not be null,

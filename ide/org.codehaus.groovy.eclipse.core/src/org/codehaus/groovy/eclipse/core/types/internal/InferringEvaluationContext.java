@@ -48,7 +48,7 @@ public class InferringEvaluationContext extends TypedEvaluationContext {
 
 	public GroovyDeclaration lookupSymbol(String name) {
 		GroovyDeclaration type = super.lookupSymbol(name);
-		if (type.isGroovyType() && !type.isInferred()) {
+		if (!type.isInferred()) {
 			switch (type.getType()) {
 				case LOCAL_VARIABLE:
 					return Infer.localVariable((LocalVariable) type, this);
@@ -65,7 +65,7 @@ public class InferringEvaluationContext extends TypedEvaluationContext {
 	
 	public Method lookupMethod(String type, String name, String[] paramTypes, boolean accessible, boolean staticAccess) {
 		Method method = super.lookupMethod(type, name, paramTypes, accessible, staticAccess);
-		if (method.isGroovyType() && !method.isInferred()) {
+		if (!method.isInferred()) {
 			return Infer.method(method, this);
 		}
 		return method;

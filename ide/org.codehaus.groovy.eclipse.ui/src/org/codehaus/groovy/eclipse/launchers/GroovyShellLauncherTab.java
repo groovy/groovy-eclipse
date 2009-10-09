@@ -17,11 +17,9 @@ package org.codehaus.groovy.eclipse.launchers;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchTab;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaMainTab;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.launching.JavaSourceLookupDirector;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.ui.ISharedImages;
 import org.eclipse.jdt.ui.JavaUI;
@@ -48,7 +46,7 @@ public class GroovyShellLauncherTab extends JavaMainTab {
 	    fMainText.setVisible(false);
         String className = groovy.ui.InteractiveShell.class.getName();
 	    fMainText.setText(className);
-	    createMainTypeExtensions(parent);
+//	    createMainTypeExtensions(parent);
 	}
 	
 	@Override

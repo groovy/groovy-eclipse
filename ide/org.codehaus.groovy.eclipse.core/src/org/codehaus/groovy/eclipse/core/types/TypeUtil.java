@@ -89,7 +89,7 @@ public class TypeUtil {
         String returnType = getReturnType(method);
         // if an array, then use the type signature, not the name
         ClassType declaringClass = TypeUtil.newClassType(jdtDeclaringClass);
-        return new JavaMethod(modifiers, method.getElementName(), parameters, returnType, declaringClass);
+        return new Method(modifiers, method.getElementName(), parameters, returnType, declaringClass, true);
 	}
 
     /**

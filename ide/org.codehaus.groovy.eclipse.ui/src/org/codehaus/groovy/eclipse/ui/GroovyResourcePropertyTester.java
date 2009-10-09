@@ -39,7 +39,9 @@ public class GroovyResourcePropertyTester extends PropertyTester {
 	/**
 	 * Property name to determine if a class has a main method
 	 */
-	public static final String hasMain = "hasMain" ;  
+	public static final String hasMain = "hasMain";
+	public static final String isScript = "isScript";
+	
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.expressions.IPropertyTester#test(Object receiver, String property, Object[] args, Object expectedValue)
@@ -47,7 +49,7 @@ public class GroovyResourcePropertyTester extends PropertyTester {
 	public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
 		boolean returnValue = false;
 
-		if (hasMain.equals(property)) {
+		if (hasMain.equals(property) || isScript.equals(property)) {
 			if(receiver instanceof IAdaptable) {
 				try {
 				    ICompilationUnit unit = (ICompilationUnit) ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
@@ -58,8 +60,12 @@ public class GroovyResourcePropertyTester extends PropertyTester {
 				        }
 				    }
 				    if (unit != null) {
-				        List<IType> results = GroovyProjectFacade.findAllRunnableTypes(unit);
-				        returnValue = results.size() > 0;
+				        if (hasMain.equals(property)) {
+    				        List<IType> results = GroovyProjectFacade.findAllRunnableTypes(unit);
+    				        returnValue = results.size() > 0;
+				        } else if (isScript.equals(property)) {
+				            returnValue = new GroovyProjectFacade(unit).isGroovyScript(unit);
+				        }
 				    }
 				} catch (IllegalArgumentException e) {
 					// can ignore

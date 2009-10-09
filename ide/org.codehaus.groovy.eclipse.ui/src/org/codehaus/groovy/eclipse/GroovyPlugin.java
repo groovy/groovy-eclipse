@@ -16,9 +16,9 @@
 package org.codehaus.groovy.eclipse;
 import java.io.IOException;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
-import org.codehaus.groovy.eclipse.editor.GroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.preferences.AskToConvertLegacyProjects;
 import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener;
@@ -44,7 +44,26 @@ import org.osgi.framework.BundleContext;
  */
 public class GroovyPlugin extends AbstractUIPlugin {
 	
-	/**
+    private final class JUnitPageListener implements IPageListener {
+        public void pageOpened(IWorkbenchPage page) {
+            IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
+            service.addPartListener(ensure);
+        }
+
+        public void pageClosed(IWorkbenchPage page) {
+            try {
+                IPartService service = (IPartService) page.getWorkbenchWindow().getService(IPartService.class);
+                service.removePartListener(ensure);
+            } catch (Exception e) {
+                GroovyCore.logException("Exception thrown when removing JUnit Monospace font listener", e);
+            }
+        }
+
+        public void pageActivated(IWorkbenchPage page) {
+        }
+    }
+
+    /**
 	 * The single plugin instance
 	 */
 	private static GroovyPlugin plugin;
@@ -62,6 +81,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	private ContributionTemplateStore fTemplateStore;
 
     private EnsureJUnitFont ensure;
+
+    private IPageListener junitListener;
 	
 	static {
 		String value = Platform
@@ -181,21 +202,10 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     private void addMonospaceFontListener() {
         ensure = new EnsureJUnitFont();
-
+        junitListener = new JUnitPageListener();
         try {
             // listen for activations of the JUnit view and ensure monospace font if requested.
-            Workbench.getInstance().getActiveWorkbenchWindow().addPageListener(new IPageListener() {
-                public void pageOpened(IWorkbenchPage page) {
-                    IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
-                    service.addPartListener(ensure);
-                }
-                
-                public void pageClosed(IWorkbenchPage page) {
-                }
-                
-                public void pageActivated(IWorkbenchPage page) {
-                }
-            });
+            Workbench.getInstance().getActiveWorkbenchWindow().addPageListener(junitListener);
         } catch (NullPointerException e) {
             // ignore, UI has not been initialized yet
         }
@@ -204,14 +214,23 @@ public class GroovyPlugin extends AbstractUIPlugin {
         
         maybeAskToConvertLegacyProjects();
     }
+    
+    private void removeMonospaceFontListener() {
+        try {
+            // listen for activations of the JUnit view and ensure monospace font if requested.
+            Workbench.getInstance().getActiveWorkbenchWindow().removePageListener(junitListener);
+        } catch (NullPointerException e) {
+            // ignore, UI has not been initialized yet
+        }
+        getPreferenceStore().removePropertyChangeListener(ensure);
+    }
 	
 	/**
      * 
      */
     private void maybeAskToConvertLegacyProjects() {
         AskToConvertLegacyProjects ask = new AskToConvertLegacyProjects();
-        if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS) 
-                && ask.hasOldProjects()) {
+        if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS)) {
             ask.schedule();
         }
     }
@@ -221,6 +240,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	    super.stop(context);
 	    textTools.dispose();
 	    textTools = null;
+        DelegatingCleanUpPostSaveListener.uninstallCleanUp();
+        removeMonospaceFontListener();
 	}
 
 	

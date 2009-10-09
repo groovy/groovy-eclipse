@@ -19,7 +19,6 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
-import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
@@ -39,7 +38,7 @@ import org.eclipse.ui.dialogs.ListDialog;
  *
  * @author MelamedZ
  */
-public class GroovyLauncherTab extends JavaMainTab {
+public abstract class AbstractGroovyLauncherTab extends JavaMainTab {
 
 	/**
 	 * Dialog for selecting the groovy class to run.
@@ -52,7 +51,7 @@ public class GroovyLauncherTab extends JavaMainTab {
 		 * project needs to be compiled.
 		 */
 		try {
-            final List<IType> availableClasses = new GroovyProjectFacade(javaProject).findAllRunnableTypes();
+            final List<IType> availableClasses = findAllRunnableTypes(javaProject);
             if (availableClasses.size() == 0) {
             	MessageDialog.openWarning(getShell(), "No Groovy classes to run",
             			"There are no compiled groovy classes to run in this project");
@@ -81,7 +80,14 @@ public class GroovyLauncherTab extends JavaMainTab {
             GroovyCore.logException("Exception when launching " + javaProject, e);
         }
 	}
-	
+
+    /**
+     * @param javaProject
+     * @return
+     * @throws JavaModelException
+     */
+    protected abstract List<IType> findAllRunnableTypes(IJavaProject javaProject)
+            throws JavaModelException;
 	/**
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getName()
 	 */

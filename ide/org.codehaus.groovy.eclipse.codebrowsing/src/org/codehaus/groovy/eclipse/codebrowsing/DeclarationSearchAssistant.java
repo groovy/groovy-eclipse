@@ -188,8 +188,6 @@ public class DeclarationSearchAssistant implements IDeclarationSearchAssistant {
         ASTSearchResult result = ASTNodeFinder.findASTNode(moduleNode,
 				identifier, region, facade.getFile());
 		if (result != null) {
-			System.out.println("Found at offset " + result.getRegion().getOffset() + ", "
-					+ ": " + result.getASTNode());
 			return processAST(facade, region, result);
 		}
 		return null;
