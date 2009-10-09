@@ -59,16 +59,18 @@ public class BreakpointUpdater implements IMarkerUpdater {
 
     public boolean updateMarker(IMarker marker, IDocument document,
             Position position) {
+        GroovyCompilationUnit unit = getCompilationUnit(marker);
+        if (unit == null) {
+            // ignore non-GroovyCompilationUnits
+            return true;
+        }
+
         if(position.isDeleted()) {
             return false;
         }
         IBreakpointManager manager = DebugPlugin.getDefault().getBreakpointManager();
         IBreakpoint breakpoint = manager.getBreakpoint(marker);
         if(breakpoint == null) {
-            return false;
-        }
-        GroovyCompilationUnit unit = getCompilationUnit(marker);
-        if (unit == null) {
             return false;
         }
         try {
