@@ -16,14 +16,15 @@
 
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import org.codehaus.groovy.activator.GroovyActivator;
+import org.codehaus.groovy.activator.RefreshPackages;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
-import org.eclipse.core.internal.registry.osgi.OSGIUtils;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.internal.baseadaptor.StateManager;
-import org.eclipse.osgi.internal.resolver.SystemState;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.DisabledInfo;
 import org.eclipse.osgi.service.resolver.State;
@@ -105,6 +106,9 @@ public class CompilerUtils {
                 }
             }
             
+            // set to refresh packages on startup
+            GroovyActivator.getDefault().setRefreshOnStartup(true);
+
             Bundle[] toDisable = Platform.getBundles("org.codehaus.groovy", (toVersion17 ? version16 : version17));
             Bundle toEnable  = toVersion17 ? getHighestVersion(state, 7) : getHighestVersion(state, 6);
 
@@ -122,14 +126,14 @@ public class CompilerUtils {
                     Platform.getPlatformAdmin().addDisabledInfo(info);
                 }
             }
-            toEnable.start();
+            toEnable.start(Bundle.START_ACTIVATION_POLICY);
             
-            // Now, make sure that all cached references to bundle and package exports and imports
-            Bundle[] allChangedBundles = new Bundle[1 + toDisable.length];
-            allChangedBundles[0] = toEnable;
-            System.arraycopy(toDisable, 0, allChangedBundles, 1, toDisable.length);
-            OSGIUtils.getDefault().getPackageAdmin().refreshPackages(allChangedBundles);
-            
+            // Force a package refresh at startup
+            // add the JVM argument to refresh packages on startup
+            IStatus status = new RefreshPackages().addJvmArg();
+            if (status.getSeverity() > IStatus.WARNING) {
+                throw new CoreException(status);
+            }
             return Status.OK_STATUS;
         } catch (Exception e) {
             GroovyCore.logException(e.getMessage(), e);
@@ -163,7 +167,7 @@ public class CompilerUtils {
         if (highestMinorVersion == null) {
             return null;
         }
-        return Platform.getBundle("org.codehaus.groovy").getBundleContext().getBundle(highestMinorVersion.getBundleId());
+        return Platform.getBundle("org.codehaus.groovy.eclipse.core").getBundleContext().getBundle(highestMinorVersion.getBundleId());
     }
 
     /**

@@ -61,6 +61,7 @@ Export-Package: antlr,
  org.apache.bsf.util.type,
  org.apache.commons.cli,
  org.codehaus.groovy,
+ org.codehaus.groovy.activator,
  org.codehaus.groovy.ant,
  org.codehaus.groovy.antlr,
  org.codehaus.groovy.antlr.java,
@@ -106,7 +107,12 @@ Export-Package: antlr,
 Eclipse-BuddyPolicy: dependent
 Require-Bundle: org.apache.ant,
  org.junit,
- org.eclipse.core.runtime
+ org.eclipse.core.runtime,
+ org.eclipse.equinox.p2.metadata;bundle-version="1.0.100",
+ org.eclipse.equinox.p2.metadata.generator;bundle-version="1.0.100",
+ org.eclipse.equinox.p2.metadata.repository;bundle-version="1.0.101",
+ org.eclipse.equinox.p2.engine;bundle-version="1.0.101",
+ org.eclipse.equinox.p2.core;bundle-version="1.0.101"
 Bundle-Vendor: Codehaus.org
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
