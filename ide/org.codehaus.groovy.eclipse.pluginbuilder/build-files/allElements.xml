@@ -26,11 +26,11 @@
 	<target name="allElementsDelegator">
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
-			<property name="id" value="org.codehaus.groovy17.feature" />
+			<property name="id" value="org.codehaus.groovy16.feature" />
 		</ant>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
-			<property name="id" value="org.codehaus.groovy16.feature" />
+			<property name="id" value="org.codehaus.groovy17.feature" />
 		</ant>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
@@ -65,12 +65,12 @@
  	<!-- Add one target for each root element and each configuration           -->
  	<!-- Replace element.id with the id of the top level element being built   -->
  	<!-- ===================================================================== -->
-	<target name="assemble.org.codehaus.groovy17.feature">
+	<target name="assemble.org.codehaus.groovy16.feature">
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
-	<target name="assemble.org.codehaus.groovy16.feature">
+	<target name="assemble.org.codehaus.groovy17.feature">
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
