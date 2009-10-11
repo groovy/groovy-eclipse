@@ -5,16 +5,12 @@
     are made available under the terms of the Eclipse Public License v1.0
     which accompanies this distribution, and is available at
     http://www.eclipse.org/legal/epl-v10.html
-   
-    Contributors:
-        Andrew Eisenberg - modified for Groovy Eclipse 2.0
  -->
 <feature
-      id="org.codehaus.groovy.eclipse.feature"
+      id="org.codehaus.groovy17.feature"
       label="%featureName"
       version="2.0.0.qualifier"
-      provider-name="%providerName"
-      plugin="org.codehaus.groovy.eclipse">
+      provider-name="%providerName">
 
    <description url="%descriptionURL">
       %description
@@ -31,18 +27,6 @@
    <url>
       <update label="%updateSiteName" url="http://dist.codehaus.org/groovy/distributions/greclipse/snapshot/e3.5/"/>
    </url>
-
-   <includes
-         id="org.codehaus.groovy.jdt.patch"
-         version="0.0.0"/>
-
-   <includes
-         id="org.codehaus.groovy16.feature"
-         version="0.0.0"/>
-
-   <includes
-         id="org.codehaus.groovy17.feature"
-         version="0.0.0"/>
 
    <requires>
       <import plugin="org.eclipse.jface"/>
@@ -77,71 +61,9 @@
    </requires>
 
    <plugin
-         id="org.codehaus.groovy.eclipse.codebrowsing"
+         id="org.codehaus.groovy"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.codeassist.completion"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.cstviewer"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.core.help"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.refactoring"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.groovy.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.ant"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
+         version="1.7.0.qualifier"/>
 
 </feature>

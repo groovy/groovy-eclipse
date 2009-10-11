@@ -33,6 +33,10 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy16.feature">
 			</fileset>
 		</copy>
+		<copy todir="${featuresDestDir}/org.codehaus.groovy17.feature">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy17.feature">
+			</fileset>
+		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.jdt.patch">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.jdt.patch">
 			</fileset>
