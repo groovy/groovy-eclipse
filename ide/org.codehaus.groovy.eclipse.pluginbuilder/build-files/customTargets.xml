@@ -182,6 +182,7 @@
 			<fileset dir="${updateSiteDir}/features">
 			    <include name="*alltests*"/>
 			    <include name="*sdk*"/>
+			    <include name="*groovy16*"/>
 			</fileset>
 		</delete>
   	<delete>

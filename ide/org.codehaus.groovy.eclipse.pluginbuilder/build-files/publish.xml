@@ -3,7 +3,7 @@
 	<!-- ================================= 
           target: publish              
        ================================= -->
-  <target name="publish" description="Publishes build files to webdav" depends="-init">
+  <target name="publish" description="Publishes build files to update site location" depends="-init">
   	<!--
   	1. zip the old
   	2. delete the old 
@@ -15,7 +15,7 @@
   		<zipfileset dir="${buildDirectory}/updateSite">
   			 <include name="**/*"/>
   			 <exclude name="old"/>
-		    <exclude name="old/*"/>
+		     <exclude name="old/*"/>
   		</zipfileset>
   	</zip>
 
