@@ -164,6 +164,27 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n"); 
     	}
     }
+    
+    public void testNewRuleInLatestGroovy() {
+    	if (isGroovy16()) { // FIXASC (M2) should also break in 17b2
+	    	this.runNegativeTest(new String[]{
+	    			"Move.groovy",
+	    			"enum Move { ROCK, PAPER, SCISSORS }\n"+
+					"\n"+
+					"final static BEATS = [\n"+
+					"   [Move.ROCK,     Move.SCISSORS],\n"+
+					"   [Move.PAPER,    Move.ROCK],\n"+
+					"   [Move.SCISSORS, Move.PAPER]\n"+
+					"].asImmutable()"
+	    	},
+	    	"----------\n" + 
+			"1. ERROR in Move.groovy (at line 3)\n" + 
+			"	final static BEATS = [\n" + 
+			"	^\n" + 
+			"Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" + 
+			"----------\n");
+    	}
+    }
 	
 	// WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
 	public void testStandaloneGroovyFile() {
