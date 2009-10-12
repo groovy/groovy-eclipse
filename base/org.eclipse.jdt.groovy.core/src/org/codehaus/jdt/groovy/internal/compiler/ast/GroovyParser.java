@@ -53,6 +53,7 @@ public class GroovyParser {
 	// FIXASC (RC1) review callers who pass null for options
 	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
 		String path = (options == null ? null : options.groovyClassLoaderPath);
+		System.err.println("ref context=" + problemReporter.referenceContext);
 		// if (options == null) {
 		// throw new RuntimeException("Dont do that");
 		// }
@@ -62,7 +63,7 @@ public class GroovyParser {
 		// FIXASC (M2) set parent of the loader to system or context class loader?
 
 		GroovyClassLoader gcl = (path == null ? null : cache.get(path));
-		if (gcl == null) {
+		if (gcl == null && path != null) {
 			gcl = new GroovyClassLoader();
 			configureClasspath(gcl, path);
 			cache.put(path, gcl);
