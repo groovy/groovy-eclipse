@@ -50,11 +50,6 @@
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.eclipse.sdk" />
 		</ant>
-		<ant antfile="${genericTargets}" target="${target}">
-			<property name="type" value="feature" />
-			<property name="id" value="org.codehaus.groovy16.feature" />
-		</ant>
-		
 		<!--
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
@@ -99,11 +94,6 @@
 		</ant>
 	</target>
 	<target name="assemble.org.codehaus.groovy.eclipse.sdk">
-		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
-			<property name="zipargs" value="" />
-		</ant>
-	</target>
-	<target name="assemble.org.codehaus.groovy16.feature">
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
