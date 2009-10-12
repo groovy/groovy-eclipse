@@ -119,6 +119,12 @@
          version="0.0.0"/>
 
    <plugin
+         id="org.codehaus.groovy"
+         download-size="0"
+         install-size="0"
+         version="1.7.0.qualifier"/>
+
+   <plugin
          id="org.codehaus.groovy.eclipse.refactoring"
          download-size="0"
          install-size="0"
