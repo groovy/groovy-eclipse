@@ -99,7 +99,7 @@ public class RefreshPackages {
         String time = Long.toString(System.currentTimeMillis());
         iu.setId("property.setter");
         iu.setVersion(Version.createOSGi(0, 0, 0, time));
-        Map touchpointData = new HashMap();
+        Map<String, String> touchpointData = new HashMap<String, String>();
         String data = "addJvmArg(jvmArg:-Declipse.refreshBundles=true);";
         touchpointData.put("configure", data);
         data = "removeJvmArg(jvmArg:-Declipse.refreshBundles=true);";

@@ -24,38 +24,36 @@
  	<!-- Add on <ant> task for each top level element being built.             -->
  	<!-- ===================================================================== -->	
 	<target name="allElementsDelegator">
-		<!--
-		<ant antfile="${genericTargets}" target="${target}">
-			<property name="type" value="feature" />
-			<property name="id" value="org.codehaus.groovy16.feature" />
-		</ant>
+		<echo message="Delegating to org.codehaus.groovy17.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy17.feature" />
 		</ant>
-		-->
+		<echo message="Delegating to org.codehaus.groovy16.feature"/>
+		<ant antfile="${genericTargets}" target="${target}">
+			<property name="type" value="feature" />
+			<property name="id" value="org.codehaus.groovy16.feature" />
+		</ant>
+		<echo message="Delegating to org.codehaus.groovy.jdt.patch"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.jdt.patch" />
 		</ant>
+		<echo message="Delegating to org.codehaus.groovy.eclipse.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.eclipse.feature" />
 		</ant>
+		<echo message="Delegating to org.codehaus.groovy.alltests.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.alltests.feature" />
 		</ant>
+		<echo message="Delegating to org.codehaus.groovy.eclipse.sdk"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.eclipse.sdk" />
 		</ant>
-		<!--
-		<ant antfile="${genericTargets}" target="${target}">
-			<property name="type" value="feature" />
-			<property name="id" value="org.codehaus.groovy.eclipse.testng.feature" />
-		</ant>
-		-->
 	</target>
 
 	
@@ -66,44 +64,41 @@
  	<!-- Add one target for each root element and each configuration           -->
  	<!-- Replace element.id with the id of the top level element being built   -->
  	<!-- ===================================================================== -->
-	<!--
-	<target name="assemble.org.codehaus.groovy16.feature">
-		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
-			<property name="zipargs" value="" />
-		</ant>
-	</target>
-	<target name="assemble.org.codehaus.groovy17.feature">
-		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
-			<property name="zipargs" value="" />
-		</ant>
-	</target>
-	-->
 	<target name="assemble.org.codehaus.groovy.jdt.patch">
+		<echo message="Assembling org.codehaus.groovy.jdt.patch"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
 	<target name="assemble.org.codehaus.groovy.eclipse.feature">
+		<echo message="Assembling org.codehaus.groovy.eclipse.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
 	<target name="assemble.org.codehaus.groovy.alltests.feature">
+		<echo message="Assembling org.codehaus.groovy.alltests.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
 	<target name="assemble.org.codehaus.groovy.eclipse.sdk">
+		<echo message="Assembling org.codehaus.groovy.eclipse.sdk"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
-	<!--
-	<target name="assemble.org.codehaus.groovy.eclipse.testng.feature">
+	<target name="assemble.org.codehaus.groovy16.feature">
+		<echo message="Assembling org.codehaus.groovy16.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
-  -->
+	<target name="assemble.org.codehaus.groovy17.feature">
+		<echo message="Assembling org.codehaus.groovy17.feature"/>
+		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
+			<property name="zipargs" value="" />
+		</ant>
+	</target>
 	
 </project>

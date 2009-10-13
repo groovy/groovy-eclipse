@@ -10,6 +10,7 @@
   	3. copy the new
   	-->
   	
+  	<mkdir dir="${publishLocation}"/>
   	<mkdir dir="${publishLocation}/old"/>
   	<zip destfile="${publishLocation}/old/archive-${org.codehaus.groovy.eclipse.ui}.zip">
   		<zipfileset dir="${buildDirectory}/updateSite">

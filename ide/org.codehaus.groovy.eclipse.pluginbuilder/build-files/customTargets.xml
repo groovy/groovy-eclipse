@@ -14,6 +14,10 @@
     limitations under the License.
  -->
 <project name="Build specific targets and properties" default="noDefault">
+	<taskdef name="eclipse.buildScript" classname="org.eclipse.pde.internal.build.tasks.BuildScriptGeneratorTask">
+	</taskdef>
+	
+	
 	<condition property="isNightlyBuild">
 		<equals arg1="${buildType}" arg2="N" />
 	</condition>
@@ -182,7 +186,6 @@
 			<fileset dir="${updateSiteDir}/features">
 			    <include name="*alltests*"/>
 			    <include name="*sdk*"/>
-			    <include name="*groovy16*"/>
 			</fileset>
 		</delete>
   	<delete>

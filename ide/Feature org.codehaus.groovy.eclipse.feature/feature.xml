@@ -36,7 +36,6 @@
          id="org.codehaus.groovy.jdt.patch"
          version="0.0.0"/>
 
-<!--
    <includes
          id="org.codehaus.groovy16.feature"
          version="0.0.0"/>
@@ -44,7 +43,7 @@
    <includes
          id="org.codehaus.groovy17.feature"
          version="0.0.0"/>
--->
+
    <requires>
       <import plugin="org.eclipse.jface"/>
       <import plugin="org.eclipse.text"/>
@@ -117,12 +116,6 @@
          download-size="0"
          install-size="0"
          version="0.0.0"/>
-
-   <plugin
-         id="org.codehaus.groovy"
-         download-size="0"
-         install-size="0"
-         version="1.7.0.qualifier"/>
 
    <plugin
          id="org.codehaus.groovy.eclipse.refactoring"

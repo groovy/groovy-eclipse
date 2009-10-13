@@ -33,12 +33,10 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy16.feature">
 			</fileset>
 		</copy>
-<!--
 		<copy todir="${featuresDestDir}/org.codehaus.groovy17.feature">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy17.feature">
 			</fileset>
 		</copy>
--->
   	<copy todir="${featuresDestDir}/org.codehaus.groovy.jdt.patch">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.jdt.patch">
 			</fileset>
@@ -51,13 +49,6 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.eclipse.sdk">
 			</fileset>
 		</copy>
-  	
-  	<!--
-		<copy todir="${featuresDestDir}/org.codehaus.groovy.eclipse.testng.feature">
-			<fileset dir="${workspaceDir}/org.codehaus.groovy.eclipse.testng.feature">
-			</fileset>
-		</copy>
-  	-->
   	
   	<!-- Base Plugins -->
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy">
@@ -154,14 +145,6 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
-
-<!--
-		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.testng">
-			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.testng">
-					<exclude name="**/bin"/>
-			</fileset>
-		</copy>
--->
 
   	<!-- IDE Test Plugins -->
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.alltests">

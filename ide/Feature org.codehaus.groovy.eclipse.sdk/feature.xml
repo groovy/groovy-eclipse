@@ -47,4 +47,12 @@
          id="org.codehaus.groovy.jdt.patch.source"
          version="0.0.0"/>
 
+   <includes
+         id="org.codehaus.groovy16.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy17.feature"
+         version="0.0.0"/>
+
 </feature>

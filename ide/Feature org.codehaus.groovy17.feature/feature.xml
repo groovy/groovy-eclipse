@@ -29,35 +29,12 @@
    </url>
 
    <requires>
-      <import plugin="org.eclipse.jface"/>
-      <import plugin="org.eclipse.text"/>
-      <import plugin="org.eclipse.jface.text"/>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.ui.editors"/>
-      <import plugin="org.eclipse.jdt.ui"/>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.debug.core"/>
-      <import plugin="org.eclipse.debug.ui"/>
-      <import plugin="org.eclipse.jdt.debug"/>
-      <import plugin="org.eclipse.jdt.launching"/>
-      <import plugin="org.eclipse.jdt.debug.ui"/>
-      <import plugin="org.eclipse.ui.views"/>
-      <import plugin="org.eclipse.core.filebuffers"/>
-      <import plugin="org.eclipse.ui.console"/>
-      <import plugin="org.eclipse.jdt.junit"/>
-      <import plugin="org.apache.ant"/>
-      <import plugin="org.junit"/>
-      <import plugin="org.eclipse.ui.workbench"/>
-      <import plugin="org.eclipse.ui.navigator"/>
-      <import plugin="org.eclipse.ui.ide" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.ui.workbench.texteditor" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.expressions" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.resources" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.runtime.compatibility" version="3.1.0" match="compatible"/>
-      <import plugin="org.eclipse.compare" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.variables" version="3.1.0" match="compatible"/>
-      <import plugin="org.eclipse.jdt.junit4.runtime"/>
-      <import plugin="org.eclipse.jdt.junit.runtime" version="3.2.0" match="compatible"/>
+      <import plugin="org.eclipse.equinox.p2.metadata" version="1.0.100" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.equinox.p2.metadata.generator" version="1.0.100" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.equinox.p2.metadata.repository" version="1.0.100" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.equinox.p2.engine" version="1.0.100" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.equinox.p2.core" version="1.0.100" match="greaterOrEqual"/>
    </requires>
 
    <plugin

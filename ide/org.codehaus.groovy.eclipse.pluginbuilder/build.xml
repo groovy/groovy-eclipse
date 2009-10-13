@@ -14,8 +14,6 @@
     limitations under the License.
  -->
 <project name="Build Facade" default="groovy-main">
-	<taskdef resource="org/pluginbuilder/anttasks/pluginbuildertasks.properties" classpath="build-files/pluginbuilder-anttasks.jar" />
-	
 	<property file="build_local.properties" />
 	<import file="build-files/build_shared.xml"/>
   
