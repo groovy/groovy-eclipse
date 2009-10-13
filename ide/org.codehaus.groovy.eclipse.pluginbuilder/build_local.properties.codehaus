@@ -71,6 +71,9 @@ workspaceDirBaseTest=${workDir}/base-test
 workspaceDirIde=${workDir}/ide
 workspaceDirIdeTest=${workDir}/ide-test
 
+# Run the tests after the build
+isRunTests=true
+
 
 # N for nightly
 # I for integration

@@ -42,9 +42,6 @@
 	<condition property="isSVN" value="true">
 		<equals arg1="${pluginbuilder.is.svn}" arg2="true"/>
 	</condition>
-	<condition property="isRunTests" value="true">
-		<equals arg1="${pluginbuilder.is.runtests}" arg2="true"/>
-	</condition>
 	
 	<import file="copyAllProjects.xml"/>
 	
