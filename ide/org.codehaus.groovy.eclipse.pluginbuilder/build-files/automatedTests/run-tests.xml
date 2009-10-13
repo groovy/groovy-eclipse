@@ -73,6 +73,7 @@
 	</target>
 	
 	<target name="run" depends="-init,-runTestSuite" description="Run manually defined tests and create a report.">
+<!--
 		<delete dir="${test.result.dir}" />
 		<mkdir dir="${test.result.dir}/xml" />
 
@@ -84,8 +85,11 @@
 		</ant>
 		
 		<copy file="${test.eclipse.host}/${test.aggregated.report}" todir="${test.result.dir}/xml" />
+-->
 		<!--<style style="${basedir}/JUNIT.XSL" basedir="${test.result.dir}/xml" destdir="${test.result.dir}/html" />-->
+<!--
 		<style style="${junit.xsl.file}" basedir="${test.result.dir}/xml" destdir="${test.result.dir}/html" />
+-->
 		<!--<xslt style="${junit.xsl.file}" basedir="${test.result.dir}/xml" destdir="${test.result.dir}/html"/>-->
 	</target>
 	
