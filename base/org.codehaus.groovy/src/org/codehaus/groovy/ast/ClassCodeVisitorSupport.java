@@ -139,9 +139,9 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     }
 
     protected void addError(String msg, ASTNode expr) {
-    	if (expr instanceof ClassNode) {
-    		new RuntimeException().printStackTrace();
-    	}
+//    	if (expr instanceof ClassNode) {
+//    		new RuntimeException().printStackTrace();
+//    	}
         int line = expr.getLineNumber();
         int col = expr.getColumnNumber();
         SourceUnit source = getSourceUnit();
