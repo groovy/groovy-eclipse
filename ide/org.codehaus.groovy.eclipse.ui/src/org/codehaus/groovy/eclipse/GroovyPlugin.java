@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.templates.ContextTypeRegistry;
 import org.eclipse.jface.text.templates.persistence.TemplateStore;
+import org.eclipse.swt.SWTError;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IPageListener;
 import org.eclipse.ui.IPartService;
@@ -218,9 +219,13 @@ public class GroovyPlugin extends AbstractUIPlugin {
     private void removeMonospaceFontListener() {
         try {
             // listen for activations of the JUnit view and ensure monospace font if requested.
-            Workbench.getInstance().getActiveWorkbenchWindow().removePageListener(junitListener);
+            if (! Workbench.getInstance().isClosing()) {
+                Workbench.getInstance().getActiveWorkbenchWindow().removePageListener(junitListener);
+            }
         } catch (NullPointerException e) {
             // ignore, UI has not been initialized yet
+        } catch (SWTError e) {
+            // workbench is shutting down.  can ignore this
         }
         getPreferenceStore().removePropertyChangeListener(ensure);
     }
