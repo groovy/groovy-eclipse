@@ -25,6 +25,7 @@ public class AllCoreTests {
         // $JUnit-BEGIN$
         suite.addTestSuite(ClasspathVariableInitializerTest.class);
         suite.addTestSuite(ClasspathContainerTest.class);
+        suite.addTestSuite(CompilerSwitchTests.class);
         // $JUnit-END$
         suite.addTest(org.codehaus.groovy.eclipse.core.compiler.AllTests
                 .suite());

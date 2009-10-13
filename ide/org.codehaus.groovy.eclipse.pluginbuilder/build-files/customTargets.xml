@@ -133,19 +133,24 @@
 	<target name="postBuild" depends="-prepareBuildResultsDirectory" unless="no.postBuild">
 		<antcall target="createUpdateSite"/>
 		<antcall target="runTests"/>
+		<echo message="About to copy results"/>
 		<copy todir="${buildResultsDirectory}" flatten="true">
 			<fileset dir="${buildDirectory}" includes="${buildType}-**/*.zip" />
 		</copy>
+		<echo message="Finished copying results"/>
 	</target>
 	<!-- ===================================================================== -->
 	<!-- Run tests. -->
 	<!-- ===================================================================== -->
 	<target name="runTests"> <!--if="isRunTests">-->
+		<echo message="isRunTests = ${isRunTests}"/>
 		<property name="automatedTestsHome" location="${buildHome}/build-files/automatedTests"/>
 
 		<ant antfile="${automatedTestsHome}/run-tests.xml" target="run" dir="${automatedTestsHome}">
 			<property name="test.result.dir" value="${buildResultsDirectory}/testresults"/>
 		</ant>
+		
+		<echo message="Finished running tests"/>
 	</target>	
 	
 	
