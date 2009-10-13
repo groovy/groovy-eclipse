@@ -108,11 +108,11 @@ Eclipse-BuddyPolicy: dependent
 Require-Bundle: org.apache.ant,
  org.junit,
  org.eclipse.core.runtime,
- org.eclipse.equinox.p2.metadata;bundle-version="1.0.100",
- org.eclipse.equinox.p2.metadata.generator;bundle-version="1.0.100",
- org.eclipse.equinox.p2.metadata.repository;bundle-version="1.0.100",
- org.eclipse.equinox.p2.engine;bundle-version="1.0.100",
- org.eclipse.equinox.p2.core;bundle-version="1.0.100"
+ org.eclipse.equinox.p2.metadata;bundle-version="1.0.100";resolution:=optional,
+ org.eclipse.equinox.p2.metadata.generator;bundle-version="1.0.100";resolution:=optional,
+ org.eclipse.equinox.p2.metadata.repository;bundle-version="1.0.100";resolution:=optional,
+ org.eclipse.equinox.p2.engine;bundle-version="1.0.100";resolution:=optional,
+ org.eclipse.equinox.p2.core;bundle-version="1.0.100";resolution:=optional
 Bundle-Vendor: Codehaus.org
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

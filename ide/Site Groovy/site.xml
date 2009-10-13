@@ -13,10 +13,10 @@
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>
    <feature url="features/org.codehaus.groovy16.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy16.feature" version="0.0.0.qualifier">
-      <category name="org.codehaus.groovy.eclipse"/>
+      <category name="org.codehaus.groovy.compilers"/>
    </feature>
-   <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy16.feature" version="0.0.0.qualifier">
-      <category name="org.codehaus.groovy.eclipse"/>
+   <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
    </feature>
    <category-def name="org.codehaus.groovy.compilers" label="Groovy Compilers">
       <description>

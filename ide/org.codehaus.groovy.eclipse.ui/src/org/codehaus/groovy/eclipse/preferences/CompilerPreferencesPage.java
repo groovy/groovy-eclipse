@@ -1,21 +1,13 @@
 package org.codehaus.groovy.eclipse.preferences;
 
-import org.codehaus.groovy.activator.GroovyActivator;
-import org.codehaus.groovy.activator.RefreshPackages;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.eclipse.core.internal.registry.ExtensionRegistry;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -24,12 +16,30 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.internal.Workbench;
+import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
+import org.eclipse.ui.internal.ide.actions.OpenWorkspaceAction;
 
 public class CompilerPreferencesPage extends PreferencePage implements
         IWorkbenchPreferencePage {
+    private static final String PROP_VM = "eclipse.vm"; //$NON-NLS-1$
+
+    private static final String PROP_VMARGS = "eclipse.vmargs"; //$NON-NLS-1$
+
+    private static final String PROP_REFRESH_BUNDLES = "-Declipse.refreshBundles=true";
+    
+    private static final String PROP_COMMANDS = "eclipse.commands"; //$NON-NLS-1$
+
+    private static final String PROP_EXIT_CODE = "eclipse.exitcode"; //$NON-NLS-1$
+
+    private static final String PROP_EXIT_DATA = "eclipse.exitdata"; //$NON-NLS-1$
+
+    private static final String CMD_VMARGS = "-vmargs"; //$NON-NLS-1$
+
+    private static final String NEW_LINE = "\n"; //$NON-NLS-1$
 
     protected final boolean isGroovy17Disabled;
     
@@ -59,7 +69,8 @@ public class CompilerPreferencesPage extends PreferencePage implements
         switchTo.addSelectionListener(new SelectionListener() {
             
         public void widgetSelected(SelectionEvent e) {
-            boolean result = MessageDialog.openQuestion(page.getShell(), "Change compiler and restart?", 
+            Shell shell = page.getShell();
+            boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?", 
                     "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
                     " the compiler will be changed and Eclipse will be restarted.\n\n" +
                     "Make sure all your work is saved before clicking \"Yes\".");
@@ -68,9 +79,9 @@ public class CompilerPreferencesPage extends PreferencePage implements
                     // change compiler
                     IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
                     if (status == Status.OK_STATUS) {
-                        Workbench.getInstance().restart();
+                        restart(shell);
                     } else {
-                        ErrorDialog error = new ErrorDialog(page.getShell(), 
+                        ErrorDialog error = new ErrorDialog(shell, 
                                 "Error occurred", "Error occurred when trying to enable Groovy " + CompilerUtils.getOtherVersion(), 
                                 status, IStatus.ERROR);
                         error.open();
@@ -86,9 +97,74 @@ public class CompilerPreferencesPage extends PreferencePage implements
         return page;
     }
 
+    /**
+     * borrowed from {@link OpenWorkspaceAction}
+     */
+    protected void restart(Shell shell) {
+        String command_line = buildCommandLine(shell);
+        if (command_line == null) {
+            return;
+        }
+
+        System.setProperty(PROP_EXIT_CODE, Integer.toString(24));
+        System.setProperty(PROP_EXIT_DATA, command_line);
+        System.out.println("Restart command line begin:\n " + command_line);
+        System.out.println("Restart command line end");
+        Workbench.getInstance().restart();
+        
+    }
+    
+    /**
+     * Create and return a string with command line options for eclipse.exe that
+     * will launch a new workbench that is the same as the currently running
+     * one, but using the argument directory as its workspace.
+     * 
+     * @param workspace
+     *            the directory to use as the new workspace
+     * @return a string of command line options or null on error
+     */
+    private String buildCommandLine(Shell shell) {
+        String property = System.getProperty(PROP_VM);
+        if (property == null) {
+            MessageDialog
+                    .openError(
+                            shell,
+                            IDEWorkbenchMessages.OpenWorkspaceAction_errorTitle,
+                            NLS.bind(IDEWorkbenchMessages.OpenWorkspaceAction_errorMessage,
+                                    PROP_VM));
+            return null;
+        }
+
+        StringBuffer result = new StringBuffer(512);
+        result.append(property);
+        result.append(NEW_LINE);
+
+        // append the vmargs and commands. Assume that these already end in \n
+        String vmargs = System.getProperty(PROP_VMARGS);
+        vmargs = vmargs == null ? 
+                PROP_REFRESH_BUNDLES + NEW_LINE : 
+                    vmargs + NEW_LINE + PROP_REFRESH_BUNDLES + NEW_LINE;
+        result.append(vmargs);
+
+        // append the rest of the args, replacing or adding -data as required
+        property = System.getProperty(PROP_COMMANDS);
+        if (property != null) {
+            result.append(property);
+        }
+
+        // put the vmargs back at the very end (the eclipse.commands property
+        // already contains the -vm arg)
+        if (vmargs != null) {
+            result.append(CMD_VMARGS);
+            result.append(NEW_LINE);
+            result.append(vmargs);
+        }
+
+        return result.toString();
+    }
+
+
     public void init(IWorkbench workbench) {
         
     }
-
-    
 }

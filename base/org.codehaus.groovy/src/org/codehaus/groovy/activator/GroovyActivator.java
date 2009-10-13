@@ -31,10 +31,10 @@ public class GroovyActivator extends Plugin {
         if (isRefreshOnStartup()) {
             setRefreshOnStartup(false);
             // do not force a package refresh at next startup
-            IStatus status = new RefreshPackages().removeJvmArg();
-            if (status.getSeverity() >= IStatus.WARNING) {
-                getLog().log(status);
-            }
+//            IStatus status = new RefreshPackages().removeJvmArg();
+//            if (status.getSeverity() >= IStatus.WARNING) {
+//                getLog().log(status);
+//            }
         }
     }
 
