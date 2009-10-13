@@ -106,7 +106,7 @@ public class GroovyParser {
 						projectToLoaderCache.put(projectName, pathAndLoader);
 					}
 				}
-				System.out.println("Using loader with path " + pathAndLoader.classpath);
+				// System.out.println("Using loader with path " + pathAndLoader.classpath);
 				gcl = pathAndLoader.groovyClassLoader;
 			}
 		}
