@@ -57,7 +57,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
 		groovyLevel=17;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-beta-1-SNAPSHOT.jar");
+    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-beta-2.jar");
     	if (groovyJar==null) {
     		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.5.jar");
     		groovyLevel=16;
@@ -87,13 +87,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
         	groovyLevel=17;
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-beta-1-SNAPSHOT.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-beta-2.jar");
         	if (groovyJar==null) {
         		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.5.jar");
         		groovyLevel=16;
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
-        	URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.1.jar");
+        	URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
         	if (asmJar==null) {
         		asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
         	}
@@ -166,7 +166,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     }
     
     public void testNewRuleInLatestGroovy() {
-    	if (isGroovy16()) { // FIXASC (M2) should also break in 17b2
+//    	if (isGroovy16()) { // FIXASC (M2) should also break in 17b2
 	    	this.runNegativeTest(new String[]{
 	    			"Move.groovy",
 	    			"enum Move { ROCK, PAPER, SCISSORS }\n"+
@@ -183,7 +183,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"	^\n" + 
 			"Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" + 
 			"----------\n");
-    	}
+//    	}
     }
 	
 	// WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
@@ -1897,9 +1897,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"	void func() {\n" + 
 			"		return 5\n" + 
 			"	             ^\n" + 
-			(isGroovy16()?
-			"Groovy:Cannot use return statement with an expression on a method that returns void\n":
-			"Groovy:Cannot use return statement with an expression on a method that returns void.\n") + 
+			"Groovy:Cannot use return statement with an expression on a method that returns void\n"+
 			"----------\n"
 		);
 	}
@@ -1925,9 +1923,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"	void func() {\n" + 
 			"		return 5\n" + 
 			"	             ^\n" + 
-			(isGroovy16()?
-			"Groovy:Cannot use return statement with an expression on a method that returns void\n":
-			"Groovy:Cannot use return statement with an expression on a method that returns void.\n")+ 
+			"Groovy:Cannot use return statement with an expression on a method that returns void\n"+
 			"----------\n"
 		);
 	}
@@ -5206,9 +5202,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"1. ERROR in p\\Code.groovy (at line 5)\n" + 
 		"	public void m(String s, Integer i =3) {}\n" + 
 		"	^\n" + 
-		(isGroovy16()?
-		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n": 
-		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined..\n") + 
+		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n"+ 
 		"----------\n"
 		);
 	}
@@ -5993,6 +5987,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	public void testTransforms_BasicLogging() throws IOException {
 		Map options = getCompilerOptions();
 		options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile());
+		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
 		// From: http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
 		runConformTest(new String[] {
 			"examples/local/LoggingExample.groovy",

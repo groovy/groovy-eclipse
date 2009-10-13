@@ -902,7 +902,7 @@ inputState.guessing--;
 		}
 		if ( inputState.guessing==0 ) {
 			packageDefinition_AST = (AST)currentAST.root;
-			
+			// error recovery for missing package name
 			if (id_AST==null) {
 							reportError("Invalid package specification",LT(0));
 						} else {
@@ -9229,7 +9229,7 @@ inputState.guessing--;
 		{
 		_loop347:
 		do {
-			if ((LA(1)==NLS||LA(1)==LITERAL_catch) && (LA(2)==LPAREN||LA(2)==LITERAL_catch)) {
+			if (((LA(1)==NLS||LA(1)==LITERAL_catch) && (LA(2)==LPAREN||LA(2)==LITERAL_catch))&&(!(LA(1) == NLS && LA(2) == LPAREN))) {
 				nls();
 				handler();
 				h_AST = (AST)returnAST;
@@ -11072,147 +11072,12 @@ inputState.guessing--;
 		AST mca_AST = null;
 		AST apb_AST = null;
 		AST ipa_AST = null;
+		Token  thisPart = null;
+		AST thisPart_AST = null;
 		Token operator = LT(1);
 		
 		try {      // for error handling
 			switch ( LA(1)) {
-			case DOT:
-			case NLS:
-			case SPREAD_DOT:
-			case OPTIONAL_DOT:
-			case MEMBER_POINTER:
-			{
-				if ( inputState.guessing==0 ) {
-					pathElement_AST = (AST)currentAST.root;
-					pathElement_AST = prefix;
-					currentAST.root = pathElement_AST;
-					currentAST.child = pathElement_AST!=null &&pathElement_AST.getFirstChild()!=null ?
-						pathElement_AST.getFirstChild() : pathElement_AST;
-					currentAST.advanceChildToEnd();
-				}
-				{
-				switch ( LA(1)) {
-				case SPREAD_DOT:
-				{
-					match(SPREAD_DOT);
-					break;
-				}
-				case OPTIONAL_DOT:
-				{
-					match(OPTIONAL_DOT);
-					break;
-				}
-				case MEMBER_POINTER:
-				{
-					match(MEMBER_POINTER);
-					break;
-				}
-				case DOT:
-				case NLS:
-				{
-					{
-					nls();
-					match(DOT);
-					}
-					break;
-				}
-				default:
-				{
-					throw new NoViableAltException(LT(1), getFilename());
-				}
-				}
-				}
-				nls();
-				{
-				switch ( LA(1)) {
-				case LT:
-				{
-					typeArguments();
-					ta_AST = (AST)returnAST;
-					break;
-				}
-				case FINAL:
-				case ABSTRACT:
-				case UNUSED_GOTO:
-				case UNUSED_DO:
-				case STRICTFP:
-				case LITERAL_package:
-				case LITERAL_import:
-				case LITERAL_static:
-				case LITERAL_def:
-				case IDENT:
-				case STRING_LITERAL:
-				case LPAREN:
-				case LITERAL_class:
-				case LITERAL_interface:
-				case LITERAL_enum:
-				case AT:
-				case LITERAL_extends:
-				case LITERAL_void:
-				case LITERAL_boolean:
-				case LITERAL_byte:
-				case LITERAL_char:
-				case LITERAL_short:
-				case LITERAL_int:
-				case LITERAL_float:
-				case LITERAL_long:
-				case LITERAL_double:
-				case LITERAL_as:
-				case LITERAL_private:
-				case LITERAL_public:
-				case LITERAL_protected:
-				case LITERAL_transient:
-				case LITERAL_native:
-				case LITERAL_threadsafe:
-				case LITERAL_synchronized:
-				case LITERAL_volatile:
-				case LCURLY:
-				case LITERAL_default:
-				case LITERAL_throws:
-				case LITERAL_implements:
-				case LITERAL_if:
-				case LITERAL_else:
-				case LITERAL_while:
-				case LITERAL_switch:
-				case LITERAL_for:
-				case LITERAL_in:
-				case LITERAL_return:
-				case LITERAL_break:
-				case LITERAL_continue:
-				case LITERAL_throw:
-				case LITERAL_assert:
-				case LITERAL_case:
-				case LITERAL_try:
-				case LITERAL_finally:
-				case LITERAL_catch:
-				case LITERAL_false:
-				case LITERAL_instanceof:
-				case LITERAL_new:
-				case LITERAL_null:
-				case LITERAL_true:
-				case STRING_CTOR_START:
-				{
-					break;
-				}
-				default:
-				{
-					throw new NoViableAltException(LT(1), getFilename());
-				}
-				}
-				}
-				namePart();
-				np_AST = (AST)returnAST;
-				if ( inputState.guessing==0 ) {
-					pathElement_AST = (AST)currentAST.root;
-					pathElement_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(operator.getType(),operator.getText(),prefix,LT(1))).add(prefix).add(ta_AST).add(np_AST));
-					currentAST.root = pathElement_AST;
-					currentAST.child = pathElement_AST!=null &&pathElement_AST.getFirstChild()!=null ?
-						pathElement_AST.getFirstChild() : pathElement_AST;
-					currentAST.advanceChildToEnd();
-				}
-				pathElement_AST = (AST)currentAST.root;
-				break;
-			}
 			case LPAREN:
 			{
 				methodCallArgs(prefix);
@@ -11259,7 +11124,154 @@ inputState.guessing--;
 				break;
 			}
 			default:
-			{
+				if ((_tokenSet_90.member(LA(1))) && (_tokenSet_91.member(LA(2)))) {
+					if ( inputState.guessing==0 ) {
+						pathElement_AST = (AST)currentAST.root;
+						pathElement_AST = prefix;
+						currentAST.root = pathElement_AST;
+						currentAST.child = pathElement_AST!=null &&pathElement_AST.getFirstChild()!=null ?
+							pathElement_AST.getFirstChild() : pathElement_AST;
+						currentAST.advanceChildToEnd();
+					}
+					{
+					switch ( LA(1)) {
+					case SPREAD_DOT:
+					{
+						match(SPREAD_DOT);
+						break;
+					}
+					case OPTIONAL_DOT:
+					{
+						match(OPTIONAL_DOT);
+						break;
+					}
+					case MEMBER_POINTER:
+					{
+						match(MEMBER_POINTER);
+						break;
+					}
+					case DOT:
+					case NLS:
+					{
+						{
+						nls();
+						match(DOT);
+						}
+						break;
+					}
+					default:
+					{
+						throw new NoViableAltException(LT(1), getFilename());
+					}
+					}
+					}
+					nls();
+					{
+					switch ( LA(1)) {
+					case LT:
+					{
+						typeArguments();
+						ta_AST = (AST)returnAST;
+						break;
+					}
+					case FINAL:
+					case ABSTRACT:
+					case UNUSED_GOTO:
+					case UNUSED_DO:
+					case STRICTFP:
+					case LITERAL_package:
+					case LITERAL_import:
+					case LITERAL_static:
+					case LITERAL_def:
+					case IDENT:
+					case STRING_LITERAL:
+					case LPAREN:
+					case LITERAL_class:
+					case LITERAL_interface:
+					case LITERAL_enum:
+					case AT:
+					case LITERAL_extends:
+					case LITERAL_void:
+					case LITERAL_boolean:
+					case LITERAL_byte:
+					case LITERAL_char:
+					case LITERAL_short:
+					case LITERAL_int:
+					case LITERAL_float:
+					case LITERAL_long:
+					case LITERAL_double:
+					case LITERAL_as:
+					case LITERAL_private:
+					case LITERAL_public:
+					case LITERAL_protected:
+					case LITERAL_transient:
+					case LITERAL_native:
+					case LITERAL_threadsafe:
+					case LITERAL_synchronized:
+					case LITERAL_volatile:
+					case LCURLY:
+					case LITERAL_default:
+					case LITERAL_throws:
+					case LITERAL_implements:
+					case LITERAL_if:
+					case LITERAL_else:
+					case LITERAL_while:
+					case LITERAL_switch:
+					case LITERAL_for:
+					case LITERAL_in:
+					case LITERAL_return:
+					case LITERAL_break:
+					case LITERAL_continue:
+					case LITERAL_throw:
+					case LITERAL_assert:
+					case LITERAL_case:
+					case LITERAL_try:
+					case LITERAL_finally:
+					case LITERAL_catch:
+					case LITERAL_false:
+					case LITERAL_instanceof:
+					case LITERAL_new:
+					case LITERAL_null:
+					case LITERAL_true:
+					case STRING_CTOR_START:
+					{
+						break;
+					}
+					default:
+					{
+						throw new NoViableAltException(LT(1), getFilename());
+					}
+					}
+					}
+					namePart();
+					np_AST = (AST)returnAST;
+					if ( inputState.guessing==0 ) {
+						pathElement_AST = (AST)currentAST.root;
+						pathElement_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(operator.getType(),operator.getText(),prefix,LT(1))).add(prefix).add(ta_AST).add(np_AST));
+						currentAST.root = pathElement_AST;
+						currentAST.child = pathElement_AST!=null &&pathElement_AST.getFirstChild()!=null ?
+							pathElement_AST.getFirstChild() : pathElement_AST;
+						currentAST.advanceChildToEnd();
+					}
+					pathElement_AST = (AST)currentAST.root;
+				}
+				else if ((LA(1)==DOT) && (LA(2)==NLS||LA(2)==LITERAL_this)) {
+					match(DOT);
+					nls();
+					thisPart = LT(1);
+					thisPart_AST = astFactory.create(thisPart);
+					match(LITERAL_this);
+					if ( inputState.guessing==0 ) {
+						pathElement_AST = (AST)currentAST.root;
+						pathElement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(operator.getType(),operator.getText(),prefix,LT(1))).add(prefix).add(thisPart_AST));
+						currentAST.root = pathElement_AST;
+						currentAST.child = pathElement_AST!=null &&pathElement_AST.getFirstChild()!=null ?
+							pathElement_AST.getFirstChild() : pathElement_AST;
+						currentAST.advanceChildToEnd();
+					}
+					pathElement_AST = (AST)currentAST.root;
+				}
+			else {
 				throw new NoViableAltException(LT(1), getFilename());
 			}
 			}
@@ -11411,9 +11423,9 @@ inputState.guessing--;
 		switch ( LA(1)) {
 		case IDENT:
 		{
-			AST tmp281_AST = null;
-			tmp281_AST = astFactory.create(LT(1));
-			astFactory.addASTChild(currentAST, tmp281_AST);
+			AST tmp282_AST = null;
+			tmp282_AST = astFactory.create(LT(1));
+			astFactory.addASTChild(currentAST, tmp282_AST);
 			match(IDENT);
 			break;
 		}
@@ -11577,8 +11589,13 @@ inputState.guessing--;
 		returnAST = null;
 		ASTPair currentAST = new ASTPair();
 		AST indexPropertyArgs_AST = null;
+		Token  lb = null;
+		AST lb_AST = null;
 		AST al_AST = null;
 		
+		lb = LT(1);
+		lb_AST = astFactory.create(lb);
+		astFactory.addASTChild(currentAST, lb_AST);
 		match(LBRACK);
 		argList();
 		al_AST = (AST)returnAST;
@@ -11587,10 +11604,10 @@ inputState.guessing--;
 			indexPropertyArgs_AST = (AST)currentAST.root;
 			if (indexee != null && indexee.getFirstChild() != null) {
 			//expression like obj.index[]
-			indexPropertyArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(INDEX_OP,"INDEX_OP",indexee.getFirstChild(),LT(1))).add(indexee).add(al_AST)); 
+			indexPropertyArgs_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(INDEX_OP,"INDEX_OP",indexee.getFirstChild(),LT(1))).add(lb_AST).add(indexee).add(al_AST)); 
 			} else {
 			//expression like obj[]
-			indexPropertyArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(INDEX_OP,"INDEX_OP",indexee,LT(1))).add(indexee).add(al_AST));
+			indexPropertyArgs_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(INDEX_OP,"INDEX_OP",indexee,LT(1))).add(lb_AST).add(indexee).add(al_AST));
 			}
 			
 			currentAST.root = indexPropertyArgs_AST;
@@ -12126,7 +12143,7 @@ inputState.guessing--;
 		shiftExpression(lc_stmt);
 		astFactory.addASTChild(currentAST, returnAST);
 		{
-		if ((_tokenSet_90.member(LA(1))) && (_tokenSet_91.member(LA(2)))) {
+		if ((_tokenSet_92.member(LA(1))) && (_tokenSet_93.member(LA(2)))) {
 			{
 			{
 			switch ( LA(1)) {
@@ -12181,7 +12198,7 @@ inputState.guessing--;
 			astFactory.addASTChild(currentAST, returnAST);
 			}
 		}
-		else if ((LA(1)==LITERAL_instanceof) && (_tokenSet_92.member(LA(2)))) {
+		else if ((LA(1)==LITERAL_instanceof) && (_tokenSet_94.member(LA(2)))) {
 			AST tmp304_AST = null;
 			tmp304_AST = astFactory.create(LT(1));
 			astFactory.makeASTRoot(currentAST, tmp304_AST);
@@ -12190,7 +12207,7 @@ inputState.guessing--;
 			typeSpec(true);
 			astFactory.addASTChild(currentAST, returnAST);
 		}
-		else if ((LA(1)==LITERAL_as) && (_tokenSet_92.member(LA(2)))) {
+		else if ((LA(1)==LITERAL_as) && (_tokenSet_94.member(LA(2)))) {
 			AST tmp305_AST = null;
 			tmp305_AST = astFactory.create(LT(1));
 			astFactory.makeASTRoot(currentAST, tmp305_AST);
@@ -12199,7 +12216,7 @@ inputState.guessing--;
 			typeSpec(true);
 			astFactory.addASTChild(currentAST, returnAST);
 		}
-		else if ((_tokenSet_93.member(LA(1))) && (_tokenSet_69.member(LA(2)))) {
+		else if ((_tokenSet_95.member(LA(1))) && (_tokenSet_69.member(LA(2)))) {
 		}
 		else {
 			throw new NoViableAltException(LT(1), getFilename());
@@ -12223,7 +12240,7 @@ inputState.guessing--;
 		{
 		_loop435:
 		do {
-			if ((LA(1)==PLUS||LA(1)==MINUS) && (_tokenSet_91.member(LA(2)))) {
+			if ((LA(1)==PLUS||LA(1)==MINUS) && (_tokenSet_93.member(LA(2)))) {
 				{
 				switch ( LA(1)) {
 				case PLUS:
@@ -12284,7 +12301,7 @@ inputState.guessing--;
 			{
 			_loop440:
 			do {
-				if ((_tokenSet_94.member(LA(1)))) {
+				if ((_tokenSet_96.member(LA(1)))) {
 					{
 					switch ( LA(1)) {
 					case STAR:
@@ -12344,7 +12361,7 @@ inputState.guessing--;
 			{
 			_loop444:
 			do {
-				if ((_tokenSet_94.member(LA(1)))) {
+				if ((_tokenSet_96.member(LA(1)))) {
 					{
 					switch ( LA(1)) {
 					case STAR:
@@ -12407,7 +12424,7 @@ inputState.guessing--;
 			{
 			_loop448:
 			do {
-				if ((_tokenSet_94.member(LA(1)))) {
+				if ((_tokenSet_96.member(LA(1)))) {
 					{
 					switch ( LA(1)) {
 					case STAR:
@@ -12470,7 +12487,7 @@ inputState.guessing--;
 			{
 			_loop452:
 			do {
-				if ((_tokenSet_94.member(LA(1)))) {
+				if ((_tokenSet_96.member(LA(1)))) {
 					{
 					switch ( LA(1)) {
 					case STAR:
@@ -12553,7 +12570,7 @@ inputState.guessing--;
 			{
 			_loop456:
 			do {
-				if ((_tokenSet_94.member(LA(1)))) {
+				if ((_tokenSet_96.member(LA(1)))) {
 					{
 					switch ( LA(1)) {
 					case STAR:
@@ -12946,7 +12963,7 @@ inputState.guessing--;
 		pathExpression(lc_stmt);
 		astFactory.addASTChild(currentAST, returnAST);
 		{
-		if ((LA(1)==INC) && (_tokenSet_95.member(LA(2)))) {
+		if ((LA(1)==INC) && (_tokenSet_97.member(LA(2)))) {
 			in = LT(1);
 			in_AST = astFactory.create(in);
 			astFactory.makeASTRoot(currentAST, in_AST);
@@ -12955,7 +12972,7 @@ inputState.guessing--;
 				in_AST.setType(POST_INC);
 			}
 		}
-		else if ((LA(1)==DEC) && (_tokenSet_95.member(LA(2)))) {
+		else if ((LA(1)==DEC) && (_tokenSet_97.member(LA(2)))) {
 			de = LT(1);
 			de_AST = astFactory.create(de);
 			astFactory.makeASTRoot(currentAST, de_AST);
@@ -12964,7 +12981,7 @@ inputState.guessing--;
 				de_AST.setType(POST_DEC);
 			}
 		}
-		else if ((_tokenSet_95.member(LA(1))) && (_tokenSet_69.member(LA(2)))) {
+		else if ((_tokenSet_97.member(LA(1))) && (_tokenSet_69.member(LA(2)))) {
 		}
 		else {
 			throw new NoViableAltException(LT(1), getFilename());
@@ -13229,7 +13246,7 @@ inputState.guessing--;
 		AST emcon_AST = null;
 		boolean hasLabels = false;
 		
-		if ((LA(1)==LBRACK) && (_tokenSet_96.member(LA(2)))) {
+		if ((LA(1)==LBRACK) && (_tokenSet_98.member(LA(2)))) {
 			lcon = LT(1);
 			lcon_AST = astFactory.create(lcon);
 			match(LBRACK);
@@ -13313,7 +13330,7 @@ inputState.guessing--;
 		int _cnt525=0;
 		_loop525:
 		do {
-			if ((LA(1)==LBRACK) && (_tokenSet_97.member(LA(2)))) {
+			if ((LA(1)==LBRACK) && (_tokenSet_99.member(LA(2)))) {
 				lb = LT(1);
 				lb_AST = astFactory.create(lb);
 				astFactory.makeASTRoot(currentAST, lb_AST);
@@ -13516,7 +13533,7 @@ inputState.guessing--;
 			}
 			}
 		}
-		else if ((_tokenSet_78.member(LA(1))) && (_tokenSet_98.member(LA(2)))) {
+		else if ((_tokenSet_78.member(LA(1))) && (_tokenSet_100.member(LA(2)))) {
 		}
 		else {
 			throw new NoViableAltException(LT(1), getFilename());
@@ -14597,24 +14614,38 @@ inputState.guessing--;
 	}
 	public static final BitSet _tokenSet_89 = new BitSet(mk_tokenSet_89());
 	private static final long[] mk_tokenSet_90() {
-		long[] data = { 0L, 8594128896L, 13510798882112512L, 0L, 0L, 0L};
+		long[] data = { 0L, 2305843009222082560L, 29360128L, 0L, 0L, 0L};
 		return data;
 	}
 	public static final BitSet _tokenSet_90 = new BitSet(mk_tokenSet_90());
 	private static final long[] mk_tokenSet_91() {
+		long[] data = new long[8];
+		data[0]=7559142440960L;
+		data[1]=-1981619087524773888L;
+		data[2]=1044185057L;
+		data[3]=1L;
+		return data;
+	}
+	public static final BitSet _tokenSet_91 = new BitSet(mk_tokenSet_91());
+	private static final long[] mk_tokenSet_92() {
+		long[] data = { 0L, 8594128896L, 13510798882112512L, 0L, 0L, 0L};
+		return data;
+	}
+	public static final BitSet _tokenSet_92 = new BitSet(mk_tokenSet_92());
+	private static final long[] mk_tokenSet_93() {
 		long[] data = new long[8];
 		data[1]=2594108503185686528L;
 		data[2]=-3314649324771409918L;
 		data[3]=253L;
 		return data;
 	}
-	public static final BitSet _tokenSet_91 = new BitSet(mk_tokenSet_91());
-	private static final long[] mk_tokenSet_92() {
+	public static final BitSet _tokenSet_93 = new BitSet(mk_tokenSet_93());
+	private static final long[] mk_tokenSet_94() {
 		long[] data = { 0L, 2305878124867354624L, 0L, 0L};
 		return data;
 	}
-	public static final BitSet _tokenSet_92 = new BitSet(mk_tokenSet_92());
-	private static final long[] mk_tokenSet_93() {
+	public static final BitSet _tokenSet_94 = new BitSet(mk_tokenSet_94());
+	private static final long[] mk_tokenSet_95() {
 		long[] data = new long[8];
 		data[0]=7559142440962L;
 		data[1]=-35244782665728L;
@@ -14622,13 +14653,13 @@ inputState.guessing--;
 		data[3]=253L;
 		return data;
 	}
-	public static final BitSet _tokenSet_93 = new BitSet(mk_tokenSet_93());
-	private static final long[] mk_tokenSet_94() {
+	public static final BitSet _tokenSet_95 = new BitSet(mk_tokenSet_95());
+	private static final long[] mk_tokenSet_96() {
 		long[] data = { 0L, 35184372088832L, 864691128455135232L, 0L, 0L, 0L};
 		return data;
 	}
-	public static final BitSet _tokenSet_94 = new BitSet(mk_tokenSet_94());
-	private static final long[] mk_tokenSet_95() {
+	public static final BitSet _tokenSet_96 = new BitSet(mk_tokenSet_96());
+	private static final long[] mk_tokenSet_97() {
 		long[] data = new long[8];
 		data[0]=7559142440962L;
 		data[1]=-276840448L;
@@ -14636,8 +14667,8 @@ inputState.guessing--;
 		data[3]=253L;
 		return data;
 	}
-	public static final BitSet _tokenSet_95 = new BitSet(mk_tokenSet_95());
-	private static final long[] mk_tokenSet_96() {
+	public static final BitSet _tokenSet_97 = new BitSet(mk_tokenSet_97());
+	private static final long[] mk_tokenSet_98() {
 		long[] data = new long[8];
 		data[0]=7559142440960L;
 		data[1]=-4287426910230691840L;
@@ -14645,16 +14676,16 @@ inputState.guessing--;
 		data[3]=253L;
 		return data;
 	}
-	public static final BitSet _tokenSet_96 = new BitSet(mk_tokenSet_96());
-	private static final long[] mk_tokenSet_97() {
+	public static final BitSet _tokenSet_98 = new BitSet(mk_tokenSet_98());
+	private static final long[] mk_tokenSet_99() {
 		long[] data = new long[8];
 		data[1]=288265493972516864L;
 		data[2]=-3314649324771409918L;
 		data[3]=253L;
 		return data;
 	}
-	public static final BitSet _tokenSet_97 = new BitSet(mk_tokenSet_97());
-	private static final long[] mk_tokenSet_98() {
+	public static final BitSet _tokenSet_99 = new BitSet(mk_tokenSet_99());
+	private static final long[] mk_tokenSet_100() {
 		long[] data = new long[8];
 		data[0]=7559142440960L;
 		data[1]=-16384L;
@@ -14662,6 +14693,6 @@ inputState.guessing--;
 		data[3]=253L;
 		return data;
 	}
-	public static final BitSet _tokenSet_98 = new BitSet(mk_tokenSet_98());
+	public static final BitSet _tokenSet_100 = new BitSet(mk_tokenSet_100());
 	
 	}

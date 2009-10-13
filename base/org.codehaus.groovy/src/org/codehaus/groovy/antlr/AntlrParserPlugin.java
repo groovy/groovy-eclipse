@@ -221,6 +221,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         makeModule();
         try {
             convertGroovy(ast);
+            if(output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
+            	output.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
+            }
+            
             // FIXASC (groovychange)
             fixModuleNodeLocations();
             // end
@@ -583,11 +587,16 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.setNameEnd(nameEnd);
         // end
 
+        // we put the class already in output to avoid the most inner classes
+        // will be used as first class later in the loader. The first class
+        // there determines what GCL#parseClass for example will return, so we
+        // have here to ensure it won't be the inner class
+        output.addClass(classNode);
+
         int oldClassCount = innerClassCounter;
         
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
-        output.addClass(classNode);
         
         classNode = outerClass;
         innerClassCounter = oldClassCount;
@@ -1399,9 +1408,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         AST node = variableDef.getFirstChild();
         ClassNode type = null;
         List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
+        boolean staticVariable = false;
+        AST modifierNode = null;
         if (isType(MODIFIERS, node)) {
             // force check of modifier conflicts
-            modifiers(node, annotations, 0);
+            int modifiers = modifiers(node, annotations, 0);
+            if((modifiers & Opcodes.ACC_STATIC) != 0) {
+                modifierNode = node;
+                staticVariable = true;
+            }
             node = node.getNextSibling();
         }
         if (isType(TYPE, node)) {
@@ -1426,6 +1441,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             right = node.getNextSibling();
             if (right != null) rightExpression = expression(right);
         } else {
+            if(staticVariable) {
+                throw new ASTRuntimeException(modifierNode, "Variable definition has an incorrect modifier 'static'.");
+            }
             String name = identifier(node);
             VariableExpression ve = new VariableExpression(name, type);
             ve.addAnnotations(annotations);
@@ -2191,13 +2209,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
 
     protected Expression indexExpression(AST indexNode) {
-        AST leftNode = indexNode.getFirstChild();
+        AST bracket = indexNode.getFirstChild();
+        AST leftNode = bracket.getNextSibling();
         Expression leftExpression = expression(leftNode);
 
         AST rightNode = leftNode.getNextSibling();
         Expression rightExpression = expression(rightNode);
 
-        BinaryExpression binaryExpression = new BinaryExpression(leftExpression, makeToken(Types.LEFT_SQUARE_BRACKET, indexNode), rightExpression);
+        BinaryExpression binaryExpression = new BinaryExpression(leftExpression, makeToken(Types.LEFT_SQUARE_BRACKET, bracket), rightExpression);
         configureAST(binaryExpression, indexNode);
         return binaryExpression;
     }
@@ -2293,6 +2312,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 }
                 Expression property = expression(identifierNode,true);
                 
+                
+                // A."this" assumes a VariableExpression can be used for "this"
+                // we correct that here into a ConstantExpression
+                if (property instanceof VariableExpression) {
+                    VariableExpression ve = (VariableExpression) property;
+                    property = new ConstantExpression(ve.getName());
+                }
+                
                 PropertyExpression propertyExpression = new PropertyExpression(leftExpression, property, node.getType() != DOT);
                 if (node.getType() == SPREAD_DOT) {
                     propertyExpression.setSpreadSafe(true);
@@ -2324,13 +2351,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected Expression methodCallExpression(AST methodCallNode) {
         AST node = methodCallNode.getFirstChild();
-        /* // Bad idea, since foo(1)(2) is valid Groovy for foo(1).call(2).
-        if (isType(METHOD_CALL, node)) {
-            // sometimes method calls get wrapped in method calls for some wierd reason
-            return methodCallExpression(node);
-        }
-        */
-
         Expression objectExpression;
         AST selector;
         AST elist = node.getNextSibling();
@@ -2854,6 +2874,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 answer = makeType(node).makeArray();
             } else {
                 answer = ClassHelper.make(qualifiedName(node));
+                if(answer.isUsingGenerics()) {
+                    ClassNode newAnswer = ClassHelper.makeWithoutCaching(answer.getName());
+                    newAnswer.setRedirect(answer);
+                    answer = newAnswer;
+                }
             }
             configureAST(answer,node);
         }

@@ -18,10 +18,7 @@ package org.codehaus.groovy.control;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyRuntimeException;
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.CompileUnit;
-import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.classgen.*;
 import org.codehaus.groovy.control.io.InputStreamReaderSource;
 import org.codehaus.groovy.control.io.ReaderSource;
@@ -49,7 +46,7 @@ import java.util.*;
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Id: CompilationUnit.java 16296 2009-05-09 12:34:19Z blackdrag $
+ * @version $Id: CompilationUnit.java 17749 2009-09-26 06:06:36Z roshandawrani $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -167,9 +164,6 @@ public class CompilationUnit extends ProcessingUnit {
             }
         }, Phases.CONVERSION);
         addPhaseOperation(resolve, Phases.SEMANTIC_ANALYSIS);
-        // FIXASC (groovychange)
-        addPhaseOperation(checkGenerics, Phases.SEMANTIC_ANALYSIS);
-        // end
         addPhaseOperation(staticImport, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(new PrimaryClassNodeOperation() {
             @Override
@@ -351,6 +345,9 @@ public class CompilationUnit extends ProcessingUnit {
         return addSource(new SourceUnit(name, source, configuration, classLoader, getErrorCollector()));
     }
 
+    public SourceUnit addSource(String name, String scriptText) {
+        return addSource(new SourceUnit(name, scriptText, configuration, classLoader, getErrorCollector()));
+    }
 
     /**
      * Adds a SourceUnit to the unit.
@@ -596,6 +593,11 @@ public class CompilationUnit extends ProcessingUnit {
             for (Iterator it = classes.iterator(); it.hasNext();) {
                 ClassNode node = (ClassNode) it.next();
 
+//                if (node instanceof InnerClassNode && ((InnerClassNode)node).getVariableScope() != null) {
+//                    // what we want to do is not to process anonymous here as they were processed already
+//                    continue;
+//                }
+
                 VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(source);
                 scopeVisitor.visitClass(node);
 
@@ -738,6 +740,10 @@ public class CompilationUnit extends ProcessingUnit {
 
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
 
+            if(!classNode.isSynthetic()) {
+                GenericsVisitor genericsVisitor = new GenericsVisitor(source);
+                genericsVisitor.visitClass(classNode);
+            }
             //
             // Run the Verifier on the outer class
             //
@@ -774,7 +780,7 @@ public class CompilationUnit extends ProcessingUnit {
             // also takes care of both \ and / depending on the host compiling environment
             if (sourceName != null)
                 sourceName = sourceName.substring(Math.max(sourceName.lastIndexOf('\\'), sourceName.lastIndexOf('/')) + 1);
-            ClassGenerator generator = new AsmClassGenerator(context, visitor, classLoader, sourceName);
+            ClassGenerator generator = new AsmClassGenerator(source,context, visitor, classLoader, sourceName);
 
             //
             // Run the generation and create the class (if required)

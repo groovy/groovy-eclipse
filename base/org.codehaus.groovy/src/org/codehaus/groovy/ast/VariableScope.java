@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Jochen Theodorou
- * @version $Revision: 15807 $
+ * @version $Revision: 17917 $
  */
 public class VariableScope  {
     private Map<String, Variable> declaredVariables = Collections.emptyMap();
@@ -76,10 +76,12 @@ public class VariableScope  {
         this.inStaticContext = inStaticContext;
     }
 
+    @Deprecated
     public boolean isResolvingDynamic() {
         return resolvesDynamic;
     }
 
+    @Deprecated
     public void setDynamicResolving(boolean resolvesDynamic) {
         this.resolvesDynamic = resolvesDynamic;
     }
