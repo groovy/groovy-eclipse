@@ -140,7 +140,7 @@
 	<!-- ===================================================================== -->
 	<!-- Run tests. -->
 	<!-- ===================================================================== -->
-	<target name="runTests" if="isRunTests">
+	<target name="runTests"> <!--if="isRunTests">-->
 		<property name="automatedTestsHome" location="${buildHome}/build-files/automatedTests"/>
 
 		<ant antfile="${automatedTestsHome}/run-tests.xml" target="run" dir="${automatedTestsHome}">
