@@ -48,25 +48,67 @@ public class GroovyParser {
 	private String gclClasspath;
 	public static IGroovyDebugRequestor debugRequestor;
 	private CompilerOptions compilerOptions;
-	private static Map<String, GroovyClassLoader> cache = Collections.synchronizedMap(new HashMap<String, GroovyClassLoader>());
+
+	/*
+	 * Each project is allowed a GroovyClassLoader that will be used to load transform definitions and supporting classes. A cache
+	 * is maintained from project names to the current classpath and associated loader. If the classpath matches the cached version
+	 * on a call to build a parser then it is reused. If it does not match then a new loader is created and stored (storing it
+	 * orphans the previously cached one). When either a full build or a clean or project close occurs, we also discard the loader
+	 * instances associated with the project.
+	 */
+
+	private static Map<String, PathLoaderPair> projectToLoaderCache = Collections
+			.synchronizedMap(new HashMap<String, PathLoaderPair>());
+
+	static class PathLoaderPair {
+		String classpath;
+		GroovyClassLoader groovyClassLoader;
+
+		PathLoaderPair(String classpath) {
+			this.classpath = classpath;
+			this.groovyClassLoader = new GroovyClassLoader();
+			configureClasspath(groovyClassLoader, classpath);
+		}
+	}
+
+	/**
+	 * Remove all cached classloaders for this project
+	 */
+	public static void tidyCache(String projectName) {
+		// This will orphan the loader on the heap
+		PathLoaderPair removed = projectToLoaderCache.remove(projectName);
+		// System.out.println("Cleaning up loader for project " + projectName + "?" + (removed == null ? "no" : "yes"));
+	}
 
 	// FIXASC (RC1) review callers who pass null for options
 	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
 		String path = (options == null ? null : options.groovyClassLoaderPath);
-		System.err.println("ref context=" + problemReporter.referenceContext);
-		// if (options == null) {
-		// throw new RuntimeException("Dont do that");
-		// }
 
-		// FIXASC (M2) classloader cache - is this going to bite me later...
-		// FIXASC (M2) need a control on cache size
 		// FIXASC (M2) set parent of the loader to system or context class loader?
 
-		GroovyClassLoader gcl = (path == null ? null : cache.get(path));
-		if (gcl == null && path != null) {
-			gcl = new GroovyClassLoader();
-			configureClasspath(gcl, path);
-			cache.put(path, gcl);
+		// record any paths we use for a project so that when the project is cleared,
+		// the paths (which point to cached classloaders) can be cleared
+		GroovyClassLoader gcl = null;
+		if (path != null) {
+			String projectName = options.groovyProjectName;
+			if (projectName == null) {
+				// throw new IllegalStateException("Cannot build without knowing project name");
+			} else {
+				PathLoaderPair pathAndLoader = projectToLoaderCache.get(projectName);
+				if (pathAndLoader == null) {
+					pathAndLoader = new PathLoaderPair(path);
+					projectToLoaderCache.put(projectName, pathAndLoader);
+				} else {
+					if (!path.equals(pathAndLoader.classpath)) {
+						// classpath change detected
+						// System.out.println("Classpath change detected for " + projectName);
+						pathAndLoader = new PathLoaderPair(path);
+						projectToLoaderCache.put(projectName, pathAndLoader);
+					}
+				}
+				System.out.println("Using loader with path " + pathAndLoader.classpath);
+				gcl = pathAndLoader.groovyClassLoader;
+			}
 		}
 		this.gclClasspath = path;
 		this.compilerOptions = options;
@@ -99,7 +141,7 @@ public class GroovyParser {
 	}
 
 	// FIXASC (RC1) perf ok?
-	private void configureClasspath(GroovyClassLoader gcl, String path) {
+	private static void configureClasspath(GroovyClassLoader gcl, String path) {
 		if (path != null) {
 			if (path.indexOf(File.pathSeparator) != -1) {
 				int pos = 0;

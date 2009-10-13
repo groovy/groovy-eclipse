@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * Utility class, contains helpers for configuring the compiler options based on the project.  If the project is a groovy project it
@@ -106,6 +107,7 @@ public class CompilerUtils {
 		// FIXASC (M3) temporary way to get compiler stuff configured when there is no UI for it
 		Map newOptions = new HashMap();
 		setGroovyClasspath(newOptions, javaProject);
+		compilerOptions.groovyProjectName = javaProject.getProject().getName();
 		if (!newOptions.isEmpty()) {
 			compilerOptions.set(newOptions);
 		}
@@ -146,6 +148,7 @@ public class CompilerUtils {
 				t.printStackTrace();				
 			}
 		}
+		optionMap.put(CompilerOptions.OPTIONG_GroovyProjectName,javaProject.getProject().getName());
 	}
 
 		

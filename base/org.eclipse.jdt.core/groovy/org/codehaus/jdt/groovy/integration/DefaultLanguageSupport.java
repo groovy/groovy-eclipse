@@ -24,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
@@ -77,5 +78,17 @@ class DefaultLanguageSupport implements LanguageSupport {
 	public boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern,
 			SearchRequestor requestor) {
 		return false;
+	}
+
+	public EventHandler getEventHandler() {
+		return DefaultEventHandler.instance;
+	}
+	
+	static class DefaultEventHandler implements EventHandler {
+		static DefaultEventHandler instance = new DefaultEventHandler();
+		private DefaultEventHandler() {}
+		public void handle(JavaProject javaProject, String string) {
+			// nop
+		}
 	}
 }

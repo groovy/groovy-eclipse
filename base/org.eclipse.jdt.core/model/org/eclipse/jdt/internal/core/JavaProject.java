@@ -23,6 +23,9 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+import org.codehaus.jdt.groovy.integration.LanguageSupport;
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -448,6 +451,9 @@ public class JavaProject
 				}
 			}
 		}
+		// GROOVY start
+		LanguageSupportFactory.getEventHandler().handle(this,"close");
+		// GROOVY end
 		super.close();
 	}
 

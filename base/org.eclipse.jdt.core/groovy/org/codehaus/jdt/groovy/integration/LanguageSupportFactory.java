@@ -122,5 +122,8 @@ public class LanguageSupportFactory {
 	    Util.log(e, "Error creating Groovy language support"); //$NON-NLS-1$
 	}
 
+	public static EventHandler getEventHandler() {
+		return getLanguageSupport().getEventHandler();
+	}
 
 }

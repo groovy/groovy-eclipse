@@ -88,4 +88,6 @@ public interface LanguageSupport {
 	 */
 	boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor);
 
+	EventHandler getEventHandler();
+
 }

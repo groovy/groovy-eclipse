@@ -133,6 +133,7 @@ public class CompilerOptions {
 	public static final String OPTIONG_BuildGroovyFiles = "org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyFlags = "org.eclipse.jdt.core.compiler.groovy.projectFlags"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyClassLoaderPath = "org.eclipse.jdt.core.compiler.groovy.groovyClassLoaderPath"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyProjectName = "org.eclipse.jdt.core.compiler.groovy.groovyProjectName"; //$NON-NLS-1$
 	// GROOVY end
 	
 	// Backward compatibility
@@ -345,6 +346,7 @@ public class CompilerOptions {
 	public int groovyFlags = 0; // 0x01 == IsGrails
 	
 	public String groovyClassLoaderPath = null;
+	public String groovyProjectName = null;
 	// GROOVY end
 
 
@@ -1428,6 +1430,9 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyClassLoaderPath)) != null) {
 			groovyClassLoaderPath = (String)optionValue;
 		}
+		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
+			groovyProjectName = (String)optionValue;
+		}
 		// GROOVY end
 	}
 	public String toString() {
@@ -1526,6 +1531,7 @@ public class CompilerOptions {
 		buf.append("\n\t- build groovy files: ").append((buildGroovyFiles==0)?"dontknow":(buildGroovyFiles==1?"no":"yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(groovyFlags)); //$NON-NLS-1$
 		buf.append("\n\t- groovyclassloader path: ").append(groovyClassLoaderPath); //$NON-NLS-1$
+		buf.append("\n\t- groovy projectname: ").append(groovyProjectName); //$NON-NLS-1$
 		// GROOVY end
 		return buf.toString();
 	}

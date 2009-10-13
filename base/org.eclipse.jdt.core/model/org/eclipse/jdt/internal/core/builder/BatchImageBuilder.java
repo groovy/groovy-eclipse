@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupport;
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 
@@ -163,6 +165,9 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 			this.notifier.checkCancel();
 		}
 	}
+	// GROOVY start
+	LanguageSupportFactory.getEventHandler().handle(this.javaBuilder.javaProject,"cleanOutputFolders");
+	// GROOVY end
 }
 
 protected void cleanUp() {
