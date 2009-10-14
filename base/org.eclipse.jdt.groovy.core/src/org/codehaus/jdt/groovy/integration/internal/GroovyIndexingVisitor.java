@@ -180,8 +180,10 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	@Override
 	public void visitClosureExpression(ClosureExpression node) {
-		for (Parameter param : node.getParameters()) {
-			handleType(param.getType(), false, true);
+		if (node.getParameters() != null) {
+			for (Parameter param : node.getParameters()) {
+				handleType(param.getType(), false, true);
+			}
 		}
 		super.visitClosureExpression(node);
 	}
