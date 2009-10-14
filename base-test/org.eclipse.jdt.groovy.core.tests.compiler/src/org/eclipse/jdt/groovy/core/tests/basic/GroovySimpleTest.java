@@ -6397,23 +6397,33 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	
 	// Parser should correctly parse this code, but 
 	// should return with an error
-//	public void testSafeDereferencingParserRecovery() {
-//	    this.runNegativeTest(new String[] {
-//	            "Run.groovy",
-//	            "public class SomeClass {\n" +
-//	            "  int someProperty\n" +
-//	            "  void someMethod() {\n" +
-//	            "    someProperty?.\n" +
-//	            "  }\n" +
-//	            "}"
-//	    }, 
-//        "----------\n" + 
-//        "1. ERROR in Foo.groovy (at line 5)\n" + 
-//        "  }\n" + 
-//        "  ^\n" + 
-//        "Groovy:unexpected token: } @ line 5, column 2.\n" + 
-//        "----------\n"); 
-//	}
+	public void testSafeDereferencingParserRecovery() {
+	    this.runNegativeTest(new String[] {
+	            "Run.groovy",
+	            "public class SomeClass {\n" +
+	            "  int someProperty\n" +
+	            "  void someMethod() {\n" +
+	            "    someProperty?.\n" +
+	            "  }\n" +
+	            "}"
+	    }, 
+	    "----------\n" + 
+		"1. ERROR in Run.groovy (at line 5)\n" + 
+		"	}\n" + 
+		"	^\n" + 
+		"Groovy:unexpected token: } @ line 5, column 3.\n" + 
+		"----------\n"); 
+
+		String expectedOutput = 
+			"public class SomeClass extends java.lang.Object {\n" + 
+			"  private int someProperty;\n" + 
+			"  public SomeClass() {\n" + 
+			"  }\n" + 
+			"  public void someMethod() {\n" + 
+			"  }\n" + 
+			"}\n";
+		checkGCUDeclaration("Run.groovy",expectedOutput);
+	}
 
 
 	// FIXASC what does this actually mean to groovy?  from GrailsPluginUtils
@@ -6470,7 +6480,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	private void checkGCUDeclaration(String filename, String expectedOutput) {
 		GroovyCompilationUnitDeclaration decl = (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
 		String declarationContents = decl.print();
-		if (expectedOutput.length()==0 || expectedOutput==null) {
+		if (expectedOutput==null || expectedOutput.length()==0) {
 			System.out.println(Util.displayString(declarationContents,2));
 		} else {
 			int foundIndex = declarationContents.indexOf(expectedOutput);
