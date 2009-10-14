@@ -163,6 +163,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"Groovy:unexpected token: abc @ line 12, column 2.\n" + 
     			"----------\n"); 
     	}
+
     }
     
     public void testNewRuleInLatestGroovy() {
@@ -6393,6 +6394,26 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			" print sine(PI / 6) + cosine(PI / 3)"
 		},"1.0");		
 	}
+	
+	// Parser should correctly parse this code, but 
+	// should return with an error
+//	public void testSafeDereferencingParserRecovery() {
+//	    this.runNegativeTest(new String[] {
+//	            "Run.groovy",
+//	            "public class SomeClass {\n" +
+//	            "  int someProperty\n" +
+//	            "  void someMethod() {\n" +
+//	            "    someProperty?.\n" +
+//	            "  }\n" +
+//	            "}"
+//	    }, 
+//        "----------\n" + 
+//        "1. ERROR in Foo.groovy (at line 5)\n" + 
+//        "  }\n" + 
+//        "  ^\n" + 
+//        "Groovy:unexpected token: } @ line 5, column 2.\n" + 
+//        "----------\n"); 
+//	}
 
 
 	// FIXASC what does this actually mean to groovy?  from GrailsPluginUtils
