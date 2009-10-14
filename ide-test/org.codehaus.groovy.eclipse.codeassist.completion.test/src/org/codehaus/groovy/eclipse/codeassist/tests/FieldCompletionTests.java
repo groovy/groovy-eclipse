@@ -31,7 +31,7 @@ public class FieldCompletionTests extends CompletionTestCase {
     // test that safe dereferencing works
     // should find that someProperty is of type integer
     public void testSafeDeferencing() throws Exception {
-        String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { someProperty?.}}";
+        String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { someProperty?.x}}";
         ICompilationUnit unit = create(contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "?."), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "getInteger", 3);

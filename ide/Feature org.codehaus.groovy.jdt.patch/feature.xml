@@ -14,7 +14,7 @@
       label="%featureName"
       version="2.0.0.qualifier"
       provider-name="%providerName"
-      plugin="org.eclipse.jdt">
+      plugin="org.codehaus.groovy.eclipse">
 
    <description url="%descriptionURL">
       %description
@@ -42,5 +42,11 @@
          install-size="0"
          version="0.0.0"
          unpack="false"/>
+
+   <plugin
+         id="org.codehaus.groovy.eclipse"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
 </feature>

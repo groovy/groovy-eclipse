@@ -10,7 +10,8 @@
       id="org.codehaus.groovy16.feature"
       label="%featureName"
       version="2.0.0.qualifier"
-      provider-name="%providerName">
+      provider-name="%providerName"
+      plugin="org.codehaus.groovy.eclipse">
 
    <description url="%descriptionURL">
       %description
@@ -44,5 +45,11 @@
          download-size="0"
          install-size="0"
          version="1.6.5.qualifier"/>
+
+   <plugin
+         id="org.codehaus.groovy.eclipse"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
 </feature>

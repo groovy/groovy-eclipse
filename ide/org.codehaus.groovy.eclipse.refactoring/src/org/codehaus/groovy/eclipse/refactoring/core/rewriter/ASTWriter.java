@@ -802,12 +802,40 @@ public class ASTWriter extends CodeVisitorSupport implements
     
     @Override
     public void visitReturnStatement(ReturnStatement statement) {
-        preVisitStatement(statement);
-        groovyCode.append("return ");
-        super.visitReturnStatement(statement);
-        postVisitStatement(statement);
+        // ignore return statement when in an empty script
+        if (!shouldIgnoreReturn()) {
+            preVisitStatement(statement);
+            groovyCode.append("return ");
+            super.visitReturnStatement(statement);
+            postVisitStatement(statement);
+        }
     }
     
+    /**
+     * Ignore the return statement when visiting an empty script
+     */
+    private boolean shouldIgnoreReturn() {
+        if (root.getClasses().size() == 1) {
+            ClassNode clazz = (ClassNode) root.getClasses().get(0);
+            if (clazz.isScript()) {
+                MethodNode runMethod = clazz.getMethod("run", new Parameter[0]);
+                if (runMethod != null) {
+                    Statement s = runMethod.getCode();
+                    if (s instanceof BlockStatement) {
+                        BlockStatement body = (BlockStatement) s;
+                        if (body.getStatements().size() == 1 && body.getStatements().get(0) instanceof ReturnStatement) {
+                            ReturnStatement ret = (ReturnStatement) body.getStatements().get(0);
+                            return ret.getExpression() instanceof ConstantExpression && 
+                                ((ConstantExpression) ret.getExpression()).getText().equals("null");
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+
     @Override
     public void visitSwitch(SwitchStatement statement) {
         preVisitStatement(statement);
@@ -1248,12 +1276,14 @@ public class ASTWriter extends CodeVisitorSupport implements
 		} else {
 			groovyCode.append(ImportResolver.getResolvedClassName(root,type,true));
 			if (type.isUsingGenerics()) {
-				groovyCode.append("<");
-				GenericsType[] genericTypes = type.getGenericsTypes();
-				for (GenericsType generic : Arrays.asList(genericTypes)) {
-					printGenericsType(generic);
-				}
-				groovyCode.append(">");
+			    GenericsType[] genericTypes = type.getGenericsTypes();
+			    if (genericTypes != null) {
+    				groovyCode.append("<");
+    				for (GenericsType generic : Arrays.asList(genericTypes)) {
+    					printGenericsType(generic);
+    				}
+    				groovyCode.append(">");
+			    }
 			}
 		}
 	}
