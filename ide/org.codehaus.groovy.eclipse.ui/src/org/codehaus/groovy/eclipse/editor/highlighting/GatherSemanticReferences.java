@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.eclipse.editor.GroovyTagScanner;
 import org.eclipse.jface.text.Position;
 
 class GatherSemanticReferences extends ClassCodeVisitorSupport {
@@ -97,13 +98,21 @@ class GatherSemanticReferences extends ClassCodeVisitorSupport {
                 if (objName.equals("this") || objName.equals("super")) {
                     if (call.getMethod() instanceof ConstantExpression) {
                         String methodName= call.getMethodAsString();
-                        if (thisClass.getMethods(methodName).size() == 0) {
+                        if (!isGjdkMethod(methodName) && thisClass.getMethods(methodName).size() == 0) {
                             unknownReferences.add(extractNameOnly(call.getMethod(), methodName));
                         }
                     }
                 }
             }
             super.visitMethodCallExpression(call);
+        }
+
+        /**
+         * @param methodName
+         * @return
+         */
+        private boolean isGjdkMethod(String methodName) {
+            return GroovyTagScanner.gjdkSet.contains(methodName);
         }
 
         /**

@@ -16,7 +16,9 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -143,6 +145,7 @@ public class GroovyTagScanner extends RuleBasedScanner {
 		"intersect",
 		"invokeMethods",
 		"isCase",
+		"it",
 		"join",
 		"leftShift",
 		"minus",
@@ -186,8 +189,14 @@ public class GroovyTagScanner extends RuleBasedScanner {
 		"withWriterAppend",
 		"write",
 		"writeLine",
-		"it"
 	};
+	
+	public static Set<String> gjdkSet = new HashSet<String>();
+	static {
+	    for (String gjdk : gjdkWords) {
+            gjdkSet.add(gjdk);
+        }
+	}
 
 	public GroovyTagScanner(IColorManager manager) {
 	    this(manager, null, null);
