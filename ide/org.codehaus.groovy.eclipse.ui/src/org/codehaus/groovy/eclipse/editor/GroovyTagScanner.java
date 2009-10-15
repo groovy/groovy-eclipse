@@ -108,6 +108,7 @@ public class GroovyTagScanner extends RuleBasedScanner {
 		"test",
 		"using",
 		"in",
+		"def",
 	};
 	
 	private static String[] gjdkWords = {
@@ -184,7 +185,8 @@ public class GroovyTagScanner extends RuleBasedScanner {
 		"withWriter",
 		"withWriterAppend",
 		"write",
-		"writeLine"
+		"writeLine",
+		"it"
 	};
 
 	public GroovyTagScanner(IColorManager manager) {

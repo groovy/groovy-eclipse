@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.TextAttribute;
@@ -62,7 +61,7 @@ public class GroovyMultiLineCommentScanner extends RuleBasedScanner {
 	
 	public GroovyMultiLineCommentScanner() {
 		// get color
-		Preferences prefs = GroovyPlugin.getDefault().getPluginPreferences();
+		IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
 		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED)) {
 			IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 			RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR);

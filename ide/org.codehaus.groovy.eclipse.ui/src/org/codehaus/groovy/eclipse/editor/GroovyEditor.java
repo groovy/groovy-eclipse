@@ -15,13 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.editor.highlighting.GroovySemanticReconciler;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
@@ -43,80 +43,31 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
-import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
+import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
+import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
 import org.eclipse.jdt.ui.actions.RefactorActionGroup;
-import org.eclipse.jdt.ui.cleanup.ICleanUp;
+import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IWorkbenchSite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel;
 
 public class GroovyEditor extends CompilationUnitEditor {
-    /**
-     * 
-     * @author Andrew Eisenberg
-     * @created Aug 20, 2009
-     * ensure that this class is a noop
-     */
-    private class NoopCleanUpsAction extends AllCleanUpsAction {
-    
-        public NoopCleanUpsAction(IWorkbenchSite site) {
-            super(site);
-        }
-    
-        @Override
-        public void dispose() {
-        }
-    
-        @Override
-        protected ICleanUp[] getCleanUps(ICompilationUnit[] units) {
-            return new ICleanUp[0];
-        }
-    
-        @Override
-        protected void performRefactoring(ICompilationUnit[] cus,
-                ICleanUp[] cleanUps) throws InvocationTargetException {
-        }
-    
-        @Override
-        public ICompilationUnit[] getCompilationUnits(
-                IStructuredSelection selection) {
-            return new ICompilationUnit[0];
-        }
-    
-        @Override
-        public void run(IStructuredSelection selection) {
-        }
-    
-        @Override
-        public void run(ITextSelection selection) {
-        }
-    
-        @Override
-        public void selectionChanged(IStructuredSelection selection) {
-        }
-    
-        @Override
-        public void selectionChanged(ITextSelection selection) {
-        }
-    }
-
     public static final String EDITOR_ID = "org.codehaus.groovy.eclipse.editor.GroovyEditor";
 
     private GroovyImageDecorator decorator = new GroovyImageDecorator();
+    
+    private GroovySemanticReconciler semanticReconciler;
     
     public GroovyEditor() {
 		super();
@@ -130,6 +81,33 @@ public class GroovyEditor extends CompilationUnitEditor {
         setSourceViewerConfiguration(new GroovyConfiguration(textTools.getColorManager(), store, this));    
     }
 
+    
+    private void installSemanticHighlighting() {
+        // only install if magic system property is set
+        if (System.getProperty("groovy.semantic.highlighting") != null) {
+            semanticReconciler = new GroovySemanticReconciler();
+            semanticReconciler.install(this, (JavaSourceViewer) this.getSourceViewer());
+            ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "addReconcileListener", 
+                    new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
+        }
+    }
+    
+    private void uninstallSemanticHighlighting() {
+        // only install if magic system property is set
+        if (System.getProperty("groovy.semantic.highlighting") != null) {
+            semanticReconciler.uninstall();
+            ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener", 
+                    new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
+            semanticReconciler = null;
+        }
+    }
+
+    
+    @Override
+    public void dispose() {
+        super.dispose();
+        uninstallSemanticHighlighting();
+    }
     
 	@Override
 	public IEditorInput getEditorInput() {
@@ -306,7 +284,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
     
-    private ModuleNode getModuleNode() {
+    public ModuleNode getModuleNode() {
         GroovyCompilationUnit unit = getGroovyCompilationUnit();
         if (unit != null) {
             return unit.getModuleNode();
@@ -339,6 +317,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     public void createPartControl(Composite parent) {
         super.createPartControl(parent);
         unsetJavaBreakpointUpdater();
+        installSemanticHighlighting();
     }
     
     
@@ -350,6 +329,14 @@ public class GroovyEditor extends CompilationUnitEditor {
     protected void doSetInput(IEditorInput input) throws CoreException {
         super.doSetInput(input);
         unsetJavaBreakpointUpdater();
+    }
+    
+    
+    /**
+     * Make accessible
+     */
+    public JavaSourceViewerConfiguration createJavaSourceViewerConfiguration() {
+        return super.createJavaSourceViewerConfiguration();
     }
     
     /**
