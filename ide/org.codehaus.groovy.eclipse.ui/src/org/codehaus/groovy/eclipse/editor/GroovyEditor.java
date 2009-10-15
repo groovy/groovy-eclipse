@@ -84,21 +84,29 @@ public class GroovyEditor extends CompilationUnitEditor {
     
     private void installSemanticHighlighting() {
         // only install if magic system property is set
-        if (System.getProperty("groovy.semantic.highlighting") != null) {
-            semanticReconciler = new GroovySemanticReconciler();
-            semanticReconciler.install(this, (JavaSourceViewer) this.getSourceViewer());
-            ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "addReconcileListener", 
-                    new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
+        try {
+            if (System.getProperty("groovy.semantic.highlighting") != null) {
+                semanticReconciler = new GroovySemanticReconciler();
+                semanticReconciler.install(this, (JavaSourceViewer) this.getSourceViewer());
+                ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "addReconcileListener", 
+                        new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
+            }
+        } catch (SecurityException e) {
+            // ignore
         }
     }
     
     private void uninstallSemanticHighlighting() {
         // only install if magic system property is set
-        if (System.getProperty("groovy.semantic.highlighting") != null) {
-            semanticReconciler.uninstall();
-            ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener", 
-                    new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
-            semanticReconciler = null;
+        try {
+            if (System.getProperty("groovy.semantic.highlighting") != null) {
+                semanticReconciler.uninstall();
+                ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener", 
+                        new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
+                semanticReconciler = null;
+            }
+        } catch (SecurityException e) {
+            // ignore
         }
     }
 

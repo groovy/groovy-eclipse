@@ -90,6 +90,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 			formatLength = document.getLength();
 		}
 	}
+	
 	public DefaultGroovyFormatter(IDocument doc,
 	        IPreferenceStore preferences, int indentationLevel) {
 		this(new TextSelection(0,0),doc,preferences,true);
@@ -469,6 +470,13 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	public Vector<Token> getTokens() {
 		return tokens;
 	}
+	
+	/**
+     * @param indentationLevel the indentationLevel to set
+     */
+    public void setIndentationLevel(int indentationLevel) {
+        this.indentationLevel = indentationLevel;
+    }
 
 	public int getPosOfNextTokenOfType(int pClStart, int expectedType) {
 	    int posClStart = pClStart;
@@ -480,5 +488,32 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	}
 
 
+	/**
+	 * Computes the given indent level for the line by looking at whitespace.
+	 * before the line starts.<br><br>
+	 * Each tab is consider one indent level.  And for spaces,
+	 * the value pref.tabSize is used (rounded up).
+	 * @param line the line to look at
+	 * @return indentation level
+	 */
+	public int computeIndentLevel(String line) {
+	    int indentsFound = 0;
+	    for (int currPos = 0, accumulatedSpaces = 0; currPos < line.length(); currPos++) {
+	        char c = line.charAt(currPos);
+	        if (c != ' ' && c != '\t') {
+	            break;
+	        } else if (c == '\t') {
+	            indentsFound++;
+	            accumulatedSpaces = 0;
+	        } else if (c == ' ') {
+	            accumulatedSpaces++;
+	            if (accumulatedSpaces == pref.tabSize) {
+	                indentsFound++;
+	                accumulatedSpaces = 0;
+	            }
+	        }
+	    }
+	    return indentsFound;
+	}
 
 }

@@ -32,6 +32,7 @@ public class FormatterTestSuite extends BaseTestSuite {
 		for (File file : files) {		
 			ts.addTest(new FormatterTestCase(file.getName(),file));
 		}
+		ts.addTestSuite(FindIndentsTests.class);
 		return ts;
 	}
 }

@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
+import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentation;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ToolFactory;
@@ -49,10 +52,13 @@ import org.eclipse.jface.text.DocumentRewriteSession;
 import org.eclipse.jface.text.DocumentRewriteSessionType;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.ITypedRegion;
 import org.eclipse.jface.text.Region;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.text.rules.FastPartitioner;
+import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.texteditor.ITextEditorExtension3;
@@ -643,65 +649,76 @@ public class GroovyAutoIndentStrategy extends DefaultIndentLineAutoEditStrategy 
 			// handle the indentation computation inside a temporary document
 			Document temp= new Document(prefix + newText);
 			DocumentRewriteSession session= temp.startRewriteSession(DocumentRewriteSessionType.STRICTLY_SEQUENTIAL);
-			scanner= new JavaHeuristicScanner(temp);
-			indenter= new GroovyIndenter(temp, scanner, fProject);
-			installJavaStuff(temp);
-
-			// indent the first and second line
-			// compute the relative indentation difference from the second line
-			// (as the first might be partially selected) and use the value to
-			// indent all other lines.
-			boolean isIndentDetected= false;
-			StringBuffer addition= new StringBuffer();
-			int insertLength= 0;
-			int first= document.computeNumberOfLines(prefix) + firstLine; // don't format first line
-			int lines= temp.getNumberOfLines();
-			boolean changed= false;
-			for (int l= first; l < lines; l++) { // we don't change the number of lines while adding indents
-
-				IRegion r= temp.getLineInformation(l);
-				int lineOffset= r.getOffset();
-				int lineLength= r.getLength();
-
-				if (lineLength == 0) // don't modify empty lines
-					continue;
-
-				if (!isIndentDetected) {
-
-					// indent the first pasted line
-					String current= getCurrentIndent(temp, l);
-					StringBuffer correct= indenter.computeIndentation(lineOffset);
-					if (correct == null)
-						return; // bail out
-
-					insertLength= subtractIndent(correct, current, addition);
-					if (l != first && temp.get(lineOffset, lineLength).trim().length() != 0) {
-						isIndentDetected= true;
-						if (insertLength == 0) {
-							 // no adjustment needed, bail out
-							if (firstLine == 0) {
-								// but we still need to adjust the first line
-								command.offset= newOffset;
-								command.length= newLength;
-								if (changed)
-									break; // still need to get the leading indent of the first line
-							}
-							return;
-						}
-						removeJavaStuff(temp);
-					} else {
-						changed= insertLength != 0;
-					}
-				}
-
-				// relatively indent all pasted lines
-				if (insertLength > 0)
-					addIndent(temp, l, addition);
-				else if (insertLength < 0)
-					cutIndent(temp, l, -insertLength);
-
-			}
-
+			
+			// GROOVY Change
+			// don't use Groovy indenter, use the GroovyIndentation from refactoring plugin
+			ITextSelection sel = new TextSelection(prefix.length(), newText.length());
+			DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(sel, temp, GroovyPlugin.getDefault()
+		            .getPreferenceStore(), true);
+			int indentLevel = formatter.computeIndentLevel(prefix);
+			formatter.setIndentationLevel(indentLevel);
+			TextEdit edit = formatter.format();
+			edit.apply(temp);
+//			scanner= new JavaHeuristicScanner(temp);
+//			indenter= new GroovyIndenter(temp, scanner, fProject);
+//			installJavaStuff(temp);
+//
+//			// indent the first and second line
+//			// compute the relative indentation difference from the second line
+//			// (as the first might be partially selected) and use the value to
+//			// indent all other lines.
+//			boolean isIndentDetected= false;
+//			StringBuffer addition= new StringBuffer();
+//			int insertLength= 0;
+//			int first= document.computeNumberOfLines(prefix) + firstLine; // don't format first line
+//			int lines= temp.getNumberOfLines();
+//			boolean changed= false;
+//			for (int l= first; l < lines; l++) { // we don't change the number of lines while adding indents
+//
+//				IRegion r= temp.getLineInformation(l);
+//				int lineOffset= r.getOffset();
+//				int lineLength= r.getLength();
+//
+//				if (lineLength == 0) // don't modify empty lines
+//					continue;
+//
+//				if (!isIndentDetected) {
+//
+//					// indent the first pasted line
+//					String current= getCurrentIndent(temp, l);
+//					StringBuffer correct= indenter.computeIndentation(lineOffset);
+//					if (correct == null)
+//						return; // bail out
+//
+//					insertLength= subtractIndent(correct, current, addition);
+//					if (l != first && temp.get(lineOffset, lineLength).trim().length() != 0) {
+//						isIndentDetected= true;
+//						if (insertLength == 0) {
+//							 // no adjustment needed, bail out
+//							if (firstLine == 0) {
+//								// but we still need to adjust the first line
+//								command.offset= newOffset;
+//								command.length= newLength;
+//								if (changed)
+//									break; // still need to get the leading indent of the first line
+//							}
+//							return;
+//						}
+//						removeJavaStuff(temp);
+//					} else {
+//						changed= insertLength != 0;
+//					}
+//				}
+//
+//				// relatively indent all pasted lines
+//				if (insertLength > 0)
+//					addIndent(temp, l, addition);
+//				else if (insertLength < 0)
+//					cutIndent(temp, l, -insertLength);
+//
+//			}
+			// GROOVY change end
+			
 			temp.stopRewriteSession(session);
 			newText= temp.get(prefix.length(), temp.getLength() - prefix.length());
 
