@@ -107,7 +107,7 @@ public class CompilerUtils {
             }
             
             // set to refresh packages on startup
-            GroovyActivator.getDefault().setRefreshOnStartup(true);
+//            GroovyActivator.getDefault().setRefreshOnStartup(true);
 
             Bundle[] toDisable = Platform.getBundles("org.codehaus.groovy", (toVersion17 ? version16 : version17));
             Bundle toEnable  = toVersion17 ? getHighestVersion(state, 7) : getHighestVersion(state, 6);
@@ -128,12 +128,12 @@ public class CompilerUtils {
             }
             toEnable.start(Bundle.START_ACTIVATION_POLICY);
             
-            // Force a package refresh at startup
-            // add the JVM argument to refresh packages on startup
-            IStatus status = new RefreshPackages().addJvmArg();
-            if (status.getSeverity() > IStatus.WARNING) {
-                throw new CoreException(status);
-            }
+//            // Force a package refresh at startup
+//            // add the JVM argument to refresh packages on startup
+//            IStatus status = new RefreshPackages().addJvmArg();
+//            if (status.getSeverity() > IStatus.WARNING) {
+//                throw new CoreException(status);
+//            }
             return Status.OK_STATUS;
         } catch (Exception e) {
             GroovyCore.logException(e.getMessage(), e);

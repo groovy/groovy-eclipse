@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.core.types;
 
+import static org.codehaus.groovy.eclipse.core.types.GroovyDeclaration.Kind.FIELD;
 import static org.codehaus.groovy.eclipse.core.types.GroovyDeclaration.Kind.MEMBER;
 
 public abstract class Member extends GroovyDeclaration {
@@ -35,5 +36,23 @@ public abstract class Member extends GroovyDeclaration {
 	
 	public ClassType getDeclaringClass() {
 		return declaringClass;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+	    return super.equals(obj) && declaringClass.equals(((Member) obj).getDeclaringClass());
+	}
+	
+	public int hashCode() {
+	    return super.hashCode() * declaringClass.hashCode();
+	}
+	@Override
+	protected boolean similarKinds(GroovyDeclaration rhs) {
+	    return rhs.getType() == MEMBER || rhs.getType() == FIELD;
+	}
+	
+	@Override
+	public boolean isSimilar(GroovyDeclaration rhs) {
+	    return super.isSimilar(rhs) && declaringClass.isSimilar(((Member) rhs).declaringClass);
 	}
 }

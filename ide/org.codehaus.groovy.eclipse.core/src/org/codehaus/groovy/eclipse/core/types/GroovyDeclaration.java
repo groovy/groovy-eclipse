@@ -27,6 +27,10 @@ import org.eclipse.jdt.core.IJavaElement;
 public abstract class GroovyDeclaration implements Modifiers, Comparable {
     public enum Kind { CLASS, MEMBER, LOCAL_VARIABLE, PARAMETER, FIELD, METHOD }
     
+    /**
+     * Signature is the type signature of classes
+     * But it is the qualified name of Properties and Fields
+     */
 	protected String signature;
 
 	protected String name;
@@ -67,20 +71,50 @@ public abstract class GroovyDeclaration implements Modifiers, Comparable {
 
 		try {
 			GroovyDeclaration rhs = (GroovyDeclaration) obj;
-			return getType() == rhs.getType() && name.equals(rhs.name)
-					&& signature.equals(signature) && modifiers == rhs.modifiers;
+			return rhs.getType() == getType() && name.equals(rhs.name)
+					&& signature.equals(rhs.signature) && modifiers == rhs.modifiers;
 		} catch (ClassCastException e) {
 			return false;
 		}
 	}
 
 	public int hashCode() {
-		return name.hashCode() + signature.hashCode() + modifiers;
+		return (name.hashCode() * signature.hashCode()) + getType().hashCode() + modifiers;
+	}
+	
+	/**
+	 * Same as equals(), but does not consider the modifiers
+	 * @param rhs
+	 * @return
+	 */
+	public boolean isSimilar(GroovyDeclaration rhs) {
+        return similarKinds(rhs) && name.equals(rhs.name)
+            && signature.equals(rhs.signature);
 	}
 
+    protected boolean similarKinds(GroovyDeclaration rhs) {
+        return getType() == rhs.getType();
+    }
+
+	/**
+	 * Note: this class has a natural ordering that is inconsistent with equals.
+	 */
 	public int compareTo(Object arg) {
 		GroovyDeclaration type = (GroovyDeclaration) arg;
-		return name.compareTo(type.name);
+		int current = name.compareTo(type.name);
+		if (current == 0) {
+		    current = signature.compareTo(type.signature);
+		}
+		if (current == 0) {
+		    if (modifiers < type.modifiers) {
+		        current = -1;
+		    } else if (modifiers > type.modifiers) {
+		        current = 1;
+		    } else {
+		        current = 0;
+		    }
+		}
+		return current;
 	}
 
 	public String toString() {

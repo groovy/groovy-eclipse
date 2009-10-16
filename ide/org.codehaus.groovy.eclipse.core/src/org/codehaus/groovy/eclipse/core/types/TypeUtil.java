@@ -198,16 +198,36 @@ public class TypeUtil {
 	
 	public static Field newField(IField field) throws IllegalArgumentException, JavaModelException {
 		ClassType declaringClass = newClassType(field.getDeclaringType());
-		String signature = field.getTypeSignature();
+		// Do *not* use the signature, but rather the qualified name
+		// FIXADE M2 change this!!!
+		String name = convertToQualifiedName(field.getTypeSignature());
 		int modifiers = TypeUtil.convertFromJavaCoreModifiers(field.getFlags());
-		return new Field(signature, modifiers, field.getElementName(), declaringClass, !signature.equals(OBJECT_TYPE));
+		return new Field(name, modifiers, field.getElementName(), declaringClass, !name.equals(OBJECT_TYPE));
 	}
 	
-	public static Field newField(IField field, IType declaringType) throws IllegalArgumentException, JavaModelException {
+	/**
+     * @param typeSignature
+     * @return
+     */
+    private static String convertToQualifiedName(String typeSignature) {
+        // if an array type, use the type signature
+        if (typeSignature.startsWith("[")) {
+            return typeSignature;
+        }
+        String qualifier = Signature.getSignatureQualifier(typeSignature);
+        if (qualifier.length() > 0) {
+            return qualifier + "." + Signature.getSignatureSimpleName(typeSignature);
+        }
+        return Signature.getSignatureSimpleName(typeSignature);
+    }
+
+    public static Field newField(IField field, IType declaringType) throws IllegalArgumentException, JavaModelException {
 	    ClassType declaringClass = newClassType(declaringType);
-	    String signature = field.getTypeSignature();
+        // Do *not* use the signature, but rather the qualified name
+        // FIXADE M2 change this!!!
+        String name = convertToQualifiedName(field.getTypeSignature());
 	    int modifiers = TypeUtil.convertFromJavaCoreModifiers(field.getFlags());
-	    return new Field(signature, modifiers, field.getElementName(), declaringClass, !signature.equals(OBJECT_TYPE));
+	    return new Field(name, modifiers, field.getElementName(), declaringClass, !name.equals(OBJECT_TYPE));
 	}
 
 	/**

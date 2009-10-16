@@ -56,18 +56,45 @@ public class Method extends Member implements Comparable {
 
 	@Override
     public boolean equals(Object obj) {
-		if (obj == null) {
+	    return super.equals(obj) && returnType.equals(((Method) obj).returnType) && parametersEqual((Method) obj);
+	}
+	@Override
+	public int hashCode() {
+	    int code = super.hashCode();
+	    for (int i = 0; i < parameters.length; ++i) {
+	        code *= parameters.hashCode();
+	    }
+	    code *= returnType.hashCode();
+	    return code;
+	}
+
+	 
+	/**
+     * @param obj
+     * @return
+     */
+    private boolean parametersEqual(Method obj) {
+        if (obj.parameters.length != parameters.length) {
+            return false;
+        }
+        for (int i = 0; i < parameters.length; i++) {
+            if (!parameters[i].equals(obj.parameters[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+	public boolean isSimilar(GroovyDeclaration rhs) {
+		if (rhs == null || !(rhs instanceof Method)) {
 			return false;
 		}
 
 		try {
-			// Don't call super - it checks type which is the return type for Method and not taken into account here.
-			Method method = (Method) obj;
-			if (!name.equals(method.name) || !returnType.equals(method.returnType) || modifiers != method.modifiers) {
-				return false;
-			}
-
-			if (!declaringClass.equals(method.declaringClass)) {
+		    // don't call super.  return types are not required for similarity
+			Method method = (Method) rhs;
+			if (!name.equals(method.name)) {
 				return false;
 			}
 
@@ -76,28 +103,49 @@ public class Method extends Member implements Comparable {
 			}
 
 			for (int i = 0; i < parameters.length; ++i) {
-				if (!parameters[i].equals(method.parameters[i])) {
+				if (!parameters[i].getSignature().equals(method.parameters[i].getSignature())) {
 					return false;
 				}
 			}
+			if (!declaringClass.equals(method.declaringClass)) {
+			    // still might be similar if classes on the same hierarchy
+			    // FIXADE M2 I really, really, really don't like this.
+			    // This will only work if classes in the project are also 
+			    // available in the workspace
+		        try {
+		            // If related, figure out which is super class of other.
+		            Class cls = Class.forName(declaringClass.name);
+		            Class clsOther = Class.forName(method.declaringClass.name);
+		            if (cls.equals(clsOther)) {
+		                // should not happen.  the declaring class should be equal already
+		                return true;
+		            } else if (cls.isAssignableFrom(clsOther)) {
+		                return true;
+		            } else if (clsOther.isAssignableFrom(cls)) {
+		                return true;
+		            }
+		        } catch (ClassNotFoundException e) {
+		            // Ignore - assume "equal" which is good enough for display purposes.
+		            // For hashing
+		            return true;
+		        }
+			    return false;
+			}
+
 		} catch (ClassCastException e) {
 			return false;
 		}
 		return true;
 	}
 
-	@Override
-    public int hashCode() {
-		int code = super.hashCode();
-		for (int i = 0; i < parameters.length; ++i) {
-			code += parameters.hashCode();
-		}
-		return code;
-	}
 
 	@Override
     @SuppressWarnings("unchecked")
     public int compareTo(Object arg) {
+	    if (! (arg instanceof Method)) {
+	        return -1;
+	    }
+	    
 		Method method = (Method) arg;
 		int value = name.compareTo(method.name);
 		if (value != 0) {
@@ -154,7 +202,7 @@ public class Method extends Member implements Comparable {
 
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < parameters.length; ++i) {
-			sb.append(parameters[i].getType()).append(' ').append(parameters[i].getName()).append(',');
+			sb.append(parameters[i].getSignature()).append(' ').append(parameters[i].getName()).append(',');
 		}
 
 		return sb.substring(0, sb.length() - 1);

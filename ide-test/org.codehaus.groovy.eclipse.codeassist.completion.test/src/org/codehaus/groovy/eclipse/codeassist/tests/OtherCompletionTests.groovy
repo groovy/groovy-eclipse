@@ -49,40 +49,56 @@ public class OtherCompletionTests extends CompletionTestCase {
     // type signatures were popping up in various places in the display string
     // ensure this doesn't happen
     void testGreclipse422() throws Exception {
-        System.err.println("This test is disabled");
-//        String javaClass = """
-//             public class StringExtension {
-//         public static String bar(String self) {
-//                     return self;
-//                 }
-//             }
-//             """     
-//            
-//        String groovyClass = """
-//             public class MyClass {
-//                 public void foo() {
-//                     String foo = 'foo';
-//                     use (StringExtension) {
-//                         foo.bar()
-//                     }
-//                     this.collect
-//                 }
-//             }
-//             """
-//            
-//        ICompilationUnit groovyUnit = create(groovyClass)
-//        env.addClass groovyUnit.getParent().getResource().getFullPath(), "StringExtension", javaClass
-//        incrementalBuild()
-//        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "foo.ba"), GeneralGroovyCompletionProcessor.class);
-//        proposalExists(proposals, "bar", 1);
-//        assertEquals proposals[0].getDisplayString(), "bar() : String - StringExtension (Groovy)"
-//            
-//        proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GeneralGroovyCompletionProcessor.class);
-//        proposalExists(proposals, "collect", 2);
-//        assertTrue   ((proposals[0].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Groovy)")) ||
-//                     (proposals[1].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Groovy)")))
-//        assertTrue   ((proposals[0].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)")) ||
-//                     (proposals[1].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)")))
+        String javaClass = """
+         public class StringExtension {
+         public static String bar(String self) {
+                     return self;
+                 }
+             }
+             """     
+            
+        String groovyClass = """
+             public class MyClass {
+                 public void foo() {
+                     String foo = 'foo';
+                     use (StringExtension) {
+                         foo.bar()
+                     }
+                     this.collect
+                 }
+             }
+             """
+            
+        ICompilationUnit groovyUnit = create(groovyClass)
+        env.addClass groovyUnit.getParent().getResource().getFullPath(), "StringExtension", javaClass
+        incrementalBuild()
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "foo.ba"), GeneralGroovyCompletionProcessor.class);
+        proposalExists(proposals, "bar", 1);
+        assertEquals proposals[0].getDisplayString(), "bar() : String - StringExtension (Groovy)"
+            
+        proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GeneralGroovyCompletionProcessor.class);
+        proposalExists(proposals, "collect", 2);
+        assertTrue   ((proposals[0].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Groovy)")) ||
+                     (proposals[1].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Groovy)")))
+        assertTrue   ((proposals[0].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)")) ||
+                     (proposals[1].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)")))
+    }
+    
+    public void testVisibility() throws Exception {
+        String groovyClass = 
+"""
+class B { }
+class C {
+    B theB
+}
+new C().th
+"""
+        ICompilationUnit groovyUnit = create(groovyClass)
+        incrementalBuild()
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "().th"), GeneralGroovyCompletionProcessor.class);
+        proposalExists proposals, "theB", 1
+        assertEquals "theB B - C (Groovy)", proposals[0].getDisplayString()
+            
     }
 
     private ICompilationUnit create(String contents) throws Exception {

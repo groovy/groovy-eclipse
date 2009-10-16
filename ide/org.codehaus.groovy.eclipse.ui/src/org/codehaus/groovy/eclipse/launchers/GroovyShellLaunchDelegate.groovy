@@ -53,8 +53,8 @@ public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
     
     static String getPathTo(String jarName) throws CoreException, IOException {
         Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy")
-        Enumeration<URL> enu = groovyBundle.findEntries("", jarName, false)
-        if (enu.hasMoreElements()) {
+        Enumeration<URL> enu = groovyBundle.findEntries("lib", jarName, false)
+        if (enu != null && enu.hasMoreElements()) {
             URL jar = resolve(enu.nextElement())
             return jar.getFile()
         } else {

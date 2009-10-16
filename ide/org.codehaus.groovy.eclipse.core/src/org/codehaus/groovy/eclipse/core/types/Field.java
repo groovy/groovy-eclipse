@@ -16,6 +16,8 @@
 package org.codehaus.groovy.eclipse.core.types;
 
 import static org.codehaus.groovy.eclipse.core.types.GroovyDeclaration.Kind.FIELD;
+import static org.codehaus.groovy.eclipse.core.types.GroovyDeclaration.Kind.MEMBER;
+
 
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.eclipse.jdt.core.IJavaElement;
@@ -46,5 +48,10 @@ public class Field extends Member {
             return ((IType) elt).getField(name);
         }
         return null;
+    }
+    
+    @Override
+    protected boolean similarKinds(GroovyDeclaration rhs) {
+        return rhs.getType() == MEMBER || rhs.getType() == FIELD;
     }
 }
