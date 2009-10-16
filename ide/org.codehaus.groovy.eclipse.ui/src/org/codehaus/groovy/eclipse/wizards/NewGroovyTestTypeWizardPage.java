@@ -70,17 +70,22 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
     public void createType(IProgressMonitor monitor) throws CoreException,
             InterruptedException {
         
+        // the below is no longer necessary now that the parser can handle 
+        // empty package statements
+        super.createType(monitor);
+        
         // bug GRECLIPSE-322
         // if JUnit 3 and default package, calling super will be an error.
-        IPackageFragment pack = getPackageFragment();
-        if (pack == null) {
-            pack = getPackageFragmentRoot().getPackageFragment("");
-        }
-        if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
-            createTypeInDefaultPackageJUnit3(pack, monitor);
-        } else {
-            super.createType(monitor);
-        }
+//        IPackageFragment pack = getPackageFragment();
+//        if (pack == null) {
+//            pack = getPackageFragmentRoot().getPackageFragment("");
+//        }
+//        if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
+//            createTypeInDefaultPackageJUnit3(pack, monitor);
+//            super.createType(monitor);
+//        } else {
+//            super.createType(monitor);
+//        }
     }
     
     // this will not handle Enclosing types
@@ -90,8 +95,8 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
         StringBuffer sb = new StringBuffer();
         String superClass = getSuperClass();
         String typeName = getTypeName();
+        String[] splits = superClass.split("\\.");
         if (superClass != null && !superClass.equals(GROOVY_TEST_CASE)) {
-            String[] splits = superClass.split("\\.");
             if (splits.length > 1) {
                 sb.append("import " + superClass + "\n\n");
             } 
@@ -100,7 +105,9 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
                 .append(" extends ")
                 .append(splits[splits.length-1]);
         } else {
-            sb.append("class ").append(typeName);
+            sb.append("class ").append(typeName)
+            .append(" extends ")
+            .append(splits[splits.length-1]);
         }
         
         sb.append(" {\n\n");
