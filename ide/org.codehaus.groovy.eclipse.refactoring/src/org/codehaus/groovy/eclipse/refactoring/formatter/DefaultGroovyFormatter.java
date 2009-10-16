@@ -167,7 +167,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 //			}
 
 		} catch (Exception e) {
-			throw new RuntimeException("Formatting could not be performed.\nMessage:" + e.getMessage() + "\nCause: " + e.getCause() + "\nType: " + e.getClass().getName());
+			throw new RuntimeException("Formatting could not be performed.\nMessage:" + e.getMessage() + "\nCause: " + e.getCause() + "\nType: " + e.getClass().getName(), e);
 		}
 		if (!formattedDocument.get().equals(document.get()))
 			return new ReplaceEdit(0, document.getLength(), formattedDocument

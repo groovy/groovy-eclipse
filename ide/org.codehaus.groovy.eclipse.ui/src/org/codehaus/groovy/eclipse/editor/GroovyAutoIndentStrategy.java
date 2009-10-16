@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentation;
 import org.eclipse.core.runtime.Assert;
@@ -657,8 +658,12 @@ public class GroovyAutoIndentStrategy extends DefaultIndentLineAutoEditStrategy 
 		            .getPreferenceStore(), true);
 			int indentLevel = formatter.computeIndentLevel(prefix);
 			formatter.setIndentationLevel(indentLevel);
-			TextEdit edit = formatter.format();
-			edit.apply(temp);
+			try {
+    			TextEdit edit = formatter.format();
+    			edit.apply(temp);
+			} catch (RuntimeException e) {
+			    GroovyCore.logException(e.getMessage(), e);
+			}
 //			scanner= new JavaHeuristicScanner(temp);
 //			indenter= new GroovyIndenter(temp, scanner, fProject);
 //			installJavaStuff(temp);
