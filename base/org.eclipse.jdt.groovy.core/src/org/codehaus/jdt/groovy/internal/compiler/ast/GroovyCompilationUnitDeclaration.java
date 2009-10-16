@@ -784,24 +784,24 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// }
 		// }
 		Parameter[] params = methodNode.getParameters();
+		ClassNode returnType = methodNode.getReturnType();
+
 		// source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
 		if ((modifiers & ClassFileConstants.AccStatic) != 0 && params != null && params.length == 1
 				&& methodNode.getName().equals("main")) {
 			Parameter p = params[0];
-			if (p.getType()==null || p.getType().getName().equals(ClassHelper.OBJECT)) {
-				params[0].setType(ClassHelper.STRING_TYPE.makeArray());
-				if (methodNode.getReturnType().getName().equals(ClassHelper.OBJECT)) {
-					methodNode.setReturnType(ClassHelper.VOID_TYPE);
+			if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
+				String name = p.getName();
+				params = new Parameter[1];
+				params[0] = new Parameter(ClassHelper.STRING_TYPE.makeArray(), name);
+				if (returnType.getName().equals(ClassHelper.OBJECT)) {
+					returnType = ClassHelper.VOID_TYPE;
 				}
 			}
 		}
 
-		// if ((modifiers & ClassFileConstants.AccStatic) != 0 && methodNode.getName().equals("main")
-		// && methodNode.getTypeDescriptor().equals("void main([Ljava.lang.String;)")) {
-		// isMain = true;
-		// }
 		methodDeclaration.arguments = createArguments(params, isMain);
-		methodDeclaration.returnType = createTypeReferenceForClassNode(methodNode.getReturnType());
+		methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
 		fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
 		return methodDeclaration;
 	}
