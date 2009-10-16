@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.wizards;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
@@ -93,5 +94,12 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         }
     }
 
-	
+   @Override
+   public int getModifiers() {
+       int modifiers = super.getModifiers();
+       modifiers &= ~F_PUBLIC;
+       modifiers &= ~F_PRIVATE;
+       modifiers &= ~F_PROTECTED;
+       return modifiers;
+   }
 }

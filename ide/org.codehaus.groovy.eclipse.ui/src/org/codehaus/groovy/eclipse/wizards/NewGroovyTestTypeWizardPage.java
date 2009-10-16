@@ -65,57 +65,8 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
             setSuperClass(GROOVY_TEST_CASE, true);
         }
     }
-
-    @Override
-    public void createType(IProgressMonitor monitor) throws CoreException,
-            InterruptedException {
-        
-        // the below is no longer necessary now that the parser can handle 
-        // empty package statements
-        super.createType(monitor);
-        
-        // bug GRECLIPSE-322
-        // if JUnit 3 and default package, calling super will be an error.
-//        IPackageFragment pack = getPackageFragment();
-//        if (pack == null) {
-//            pack = getPackageFragmentRoot().getPackageFragment("");
-//        }
-//        if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
-//            createTypeInDefaultPackageJUnit3(pack, monitor);
-//            super.createType(monitor);
-//        } else {
-//            super.createType(monitor);
-//        }
-    }
     
-    // this will not handle Enclosing types
-    private void createTypeInDefaultPackageJUnit3(
-            IPackageFragment pack, IProgressMonitor monitor) throws JavaModelException {
-        
-        StringBuffer sb = new StringBuffer();
-        String superClass = getSuperClass();
-        String typeName = getTypeName();
-        String[] splits = superClass.split("\\.");
-        if (superClass != null && !superClass.equals(GROOVY_TEST_CASE)) {
-            if (splits.length > 1) {
-                sb.append("import " + superClass + "\n\n");
-            } 
-            
-            sb.append("class ").append(typeName)
-                .append(" extends ")
-                .append(splits[splits.length-1]);
-        } else {
-            sb.append("class ").append(typeName)
-            .append(" extends ")
-            .append(splits[splits.length-1]);
-        }
-        
-        sb.append(" {\n\n");
-        sb.append("}");
-        
-        ICompilationUnit unit = pack.createCompilationUnit(typeName + DOT_GROOVY, sb.toString(), true, monitor);
-        maybeCreatedType = unit.getType(typeName);
-    }
+
 
     @Override
     public IType getCreatedType() {
@@ -141,4 +92,67 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
 
         return super.superClassChanged();
     }
+    
+    /**
+     * Groovy classes do not need public/private/protected modifiers
+     */
+    @Override
+    public int getModifiers() {
+        int modifiers = super.getModifiers();
+        modifiers &= ~F_PUBLIC;
+        modifiers &= ~F_PRIVATE;
+        modifiers &= ~F_PROTECTED;
+        return modifiers;
+    }
+
+//  @Override
+//  public void createType(IProgressMonitor monitor) throws CoreException,
+//          InterruptedException {
+//      
+//      // the below is no longer necessary now that the parser can handle 
+//      // empty package statements
+//      super.createType(monitor);
+//      
+//      // bug GRECLIPSE-322
+//      // if JUnit 3 and default package, calling super will be an error.
+//      IPackageFragment pack = getPackageFragment();
+//      if (pack == null) {
+//          pack = getPackageFragmentRoot().getPackageFragment("");
+//      }
+//      if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
+//          createTypeInDefaultPackageJUnit3(pack, monitor);
+//          super.createType(monitor);
+//      } else {
+//          super.createType(monitor);
+//      }
+//  }
+  
+//  // this will not handle Enclosing types
+//  private void createTypeInDefaultPackageJUnit3(
+//          IPackageFragment pack, IProgressMonitor monitor) throws JavaModelException {
+//      
+//      StringBuffer sb = new StringBuffer();
+//      String superClass = getSuperClass();
+//      String typeName = getTypeName();
+//      String[] splits = superClass.split("\\.");
+//      if (superClass != null && !superClass.equals(GROOVY_TEST_CASE)) {
+//          if (splits.length > 1) {
+//              sb.append("import " + superClass + "\n\n");
+//          } 
+//          
+//          sb.append("class ").append(typeName)
+//              .append(" extends ")
+//              .append(splits[splits.length-1]);
+//      } else {
+//          sb.append("class ").append(typeName)
+//          .append(" extends ")
+//          .append(splits[splits.length-1]);
+//      }
+//      
+//      sb.append(" {\n\n");
+//      sb.append("}");
+//      
+//      ICompilationUnit unit = pack.createCompilationUnit(typeName + DOT_GROOVY, sb.toString(), true, monitor);
+//      maybeCreatedType = unit.getType(typeName);
+//  }
 }
