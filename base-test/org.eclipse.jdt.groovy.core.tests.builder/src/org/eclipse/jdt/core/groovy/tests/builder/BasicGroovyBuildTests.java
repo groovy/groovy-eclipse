@@ -207,6 +207,35 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
 	}
 
+	// use funky main method
+	public void testBuildGroovyHelloWorld2() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p1", "Hello",
+			"package p1;\n"+
+			"class Hello {\n"+
+			"   static main(args) {\n"+
+			"      print \"Hello Groovy world\"\n"+
+			"   }\n"+
+			"}\n"
+			);
+		
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p1.Hello");
+		expectingNoProblems();
+		executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
+	}
+
+	
 	public void testPropertyAccessorLocationChecks() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());

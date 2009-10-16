@@ -163,7 +163,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"Groovy:unexpected token: abc @ line 12, column 2.\n" + 
     			"----------\n"); 
     	}
-
     }
     
     public void testNewRuleInLatestGroovy() {
@@ -198,6 +197,31 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"  }\n"+
 			"}\n",
 		},"success");		
+	}
+	
+	public void testStandaloneGroovyFile2() {
+		this.runConformTest(new String[] {
+			"p/X.groovy",
+			"package p;\n" + 
+			"public class X {\n" + 
+//			"  public static void main(String[] args) {\n"+
+			"  static main(args) {\n"+
+			"    print \"success\"\n" + 
+			"  }\n"+
+			"}\n",
+		},"success");	
+		checkGCUDeclaration("X.groovy", 		
+				"package p;\n" + 
+				"public class X extends java.lang.Object {\n" + 
+				"  public X() {\n" + 
+				"  }\n" + 
+				// for: public static void main(String[] args) {
+//				"  public static void main(public String... args) {\n" + 
+				// for: static main(args) {
+				"  public static void main(public java.lang.String... args) {\n" + 
+				"  }\n" + 
+				"}\n"
+);
 	}
 	
 	public void testBrokenPackage() {

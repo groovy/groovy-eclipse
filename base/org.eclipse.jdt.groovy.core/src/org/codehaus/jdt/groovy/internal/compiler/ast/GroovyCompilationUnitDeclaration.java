@@ -770,11 +770,37 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
 		methodDeclaration.modifiers = modifiers;
 		methodDeclaration.selector = methodNode.getName().toCharArray();
-		if ((modifiers & ClassFileConstants.AccStatic) != 0 && methodNode.getName().equals("main")
-				&& methodNode.getTypeDescriptor().equals("void main([Ljava.lang.String;)")) {
-			isMain = true;
+		// Need to capture the rule in Verifier.adjustTypesIfStaticMainMethod(MethodNode node)
+		// if (node.getName().equals("main") && node.isStatic()) {
+		// Parameter[] params = node.getParameters();
+		// if (params.length == 1) {
+		// Parameter param = params[0];
+		// if (param.getType() == null || param.getType()==ClassHelper.OBJECT_TYPE) {
+		// param.setType(ClassHelper.STRING_TYPE.makeArray());
+		// ClassNode returnType = node.getReturnType();
+		// if(returnType == ClassHelper.OBJECT_TYPE) {
+		// node.setReturnType(ClassHelper.VOID_TYPE);
+		// }
+		// }
+		// }
+		Parameter[] params = methodNode.getParameters();
+		// source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
+		if ((modifiers & ClassFileConstants.AccStatic) != 0 && params != null && params.length == 1
+				&& methodNode.getName().equals("main")) {
+			Parameter p = params[0];
+			if (p.getType()==null || p.getType().getName().equals(ClassHelper.OBJECT)) {
+				params[0].setType(ClassHelper.STRING_TYPE.makeArray());
+				if (methodNode.getReturnType().getName().equals(ClassHelper.OBJECT)) {
+					methodNode.setReturnType(ClassHelper.VOID_TYPE);
+				}
+			}
 		}
-		methodDeclaration.arguments = createArguments(methodNode.getParameters(), isMain);
+
+		// if ((modifiers & ClassFileConstants.AccStatic) != 0 && methodNode.getName().equals("main")
+		// && methodNode.getTypeDescriptor().equals("void main([Ljava.lang.String;)")) {
+		// isMain = true;
+		// }
+		methodDeclaration.arguments = createArguments(params, isMain);
 		methodDeclaration.returnType = createTypeReferenceForClassNode(methodNode.getReturnType());
 		fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
 		return methodDeclaration;
