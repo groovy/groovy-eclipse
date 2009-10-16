@@ -274,64 +274,33 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 	 * @param types
 	 * @return
 	 */
-    protected GroovyDeclaration[] mergeTypes(GroovyDeclaration[] types) {
-		if (types.length < 1) {
+    protected <T extends GroovyDeclaration> T[] mergeTypes(T[] types) {
+		if (types.length < 1) { 
 			return types;
 		}
 		
 		Arrays.sort(types);
 		
-		List<GroovyDeclaration> results = new ArrayList<GroovyDeclaration>();
+		List<T> results = new ArrayList<T>();
 		results.add(types[0]);
 		for (int i = 1; i < types.length; ++i) {
-			if (!isSimilar(types[i-1], types[i])) {
+			if (! types[i-1].isSimilar(types[i])) {
 				results.add(types[i]);
 			}
 		}
 		
 		removeCompilerMethods(results);
+		Class<? extends GroovyDeclaration> cls = types[0].getClass();
 		
-		// HACK: emp - must be base type. This is really wanting to be an interface at some stage.
-		Class<?> cls = types[0].getClass();
-		if (cls.getName().startsWith("org.codehaus.groovy.eclipse.core.types.Java")) {
-			cls = cls.getSuperclass();
-		}
-		
-		return (GroovyDeclaration[]) results.toArray((GroovyDeclaration[])Array.newInstance(cls, results.size()));
+		return (T[]) results.toArray((T[]) Array.newInstance(cls, 0));
 	}
 
-    private boolean isSimilar(GroovyDeclaration type1, GroovyDeclaration type2) {
-        if (type1 instanceof Method && type2 instanceof Method) {
-            Method method1 = (Method) type1;
-            Method method2 = (Method) type2;
-            
-            if (! method1.getName().equals(method2.getName())) {
-                return false;
-            }
-            
-            if (method1.getParameters().length != method2.getParameters().length) {
-                return false;
-            }
-            
-            Parameter[] params1 = method1.getParameters();
-            Parameter[] params2 = method2.getParameters();
-            for (int i = 0; i < params1.length; i++) {
-                if (!params1[i].getSignature() .equals(params2[i].getSignature())) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            return type1.equals(type2);
-        }
-    }
-	
 	/**
 	 * class$ and super$ and this$ methods must be removed.
 	 * @param results
 	 */
-	protected void removeCompilerMethods(List<GroovyDeclaration> results) {
-		for (Iterator<GroovyDeclaration> iter  = results.iterator(); iter.hasNext();) {
+	protected <T extends GroovyDeclaration> void removeCompilerMethods(List<T> results) {
+		for (Iterator<T> iter  = results.iterator(); iter.hasNext();) {
 			String name = iter.next().getName();
 			if (name.startsWith("<clinit>") || name.startsWith("class$") || name.startsWith("super$") || name.startsWith("this$")) {
 				iter.remove();
@@ -341,7 +310,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 	
     protected boolean isScriptOrClosureContext(ISourceCodeContext sourceContext) {
         try {
-            return  sourceContext.getId().equals(ISourceCodeContext.CLOSURE_SCOPE) ||
+            return sourceContext.getId().equals(ISourceCodeContext.CLOSURE_SCOPE) ||
                     ((ClassNode) sourceContext.getASTPath()[1]).isScript();
         } catch (Exception e) {
             // any reason for failure means we are not in a script
@@ -397,7 +366,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 	protected StyledString createDisplayString(Member member) {
 		StringBuffer sb = new StringBuffer(member.getName());
 		sb.append(" ").append(toSimpleTypeName(member.getSignature())).append(" - ").append(
-				toSimpleTypeName(member.getDeclaringClass().getSignature())).append(" (Groovy)");
+				toSimpleTypeName(member.getDeclaringClass().getName())).append(" (Groovy)");
 		return new StyledString(sb.toString());
 	}
 

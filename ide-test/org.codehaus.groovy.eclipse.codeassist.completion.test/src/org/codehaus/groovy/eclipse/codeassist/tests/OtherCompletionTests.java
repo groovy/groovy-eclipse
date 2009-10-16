@@ -39,6 +39,7 @@ public class OtherCompletionTests extends CompletionTestCase {
     "}\n" +
 "}";
         ICompilationUnit unit = create(contents);
+        fullBuild();
         // ensure that there is no ArrayIndexOutOfBoundsException thrown.
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "this."), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "i", 1);
@@ -67,7 +68,7 @@ public class OtherCompletionTests extends CompletionTestCase {
             
         ICompilationUnit groovyUnit = create(groovyClass);
         env.addClass(groovyUnit.getParent().getResource().getFullPath(), "StringExtension", javaClass);
-        incrementalBuild();
+        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "foo.ba"), GeneralGroovyCompletionProcessor.class);
         proposalExists(proposals, "bar", 1);
         assertEquals (proposals[0].getDisplayString(), "bar() : String - StringExtension (Groovy)");
@@ -81,17 +82,17 @@ public class OtherCompletionTests extends CompletionTestCase {
     }
     
     public void testVisibility() throws Exception {
-//        String groovyClass = 
-//"class B { }\n" +
-//"class C {\n" +
-//    "B theB\n" +
-//"}\n" +
-//"new C().th\n";
-//        ICompilationUnit groovyUnit = create(groovyClass);
-//        incrementalBuild();
-//        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "().th"), GeneralGroovyCompletionProcessor.class);
-//        proposalExists(proposals, "theB", 1);
-//        assertEquals("theB B - C (Groovy)", proposals[0].getDisplayString());
+        String groovyClass = 
+"class B { }\n" +
+"class C {\n" +
+    "B theB\n" +
+"}\n" +
+"new C().th\n";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "().th"), GeneralGroovyCompletionProcessor.class);
+        proposalExists(proposals, "theB", 1);
+        assertEquals("theB B - C (Groovy)", proposals[0].getDisplayString());
             
     }
 
