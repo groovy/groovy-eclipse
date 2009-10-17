@@ -16,6 +16,14 @@
 
 package org.codehaus.groovy.eclipse.editor.actions;
 
+import java.util.Set;
+
+import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.dialogs.MessageDialog;
+
 /**
  * @author Andrew Eisenberg
  * @created Aug 26, 2009
@@ -26,4 +34,34 @@ public class RenameToGroovyAction extends RenameToGroovyOrJavaAction {
     public RenameToGroovyAction() {
         super(GROOVY);
     }
+    
+    protected void askToConvert(Set<IProject> affectedProjects) {
+        if (affectedProjects.size() == 0) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (affectedProjects.size() > 1) {
+            sb.append("Projects ");
+            for (IProject project : affectedProjects) {
+                sb.append(project.getName()).append(", ");
+            }
+            sb.replace(sb.length()-2, 2, " do ");
+        } else {
+            sb.append("Projects ").append(affectedProjects.iterator().next().getName()).append(" does ");
+        }
+        sb.append("have the Groovy nature.  Do you want to add it?");
+        
+        boolean yes = MessageDialog.openQuestion(window != null ? window.getShell() : null, "Convert to Groovy?", sb.toString());
+        if (yes) {
+            for (IProject project : affectedProjects) {
+                try {
+                    GroovyNature.configure(project);
+                } catch (CoreException e) {
+                    GroovyCore.logException("Exception when configuring groovy nature for project " + project.getName(), e);
+                }
+            }
+        }
+    }
+    
+    
 }
