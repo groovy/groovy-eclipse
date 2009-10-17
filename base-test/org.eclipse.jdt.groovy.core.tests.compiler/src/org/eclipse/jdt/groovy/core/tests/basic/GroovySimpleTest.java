@@ -225,6 +225,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testBrokenPackage() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"Foo.groovy",
 				"package \n"+
@@ -238,6 +239,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testBrokenPackage2() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"Foo.groovy",
 				"package ;\n"+
@@ -252,6 +254,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 	// does the second error now get reported after the package problem
 	public void testBrokenPackage3() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"Foo.groovy",
 				"package ;\n"+
