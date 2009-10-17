@@ -23,6 +23,7 @@ import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * @author Andrew Eisenberg
@@ -35,7 +36,7 @@ public class RenameToGroovyAction extends RenameToGroovyOrJavaAction {
         super(GROOVY);
     }
     
-    protected void askToConvert(Set<IProject> affectedProjects) {
+    protected void askToConvert(Set<IProject> affectedProjects, Shell shell) {
         if (affectedProjects.size() == 0) {
             return;
         }
@@ -51,7 +52,7 @@ public class RenameToGroovyAction extends RenameToGroovyOrJavaAction {
         }
         sb.append("have the Groovy nature.  Do you want to add it?");
         
-        boolean yes = MessageDialog.openQuestion(window != null ? window.getShell() : null, "Convert to Groovy?", sb.toString());
+        boolean yes = MessageDialog.openQuestion(shell, "Convert to Groovy?", sb.toString());
         if (yes) {
             for (IProject project : affectedProjects) {
                 try {
