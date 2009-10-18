@@ -16,10 +16,14 @@
 package org.codehaus.groovy.eclipse.test.actions;
 
 import org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction;
+import org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyOrJavaAction;
 import org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
+import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IActionDelegate;
@@ -31,6 +35,13 @@ import org.eclipse.ui.IActionDelegate;
  *
  */
 public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
+    
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        testProject.addNature(GroovyNature.GROOVY_NATURE);
+    }
+    
     public void testRenameToGroovy() throws Exception {
         IType type = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
         IResource file = type.getCompilationUnit().getResource();
@@ -39,7 +50,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         IActionDelegate action = new RenameToGroovyAction();
         action.selectionChanged(null, ss);
         action.run(null);
-        file.refreshLocal(IResource.DEPTH_INFINITE, null);
+        waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
         
         file = file.getParent().getFile(new Path("Bar.groovy"));
@@ -52,7 +63,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         IActionDelegate action = new RenameToJavaAction();
         action.selectionChanged(null, ss);
         action.run(null);
-        file.refreshLocal(IResource.DEPTH_INFINITE, null);
+        waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
         
         file = file.getParent().getFile(new Path("Bar.java"));
@@ -66,7 +77,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         IActionDelegate action = new RenameToGroovyAction();
         action.selectionChanged(null, ss);
         action.run(null);
-        file.refreshLocal(IResource.DEPTH_INFINITE, null);
+        waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
         
         file = file.getParent().getFile(new Path("Bar.groovy"));
@@ -77,7 +88,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action = new RenameToJavaAction();
         action.selectionChanged(null, ss);
         action.run(null);
-        file.refreshLocal(IResource.DEPTH_INFINITE, null);
+        waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
         
         file = file.getParent().getFile(new Path("Bar.java"));
@@ -91,7 +102,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         IActionDelegate action = new RenameToJavaAction();
         action.selectionChanged(null, ss);
         action.run(null);
-        file.refreshLocal(IResource.DEPTH_INFINITE, null);
+        waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
         
         file = file.getParent().getFile(new Path("Bar.java"));
@@ -102,12 +113,22 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action = new RenameToGroovyAction();
         action.selectionChanged(null, ss);
         action.run(null);
-        file.refreshLocal(IResource.DEPTH_INFINITE, null);
+        waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
         
         file = file.getParent().getFile(new Path("Bar.groovy"));
         assertTrue(file.getName() + " should exist", file.exists());
 
+    }
+    /**
+     * @param file
+     * @throws InterruptedException
+     * @throws CoreException
+     */
+    private void waitForJobAndRefresh(IResource file)
+            throws InterruptedException, CoreException {
+        Job.getJobManager().join(RenameToGroovyOrJavaAction.class, null);
+        file.getParent().refreshLocal(IResource.DEPTH_INFINITE, null);
     }
 
 }

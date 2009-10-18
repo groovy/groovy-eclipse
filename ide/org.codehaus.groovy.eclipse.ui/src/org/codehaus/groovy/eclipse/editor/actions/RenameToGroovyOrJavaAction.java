@@ -30,7 +30,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.window.IShellProvider;
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorReference;
@@ -47,6 +46,73 @@ import org.eclipse.ui.progress.UIJob;
  * Rename the file extension of a file to groovy or to java
  */
 public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActionDelegate {
+
+    /**
+     * @author Andrew Eisenberg
+     * @created Oct 17, 2009
+     *
+     */
+    private final class RenameToGroovyOrJavaJob extends UIJob {
+        private RenameToGroovyOrJavaJob(String name) {
+            super(name);
+        }
+        
+        @Override
+        public boolean belongsTo(Object family) {
+            return RenameToGroovyOrJavaAction.class == family;
+        }
+
+
+
+        @Override
+        public IStatus runInUIThread(IProgressMonitor monitor) {
+            Set<IProject> affectedProjects = new HashSet<IProject>();
+            final Set<IResource> filesAlreadyOpened = new HashSet<IResource>();
+            StructuredSelection sel = (StructuredSelection) selection;
+            for (Iterator iter = sel.iterator(); iter.hasNext();) {
+                Object object = iter.next();
+                if (object instanceof IAdaptable) {
+
+                    IResource file = (IResource) ((IAdaptable) object)
+                            .getAdapter(IResource.class);
+                    
+                    if (file != null) {
+                        if (file.getType() != IResource.FILE) {
+                            continue;
+                        }
+                        IDE.saveAllEditors(new IFile[] { (IFile) file }, true);
+                        String name = convertName(file);
+                        RenameResourceChange change = new RenameResourceChange(
+                                file.getFullPath(), name); //$NON-NLS-1$
+                        try {
+                            if (isOpenInEditor(file)) {
+                                filesAlreadyOpened.add(file);
+                            }
+                                
+                            change.perform(monitor);
+                            
+                            IProject project = file.getProject();
+                            if (!GroovyNature.hasGroovyNature(project)) {
+                                affectedProjects.add(project);
+                            }
+                        } catch (CoreException e) {
+                            String message = "Error converting file extension to " + 
+                                    javaOrGroovy + " for file " + file.getName();
+                            GroovyCore.logException(message, e);
+                            return new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message, e);
+                        }
+                    }
+                }
+            }
+            
+            if (! affectedProjects.isEmpty() && javaOrGroovy.equals(GROOVY)) {
+                askToConvert(affectedProjects, this.getDisplay().getActiveShell());
+            }
+            
+            reopenFiles(filesAlreadyOpened);
+            return Status.OK_STATUS;
+        }
+    }
 
     public static final String GROOVY = ".groovy";
 	public static final String JAVA = ".java";
@@ -65,57 +131,7 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
 	 */
 	public void run(IAction action) {
 		if (selection instanceof StructuredSelection) {
-		    UIJob renameTo = new UIJob("Rename to " + javaOrGroovy) {
-                
-                @Override
-                public IStatus runInUIThread(IProgressMonitor monitor) {
-                    Set<IProject> affectedProjects = new HashSet<IProject>();
-                    final Set<IResource> filesAlreadyOpened = new HashSet<IResource>();
-                    StructuredSelection sel = (StructuredSelection) selection;
-                    for (Iterator iter = sel.iterator(); iter.hasNext();) {
-                        Object object = iter.next();
-                        if (object instanceof IAdaptable) {
-
-                            IResource file = (IResource) ((IAdaptable) object)
-                                    .getAdapter(IResource.class);
-                            
-                            if (file != null) {
-                                if (file.getType() != IResource.FILE) {
-                                    continue;
-                                }
-                                IDE.saveAllEditors(new IFile[] { (IFile) file }, true);
-                                String name = convertName(file);
-                                RenameResourceChange change = new RenameResourceChange(
-                                        file.getFullPath(), name); //$NON-NLS-1$
-                                try {
-                                    if (isOpenInEditor(file)) {
-                                        filesAlreadyOpened.add(file);
-                                    }
-                                        
-                                    change.perform(monitor);
-                                    
-                                    IProject project = file.getProject();
-                                    if (!GroovyNature.hasGroovyNature(project)) {
-                                        affectedProjects.add(project);
-                                    }
-                                } catch (CoreException e) {
-                                    String message = "Error converting file extension to " + 
-                                            javaOrGroovy + " for file " + file.getName();
-                                    GroovyCore.logException(message, e);
-                                    return new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message, e);
-                                }
-                            }
-                        }
-                    }
-                    
-                    if (! affectedProjects.isEmpty() && javaOrGroovy.equals(GROOVY)) {
-                        askToConvert(affectedProjects, this.getDisplay().getActiveShell());
-                    }
-                    
-                    reopenFiles(filesAlreadyOpened);
-                    return Status.OK_STATUS;
-                }
-            };
+		    UIJob renameTo = new RenameToGroovyOrJavaJob("Rename to " + javaOrGroovy);
             renameTo.schedule();
 		}
 	}

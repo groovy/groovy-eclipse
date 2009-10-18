@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.editor;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
-import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentation;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ToolFactory;

@@ -18,10 +18,8 @@ package org.codehaus.groovy.eclipse.editor.actions;
 
 import java.util.Set;
 
-import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 
@@ -55,14 +53,8 @@ public class RenameToGroovyAction extends RenameToGroovyOrJavaAction {
         boolean yes = MessageDialog.openQuestion(shell, "Convert to Groovy?", sb.toString());
         if (yes) {
             for (IProject project : affectedProjects) {
-                try {
-                    GroovyNature.configure(project);
-                } catch (CoreException e) {
-                    GroovyCore.logException("Exception when configuring groovy nature for project " + project.getName(), e);
-                }
+                GroovyRuntime.addGroovyRuntime(project);
             }
         }
     }
-    
-    
 }
