@@ -128,6 +128,7 @@ public class CompilationUnit extends ProcessingUnit {
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
                            GroovyClassLoader loader, GroovyClassLoader transformLoader) 
     {
+    	
         super(configuration, loader, null);
         this.transformLoader = transformLoader;
         this.names = new ArrayList();
@@ -175,7 +176,7 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
-        addPhaseOperation(output);
+//        addPhaseOperation(output);
 
         ASTTransformationVisitor.addPhaseOperations(this);
 
@@ -922,6 +923,14 @@ public class CompilationUnit extends ProcessingUnit {
     }
     
     private List getPrimaryClassNodes(boolean sort) {
+    /*
+    	if (sort==true) {
+    		List<ModuleNode> sortedModules = this.ast.getSortedModules();
+    		if (sortedModules!=null) {
+    			return sortedModules;
+    		} 
+    	}
+    */
         List unsorted = new ArrayList();
         Iterator modules = this.ast.getModules().iterator();
         while (modules.hasNext()) {
@@ -955,7 +964,7 @@ public class CompilationUnit extends ProcessingUnit {
 
         List sorted = getSorted(indexInterface, unsorted);
         sorted.addAll(getSorted(indexClass, unsorted));
-
+    //    this.ast.setSortedModules(sorted);
         return sorted;
     }
 
@@ -1048,7 +1057,7 @@ public class CompilationUnit extends ProcessingUnit {
             //
             GroovyClass gclass = (GroovyClass) iterator.next();
             try {
-                body.call(gclass);
+                body.call(gclass);	
             } catch (CompilationFailedException e) {
                 // fall thorugh, getErrorREporter().failIfErrors() will triger
             } catch (NullPointerException npe) {
