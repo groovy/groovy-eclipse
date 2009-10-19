@@ -173,7 +173,7 @@ public class CompilationUnit extends ProcessingUnit {
         addPhaseOperation(staticImport, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
-        addPhaseOperation(output);
+      //  addPhaseOperation(output);
 
         ASTTransformationVisitor.addPhaseOperations(this);
 
