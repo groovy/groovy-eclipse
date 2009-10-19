@@ -658,6 +658,7 @@ public class GroovyAutoIndentStrategy extends DefaultIndentLineAutoEditStrategy 
 			int indentLevel = formatter.computeIndentLevel(prefix);
 			formatter.setIndentationLevel(indentLevel);
 			try {
+			    // if there is an exception, then no formatting will be applied.
     			TextEdit edit = formatter.format();
     			edit.apply(temp);
 			} catch (RuntimeException e) {

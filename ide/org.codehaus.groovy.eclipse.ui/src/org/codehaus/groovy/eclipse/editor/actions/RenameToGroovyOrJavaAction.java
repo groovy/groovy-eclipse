@@ -152,7 +152,8 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
                         }
                     }
                 } catch (PartInitException e) {
-                    GroovyCore.logException("Exception looking through opened editors", e);
+                    // Safe to ignore.  This can happen when a class file editor
+                    // was open, but its underlying resource was deleted.
                 }
             }
         } catch (NullPointerException npe) {

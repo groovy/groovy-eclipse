@@ -160,7 +160,7 @@ public class GroovyProjectFacade {
              ModuleNode module = ((GroovyCompilationUnit) unit).getModuleNode();
              List<ClassNode> classes = module.getClasses();
              for (ClassNode classNode : classes) {
-                if (classNode.getName().equals(type.getElementName())) {
+                if (classNode.getNameWithoutPackage().equals(type.getElementName())) {
                     return classNode;
                 }
             }
@@ -316,14 +316,16 @@ public class GroovyProjectFacade {
      * @return
      */
     public boolean isGroovyScript(ICompilationUnit unit) {
-        try {
-            for (IType type : unit.getTypes()) {
-                if (isGroovyScript(type)) {
-                    return true;
+        if (unit instanceof GroovyCompilationUnit) {
+            GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
+            ModuleNode module = gunit.getModuleNode();
+            if (module !=  null) {
+                for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
+                    if (clazz.isScript()) {
+                        return true;
+                    }
                 }
             }
-        } catch (JavaModelException e) {
-            GroovyCore.logException("Exception when looking for Groovy Scripts", e);
         }
         return false;
     }

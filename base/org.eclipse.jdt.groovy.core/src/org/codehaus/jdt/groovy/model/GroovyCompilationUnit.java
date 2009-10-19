@@ -33,6 +33,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -543,7 +544,10 @@ public class GroovyCompilationUnit extends CompilationUnit {
 				return types[0];
 			}
 		} catch (JavaModelException e) {
-			Util.log(e, "Error finding all types of " + this.getElementName());
+			// can ignore situations when trying to find types that are not on the classpath
+			if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH) {
+				Util.log(e, "Error finding all types of " + this.getElementName());
+			}
 		}
 		return null;
 	}

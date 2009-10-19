@@ -23,6 +23,7 @@ import org.eclipse.core.expressions.PropertyTester;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -71,7 +72,11 @@ public class GroovyResourcePropertyTester extends PropertyTester {
 					// can ignore
 					// passed in non-JavaLike file name
                 } catch (JavaModelException e) {
-                    GroovyCore.logException("Exception when testing for main methods " + receiver, e);
+                    // can ignore situations when trying to find types that are not on the classpath
+                    if (e.getStatus() != null && 
+                            e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH) {
+                        GroovyCore.logException("Exception when testing for main methods " + receiver, e);
+                    }
                 }
 				
 			}

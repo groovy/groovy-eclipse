@@ -46,7 +46,7 @@ public class RenameToGroovyAction extends RenameToGroovyOrJavaAction {
             }
             sb.replace(sb.length()-2, 2, " do ");
         } else {
-            sb.append("Projects ").append(affectedProjects.iterator().next().getName()).append(" does ");
+            sb.append("Project ").append(affectedProjects.iterator().next().getName()).append(" does ");
         }
         sb.append("have the Groovy nature.  Do you want to add it?");
         
