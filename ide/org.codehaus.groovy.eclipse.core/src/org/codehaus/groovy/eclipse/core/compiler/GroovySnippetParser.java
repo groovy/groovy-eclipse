@@ -116,6 +116,9 @@ public class GroovySnippetParser {
             parser.dietParse(unit, compilationResult);
         ModuleNode node = decl.getModuleNode();
 
+        if (node == null) {
+            return null;
+        }
         // Remove any remaining synthetic methods
         for (ClassNode classNode : (Iterable<ClassNode>) node.getClasses()) {
             for (Iterator<MethodNode> methodIter = classNode.getMethods().iterator(); methodIter.hasNext();) {

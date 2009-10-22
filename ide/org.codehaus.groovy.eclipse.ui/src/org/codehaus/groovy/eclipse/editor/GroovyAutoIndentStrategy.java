@@ -662,7 +662,9 @@ public class GroovyAutoIndentStrategy extends DefaultIndentLineAutoEditStrategy 
     			TextEdit edit = formatter.format();
     			edit.apply(temp);
 			} catch (RuntimeException e) {
-			    GroovyCore.logException(e.getMessage(), e);
+			    // formatting could not proceed.  
+			    // likely because of pasting some unformatted code.
+			    GroovyCore.logWarning(e.getMessage(), e);
 			}
 //			scanner= new JavaHeuristicScanner(temp);
 //			indenter= new GroovyIndenter(temp, scanner, fProject);

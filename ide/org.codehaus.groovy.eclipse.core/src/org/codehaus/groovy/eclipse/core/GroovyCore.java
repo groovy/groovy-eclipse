@@ -49,6 +49,15 @@ public class GroovyCore {
     }
 
     /**
+     * Logs a warning with an exception attached
+     * 
+     * @param message The warning to log.
+     */
+    public static void logWarning(final String message, final Throwable t) {
+        log(IStatus.WARNING, message, t);
+    }
+    
+    /**
      * Logs an information message.
      * 
      * @param message The message to log.

@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
 import org.eclipse.core.filebuffers.ITextFileBufferManager;
@@ -279,6 +280,12 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 		try {
 			if (!ActionUtil.isOnBuildPath(unit))
 				return;
+			
+			// GROOVY Change do not perform any cleanups if not a Groovy project
+			IProject proj = unit.getJavaProject().getProject();
+			if (proj == null || !GroovyNature.hasGroovyNature(proj)) {
+			    return;
+			}
 
 			ICleanUp[] cleanUps= getCleanUps(unit.getJavaProject().getProject());
 
