@@ -2,6 +2,7 @@ package org.codehaus.groovy.eclipse.editor;
 
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput;
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
@@ -25,7 +26,6 @@ import org.eclipse.ui.texteditor.ITextEditor;
 public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
 //	private ITextDoubleClickStrategy doubleClickStrategy;
-	private GroovyTagScanner tagScanner;
 	private GroovyStringScanner stringScanner;
 	
 	
@@ -40,14 +40,10 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
 	public GroovyConfiguration(GroovyColorManager colorManager, IPreferenceStore preferenceSource, ITextEditor editor) {
 	    super(colorManager, preferenceSource, editor, IJavaPartitions.JAVA_PARTITIONING);
-	    this.tagScanner = new GroovyTagScanner(colorManager);
 	    this.stringScanner = new GroovyStringScanner(colorManager);
+	    GroovyTagScanner tagScanner = new GroovyTagScanner(colorManager);
+	    ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fCodeScanner", this, tagScanner);
 	}
-
-    @Override
-    protected RuleBasedScanner getCodeScanner() {
-        return tagScanner;
-    }
 
     @Override
     public IAutoEditStrategy[] getAutoEditStrategies(

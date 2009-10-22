@@ -49,23 +49,6 @@ public abstract class CompletionTestCase extends BuilderTests {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        ICompilationUnit[] wcs = new ICompilationUnit[0];
-        int i = 0;
-        do {
-            wcs = JavaCore.getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY);
-            for (ICompilationUnit workingCopy : wcs) {
-                try {
-                    workingCopy.discardWorkingCopy();
-                    workingCopy.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            i++;
-            if (i > 20) {
-                fail("Could not delete working copies " + wcs);
-            }
-        } while (wcs.length > 0);
     }
     
 

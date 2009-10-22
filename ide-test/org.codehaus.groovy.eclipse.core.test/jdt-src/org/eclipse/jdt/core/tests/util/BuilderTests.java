@@ -18,9 +18,11 @@ import java.util.Vector;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.Compiler;
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 
 /**
  * Base class for Java image builder tests
@@ -478,6 +480,23 @@ public class BuilderTests extends TestCase {
 	 */
 	protected void tearDown() throws Exception {
 		env.resetWorkspace();
+        ICompilationUnit[] wcs = new ICompilationUnit[0];
+        int i = 0;
+        do {
+            wcs = JavaCore.getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY);
+            for (ICompilationUnit workingCopy : wcs) {
+                try {
+                    workingCopy.discardWorkingCopy();
+                    workingCopy.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            i++;
+            if (i > 20) {
+                fail("Could not delete working copies " + wcs);
+            }
+        } while (wcs.length > 0);
 		JavaCore.setOptions(JavaCore.getDefaultOptions());
 		super.tearDown();
 	}

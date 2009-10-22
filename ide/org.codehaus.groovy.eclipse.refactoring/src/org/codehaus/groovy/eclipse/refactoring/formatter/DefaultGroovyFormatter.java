@@ -121,7 +121,12 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 					// Ignore Tokens inside a String
 					if(token.getType() == GroovyTokenTypes.STRING_CTOR_START) {
 						tokens.add(token);
-						while((token = stream.nextToken()).getType() != GroovyTokenTypes.STRING_CTOR_END) {
+						Token prevToken = token;
+						inner: while((token = stream.nextToken()).getType() != GroovyTokenTypes.STRING_CTOR_END) {
+						    if (equalTokens(prevToken, token)) {
+						        break inner;
+						    }
+						    prevToken = token;
 						}
 					}
 					tokens.add(token);
@@ -140,7 +145,31 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	
 	
 
-	@Override
+	/**
+     * @param prevToken
+     * @param token
+     * @return
+     */
+    private boolean equalTokens(Token t1, Token t2) {
+        return t1.getType() == t2.getType() && t1.getColumn() == t2.getColumn() && t1.getLine() == t2.getLine() 
+               && nullEquals(t1.getFilename(), t2.getFilename()) && nullEquals(t1.getText(), t2.getText());
+    }
+
+    /**
+     * @param s1
+     * @param s2
+     * @return
+     */
+    private boolean nullEquals(String s1, String s2) {
+        if (s1 == null && s2 == null) {
+            return true;
+        } else if (s1 == null || s2 == null) {
+            return false;
+        }
+        return s1.equals(s2);
+    }
+
+    @Override
 	public TextEdit format() {
 		formattedDocument = new Document(document.get());
 		try {
@@ -285,10 +314,11 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	public Token getTokenAfterParenthesis(int index) {
 	    int i = index;
 		int countParenthesis = 1;
-		while (tokens.get(i).getType() != GroovyTokenTypes.LPAREN)
+		while (tokens.get(i).getType() != GroovyTokenTypes.LPAREN) {
 			i++;
+		}
 		i++;
-		while (countParenthesis > 0) {
+		while (countParenthesis > 0 && i < tokens.size()-1) {
 			switch (tokens.get(i).getType()) {
 				case GroovyTokenTypes.LPAREN:
 					countParenthesis++;
@@ -299,8 +329,10 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 			}
 			i++;
 		}
-		if (tokens.get(i).getType() == GroovyTokenTypes.LCURLY)
+		if (tokens.get(i).getType() == GroovyTokenTypes.LCURLY ||
+		        i >= tokens.size()) {
 			return null;
+		}
         return getNextToken(i);
 	}
 
@@ -342,15 +374,19 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	 *            position of the actual cursor
 	 * @param includingNLS
 	 *            including newline tokens
-	 * @return returns the position in the collection of tokens
+	 * @return returns the next position in the collection of tokens 
+	 * or the current position if it is the last token
 	 */
 	public int getPositionOfNextToken(int cPos, boolean includingNLS) {
+	    if (cPos == tokens.size()-1) {
+	        return cPos;
+	    }
 	    int currentPos = cPos;
 		int type;
 		do {
 			type = tokens.get(++currentPos).getType();
 		} while ((type == GroovyTokenTypes.WS || (type == GroovyTokenTypes.NLS && !includingNLS))
-				&& currentPos < tokens.size() - 1);
+				&& currentPos < tokens.size() - 2);
 		return currentPos;
 	}
 

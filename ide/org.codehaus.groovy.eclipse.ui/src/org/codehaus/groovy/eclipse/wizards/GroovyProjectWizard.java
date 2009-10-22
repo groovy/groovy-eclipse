@@ -19,9 +19,9 @@ package org.codehaus.groovy.eclipse.wizards;
 import java.lang.reflect.InvocationTargetException;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.GroovyPluginImages;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
+import org.codehaus.groovy.eclipse.ui.decorators.GroovyPluginImages;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;

@@ -11,7 +11,6 @@
 
 package org.codehaus.groovy.eclipse.core.builder;
 
-import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.internal.events.BuildCommand;
 import org.eclipse.core.resources.IProject;
@@ -35,7 +34,8 @@ public class ConvertLegacyProject {
 
     public static final String OLD_NATURE = "org.codehaus.groovy.eclipse.groovyNature"
     public static final String OLD_BUILDER = "org.codehaus.groovy.eclipse.groovyBuilder"
-    
+    public static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature"; //$NON-NLS-1$
+
     def convertProjects(projects) {
         projects.each( { it -> if (it.isAccessible()) {
             convertProject(it) 
@@ -48,7 +48,7 @@ public class ConvertLegacyProject {
         
         def natures = desc.getNatureIds()
         def newNatures = natures.findAll( { it -> ! it.equals(OLD_NATURE) } ).asList()
-        ((List) newNatures).add(0, GroovyNature.GROOVY_NATURE)
+        ((List) newNatures).add(0, GROOVY_NATURE)
         newNatures = newNatures.unique()
         desc.setNatureIds(newNatures.toArray(new String[newNatures.size()]))
         

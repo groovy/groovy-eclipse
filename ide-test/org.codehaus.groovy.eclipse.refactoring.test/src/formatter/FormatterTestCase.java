@@ -48,11 +48,6 @@ public class FormatterTestCase extends BaseTestCase {
 	    doTest();
 	}
 	private void doTest() {
-		if (this.getName().equals("Formatter_Test_MultilineStatements3.txt")) {
-			// this test is failing...need to look into why
-			return;
-		}
-		
 		boolean indentendOnly = false;
 		IPreferenceStore pref = null;
 

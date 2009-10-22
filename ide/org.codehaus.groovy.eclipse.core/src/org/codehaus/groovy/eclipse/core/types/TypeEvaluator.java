@@ -287,7 +287,8 @@ public class TypeEvaluator {
 		
 		@Override
         public void visitBooleanExpression(BooleanExpression expression) {
-			throw new UnsupportedVisitException("visitBooleanExpression");
+            super.visitBooleanExpression(expression);
+            stack.push("java.lang.Boolean");
 		}
 		
 		@Override

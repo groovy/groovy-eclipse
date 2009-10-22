@@ -16,11 +16,14 @@
 
 package org.codehaus.groovy.eclipse.core.compiler;
 
-import org.codehaus.groovy.activator.GroovyActivator;
-import org.codehaus.groovy.activator.RefreshPackages;
+import static org.eclipse.core.runtime.FileLocator.resolve;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
+
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -29,6 +32,7 @@ import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.DisabledInfo;
 import org.eclipse.osgi.service.resolver.State;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
 
 /**
  * @author Andrew Eisenberg
@@ -82,6 +86,41 @@ public class CompilerUtils {
         String version17 = "1.7.0";
         Bundle[] active = Platform.getBundles("org.codehaus.groovy", (isGroovy17DisabledOrMissing() ? version16 : version17));
         return active.length > 0 ? active[0] : null;
+    }
+    
+    
+    /**
+     * Returns the groovy-all-*.jar that is used in the Eclipse project. We know
+     * there should only be one specified in the header for org.codehaus.groovy
+     * right now.
+     * 
+     * @return Returns the names of the jars that are exported by the
+     *         org.codehaus.groovy project.
+     * @throws BundleException
+     */
+    @SuppressWarnings("unchecked")
+    public static URL getExportedGroovyAllJar() {
+        try {
+            Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
+            Enumeration<URL> enu = groovyBundle.findEntries("lib", "groovy-all-*.jar", false);
+            if (enu == null) {
+                // in some versions of the plugin, the groovy-all jar is in the base directory of the plugins
+                enu = groovyBundle.findEntries("", "groovy-all-*.jar", false);
+            }
+            while (enu.hasMoreElements()) {
+                URL jar = enu.nextElement();
+                if (jar.getFile().indexOf("-sources") == -1 &&
+                        jar.getFile().indexOf("-javadoc") == -1 &&
+                        jar.getFile().indexOf("-eclipse") == -1) {
+                    // remove the "reference:/" protocol
+                    jar = resolve(jar);
+                    return jar;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        throw new RuntimeException("Could not find groovy all jar");
     }
     
     /**

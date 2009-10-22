@@ -16,16 +16,17 @@
 package org.codehaus.groovy.eclipse.ui.cpcontainer;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.core.ClasspathVariableInitializer;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPage;
@@ -116,18 +117,9 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
         label.setText("Select Groovy Runtime:");
         versionCombo = new Combo(composite, SWT.READ_ONLY);
         final List<String> options = ListUtil.newEmptyList();
-        final IPath embeddedJar = ClasspathVariableInitializer
-                .getEmbeddedJar(GroovyCore.getEmbeddedGroovyRuntimeHome());
-        options.add("Plugin Embedded Lib: " + embeddedJar.lastSegment());
-        final IPath runtimePath = ClasspathVariableInitializer
-                .getCPVarEmbeddablePath();
-        if (!nullEquals(GroovyCore.getEmbeddedGroovyRuntimeHome(),
-                runtimePath)) {
-            final IPath groovyHomeJar = ClasspathVariableInitializer
-                    .getEmbeddedJar(runtimePath);
-            if (groovyHomeJar != null && groovyHomeJar.toFile().exists())
-                options.add("$GROOVY_HOME/" + groovyHomeJar.lastSegment());
-        }
+        URL groovyURL = CompilerUtils.getExportedGroovyAllJar();
+        IPath runtimeJarPath = new Path(groovyURL.getPath());
+        options.add("Plugin Embedded Lib: " + runtimeJarPath.lastSegment());
         versionCombo.setItems(options.toArray(new String[0]));
         versionCombo.setFont(composite.getFont());
         String pref = getPreference();

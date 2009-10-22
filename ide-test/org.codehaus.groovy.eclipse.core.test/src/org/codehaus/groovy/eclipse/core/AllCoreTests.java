@@ -23,7 +23,6 @@ public class AllCoreTests {
         final TestSuite suite = new TestSuite("Test for "
                 + AllCoreTests.class.getPackage().getName());
         // $JUnit-BEGIN$
-        suite.addTestSuite(ClasspathVariableInitializerTest.class);
         suite.addTestSuite(ClasspathContainerTest.class);
         suite.addTestSuite(CompilerSwitchTests.class);
         // $JUnit-END$

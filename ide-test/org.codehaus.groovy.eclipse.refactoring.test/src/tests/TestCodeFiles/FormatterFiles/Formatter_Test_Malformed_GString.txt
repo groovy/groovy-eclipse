@@ -1,0 +1,9 @@
+###prop
+setPreferences=true
+###src
+// GRECLIPSE-463 prevent infinite loop
+println "${sdf.parse(dateString)
+###exp
+// GRECLIPSE-463 prevent infinite loop
+println "${sdf.parse(dateString)
+###end

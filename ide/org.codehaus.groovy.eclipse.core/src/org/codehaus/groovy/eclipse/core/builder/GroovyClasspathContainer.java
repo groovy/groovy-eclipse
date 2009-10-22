@@ -54,7 +54,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     private void updateEntries() {
         final List<IClasspathEntry> newEntries = newList();
         try {
-	    	URL groovyURL = getExportedGroovyAllJar();
+	    	URL groovyURL = CompilerUtils.getExportedGroovyAllJar();
 	        IPath runtimeJarPath = new Path(groovyURL.getPath());
 	        File srcJarFile = new File(groovyURL.getPath().replace(".jar", "-sources.jar"));
 	        IPath srcJarPath = srcJarFile.exists() ? 
@@ -86,39 +86,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
 
     
-    /**
-     * Returns the groovy-all-*.jar that is used in the Eclipse project. We know
-     * there should only be one specified in the header for org.codehaus.groovy
-     * right now.
-     * 
-     * @return Returns the names of the jars that are exported by the
-     *         org.codehaus.groovy project.
-     * @throws BundleException
-     */
-    @SuppressWarnings("unchecked")
-    private URL getExportedGroovyAllJar() {
-        try {
-        	Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-        	Enumeration<URL> enu = groovyBundle.findEntries("lib", "groovy-all-*.jar", false);
-        	if (enu == null) {
-        	    // in some versions of the plugin, the groovy-all jar is in the base directory of the plugins
-        	    enu = groovyBundle.findEntries("", "groovy-all-*.jar", false);
-        	}
-        	while (enu.hasMoreElements()) {
-        		URL jar = enu.nextElement();
-        		if (jar.getFile().indexOf("-sources") == -1 &&
-        				jar.getFile().indexOf("-javadoc") == -1 &&
-        				jar.getFile().indexOf("-eclipse") == -1) {
-        			// remove the "reference:/" protocol
-        			jar = resolve(jar);
-        			return jar;
-        		}
-        	}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		throw new RuntimeException("Could not find groovy all jar");
-    }
+
     
     public String getDescription() {
         return DESC;

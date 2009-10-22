@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.eclipse.jdt.internal.ui.text.AbstractJavaScanner;
 import org.eclipse.jdt.ui.text.IColorManager;
 import org.eclipse.jdt.ui.text.IJavaColorConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -41,7 +42,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 
-public class GroovyTagScanner extends RuleBasedScanner {
+public class GroovyTagScanner extends AbstractJavaScanner {
 	private static String[] types =
 	{
 		"boolean",
@@ -191,12 +192,17 @@ public class GroovyTagScanner extends RuleBasedScanner {
 		"writeLine",
 	};
 	
+	
 	public static Set<String> gjdkSet = new HashSet<String>();
 	static {
 	    for (String gjdk : gjdkWords) {
             gjdkSet.add(gjdk);
         }
 	}
+	
+	private final IColorManager manager;
+	private final List<IRule> additionalRules;
+	private final List<String> additionalGroovyKeywords;
 
 	public GroovyTagScanner(IColorManager manager) {
 	    this(manager, null, null);
@@ -209,71 +215,81 @@ public class GroovyTagScanner extends RuleBasedScanner {
 	 * @param additionalGroovyKeywords Additional keywords for sub-types to add new kinds of syntax highlighting
 	 */
 	public GroovyTagScanner(IColorManager manager, List<IRule> additionalRules, List<String> additionalGroovyKeywords) {
-		List<IRule> rules = new ArrayList<IRule>();
+	    super(manager, GroovyPlugin.getDefault().getPreferenceStore());
+		this.manager = manager;
+		this.additionalRules = additionalRules;
+		this.additionalGroovyKeywords = additionalGroovyKeywords;
+		initialize();
+	}
 
-		// Add generic whitespace rule.
-		rules.add(new WhitespaceRule(new GroovyWhitespaceDetector()));
-		
-		// add keywords rule
-		IToken plainCode =
-			new Token(
-					new TextAttribute(manager.getColor(IJavaColorConstants.JAVA_DEFAULT)));
-		
-		WordRule keywordsRule = new WordRule(new IWordDetector(){
-			
-			public boolean isWordStart(char c) {
-				return c == '@' || Character.isJavaIdentifierStart(c);
-			}
 
-			public boolean isWordPart(char c) {
-				return Character.isJavaIdentifierPart(c);
-			}
-		
-		},plainCode); 
-		// add gjdk to the java keyword rule
-		IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
-		IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
-		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED)) {
-			RGB gjdkRGB = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
-			IToken gjdkToken = new Token(new TextAttribute(new Color(null,gjdkRGB), null, SWT.BOLD));
-			for (int j = 0; j < gjdkWords.length; ++j) {
-				keywordsRule.addWord(gjdkWords[j],gjdkToken);
-			}
-		}
-		
-		
-		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED)) {
-			RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
-			IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
-			for (int j = 0; j < keywords.length; ++j) {
-				keywordsRule.addWord(keywords[j],token);
-			}
-		}
-		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED)) {
-			RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR);
-			IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
-			for (int j = 0; j < groovyKeywords.length; ++j) {
-				keywordsRule.addWord(groovyKeywords[j],token);
-			}
+    @Override
+    protected List createRules() {
+        List<IRule> rules = new ArrayList<IRule>();
+
+        // Add generic whitespace rule.
+        rules.add(new WhitespaceRule(new GroovyWhitespaceDetector()));
+        
+        // add keywords rule
+        IToken plainCode =
+            new Token(
+                    new TextAttribute(manager.getColor(IJavaColorConstants.JAVA_DEFAULT)));
+        
+        WordRule keywordsRule = new WordRule(new IWordDetector(){
+            
+            public boolean isWordStart(char c) {
+                return c == '@' || Character.isJavaIdentifierStart(c);
+            }
+
+            public boolean isWordPart(char c) {
+                return Character.isJavaIdentifierPart(c);
+            }
+        
+        },plainCode); 
+        // add gjdk to the java keyword rule
+        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
+        if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED)) {
+            RGB gjdkRGB = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
+            IToken gjdkToken = new Token(new TextAttribute(new Color(null,gjdkRGB), null, SWT.BOLD));
+            for (int j = 0; j < gjdkWords.length; ++j) {
+                keywordsRule.addWord(gjdkWords[j],gjdkToken);
+            }
+        }
+        
+        
+        if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED)) {
+            RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
+            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
+            for (int j = 0; j < keywords.length; ++j) {
+                keywordsRule.addWord(keywords[j],token);
+            }
+        }
+        if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED)) {
+            RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR);
+            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
+            for (int j = 0; j < groovyKeywords.length; ++j) {
+                keywordsRule.addWord(groovyKeywords[j],token);
+            }
             // additional keywords
-			if (additionalGroovyKeywords != null) {
-			    for (String additional : additionalGroovyKeywords) {
-			        keywordsRule.addWord(additional,token);
+            if (additionalGroovyKeywords != null) {
+                for (String additional : additionalGroovyKeywords) {
+                    keywordsRule.addWord(additional,token);
                 }
-			}
-		}
-		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_ENABLED)) {
-			RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
-			IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
-			for (int j = 0; j < types.length; ++j) {
-				keywordsRule.addWord(types[j],token);
-			}
-		}
-		if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED)) {
-			RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR);
-			IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.NONE));
-			rules.add( new NumberRule(token));
-		}
+            }
+        }
+        if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_ENABLED)) {
+            RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
+            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
+            for (int j = 0; j < types.length; ++j) {
+                keywordsRule.addWord(types[j],token);
+            }
+        }
+        if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED)) {
+            RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR);
+            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.NONE));
+            rules.add( new NumberRule(token));
+        }
         if (prefs.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED)) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR);
             IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.NONE));
@@ -286,16 +302,22 @@ public class GroovyTagScanner extends RuleBasedScanner {
             IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.ITALIC));
             rules.add( new SingleLineRule("/", "/", token, '\\'));
         }
-		rules.add(keywordsRule); 
-		
-		// additional rules
-		if (additionalRules != null) {
-		    rules.addAll(additionalRules);
-		}
-		
-		// convert rules list to array and return
-		IRule[] ruleArray = new IRule[rules.size()];
-		rules.toArray(ruleArray);
-		setRules(ruleArray);
-	}
+        rules.add(keywordsRule); 
+        
+        // additional rules
+        if (additionalRules != null) {
+            rules.addAll(additionalRules);
+        }
+        
+        return rules;
+    }
+
+
+    /**
+     * Not used
+     */
+    @Override
+    protected String[] getTokenProperties() {
+        return new String[0];
+    }
 }

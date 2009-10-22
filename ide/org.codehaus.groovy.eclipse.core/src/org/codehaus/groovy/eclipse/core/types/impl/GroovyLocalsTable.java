@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.core.IGroovyProjectAware;
@@ -95,19 +96,36 @@ public class GroovyLocalsTable implements ISymbolTable,
         this.context = context;
         // setup access to symbol table here from context.
         ASTNode[] path = context.getASTPath();
-        ASTNode astNode = path[path.length - 1];
-        if (astNode instanceof MethodNode) {
-            astNode = ((MethodNode) astNode).getCode();
-        } else if (astNode instanceof ClosureExpression) {
-            astNode = ((ClosureExpression) astNode).getCode();
-        } else if (astNode instanceof MethodCallExpression) {
-            ArgumentListExpression ale = (ArgumentListExpression) ((MethodCallExpression) astNode)
-                    .getArguments();
-            if (ale.getExpression(0) instanceof ClosureExpression) {
-                ClosureExpression cl = (ClosureExpression) ale.getExpression(0);
-                astNode = cl.getCode();
+        int index = path.length - 1;
+        while (index > 0) {
+            ASTNode astNode = path[index--];
+            VariableScope candidate = findScope(astNode);
+            if (candidate != null) {
+                scope = candidate;
+                break;
             }
         }
-        scope = ((BlockStatement) astNode).getVariableScope();
+    }
+    
+    private VariableScope findScope(ASTNode node) {
+        if (node instanceof MethodNode) {
+            node = ((MethodNode) node).getCode();
+        } else if (node instanceof ClosureExpression) {
+            node = ((ClosureExpression) node).getCode();
+        } else if (node instanceof MethodCallExpression) {
+            ArgumentListExpression ale = (ArgumentListExpression) ((MethodCallExpression) node)
+                    .getArguments();
+            for (Expression expr : (Iterable<Expression>) ale.getExpressions()) {
+                if (expr instanceof ClosureExpression) {
+                    node = ((ClosureExpression) expr).getCode();
+                    break;
+                }
+            }
+        }
+        if (node instanceof BlockStatement) {
+            return ((BlockStatement) node).getVariableScope();
+        } else {
+            return null;
+        }
     }
 }

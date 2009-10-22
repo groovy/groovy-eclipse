@@ -51,8 +51,13 @@ public class AskToConvertLegacyProjects extends UIJob {
         Shell shell = this.getDisplay().getActiveShell();
         boolean shouldDispose = false;
         if (shell == null) {
-            shell = new Shell(this.getDisplay());
-            shouldDispose = true;
+            Shell[] shells = this.getDisplay().getShells();
+            if (shells.length > 0) {
+                shell = shells[0];
+            } else {
+                shell = new Shell(this.getDisplay());
+                shouldDispose = true;
+            }
         }
         IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
         MessageDialogWithToggle d = MessageDialogWithToggle.openYesNoQuestion(

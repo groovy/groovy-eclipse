@@ -10,7 +10,7 @@ toString()
 ###exp
 println(
 		"hello".
-				toString().
-				toString()
-				)
+		toString().
+		toString()
+		)
 ###end
