@@ -103,6 +103,13 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
     public void testSearchForTypesClass6() throws Exception {
         doTestForTwoInClassWithImplements("class Second implements First { def x(First y) { } }");
     }
+    public void testSearchForTypesClass7() throws Exception {
+        createUnit("other", "First", "class First { }");
+        doTestForTwoInClass("class Second extends First {\n" +
+        		" def x() {\n" + // yes
+        		" y = new other.First()\n" + // no
+        		" y = new First()} }"); // yes
+    }
     
     
     // also need to test interfaces

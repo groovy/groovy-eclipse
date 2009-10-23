@@ -17,8 +17,11 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -82,10 +85,19 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     }
 
     protected GroovyCompilationUnit createUnit(String name, String contents) {
-    	IPath path = env.addGroovyClass(project.getFile("src").getFullPath(), name, contents);
+    	IPath path = env.addGroovyClass(project.getFolder("src").getFullPath(), name, contents);
     	return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
 
+    protected GroovyCompilationUnit createUnit(String pkg, String name, String contents) throws CoreException {
+        IFolder folder = project.getFolder("src").getFolder(new Path(pkg));
+        if (!folder.exists()) {
+            folder.create(true, true, null);
+        }
+        IPath path = env.addGroovyClass(folder.getFullPath(), name, contents);
+        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+    }
+    
     protected void assertLocation(SearchMatch match, int start, int length) {
         assertEquals("Invalid match start for: " + MockPossibleMatch.printMatch(match), start, match.getOffset());
         assertEquals("Invalid match length for: " + MockPossibleMatch.printMatch(match), length, match.getLength());

@@ -57,6 +57,16 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
         createUnit("Other.groovy", "class Other { def xxx }");
         doTestForTwoFieldReferencesInScript("class SubClass extends First { } \n SubClass f = new SubClass()\n f.xxx\nnew Other().xxx = 0\nf.xxx");
     }
+    public void testFieldReferencesInScript8() throws Exception {
+        doTestForTwoFieldReferencesInScript(
+                "class SubClass extends First { } \n " +
+        		"def f = new SubClass()\n " +
+        		"f.xxx\n" + // here
+        		"f = 9\n" +
+        		"f.xxx\n" +  // invalid reference
+        		"f = new SubClass()\n" +
+        		"f.xxx");  // here
+    }
     public void testFieldReferencesInClass1() throws Exception {
         doTestForTwoFieldReferencesInClass("class Second extends First { \ndef method() { this.xxx }\ndef xxx() { }\n def method2() { super.xxx }}");
     }
@@ -65,7 +75,37 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
         doTestForTwoFieldReferencesInClass("class Second extends First { \ndef method() { xxx }\ndef xxx() { }\n def method2(xxx) { xxx = super.xxx }}");
     }
 
-    
+    public void testFieldReferencesInClass3() throws Exception {
+        doTestForTwoFieldReferencesInClass(
+        		"class Second extends First {\n" +
+        		"  def method() {\n" +
+        		"    this.xxx = 'nothing'\n" + // yes
+        		"  }\n" +
+                "  def xxx() { }\n" +  // no
+        		"  def method2() {\n" +  // no
+        		"    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
+        		"  }\n" +
+        		"}");
+    }
+    public void testFieldReferencesInClass4() throws Exception {
+        createUnit("Third",  
+                "class Third {\n" +
+                "  def xxx\n" + // no
+        "}\n");
+        doTestForTwoFieldReferencesInClass(
+                "class Second extends First {\n" +
+                "  def method() {\n" +
+                "    this.xxx = 'nothing'\n" + // yes
+                "  }\n" +
+                "  def xxx() { }\n" +  // no
+                "  def method3(xxx) {\n" +  // no
+                "    new Third().xxx\n" + // no
+                "    xxx()\n" + // no 
+                "    xxx = xxx\n" +  // no, no
+                "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
+                "  }\n" +
+        "}");
+    }
     
     private void doTestForTwoFieldReferencesInScript(String secondContents) throws JavaModelException {
         doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx");
