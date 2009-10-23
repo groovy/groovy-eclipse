@@ -17,6 +17,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.util.List;
+import java.util.Stack;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -25,6 +26,7 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -66,6 +68,8 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
 import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
@@ -93,6 +97,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private final GroovyCompilationUnit unit;
 
+	private final Stack<VariableScope> scopes;
+
 	// we are going to have to be very careful about the ordering of lookups
 	// Simple type lookup must be last because it always returns an answer
 	// Assume that if something returns an answer, then we go with that.
@@ -105,17 +111,37 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private boolean rethrowVisitComplete = false;
 
+	/**
+	 * The head of the stack is the current property/attribute/methodcall expression being visited. This stack is used so we can
+	 * keep track of the type of the object expressions in these property expressions
+	 */
+	private Stack<Expression> propertyExpression;
+
+	/**
+	 * Keeps track of the type of the object expression corresponding to each frame of the property expression.
+	 */
+	private Stack<ClassNode> objectExpressionType;
+	/**
+	 * Keeps track of the type of the type of the property field corresponding to each frame of the property expression.
+	 */
+	private Stack<ClassNode> propertyExpressionType;
+
 	public TypeInferencingVisitorWithRequestor(GroovyCompilationUnit unit, ITypeLookup[] lookups) {
 		super();
 		this.unit = unit;
 		enclosingDeclarationNode = unit.getModuleNode();
 		this.lookups = lookups;
+		scopes = new Stack<VariableScope>();
+		propertyExpression = new Stack<Expression>();
+		objectExpressionType = new Stack<ClassNode>();
+		propertyExpressionType = new Stack<ClassNode>();
 	}
 
 	public void visitCompilationUnit(ITypeRequestor requestor) {
 		this.requestor = requestor;
 		enclosingElement = unit;
 		rethrowVisitComplete = true;
+		scopes.push(new VariableScope(null, enclosingDeclarationNode));
 
 		try {
 			visitPackage(((ModuleNode) enclosingDeclarationNode).getPackage());
@@ -129,10 +155,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				Util.log(e, "Error getting types for " + unit.getElementName());
 			}
 
+			scopes.pop();
+
 		} catch (VisitCompleted vc) {
 		}
 	}
 
+	// @Override
+	@Override
 	public void visitPackage(PackageNode p) {
 		// do nothing for now
 	}
@@ -145,6 +175,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		enclosingElement = type;
 		try {
 			ClassNode node = findClassWithName(type.getElementName());
+			scopes.push(new VariableScope(scopes.peek(), node));
 			enclosingDeclarationNode = node;
 			visitClassInternal(node);
 
@@ -176,6 +207,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			enclosingElement = oldEnclosing;
 			enclosingDeclarationNode = oldEnclosingNode;
 			rethrowVisitComplete = oldRethrow;
+			scopes.pop();
 		}
 	}
 
@@ -186,6 +218,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		this.requestor = requestor;
 		FieldNode fieldNode = findFieldNode(field);
 		enclosingDeclarationNode = fieldNode;
+		scopes.push(new VariableScope(scopes.peek(), fieldNode));
 		try {
 			visitField(fieldNode);
 		} catch (VisitCompleted vc) {
@@ -195,6 +228,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		} finally {
 			enclosingDeclarationNode = oldEnclosingNode;
 			enclosingElement = oldEnclosing;
+			scopes.pop();
 		}
 	}
 
@@ -205,6 +239,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		MethodNode methodNode = findMethodNode(method);
 		enclosingDeclarationNode = methodNode;
 		this.requestor = requestor;
+		scopes.push(new VariableScope(scopes.peek(), methodNode));
 		try {
 			visitConstructorOrMethod(methodNode, method.isConstructor());
 		} catch (VisitCompleted vc) {
@@ -217,16 +252,22 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		} finally {
 			enclosingElement = oldEnclosing;
 			enclosingDeclarationNode = oldEnclosingNode;
+			scopes.pop();
 		}
 	}
 
+	/**
+	 * visit the class itself
+	 * 
+	 * @param node
+	 */
 	private void visitClassInternal(ClassNode node) {
 		TypeLookupResult result = null;
 		visitAnnotations(node);
 
 		ClassNode supr = node.getSuperClass();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(supr);
+			result = lookup.lookupType(supr, scopes.peek());
 			if (result != null) {
 				break;
 			}
@@ -244,7 +285,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		for (ClassNode intr : node.getInterfaces()) {
 			for (ITypeLookup lookup : lookups) {
-				result = lookup.lookupType(intr);
+				result = lookup.lookupType(intr, scopes.peek());
 				if (result != null) {
 					break;
 				}
@@ -260,10 +301,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 
-		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
+		for (Statement element : node.getObjectInitializerStatements()) {
 			element.visit(this);
 		}
-
 		// don't visit contents, the visitJDT methods are used instead
 	}
 
@@ -271,7 +311,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitField(FieldNode node) {
 		TypeLookupResult result = null;
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node);
+			result = lookup.lookupType(node, scopes.peek());
 			if (result != null) {
 				break;
 			}
@@ -279,7 +319,43 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		VisitStatus status = handleRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
+				visitClassReference(node.getType());
 				super.visitField(node);
+			case CANCEL_BRANCH:
+				return;
+			case STOP_VISIT:
+				throw new VisitCompleted();
+		}
+	}
+
+	/**
+	 * Visit a return type
+	 */
+	private void visitClassReference(ClassNode node) {
+		TypeLookupResult result = null;
+		for (ITypeLookup lookup : lookups) {
+			result = lookup.lookupType(node, scopes.peek());
+			if (result != null) {
+				break;
+			}
+		}
+
+		VisitStatus status = handleRequestor(node, requestor, result);
+		switch (status) {
+			case CONTINUE:
+				if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
+					for (GenericsType typeParameter : node.getGenericsTypes()) {
+						if (typeParameter.getLowerBound() != null) {
+							visitClassReference(typeParameter.getLowerBound());
+						}
+						if (typeParameter.getUpperBounds() != null) {
+							for (ClassNode upperBound : typeParameter.getUpperBounds()) {
+								visitClassReference(upperBound);
+							}
+						}
+					}
+				}
+				// fall through
 			case CANCEL_BRANCH:
 				return;
 			case STOP_VISIT:
@@ -291,7 +367,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
 		TypeLookupResult result = null;
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node);
+			result = lookup.lookupType(node, scopes.peek());
 			if (result != null) {
 				break;
 			}
@@ -300,6 +376,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		switch (status) {
 			case CONTINUE:
+				visitClassReference(node.getReturnType());
 				if (handleParameterList(node.getParameters())) {
 					super.visitConstructorOrMethod(node, isConstructor);
 				}
@@ -313,17 +390,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitAnnotations(AnnotatedNode node) {
-		for (AnnotationNode annotation : (Iterable<AnnotationNode>) node.getAnnotations()) {
+		for (AnnotationNode annotation : node.getAnnotations()) {
 			visitAnnotation(annotation);
 		}
 		super.visitAnnotations(node);
 	}
 
+	// @Override
+	@Override
 	public void visitImports(ModuleNode node) {
-		for (ImportNode imp : (Iterable<ImportNode>) node.getImports()) {
+		for (ImportNode imp : node.getImports()) {
 			TypeLookupResult result = null;
 			for (ITypeLookup lookup : lookups) {
-				result = lookup.lookupType(imp);
+				result = lookup.lookupType(imp, scopes.peek());
 				if (result != null) {
 					break;
 				}
@@ -342,8 +421,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private boolean handleExpression(Expression node) {
 		TypeLookupResult result = null;
+		ClassNode objectExprType = null;
+		if (isProperty(node)) {
+			objectExprType = objectExpressionType.pop();
+		}
+
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, enclosingDeclarationNode);
+			result = lookup.lookupType(node, scopes.peek(), objectExprType);
 			if (result != null) {
 				break;
 			}
@@ -351,6 +435,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		VisitStatus status = handleRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
+				if (isObjectExpression(node)) {
+					objectExpressionType.push(result.type);
+				} else if (isProperty(node)) {
+					propertyExpressionType.push(result.type);
+				}
 				return true;
 			case CANCEL_BRANCH:
 				return false;
@@ -366,7 +455,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			for (Parameter node : params) {
 				TypeLookupResult result = null;
 				for (ITypeLookup lookup : lookups) {
-					result = lookup.lookupType(node.getType());
+					// the first lookup is used to store the type of the
+					// parameter in the sope
+					lookup.lookupType(node, scopes.peek());
+					result = lookup.lookupType(node.getType(), scopes.peek());
 					if (result != null) {
 						break;
 					}
@@ -418,7 +510,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitAttributeExpression(AttributeExpression node) {
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
+			propertyExpression.push(node);
 			super.visitAttributeExpression(node);
+			propertyExpression.pop();
 		}
 	}
 
@@ -472,11 +566,31 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitClosureExpression(ClosureExpression node) {
+		scopes.push(new VariableScope(scopes.peek(), node));
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			handleParameterList(node.getParameters());
 			super.visitClosureExpression(node);
 		}
+		scopes.pop();
+	}
+
+	@Override
+	public void visitBlockStatement(BlockStatement block) {
+		scopes.push(new VariableScope(scopes.peek(), block));
+		super.visitBlockStatement(block);
+		scopes.pop();
+	}
+
+	@Override
+	public void visitForLoop(ForStatement node) {
+		scopes.push(new VariableScope(scopes.peek(), node));
+		Parameter param = node.getVariable();
+		if (param != null) {
+			handleParameterList(new Parameter[] { param });
+		}
+		super.visitForLoop(node);
+		scopes.pop();
 	}
 
 	@Override
@@ -557,7 +671,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitMethodCallExpression(MethodCallExpression node) {
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
+			propertyExpression.push(node);
 			super.visitMethodCallExpression(node);
+			propertyExpression.pop();
 		}
 	}
 
@@ -595,9 +711,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitPropertyExpression(PropertyExpression node) {
+		propertyExpression.push(node);
+		node.getObjectExpression().visit(this);
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
-			super.visitPropertyExpression(node);
+			node.getProperty().visit(this);
+			// this is the type of this property expression
+			ClassNode propType = propertyExpressionType.pop();
+
+			propertyExpression.pop();
+			if (isObjectExpression(node)) {
+				// returns true if this property expression is the property field of another property expression
+				objectExpressionType.push(propType);
+			}
+		} else {
+			propertyExpression.pop();
+
+			// not popped earlier because the property field of the expression was not examined
+			objectExpressionType.pop();
 		}
 	}
 
@@ -684,7 +815,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private void visitAnnotation(AnnotationNode node) {
 		TypeLookupResult result = null;
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node);
+			result = lookup.lookupType(node, scopes.peek());
 			if (result != null) {
 				break;
 			}
@@ -767,7 +898,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	private ClassNode findClassWithName(String simpleName) {
-		for (ClassNode clazz : (Iterable<ClassNode>) getModuleNode().getClasses()) {
+		for (ClassNode clazz : getModuleNode().getClasses()) {
 			if (clazz.getNameWithoutPackage().equals(simpleName)) {
 				return clazz;
 			}
@@ -786,6 +917,46 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			return ((FieldNode) enclosingDeclarationNode).getDeclaringClass().getModule();
 		} else {
 			throw new IllegalArgumentException("Invalid enclosing declaration node: " + enclosingDeclarationNode);
+		}
+	}
+
+	private boolean isObjectExpression(Expression node) {
+		if (!propertyExpression.isEmpty()) {
+			Expression maybeProperty = propertyExpression.peek();
+			if (maybeProperty instanceof PropertyExpression) {
+				PropertyExpression prop = (PropertyExpression) maybeProperty;
+				return prop.getObjectExpression() == node;
+			} else if (maybeProperty instanceof MethodCallExpression) {
+				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
+				return prop.getObjectExpression() == node;
+			} else if (maybeProperty instanceof AttributeExpression) {
+				AttributeExpression prop = (AttributeExpression) maybeProperty;
+				return prop.getObjectExpression() == node;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	private boolean isProperty(Expression node) {
+		if (!propertyExpression.isEmpty()) {
+			Expression maybeProperty = propertyExpression.peek();
+			if (maybeProperty instanceof PropertyExpression) {
+				PropertyExpression prop = (PropertyExpression) maybeProperty;
+				return prop.getProperty() == node;
+			} else if (maybeProperty instanceof MethodCallExpression) {
+				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
+				return prop.getMethod() == node;
+			} else if (maybeProperty instanceof AttributeExpression) {
+				AttributeExpression prop = (AttributeExpression) maybeProperty;
+				return prop.getProperty() == node;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
 		}
 	}
 

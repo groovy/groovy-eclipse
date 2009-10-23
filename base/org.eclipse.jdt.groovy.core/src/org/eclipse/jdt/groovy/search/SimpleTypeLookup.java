@@ -17,24 +17,29 @@
 package org.eclipse.jdt.groovy.search;
 
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXACT;
+import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
 
-import org.codehaus.groovy.ast.ASTNode;
+import java.util.List;
+
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.MethodPointerExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
+import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
 /**
  * @author Andrew Eisenberg
@@ -44,39 +49,117 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
  */
 public class SimpleTypeLookup implements ITypeLookup {
 
-	private LookupType lookupType;
+	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
 
-	public TypeLookupResult lookupType(Expression node, ASTNode enclosingDeclarationNode) {
-		if (node instanceof DeclarationExpression) {
-			node = ((DeclarationExpression) node).getLeftExpression();
+		ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope);
+
+		ClassNode type = findType(node, objectExpressionType, scope);
+
+		// always inferred for now
+		return new TypeLookupResult(type, declaringType, INFERRED);
+	}
+
+	public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
+		return new TypeLookupResult(baseType(node.getType()), baseType(node.getDeclaringClass()), EXACT);
+	}
+
+	public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
+		return new TypeLookupResult(baseType(node.getReturnType()), baseType(node.getDeclaringClass()), EXACT);
+	}
+
+	public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
+		return new TypeLookupResult(baseType(node.getClassNode()), baseType(node.getClassNode()), EXACT);
+	}
+
+	public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
+		return new TypeLookupResult(baseType(node.getType()), baseType(node.getType()), EXACT);
+	}
+
+	/**
+	 * always return the passed in node
+	 */
+	public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
+		return new TypeLookupResult(baseType(node), baseType(node), EXACT);
+	}
+
+	public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
+		return new TypeLookupResult(baseType(node.getType()), scope.getEnclosingTypeDeclaration(), EXACT);
+	}
+
+	/**
+	 * @param node
+	 * @param scope
+	 * @return
+	 */
+	private ClassNode findDeclaringType(Expression node, VariableScope scope) {
+		if (node instanceof ClassExpression || node instanceof ConstructorCallExpression) {
+			return node.getType();
+
+		} else if (node instanceof FieldExpression) {
+			return baseType(baseType(((FieldExpression) node).getField().getDeclaringClass()));
+
+		} else if (node instanceof MethodCallExpression) {
+			return baseType(((MethodCallExpression) node).getObjectExpression().getType());
+
+		} else if (node instanceof StaticMethodCallExpression) {
+			return baseType(((StaticMethodCallExpression) node).getOwnerType());
+
+		} else if (node instanceof VariableExpression) {
+			Variable var = ((VariableExpression) node).getAccessedVariable();
+			if (var instanceof DynamicVariable) {
+				// this dynamic variable might be a field
+				return findField((VariableExpression) node, scope.getEnclosingTypeDeclaration());
+			} else if (var instanceof FieldNode) {
+				return ((FieldNode) var).getDeclaringClass();
+			}
+
+		} else if (node instanceof DeclarationExpression) {
+			// the type declaration of the DeclarationExpression is considered to be the
+			// declaring type. This ensures that type declarations are considered
+			// to be type references.
+			return ((DeclarationExpression) node).getLeftExpression().getType();
+		}
+		return new ClassNode(Object.class);
+	}
+
+	/**
+	 * @param node
+	 * @param scope
+	 * @return
+	 */
+	private ClassNode findType(Expression node, ClassNode objectExpressionType, VariableScope scope) {
+		// check first to see if we have this type inferred
+		if (node instanceof Variable) {
+			VariableInfo info = scope.lookupName(((Variable) node).getName());
+			if (info != null) {
+				return baseType(info.type);
+			}
 		}
 
-		if (lookupType == LookupType.DECLARING_TYPE) {
-			// must distinguish between the return type and the declaring type only in certain circumstances
-			if (node instanceof MethodCallExpression) {
-				return new TypeLookupResult(baseType(((MethodCallExpression) node).getObjectExpression().getType()), EXACT);
-			} else if (node instanceof FieldExpression) {
-				return new TypeLookupResult(baseType(((FieldExpression) node).getField().getDeclaringClass()), EXACT);
-			} else if (node instanceof StaticMethodCallExpression) {
-				return new TypeLookupResult(baseType(((StaticMethodCallExpression) node).getOwnerType()), EXACT);
-			} else if (node instanceof PropertyExpression) {
-				PropertyExpression prop = (PropertyExpression) node;
-				if (isThisOrSuperReference(prop)) {
-					return findFieldReferenceInHierarchy(prop, enclosingDeclarationNode);
-				} else if (prop.getObjectExpression() instanceof VariableExpression) {
-					return findVariableType(prop);
+		if (objectExpressionType != null) {
+			// lookup the type in the object's expression type
+			if (node instanceof ConstantExpression) {
+				ConstantExpression constExpr = (ConstantExpression) node;
+				String name = constExpr.getText();
+				PropertyNode property = objectExpressionType.getProperty(name);
+				if (property != null) {
+					return property.getType();
 				}
-				return new TypeLookupResult(baseType(prop.getObjectExpression().getType()), EXACT);
-			} else if (node instanceof MethodPointerExpression) {
-				return new TypeLookupResult(baseType(((MethodPointerExpression) node).getExpression().getType()), EXACT);
-			} else if (node instanceof VariableExpression) {
-				if (((VariableExpression) node).getAccessedVariable() instanceof DynamicVariable) {
-					// this dynamic variable might be a field
-					return findField((VariableExpression) node, enclosingDeclarationNode);
+				// do not distinguish between method variants
+				List<MethodNode> methods = objectExpressionType.getMethods(name);
+				if (methods.size() > 0) {
+					return methods.get(0).getReturnType();
+				}
+
+				FieldNode field = objectExpressionType.getField(name);
+				if (field != null) {
+					return field.getType();
 				}
 			}
 		}
-		return new TypeLookupResult(baseType(node.getType()), EXACT);
+
+		// don't know
+		return baseType(node.getType());
 	}
 
 	/**
@@ -84,128 +167,20 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @param enclosingDeclarationNode
 	 * @return
 	 */
-	private TypeLookupResult findField(VariableExpression var, ASTNode enclosingDeclarationNode) {
-		ClassNode declaringClass = findDeclaringClass(enclosingDeclarationNode);
+	private ClassNode findField(VariableExpression var, ClassNode declaringClass) {
 		if (declaringClass == null) {
-			return new TypeLookupResult(baseType(var.getType()), TypeConfidence.POTENTIAL);
+			return baseType(var.getType());
 		}
 		String name = var.getName();
 		FieldNode field = declaringClass.getField(name);
 		if (field != null) {
-			return new TypeLookupResult(field.getDeclaringClass(), EXACT);
+			return field.getDeclaringClass();
 		} else {
-			return new TypeLookupResult(baseType(var.getType()), TypeConfidence.POTENTIAL);
+			return baseType(var.getType());
 		}
-	}
-
-	/**
-	 * @param prop
-	 */
-	private TypeLookupResult findVariableType(PropertyExpression prop) {
-		Variable var = ((VariableExpression) prop.getObjectExpression()).getAccessedVariable();
-		if (var.getType() != null) {
-			ClassNode variableType = baseType(var.getType());
-			FieldNode field = variableType.getField(prop.getPropertyAsString());
-			if (field != null) {
-				return new TypeLookupResult(field.getDeclaringClass(), EXACT);
-			}
-		}
-		// can't find the type declared in, so just do the best we can
-		return new TypeLookupResult(baseType(prop.getObjectExpression().getType()), TypeConfidence.POTENTIAL);
-	}
-
-	/**
-	 * @param node
-	 * @param enclosingDeclarationNode
-	 * @return
-	 */
-	private TypeLookupResult findFieldReferenceInHierarchy(PropertyExpression node, ASTNode enclosingDeclarationNode) {
-		ClassNode declaringClass = findDeclaringClass(enclosingDeclarationNode);
-		if (declaringClass == null) {
-			return new TypeLookupResult(baseType(node.getObjectExpression().getType()), TypeConfidence.POTENTIAL);
-		}
-
-		if (isSuperReference(node)) {
-			declaringClass = declaringClass.getSuperClass();
-		}
-
-		FieldNode field = declaringClass.getField(node.getPropertyAsString());
-		if (field != null) {
-			return new TypeLookupResult(field.getDeclaringClass(), TypeConfidence.EXACT);
-		} else {
-			return new TypeLookupResult(baseType(node.getObjectExpression().getType()), TypeConfidence.POTENTIAL);
-		}
-	}
-
-	/**
-	 * @param enclosingDeclarationNode
-	 * @return
-	 */
-	private ClassNode findDeclaringClass(ASTNode enclosingDeclarationNode) {
-		ClassNode declaringClass;
-		if (enclosingDeclarationNode instanceof ClassNode) {
-			declaringClass = (ClassNode) enclosingDeclarationNode;
-		} else if (enclosingDeclarationNode instanceof FieldNode) {
-			declaringClass = ((FieldNode) enclosingDeclarationNode).getDeclaringClass();
-		} else if (enclosingDeclarationNode instanceof MethodNode) {
-			declaringClass = ((MethodNode) enclosingDeclarationNode).getDeclaringClass();
-		} else {
-			// can't find the type declared in, so just do the best we can
-			declaringClass = null;
-		}
-		return declaringClass;
-	}
-
-	/**
-	 * @param node
-	 * @return
-	 */
-	private boolean isThisOrSuperReference(PropertyExpression node) {
-		String objectExprText = node.getObjectExpression().getText();
-		return objectExprText.equals("this") || objectExprText.equals("super");
-	}
-
-	private boolean isSuperReference(PropertyExpression node) {
-		String objectExprText = node.getObjectExpression().getText();
-		return objectExprText.equals("super");
-	}
-
-	public TypeLookupResult lookupType(FieldNode node) {
-		if (lookupType == LookupType.RETURN_TYPE) {
-			return new TypeLookupResult(baseType(node.getType()), EXACT);
-		} else {
-			return new TypeLookupResult(baseType(node.getDeclaringClass()), EXACT);
-		}
-	}
-
-	public TypeLookupResult lookupType(MethodNode node) {
-		if (lookupType == LookupType.RETURN_TYPE) {
-			return new TypeLookupResult(baseType(node.getReturnType()), EXACT);
-		} else {
-			return new TypeLookupResult(baseType(node.getDeclaringClass()), EXACT);
-		}
-	}
-
-	public TypeLookupResult lookupType(AnnotationNode node) {
-		return new TypeLookupResult(baseType(node.getClassNode()), EXACT);
-	}
-
-	public TypeLookupResult lookupType(ImportNode node) {
-		return new TypeLookupResult(baseType(node.getType()), EXACT);
 	}
 
 	private ClassNode baseType(ClassNode node) {
-		return node.getComponentType() == null ? node : node.getComponentType();
-	}
-
-	/**
-	 * always return the passed in node
-	 */
-	public TypeLookupResult lookupType(ClassNode node) {
-		return new TypeLookupResult(baseType(node), EXACT);
-	}
-
-	public void setLookupType(LookupType lookupType) {
-		this.lookupType = lookupType;
+		return node == null ? null : (node.getComponentType() == null ? node : node.getComponentType());
 	}
 }

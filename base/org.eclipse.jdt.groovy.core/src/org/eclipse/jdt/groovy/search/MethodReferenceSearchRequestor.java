@@ -107,7 +107,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		if (doCheck) {
 			// FIXADE M2 really, must check the hierarchy, but this is good enough for now.
 			// FIXADE M2 ignore checking parameters for now
-			boolean isCompleteMatch = qualifiedNameMatches(result.getFullyQualifiedName());
+			boolean isCompleteMatch = qualifiedNameMatches(result.type.getName());
 			if ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences)) {
 				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
 						- start, participant, enclosingElement.getResource());

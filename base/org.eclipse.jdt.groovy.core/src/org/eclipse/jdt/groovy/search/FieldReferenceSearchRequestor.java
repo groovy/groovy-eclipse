@@ -17,12 +17,10 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
@@ -46,21 +44,22 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 	private final SearchParticipant participant;
 
 	private final char[] name;
-	private final String declaringSimpleName;
-	private final String declaringQualification;
+	private final String declaringQualifiedName;
 	private final boolean readAccess;
 	private final boolean writeAccess;
 	private final boolean findDeclarations;
 	private final boolean findReferences;
 
+	@SuppressWarnings("nls")
 	public FieldReferenceSearchRequestor(FieldPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
 		this.requestor = requestor;
 		this.participant = participant;
 		name = (char[]) ReflectionUtils.getPrivateField(VariablePattern.class, "name", pattern);
 		char[] arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringSimpleName", pattern);
-		declaringSimpleName = arr == null ? "" : new String(arr);
+		String declaringSimpleName = arr == null ? "" : new String(arr);
 		arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringQualification", pattern);
-		declaringQualification = ((arr == null || arr.length == 0) ? "" : (new String(arr) + "."));
+		String declaringQualification = ((arr == null || arr.length == 0) ? "" : (new String(arr) + "."));
+		declaringQualifiedName = declaringQualification + declaringSimpleName;
 
 		readAccess = ((Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "readAccess", pattern)).booleanValue();
 		writeAccess = ((Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "writeAccess", pattern)).booleanValue();
@@ -70,6 +69,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 				.booleanValue();
 	}
 
+	@SuppressWarnings("nls")
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
 		boolean doCheck = false;
 		boolean isAssignment = false;
@@ -78,9 +78,9 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		int end = 0;
 
 		// include method calls here because of closures
-		if (node instanceof MethodCallExpression) {
-			String mName = ((MethodCallExpression) node).getMethodAsString();
-			if (mName != null && CharOperation.equals(name, mName.toCharArray())) {
+		if (node instanceof ConstantExpression) {
+			String cName = ((ConstantExpression) node).getText();
+			if (cName != null && CharOperation.equals(name, cName.toCharArray())) {
 				doCheck = true;
 				start = node.getStart();
 				end = node.getEnd();
@@ -90,26 +90,6 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 				doCheck = true;
 				start = node.getStart();
 				end = node.getEnd();
-			}
-		} else if (node instanceof PropertyExpression) {
-			Expression prop = ((PropertyExpression) node).getProperty();
-			if (CharOperation.equals(name, prop.getText().toCharArray())) {
-				doCheck = true;
-				start = prop.getStart();
-				end = prop.getEnd();
-			}
-		} else if (node instanceof BinaryExpression) {
-			if (((BinaryExpression) node).getOperation().getText().equals("=")) { //$NON-NLS-1$
-				Expression expr = ((BinaryExpression) node).getLeftExpression();
-				if (expr instanceof FieldExpression) {
-					FieldExpression fexpr = (FieldExpression) expr;
-					if (CharOperation.equals(name, fexpr.getFieldName().toCharArray())) {
-						doCheck = true;
-						isAssignment = true;
-						start = fexpr.getStart();
-						end = fexpr.getEnd();
-					}
-				}
 			}
 		} else if (node instanceof FieldNode) {
 			FieldNode fnode = (FieldNode) node;
@@ -131,17 +111,13 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		}
 
 		if (doCheck) {
-			// FIXADE M2 really, must check the hierarchy, but this is good enough for now.
-			boolean isCompleteMatch = qualifiedNameMatches(result.getFullyQualifiedName());
+			boolean isCompleteMatch = qualifiedNameMatches(result.declaringType);
 			if (isCompleteMatch
 					&& ((isAssignment && writeAccess) || (!isAssignment && readAccess) || (isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {
 				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
 						- start, participant, enclosingElement.getResource());
 				try {
 					requestor.acceptSearchMatch(match);
-					// don't search any further down this branch
-					// I guess it is possible that there are further matches, but for the sake of efficiency, let's ignore them.
-					return VisitStatus.CANCEL_BRANCH;
 				} catch (CoreException e) {
 					Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
 							+ enclosingElement.getResource());
@@ -151,13 +127,15 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		return VisitStatus.CONTINUE;
 	}
 
-	private boolean qualifiedNameMatches(String qualifiedName) {
-		String newName = qualifiedName;
-		// don't do * matching or camel case matching yet
-		if (qualifiedName.equals(declaringQualification + declaringSimpleName)) {
+	// recursively check the hierarchy
+	private boolean qualifiedNameMatches(ClassNode declaringType) {
+		if (declaringType == null) {
+			return false;
+		} else if (declaringType.getName().equals(declaringQualifiedName)) {
 			return true;
+		} else {
+			return qualifiedNameMatches(declaringType.getSuperClass());
 		}
-		return false;
 	}
 
 	private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {

@@ -16,13 +16,14 @@
 
 package org.eclipse.jdt.groovy.search;
 
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 
 /**
  * @author Andrew Eisenberg
@@ -33,61 +34,69 @@ import org.codehaus.groovy.ast.expr.Expression;
 public interface ITypeLookup {
 
 	/**
-	 * Specifies if this type look up should look for the return type of the expression or the declaring type of the expression.
-	 */
-	public static enum LookupType {
-		RETURN_TYPE, DECLARING_TYPE
-	}
-
-	void setLookupType(LookupType lookupType);
-
-	/**
 	 * Determine the type for an expression node.
 	 * 
 	 * @param node the AST Node to determine the type for
-	 * @param enclosingDeclarationNode TODO
+	 * @param scope the variable scope at this location
+	 * @param objectExpressionType if the parent of node is a {@link PropertyExpression}, then this value contains the type of
+	 *        {@link PropertyExpression#getObjectExpression()}, otherwise null
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
-	TypeLookupResult lookupType(Expression node, ASTNode enclosingDeclarationNode);
+	TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType);
 
 	/**
 	 * Determine the type for a field node.
 	 * 
 	 * @param node the AST Node to determine the type for
+	 * @param scope the variable scope at this location
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
-	TypeLookupResult lookupType(FieldNode node);
+	TypeLookupResult lookupType(FieldNode node, VariableScope scope);
 
 	/**
 	 * Determine the type for a method node.
 	 * 
 	 * @param node the AST Node to determine the type for
+	 * @param scope TODO
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
-	TypeLookupResult lookupType(MethodNode node);
+	TypeLookupResult lookupType(MethodNode node, VariableScope scope);
 
 	/**
 	 * Determine the type for an annotation node.
 	 * 
 	 * @param node the AST Node to determine the type for
+	 * @param scope TODO
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
-	TypeLookupResult lookupType(AnnotationNode node);
+	TypeLookupResult lookupType(AnnotationNode node, VariableScope scope);
 
 	/**
 	 * Determine the type for an expression node.
 	 * 
 	 * @param node the AST Node to determine the type for
+	 * @param scope TODO
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
-	TypeLookupResult lookupType(ImportNode node);
+	TypeLookupResult lookupType(ImportNode node, VariableScope scope);
 
 	/**
 	 * Determine the type for a class node. Implementors should return null unless the type returned should be different from the
 	 * type passed in.
 	 * 
 	 * @param node the AST Node to determine the type for
+	 * @param scope TODO
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
-	TypeLookupResult lookupType(ClassNode node);
+	TypeLookupResult lookupType(ClassNode node, VariableScope scope);
+
+	/**
+	 * Determine the type for a Parameter node.
+	 * 
+	 * @param node the AST Node to determine the type for
+	 * @param scope TODO
+	 * @return the type for the node and confidence in that type, or null if cannot determine
+	 */
+	TypeLookupResult lookupType(Parameter node, VariableScope scope);
+
 }

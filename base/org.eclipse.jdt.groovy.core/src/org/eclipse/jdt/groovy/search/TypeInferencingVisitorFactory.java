@@ -23,10 +23,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
-import org.eclipse.jdt.groovy.search.ITypeLookup.LookupType;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
-import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern;
-import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -61,16 +58,7 @@ public class TypeInferencingVisitorFactory {
 
 	// maybe this can be populated via an extension point.
 	private ITypeLookup[] createLookups(SearchPattern pattern) {
-		LookupType lookupType;
-		if (pattern instanceof TypeDeclarationPattern || pattern instanceof TypeReferencePattern) {
-			lookupType = LookupType.RETURN_TYPE;
-		} else {
-			lookupType = LookupType.DECLARING_TYPE;
-		}
-		ITypeLookup[] lookups = new ITypeLookup[] { new SimpleTypeLookup() };
-		for (ITypeLookup lookup : lookups) {
-			lookup.setLookupType(lookupType);
-		}
+		ITypeLookup[] lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new SimpleTypeLookup() };
 		return lookups;
 
 	}

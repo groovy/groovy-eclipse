@@ -69,63 +69,65 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
 		if (node instanceof ClassExpression || node instanceof ConstructorCallExpression || node instanceof Parameter
 				|| node instanceof DeclarationExpression || node instanceof ClassNode || node instanceof ImportNode
-				|| node instanceof FieldNode || node instanceof MethodNode) {
+				|| node instanceof FieldNode || node instanceof MethodNode || node instanceof VariableExpression) {
 
-			String qualifiedName = result.getFullyQualifiedName();
-			if (qualifiedNameMatches(qualifiedName)) {
-				int start;
-				int end;
+			if (result.declaringType != null) {
+				String qualifiedName = result.declaringType.getName();
+				if (qualifiedNameMatches(qualifiedName)) {
+					int start;
+					int end;
 
-				// try to tease out the source location for the type only
-				if (node instanceof DeclarationExpression) {
-					node = ((DeclarationExpression) node).getLeftExpression();
-					start = node.getStart();
-					end = node.getEnd();
-					// we are potentially left with a VariableExpression, so fall through to the next if clause
-				}
-				if (node instanceof VariableExpression) {
-					node = maybeGetComponentType(((VariableExpression) node).getType());
-					start = node.getStart();
-					end = node.getEnd();
-				} else if (node instanceof Parameter) {
-					node = maybeGetComponentType(((Parameter) node).getType());
-					start = node.getStart();
-					end = node.getEnd();
-				} else if (node instanceof ImportNode) {
-					node = ((ImportNode) node).getType();
-					start = node.getStart();
-					end = node.getEnd();
-				} else if (node instanceof ConstructorCallExpression) {
-					node = maybeGetComponentType(((ConstructorCallExpression) node).getType());
-					start = node.getStart();
-					end = node.getEnd();
-				} else if (node instanceof ClassExpression) {
-					start = node.getStart();
-					end = start + ((ClassExpression) node).getType().getNameWithoutPackage().length();
-				} else if (node instanceof MethodNode) {
-					ClassNode ret = maybeGetComponentType(((MethodNode) node).getReturnType());
-					start = ret.getStart();
-					end = ret.getEnd();
-				} else if (node instanceof FieldNode) {
-					ClassNode type = maybeGetComponentType(((FieldNode) node).getType());
-					start = type.getStart();
-					end = type.getEnd();
-				} else if (node instanceof ClassNode) {
-					node = maybeGetComponentType((ClassNode) node);
-					start = node.getStart();
-					// sometimes the end is off by one
-					end = start + ((ClassNode) node).getNameWithoutPackage().length();
-				} else {
-					start = node.getStart();
-					end = node.getEnd();
-				}
+					// try to tease out the source location for the type only
+					if (node instanceof DeclarationExpression) {
+						node = ((DeclarationExpression) node).getLeftExpression();
+						start = node.getStart();
+						end = node.getEnd();
+						// we are potentially left with a VariableExpression, so fall through to the next if clause
+					}
+					if (node instanceof VariableExpression) {
+						node = maybeGetComponentType(((VariableExpression) node).getType());
+						start = node.getStart();
+						end = node.getEnd();
+					} else if (node instanceof Parameter) {
+						node = maybeGetComponentType(((Parameter) node).getType());
+						start = node.getStart();
+						end = node.getEnd();
+					} else if (node instanceof ImportNode) {
+						node = ((ImportNode) node).getType();
+						start = node.getStart();
+						end = node.getEnd();
+					} else if (node instanceof ConstructorCallExpression) {
+						node = maybeGetComponentType(((ConstructorCallExpression) node).getType());
+						start = node.getStart();
+						end = node.getEnd();
+					} else if (node instanceof ClassExpression) {
+						start = node.getStart();
+						end = start + ((ClassExpression) node).getType().getNameWithoutPackage().length();
+					} else if (node instanceof MethodNode) {
+						ClassNode ret = maybeGetComponentType(((MethodNode) node).getReturnType());
+						start = ret.getStart();
+						end = ret.getEnd();
+					} else if (node instanceof FieldNode) {
+						ClassNode type = maybeGetComponentType(((FieldNode) node).getType());
+						start = type.getStart();
+						end = type.getEnd();
+					} else if (node instanceof ClassNode) {
+						node = maybeGetComponentType((ClassNode) node);
+						start = node.getStart();
+						// sometimes the end is off by one
+						end = start + ((ClassNode) node).getNameWithoutPackage().length();
+					} else {
+						start = node.getStart();
+						end = node.getEnd();
+					}
 
-				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence), start, end - start,
-						participant, enclosingElement.getResource());
-				try {
-					requestor.acceptSearchMatch(match);
-				} catch (CoreException e) {
-					Util.log(e, "Error accepting search match for " + enclosingElement); //$NON-NLS-1$
+					SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence), start, end - start,
+							participant, enclosingElement.getResource());
+					try {
+						requestor.acceptSearchMatch(match);
+					} catch (CoreException e) {
+						Util.log(e, "Error accepting search match for " + enclosingElement); //$NON-NLS-1$
+					}
 				}
 			}
 		}

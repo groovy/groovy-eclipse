@@ -17,7 +17,6 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.eclipse.jdt.core.IType;
 
 /**
  * @author Andrew Eisenberg
@@ -49,32 +48,19 @@ public class TypeLookupResult {
 	}
 
 	public final TypeConfidence confidence;
-	public final IType type;
-	public final ClassNode node;
+	public final ClassNode type;
+	public final ClassNode declaringType;
 
 	/**
-	 * create a TypeLookupResult with a class node. Clients are expected to convert from class node to IType if required
+	 * create a TypeLookupResult with a class node.
+	 * 
+	 * @param type the type of the expression being analyzed
+	 * @param declaringType the declaring type of the expression if the expression is a field, method, or type reference
+	 * @param confidence the confidence in this type assertion
 	 */
-	public TypeLookupResult(ClassNode node, TypeConfidence confidence) {
-		this.confidence = confidence;
-		this.type = null;
-		this.node = node;
-	}
-
-	/**
-	 * create a TypeLookupResult with an IType. Clients are expected to convert from IType to class node if required
-	 */
-	public TypeLookupResult(IType type, TypeConfidence confidence) {
+	public TypeLookupResult(ClassNode type, ClassNode declaringType, TypeConfidence confidence) {
 		this.confidence = confidence;
 		this.type = type;
-		this.node = null;
-	}
-
-	public String getFullyQualifiedName() {
-		if (type != null) {
-			return type.getFullyQualifiedName();
-		} else {
-			return node.getName();
-		}
+		this.declaringType = declaringType;
 	}
 }
