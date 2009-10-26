@@ -145,7 +145,7 @@ class CollectionTreeNode extends TreeNode {
 		return value.collect {
 			def name = StringUtil.toString(it)
 			if (name.indexOf('@') != -1) {
-				name = JVM1_4Util.getSimpleName(it.class)
+				name = it.class.getCanonicalName()
 			}
 			TreeNodeFactory.createTreeNode(this, it, name)
 		} as ITreeNode[]
@@ -176,7 +176,7 @@ class AtomTreeNode implements ITreeNode {
 		} else {
 			def valueName = StringUtil.toString(value)
 			if (valueName.indexOf('@') != -1) {
-				valueName = JVM1_4Util.getSimpleName(value.class)
+				valueName = value.class.getCanonicalName()
 			}
 			displayName = "$name : ${StringUtil.toString(valueName)}".toString()
 		}

@@ -180,9 +180,19 @@ public class OrganizeImportsTest extends EclipseTestCase {
             }
             """
             def expectedImports = ["import javax.swing.text.html.HTML;"]
-                                   doAddImportTest(contents, expectedImports)
+            doAddImportTest(contents, expectedImports)
     }
-
+	
+	// test that 'as' keyword works in list expressions
+	void testGRECLIPSE470a() {
+	    String contents ="""
+	        import javax.xml.XMLConstants
+	        ['value':XMLConstants.XML_NS_URI] as Map
+	        """
+		def expectedImports = [ ] // none added, none removed
+		doAddImportTest(contents, expectedImports)
+	}
+	
     void testRemoveImport1() {
         String contents = 
             """ 

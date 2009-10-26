@@ -24,8 +24,8 @@ class MapTo {
 	// TODO: no syntax errors in Eclipse if the package for the below is not imported. Why?
 	static mapToNames = [
       	(ClassNode) : { "${it.name}" },
-      	(Expression) : { "${JVM1_4Util.getSimpleName(it.class)}" },
-      	(ExpressionStatement) : { "(${JVM1_4Util.getSimpleName(it.expression.class)}) ${it.expression.text}" },
+      	(Expression) : { "${it.class.canonicalName}" },
+      	(ExpressionStatement) : { "(${it.expression.class.canonicalName}) ${it.expression.text}" },
       	(FieldNode) : { it.name },
       	(MethodNode) : { it.name },
       	(ModuleNode) : { it.description },

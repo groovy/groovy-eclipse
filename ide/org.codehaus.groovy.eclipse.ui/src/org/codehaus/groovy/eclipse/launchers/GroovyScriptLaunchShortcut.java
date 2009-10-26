@@ -16,8 +16,6 @@
 package org.codehaus.groovy.eclipse.launchers;
 
 
-import static org.eclipse.core.runtime.FileLocator.resolve;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -32,7 +30,6 @@ import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfigurationType;
@@ -63,8 +60,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         IType returnValue = null;
         List<IType> candidates = new ArrayList<IType>();
         for (int i = 0; i < types.length; i++) {
-            GroovyProjectFacade project = new GroovyProjectFacade(types[i]);
-            if (project.isGroovyScript(types[i])) {
+            if (GroovyProjectFacade.hasRunnableMain(types[i])) {
                 candidates.add(types[i]);
             }
         }
@@ -98,15 +94,11 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
                 "-Dgroovy.starter.conf="+getGroovyConf() + 
                 " -Dgroovy.home="+getGroovyHome()
                 );
-        try {
-            launchConfigProperties.put(
-                    IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
-                    "--main groovy.ui.GroovyMain --classpath " + getSourceLocations(runType)
-                    + " " + className
+        launchConfigProperties.put(
+                IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
+                "--main groovy.ui.GroovyMain "
+                + className
                     );
-        } catch (JavaModelException e) {
-            GroovyCore.logException("Error getting the source locations for project " + runType.getJavaProject().getElementName(), e);
-        }
      
         return launchConfigProperties;
     }

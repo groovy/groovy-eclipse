@@ -19,6 +19,9 @@ import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -35,6 +38,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.IJavaElementRequestor;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.NameLookup;
@@ -42,9 +46,12 @@ import org.eclipse.jdt.internal.core.SourceRange;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
+import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
+import org.eclipse.text.edits.TextEditVisitor;
 
 /**
  * @author andrew
@@ -65,6 +72,7 @@ public class OrganizeGroovyImports {
         @Override
         public void visitCastExpression(CastExpression expression) {
             handleType(expression.getType(), false);
+            super.visitCastExpression(expression);
         }
         
         @Override
@@ -80,7 +88,6 @@ public class OrganizeGroovyImports {
         
         @Override
         public void visitVariableExpression(VariableExpression expression) {
-            // here, we might be able to look at
             handleType(expression.getType(), false);
         }
         
@@ -133,6 +140,21 @@ public class OrganizeGroovyImports {
             super.visitAnnotations(node);
         }
         
+        
+        @Override
+        public void visitListExpression(ListExpression node) {
+            super.visitListExpression(node);
+        }
+        
+        @Override
+        public void visitMapEntryExpression(MapEntryExpression expression) {
+            super.visitMapEntryExpression(expression);
+        }
+        
+        @Override
+        public void visitMapExpression(MapExpression expression) {
+            super.visitMapExpression(expression);
+        }
         
         /**
          * add the type name to missingTypes if it is not resolved
@@ -239,6 +261,8 @@ public class OrganizeGroovyImports {
                 rewriter.addImport(resolved.getFullyQualifiedName('.'));
             } 
             TextEdit edit = rewriter.rewriteImports(null);
+            // remove ';' from edits
+            edit = removeSemiColons(edit);
             return edit;
         } catch (CoreException e) {
             GroovyCore.logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
@@ -248,6 +272,30 @@ public class OrganizeGroovyImports {
         return null;
     }
     
+    /**
+     * @param edit
+     * @return
+     */
+    private TextEdit removeSemiColons(TextEdit edit) {
+        TextEditVisitor visitor = new TextEditVisitor() {
+            @Override
+            public boolean visit(InsertEdit edit) {
+                String text = edit.getText();
+                text = text.replace(';', ' ');
+                ReflectionUtils.setPrivateField(InsertEdit.class, "fText", edit, text);
+                return super.visit(edit);
+            }
+            public boolean visit(ReplaceEdit edit) {
+                String text = edit.getText();
+                text = text.replace(';', ' ');
+                ReflectionUtils.setPrivateField(InsertEdit.class, "fText", edit, text);
+                return super.visit(edit);
+            }
+        };
+        edit.accept(visitor);
+        return edit;
+    }
+
     public void calculateAndApplyMissingImports() throws JavaModelException {
         TextEdit edit = calculateMissingImports();
         if (edit != null) {

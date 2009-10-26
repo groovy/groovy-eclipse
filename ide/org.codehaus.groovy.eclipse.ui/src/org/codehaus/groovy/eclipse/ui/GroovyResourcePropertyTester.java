@@ -61,11 +61,9 @@ public class GroovyResourcePropertyTester extends PropertyTester {
 				        }
 				    }
 				    if (unit != null) {
-				        if (hasMain.equals(property)) {
+				        if (hasMain.equals(property) || isScript.equals(property)) {
     				        List<IType> results = GroovyProjectFacade.findAllRunnableTypes(unit);
     				        returnValue = results.size() > 0;
-				        } else if (isScript.equals(property)) {
-				            returnValue = new GroovyProjectFacade(unit).isGroovyScript(unit);
 				        }
 				    }
 				} catch (IllegalArgumentException e) {
