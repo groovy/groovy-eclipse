@@ -17,11 +17,14 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 /**
  * @author Andrew Eisenberg
@@ -31,6 +34,11 @@ import org.codehaus.groovy.ast.Variable;
  *          </p>
  */
 public class VariableScope {
+
+	/**
+	 * 
+	 */
+	private static final ClassNode DGM_CLASS_NODE = new ClassNode(DefaultGroovyMethods.class);
 
 	public static class VariableInfo {
 		public final ClassNode type;
@@ -43,6 +51,8 @@ public class VariableScope {
 		}
 	}
 
+	public static ClassNode NO_CATEGORY = null;
+
 	/**
 	 * Null for the top level scope
 	 */
@@ -52,9 +62,48 @@ public class VariableScope {
 
 	private Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
 
+	/**
+	 * Category that will be declared in the next scope
+	 */
+	private ClassNode categoryBeingDeclared;
+
 	public VariableScope(VariableScope parent, ASTNode enclosingNode) {
 		this.parent = parent;
 		this.enclosingNode = enclosingNode;
+	}
+
+	/**
+	 * The name of all categories in scope.
+	 * 
+	 * @return
+	 */
+	public Set<ClassNode> getCategoryNames() {
+		if (parent != null) {
+			Set<ClassNode> categories = parent.getCategoryNames();
+			// don't look at this scope's category, but the parent scope's
+			// category. This is because although current scope knows that it
+			// is a category scope, the category type is only available from parent
+			// scope
+			if (parent.isCategoryBeingDeclared()) {
+				categories.add(parent.categoryBeingDeclared);
+			}
+			return categories;
+		} else {
+			Set<ClassNode> categories = new HashSet<ClassNode>();
+			categories.add(DGM_CLASS_NODE);
+			return categories;
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	private boolean isCategoryBeingDeclared() {
+		return categoryBeingDeclared != null;
+	}
+
+	public void setCategoryBeingDeclared(ClassNode categoryBeingDeclared) {
+		this.categoryBeingDeclared = categoryBeingDeclared;
 	}
 
 	/**
@@ -64,10 +113,10 @@ public class VariableScope {
 	 * @return the variable info or null if not found
 	 */
 	public VariableInfo lookupName(String name) {
-		if (name.equals("this")) {
+		if (name.equals("this")) { //$NON-NLS-1$
 			ClassNode declaringType = getEnclosingTypeDeclaration();
 			return new VariableInfo(declaringType, declaringType);
-		} else if (name.equals("super")) {
+		} else if (name.equals("super")) { //$NON-NLS-1$
 			ClassNode declaringType = getEnclosingTypeDeclaration();
 			ClassNode superType = declaringType != null ? declaringType.getSuperClass() : null;
 			return new VariableInfo(superType, superType);

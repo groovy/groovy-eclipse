@@ -102,10 +102,14 @@ public class SourceContextInfo {
             ((IGroovyProjectAware)lookup).setGroovyProject(project);
             ((ISourceCodeContextAware)lookup).setSourceCodeContext(contexts[contexts.length - 1]);
 
+            boolean dotIsIncluded = true;
             // There is just an identifier, assume it is a field or method name and add 'this.' or 'ClassName.'.
             if (parts[1] == null) {
+                dotIsIncluded = false;  // remember that this isn't really a field or method name.  So, we can later remember to include types
                 ISourceCodeContext sourceContext = contexts[contexts.length - 1];
-                if (sourceContext.getId() == ISourceCodeContext.METHOD_SCOPE || sourceContext.getId() == ISourceCodeContext.CLOSURE_SCOPE || sourceContext.getId() == ISourceCodeContext.CONSTRUCTOR_SCOPE) {
+                if (sourceContext.getId() == ISourceCodeContext.METHOD_SCOPE || 
+                        sourceContext.getId() == ISourceCodeContext.CLOSURE_SCOPE || 
+                        sourceContext.getId() == ISourceCodeContext.CONSTRUCTOR_SCOPE) {
                     ASTNode[] path = sourceContext.getASTPath();
                     for (int i = 0; i < path.length; i++) {
                         if (path[i] instanceof MethodNode) {
@@ -118,6 +122,11 @@ public class SourceContextInfo {
                             }
                         }
                     }
+                } else {
+                    // not in a place where method, field, or property proposals make sense
+                    // only type proposals
+                    parts[1] = parts[0];
+                    parts[0] = null;
                 }
             }
             
@@ -135,10 +144,10 @@ public class SourceContextInfo {
                         .done();
                 eval = new TypeEvaluator(typeContext);
                 EvalResult result  = null;
-                result = eval.evaluate(parts[0]);
-                if (result != null) {
-                    return new SourceContextInfo(lookup, result, parts[0], parts[1]);
+                if (parts[0] != null) {
+                    result = eval.evaluate(parts[0]);
                 }
+                return new SourceContextInfo(lookup, result, parts[0], parts[1], dotIsIncluded);
             } catch (Exception e) {
                 List classes = module.getClasses();
                 GroovyCore.logException("Exception while browsing in " + (classes.size() > 0 ? 
@@ -153,13 +162,15 @@ public class SourceContextInfo {
     public final EvalResult eval;
     public final String expression;
     public final String name;
+    public final boolean dotIsIncluded; 
 
     private SourceContextInfo(IMemberLookup lookup, EvalResult eval,
-            String expression, String name) {
+            String expression, String name, boolean dotIsIncluded) {
         this.lookup = lookup;
         this.eval = eval;
         this.expression = expression;
         this.name = name;
+        this.dotIsIncluded = dotIsIncluded;
     }
 
     private static String[] createImportsArray(ModuleNode moduleNode) {

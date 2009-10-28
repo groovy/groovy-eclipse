@@ -25,13 +25,13 @@ import org.codehaus.groovy.eclipse.test.actions.SaveParticipantRegistryTest;
 import org.codehaus.groovy.eclipse.test.adapters.GroovyFileAdapterFactoryTestCase;
 import org.codehaus.groovy.eclipse.test.adapters.GroovyIFileEditorInputAdapterFactoryTestCase;
 import org.codehaus.groovy.eclipse.test.adapters.IsMainTesterTests;
-import org.codehaus.groovy.eclipse.test.core.types.TypeEvaluatorTestCase;
 import org.codehaus.groovy.eclipse.test.core.util.ExpressionFinderTestCase;
 import org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests;
 import org.codehaus.groovy.eclipse.test.debug.ConsoleLineTrackerTests;
 import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
 import org.codehaus.groovy.eclipse.test.ui.ErrorLogTest;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
+import org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests;
 
 /**
  * Suite needs to be run as eclipse plugin test
@@ -47,9 +47,7 @@ public class AllUITests {
 		suite.addTestSuite(GroovyFileAdapterFactoryTestCase.class);
 		suite.addTestSuite(GroovyIFileEditorInputAdapterFactoryTestCase.class);
 		suite.addTestSuite(IsMainTesterTests.class);
-		suite.addTest(org.codehaus.groovy.eclipse.test.core.types.AllTests.suite());
 		suite.addTest(org.codehaus.groovy.eclipse.test.core.util.AllTests.suite());
-		suite.addTestSuite(TypeEvaluatorTestCase.class);
 		suite.addTestSuite(ExpressionFinderTestCase.class);
 		suite.addTestSuite(GroovyTagScannerTests.class);
 		suite.addTestSuite(DebugBreakpointsTests.class);
@@ -58,6 +56,7 @@ public class AllUITests {
 		suite.addTestSuite(SaveParticipantRegistryTest.class);
 		suite.addTestSuite(ConvertToJavaOrGroovyActionTest.class);
 		suite.addTestSuite(ConsoleLineTrackerTests.class);
+		suite.addTestSuite(HighlightingExtenderTests.class);
 		
 		// $JUnit-END$
 		

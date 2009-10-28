@@ -399,7 +399,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
 		return factory.createContexts(buffer, moduleNode, new Region(offset, 0));
 	}
 
-	protected ModuleNode getCurrentModuleNode(JavaContentAssistInvocationContext context) {
+	protected static ModuleNode getCurrentModuleNode(JavaContentAssistInvocationContext context) {
 	    return ((GroovyCompilationUnit) context.getCompilationUnit()).getModuleNode();
 	}
 

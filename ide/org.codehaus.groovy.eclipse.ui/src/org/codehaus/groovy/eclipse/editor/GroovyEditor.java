@@ -328,15 +328,19 @@ public class GroovyEditor extends CompilationUnitEditor {
         installSemanticHighlighting();
     }
     
-    
+    // temporary storage for editor input
+    // so that GroovyConiguration can use it
+    IEditorInput internalInput;
     /**
      * Override this method so that we can get access to the newly initialized
      * annotation model
      */
     @Override
     protected void doSetInput(IEditorInput input) throws CoreException {
+        internalInput = input;
         super.doSetInput(input);
         unsetJavaBreakpointUpdater();
+        internalInput = null;
     }
     
     

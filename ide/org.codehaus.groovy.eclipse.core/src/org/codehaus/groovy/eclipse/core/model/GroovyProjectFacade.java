@@ -218,32 +218,6 @@ public class GroovyProjectFacade {
         return false;
     }
     
-    /**
-     * Evaluates the class to determine if is an JUnit test
-     * 
-     * TODO: Subclasses of these two don't seem work with this logic.
-     * Parent is returning Object instead of the superclass.
-     * 
-     * @param classNode
-     * @return
-     */
-    public static boolean isTestCaseClass(final IType type) {
-        try {
-            ITypeHierarchy hierarchy = type.newSupertypeHierarchy(null);
-            IType[] classes = hierarchy.getAllSuperclasses(type);
-            for (IType clazz : classes) {
-                if (clazz.getFullyQualifiedName().equals("org.junit.TestCase") || 
-                        clazz.getElementName().equals("GroovyTestCase")) {
-                    return true;
-                }
-            }
-        } catch (JavaModelException e) {
-            GroovyCore.logException("Error computing hierarchy for " + type, e);
-        }
-        return false;
-    }
-
-
     private static boolean hasAppropriateArrayArgsForMain(
             final String[] params) {
         if (params == null || params.length != 1) {

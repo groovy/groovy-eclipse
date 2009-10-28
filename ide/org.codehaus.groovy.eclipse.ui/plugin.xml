@@ -16,6 +16,7 @@
  -->
 
 <plugin>
+   <extension-point id="syntaxHighlightingExtension" name="Groovy Editor Syntax Highlighting Extension" schema="schema/syntaxHighlightingExtension.exsd"/>
 
    <extension
          id="org.codehaus.groovy.eclipse.groovy.launcher"

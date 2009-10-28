@@ -13,6 +13,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -24,7 +25,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
@@ -33,6 +34,7 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.internal.UIPlugin;
 
 /**
  * @author Andrew Eisenberg
@@ -48,6 +50,8 @@ public abstract class CompletionTestCase extends BuilderTests {
 
     @Override
     protected void tearDown() throws Exception {
+        // close all editors
+        UIPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
         super.tearDown();
     }
     
@@ -102,11 +106,13 @@ public abstract class CompletionTestCase extends BuilderTests {
         
         IJavaCompletionProposalComputer computer = computerClass.newInstance();
         List<ICompletionProposal> proposals = computer.computeCompletionProposals(context, null);
+        editor.close(false);
         return proposals.toArray(new ICompletionProposal[proposals.size()]);
     }
     
     protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount) {
         int foundCount = 0;
+        boolean isType = name.contains(" - ");
         for (ICompletionProposal proposal : proposals) {
             // if a field
             if (proposal.getDisplayString().startsWith(name + " ")) {
@@ -114,6 +120,10 @@ public abstract class CompletionTestCase extends BuilderTests {
             }
             // if a method
             if (proposal.getDisplayString().startsWith(name + "(")) {
+                foundCount ++;
+            }
+            // if a type
+            if (isType && proposal.getDisplayString().startsWith(name)) {
                 foundCount ++;
             }
         }
@@ -158,4 +168,29 @@ public abstract class CompletionTestCase extends BuilderTests {
     protected int getLastIndexOf(String contents, String lookFor) {
         return contents.lastIndexOf(lookFor)+lookFor.length();
     }
+
+    protected ICompletionProposal[] createProposalsAtOffset(String contents, int completionOffset)
+            throws Exception {
+                IPath projectPath = createGenericProject();
+                IPath pack = projectPath.append("src");
+                IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest2", contents);
+                incrementalBuild();
+                ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
+                unit.becomeWorkingCopy(null);
+                
+                // necessary???
+                // wait for indexes to be built
+                int timeout = 0;
+                int timeoutThreshold = 100000;
+                while (JavaModelManager.getIndexManager().awaitingJobsCount() > 0 && timeout < timeoutThreshold) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) { }
+                    timeout++;
+                }
+                if (timeout == timeoutThreshold) {
+                    fail("Failure to finish indexing project.  Timed out...");
+                }
+                return performContentAssist(unit, completionOffset, GeneralGroovyCompletionProcessor.class);
+            }
 }

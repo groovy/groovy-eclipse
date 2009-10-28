@@ -11,9 +11,6 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -29,17 +26,6 @@ public class InferencingCompletionTests extends CompletionTestCase {
     }
 
     private static final String CONTENTS = "class TransformerTest {\nvoid testTransformer() {\ndef s = \"string\"\ns.st\n}}";
-    public void testInferenceOfLocalStringInMethod() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath pack = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest", CONTENTS);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        unit.becomeWorkingCopy(null);
-        ICompletionProposal[] proposals = performContentAssist(unit, CONTENTS.indexOf("s.st") + "s.ts".length(), GeneralGroovyCompletionProcessor.class);
-        proposalExists(proposals, "startsWith", 2);
-    }
-
     private static final String CONTENTS_SCRIPT = 
         "def s = \"string\"\n" +
         "s.st\n" +
@@ -51,47 +37,28 @@ public class InferencingCompletionTests extends CompletionTestCase {
         "    t.st\n" +
         "  }" +
         "}";
+
+    private static final String CONTENTS_CLOSURE = "def file = new File(\"/tmp/some-file.txt\")\ndef writer = file.newWriter()\nnew URL(url).eachLine { line ->\nwriter.close()\n}";
+    public void testInferenceOfLocalStringInMethod() throws Exception {
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS, getIndexOf(CONTENTS, "s.st"));
+        proposalExists(proposals, "startsWith", 2);
+    }
+
     public void testInferenceOfLocalString() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath pack = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest2", CONTENTS_SCRIPT);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        unit.becomeWorkingCopy(null);
-        ICompletionProposal[] proposals = performContentAssist(unit, CONTENTS_SCRIPT.indexOf("s.st") + "s.ts".length(), GeneralGroovyCompletionProcessor.class);
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_SCRIPT, getIndexOf(CONTENTS_SCRIPT, "s.st"));
         proposalExists(proposals, "startsWith", 2);
     }
     public void testInferenceOfLocalString2() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath pack = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest2", CONTENTS_SCRIPT);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        unit.becomeWorkingCopy(null);
-        ICompletionProposal[] proposals = performContentAssist(unit, CONTENTS_SCRIPT.indexOf("0).sub") + "0).sub".length(), GeneralGroovyCompletionProcessor.class);
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_SCRIPT, getIndexOf(CONTENTS_SCRIPT, "0).sub"));
         proposalExists(proposals, "substring", 2);
     }
     
     public void testInferenceOfStringInClass() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath pack = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest2", CONTENTS_SCRIPT);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        unit.becomeWorkingCopy(null);
-        ICompletionProposal[] proposals = performContentAssist(unit, CONTENTS_SCRIPT.indexOf("t.st") + "t.st".length(), GeneralGroovyCompletionProcessor.class);
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_SCRIPT, getIndexOf(CONTENTS_SCRIPT, "t.st"));
         proposalExists(proposals, "startsWith", 2);
     }
-    
     public void testInferenceInClosure() throws Exception {
-        String contents = "def file = new File(\"/tmp/some-file.txt\")\ndef writer = file.newWriter()\nnew URL(url).eachLine { line ->\nwriter.close()\n}";
-        IPath projectPath = createGenericProject();
-        IPath pack = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(pack, "ClosureTest", contents);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        unit.becomeWorkingCopy(null);
-        ICompletionProposal[] proposals = performContentAssist(unit, contents.indexOf("writer.clos") + "writer.clos".length(), GeneralGroovyCompletionProcessor.class);
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_CLOSURE, getIndexOf(CONTENTS_CLOSURE, "writer.clos"));
         proposalExists(proposals, "close", 1);
     }
 }

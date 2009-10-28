@@ -9,6 +9,7 @@ public class AllTests {
                 + AllTests.class.getPackage().getName());
         // $JUnit-BEGIN$
         suite.addTestSuite(TypeEvaluatorTests.class);
+        suite.addTestSuite(TypeEvaluatorTestCase.class);
         suite.addTestSuite(InferredTypeEvaluatorTests.class);
         // $JUnit-END$
         return suite;

@@ -23,13 +23,14 @@ import junit.framework.TestSuite;
 public class AllCompletionTests {
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite("Run of all Completion Tests");
-        // not loading yet
         suite.addTestSuite(DefaultGroovyMethodCompletionTests.class);
         suite.addTestSuite(LocalVariableCompletionTests.class);
         suite.addTestSuite(InferencingCompletionTests.class);
         suite.addTestSuite(FieldCompletionTests.class);
+        suite.addTestSuite(TypeCompletionTests.class);
         suite.addTestSuite(GroovyLikeCompletionTests.class);
-//        suite.addTestSuite(OtherCompletionTests.class);
+        
+        suite.addTestSuite(OtherCompletionTests.class);
         
         return suite;
     }

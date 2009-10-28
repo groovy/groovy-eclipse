@@ -1241,8 +1241,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				eoffset = ((PreciseSyntaxException) syntaxException).getEndOffset();
 				// need to work out the line again as it may be wrong
 				line = 0;
-				while (compilationResult.lineSeparatorPositions[line] < soffset
-						&& line < compilationResult.lineSeparatorPositions.length) {
+				while (line < compilationResult.lineSeparatorPositions.length
+						&& compilationResult.lineSeparatorPositions[line] < soffset) {
 					line++;
 				}
 				;

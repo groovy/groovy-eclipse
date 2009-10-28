@@ -87,7 +87,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @author Andrew Eisenberg
  * @created Aug 29, 2009
  * 
- *          Visits a GroovyCompilationUnit in order to determine the type
+ *          Visits a GroovyCompilationUnit in order to determine the type of expressions contained in it.
  */
 public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport {
 
@@ -672,9 +672,42 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			propertyExpression.push(node);
+			if (isCategoryDeclaration(node)) {
+				addCategoryToBeDeclared(node);
+			}
 			super.visitMethodCallExpression(node);
+			removeCategoryToBeDeclared();
 			propertyExpression.pop();
 		}
+	}
+
+	/**
+	 * @param node
+	 */
+	private void addCategoryToBeDeclared(MethodCallExpression node) {
+		ArgumentListExpression args = (ArgumentListExpression) node.getArguments();
+		ClassExpression classExpr = (ClassExpression) args.getExpressions().get(0);
+		scopes.peek().setCategoryBeingDeclared(classExpr.getType());
+	}
+
+	/**
+	 * @param node
+	 * @return
+	 */
+	private boolean isCategoryDeclaration(MethodCallExpression node) {
+		if (node.getMethodAsString().equals("use")) {
+			Expression expr = node.getArguments();
+			if (expr instanceof ArgumentListExpression) {
+				ArgumentListExpression args = (ArgumentListExpression) expr;
+				return args.getExpressions().size() == 2 && args.getExpressions().get(0) instanceof ClassExpression
+						&& args.getExpressions().get(1) instanceof ClosureExpression;
+			}
+		}
+		return false;
+	}
+
+	private void removeCategoryToBeDeclared() {
+		scopes.peek().setCategoryBeingDeclared(VariableScope.NO_CATEGORY);
 	}
 
 	@Override

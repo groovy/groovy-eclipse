@@ -11,6 +11,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -201,6 +202,22 @@ public class OrganizeGroovyImports {
                     innerIndex = name.lastIndexOf('$', innerIndex-1);
                 }
                 doNotRemoveImport(nameWithDots);
+            }
+            
+            if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
+                for (GenericsType gen : node.getGenericsTypes()) {
+                    if (gen.getLowerBound() != null) {
+                        handleType(gen.getLowerBound(), false);
+                    } 
+                    if (gen.getUpperBounds() != null) {
+                        for (ClassNode upper : gen.getUpperBounds()) {
+                            handleType(upper, false);
+                        }
+                    }
+                    if (gen.getType() != null) {
+                        handleType(gen.getType(), false);
+                    }
+                }
             }
         }
 

@@ -498,6 +498,7 @@ public class BuilderTests extends TestCase {
             }
         } while (wcs.length > 0);
 		JavaCore.setOptions(JavaCore.getDefaultOptions());
+		
 		super.tearDown();
 	}
 

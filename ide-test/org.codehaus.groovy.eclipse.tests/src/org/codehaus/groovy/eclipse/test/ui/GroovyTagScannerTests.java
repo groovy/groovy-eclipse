@@ -60,19 +60,19 @@ public class GroovyTagScannerTests extends TestCase {
     
     
     public void testNoColor() throws Exception {
-//        tryString("fddsaadsa \"fdfdassdfafasd\"", BLACK);
+        tryString("fddsaadsa \"fdfdassdfafasd\"", BLACK);
     }
     public void testGJDKColor() throws Exception {
-//        tryString("def", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR);
+        tryString("def", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR);
     }
     public void testJavaTypeColor() throws Exception {
-//        tryString("int", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
+        tryString("int", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
     }
     public void testJavaKeywordColor() throws Exception {
-//        tryString("for", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
+        tryString("for", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
     }
     public void testStringColor() throws Exception {
-//        tryString("/fafdsads adsfds/", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
+        tryString("/fafdsads adsfds/", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
     }
 
     private void tryString(String string, String foregroundColorPreference) {

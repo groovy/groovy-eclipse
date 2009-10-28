@@ -193,6 +193,15 @@ public class OrganizeImportsTest extends EclipseTestCase {
 		doAddImportTest(contents, expectedImports)
 	}
 	
+	void testGenerics() {
+		String contents ="""
+            import java.util.Map.Entry
+		    Entry<SecondClass, HTML> entry
+            """
+		def expectedImports = [ "import javax.swing.text.html.HTML", "import other.SecondClass"]
+		doAddImportTest(contents, expectedImports)
+	}
+	
     void testRemoveImport1() {
         String contents = 
             """ 

@@ -17,11 +17,11 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.MethodPointerExpression;
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -38,13 +38,13 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @created Aug 31, 2009
  * 
  */
+@SuppressWarnings("nls")
 public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	private final SearchRequestor requestor;
 	private final SearchParticipant participant;
 
 	private final char[] name;
-	private final String declaringSimpleName;
-	private final String declaringQualification;
+	private final String declaringQualifiedName;
 	private final boolean findDeclarations;
 	private final boolean findReferences;
 	private char[][] parameterQualifications;
@@ -55,9 +55,10 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		this.participant = participant;
 		name = (char[]) ReflectionUtils.getPrivateField(MethodPattern.class, "selector", pattern);
 		char[] arr = (char[]) ReflectionUtils.getPrivateField(MethodPattern.class, "declaringSimpleName", pattern);
-		declaringSimpleName = arr == null ? "" : new String(arr);
+		String declaringSimpleName = arr == null ? "" : new String(arr);
 		arr = (char[]) ReflectionUtils.getPrivateField(MethodPattern.class, "declaringQualification", pattern);
-		declaringQualification = ((arr == null || arr.length == 0) ? "" : (new String(arr) + "."));
+		String declaringQualification = ((arr == null || arr.length == 0) ? "" : (new String(arr) + "."));
+		declaringQualifiedName = declaringQualification + declaringSimpleName;
 		findDeclarations = ((Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findDeclarations", pattern))
 				.booleanValue();
 		findReferences = ((Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findReferences", pattern)).booleanValue();
@@ -72,50 +73,44 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		int start = 0;
 		int end = 0;
 
-		if (node instanceof MethodCallExpression) {
-			MethodCallExpression expr = (MethodCallExpression) node;
-			String mName = expr.getMethodAsString();
-			if (mName != null && CharOperation.equals(name, mName.toCharArray())) {
-				doCheck = true;
-				start = expr.getMethod().getStart();
-				end = expr.getMethod().getEnd();
-			}
-		} else if (node instanceof StaticMethodCallExpression) {
-			String mName = ((StaticMethodCallExpression) node).getMethod();
-			if (mName != null && CharOperation.equals(name, mName.toCharArray())) {
+		// include method calls here because of closures
+		if (node instanceof ConstantExpression) {
+			String cName = ((ConstantExpression) node).getText();
+			if (cName != null && CharOperation.equals(name, cName.toCharArray())) {
 				doCheck = true;
 				start = node.getStart();
 				end = node.getEnd();
 			}
-		} else if (node instanceof MethodPointerExpression) {
-			Expression expr = ((MethodPointerExpression) node).getMethodName();
-			if (expr.getText() != null && CharOperation.equals(name, expr.getText().toCharArray())) {
+		} else if (node instanceof FieldExpression) {
+			if (CharOperation.equals(name, ((FieldExpression) node).getFieldName().toCharArray())) {
 				doCheck = true;
-				start = expr.getStart();
-				end = expr.getEnd();
+				start = node.getStart();
+				end = node.getEnd();
 			}
 		} else if (node instanceof MethodNode) {
-			MethodNode fnode = (MethodNode) node;
-			if (CharOperation.equals(name, fnode.getName().toCharArray())) {
+			MethodNode mnode = (MethodNode) node;
+			if (CharOperation.equals(name, mnode.getName().toCharArray())) {
 				doCheck = true;
 				isDeclaration = true;
-				start = fnode.getNameStart();
-				end = fnode.getNameEnd() + 1; // arrrgh...why +1?
+				start = mnode.getNameStart();
+				end = mnode.getNameEnd() + 1; // arrrgh...why +1?
+			}
+		} else if (node instanceof VariableExpression) {
+			VariableExpression vnode = (VariableExpression) node;
+			if (CharOperation.equals(name, vnode.getName().toCharArray())) {
+				doCheck = true;
+				start = vnode.getStart();
+				end = start + vnode.getName().length();
 			}
 		}
 
 		if (doCheck) {
-			// FIXADE M2 really, must check the hierarchy, but this is good enough for now.
-			// FIXADE M2 ignore checking parameters for now
-			boolean isCompleteMatch = qualifiedNameMatches(result.type.getName());
-			if ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences)) {
+			boolean isCompleteMatch = qualifiedNameMatches(result.declaringType);
+			if (isCompleteMatch && ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {
 				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
 						- start, participant, enclosingElement.getResource());
 				try {
 					requestor.acceptSearchMatch(match);
-					// don't search any further down this branch
-					// I guess it is possible that there are further matches, but for the sake of efficiency, let's ignore them.
-					return VisitStatus.CANCEL_BRANCH;
 				} catch (CoreException e) {
 					Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
 							+ enclosingElement.getResource());
@@ -125,13 +120,15 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		return VisitStatus.CONTINUE;
 	}
 
-	private boolean qualifiedNameMatches(String qualifiedName) {
-		String newName = qualifiedName;
-		// don't do * matching or camel case matching yet
-		if (qualifiedName.equals(declaringQualification + declaringSimpleName)) {
+	// recursively check the hierarchy
+	private boolean qualifiedNameMatches(ClassNode declaringType) {
+		if (declaringType == null) {
+			return false;
+		} else if (declaringType.getName().equals(declaringQualifiedName)) {
 			return true;
+		} else {
+			return qualifiedNameMatches(declaringType.getSuperClass());
 		}
-		return false;
 	}
 
 	private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {

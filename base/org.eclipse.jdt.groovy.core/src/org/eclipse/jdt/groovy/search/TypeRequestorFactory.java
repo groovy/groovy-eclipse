@@ -44,6 +44,8 @@ public class TypeRequestorFactory {
 			return new FieldReferenceSearchRequestor((FieldPattern) pattern, requestor, possibleMatch.document.getParticipant());
 		} else if (pattern instanceof MethodPattern) {
 			return new MethodReferenceSearchRequestor((MethodPattern) pattern, requestor, possibleMatch.document.getParticipant());
+			// return new FieldReferenceSearchRequestor((MethodPattern) pattern, requestor,
+			// possibleMatch.document.getParticipant());
 		}
 
 		return null;

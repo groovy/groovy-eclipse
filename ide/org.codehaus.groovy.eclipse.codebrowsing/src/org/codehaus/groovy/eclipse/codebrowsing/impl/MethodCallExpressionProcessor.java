@@ -66,7 +66,7 @@ public class MethodCallExpressionProcessor implements
         GroovyProjectFacade project = info.getEditorFacade().getProjectFacade();
         
         SourceContextInfo sourceInfo = SourceContextInfo.create(info.getModuleNode(), project, offset, buffer, false);
-        if (sourceInfo != null) {
+        if (sourceInfo != null && sourceInfo.eval != null) {
             // FIXADE M2 we need a way to figure out if we are looking at property on a class or not
             // for now, assume that upper case first letter is a class.
             boolean isClass = Character.isUpperCase(sourceInfo.expression.charAt(0));

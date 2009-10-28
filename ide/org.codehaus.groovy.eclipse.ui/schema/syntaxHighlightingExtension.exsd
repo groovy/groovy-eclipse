@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.codehaus.groovy.eclipse.ui" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.codehaus.groovy.eclipse.ui" id="syntaxHightlightingExtension" name="Groovy Editor Syntax Highlighting Extension"/>
+      </appInfo>
+      <documentation>
+         Extends the Groovy syntax highlighting in the Groovy editor with new Groovy keywords and highlighting rules.  Useful for plugging in your own DSL.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="highlightingExtender"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="highlightingExtender">
+      <annotation>
+         <documentation>
+            Associate a project nature with new keywords and highlighting rules for Groovy code in a Groovy editor.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="natureID" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The project nature that this extension applies to.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="identifier" basedOn="org.eclipse.core.resources.natures/@id"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="extender" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.codehaus.groovy.eclipse.editor.highlighting.IHighlightingExtender"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         2.0.0
+      </documentation>
+   </annotation>
+
+
+
+
+
+</schema>

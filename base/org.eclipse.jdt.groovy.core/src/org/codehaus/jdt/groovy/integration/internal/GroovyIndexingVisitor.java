@@ -62,14 +62,15 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 		// }
 		this.visitImports(node);
 
-		for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
+		for (ClassNode clazz : node.getClasses()) {
 			this.visitClass(clazz);
 		}
 	}
 
+	@Override
 	public void visitImports(ModuleNode node) {
 		if (node != null) {
-			for (ImportNode importNode : (Iterable<ImportNode>) node.getImports()) {
+			for (ImportNode importNode : node.getImports()) {
 				visitAnnotations(importNode);
 				try {
 					importNode.visit(this);
@@ -79,13 +80,13 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 				}
 				handleType(importNode.getType(), false, true);
 			}
-			for (ClassNode staticImportClasses : (Iterable<ClassNode>) node.getStaticImportClasses().values()) {
+			for (ClassNode staticImportClasses : node.getStaticImportClasses().values()) {
 				handleType(staticImportClasses, false, true);
 			}
-			for (ClassNode staticImportAliases : (Iterable<ClassNode>) node.getStaticImportAliases().values()) {
+			for (ClassNode staticImportAliases : node.getStaticImportAliases().values()) {
 				handleType(staticImportAliases, false, true);
 			}
-			for (String fieldName : (Iterable<String>) node.getStaticImportFields().values()) {
+			for (String fieldName : node.getStaticImportFields().values()) {
 				requestor.acceptUnknownReference(fieldName.toCharArray(), 0);
 			}
 		}
@@ -108,6 +109,8 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 		if (!(expression.isTrueExpression() || expression.isFalseExpression() || expression.isNullExpression() || expression
 				.isEmptyStringExpression())) {
 			requestor.acceptFieldReference(expression.getValue().toString().toCharArray(), expression.getStart());
+			// also could be a method reference
+			requestor.acceptMethodReference(expression.getValue().toString().toCharArray(), 0, expression.getStart());
 		}
 		super.visitConstantExpression(expression);
 	}
@@ -172,7 +175,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 		// super.visitClass(node);
 		visitAnnotations(node);
 		node.visitContents(this);
-		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
+		for (Statement element : node.getObjectInitializerStatements()) {
 			element.visit(this);
 		}
 
@@ -190,7 +193,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	@Override
 	public void visitAnnotations(AnnotatedNode node) {
-		for (AnnotationNode an : (Iterable<AnnotationNode>) node.getAnnotations()) {
+		for (AnnotationNode an : node.getAnnotations()) {
 			handleType(an.getClassNode(), true, true);
 		}
 		super.visitAnnotations(node);

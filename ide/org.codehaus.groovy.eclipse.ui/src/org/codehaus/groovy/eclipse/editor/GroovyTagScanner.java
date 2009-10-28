@@ -33,7 +33,6 @@ import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.IWordDetector;
 import org.eclipse.jface.text.rules.NumberRule;
-import org.eclipse.jface.text.rules.RuleBasedScanner;
 import org.eclipse.jface.text.rules.SingleLineRule;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
@@ -203,9 +202,13 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 	private final IColorManager manager;
 	private final List<IRule> additionalRules;
 	private final List<String> additionalGroovyKeywords;
+	private final List<String> additionalGJDKKeywords;
 
+	/**
+	 * @deprecated
+	 */
 	public GroovyTagScanner(IColorManager manager) {
-	    this(manager, null, null);
+	    this(manager, null, null, null);
 	}
 	
 	
@@ -213,14 +216,26 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 	 * @param manager the color manager
 	 * @param additionalRules Additional scanner rules for sub-types to add new kinds of partitioning
 	 * @param additionalGroovyKeywords Additional keywords for sub-types to add new kinds of syntax highlighting
+     * @deprecated use the syntaxHighlightingExtender extension point instead.  This gets all of the additional keyword 
+     * highlighting into editors of files in a project with a particular nature.
 	 */
 	public GroovyTagScanner(IColorManager manager, List<IRule> additionalRules, List<String> additionalGroovyKeywords) {
-	    super(manager, GroovyPlugin.getDefault().getPreferenceStore());
-		this.manager = manager;
-		this.additionalRules = additionalRules;
-		this.additionalGroovyKeywords = additionalGroovyKeywords;
-		initialize();
+	    this(manager, additionalRules, additionalGroovyKeywords, null);
 	}
+    /**
+     * @param manager the color manager
+     * @param additionalRules Additional scanner rules for sub-types to add new kinds of partitioning
+     * @param additionalGroovyKeywords Additional keywords for sub-types to add new kinds of groovy keyword syntax highlighting
+     * @param additionalGJDKKeywords Additional keywords for sub-types to add new kinds of gjdk syntax highlightin
+     */
+    public GroovyTagScanner(IColorManager manager, List<IRule> additionalRules, List<String> additionalGroovyKeywords, List<String> additionalGJDKKeywords) {
+        super(manager, GroovyPlugin.getDefault().getPreferenceStore());
+        this.manager = manager;
+        this.additionalRules = additionalRules;
+        this.additionalGroovyKeywords = additionalGroovyKeywords;
+        this.additionalGJDKKeywords = additionalGJDKKeywords;
+        initialize();
+    }
 
 
     @Override
@@ -254,6 +269,12 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             IToken gjdkToken = new Token(new TextAttribute(new Color(null,gjdkRGB), null, SWT.BOLD));
             for (int j = 0; j < gjdkWords.length; ++j) {
                 keywordsRule.addWord(gjdkWords[j],gjdkToken);
+            }
+            // additional gjdk keywords
+            if (additionalGJDKKeywords != null) {
+                for (String additional : additionalGJDKKeywords) {
+                    keywordsRule.addWord(additional,gjdkToken);
+                }
             }
         }
         

@@ -25,6 +25,7 @@ public class AllJUnitTests {
         TestSuite suite = new TestSuite("Run of all JUnit Tests");
         suite.addTestSuite(JUnit3TestFinderTests.class);
         suite.addTestSuite(JUnit4TestFinderTests.class);
+        suite.addTestSuite(MainMethodFinderTests.class);
         return suite;
     }
 }

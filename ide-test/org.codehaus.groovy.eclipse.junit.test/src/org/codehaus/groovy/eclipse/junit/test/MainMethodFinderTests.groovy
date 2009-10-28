@@ -50,7 +50,7 @@ class MainMethodFinderTests extends JUnitTestCase {
 		expectingNoProblems()
 		MainMethodSearchEngine engine = new MainMethodSearchEngine()
 		IType[] types = engine.searchMainMethods ( (IProgressMonitor) null, new JavaWorkspaceScope(), IJavaElementSearchConstants.CONSIDER_ALL_TYPES)
-		checkTypes(types, [ "p2.Foo" ])
+		checkTypes(types, [ ])
     }
     void testMainMethodFinder2() throws Exception {
         IPath projectPath = createGenericProject()
@@ -68,7 +68,7 @@ class MainMethodFinderTests extends JUnitTestCase {
         expectingNoProblems()
         MainMethodSearchEngine engine = new MainMethodSearchEngine()
         IType[] types = engine.searchMainMethods ( (IProgressMonitor) null, new JavaWorkspaceScope(), IJavaElementSearchConstants.CONSIDER_ALL_TYPES)
-        checkTypes(types, [ "p2.Foo" ])
+        checkTypes(types, [  ])
     }
 	
     void testMainMethodFinder3() throws Exception {

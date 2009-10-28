@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
 import org.eclipse.jface.text.rules.IPartitionTokenScanner;
 
 /**
@@ -29,12 +30,15 @@ public class GroovyTextTools {
 
     private IPartitionTokenScanner partitionScanner;
     
+    private HighlightingExtenderRegistry highlightingExtenderRegistry; 
+    
     public GroovyColorManager getColorManager() {
         return colorManager;
     }
     
     public void dispose() {
         colorManager.dispose();
+        highlightingExtenderRegistry = null;
     }
     
     /**
@@ -47,5 +51,12 @@ public class GroovyTextTools {
         return partitionScanner;
     }
 
+    public HighlightingExtenderRegistry getHighlightingExtenderRegistry() {
+        if (highlightingExtenderRegistry == null) {
+            highlightingExtenderRegistry = new HighlightingExtenderRegistry();
+            highlightingExtenderRegistry.initialize();
+        }
+        return highlightingExtenderRegistry;
+    }
     
 }

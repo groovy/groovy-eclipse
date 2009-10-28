@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.codehaus.groovy.eclipse.ui.syntaxHighlightingExtension">
+      <highlightingExtender
+            extender="org.codehaus.groovy.eclipse.test.ui.Extender1"
+            natureID="org.codehaus.groovy.eclipse.tests.testNature1">
+      </highlightingExtender>
+      <highlightingExtender
+            extender="org.codehaus.groovy.eclipse.test.ui.Extender2"
+            natureID="org.codehaus.groovy.eclipse.tests.testNature2">
+      </highlightingExtender>
+   </extension>
+	<extension
+         id="testNature1"
+         name="Test1"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="org.codehaus.groovy.eclipse.test.ui.Extender1">
+         </run>
+      </runtime>
+    </extension>
+ <extension
+       id="testNature2"
+       name="Test2"
+       point="org.eclipse.core.resources.natures">
+    <runtime>
+       <run
+             class="org.codehaus.groovy.eclipse.test.ui.Extender2">
+       </run>
+    </runtime>
+ </extension>
+
+</plugin>
