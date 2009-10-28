@@ -122,6 +122,10 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
 	// recursively check the hierarchy
 	private boolean qualifiedNameMatches(ClassNode declaringType) {
+		if (declaringQualifiedName == null || declaringQualifiedName.equals("")) {
+			// no type specified, accept all
+			return true;
+		}
 		if (declaringType == null) {
 			return false;
 		} else if (declaringType.getName().equals(declaringQualifiedName)) {

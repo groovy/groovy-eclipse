@@ -1,17 +1,17 @@
 package org.codehaus.groovy.eclipse.test.actions
 
-import org.eclipse.jdt.core.ISourceRange;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.text.edits.DeleteEdit;
-import org.eclipse.text.edits.InsertEdit;
-import org.eclipse.text.edits.TextEdit;
-import org.codehaus.groovy.eclipse.test.EclipseTestCase;
-import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
-import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.jdt.core.search.TypeNameMatch;
-import org.eclipse.core.resources.IncrementalProjectBuilder;;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports;
+import org.codehaus.groovy.eclipse.test.EclipseTestCase 
+import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.jdt.core.ISourceRange 
+import org.eclipse.jdt.core.search.TypeNameMatch 
+import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery 
+import org.eclipse.text.edits.DeleteEdit 
+import org.eclipse.text.edits.InsertEdit 
+import org.eclipse.text.edits.TextEdit 
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.core.resources.IncrementalProjectBuilder
 
 /**
  * @author Andrew Eisenberg
@@ -235,7 +235,7 @@ public class OrganizeImportsTest extends EclipseTestCase {
             """ 
             import other.ThirdClass
             import javax.swing.text.html.HTML
-            import other.SecondClass
+import other.SecondClass
             class Main {
                 HTML f = null
             }
@@ -258,16 +258,23 @@ public class OrganizeImportsTest extends EclipseTestCase {
         def unit = JavaCore.createCompilationUnitFrom(file)
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
-        TextEdit[] children = edit.getChildren()
+        def children = edit.getChildren() as List
+        def newChildren = []
+        children.each {
+        	InsertEdit insert ->
+					if (insert.text.trim().length() > 0 && insert.text != '\n') {
+						newChildren += insert
+					}
+				}
         if (expectedImports.size() > 0) {
-            assertEquals "Found incorrect imports in text edit: \n$edit\nwith expected imports:\n$expectedImports", expectedImports.size(), children.length-1
+            assertEquals "Found incorrect imports in text edit: \n$edit\nwith expected imports:\n$expectedImports", expectedImports.size(), newChildren.size()
         } else {
-            assertEquals "Found incorrect imports in text edit: \n$edit\nwith expected imports:\n$expectedImports", 0, children.length
+            assertEquals "Found incorrect imports in text edit: \n$edit\nwith expected imports:\n$expectedImports", 0, newChildren.size()
         }
         
 
         def notFound = ""
-        for (TextEdit child : children) {
+        for (TextEdit child : newChildren) {
             if (! child instanceof InsertEdit) {
                 notFound << "Found an invalid Edit: $child\n"
             } else if (!contents.contains(child.getText())) {
