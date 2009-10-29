@@ -214,9 +214,11 @@ public class TypeCategoryLookup extends AbstractMemberLookup implements IGroovyP
     private String join(final String[] strings, final String delim) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < strings.length; i++) {
-            sb.append(strings[i]);
-            if (i < strings.length-1) {
-                sb.append(delim);
+            if (strings[i].length() > 0) {
+                sb.append(strings[i]);
+                if (i < strings.length-1) {
+                    sb.append(delim);
+                }
             }
         }
         return sb.toString();

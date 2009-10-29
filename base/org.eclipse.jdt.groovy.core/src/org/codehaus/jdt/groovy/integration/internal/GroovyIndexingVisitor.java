@@ -56,10 +56,6 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	void doVisit(ModuleNode node, ImportReference pkg) {
 
-		// package is visited by the notifier
-		// if (pkg != null) {
-		// requestor.acceptPackage(pkg);
-		// }
 		this.visitImports(node);
 
 		for (ClassNode clazz : node.getClasses()) {
@@ -95,7 +91,14 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 	@Override
 	public void visitMethodCallExpression(MethodCallExpression call) {
 		super.visitMethodCallExpression(call);
-		requestor.acceptMethodReference(call.getMethodAsString().toCharArray(), 0, call.getStart());
+		char[] methodName = call.getMethodAsString().toCharArray();
+		int start = call.getStart();
+		// also could be a field reference
+		requestor.acceptFieldReference(methodName, start);
+		// we don't know how many arguments the method has, so go up to 7.
+		for (int i = 0; i < 7; i++) {
+			requestor.acceptMethodReference(methodName, i, start);
+		}
 	}
 
 	@Override
@@ -108,9 +111,14 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 	public void visitConstantExpression(ConstantExpression expression) {
 		if (!(expression.isTrueExpression() || expression.isFalseExpression() || expression.isNullExpression() || expression
 				.isEmptyStringExpression())) {
-			requestor.acceptFieldReference(expression.getValue().toString().toCharArray(), expression.getStart());
+			char[] constName = expression.getValue().toString().toCharArray();
+			int start = expression.getStart();
+			requestor.acceptFieldReference(constName, start);
 			// also could be a method reference
-			requestor.acceptMethodReference(expression.getValue().toString().toCharArray(), 0, expression.getStart());
+			// we don't know how many arguments the method has, so go up to 7.
+			for (int i = 0; i < 7; i++) {
+				requestor.acceptMethodReference(constName, i, start);
+			}
 		}
 		super.visitConstantExpression(expression);
 	}

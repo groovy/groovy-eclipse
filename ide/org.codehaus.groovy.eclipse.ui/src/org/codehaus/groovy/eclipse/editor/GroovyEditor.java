@@ -77,8 +77,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     protected void setPreferenceStore(IPreferenceStore store) {
         super.setPreferenceStore(store);
-        GroovyTextTools textTools= GroovyPlugin.getDefault().getTextTools();
-        setSourceViewerConfiguration(new GroovyConfiguration(textTools.getColorManager(), store, this));    
+        setSourceViewerConfiguration(createJavaSourceViewerConfiguration());    
     }
 
     
@@ -348,7 +347,8 @@ public class GroovyEditor extends CompilationUnitEditor {
      * Make accessible
      */
     public JavaSourceViewerConfiguration createJavaSourceViewerConfiguration() {
-        return super.createJavaSourceViewerConfiguration();
+        GroovyTextTools textTools= GroovyPlugin.getDefault().getTextTools();
+        return new GroovyConfiguration(textTools.getColorManager(), getPreferenceStore(), this);
     }
     
     /**

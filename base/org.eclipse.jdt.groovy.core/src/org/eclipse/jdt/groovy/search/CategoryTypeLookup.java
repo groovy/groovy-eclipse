@@ -36,7 +36,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
  * @created Oct 25, 2009
  * 
  *          Looks up the type of an expression in the currently applicable categories. Note that DefaultGroovyMethods are always
- *          considered to be an applicable category.  This lookup is not being used yet
+ *          considered to be an applicable category. This lookup is not being used yet
  */
 public class CategoryTypeLookup implements ITypeLookup {
 
@@ -51,7 +51,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 			Set<MethodNode> possibleMethods = new HashSet<MethodNode>();
 			// go through all categories and look for and look for a method with the given name
 			for (ClassNode category : categories) {
-				List<?> methods = category.getMethods(constExpr.getConstantName()); // use List<?> because groovy 1.6.5 does not
+				List<?> methods = category.getMethods(constExpr.getText()); // use List<?> because groovy 1.6.5 does not
 				// have type parameters on this method
 				possibleMethods.addAll((Collection<? extends MethodNode>) methods);
 			}

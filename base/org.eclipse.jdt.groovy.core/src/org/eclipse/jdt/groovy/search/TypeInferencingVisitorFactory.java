@@ -58,7 +58,8 @@ public class TypeInferencingVisitorFactory {
 
 	// maybe this can be populated via an extension point.
 	private ITypeLookup[] createLookups(SearchPattern pattern) {
-		ITypeLookup[] lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new SimpleTypeLookup() };
+		ITypeLookup[] lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new CategoryTypeLookup(),
+				new SimpleTypeLookup() };
 		return lookups;
 
 	}

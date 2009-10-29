@@ -112,8 +112,8 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 
 		if (doCheck) {
 			boolean isCompleteMatch = qualifiedNameMatches(result.declaringType);
-			if (isCompleteMatch
-					&& ((isAssignment && writeAccess) || (!isAssignment && readAccess) || (isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {
+			if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess))
+					&& ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {
 				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
 						- start, participant, enclosingElement.getResource());
 				try {

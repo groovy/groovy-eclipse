@@ -1,7 +1,6 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -158,6 +157,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
             };
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
         ContentAssistant assistant = (ContentAssistant) super.getContentAssistant(sourceViewer);
