@@ -67,12 +67,22 @@ public class CategoryTypeLookup implements ITypeLookup {
 	}
 
 	/**
-	 * @param to
+	 * can from be assigned to to?
+	 * 
 	 * @param from
+	 * @param to
 	 * @return
 	 */
-	private boolean isAssignableFrom(ClassNode to, ClassNode from) {
-		return from.equals(to);
+	private boolean isAssignableFrom(ClassNode from, ClassNode to) {
+		if (to == null || from == null) {
+			return false;
+		} else if (from.equals(to)) {
+			return true;
+		} else if (from.getName().equals("java.lang.Object")) {
+			return false;
+		} else {
+			return isAssignableFrom(from.getSuperClass(), to);
+		}
 	}
 
 	public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {

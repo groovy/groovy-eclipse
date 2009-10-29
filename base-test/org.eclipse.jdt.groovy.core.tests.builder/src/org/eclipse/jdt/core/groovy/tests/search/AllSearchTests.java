@@ -29,6 +29,8 @@ public class AllSearchTests {
         TestSuite suite = new TestSuite("Search Tests"); //$NON-NLS-1$
         suite.addTestSuite(TypeReferenceSearchTests.class);
         suite.addTestSuite(FieldReferenceSearchTests.class);
+        suite.addTestSuite(MethodReferenceSearchTests.class);
+        suite.addTestSuite(CategorySearchTests.class);
         return suite;
     }
 }

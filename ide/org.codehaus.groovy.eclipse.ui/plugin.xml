@@ -725,6 +725,21 @@
           Shows an image for Groovy Source files.
        </description>
     </decorator>
+<!-- Shows overlay for groovy elements, but only in package explorer and outline view
+    <decorator
+          adaptable="true"
+          class="org.codehaus.groovy.eclipse.ui.decorators.GroovyElementDecorator"
+          id="org.codehaus.groovy.eclipse.ui.decorators.GroovyElementDecorator"
+          label="Groovy Element Decorator"
+          lightweight="true"
+          state="true">
+       <enablement>
+           <objectClass
+                 name="org.eclipse.jdt.core.IMember">
+           </objectClass>
+       </enablement>
+    </decorator>
+    -->
  </extension>
 	<extension point="org.eclipse.core.runtime.adapters">
          <factory 

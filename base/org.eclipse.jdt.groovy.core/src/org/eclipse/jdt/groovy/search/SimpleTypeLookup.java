@@ -108,7 +108,12 @@ public class SimpleTypeLookup implements ITypeLookup {
 			Variable var = ((VariableExpression) node).getAccessedVariable();
 			if (var instanceof DynamicVariable) {
 				// this dynamic variable might be a field
-				return findField((VariableExpression) node, scope.getEnclosingTypeDeclaration());
+				ClassNode type = findField((VariableExpression) node, scope.getEnclosingTypeDeclaration());
+				if (type == null) {
+					// or it might refer to a method call with no parens
+					type = findMethod((VariableExpression) node, scope.getEnclosingTypeDeclaration());
+				}
+				return type == null ? baseType(node.getType()) : type;
 			} else if (var instanceof FieldNode) {
 				return ((FieldNode) var).getDeclaringClass();
 			}
@@ -176,7 +181,25 @@ public class SimpleTypeLookup implements ITypeLookup {
 		if (field != null) {
 			return field.getDeclaringClass();
 		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * @param name
+	 * @param enclosingDeclarationNode
+	 * @return
+	 */
+	private ClassNode findMethod(VariableExpression var, ClassNode declaringClass) {
+		if (declaringClass == null) {
 			return baseType(var.getType());
+		}
+		String name = var.getName();
+		List<MethodNode> methods = declaringClass.getMethods(name);
+		if (methods.size() > 0) {
+			return methods.get(0).getDeclaringClass();
+		} else {
+			return null;
 		}
 	}
 

@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -57,6 +58,8 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        System.out.println("\n------------------------------");
+        System.out.println("Starting: " + this.getName());
         searchRequestor = new MockSearchRequestor();
         project = createSimpleGroovyProject();
     }
@@ -107,7 +110,12 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     
     protected final static String FIRST_CONTENTS_CLASS = "class First {}";
     protected final static String FIRST_CONTENTS_INTERFACE = "interface First {}";
+    protected final static String FIRST_CONTENTS_CLASS_FOR_FIELDS = "class First { def xxx }";
+    protected final static String FIRST_CONTENTS_CLASS_FOR_METHODS = "class First { def xxx() { } }";
+    protected final static String FIRST_CONTENTS_CLASS_FOR_METHODS2 = "class First { def xxx() { } \n def xxx(arg) { } }";
 
+    
+    
     protected void doTestForTwoTypeReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent) throws JavaModelException {
         String firstClassName = "First";
         String secondClassName = "Second";
@@ -130,8 +138,6 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         checkMatches(secondContents, firstClassName, pattern, second,
                 firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
-
-    protected final static String FIRST_CONTENTS_CLASS_FOR_FIELDS = "class First { def xxx }";
 
     protected void doTestForTwoFieldReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName) throws JavaModelException {
         String firstClassName = "First";
@@ -157,6 +163,30 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
                 firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
 
+    protected void doTestForTwoMethodReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName) throws JavaModelException {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        String matchedMethodName = "xxx";
+        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
+        IMethod firstField = first.getType(firstClassName).getMethod(matchedMethodName, new String[0]);
+        SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
+        
+        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+        IJavaElement firstMatchEnclosingElement;
+        IJavaElement secondMatchEnclosingElement;
+        if (contentsIsScript) {
+            firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
+            secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
+        } else {
+            firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
+            secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent+2];
+        }
+        // match is enclosed in run method (for script), or x method for class
+        
+        checkMatches(secondContents, matchName, pattern, second,
+                firstMatchEnclosingElement, secondMatchEnclosingElement);
+    }
+    
     
     /**
      * @param secondContents

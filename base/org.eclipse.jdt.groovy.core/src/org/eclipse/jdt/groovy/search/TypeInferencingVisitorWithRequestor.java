@@ -81,6 +81,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
+import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -672,8 +673,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			propertyExpression.push(node);
-			if (isCategoryDeclaration(node)) {
-				addCategoryToBeDeclared(node);
+			ClassNode catNode = isCategoryDeclaration(node);
+			if (catNode != null) {
+				addCategoryToBeDeclared(catNode);
 			}
 			super.visitMethodCallExpression(node);
 			removeCategoryToBeDeclared();
@@ -684,26 +686,35 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	/**
 	 * @param node
 	 */
-	private void addCategoryToBeDeclared(MethodCallExpression node) {
-		ArgumentListExpression args = (ArgumentListExpression) node.getArguments();
-		ClassExpression classExpr = (ClassExpression) args.getExpressions().get(0);
-		scopes.peek().setCategoryBeingDeclared(classExpr.getType());
+	private void addCategoryToBeDeclared(ClassNode catNode) {
+		scopes.peek().setCategoryBeingDeclared(catNode);
 	}
 
 	/**
 	 * @param node
 	 * @return
 	 */
-	private boolean isCategoryDeclaration(MethodCallExpression node) {
+	private ClassNode isCategoryDeclaration(MethodCallExpression node) {
 		if (node.getMethodAsString().equals("use")) {
-			Expression expr = node.getArguments();
-			if (expr instanceof ArgumentListExpression) {
-				ArgumentListExpression args = (ArgumentListExpression) expr;
-				return args.getExpressions().size() == 2 && args.getExpressions().get(0) instanceof ClassExpression
-						&& args.getExpressions().get(1) instanceof ClosureExpression;
+			Expression exprs = node.getArguments();
+			if (exprs instanceof ArgumentListExpression) {
+				ArgumentListExpression args = (ArgumentListExpression) exprs;
+				if (args.getExpressions().size() >= 2 && args.getExpressions().get(1) instanceof ClosureExpression) {
+					// really, should be doing inference on the first expression and seeing if it
+					// is a class node, but looking up in scope is good enough for now
+					Expression expr = args.getExpressions().get(0);
+					if (expr instanceof ClassExpression) {
+						return expr.getType();
+					} else if (expr instanceof VariableExpression) {
+						VariableInfo info = scopes.peek().lookupName(expr.getText());
+						if (info != null) {
+							return info.type;
+						}
+					}
+				}
 			}
 		}
-		return false;
+		return null;
 	}
 
 	private void removeCategoryToBeDeclared() {

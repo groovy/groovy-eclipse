@@ -113,17 +113,17 @@ public class VariableScope {
 	 * @return the variable info or null if not found
 	 */
 	public VariableInfo lookupName(String name) {
-		if (name.equals("this")) { //$NON-NLS-1$
+		if ("this".equals(name)) { //$NON-NLS-1$
 			ClassNode declaringType = getEnclosingTypeDeclaration();
 			return new VariableInfo(declaringType, declaringType);
-		} else if (name.equals("super")) { //$NON-NLS-1$
+		} else if ("super".equals(name)) { //$NON-NLS-1$
 			ClassNode declaringType = getEnclosingTypeDeclaration();
 			ClassNode superType = declaringType != null ? declaringType.getSuperClass() : null;
 			return new VariableInfo(superType, superType);
 		}
 
 		VariableInfo var = nameVariableMap.get(name);
-		if (name == null && parent != null) {
+		if (var == null && parent != null) {
 			var = parent.lookupName(name);
 		}
 		return var;

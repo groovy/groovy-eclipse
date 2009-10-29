@@ -17,7 +17,6 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
@@ -32,7 +31,7 @@ import org.eclipse.jdt.core.search.SearchRequestor;
  */
 public class MockSearchRequestor extends SearchRequestor {
     
-    List matches = new ArrayList();
+    List<SearchMatch> matches = new ArrayList<SearchMatch>();
     
 
     @Override
@@ -42,8 +41,7 @@ public class MockSearchRequestor extends SearchRequestor {
     
     String printMatches() {
         StringBuffer sb = new StringBuffer();
-        for (Iterator matchIter = matches.iterator(); matchIter.hasNext();) {
-            SearchMatch match = (SearchMatch) matchIter.next();
+        for (SearchMatch match : matches) {
             sb.append(MockPossibleMatch.printMatch(match));
         }
         return sb.toString();
@@ -54,6 +52,10 @@ public class MockSearchRequestor extends SearchRequestor {
     }
     
     SearchMatch getMatch(int num) {
-        return (SearchMatch) matches.get(num);
+        return matches.get(num);
+    }
+    
+    List<SearchMatch> getMatches() {
+        return matches;
     }
 }
