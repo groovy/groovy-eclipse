@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.launchers;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -28,16 +27,10 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.ui.ILaunchShortcut;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.osgi.framework.Bundle;
 
@@ -104,30 +97,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
     }
 
 
-    /**
-     * @return
-     * @throws JavaModelException 
-     */
-    private String getSourceLocations(IType type) throws JavaModelException {
-        IJavaProject javaProject = type.getJavaProject();
-        IContainer workspaceRoot = javaProject.getProject().getParent();
-        IClasspathEntry[] entries = javaProject.getRawClasspath();
-        StringBuilder sb = new StringBuilder();
-        for (IClasspathEntry entry : entries) {
-            if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-                IPath sourcePath = entry.getPath();
-                IFolder sourceFolder = workspaceRoot.getFolder(sourcePath);
-                if (sourceFolder.isAccessible()) {
-                    if (sb.length() > 0) {
-                        sb.append(File.pathSeparatorChar);
-                    }
-                    sb.append(sourceFolder.getLocation().toOSString());
-                }
-            }
-        }
-        return /*"\"" +*/ sb.toString() /*+ "\""*/;
-    }
-
+    @SuppressWarnings("unchecked")
     private String getGroovyConf() {
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         Enumeration<URL> enu = groovyBundle.findEntries("conf", "groovy-starter.conf", false);
@@ -136,7 +106,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
             // remove the "reference:/" protocol
             try {
                 jar = FileLocator.resolve(jar);
-                return /*"\"" +*/ jar.getFile() /*+ "\""*/;
+                return "\"" + jar.getFile() + "\"";
             } catch (IOException e) {
                 GroovyCore.logException("Error finding groovy-starter.conf", e);
             }
@@ -148,8 +118,8 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
     private String getGroovyHome() {
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         try {
-            return //"\"" + 
-            FileLocator.getBundleFile(groovyBundle).toString() //+ "\""
+            return "\"" + 
+            FileLocator.getBundleFile(groovyBundle).toString() + "\""
             ;
         } catch (IOException e) {
             GroovyCore.logException("Error finding groovy-starter.conf", e);
