@@ -20,10 +20,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction.FormatKind;
+import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.fix.CodeFormatCleanUp;
 import org.eclipse.jdt.internal.ui.fix.ImportsCleanUp;
+import org.eclipse.jdt.internal.ui.fix.MapCleanUpOptions;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
+import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
 import org.eclipse.jdt.ui.cleanup.ICleanUp;
 
 /**
@@ -42,12 +45,15 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
     @Override
     protected ICleanUp[] getCleanUps(Map settings, Set ids) {
         ICleanUp[] result= JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
+        CleanUpOptions options = new MapCleanUpOptions(settings);
         boolean doImports = false;
         boolean doFormat = false;
         for (int i= 0; i < result.length; i++) {
-            if (result[i] instanceof ImportsCleanUp) {
+            if (result[i] instanceof ImportsCleanUp && options.isEnabled(CleanUpConstants.ORGANIZE_IMPORTS)) {
                 doImports = true;
-            } else if (result[i] instanceof CodeFormatCleanUp) {
+            } else if (result[i] instanceof CodeFormatCleanUp && 
+                    (options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE) || 
+                            options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY))) {
                 doFormat = true;
             }
         }
