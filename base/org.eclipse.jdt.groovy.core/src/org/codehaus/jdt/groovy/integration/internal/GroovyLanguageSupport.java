@@ -141,8 +141,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
 	public boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
 		ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch, pattern, requestor);
 		if (typeRequestor != null) {
-			TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(typeRequestor,
-					possibleMatch, pattern, requestor);
+			TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(possibleMatch);
 			visitor.visitCompilationUnit(typeRequestor);
 			return true;
 		}
