@@ -238,6 +238,51 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"----------\n");
 	}
 	
+	/*
+	public void testParsingMissingCurlyRecovery1_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"class F { int y() }\n"
+				},
+				"----------\n" + 
+				"1. ERROR in XXX.groovy (at line 1)\n" + 
+				"	class F { int y() }\n" + 
+				"	               ^\n" + 
+				"Groovy:Method body missing @ line 1, column 15.\n" + 
+				"----------\n"
+				);
+		checkGCUDeclaration("XXX.groovy",
+				"public class F extends java.lang.Object {\n" + 
+				"  public F() {\n" + 
+				"  }\n" + 
+				"  public int y() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}
+	
+	public void testParsingMissingCurlyRecovery2_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"class F { int y() { }\n"
+				},
+				"----------\n" + 
+				"1. ERROR in XXX.groovy (at line 1)\n" + 
+				"	class F { int y() }\n" + 
+				"	           ^\n" + 
+				"Groovy:You defined a method without body. Try adding a body, or declare it abstract. at line: 1 column: 11. File: XXX.groovy @ line 1, column 11.\n" + 
+				"----------\n"
+				);
+		checkGCUDeclaration("XXX.groovy",
+				"public class C extends java.lang.Object {\n" + 
+				"  public C() {\n" + 
+				"  }\n" + 
+				"  public void m() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}*/
+	
 	/**
 	 * Simple case of a new reference missing () in a method body
 	 */
@@ -268,6 +313,34 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"  public C() {\n" + 
 				"  }\n" + 
 				"  public void m() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}
+	
+	public void testParsingNewRecovery6_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"class Sample {\n"+
+				"  def x = new A\n"+
+				"}"
+				},
+				"----------\n" + 
+				"1. ERROR in XXX.groovy (at line 2)\n" + 
+				"	def x = new A\n" + 
+				"	        ^\n" + 
+				"Groovy:unable to resolve class A \n" + 
+				"----------\n" + 
+				"2. ERROR in XXX.groovy (at line 2)\n" + 
+				"	def x = new A\n" + 
+				"	            ^\n" + 
+				"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 2, column 15.\n" + 
+				"----------\n"
+				);
+		checkGCUDeclaration("XXX.groovy",
+				"public class Sample extends java.lang.Object {\n" + 
+				"  private java.lang.Object x;\n" + 
+				"  public Sample() {\n" + 
 				"  }\n" + 
 				"}\n");
 	}
