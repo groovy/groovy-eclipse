@@ -2427,6 +2427,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (isType(CTOR_CALL, node) || isType(LITERAL_new, node)) {
             node = node.getFirstChild();
         }
+        // FIXASC (groovychange)
+        // not quite ideal - a null node is a sign of a new call without the type
+        // being specified (it is a syntax error).  If we set things up
+        // with Object here we prevent lots of downstream issues.
+        if (node==null) {
+            return new ConstructorCallExpression(ClassHelper.OBJECT_TYPE, new ArgumentListExpression()); 
+        }
+        // FIXASC (groovychange) end
 
         AST elist = node.getNextSibling();
 
@@ -2539,7 +2547,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         else {
             ArgumentListExpression argumentListExpression = new ArgumentListExpression(expressionList);
-            configureAST(argumentListExpression, elist);
+            // FIXASC (groovychange)
+            // For an unfinished declaration 'new Foo' where the parentheses are missing an error
+            // will be raised but recovery should allow for that - here that incorrect declaration
+            // manifests as a null elist
+            // oldcode:
+            // configureAST(argumentListExpression, elist);
+            // newcode:
+            if (elist!=null) {
+            	configureAST(argumentListExpression, elist);
+            }
+            // FIXASC (groovychange) end
             return argumentListExpression;
         }
     }

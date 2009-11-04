@@ -238,6 +238,173 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"----------\n");
 	}
 	
+	/**
+	 * Simple case of a new reference missing () in a method body
+	 */
+	public void testParsingNewRecovery1_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"class C {\n"+
+				"  public void m() {\n"+
+				"  new Earth\n"+
+				"  }\n"+
+				"}"
+				},
+				"----------\n" + 
+				"1. ERROR in XXX.groovy (at line 3)\n" + 
+				"	new Earth\n" + 
+				"	^\n" + 
+				"Groovy:unable to resolve class Earth \n" + 
+				"----------\n" + 
+				"2. ERROR in XXX.groovy (at line 3)\n" + 
+				"	new Earth\n" + 
+				"	    ^\n" + 
+				"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 7.\n" + 
+				"----------\n"
+				);
+		checkGCUDeclaration("XXX.groovy",
+				"public class C extends java.lang.Object {\n" + 
+				"  public C() {\n" + 
+				"  }\n" + 
+				"  public void m() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}
+	
+	/**
+	 * Simple case of a new reference missing () followed by valid code
+	 */
+	public void testParsingNewRecovery2_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"class C {\n"+
+				"  public void m() {\n"+
+				"  new Earth\n"+
+				"  def a = 42\n"+
+				"  print a\n"+
+				"  }\n"+
+				"}"
+				},
+				"----------\n" + 
+				"1. ERROR in XXX.groovy (at line 3)\n" + 
+				"	new Earth\n" + 
+				"	^\n" + 
+				"Groovy:unable to resolve class Earth \n" + 
+				"----------\n" + 
+				"2. ERROR in XXX.groovy (at line 3)\n" + 
+				"	new Earth\n" + 
+				"	    ^\n" + 
+				"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 7.\n" + 
+				"----------\n"
+				);
+		checkGCUDeclaration("XXX.groovy",
+				"public class C extends java.lang.Object {\n" + 
+				"  public C() {\n" + 
+				"  }\n" + 
+				"  public void m() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}
+
+	
+	/**
+	 * Missing type name for new call
+	 */
+	public void testParsingNewRecovery3_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"Foo.groovy",
+				"new\n"+
+				"def a = 5\n"},
+				"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 1)\n" + 
+				"	new\n" + 
+				"	 ^\n" + 
+				"Groovy:missing type for constructor call @ line 1, column 1.\n" + 
+				"----------\n");
+		checkGCUDeclaration("Foo.groovy",
+				"public class Foo extends groovy.lang.Script {\n" + 
+				"  public Foo() {\n" + 
+				"  }\n" + 
+				"  public Foo(public groovy.lang.Binding context) {\n" + 
+				"  }\n" + 
+				"  public static void main(public java.lang.String... args) {\n" + 
+				"  }\n" + 
+				"  public java.lang.Object run() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}
+	
+	public void testParsingNewRecovery4_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"class C {\n"+
+				"  public void m() {\n"+
+				"  new Earth\n"+
+				"     new Air\n"+
+				"    new\n"+
+				" new Fire\n"+
+				" def leppard = 'cool'\n"+
+				"  }\n"+
+				"}"
+				},
+				"----------\n" + 
+				"1. ERROR in XXX.groovy (at line 3)\n" + 
+				"	new Earth\n" + 
+				"	^\n" + 
+				"Groovy:unable to resolve class Earth \n" + 
+				"----------\n" + 
+				"2. ERROR in XXX.groovy (at line 3)\n" + 
+				"	new Earth\n" + 
+				"	    ^\n" + 
+				"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 7.\n" + 
+				"----------\n" + 
+				"3. ERROR in XXX.groovy (at line 5)\n" + 
+				"	new\n" + 
+				"	^\n" + 
+				"Groovy:missing type for constructor call @ line 5, column 5.\n" + 
+				"----------\n"
+				);
+		checkGCUDeclaration("XXX.groovy",
+				"public class C extends java.lang.Object {\n" + 
+				"  public C() {\n" + 
+				"  }\n" + 
+				"  public void m() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}
+	
+	/**
+	 * Missing type name for new call
+	 */
+	public void testParsingNewRecovery5_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"Foo.groovy",
+				"class C { \n"+
+				" static {\n"+
+				"new\n"+
+				"def a = 5\n"+
+				"}\n"+
+				"}"},
+				"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 3)\n" + 
+				"	new\n" + 
+				"	^\n" + 
+				"Groovy:missing type for constructor call @ line 3, column 1.\n" + 
+				"----------\n");
+		checkGCUDeclaration("Foo.groovy",
+				"public class C extends java.lang.Object {\n" + 
+				"  public C() {\n" + 
+				"  }\n" + 
+				"  static void <clinit>() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}
+	
 	public void testBrokenPackage2() {
 		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {

@@ -403,6 +403,18 @@ tokens {
     }
     
     /**
+     * Report a recovered error and specify the token.
+     */
+    public void reportError(String message, AST lt) {
+        Map row = new HashMap();
+        row.put("error" ,message);
+        row.put("filename", getFilename());
+        row.put("line", new Integer(lt.getLine()));
+        row.put("column", new Integer(lt.getColumn()));
+        errorList.add(row);
+    }
+    
+    /**
      * Report a recovered exception.
      */
     public void reportError(RecognitionException e) {
@@ -3071,16 +3083,17 @@ identPrimary
  *
  */
 newExpression {Token first = LT(1);}
-    :   "new"! nls! (ta:typeArguments!)? t:type!
-        (   nls!
-            mca:methodCallArgs[null]!
-
+    :   "new"! nls! (ta:typeArguments!)? (t:type!)?
+        (  nls! 
+           mca:methodCallArgs[null]!
+           
             (
                 options { greedy=true; }:
                 cb:classBlock
             )?
 
-            {#mca = #mca.getFirstChild();
+            {
+            #mca = #mca.getFirstChild();
             #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#mca,#cb);}
 
             //java 1.1
@@ -3090,12 +3103,33 @@ newExpression {Token first = LT(1);}
             // to make sure:
             //   a) [ expr ] and [ ] are not mixed
             //   b) [ expr ] and an init are not used together
-        |   ad:newArrayDeclarator! //(arrayInitializer)?
+        | (LBRACK!) =>  ad:newArrayDeclarator! //(arrayInitializer)?
             // Groovy does not support Java syntax for initialized new arrays.
             // Use sequence constructors instead.
             {#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#ad);}
-
-        )
+		)
+        // RECOVERY: missing '(' or '['
+        exception
+        catch [RecognitionException e] {
+            if (#t==null) {
+			  reportError("missing type for constructor call",first);
+              #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null); 
+              int la1 = LA(1);
+			  if (!(la1==NLS|| la1==RCURLY)) {
+				consumeUntil(NLS);					
+			  }              
+            } else if (#mca==null && #ad==null) {
+			  reportError("expecting '(' or '[' after type name to continue new expression",#t);
+              #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);               
+              int la1 = LA(1);
+			  if (!(la1==NLS|| la1==RCURLY)) {
+				consumeUntil(NLS);					
+			  }              
+            } else {
+              throw e;
+            }
+        }
+        
     ;
 
 argList
