@@ -317,33 +317,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"}\n");
 	}
 	
-	public void testParsingNewRecovery6_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
-		this.runNegativeTest(new String[] {
-				"XXX.groovy",
-				"class Sample {\n"+
-				"  def x = new A\n"+
-				"}"
-				},
-				"----------\n" + 
-				"1. ERROR in XXX.groovy (at line 2)\n" + 
-				"	def x = new A\n" + 
-				"	        ^\n" + 
-				"Groovy:unable to resolve class A \n" + 
-				"----------\n" + 
-				"2. ERROR in XXX.groovy (at line 2)\n" + 
-				"	def x = new A\n" + 
-				"	            ^\n" + 
-				"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 2, column 15.\n" + 
-				"----------\n"
-				);
-		checkGCUDeclaration("XXX.groovy",
-				"public class Sample extends java.lang.Object {\n" + 
-				"  private java.lang.Object x;\n" + 
-				"  public Sample() {\n" + 
-				"  }\n" + 
-				"}\n");
-	}
 	
 	/**
 	 * Simple case of a new reference missing () followed by valid code
@@ -380,8 +353,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"  }\n" + 
 				"}\n");
 	}
-
-	
 	/**
 	 * Missing type name for new call
 	 */
@@ -435,10 +406,30 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"	    ^\n" + 
 				"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 7.\n" + 
 				"----------\n" + 
-				"3. ERROR in XXX.groovy (at line 5)\n" + 
+				"3. ERROR in XXX.groovy (at line 4)\n" + 
+				"	new Air\n" + 
+				"	^\n" + 
+				"Groovy:unable to resolve class Air \n" + 
+				"----------\n" + 
+				"4. ERROR in XXX.groovy (at line 4)\n" + 
+				"	new Air\n" + 
+				"	    ^\n" + 
+				"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 4, column 10.\n" + 
+				"----------\n" + 
+				"5. ERROR in XXX.groovy (at line 5)\n" + 
 				"	new\n" + 
 				"	^\n" + 
 				"Groovy:missing type for constructor call @ line 5, column 5.\n" + 
+				"----------\n" + 
+				"6. ERROR in XXX.groovy (at line 6)\n" + 
+				"	new Fire\n" + 
+				"	^\n" + 
+				"Groovy:unable to resolve class Fire \n" + 
+				"----------\n" + 
+				"7. ERROR in XXX.groovy (at line 6)\n" + 
+				"	new Fire\n" + 
+				"	    ^\n" + 
+				"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 6, column 6.\n" + 
 				"----------\n"
 				);
 		checkGCUDeclaration("XXX.groovy",
@@ -477,7 +468,98 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"  }\n" + 
 				"}\n");
 	}
+
+	public void testParsingNewRecovery6_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"class Sample {\n"+
+				"  def x = new A\n"+
+				"}"
+		},
+		"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 2)\n" + 
+		"	def x = new A\n" + 
+		"	        ^\n" + 
+		"Groovy:unable to resolve class A \n" + 
+		"----------\n" + 
+		"2. ERROR in XXX.groovy (at line 2)\n" + 
+		"	def x = new A\n" + 
+		"	            ^\n" + 
+		"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 2, column 15.\n" + 
+		"----------\n"
+		);
+		checkGCUDeclaration("XXX.groovy",
+				"public class Sample extends java.lang.Object {\n" + 
+				"  private java.lang.Object x;\n" + 
+				"  public Sample() {\n" + 
+				"  }\n" + 
+		"}\n");
+	}
 	
+	public void testParsingNewRecovery7_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"import javax.swing.text.html.HTML\n"+
+				"HTML h\n"+
+				"new Earth"
+		},
+		"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 3)\n" + 
+		"	new Earth\n" + 
+		"	^\n" + 
+		"Groovy:unable to resolve class Earth \n" + 
+		"----------\n" + 
+		"2. ERROR in XXX.groovy (at line 3)\n" + 
+		"	new Earth\n" + 
+		"	    ^\n" + 
+		"Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 5.\n" + 
+		"----------\n"
+		);
+		checkGCUDeclaration("XXX.groovy",null);
+	}
+	
+	public void testParsingNewRecovery8_GRE468() {
+		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+		this.runNegativeTest(new String[] {
+				"XXX.groovy",
+				"import javax.swing.text.html.HTML\n"+
+				"HTML h\n"+
+				"new String()\n" 
+		},"");
+		checkGCUDeclaration("XXX.groovy",
+				"import javax.swing.text.html.HTML;\n" + 
+				"public class XXX extends groovy.lang.Script {\n" + 
+				"  public XXX() {\n" + 
+				"  }\n" + 
+				"  public XXX(public groovy.lang.Binding context) {\n" + 
+				"  }\n" + 
+				"  public static void main(public java.lang.String... args) {\n" + 
+				"  }\n" + 
+				"  public java.lang.Object run() {\n" + 
+				"  }\n" + 
+		"}\n");
+	}
+
+	
+	
+//	public void testAliasing_GRE473() {
+//		this.runConformTest(new String[] {
+//				"Foo.groovy",
+//				"import java.util.regex.Pattern as JavaPattern\n"+
+//				"class Pattern {JavaPattern javaPattern}\n"+
+//				"def p = new Pattern(javaPattern:~/\\d+/)\n"+
+//				"assert \"123\" ==~ p.javaPattern\n"+
+//				"print 'success'\n"},
+//				"----------\n" + 
+//				"1. ERROR in Foo.groovy (at line 1)\n" + 
+//				"	package ;\n" + 
+//				"	 ^\n" + 
+//				"Groovy:Invalid package specification @ line 1, column 1.\n" + 
+//				"----------\n");
+//	}
+
 	public void testBrokenPackage2() {
 		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {

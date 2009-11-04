@@ -13127,7 +13127,7 @@ inputState.guessing--;
 		AST mca_AST = null;
 		AST cb_AST = null;
 		AST ad_AST = null;
-		Token first = LT(1);
+		Token first = LT(1); int jumpBack = mark();
 		
 		try {      // for error handling
 			match(LITERAL_new);
@@ -13250,19 +13250,32 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 				if (t_AST==null) {
-							  reportError("missing type for constructor call",first);
-				newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(null)); 
-				int la1 = LA(1);
-							  if (!(la1==NLS|| la1==RCURLY)) {
-								consumeUntil(NLS);					
-							  }              
+							    reportError("missing type for constructor call",first);
+								newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(null)); 
+				// currentAST.root = newExpression_AST;
+								// currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+								// newExpression_AST.getFirstChild() : newExpression_AST;
+								// currentAST.advanceChildToEnd();
+								// probably others to include - or make this the default?
+								if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
+									// int i = ((MismatchedTokenException)e).token.getType();
+									rewind(jumpBack);
+									consumeUntil(NLS);
+								}      
 				} else if (mca_AST==null && ad_AST==null) {
-							  reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
+				reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
 				newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(t_AST));               
-				int la1 = LA(1);
-							  if (!(la1==NLS|| la1==RCURLY)) {
-								consumeUntil(NLS);					
-							  }              
+								//currentAST.root = newExpression_AST;
+								//currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+								//newExpression_AST.getFirstChild() : newExpression_AST;
+								//currentAST.advanceChildToEnd();
+								if (e instanceof MismatchedTokenException) {
+									Token t =  ((MismatchedTokenException)e).token;
+									int i = ((MismatchedTokenException)e).token.getType();
+									rewind(jumpBack);
+									consume();
+									consumeUntil(NLS);
+								}   
 				} else {
 				throw e;
 				}

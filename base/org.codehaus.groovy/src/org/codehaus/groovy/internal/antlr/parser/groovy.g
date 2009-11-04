@@ -1196,7 +1196,13 @@ classBlock  {Token first = LT(1);}
     :   LCURLY!
         ( classField )? ( sep! ( classField )? )*
         RCURLY!
-        {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);}
+        {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);  }
+// unfinished recovery for missing final '}'
+//        exception
+//        catch [RecognitionException e] {
+//        	
+//        	reportError(e);
+//        }
     ;
 
 // This is the body of an interface. You can have interfaceField and extra semicolons.
@@ -3082,7 +3088,7 @@ identPrimary
  *                         2
  *
  */
-newExpression {Token first = LT(1);}
+newExpression {Token first = LT(1); int jumpBack = mark();}
     :   "new"! nls! (ta:typeArguments!)? (t:type!)?
         (  nls! 
            mca:methodCallArgs[null]!
@@ -3112,19 +3118,32 @@ newExpression {Token first = LT(1);}
         exception
         catch [RecognitionException e] {
             if (#t==null) {
-			  reportError("missing type for constructor call",first);
-              #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null); 
-              int la1 = LA(1);
-			  if (!(la1==NLS|| la1==RCURLY)) {
-				consumeUntil(NLS);					
-			  }              
+			    reportError("missing type for constructor call",first);
+				#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null); 
+                // currentAST.root = newExpression_AST;
+				// currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+				// newExpression_AST.getFirstChild() : newExpression_AST;
+				// currentAST.advanceChildToEnd();
+				// probably others to include - or make this the default?
+				if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
+					// int i = ((MismatchedTokenException)e).token.getType();
+					rewind(jumpBack);
+					consumeUntil(NLS);
+				}      
             } else if (#mca==null && #ad==null) {
-			  reportError("expecting '(' or '[' after type name to continue new expression",#t);
-              #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);               
-              int la1 = LA(1);
-			  if (!(la1==NLS|| la1==RCURLY)) {
-				consumeUntil(NLS);					
-			  }              
+                reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
+                #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);               
+				//currentAST.root = newExpression_AST;
+				//currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+				//newExpression_AST.getFirstChild() : newExpression_AST;
+				//currentAST.advanceChildToEnd();
+				if (e instanceof MismatchedTokenException) {
+					Token t =  ((MismatchedTokenException)e).token;
+					int i = ((MismatchedTokenException)e).token.getType();
+					rewind(jumpBack);
+					consume();
+					consumeUntil(NLS);
+				}   
             } else {
               throw e;
             }
