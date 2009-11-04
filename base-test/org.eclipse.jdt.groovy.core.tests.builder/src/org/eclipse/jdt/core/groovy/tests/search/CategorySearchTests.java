@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 import junit.framework.Test;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;

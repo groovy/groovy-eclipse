@@ -31,6 +31,7 @@ public class AllSearchTests {
         suite.addTestSuite(FieldReferenceSearchTests.class);
         suite.addTestSuite(MethodReferenceSearchTests.class);
         suite.addTestSuite(CategorySearchTests.class);
+        suite.addTestSuite(InferencingTests.class);
         return suite;
     }
 }

@@ -18,10 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
 
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * @author Andrew Eisenberg

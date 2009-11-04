@@ -31,14 +31,23 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
+import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
+import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.NotExpression;
+import org.codehaus.groovy.ast.expr.PostfixExpression;
+import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -172,8 +181,33 @@ public class SimpleTypeLookup implements ITypeLookup {
 			}
 		} else if (node instanceof ArgumentListExpression) {
 			return VariableScope.LIST_CLASS_NODE;
-		} else if (node instanceof DeclarationExpression) {
-			return baseType(((DeclarationExpression) node).getLeftExpression().getType());
+
+		} else if (node instanceof BinaryExpression) {
+			// FIXDE M2 should actually get the type from the object expression
+			return baseType(((BinaryExpression) node).getLeftExpression().getType());
+
+		} else if (node instanceof BooleanExpression || node instanceof NotExpression) {
+			return VariableScope.BOOLEAN_CLASS_NODE;
+
+		} else if (node instanceof GStringExpression) {
+			return VariableScope.GSTRING_CLASS_NODE;
+
+		} else if (node instanceof ListExpression) {
+			return VariableScope.LIST_CLASS_NODE;
+
+		} else if (node instanceof MapExpression) {
+			return VariableScope.MAP_CLASS_NODE;
+
+		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
+			return VariableScope.NUMBER_CLASS_NODE;
+
+		} else if (node instanceof BitwiseNegationExpression) {
+			ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
+			if (type.getName().equals(VariableScope.STRING_CLASS_NODE.getName())) {
+				return VariableScope.PATTERN_CLASS_NODE;
+			} else {
+				return type;
+			}
 		}
 
 		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)
@@ -222,6 +256,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 		}
 	}
 
+	// FIXADE M2 not sure if we should be getting the base type here
 	private ClassNode baseType(ClassNode node) {
 		return node == null ? null : (node.getComponentType() == null ? node : node.getComponentType());
 	}

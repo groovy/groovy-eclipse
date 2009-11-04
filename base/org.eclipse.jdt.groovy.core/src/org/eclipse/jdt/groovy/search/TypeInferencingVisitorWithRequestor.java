@@ -958,7 +958,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (groovyParams.length != jdtParamTypes.length) {
 						continue;
 					}
-					// FIXDE M2 this is not precise. Doesn't take into account generics
+					// FIXADE M2 this is not precise. Doesn't take into account generics
 					for (int i = 0; i < groovyParams.length; i++) {
 						String groovyClassType = groovyParams[i].getType().getName();
 						if (!groovyClassType.startsWith("[")) { //$NON-NLS-1$
@@ -994,6 +994,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		} catch (JavaModelException e) {
 			Util.log(e, "Exception finding method " + method.getElementName() + " in class " + clazz.getName());
 		}
+		// probably happened due to a syntax error in the code
 		throw new IllegalArgumentException("Could not find method " + method.getElementName() + " in class " + clazz.getName()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
