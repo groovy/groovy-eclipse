@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.test.adapters;
 
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester;
+import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 
 /**
@@ -69,7 +70,7 @@ public class IsMainTesterTests extends EclipseTestCase {
 
     
     private void doTest(String text, boolean expected) throws Exception {
-        
+        testProject.addNature(GroovyNature.GROOVY_NATURE);
         IFile file = testProject.createGroovyTypeAndPackage( "pack1",
                 "MainClass.groovy",
                 text);

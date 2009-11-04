@@ -21,12 +21,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.GroovyColorManager;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
@@ -230,15 +229,10 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private GroovyEditor editor;
     
     // make these configurable
-    private HighlightingStyle staticHighlighting;
     private HighlightingStyle undefinedRefHighlighting;
     
     private SemanticHighlightingPresenter presenter;
     
-    /**
-     * Contains the highlighted positions from the last reconcile
-     */
-    private List<HighlightedPosition> oldPositions = new ArrayList<HighlightedPosition>();
     /**
      * <code>true</code> if any thread is executing
      * <code>reconcile</code>, <code>false</code> otherwise.
@@ -249,7 +243,6 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     public GroovySemanticReconciler() { 
         GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
         Color color = colorManager.getColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
-        staticHighlighting = new HighlightingStyle(new TextAttribute(color, null, SWT.ITALIC), true);
         undefinedRefHighlighting = new HighlightingStyle(new TextAttribute(color, null, TextAttribute.UNDERLINE), true);
     }
     
@@ -267,6 +260,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     public void aboutToBeReconciled() { }
 
+    @SuppressWarnings("unchecked")
     public void reconciled(CompilationUnit ast, boolean forced,
             IProgressMonitor progressMonitor) {
         
@@ -281,36 +275,37 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         try {
             progressMonitor.beginTask("Groovy semantic highlighting", 100);
             
-            ModuleNode module = editor.getModuleNode();
-            if (module != null) {
+            GroovyCompilationUnit unit = editor.getGroovyCompilationUnit();
+            if (unit != null) {
                 presenter.setCanceled(progressMonitor.isCanceled());
-                GatherSemanticReferences visitor = new GatherSemanticReferences();
-                List<HighlightedPosition> newPositions = new LinkedList<HighlightedPosition>();
-                visitor.visitModule(module);
+                GatherSemanticReferences finder = new GatherSemanticReferences(unit);
+                List<Position> unknownReferences = finder.findStaticlyUnkownReferences();
                 progressMonitor.worked(50);
 
-                List<HighlightedPosition> oldPositionsCopy = new LinkedList<HighlightedPosition>();
-                oldPositionsCopy.addAll(oldPositions);
-                for (Position pos : visitor.staticReferences) {
-                    HighlightedPosition range = createHighlightedStaticPosition(pos);
-                    maybeAddPosition(newPositions, oldPositionsCopy, range);
+                List<HighlightedPosition> newPositions = new LinkedList<HighlightedPosition>();
+                List<HighlightedPosition> removedPositions = new LinkedList<HighlightedPosition>();
+                for (HighlightedPosition oldPosition : (Iterable<HighlightedPosition>) presenter.fPositions) {
+                    if (oldPosition != null) {
+                        removedPositions.add(oldPosition);
+                    }
                 }
+                
                 progressMonitor.worked(20);
-
-                for (Position pos : visitor.unknownReferences) {
+                List<HighlightedPosition> unknownReferencesHighlighted = new ArrayList<HighlightedPosition>(unknownReferences.size()); 
+                for (Position pos : unknownReferences) {
                     HighlightedPosition range = createHighlightedUnknownPosition(pos);
-                    maybeAddPosition(newPositions, oldPositionsCopy, range);
+                    maybeAddPosition(newPositions, removedPositions, range);
+                    unknownReferencesHighlighted.add(range);
                 }
                 progressMonitor.worked(20);
                 
                 TextPresentation textPresentation = null;
                 if (!presenter.isCanceled()) {
-                    textPresentation= presenter.createPresentation(newPositions, oldPositionsCopy);
+                    textPresentation= presenter.createPresentation(newPositions, removedPositions);
                 }
                 
                 if (!presenter.isCanceled()) {
-                    updatePresentation(textPresentation, newPositions, oldPositionsCopy);
-                    oldPositions = newPositions;
+                    updatePresentation(textPresentation, newPositions, removedPositions);
                 }
                 progressMonitor.worked(10);
             }
@@ -327,14 +322,6 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
      */
     private HighlightedPosition createHighlightedUnknownPosition(Position pos) {
         return new HighlightedPosition(pos.offset, pos.length, undefinedRefHighlighting, this);
-    }
-
-    /**
-     * @param staticNode
-     * @return
-     */
-    private HighlightedPosition createHighlightedStaticPosition(Position pos) {
-        return new HighlightedPosition(pos.offset, pos.length, staticHighlighting, this);
     }
 
     /**

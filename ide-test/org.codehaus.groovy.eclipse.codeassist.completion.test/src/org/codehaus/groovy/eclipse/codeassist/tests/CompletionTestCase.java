@@ -62,6 +62,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         // remove old package fragment root so that names don't collide
         env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyNature("Project");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
         env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$

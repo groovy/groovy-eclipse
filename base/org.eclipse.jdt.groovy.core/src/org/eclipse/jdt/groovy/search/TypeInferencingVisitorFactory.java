@@ -21,8 +21,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -42,13 +40,12 @@ public class TypeInferencingVisitorFactory {
 	 * @param requestor
 	 * @return a fully configured {@link TypeInferencingVisitorWithRequestor}
 	 */
-	public TypeInferencingVisitorWithRequestor createVisitor(ITypeRequestor typeRequestor, PossibleMatch possibleMatch,
-			SearchPattern pattern, SearchRequestor requestor) {
+	public TypeInferencingVisitorWithRequestor createVisitor(PossibleMatch possibleMatch) {
 
 		try {
 			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(possibleMatch.document.getPath()));
 			GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-			TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorWithRequestor(unit, createLookups(pattern));
+			TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorWithRequestor(unit, createLookups());
 			return visitor;
 		} catch (Exception e) {
 			Util.log(e, "Exception when creating TypeInferencingVisitorWithRequestor for " + possibleMatch.document.getPath()); //$NON-NLS-1$
@@ -56,12 +53,15 @@ public class TypeInferencingVisitorFactory {
 		return null;
 	}
 
+	public TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit unit) {
+		return new TypeInferencingVisitorWithRequestor(unit, createLookups());
+	}
+
 	// maybe this can be populated via an extension point.
-	private ITypeLookup[] createLookups(SearchPattern pattern) {
+	private ITypeLookup[] createLookups() {
 		ITypeLookup[] lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new CategoryTypeLookup(),
 				new SimpleTypeLookup() };
 		return lookups;
-
 	}
 
 }

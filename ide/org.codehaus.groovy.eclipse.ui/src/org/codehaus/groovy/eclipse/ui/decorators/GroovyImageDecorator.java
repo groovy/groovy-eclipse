@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.ui.decorators;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -39,6 +40,10 @@ public class GroovyImageDecorator implements ILabelDecorator {
     private TreeHierarchyLayoutProblemsDecorator problemsDecorator;
     private DecoratorManager decman;
     private boolean preventRecursion = false;
+    
+    // declare locally, so as not to accidentally load GroovyNature class
+    private static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature"; //$NON-NLS-1$
+
     
     public GroovyImageDecorator() {
         problemsDecorator = new TreeHierarchyLayoutProblemsDecorator();
@@ -84,6 +89,7 @@ public class GroovyImageDecorator implements ILabelDecorator {
         return null;
     }
     private Image getJavaElementImageDescriptor(Image image, IResource resource) {
+        
         int flags;
         if (image != null) {
             Rectangle rect = image.getBounds();
@@ -92,7 +98,17 @@ public class GroovyImageDecorator implements ILabelDecorator {
             flags = JavaElementImageProvider.SMALL_ICONS;
         }
         Point size= useSmallSize(flags) ? JavaElementImageProvider.SMALL_SIZE : JavaElementImageProvider.BIG_SIZE;
-        return getImageLabel(new JavaElementImageDescriptor(GroovyPluginImages.DESC_GROOVY_FILE, 0, size));
+        ImageDescriptor desc;
+        try {
+            if (resource.getProject().hasNature(GROOVY_NATURE)) {
+                desc = GroovyPluginImages.DESC_GROOVY_FILE;
+            } else {
+                desc = GroovyPluginImages.DESC_GROOVY_FILE_NO_BUILD;
+            }
+        } catch (CoreException e) {
+            desc = GroovyPluginImages.DESC_GROOVY_FILE_NO_BUILD;
+        }
+        return getImageLabel(new JavaElementImageDescriptor(desc, 0, size));
     }
     private static boolean useSmallSize(int flags) {
         return (flags & JavaElementImageProvider.SMALL_ICONS) != 0;

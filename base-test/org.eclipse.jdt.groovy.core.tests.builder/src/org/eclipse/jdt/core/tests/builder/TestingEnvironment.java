@@ -90,7 +90,7 @@ public class TestingEnvironment {
         }
 	}
 
-	   /**
+	/**
      * Removes groovy nature from project and keeps only the JavaNature
      */
     public void addGroovyNature(String projectName) {

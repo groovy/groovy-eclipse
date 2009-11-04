@@ -18,7 +18,7 @@ package org.eclipse.jdt.groovy.search;
 
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXACT;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
-
+import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -30,15 +30,19 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
 /**
@@ -51,12 +55,13 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
 
-		ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope);
+		TypeConfidence[] confidence = new TypeConfidence[] { EXACT };
+		ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
 
-		ClassNode type = findType(node, objectExpressionType, scope);
+		ClassNode type = findType(node, objectExpressionType, scope, confidence);
 
 		// always inferred for now
-		return new TypeLookupResult(type, declaringType, INFERRED);
+		return new TypeLookupResult(type, declaringType, confidence[0]);
 	}
 
 	public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
@@ -91,7 +96,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @param scope
 	 * @return
 	 */
-	private ClassNode findDeclaringType(Expression node, VariableScope scope) {
+	private ClassNode findDeclaringType(Expression node, VariableScope scope, TypeConfidence[] confidence) {
 		if (node instanceof ClassExpression || node instanceof ConstructorCallExpression) {
 			return node.getType();
 
@@ -113,6 +118,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 					// or it might refer to a method call with no parens
 					type = findMethod((VariableExpression) node, scope.getEnclosingTypeDeclaration());
 				}
+				confidence[0] = TypeConfidence.findLessPrecise(confidence[0], INFERRED);
 				return type == null ? baseType(node.getType()) : type;
 			} else if (var instanceof FieldNode) {
 				return ((FieldNode) var).getDeclaringClass();
@@ -124,7 +130,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			// to be type references.
 			return ((DeclarationExpression) node).getLeftExpression().getType();
 		}
-		return new ClassNode(Object.class);
+		return VariableScope.OBJECT_CLASS_NODE;
 	}
 
 	/**
@@ -132,11 +138,12 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @param scope
 	 * @return
 	 */
-	private ClassNode findType(Expression node, ClassNode objectExpressionType, VariableScope scope) {
+	private ClassNode findType(Expression node, ClassNode objectExpressionType, VariableScope scope, TypeConfidence[] confidence) {
 		// check first to see if we have this type inferred
 		if (node instanceof Variable) {
 			VariableInfo info = scope.lookupName(((Variable) node).getName());
 			if (info != null) {
+				confidence[0] = TypeConfidence.findLessPrecise(confidence[0], INFERRED);
 				return baseType(info.type);
 			}
 		}
@@ -160,7 +167,19 @@ public class SimpleTypeLookup implements ITypeLookup {
 				if (field != null) {
 					return field.getType();
 				}
+				confidence[0] = UNKNOWN;
+				return baseType(node.getType());
 			}
+		} else if (node instanceof ArgumentListExpression) {
+			return VariableScope.LIST_CLASS_NODE;
+		} else if (node instanceof DeclarationExpression) {
+			return baseType(((DeclarationExpression) node).getLeftExpression().getType());
+		}
+
+		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)
+				&& !(node instanceof MapEntryExpression) && !(node instanceof PropertyExpression)
+				&& node.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+			confidence[0] = UNKNOWN;
 		}
 
 		// don't know

@@ -1,4 +1,5 @@
 /*******************************************************************************
+
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +15,7 @@
  * limitations under the License.
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.codeassist.completion.jdt;
-
-import java.lang.reflect.Array;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,7 +34,6 @@ import org.codehaus.groovy.eclipse.core.types.LocalVariable;
 import org.codehaus.groovy.eclipse.core.types.Member;
 import org.codehaus.groovy.eclipse.core.types.Method;
 import org.codehaus.groovy.eclipse.core.types.Modifiers;
-import org.codehaus.groovy.eclipse.core.types.Parameter;
 import org.codehaus.groovy.eclipse.core.types.Property;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ParseException;
@@ -67,6 +66,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
+
 
 @SuppressWarnings("nls")
 public abstract class AbstractGroovyCompletionProcessor implements IJavaCompletionProposalComputer {
@@ -175,7 +175,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IJavaCompleti
                 buffer.replace(buffer.length()-1, buffer.length(), "");
                 // add space if not already there
                 if (!prefs.beforeOpeningParen) {
-                    buffer.append(" ");
+                    buffer.append(SPACE);
                 }
                 
                 // now add the parameters

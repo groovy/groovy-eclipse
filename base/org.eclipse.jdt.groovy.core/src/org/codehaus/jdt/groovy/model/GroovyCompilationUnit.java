@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -34,6 +35,7 @@ import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -203,6 +205,10 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	@Override
 	protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource)
 			throws JavaModelException {
+
+		if (!isOnBuildPath()) {
+			return false;
+		}
 
 		CompilationUnitElementInfo unitInfo = (CompilationUnitElementInfo) info;
 
@@ -500,7 +506,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			}
 			realElts.add(elt);
 		}
-		if (selectHelper != null) {
+		if (selectHelper != null && isOnBuildPath()) {
 			elts = selectHelper.select(this, new Region(offset, length));
 			if (elts != null) {
 				for (IJavaElement elt : elts) {
@@ -556,4 +562,16 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		selectHelper = newSelectHelper;
 	}
 
+	public boolean isOnBuildPath() {
+		// fix for bug http://dev.eclipse.org/bugs/show_bug.cgi?id=20051
+		IJavaProject project = this.getJavaProject();
+		if (!project.isOnClasspath(this))
+			return false;
+		IProject resourceProject = project.getProject();
+		if (resourceProject == null || !resourceProject.isAccessible() || !GroovyNature.hasGroovyNature(resourceProject)) {
+			return false;
+		}
+
+		return true;
+	}
 }

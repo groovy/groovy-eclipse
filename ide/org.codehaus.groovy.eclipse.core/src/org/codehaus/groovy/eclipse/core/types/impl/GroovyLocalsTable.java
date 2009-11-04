@@ -108,22 +108,23 @@ public class GroovyLocalsTable implements ISymbolTable,
     }
     
     private VariableScope findScope(ASTNode node) {
+        ASTNode candidate = node;
         if (node instanceof MethodNode) {
-            node = ((MethodNode) node).getCode();
-        } else if (node instanceof ClosureExpression) {
-            node = ((ClosureExpression) node).getCode();
-        } else if (node instanceof MethodCallExpression) {
-            ArgumentListExpression ale = (ArgumentListExpression) ((MethodCallExpression) node)
+            candidate = ((MethodNode) candidate).getCode();
+        } else if (candidate instanceof ClosureExpression) {
+            candidate = ((ClosureExpression) candidate).getCode();
+        } else if (candidate instanceof MethodCallExpression) {
+            ArgumentListExpression ale = (ArgumentListExpression) ((MethodCallExpression) candidate)
                     .getArguments();
             for (Expression expr : (Iterable<Expression>) ale.getExpressions()) {
                 if (expr instanceof ClosureExpression) {
-                    node = ((ClosureExpression) expr).getCode();
+                    candidate = ((ClosureExpression) expr).getCode();
                     break;
                 }
             }
         }
-        if (node instanceof BlockStatement) {
-            return ((BlockStatement) node).getVariableScope();
+        if (candidate instanceof BlockStatement) {
+            return ((BlockStatement) candidate).getVariableScope();
         } else {
             return null;
         }

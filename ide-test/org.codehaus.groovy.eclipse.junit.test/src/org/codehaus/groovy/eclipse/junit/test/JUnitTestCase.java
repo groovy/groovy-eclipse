@@ -34,6 +34,7 @@ public class JUnitTestCase extends BuilderTests {
         IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
         // remove old package fragment root so that names don't collide
         env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+        env.addGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addJUnitJar(projectPath);
         env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$

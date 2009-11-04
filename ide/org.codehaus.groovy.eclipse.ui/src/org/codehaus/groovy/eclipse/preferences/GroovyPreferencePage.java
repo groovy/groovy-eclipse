@@ -107,6 +107,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                     "This option is particularly useful for testing frameworks\n" +
                     "that use a formatted output such as Spock\n\n");
         
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, "Underline staticly unknown references", getFieldEditorParent()));
         
         // legacy projects
         ConvertLegacyProject convert = new ConvertLegacyProject();
@@ -130,8 +131,8 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                     populateProjectsList(oldProjectsList, new ConvertLegacyProject().getAllOldProjects());
                 }
             });
-            
         }
+        
     }
 
 

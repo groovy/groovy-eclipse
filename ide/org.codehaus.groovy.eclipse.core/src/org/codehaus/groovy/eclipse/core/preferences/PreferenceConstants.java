@@ -72,4 +72,6 @@ public class PreferenceConstants {
 	public static final String GROOVY_PLUGIN_LAST_VERSION_NUMBER = "groovy.plugin.version";
 	
 	public static final String GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS = "groovy.plugin.ask.to.convert";
+	
+	public static final String GROOVY_SEMANTIC_HIGHLIGHTING = "groovy.semantic.highlighting";
 }

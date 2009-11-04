@@ -69,19 +69,31 @@ public class CategoryTypeLookup implements ITypeLookup {
 	/**
 	 * can from be assigned to to?
 	 * 
+	 * FIXADE M2 ensure we don't visit interfaces more than once
+	 * 
 	 * @param from
 	 * @param to
 	 * @return
 	 */
 	private boolean isAssignableFrom(ClassNode from, ClassNode to) {
-		if (to == null || from == null) {
+		if (from == null || to == null) {
 			return false;
 		} else if (from.equals(to)) {
 			return true;
 		} else if (from.getName().equals("java.lang.Object")) {
 			return false;
+		} else if (isAssignableFrom(from.getSuperClass(), to)) {
+			return true;
 		} else {
-			return isAssignableFrom(from.getSuperClass(), to);
+			if (to.isInterface()) {
+				// checking super interfaces here may mean that there are duplicated checks
+				for (ClassNode superInterface : from.getInterfaces()) {
+					if (isAssignableFrom(superInterface, to)) {
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 	}
 

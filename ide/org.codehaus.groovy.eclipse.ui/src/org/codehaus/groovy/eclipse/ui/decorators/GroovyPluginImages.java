@@ -39,11 +39,13 @@ public class GroovyPluginImages {
 
 	public static final String IMG_NEW_GROOVY_PROJECT = "icons/full/newgroovyprj_wiz.gif"; 
 	public static final String IMG_GROOVY_FILE = "icons/groovy_file.gif"; 
+	public static final String IMG_GROOVY_FILE_NO_BUILD = "icons/groovy_file_no_build.gif"; 
 	public static final String IMG_GROOVY_OVERLAY = "icons/groovy-project-overlay.gif"; 
 	
 
 	public static final ImageDescriptor DESC_NEW_GROOVY_PROJECT = createDescriptor(IMG_NEW_GROOVY_PROJECT);
 	public static final ImageDescriptor DESC_GROOVY_FILE = createDescriptor(IMG_GROOVY_FILE);
+	public static final ImageDescriptor DESC_GROOVY_FILE_NO_BUILD = createDescriptor(IMG_GROOVY_FILE_NO_BUILD);
 	public static final ImageDescriptor DESC_GROOVY_OVERLAY = createDescriptor(IMG_GROOVY_OVERLAY);
 
 	public static ImageDescriptor createDescriptor(String path) {

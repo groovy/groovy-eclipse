@@ -167,7 +167,7 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
         assertEquals("Wrong IJavaElement found: " + searchFor, "doNothing", searchFor.getElementName());
         SearchPattern pattern = SearchPattern.createPattern(searchFor, IJavaSearchConstants.REFERENCES);
         ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor);
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(typeRequestor, match, pattern, searchRequestor);
+        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(match);
         visitor.visitCompilationUnit(typeRequestor);
         
         System.out.println("Matches found:\n" + searchRequestor.printMatches());

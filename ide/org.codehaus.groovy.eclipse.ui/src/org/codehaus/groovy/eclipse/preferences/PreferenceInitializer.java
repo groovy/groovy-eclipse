@@ -105,6 +105,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS,
                 true);
         
+        // Semantic highlighting
+        store.setDefault(
+                PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
+                true);
     }
     
     public void reset() {

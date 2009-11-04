@@ -122,7 +122,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
             FileLocator.getBundleFile(groovyBundle).toString() + "\""
             ;
         } catch (IOException e) {
-            GroovyCore.logException("Error finding groovy-starter.conf", e);
+            GroovyCore.logException("Error finding Groovy Home", e);
             // should throw an exception here
             return null;
         }

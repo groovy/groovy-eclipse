@@ -23,7 +23,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.junit.ui.JUnitPlugin;
 import org.eclipse.jdt.internal.junit.util.JUnitStatus;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
@@ -105,54 +104,50 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
         return modifiers;
     }
 
-//  @Override
-//  public void createType(IProgressMonitor monitor) throws CoreException,
-//          InterruptedException {
-//      
-//      // the below is no longer necessary now that the parser can handle 
-//      // empty package statements
-//      super.createType(monitor);
-//      
-//      // bug GRECLIPSE-322
-//      // if JUnit 3 and default package, calling super will be an error.
-//      IPackageFragment pack = getPackageFragment();
-//      if (pack == null) {
-//          pack = getPackageFragmentRoot().getPackageFragment("");
-//      }
-//      if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
-//          createTypeInDefaultPackageJUnit3(pack, monitor);
-//          super.createType(monitor);
-//      } else {
-//          super.createType(monitor);
-//      }
-//  }
-  
-//  // this will not handle Enclosing types
-//  private void createTypeInDefaultPackageJUnit3(
-//          IPackageFragment pack, IProgressMonitor monitor) throws JavaModelException {
-//      
-//      StringBuffer sb = new StringBuffer();
-//      String superClass = getSuperClass();
-//      String typeName = getTypeName();
-//      String[] splits = superClass.split("\\.");
-//      if (superClass != null && !superClass.equals(GROOVY_TEST_CASE)) {
-//          if (splits.length > 1) {
-//              sb.append("import " + superClass + "\n\n");
-//          } 
-//          
-//          sb.append("class ").append(typeName)
-//              .append(" extends ")
-//              .append(splits[splits.length-1]);
-//      } else {
-//          sb.append("class ").append(typeName)
-//          .append(" extends ")
-//          .append(splits[splits.length-1]);
-//      }
-//      
-//      sb.append(" {\n\n");
-//      sb.append("}");
-//      
-//      ICompilationUnit unit = pack.createCompilationUnit(typeName + DOT_GROOVY, sb.toString(), true, monitor);
-//      maybeCreatedType = unit.getType(typeName);
-//  }
+    @Override
+    public void createType(IProgressMonitor monitor) throws CoreException,
+    InterruptedException {
+
+        // bug GRECLIPSE-322
+        // if JUnit 3 and default package, calling super will be an error.
+        IPackageFragment pack = getPackageFragment();
+        if (pack == null) {
+            pack = getPackageFragmentRoot().getPackageFragment("");
+        }
+        if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
+            createTypeInDefaultPackageJUnit3(pack, monitor);
+//            super.createType(monitor);
+        } else {
+            super.createType(monitor);
+        }
+    }
+
+    // this will not handle Enclosing types
+    private void createTypeInDefaultPackageJUnit3(
+            IPackageFragment pack, IProgressMonitor monitor) throws JavaModelException {
+
+        StringBuffer sb = new StringBuffer();
+        String superClass = getSuperClass();
+        String typeName = getTypeName();
+        String[] splits = superClass.split("\\.");
+        if (superClass != null && !superClass.equals(GROOVY_TEST_CASE)) {
+            if (splits.length > 1) {
+                sb.append("import " + superClass + "\n\n");
+            } 
+
+            sb.append("class ").append(typeName)
+            .append(" extends ")
+            .append(splits[splits.length-1]);
+        } else {
+            sb.append("class ").append(typeName)
+            .append(" extends ")
+            .append(splits[splits.length-1]);
+        }
+
+        sb.append(" {\n\n");
+        sb.append("}");
+
+        ICompilationUnit unit = pack.createCompilationUnit(typeName + DOT_GROOVY, sb.toString(), true, monitor);
+        maybeCreatedType = unit.getType(typeName);
+    }
 }

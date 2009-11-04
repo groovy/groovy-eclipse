@@ -16,125 +16,45 @@
 
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.DynamicVariable;
-import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.MethodPointerExpression;
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.eclipse.editor.GroovyTagScanner;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.Position;
 
-class GatherSemanticReferences extends ClassCodeVisitorSupport {
+class GatherSemanticReferences {
     
-        List<Position> unknownReferences = new LinkedList<Position>();  // underlined
-        List<Position> staticReferences = new LinkedList<Position>();   // italicized
-        
-        private ClassNode thisClass;
-        
-        @Override
-        protected SourceUnit getSourceUnit() {
-            return null;
-        }
-    
-        /**
-         * @param module
-         */
-        public void visitModule(ModuleNode module) {
-            for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
-                thisClass = clazz;
-                this.visitClass(clazz);
-            }
-        }
-        
-        @Override
-        public void visitStaticMethodCallExpression(
-                StaticMethodCallExpression call) {
-            // no static refs for now
-//            if (call.getStart() > 0 || call.getEnd() > 0) {
-//                staticReferences.add(call);
-//            }
-            super.visitStaticMethodCallExpression(call);
-        }
-        
-        @Override
-        public void visitFieldExpression(FieldExpression expression) {
-            // no static refs for now
-//            if (expression.getField().isStatic()) {
-//                if (expression.getStart() > 0 || expression.getEnd() > 0) {
-//                    staticReferences.add(expression);
-//                }
-//            }
-            super.visitFieldExpression(expression);
-        }
-        
-        @Override
-        public void visitVariableExpression(VariableExpression expression) {
-            if (expression.getAccessedVariable() == null || expression.getAccessedVariable() instanceof DynamicVariable) {
-                String name = expression.getName();
-                if (!name.equals("this") && !name.equals("super")) {
-                    if (expression.getStart() > 0 || expression.getEnd() > 0) {
-                        unknownReferences.add(fullPosition(expression));
-                    }
-                }
-            }
-            super.visitVariableExpression(expression);
-        }
-
-        @Override
-        public void visitMethodCallExpression(MethodCallExpression call) {
-            if (call.getObjectExpression() instanceof VariableExpression) {
-                String objName = ((VariableExpression) call.getObjectExpression()).getName();
-                if (objName.equals("this") || objName.equals("super")) {
-                    if (call.getMethod() instanceof ConstantExpression) {
-                        String methodName= call.getMethodAsString();
-                        if (!isGjdkMethod(methodName) && thisClass.getMethods(methodName).size() == 0) {
-                            unknownReferences.add(extractNameOnly(call.getMethod(), methodName));
-                        }
-                    }
-                }
-            }
-            super.visitMethodCallExpression(call);
-        }
-
-        /**
-         * @param methodName
-         * @return
-         */
-        private boolean isGjdkMethod(String methodName) {
-            return GroovyTagScanner.gjdkSet.contains(methodName);
-        }
-
-        /**
-         * @param call
-         * @return
-         */
-        private Position extractNameOnly(Expression expr, String name) {
-            return new Position(expr.getStart(), name.length());
-        }
-        
-        @Override
-        public void visitMethodPointerExpression(
-                MethodPointerExpression expression) {
-            super.visitMethodPointerExpression(expression);
-        }
-
-        /**
-         * @param expression
-         * @return
-         */
-        private Position fullPosition(VariableExpression expression) {
-            return new Position(expression.getStart(), expression.getEnd()-expression.getStart());
-        }
-        
+    private final GroovyCompilationUnit unit;
+    private final IPreferenceStore preferences;
+    public GatherSemanticReferences(GroovyCompilationUnit unit) {
+        this.unit = unit;
+        preferences = GroovyPlugin.getDefault().getPreferenceStore();
     }
+    
+    List<Position> findStaticlyUnkownReferences() {
+        if (preferences.getBoolean(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING) && unit.isOnBuildPath()) {
+            
+            try {
+                StaticlyUnknownReferenceRequestor typeRequestor = new StaticlyUnknownReferenceRequestor();
+                TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
+                visitor.visitCompilationUnit(typeRequestor);
+                List<Position> positions = new ArrayList<Position>(typeRequestor.unknownNodes.size());
+                for (ASTNode node : typeRequestor.unknownNodes) {
+                    positions.add(new Position(node.getStart(), node.getEnd()-node.getStart()));
+                }
+                return positions;
+            } catch (Exception e) {
+                GroovyCore.logException("Exception with semantic highlighting", e);
+            }
+        }
+        return Collections.emptyList();
+    }
+}

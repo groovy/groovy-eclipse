@@ -490,6 +490,7 @@ public class GroovyCompilationUnitTests extends BuilderTests {
     
 	private IFile createSimpleGroovyProject() throws JavaModelException {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         fullBuild(projectPath);
         
@@ -515,6 +516,7 @@ public class GroovyCompilationUnitTests extends BuilderTests {
 	private IPath createAnnotationGroovyProject() throws Exception {
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyNature("Project");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
         

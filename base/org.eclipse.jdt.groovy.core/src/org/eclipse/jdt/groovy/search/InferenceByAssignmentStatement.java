@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
+import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
  * Records types for variables in the scope based on assignment statements
@@ -45,7 +46,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 			DeclarationExpression declExpr = (DeclarationExpression) node;
 			if (declExpr.isMultipleAssignmentDeclaration()) {
 				ArgumentListExpression args = (ArgumentListExpression) declExpr.getLeftExpression();
-				for (Expression argExpr : (Iterable<Expression>) args.getExpressions()) {
+				for (Expression argExpr : args.getExpressions()) {
 					// probable won't get anything out of here
 					throw new RuntimeException("Not implemented");
 				}
@@ -53,19 +54,33 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 				if (declExpr.getLeftExpression() instanceof VariableExpression) {
 					// should also be looking at variable types here
 					VariableExpression var = (VariableExpression) declExpr.getLeftExpression();
-					scope.addVariable(var.getName(), declExpr.getRightExpression().getType(),
-							var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var.getAccessedVariable())
-									.getDeclaringClass() : null);
+					ClassNode type = declExpr.getRightExpression().getType();
+					ClassNode declaringType = var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var
+							.getAccessedVariable()).getDeclaringClass() : VariableScope.OBJECT_CLASS_NODE;
+					scope.addVariable(var.getName(), type, declaringType);
+
+					return new TypeLookupResult(type, declaringType, TypeConfidence.EXACT);
 				}
 			}
 
 		} else if (node instanceof BinaryExpression) {
 			BinaryExpression assign = (BinaryExpression) node;
-			if (assign.getOperation().getType() == Types.EQUALS && assign.getLeftExpression() instanceof VariableExpression) {
-				VariableExpression var = (VariableExpression) assign.getLeftExpression();
-				scope.addVariable(var.getName(), assign.getRightExpression().getType(),
-						var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var.getAccessedVariable())
-								.getDeclaringClass() : null);
+			if (assign.getOperation().getType() == Types.EQUALS) {
+				ClassNode type = assign.getRightExpression().getType();
+				ClassNode declaringType;
+				// FIXADE M2 hmmmm...can't get 'foo = some.value'
+				if (assign.getLeftExpression() instanceof VariableExpression) {
+					VariableExpression var = (VariableExpression) assign.getLeftExpression();
+					declaringType = var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var.getAccessedVariable())
+							.getDeclaringClass()
+							: VariableScope.OBJECT_CLASS_NODE;
+					scope.addVariable(var.getName(), type, declaringType);
+				} else {
+					// FIXADE M2 this is a property node, eg- 'foo.bar = somevalue' just do Object type
+					declaringType = VariableScope.OBJECT_CLASS_NODE;
+				}
+
+				return new TypeLookupResult(type, declaringType, TypeConfidence.INFERRED);
 			}
 		}
 		return null;

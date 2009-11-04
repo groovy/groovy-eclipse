@@ -77,6 +77,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
 
     protected IProject createSimpleGroovyProject() throws JavaModelException {
         IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+        env.addGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         fullBuild(projectPath);
         
@@ -201,7 +202,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
             IJavaElement firstMatchEnclosingElement, IJavaElement secondMatchEnclosingElement) {
         MockPossibleMatch match = new MockPossibleMatch(second);
         ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor);
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(typeRequestor, match, pattern, searchRequestor);
+        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(match);
         
         visitor.visitCompilationUnit(typeRequestor);
         

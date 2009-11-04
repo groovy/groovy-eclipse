@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.search;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,10 +36,10 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
  */
 public class VariableScope {
 
-	/**
-	 * 
-	 */
 	private static final ClassNode DGM_CLASS_NODE = new ClassNode(DefaultGroovyMethods.class);
+
+	public static final ClassNode OBJECT_CLASS_NODE = new ClassNode(Object.class);
+	public static final ClassNode LIST_CLASS_NODE = new ClassNode(List.class);
 
 	public static class VariableInfo {
 		public final ClassNode type;

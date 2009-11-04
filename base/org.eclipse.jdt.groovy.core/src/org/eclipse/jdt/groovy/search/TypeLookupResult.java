@@ -31,20 +31,34 @@ public class TypeLookupResult {
 		/**
 		 * Match is certain E.g., type is explicitly declared on a variable
 		 */
-		EXACT,
+		EXACT(0),
 		/**
 		 * Match is potential. E.g., it may be from an interface or from a concrete type, but not possible to tell which one from
 		 * the context
 		 */
-		POTENTIAL,
+		POTENTIAL(1),
 		/**
 		 * The type has been inferred from local or global context. E.g., by looking at assignment statements
 		 */
-		INFERRED,
+		INFERRED(2),
 		/**
 		 * The type has been inferred using less precise means. E.g., by looking at the results of running JUnit tests
 		 */
-		LOOSELY_INFERRED
+		LOOSELY_INFERRED(3),
+		/**
+		 * This is an unknown reference
+		 */
+		UNKNOWN(4);
+
+		private final int val;
+
+		TypeConfidence(int val) {
+			this.val = val;
+		}
+
+		static TypeConfidence findLessPrecise(TypeConfidence left, TypeConfidence right) {
+			return left.val > right.val ? left : right;
+		}
 	}
 
 	public final TypeConfidence confidence;

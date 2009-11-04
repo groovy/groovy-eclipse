@@ -1187,6 +1187,19 @@ public void cleanBuild() {
     }   
     public void addJUnitJar(IPath projectPath) throws Exception {
         addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.codehaus.groovy.eclipse.core.test").getEntry("lib/junit-4.3.1.jar")).getFile());
-    }   
-    
+    }
+
+    /**
+     * Removes groovy nature from project and keeps only the JavaNature
+     */
+    public void addGroovyNature(String projectName) {
+        try {
+            IProject project = getProject(projectName);
+            IProjectDescription description = project.getDescription();
+            description.setNatureIds(new String[] { JavaCore.NATURE_ID, GroovyNature.GROOVY_NATURE });
+            project.setDescription(description, null);
+        } catch (CoreException e) {
+            handleCoreException(e);
+        }
+    }
 }

@@ -107,6 +107,9 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 						ClassNode ret = maybeGetComponentType(((MethodNode) node).getReturnType());
 						start = ret.getStart();
 						end = ret.getEnd();
+						if (end == 0) {
+							end = simpleName.length();
+						}
 					} else if (node instanceof FieldNode) {
 						ClassNode type = maybeGetComponentType(((FieldNode) node).getType());
 						start = type.getStart();

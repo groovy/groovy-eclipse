@@ -225,7 +225,7 @@ public class SemanticHighlightingPresenter implements ITextPresentationListener,
 	private JavaPresentationReconciler fPresentationReconciler;
 
 	/** UI's current highlighted positions - can contain <code>null</code> elements */
-	private List fPositions= new ArrayList();
+	List fPositions= new ArrayList();
 	/** UI position lock */
 	private Object fPositionLock= new Object();
 

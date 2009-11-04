@@ -106,6 +106,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 		tokenLines = new Vector<Vector<Token>>();
 		rootNode = ASTTools.getASTNodeFromSource(formattedDocument.get());
 		if(rootNode == null) {
+		    // caused by unparseable file  
 			throw new Exception(GroovyRefactoringMessages.FormattingAction_RootNode_Errors);
 		}
 
@@ -196,7 +197,8 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 //			}
 
 		} catch (Exception e) {
-			throw new RuntimeException("Formatting could not be performed.\nMessage:" + e.getMessage() + "\nCause: " + e.getCause() + "\nType: " + e.getClass().getName(), e);
+		    // swallow exception.  Caused by unparseable code
+//			throw new RuntimeException("Formatting could not be performed.\nMessage:" + e.getMessage() + "\nCause: " + e.getCause() + "\nType: " + e.getClass().getName(), e);
 		}
 		if (!formattedDocument.get().equals(document.get()))
 			return new ReplaceEdit(0, document.getLength(), formattedDocument

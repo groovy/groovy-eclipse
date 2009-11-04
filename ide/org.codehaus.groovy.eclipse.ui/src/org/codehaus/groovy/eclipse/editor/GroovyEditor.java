@@ -282,7 +282,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
     
-    private GroovyCompilationUnit getGroovyCompilationUnit() {
+    public GroovyCompilationUnit getGroovyCompilationUnit() {
         IFile file = getFile();
         if (file != null) {
             return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
