@@ -477,7 +477,13 @@ void faultInImports() {
 				if (importReference.isTypeUseDeprecated(typeToCheck, this))
 					problemReporter().deprecatedType(typeToCheck, importReference);
 
-				ReferenceBinding existingType = typesBySimpleNames.get(compoundName[compoundName.length - 1]);
+				// GROOVY start: use any aliased name for lookup
+				// old code:
+				// ReferenceBinding existingType = typesBySimpleNames.get(compoundName[compoundName.length - 1]);
+				// new code:
+				ReferenceBinding existingType = typesBySimpleNames.get(importReference.getSimpleName());
+				// GROOVY end
+				
 				if (existingType != null) {
 					// duplicate test above should have caught this case, but make sure
 					if (existingType == referenceBinding)

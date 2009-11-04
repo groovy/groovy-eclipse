@@ -542,23 +542,33 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"}\n");
 	}
 
+	public void testAliasing_GRE473() {
+		this.runConformTest(new String[] {
+				"Foo.groovy",
+				"import java.util.regex.Pattern as JavaPattern\n"+
+				"class Pattern {JavaPattern javaPattern}\n"+
+				"def p = new Pattern(javaPattern:~/\\d+/)\n"+
+				"assert \"123\" ==~ p.javaPattern\n"+
+				"print 'success '\n"+
+				"print '['+p.class.package+']['+JavaPattern.class.package.name+']'\n"},
+				"success [null][java.util.regex]");
+	}
 	
-	
-//	public void testAliasing_GRE473() {
-//		this.runConformTest(new String[] {
-//				"Foo.groovy",
-//				"import java.util.regex.Pattern as JavaPattern\n"+
-//				"class Pattern {JavaPattern javaPattern}\n"+
-//				"def p = new Pattern(javaPattern:~/\\d+/)\n"+
-//				"assert \"123\" ==~ p.javaPattern\n"+
-//				"print 'success'\n"},
-//				"----------\n" + 
-//				"1. ERROR in Foo.groovy (at line 1)\n" + 
-//				"	package ;\n" + 
-//				"	 ^\n" + 
-//				"Groovy:Invalid package specification @ line 1, column 1.\n" + 
-//				"----------\n");
-//	}
+	public void testAliasing_GRE473_2() {
+		this.runNegativeTest(new String[] {
+				"Foo.groovy",
+				"import java.util.regex.Pattern\n"+
+				"class Pattern {Pattern javaPattern}\n"+
+				"def p = new Pattern(javaPattern:~/\\d+/)\n"+
+				"assert \"123\" ==~ p.javaPattern\n"+
+				"print 'success'\n"},
+				"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 1)\n" + 
+				"	import java.util.regex.Pattern\n" + 
+				"	^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+				"The import java.util.regex.Pattern conflicts with a type defined in the same file\n" + 
+				"----------\n");
+	}
 
 	public void testBrokenPackage2() {
 		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
