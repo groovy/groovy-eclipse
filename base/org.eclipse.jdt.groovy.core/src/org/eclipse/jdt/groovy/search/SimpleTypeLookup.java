@@ -21,6 +21,7 @@ import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFE
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 import java.util.List;
 
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
@@ -67,37 +68,38 @@ public class SimpleTypeLookup implements ITypeLookup {
 		TypeConfidence[] confidence = new TypeConfidence[] { EXACT };
 		ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
 
-		ClassNode type = findType(node, objectExpressionType, scope, confidence);
+		TypeLookupResult result = findType(node, objectExpressionType, declaringType, scope, confidence[0]);
 
-		// always inferred for now
-		return new TypeLookupResult(type, declaringType, confidence[0]);
+		return result;
 	}
 
 	public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
-		return new TypeLookupResult(baseType(node.getType()), baseType(node.getDeclaringClass()), EXACT);
+		return new TypeLookupResult(node.getType(), node.getDeclaringClass(), node, EXACT);
 	}
 
 	public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
-		return new TypeLookupResult(baseType(node.getReturnType()), baseType(node.getDeclaringClass()), EXACT);
+		return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, EXACT);
 	}
 
 	public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
-		return new TypeLookupResult(baseType(node.getClassNode()), baseType(node.getClassNode()), EXACT);
+		ClassNode baseType = node.getClassNode();
+		return new TypeLookupResult(baseType, baseType, baseType, EXACT);
 	}
 
 	public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
-		return new TypeLookupResult(baseType(node.getType()), baseType(node.getType()), EXACT);
+		ClassNode baseType = node.getType();
+		return new TypeLookupResult(baseType, baseType, baseType, EXACT);
 	}
 
 	/**
 	 * always return the passed in node
 	 */
 	public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
-		return new TypeLookupResult(baseType(node), baseType(node), EXACT);
+		return new TypeLookupResult(node, node, node, EXACT);
 	}
 
 	public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
-		return new TypeLookupResult(baseType(node.getType()), scope.getEnclosingTypeDeclaration(), EXACT);
+		return new TypeLookupResult(node.getType(), scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, EXACT);
 	}
 
 	/**
@@ -110,13 +112,13 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return node.getType();
 
 		} else if (node instanceof FieldExpression) {
-			return baseType(baseType(((FieldExpression) node).getField().getDeclaringClass()));
+			return ((FieldExpression) node).getField().getDeclaringClass();
 
 		} else if (node instanceof MethodCallExpression) {
-			return baseType(((MethodCallExpression) node).getObjectExpression().getType());
+			return ((MethodCallExpression) node).getObjectExpression().getType();
 
 		} else if (node instanceof StaticMethodCallExpression) {
-			return baseType(((StaticMethodCallExpression) node).getOwnerType());
+			return ((StaticMethodCallExpression) node).getOwnerType();
 
 		} else if (node instanceof VariableExpression) {
 			Variable var = ((VariableExpression) node).getAccessedVariable();
@@ -127,8 +129,12 @@ public class SimpleTypeLookup implements ITypeLookup {
 					// or it might refer to a method call with no parens
 					type = findMethod((VariableExpression) node, scope.getEnclosingTypeDeclaration());
 				}
+				if (type == null) {
+					// might be a property
+					type = findProperty((VariableExpression) node, scope.getEnclosingTypeDeclaration());
+				}
 				confidence[0] = TypeConfidence.findLessPrecise(confidence[0], INFERRED);
-				return type == null ? baseType(node.getType()) : type;
+				return type == null ? node.getType() : type;
 			} else if (var instanceof FieldNode) {
 				return ((FieldNode) var).getDeclaringClass();
 			}
@@ -147,13 +153,30 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @param scope
 	 * @return
 	 */
-	private ClassNode findType(Expression node, ClassNode objectExpressionType, VariableScope scope, TypeConfidence[] confidence) {
+	private TypeLookupResult findType(Expression node, ClassNode objectExpressionType, ClassNode declaringType,
+			VariableScope scope, TypeConfidence confidence) {
 		// check first to see if we have this type inferred
 		if (node instanceof Variable) {
-			VariableInfo info = scope.lookupName(((Variable) node).getName());
+			AnnotatedNode declaration = node;
+			if (node instanceof VariableExpression) {
+				Variable accessedVar = ((VariableExpression) node).getAccessedVariable();
+				if (accessedVar != null && accessedVar instanceof AnnotatedNode) {
+					declaration = (AnnotatedNode) accessedVar;
+				}
+			}
+
+			Variable var = (Variable) node;
+			VariableInfo info = scope.lookupName(var.getName());
 			if (info != null) {
-				confidence[0] = TypeConfidence.findLessPrecise(confidence[0], INFERRED);
-				return baseType(info.type);
+				confidence = TypeConfidence.findLessPrecise(confidence, INFERRED);
+				return new TypeLookupResult(info.type, declaringType, declaration, confidence);
+			} else if (var instanceof VariableExpression) {
+				VariableExpression varExpr = (VariableExpression) var;
+				Variable accessedVar = varExpr.getAccessedVariable();
+				if (accessedVar instanceof DynamicVariable) {
+					confidence = UNKNOWN;
+				}
+				return new TypeLookupResult(accessedVar.getType(), declaringType, declaration, confidence);
 			}
 		}
 
@@ -161,63 +184,95 @@ public class SimpleTypeLookup implements ITypeLookup {
 			// lookup the type in the object's expression type
 			if (node instanceof ConstantExpression) {
 				ConstantExpression constExpr = (ConstantExpression) node;
+
 				String name = constExpr.getText();
 				PropertyNode property = objectExpressionType.getProperty(name);
 				if (property != null) {
-					return property.getType();
+					return new TypeLookupResult(property.getType(), objectExpressionType, property, confidence);
 				}
 				// do not distinguish between method variants
 				List<MethodNode> methods = objectExpressionType.getMethods(name);
 				if (methods.size() > 0) {
-					return methods.get(0).getReturnType();
+					return new TypeLookupResult(methods.get(0).getReturnType(), declaringType, methods.get(0), confidence);
 				}
 
 				FieldNode field = objectExpressionType.getField(name);
 				if (field != null) {
-					return field.getType();
+					return new TypeLookupResult(field.getType(), declaringType, field, confidence);
 				}
-				confidence[0] = UNKNOWN;
-				return baseType(node.getType());
+				confidence = UNKNOWN;
+				return new TypeLookupResult(node.getType(), declaringType, null, confidence);
 			}
-		} else if (node instanceof ArgumentListExpression) {
-			return VariableScope.LIST_CLASS_NODE;
+		} else if (node instanceof ConstantExpression) {
+			// here, we know that since there is no object expression, this is not part
+			// of a dotted anything, so we can safely assume that it is a quoted string or
+			// some other constant
+			ConstantExpression constExpr = (ConstantExpression) node;
+
+			if (constExpr.isTrueExpression() || constExpr.isTrueExpression()) {
+				return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence);
+			} else if (constExpr.isNullExpression()) {
+				return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, confidence);
+			} else if (constExpr.isEmptyStringExpression()) {
+				return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence);
+			} else {
+				return new TypeLookupResult(node.getType(), null, null, confidence);
+			}
+
+		} else if (node instanceof ArgumentListExpression || node instanceof ListExpression) {
+			return new TypeLookupResult(VariableScope.LIST_CLASS_NODE, null, null, confidence);
 
 		} else if (node instanceof BinaryExpression) {
 			// FIXDE M2 should actually get the type from the object expression
-			return baseType(((BinaryExpression) node).getLeftExpression().getType());
+			return new TypeLookupResult(((BinaryExpression) node).getLeftExpression().getType(), null, null, confidence);
 
 		} else if (node instanceof BooleanExpression || node instanceof NotExpression) {
-			return VariableScope.BOOLEAN_CLASS_NODE;
+			return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence);
 
 		} else if (node instanceof GStringExpression) {
-			return VariableScope.GSTRING_CLASS_NODE;
-
-		} else if (node instanceof ListExpression) {
-			return VariableScope.LIST_CLASS_NODE;
+			return new TypeLookupResult(VariableScope.GSTRING_CLASS_NODE, null, null, confidence);
 
 		} else if (node instanceof MapExpression) {
-			return VariableScope.MAP_CLASS_NODE;
+			return new TypeLookupResult(VariableScope.MAP_CLASS_NODE, null, null, confidence);
 
 		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
-			return VariableScope.NUMBER_CLASS_NODE;
+			return new TypeLookupResult(VariableScope.NUMBER_CLASS_NODE, null, null, confidence);
 
 		} else if (node instanceof BitwiseNegationExpression) {
 			ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
 			if (type.getName().equals(VariableScope.STRING_CLASS_NODE.getName())) {
-				return VariableScope.PATTERN_CLASS_NODE;
+				return new TypeLookupResult(VariableScope.PATTERN_CLASS_NODE, null, null, confidence);
 			} else {
-				return type;
+				return new TypeLookupResult(type, null, null, confidence);
 			}
 		}
 
 		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)
 				&& !(node instanceof MapEntryExpression) && !(node instanceof PropertyExpression)
 				&& node.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
-			confidence[0] = UNKNOWN;
+			confidence = UNKNOWN;
 		}
 
 		// don't know
-		return baseType(node.getType());
+		return new TypeLookupResult(node.getType(), declaringType, null, confidence);
+	}
+
+	/**
+	 * @param node
+	 * @param enclosingTypeDeclaration
+	 * @return
+	 */
+	private ClassNode findProperty(VariableExpression var, ClassNode declaringClass) {
+		if (declaringClass == null) {
+			return var.getType();
+		}
+		String name = var.getName();
+		PropertyNode property = declaringClass.getProperty(name);
+		if (property != null) {
+			return property.getDeclaringClass();
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -227,7 +282,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 */
 	private ClassNode findField(VariableExpression var, ClassNode declaringClass) {
 		if (declaringClass == null) {
-			return baseType(var.getType());
+			return var.getType();
 		}
 		String name = var.getName();
 		FieldNode field = declaringClass.getField(name);
@@ -245,7 +300,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 */
 	private ClassNode findMethod(VariableExpression var, ClassNode declaringClass) {
 		if (declaringClass == null) {
-			return baseType(var.getType());
+			return var.getType();
 		}
 		String name = var.getName();
 		List<MethodNode> methods = declaringClass.getMethods(name);
@@ -254,10 +309,5 @@ public class SimpleTypeLookup implements ITypeLookup {
 		} else {
 			return null;
 		}
-	}
-
-	// FIXADE M2 not sure if we should be getting the base type here
-	private ClassNode baseType(ClassNode node) {
-		return node == null ? null : (node.getComponentType() == null ? node : node.getComponentType());
 	}
 }

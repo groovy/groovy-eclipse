@@ -34,7 +34,7 @@ public class GroovyBrowsingPlugin extends AbstractUIPlugin {
         // TODO consider turning this into an extension point.
 		// This object needs to be injected into GroovyCompilationUnit
 		// before code selection starts.
-		GroovyCompilationUnit.setSelectHelper(new CodeSelectHelper());
+		GroovyCompilationUnit.setSelectHelper(new org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper());
 	}
 
 	@Override

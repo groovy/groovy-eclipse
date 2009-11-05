@@ -111,7 +111,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		}
 
 		if (doCheck) {
-			boolean isCompleteMatch = qualifiedNameMatches(result.declaringType);
+			boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
 			if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess))
 					&& ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {
 				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
@@ -129,7 +129,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 
 	// recursively check the hierarchy
 	private boolean qualifiedNameMatches(ClassNode declaringType) {
-		if (declaringQualifiedName == null || declaringQualifiedName.equals("")) {
+		if (declaringQualifiedName == null || declaringQualifiedName.equals("")) { //$NON-NLS-1$
 			// no type specified, accept all
 			return true;
 		}
@@ -154,4 +154,11 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		}
 	}
 
+	/**
+	 * @param declaration
+	 * @return
+	 */
+	private ClassNode removeArray(ClassNode declaration) {
+		return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
+	}
 }

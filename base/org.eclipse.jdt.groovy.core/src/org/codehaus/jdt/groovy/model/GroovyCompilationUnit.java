@@ -492,22 +492,22 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	@Override
 	protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu, int offset, int length,
 			WorkingCopyOwner o) throws JavaModelException {
-		IJavaElement[] elts = super.codeSelect(cu, offset, length, o);
-
-		// filter out ones we know are wrong
+		// IJavaElement[] elts = super.codeSelect(cu, offset, length, o);
+		//
+		// // filter out ones we know are wrong
 		Set<IJavaElement> realElts = new HashSet<IJavaElement>();
-		for (IJavaElement elt : elts) {
-			if (elt.getElementType() == IJavaElement.TYPE) {
-				// filter out classes x, y, z, and all lower case single letter
-				// classes
-				if (elt.getElementName().length() == 1 && Character.isLowerCase(elt.getElementName().charAt(0))) {
-					continue;
-				}
-			}
-			realElts.add(elt);
-		}
+		// for (IJavaElement elt : elts) {
+		// if (elt.getElementType() == IJavaElement.TYPE) {
+		// // filter out classes x, y, z, and all lower case single letter
+		// // classes
+		// if (elt.getElementName().length() == 1 && Character.isLowerCase(elt.getElementName().charAt(0))) {
+		// continue;
+		// }
+		// }
+		// realElts.add(elt);
+		// }
 		if (selectHelper != null && isOnBuildPath()) {
-			elts = selectHelper.select(this, new Region(offset, length));
+			IJavaElement[] elts = selectHelper.select(this, new Region(offset, length));
 			if (elts != null) {
 				for (IJavaElement elt : elts) {
 					realElts.add(elt);

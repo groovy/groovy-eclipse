@@ -143,6 +143,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	public void visitCompilationUnit(ITypeRequestor requestor) {
+		if (enclosingDeclarationNode == null) {
+			// no module node, can't do anything
+			return;
+		}
 		this.requestor = requestor;
 		enclosingElement = unit;
 		rethrowVisitComplete = true;
@@ -163,6 +167,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			scopes.pop();
 
 		} catch (VisitCompleted vc) {
+		} catch (Exception e) {
+			Util.log(e, "Error performing search for " + unit.getElementName());
 		}
 	}
 
@@ -740,7 +746,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * @return
 	 */
 	private ClassNode isCategoryDeclaration(MethodCallExpression node) {
-		if (node.getMethodAsString().equals("use")) {
+		String methodAsString = node.getMethodAsString();
+		if (methodAsString != null && methodAsString.equals("use")) {
 			Expression exprs = node.getArguments();
 			if (exprs instanceof ArgumentListExpression) {
 				ArgumentListExpression args = (ArgumentListExpression) exprs;
@@ -750,7 +757,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					Expression expr = args.getExpressions().get(0);
 					if (expr instanceof ClassExpression) {
 						return expr.getType();
-					} else if (expr instanceof VariableExpression) {
+					} else if (expr instanceof VariableExpression && expr.getText() != null) {
 						VariableInfo info = scopes.peek().lookupName(expr.getText());
 						if (info != null) {
 							return info.type;

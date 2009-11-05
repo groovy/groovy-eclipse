@@ -44,6 +44,7 @@ public class VariableScope {
 	public static final ClassNode OBJECT_CLASS_NODE = new ClassNode(Object.class);
 	public static final ClassNode LIST_CLASS_NODE = new ClassNode(List.class);
 	public static final ClassNode BOOLEAN_CLASS_NODE = new ClassNode(Boolean.class);
+	public static final ClassNode VOID_CLASS_NODE = new ClassNode(Void.class);
 	public static final ClassNode GSTRING_CLASS_NODE = new ClassNode(GString.class);
 	public static final ClassNode STRING_CLASS_NODE = new ClassNode(String.class);
 	public static final ClassNode PATTERN_CLASS_NODE = new ClassNode(Pattern.class);

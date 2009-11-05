@@ -105,7 +105,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		}
 
 		if (doCheck) {
-			boolean isCompleteMatch = qualifiedNameMatches(result.declaringType);
+			boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
 			if (isCompleteMatch && ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {
 				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
 						- start, participant, enclosingElement.getResource());
@@ -147,4 +147,11 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		}
 	}
 
+	/**
+	 * @param declaration
+	 * @return
+	 */
+	private ClassNode removeArray(ClassNode declaration) {
+		return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
+	}
 }

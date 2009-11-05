@@ -59,7 +59,8 @@ public class CategoryTypeLookup implements ITypeLookup {
 				Parameter[] params = methodNode.getParameters();
 				if (params != null && params.length > 0 && isAssignableFrom(currentType, params[0].getType())) {
 					// found it! There may be more, but this is good enough
-					return new TypeLookupResult(methodNode.getReturnType(), methodNode.getDeclaringClass(), TypeConfidence.EXACT);
+					return new TypeLookupResult(methodNode.getReturnType(), methodNode.getDeclaringClass(), methodNode,
+							TypeConfidence.EXACT);
 				}
 			}
 		}

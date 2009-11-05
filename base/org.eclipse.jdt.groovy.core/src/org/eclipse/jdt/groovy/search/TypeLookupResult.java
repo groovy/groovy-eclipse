@@ -16,6 +16,7 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 
 /**
@@ -64,17 +65,20 @@ public class TypeLookupResult {
 	public final TypeConfidence confidence;
 	public final ClassNode type;
 	public final ClassNode declaringType;
+	public final AnnotatedNode declaration;
 
 	/**
 	 * create a TypeLookupResult with a class node.
 	 * 
 	 * @param type the type of the expression being analyzed
 	 * @param declaringType the declaring type of the expression if the expression is a field, method, or type reference
+	 * @param the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
 	 * @param confidence the confidence in this type assertion
 	 */
-	public TypeLookupResult(ClassNode type, ClassNode declaringType, TypeConfidence confidence) {
+	public TypeLookupResult(ClassNode type, ClassNode declaringType, AnnotatedNode declaration, TypeConfidence confidence) {
 		this.confidence = confidence;
 		this.type = type;
 		this.declaringType = declaringType;
+		this.declaration = declaration;
 	}
 }

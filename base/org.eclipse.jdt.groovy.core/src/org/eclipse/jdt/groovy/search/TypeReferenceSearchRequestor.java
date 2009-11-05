@@ -72,7 +72,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 				|| node instanceof FieldNode || node instanceof MethodNode || node instanceof VariableExpression) {
 
 			if (result.declaringType != null) {
-				String qualifiedName = result.declaringType.getName();
+				String qualifiedName = removeArray(result.declaringType).getName();
 				if (qualifiedNameMatches(qualifiedName)) {
 					int start;
 					int end;
@@ -151,6 +151,14 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 			}
 		}
 		return orig;
+	}
+
+	/**
+	 * @param declaration
+	 * @return
+	 */
+	private ClassNode removeArray(ClassNode declaration) {
+		return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
 	}
 
 	private boolean qualifiedNameMatches(String qualifiedName) {

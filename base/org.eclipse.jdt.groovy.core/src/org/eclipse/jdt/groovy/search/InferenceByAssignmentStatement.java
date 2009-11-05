@@ -48,7 +48,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 				ArgumentListExpression args = (ArgumentListExpression) declExpr.getLeftExpression();
 				for (Expression argExpr : args.getExpressions()) {
 					// probable won't get anything out of here
-					throw new RuntimeException("Not implemented");
+					throw new RuntimeException("Not implemented.  Please raise a bug for this.");
 				}
 			} else {
 				if (declExpr.getLeftExpression() instanceof VariableExpression) {
@@ -59,7 +59,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 							.getAccessedVariable()).getDeclaringClass() : VariableScope.OBJECT_CLASS_NODE;
 					scope.addVariable(var.getName(), type, declaringType);
 
-					return new TypeLookupResult(type, declaringType, TypeConfidence.EXACT);
+					return new TypeLookupResult(type, declaringType, declExpr.getLeftExpression(), TypeConfidence.EXACT);
 				}
 			}
 
@@ -80,7 +80,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 					declaringType = VariableScope.OBJECT_CLASS_NODE;
 				}
 
-				return new TypeLookupResult(type, declaringType, TypeConfidence.INFERRED);
+				return new TypeLookupResult(type, declaringType, null, TypeConfidence.INFERRED);
 			}
 		}
 		return null;
