@@ -25,6 +25,7 @@ import org.codehaus.groovy.control.io.ReaderSource;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.runtime.ArrayUtil;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.groovy.transform.ASTTransformationVisitor;
@@ -923,14 +924,12 @@ public class CompilationUnit extends ProcessingUnit {
     }
     
     private List getPrimaryClassNodes(boolean sort) {
-    /*
     	if (sort==true) {
     		List<ModuleNode> sortedModules = this.ast.getSortedModules();
     		if (sortedModules!=null) {
     			return sortedModules;
     		} 
     	}
-    */
         List unsorted = new ArrayList();
         Iterator modules = this.ast.getModules().iterator();
         while (modules.hasNext()) {
@@ -945,6 +944,9 @@ public class CompilationUnit extends ProcessingUnit {
 
         if (sort == false) return unsorted;
 
+// FIXASC (groovychange) rewritten sort algorithm
+// oldcode:
+/*
         int[] indexClass = new int[unsorted.size()];
         int[] indexInterface = new int[unsorted.size()];
         {
@@ -964,10 +966,42 @@ public class CompilationUnit extends ProcessingUnit {
 
         List sorted = getSorted(indexInterface, unsorted);
         sorted.addAll(getSorted(indexClass, unsorted));
-    //    this.ast.setSortedModules(sorted);
+*/ 
+// newcode: 
+        // Sort them by how many types are in their hierarchy, but all interfaces first.
+        // Algorithm:
+        // Create a list of integers.  Each integer captures the index into the unsorted
+        // list (bottom 16bits) and the count of how many types are in that types
+        // hierarchy (top 16bits).  For classes the count is augmented by 2000 so that
+        // when sorting the classes will come out after the interfaces.
+        // This list of integers is sorted.  We then just go through it and for the
+        // lower 16bits of each entry (0xffff) that is the index of the next value to
+        // pull from the unsorted list and put into the sorted list.
+        // Will break down if more than 2000 interfaces in the type hierarchy for an
+        // individual type, or a project contains > 65535 files... but if you've got
+        // that kind of setup, you have other problems...
+        List<Integer> countIndexPairs = new ArrayList<Integer>();
+        {
+            int i = 0;
+            for (Iterator iter = unsorted.iterator(); iter.hasNext(); i++) {
+                ClassNode node = (ClassNode) iter.next();
+                if (node.isInterface()) {
+                    countIndexPairs.add((getSuperInterfaceCount(node)<<16)+i);
+                } else {
+                    countIndexPairs.add(((getSuperClassCount(node)+2000)<<16)+i);
+                }
+            }
+        }
+        Collections.sort(countIndexPairs);
+        List sorted = new ArrayList();
+        for (int i: countIndexPairs) {
+        	sorted.add(unsorted.get(i&0xffff));
+        }
+        this.ast.setSortedModules(sorted);
+// FIXASC (groovychange) end
         return sorted;
     }
-
+    
     private List getSorted(int[] index, List unsorted) {
         List sorted = new ArrayList(unsorted.size());
         int start = 0;
