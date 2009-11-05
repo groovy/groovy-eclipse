@@ -52,9 +52,9 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         IPath root = projectPath.append("src");
         String contents = "class Foo { def x = 9\n"+
         "def y() {\nx++\n } }";
-        env.addGroovyClass(root, "", "Hello", contents);
+        env.addGroovyClass(root, "", "Hello1", contents);
         env.incrementalBuild();
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello1.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('x'), 1);
         assertEquals("Should have found a selection", 1, elt.length);
@@ -159,9 +159,9 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         String contents = "def y = 9\ndef x = {\n"+
         "t -> print y\n"+
         "}\n";
-        env.addGroovyClass(root, "", "Hello", contents);
+        env.addGroovyClass(root, "", "Hello2", contents);
         env.incrementalBuild();
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello2.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf('y'), 1);
         assertEquals("Should have found a selection", 1, elt.length);
