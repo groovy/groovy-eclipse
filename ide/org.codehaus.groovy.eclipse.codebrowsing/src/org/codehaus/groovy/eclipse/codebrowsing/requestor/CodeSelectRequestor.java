@@ -68,13 +68,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 if (result.declaration instanceof VariableExpression) {
                     // look in the local scope
                     VariableExpression var = (VariableExpression) result.declaration;
-                    try {
-                        requestedElement = 
-                            new LocalVariable((JavaElement) unit.getElementAt(var.getStart()-1), var.getName(), var.getStart(), var.getEnd()-1, var.getStart(), var.getEnd()-1, 
-                                    Signature.createTypeSignature(var.getType().getName(), false), new Annotation[0]);
-                    } catch (JavaModelException e) {
-                        Util.log(e, "Problem getting element at " + (var.getStart()-1) + " for file " + unit.getElementName());
-                    }
+                    requestedElement = 
+                        new LocalVariable((JavaElement) enclosingElement, var.getName(), var.getStart(), var.getEnd()-1, var.getStart(), var.getEnd()-1, 
+                                Signature.createTypeSignature(var.getType().getName(), false), new Annotation[0]);
                 } else if (result.declaration instanceof Parameter) {
                     // look in the local scope
                     Parameter var = (Parameter) result.declaration;

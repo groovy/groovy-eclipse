@@ -117,7 +117,8 @@ public class GroovyProjectFacade {
      
      public IType groovyClassToJavaType(ClassNode node) {
          try {
-            return project.findType(node.getName(), new NullProgressMonitor());
+             String name = node.getName().replace('$','.');
+             return project.findType(name, new NullProgressMonitor());
         } catch (JavaModelException e) {
             GroovyCore.logException("Error converting from Groovy Element to Java Element: " + node.getName(), e);
             return null;
