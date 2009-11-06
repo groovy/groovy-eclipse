@@ -81,7 +81,7 @@ public abstract class Comment {
 			int taglen = tag.length();
 			String lcTag = tag.toLowerCase();
 			char firstChar = lcTag.charAt(0);
-			for (int p = fromIndex, max = text.length() - tag.length(); p < max; p++) {
+			for (int p = fromIndex, max = text.length() - tag.length()+1; p < max; p++) {
 				if (Character.toLowerCase(text.charAt(p)) == firstChar) {
 					// possible match
 					boolean matched = true;
@@ -116,6 +116,9 @@ class SingleLineComment extends Comment {
 
 	public List<TaskEntry> getPositionsOf(String taskTag, String taskPriority, int[] lineseps, boolean caseSensitive) {
 		int i = findTaskTag(comment, taskTag, caseSensitive, 0);
+		if (debug) {
+			System.out.println("searching slc: [" + comment + "] for '"+taskTag+"' "+i);
+		}
 		if (i == -1) {
 			return Collections.emptyList();
 		}
@@ -154,6 +157,9 @@ class MultiLineComment extends Comment {
 	@Override
 	public List<TaskEntry> getPositionsOf(String taskTag, String taskPriority, int[] lineseps, boolean caseSensitive) {
 		int i = findTaskTag(comment, taskTag, caseSensitive, 0);
+		if (debug) {
+			System.out.println("searching mlc: [" + comment + "] for '"+taskTag+"' "+i);
+		}
 		if (i == -1) {
 			return Collections.emptyList();
 		}
