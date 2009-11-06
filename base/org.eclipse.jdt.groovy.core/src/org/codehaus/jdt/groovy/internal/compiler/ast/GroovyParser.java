@@ -15,10 +15,12 @@ import java.io.File;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import groovy.lang.GroovyClassLoader;
 
+import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -176,7 +178,7 @@ public class GroovyParser {
 		SourceUnit groovySourceUnit = new SourceUnit(new String(sourceUnit.getFileName()), new String(sourceCode),
 				groovyCompilerConfig, groovyCompilationUnit.getClassLoader(), errorCollector);
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
-				sourceCode.length, groovyCompilationUnit, groovySourceUnit);
+				sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);
 		// FIXASC (M2) get this from the Antlr parser
 		compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode);
 		groovyCompilationUnit.addSource(groovySourceUnit);
@@ -193,7 +195,6 @@ public class GroovyParser {
 				resolver.record(gtDeclaration);
 			}
 		}
-
 		if (debugRequestor != null) {
 			debugRequestor.acceptCompilationUnitDeclaration(gcuDeclaration);
 		}

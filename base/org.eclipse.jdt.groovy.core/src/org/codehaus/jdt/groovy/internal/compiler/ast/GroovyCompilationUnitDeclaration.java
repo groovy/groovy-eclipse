@@ -25,6 +25,7 @@ import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -33,6 +34,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.TaskEntry;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -80,6 +82,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
@@ -111,14 +114,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	// The groovy sourceunit (a member of the groovyCompilationUnit)
 	private SourceUnit groovySourceUnit;
 
+	private CompilerOptions compilerOptions;
+
 	// FIXASC (M2) decide if we need this resolution stack
 	private Stack<GroovyTypeDeclaration> typeDecls = new Stack<GroovyTypeDeclaration>();
 
+	private static final boolean DEBUG_TASK_TAGS = false;
+
 	public GroovyCompilationUnitDeclaration(ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength,
-			CompilationUnit groovyCompilationUnit, SourceUnit groovySourceUnit) {
+			CompilationUnit groovyCompilationUnit, SourceUnit groovySourceUnit, CompilerOptions compilerOptions) {
 		super(problemReporter, compilationResult, sourceLength);
 		this.groovyCompilationUnit = groovyCompilationUnit;
 		this.groovySourceUnit = groovySourceUnit;
+		this.compilerOptions = compilerOptions;
 	}
 
 	/**
@@ -1424,11 +1432,84 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	@Override
 	public void resolve() {
 		processToPhase(Phases.SEMANTIC_ANALYSIS);
+		checkForTags();
+	}
+
+	/**
+	 * Check any comments from the source file for task tag markers.
+	 */
+	private void checkForTags() {
+		List<Comment> comments = groovySourceUnit.getComments();
+		char[][] taskTags = this.compilerOptions.taskTags;
+		char[][] taskPriorities = this.compilerOptions.taskPriorites;
+		boolean caseSensitiveTags = this.compilerOptions.isTaskCaseSensitive;
+		// FIXASC (M2) sort task by priority (see Scanner)
+		try {
+			if (taskTags != null) {
+				// For each comment find all task tags within it and cope with
+				for (Comment comment : comments) {
+					List<TaskEntry> allTasksInComment = new ArrayList<TaskEntry>();
+					for (int t = 0; t < taskTags.length; t++) {
+						String taskTag = new String(taskTags[t]);
+						String taskPriority = null;
+						if (taskPriorities != null) {
+							taskPriority = new String(taskPriorities[t]);
+						}
+						allTasksInComment.addAll(comment.getPositionsOf(taskTag, taskPriority,
+								compilationResult.lineSeparatorPositions, caseSensitiveTags));
+					}
+					if (!allTasksInComment.isEmpty()) {
+						// Need to check quickly for clashes
+						for (int t1 = 0; t1 < allTasksInComment.size(); t1++) {
+							for (int t2 = 0; t2 < allTasksInComment.size(); t2++) {
+								if (t1 == t2)
+									continue;
+								TaskEntry taskOne = allTasksInComment.get(t1);
+								TaskEntry taskTwo = allTasksInComment.get(t2);
+								if (DEBUG_TASK_TAGS) {
+									System.out.println("Comparing " + taskOne.toString() + " and " + taskTwo.toString());
+								}
+								if ((taskOne.start + taskOne.taskTag.length() + 1) == taskTwo.start) {
+									// Adjacent tags
+									taskOne.isAdjacentTo = taskTwo;
+								} else {
+									if ((taskOne.getEnd() > taskTwo.start) && (taskOne.start < taskTwo.start)) {
+										taskOne.setEnd(taskTwo.start - 1);
+										if (DEBUG_TASK_TAGS) {
+											System.out.println("trim " + taskOne.toString() + " and " + taskTwo.toString());
+										}
+									} else if (taskTwo.getEnd() > taskOne.start && taskTwo.start < taskOne.start) {
+										taskTwo.setEnd(taskOne.start - 1);
+										if (DEBUG_TASK_TAGS) {
+											System.out.println("trim " + taskOne.toString() + " and " + taskTwo.toString());
+										}
+									}
+								}
+							}
+						}
+						for (TaskEntry taskEntry : allTasksInComment) {
+							this.problemReporter.referenceContext = this;
+							if (DEBUG_TASK_TAGS) {
+								System.out.println("Adding task " + taskEntry.toString());
+							}
+							problemReporter.task(taskEntry.taskTag, taskEntry.getText(), taskEntry.taskPriority, taskEntry.start,
+									taskEntry.getEnd());
+						}
+					}
+				}
+			}
+		} catch (AbortCompilation ac) {
+			// that is ok... probably cancelled
+		} catch (Throwable t) {
+			Util.log(t, "Unexpected problem processing task tags in " + groovySourceUnit.getName());
+			new RuntimeException("Unexpected problem processing task tags in " + groovySourceUnit.getName(), t).printStackTrace();
+		}
 	}
 
 	@Override
 	public void analyseCode() {
 		processToPhase(Phases.CANONICALIZATION);
+
 	}
 
 	@Override

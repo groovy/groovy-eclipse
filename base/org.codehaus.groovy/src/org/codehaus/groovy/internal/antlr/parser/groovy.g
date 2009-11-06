@@ -17,6 +17,7 @@ import antlr.LexerSharedInputState;
 import antlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
 import antlr.TokenStreamRecognitionException;
+import org.codehaus.groovy.ast.Comment;
 }
 
 /** JSR-241 Groovy Recognizer
@@ -262,6 +263,9 @@ tokens {
     List errorList;
     public List getErrorList() { return errorList; }
 
+	List<Comment> comments = new ArrayList<Comment>();
+	public List<Comment> getComments() { return comments; }
+	
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
@@ -312,6 +316,28 @@ tokens {
         return attachLast(create(type, txt, first), last);
     }
     
+	private Stack<Integer> commentStartPositions = new Stack<Integer>();
+
+	public void startComment(int line, int column) {
+		// System.out.println(">> comment at l"+line+"c"+column);
+		commentStartPositions.push((line<<16)+column);
+	}
+
+	public void endComment(int type, int line, int column,String text) {
+		// System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
+		int lineAndColumn = commentStartPositions.pop();
+		int startLine = lineAndColumn>>>16;
+		int startColumn = lineAndColumn&0xffff;
+		if (type==0) {
+			Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+			comments.add(comment);
+		} else if (type==1) {
+			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+			comments.add(comment);
+		} 
+	}
+	
+	
     /** 
     *   Clones the token
     */
@@ -3728,6 +3754,23 @@ options {
             newlineCheck(check);
         }
     ;
+    
+    protected
+ONE_NL_KEEP[boolean check]
+options {
+    paraphrase="a newline";
+}
+ :   // handle newlines, which are significant in Groovy
+        (   options {generateAmbigWarnings=false;}
+        :   "\r\n"  // Evil DOS
+        |   '\r'    // Macintosh
+        |   '\n'    // Unix (the right way)
+        )
+        {
+            // update current line number for error reporting
+            newlineCheck(check);
+        }
+    ;
 
 // Group any number of newlines (with comments and whitespace) into a single token.
 // This reduces the amount of parser lookahead required to parse around newlines.
@@ -3758,15 +3801,20 @@ options {
 SL_COMMENT
 options {
     paraphrase="a single line comment";
-}
-    :   "//"
-        (
+} 
+    :
+      "//"
+      { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+       (
             options {  greedy = true;  }:
             // '\uffff' means the EOF character.
             // This will fix the issue GROOVY-766 (infinite loop).
             ~('\n'|'\r'|'\uffff')
         )*
-        { if (!whitespaceIncluded)  $setType(Token.SKIP); }
+        { 
+         parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+          if (!whitespaceIncluded)  $setType(Token.SKIP); 
+        }
         //This might be significant, so don't swallow it inside the comment:
         //ONE_NL
     ;
@@ -3793,6 +3841,7 @@ options {
     paraphrase="a comment";
 }
     :   "/*"
+      { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
         (   /*  '\r' '\n' can be matched in one alternative or by matching
                 '\r' in one iteration and '\n' in another. I am trying to
                 handle any flavor of newline that comes in, but the language
@@ -3805,11 +3854,14 @@ options {
             }
         :
             ( '*' ~'/' ) => '*'
-        |   ONE_NL[true]
+        |   ONE_NL_KEEP[true]
         |   ~('*'|'\n'|'\r'|'\uffff')
         )*
         "*/"
-        { if (!whitespaceIncluded)  $setType(Token.SKIP); }
+        { 
+          parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+          if (!whitespaceIncluded)  $setType(Token.SKIP); 
+        }
     ;
 
 

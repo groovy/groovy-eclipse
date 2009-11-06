@@ -8967,6 +8967,9 @@ public void initializeScanner(){
 		this.options.taskTags/*taskTags*/,
 		this.options.taskPriorites/*taskPriorities*/,
 		this.options.isTaskCaseSensitive/*taskCaseSensitive*/);
+	// GROOVY start - workaround JDT bug where it sorts the tasks but not the priorities!
+	this.options.taskPriorites = scanner.taskPriorities;
+	// GROOVY end
 }
 public void jumpOverMethodBody() {
 	//on diet parsing.....do not buffer method statements

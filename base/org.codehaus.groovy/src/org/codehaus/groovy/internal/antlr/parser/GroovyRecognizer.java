@@ -10,6 +10,7 @@ import antlr.LexerSharedInputState;
 import antlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
 import antlr.TokenStreamRecognitionException;
+import org.codehaus.groovy.ast.Comment;
 
 import antlr.TokenBuffer;
 import antlr.TokenStreamException;
@@ -242,6 +243,9 @@ public class GroovyRecognizer extends antlr.LLkParser       implements GroovyTok
     List errorList;
     public List getErrorList() { return errorList; }
 
+	List<Comment> comments = new ArrayList<Comment>();
+	public List<Comment> getComments() { return comments; }
+	
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
@@ -292,6 +296,28 @@ public class GroovyRecognizer extends antlr.LLkParser       implements GroovyTok
         return attachLast(create(type, txt, first), last);
     }
     
+	private Stack<Integer> commentStartPositions = new Stack<Integer>();
+
+	public void startComment(int line, int column) {
+		// System.out.println(">> comment at l"+line+"c"+column);
+		commentStartPositions.push((line<<16)+column);
+	}
+
+	public void endComment(int type, int line, int column,String text) {
+		// System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
+		int lineAndColumn = commentStartPositions.pop();
+		int startLine = lineAndColumn>>>16;
+		int startColumn = lineAndColumn&0xffff;
+		if (type==0) {
+			Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+			comments.add(comment);
+		} else if (type==1) {
+			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+			comments.add(comment);
+		} 
+	}
+	
+	
     /** 
     *   Clones the token
     */
@@ -14083,6 +14109,7 @@ inputState.guessing--;
 		"'$'",
 		"whitespace",
 		"a newline",
+		"a newline",
 		"a single line comment",
 		"a comment",
 		"a string character",
@@ -14140,7 +14167,7 @@ inputState.guessing--;
 		long[] data = new long[16];
 		data[0]=-14L;
 		for (int i = 1; i<=2; i++) { data[i]=-1L; }
-		data[3]=67108863L;
+		data[3]=134217727L;
 		return data;
 	}
 	public static final BitSet _tokenSet_4 = new BitSet(mk_tokenSet_4());
@@ -14375,7 +14402,7 @@ inputState.guessing--;
 		data[0]=-16L;
 		data[1]=-900719925491662849L;
 		data[2]=-1L;
-		data[3]=67108860L;
+		data[3]=134217724L;
 		return data;
 	}
 	public static final BitSet _tokenSet_42 = new BitSet(mk_tokenSet_42());
@@ -14624,7 +14651,7 @@ inputState.guessing--;
 		data[0]=-16L;
 		data[1]=-288230376151711745L;
 		data[2]=-1L;
-		data[3]=67108863L;
+		data[3]=134217727L;
 		return data;
 	}
 	public static final BitSet _tokenSet_80 = new BitSet(mk_tokenSet_80());

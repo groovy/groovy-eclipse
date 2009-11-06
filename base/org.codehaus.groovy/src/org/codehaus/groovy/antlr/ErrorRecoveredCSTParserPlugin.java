@@ -87,7 +87,8 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
 		}
 		
 		super.ast = parser.getAST();
-
+		
+	    sourceUnit.setComments(parser.getComments());
 		reportCST(sourceUnit, parser);
 	}
 

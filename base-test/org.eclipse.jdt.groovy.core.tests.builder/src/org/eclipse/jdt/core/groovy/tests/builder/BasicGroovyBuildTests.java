@@ -10,10 +10,16 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import java.util.Hashtable;
+
 import junit.framework.Test;
 
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 
 /**
@@ -484,205 +490,480 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 //		"   public int run() { return 12; }\n"+
 //		"}\n"
 //		);
-		
 
-//	/*
-//	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23894
-//	 */
-//	public void testToDoMarker() throws Exception {
-//		Hashtable options = JavaCore.getOptions();
-//		Hashtable newOptions = JavaCore.getOptions();
-//		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
-//		
-//		JavaCore.setOptions(newOptions);
-//		
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p; \n"+ //$NON-NLS-1$
-//			"//todo nothing\n"+ //$NON-NLS-1$
-//			"public class A {\n"+ //$NON-NLS-1$
-//			"}"); //$NON-NLS-1$
-//
-//		fullBuild(projectPath);
-//		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing", pathToA, 14, 26, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-//		
-//		JavaCore.setOptions(options);
-//	}
-//
-//	/*
-//	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=91426
-//	 */
-//	public void testToDoMarker2() throws Exception {
-//		Hashtable options = JavaCore.getOptions();
-//		Hashtable newOptions = JavaCore.getOptions();
-//		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
-//		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
-//		
-//		JavaCore.setOptions(newOptions);
-//		
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p; \n"+ //$NON-NLS-1$
-//			"//TODO normal\n"+ //$NON-NLS-1$
-//			"public class A {\n"+ //$NON-NLS-1$
-//			"	public void foo() {\n"+ //$NON-NLS-1$
-//			"		//FIXME high\n"+ //$NON-NLS-1$
-//			"	}\n"+ //$NON-NLS-1$
-//			"	public void foo2() {\n"+ //$NON-NLS-1$
-//			"		//XXX low\n"+ //$NON-NLS-1$
-//			"	}\n"+ //$NON-NLS-1$
-//			"}"); //$NON-NLS-1$
-//
-//		fullBuild(projectPath);
-//		IMarker[] markers = env.getTaskMarkersFor(pathToA);
-//		assertEquals("Wrong size", 3, markers.length);
-//		try {
-//			IMarker marker = markers[0];
-//			Object priority = marker.getAttribute(IMarker.PRIORITY);
-//			String message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertTrue("Wrong message", message.startsWith("TODO "));
-//			assertNotNull("No task priority", priority);
-//			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
-//
-//			marker = markers[1];
-//			priority = marker.getAttribute(IMarker.PRIORITY);
-//			message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertTrue("Wrong message", message.startsWith("FIXME "));
-//			assertNotNull("No task priority", priority);
-//			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
-//
-//			marker = markers[2];
-//			priority = marker.getAttribute(IMarker.PRIORITY);
-//			message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertTrue("Wrong message", message.startsWith("XXX "));
-//			assertNotNull("No task priority", priority);
-//			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_LOW), priority);
-//		} catch (CoreException e) {
-//			assertTrue(false);
-//		}
-//		JavaCore.setOptions(options);
-//	}
-//	
-//	/*
-//	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=110797
-//	 */
-//	public void testTags() throws Exception {
-//		Hashtable options = JavaCore.getOptions();
-//		Hashtable newOptions = JavaCore.getOptions();
-//		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
-//		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
-//		
-//		JavaCore.setOptions(newOptions);
-//		
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p; \n"+ //$NON-NLS-1$
-//			"// TODO FIXME need to review the loop TODO should be done\n" + //$NON-NLS-1$
-//			"public class A {\n" + //$NON-NLS-1$
-//			"}");
-//
-//		fullBuild(projectPath);
-//		IMarker[] markers = env.getTaskMarkersFor(pathToA);
-//		assertEquals("Wrong size", 3, markers.length);
-//		try {
-//			IMarker marker = markers[2];
-//			Object priority = marker.getAttribute(IMarker.PRIORITY);
-//			String message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertEquals("Wrong message", "TODO should be done", message);
-//			assertNotNull("No task priority", priority);
-//			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
-//
-//			marker = markers[1];
-//			priority = marker.getAttribute(IMarker.PRIORITY);
-//			message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertEquals("Wrong message", "FIXME need to review the loop", message);
-//			assertNotNull("No task priority", priority);
-//			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
-//
-//			marker = markers[0];
-//			priority = marker.getAttribute(IMarker.PRIORITY);
-//			message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertEquals("Wrong message", "TODO need to review the loop", message);
-//			assertNotNull("No task priority", priority);
-//			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
-//		} catch (CoreException e) {
-//			assertTrue(false);
-//		}
-//		JavaCore.setOptions(options);
-//	}
-//
-//	/*
-//	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=110797
-//	 */
-//	public void testTags2() throws Exception {
-//		Hashtable options = JavaCore.getOptions();
-//		Hashtable newOptions = JavaCore.getOptions();
-//		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
-//		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
-//		
-//		JavaCore.setOptions(newOptions);
-//		
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p; \n"+ //$NON-NLS-1$
-//			"// TODO TODO need to review the loop\n" + //$NON-NLS-1$
-//			"public class A {\n" + //$NON-NLS-1$
-//			"}");
-//
-//		fullBuild(projectPath);
-//		IMarker[] markers = env.getTaskMarkersFor(pathToA);
-//		assertEquals("Wrong size", 2, markers.length);
-//		try {
-//			IMarker marker = markers[1];
-//			Object priority = marker.getAttribute(IMarker.PRIORITY);
-//			String message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertEquals("Wrong message", "TODO need to review the loop", message);
-//			assertNotNull("No task priority", priority);
-//			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
-//
-//			marker = markers[0];
-//			priority = marker.getAttribute(IMarker.PRIORITY);
-//			message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertEquals("Wrong message", "TODO need to review the loop", message);
-//			assertNotNull("No task priority", priority);
-//			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
-//		} catch (CoreException e) {
-//			assertTrue(false);
-//		}
-//		JavaCore.setOptions(options);
-//	}
+
+	public void testSimpleTaskMarkerInSingleLineComment() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"class C {\n"+
+			"//todo nothing\n"+ //$NON-NLS-1$  // 24>36 'todo nothing'
+			"\n"+
+			"//tooo two\n"+ //$NON-NLS-1$
+			"}"); //$NON-NLS-1$
+		
+		fullBuild(projectPath);
+
+		Problem[] rootProblems = env.getProblemsFor(pathToA);
+		for (int i=0;i<rootProblems.length;i++) {
+			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]"+rootProblems[i].getEnd());
+		}
+		// positions should be from the first character of the tag to the character after the last in the text
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing", pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		JavaCore.setOptions(options);
+	}
+
+	public void testSimpleTaskMarkerInSingleLineCommentEndOfClass() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"class C {\n"+
+			"//topo nothing\n"+ //$NON-NLS-1$ '/' is 22 'n' is 29 'g' is 35
+			"\n"+
+			"//todo two\n"+ //$NON-NLS-1$ '/' is 38 't' is 45 'o' is 47
+			"}"); //$NON-NLS-1$
+		
+		fullBuild(projectPath);
+
+		Problem[] rootProblems = env.getProblemsFor(pathToA);
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo two", pathToA, 40, 48, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		JavaCore.setOptions(options);
+	}
+
+	public void testSimpleTaskMarkerInSingleLineCommentEndOfClassCaseInsensitive() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
+		newOptions.put(JavaCore.COMPILER_TASK_CASE_SENSITIVE, JavaCore.DISABLED); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"class C {\n"+
+			"//TODO nothing\n"+ //$NON-NLS-1$ '/' is 22 'n' is 29 'g' is 35
+			"\n"+
+			"//topo two\n"+ //$NON-NLS-1$ '/' is 38 't' is 45 'o' is 47
+			"}"); //$NON-NLS-1$
+		
+		fullBuild(projectPath);
+
+		Problem[] rootProblems = env.getProblemsFor(pathToA);
+		for (int i=0;i<rootProblems.length;i++) {
+			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]"+rootProblems[i].getEnd());
+		}
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing", pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		JavaCore.setOptions(options);
+	}
+
+	public void testTaskMarkerInMultiLineCommentButOnOneLine() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"/*  todo nothing */\n"+ //$NON-NLS-1$ 
+			"public class A {\n"+ //$NON-NLS-1$
+			"}"); //$NON-NLS-1$
+		
+		fullBuild(projectPath);
+
+		Problem[] rootProblems = env.getProblemsFor(pathToA);
+		for (int i=0;i<rootProblems.length;i++) {
+			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]");
+		}
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing", pathToA, 16, 29, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		JavaCore.setOptions(options);
+	}
+	
+	public void testTaskMarkerInMultiLineButNoText() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"/*  todo\n" + //$NON-NLS-1$
+			" */\n"+ //$NON-NLS-1$ 
+			"public class A {\n"+ //$NON-NLS-1$
+			"}"); //$NON-NLS-1$
+		
+		fullBuild(projectPath);
+
+		Problem[] rootProblems = env.getProblemsFor(pathToA);
+		for (int i=0;i<rootProblems.length;i++) {
+			System.out.println(i+"  "+rootProblems[i]+" ["+rootProblems[i].getMessage()+"]");
+		}
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo ", pathToA, 16, 20, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		JavaCore.setOptions(options);
+	}
+
+	public void testTaskMarkerInMultiLineOutsideClass() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"/*  \n" + //$NON-NLS-1$  12
+			" * todo nothing *\n" + //$NON-NLS-1$  17
+			" */\n"+ //$NON-NLS-1$ 
+			"public class A {\n"+ //$NON-NLS-1$
+			"}"); //$NON-NLS-1$
+		
+		fullBuild(projectPath);
+
+		Problem[] rootProblems = env.getProblemsFor(pathToA);
+		for (int i=0;i<rootProblems.length;i++) {
+			System.out.println(i+"  "+rootProblems[i]+" ["+rootProblems[i].getMessage()+"]");
+		}
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing *", pathToA, 20, 34, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		JavaCore.setOptions(options);
+	}
+	
+	// task marker inside a multi line comment inside a class
+	public void testTaskMarkerInMultiLineInsideClass() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$ -- \n is 11
+			"public class A {\n"+ //$NON-NLS-1$ -- \n is 28 
+			"   /*  \n" + //$NON-NLS-1$ -- \n is 36
+			" * todo nothing *\n" + //$NON-NLS-1$ 
+			" */\n"+ //$NON-NLS-1$ 
+			"}"); //$NON-NLS-1$
+		
+		fullBuild(projectPath);
+
+		Problem[] rootProblems = env.getProblemsFor(pathToA);
+		for (int i=0;i<rootProblems.length;i++) {
+			System.out.println(i+"  "+rootProblems[i]);
+		}
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing *", pathToA, 40, 54, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		JavaCore.setOptions(options);
+	}
+
+
+	// Testing tag priority
+	public void testTaskMarkerMixedPriorities() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
+		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"//TODO normal\n"+ //$NON-NLS-1$
+			"public class A {\n"+ //$NON-NLS-1$
+			"	public void foo() {\n"+ //$NON-NLS-1$
+			"		//FIXME high\n"+ //$NON-NLS-1$
+			"	}\n"+ //$NON-NLS-1$
+			"	public void foo2() {\n"+ //$NON-NLS-1$
+			"		//XXX low\n"+ //$NON-NLS-1$
+			"	}\n"+ //$NON-NLS-1$
+			"}"); //$NON-NLS-1$
+
+		fullBuild(projectPath);
+		IMarker[] markers = env.getTaskMarkersFor(pathToA);
+		assertEquals("Wrong size", 3, markers.length);
+		try {
+			IMarker marker = markers[0];
+			Object priority = marker.getAttribute(IMarker.PRIORITY);
+			String message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertTrue("Wrong message", message.startsWith("TODO "));
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
+
+			marker = markers[1];
+			priority = marker.getAttribute(IMarker.PRIORITY);
+			message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertTrue("Wrong message", message.startsWith("FIXME "));
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
+
+			marker = markers[2];
+			priority = marker.getAttribute(IMarker.PRIORITY);
+			message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertTrue("Wrong message", message.startsWith("XXX "));
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_LOW), priority);
+		} catch (CoreException e) {
+			assertTrue(false);
+		}
+		JavaCore.setOptions(options);
+	}
+
+	public void testTaskMarkerMultipleOnOneLineInSLComment() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
+		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"// TODO FIXME need to review the loop TODO should be done\n" + //$NON-NLS-1$
+			"public class A {\n" + //$NON-NLS-1$
+			"}");
+
+		fullBuild(projectPath);
+		IMarker[] markers = env.getTaskMarkersFor(pathToA);
+		assertEquals("Wrong size", 3, markers.length);
+		try {
+			IMarker marker = markers[2];
+			Object priority = marker.getAttribute(IMarker.PRIORITY);
+			String message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertEquals("Wrong message", "TODO should be done", message);
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
+
+			marker = markers[1];
+			priority = marker.getAttribute(IMarker.PRIORITY);
+			message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertEquals("Wrong message", "FIXME need to review the loop", message);
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
+
+			marker = markers[0];
+			priority = marker.getAttribute(IMarker.PRIORITY);
+			message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertEquals("Wrong message", "TODO need to review the loop", message);
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
+		} catch (CoreException e) {
+			assertTrue(false);
+		}
+		JavaCore.setOptions(options);
+	}
+	
+	public void testTaskMarkerMultipleOnOneLineInMLComment() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
+		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"/* TODO FIXME need to review the loop TODO should be done */\n" + //$NON-NLS-1$
+			"public class A {\n" + //$NON-NLS-1$
+			"}");
+
+		fullBuild(projectPath);
+		IMarker[] markers = env.getTaskMarkersFor(pathToA);
+		assertEquals("Wrong size", 3, markers.length);
+		try {
+			IMarker marker = markers[2];
+			Object priority = marker.getAttribute(IMarker.PRIORITY);
+			String message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertEquals("Wrong message", "TODO should be done", message);
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
+
+			marker = markers[1];
+			priority = marker.getAttribute(IMarker.PRIORITY);
+			message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertEquals("Wrong message", "FIXME need to review the loop", message);
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
+
+			marker = markers[0];
+			priority = marker.getAttribute(IMarker.PRIORITY);
+			message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertEquals("Wrong message", "TODO need to review the loop", message);
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
+		} catch (CoreException e) {
+			assertTrue(false);
+		}
+		JavaCore.setOptions(options);
+	}
+
+	// two on one line
+	public void testTaskMarkerSharedDescription() throws Exception {
+		Hashtable options = JavaCore.getOptions();
+		Hashtable newOptions = JavaCore.getOptions();
+		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
+		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
+		
+		JavaCore.setOptions(newOptions);
+		
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p; \n"+ //$NON-NLS-1$
+			"// TODO TODO need to review the loop\n" + //$NON-NLS-1$
+			"public class A {\n" + //$NON-NLS-1$
+			"}");
+
+		fullBuild(projectPath);
+		IMarker[] markers = env.getTaskMarkersFor(pathToA);
+		assertEquals("Wrong size", 2, markers.length);
+		try {
+			IMarker marker = markers[1];
+			Object priority = marker.getAttribute(IMarker.PRIORITY);
+			String message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertEquals("Wrong message", "TODO need to review the loop", message);
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
+
+			marker = markers[0];
+			priority = marker.getAttribute(IMarker.PRIORITY);
+			message = (String) marker.getAttribute(IMarker.MESSAGE);
+			assertEquals("Wrong message", "TODO need to review the loop", message);
+			assertNotNull("No task priority", priority);
+			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
+		} catch (CoreException e) {
+			assertTrue(false);
+		}
+		JavaCore.setOptions(options);
+	}
 //	
 //	/*
 //	 * Ensures that a task tag is not user editable
