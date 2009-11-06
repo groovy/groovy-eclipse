@@ -199,6 +199,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"success");		
 	}
 	
+	
 	public void testStandaloneGroovyFile2() {
 		this.runConformTest(new String[] {
 			"p/X.groovy",
@@ -468,6 +469,40 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"  }\n" + 
 				"}\n");
 	}
+	
+//	public void testOverriding_GRE440() {
+//		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+//		this.runNegativeTest(new String[] {
+//				"Foo.groovy",
+//				"class Foo { \n"+
+//				" static void main(args) {}\n"+
+//				"}\n",
+//				"Goo.java",
+//				"class Goo extends Foo { \n"+
+//				"  public static void main(String[] argv) {}\n"+
+//				"}\n",				
+//				},
+//				"xxxx");
+//		checkGCUDeclaration("Foo.groovy",
+//				"yyy");
+//	}
+//	
+//	public void testOverriding_GRE440_2() {
+//		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+//		this.runNegativeTest(new String[] {
+//				"Foo.java",
+//				"class Foo { \n"+
+//				" void main(String... ss) {}\n"+
+//				"}\n",
+//				"Goo.java",
+//				"class Goo extends Foo { \n"+
+//				"  void main(String[] ss) {}\n"+
+//				"}\n",				
+//				},
+//				"xxxx");
+//		checkGCUDeclaration("Foo.groovy",
+//				"yyy");
+//	}
 
 	public void testParsingNewRecovery6_GRE468() {
 		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
