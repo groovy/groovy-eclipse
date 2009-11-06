@@ -19,11 +19,15 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.builder.GroovyNameLookup;
@@ -240,7 +244,7 @@ public class OrganizeGroovyImports {
     
     public TextEdit calculateMissingImports() {
         ModuleNode node = unit.getModuleNode();
-        if (node.getClasses() == null || node.getClasses().size() == 0) {
+        if (isEmpty(node)) {
             // no AST probably a syntax error...do nothing
             return new MultiTextEdit();
         }
@@ -288,7 +292,40 @@ public class OrganizeGroovyImports {
         }
         return null;
     }
+
+    /**
+     * Determine if module is empty...not as easy as it sounds
+     * @param node
+     * @return
+     */
+    private boolean isEmpty(ModuleNode node) {
+        if (node == null || node.getClasses() == null || node.getClasses().size() == 0) {
+            return true;
+        }
+        if (node.getClasses().size() == 1 && ((ClassNode) node.getClasses().get(0)).isScript()) {
+            if ((node.getStatementBlock() == null || node.getStatementBlock().isEmpty() || isNullReturn(node.getStatementBlock())) && 
+                    (node.getMethods() == null || node.getMethods().size() == 0)) {
+                return true;
+            }
+        }
+        return false;
+    }
     
+    /**
+     * @param statementBlock
+     * @return
+     */
+    private boolean isNullReturn(BlockStatement statementBlock) {
+        List<Statement> statements = statementBlock.getStatements();
+        if (statements.size() == 1 && statements.get(0) instanceof ReturnStatement) {
+            ReturnStatement ret = (ReturnStatement) statements.get(0);
+            if (ret.getExpression() instanceof ConstantExpression) {
+                return ((ConstantExpression) ret.getExpression()).isNullExpression();
+            }
+        }
+        return false;
+    }
+
     /**
      * @param edit
      * @return

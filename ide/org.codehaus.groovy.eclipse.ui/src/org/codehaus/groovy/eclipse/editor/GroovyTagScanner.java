@@ -240,6 +240,11 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 
     @Override
     protected List createRules() {
+        return createGroovyRules(manager, additionalRules, additionalGJDKKeywords, additionalGroovyKeywords);
+    }
+    
+    public static List<IRule> createGroovyRules(IColorManager manager, List<IRule> additionalRules, List<String> additionalGJDKKeywords, List<String> additionalGroovyKeywords) {
+        
         List<IRule> rules = new ArrayList<IRule>();
 
         // Add generic whitespace rule.

@@ -75,10 +75,11 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     
 
 
-    protected IProject createSimpleGroovyProject() throws JavaModelException {
+    protected IProject createSimpleGroovyProject() throws Exception {
         IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
         env.addGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
         fullBuild(projectPath);
         
         // remove old package fragment root so that names don't collide

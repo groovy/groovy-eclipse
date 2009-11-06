@@ -52,9 +52,11 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 				}
 			} else {
 				if (declExpr.getLeftExpression() instanceof VariableExpression) {
-					// should also be looking at variable types here
 					VariableExpression var = (VariableExpression) declExpr.getLeftExpression();
-					ClassNode type = declExpr.getRightExpression().getType();
+					ClassNode type = var.getType();
+					if (type.equals(VariableScope.OBJECT_CLASS_NODE)) {
+						type = declExpr.getRightExpression().getType();
+					}
 					ClassNode declaringType = var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var
 							.getAccessedVariable()).getDeclaringClass() : VariableScope.OBJECT_CLASS_NODE;
 					scope.addVariable(var.getName(), type, declaringType);
