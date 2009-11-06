@@ -297,7 +297,7 @@ public class BuilderTests extends TestCase {
 	 */
 	protected void expectingOnlySpecificProblemFor(IPath root, Problem problem) {
 		expectingOnlySpecificProblemsFor(root, new Problem[] { problem });
-	}
+	} 
 
 	/** Verifies that the given element has specifics problems and
 	 * only the given problems.
