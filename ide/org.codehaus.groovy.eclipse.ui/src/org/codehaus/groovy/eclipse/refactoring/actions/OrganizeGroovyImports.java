@@ -89,6 +89,7 @@ public class OrganizeGroovyImports {
         public void visitConstructorCallExpression(
                 ConstructorCallExpression call) {
             handleType(call.getType(), false);
+            super.visitConstructorCallExpression(call);
         }
         
         @Override

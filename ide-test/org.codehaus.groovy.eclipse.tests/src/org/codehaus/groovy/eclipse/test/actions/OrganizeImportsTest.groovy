@@ -252,6 +252,17 @@ import other.SecondClass
         doChoiceTest(contents, ["other2.FourthClass", "other3.FourthClass"])    
     }
     
+    void testGRECLISPE506() {
+        String contents = 
+            """ 
+            import java.text.DateFormat;
+        
+            new String(DateFormat.getDateInstance())
+            """
+		def expectedImports = [ ] // none added, none removed
+		doAddImportTest(contents, expectedImports)
+    }
+    
 
 
     void doAddImportTest(contents, expectedImports) {
