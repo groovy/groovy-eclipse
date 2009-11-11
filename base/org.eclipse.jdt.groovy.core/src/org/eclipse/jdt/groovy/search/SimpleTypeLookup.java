@@ -245,6 +245,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 			} else {
 				return new TypeLookupResult(type, null, null, confidence);
 			}
+		} else if (node instanceof ClassExpression) {
+			return new TypeLookupResult(node.getType(), declaringType, node.getType(), confidence);
 		}
 
 		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)

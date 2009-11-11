@@ -642,11 +642,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
-	// TODO THIS ONE IS BROKEN!!!
 	@Override
 	public void visitConstructorCallExpression(ConstructorCallExpression node) {
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
+			internalVisitTypeReference(node.getType());
 			super.visitConstructorCallExpression(node);
 		}
 	}
@@ -872,6 +872,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitStaticMethodCallExpression(StaticMethodCallExpression node) {
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
+			internalVisitTypeReference(node.getOwnerType());
 			super.visitStaticMethodCallExpression(node);
 		}
 	}
