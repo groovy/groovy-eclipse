@@ -586,7 +586,7 @@ public class CompilationUnit extends ProcessingUnit {
             String name = su.getName();
                 // FIXASC (groovychange)
             if (iterating) {
-            	GroovyBugError gbe = GroovyBugError("Damaging 'names' whilst already iterating.  Name getting added is '"+su.getName()+"'");
+            	GroovyBugError gbe = new GroovyBugError("Damaging 'names' whilst already iterating.  Name getting added is '"+su.getName()+"'");
             	gbe.printStackTrace();
             	throw gbe;
             }
