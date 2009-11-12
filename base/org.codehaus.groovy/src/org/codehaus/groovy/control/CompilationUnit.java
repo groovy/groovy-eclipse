@@ -361,6 +361,13 @@ public class CompilationUnit extends ProcessingUnit {
             SourceUnit su = (SourceUnit) iter.next();
             if (name.equals(su.getName())) return su;
         }
+        // FIXASC (groovychange)
+        if (iterating) {
+        	GroovyBugError gbe = new GroovyBugError("Queuing new source whilst already iterating.  Queued source is '"+source.getName()+"'");
+        	gbe.printStackTrace();
+            throw gbe;
+        }
+        // FIXASC (groovychange) end
         queuedSources.add(source);
         return source;
     }
@@ -577,6 +584,13 @@ public class CompilationUnit extends ProcessingUnit {
         while (!queuedSources.isEmpty()) {
             SourceUnit su = (SourceUnit) queuedSources.removeFirst();
             String name = su.getName();
+                // FIXASC (groovychange)
+            if (iterating) {
+            	GroovyBugError gbe = GroovyBugError("Damaging 'names' whilst already iterating.  Name getting added is '"+su.getName()+"'");
+            	gbe.printStackTrace();
+            	throw gbe;
+            }
+    // FIXASC (groovychange) end
             names.add(name);
             sources.put(name, su);
         }
@@ -856,31 +870,43 @@ public class CompilationUnit extends ProcessingUnit {
     }
 
 
+    // FIXASC (groovychange)
+    private boolean iterating = false;
+    
     /**
      * A loop driver for applying operations to all SourceUnits.
      * Automatically skips units that have already been processed
      * through the current phase.
      */
     public void applyToSourceUnits(SourceUnitOperation body) throws CompilationFailedException {
-        Iterator keys = names.iterator();
-        while (keys.hasNext()) {
-            String name = (String) keys.next();
-            SourceUnit source = (SourceUnit) sources.get(name);
-            if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
-                try {
-                    body.call(source);
-                } catch (CompilationFailedException e) {
-                    throw e;
-                } catch (Exception e) {
-                    GroovyBugError gbe = new GroovyBugError(e);
-                    changeBugText(gbe, source);
-                    throw gbe;
-                } catch (GroovyBugError e) {
-                    changeBugText(e, source);
-                    throw e;
-                }
-            }
-        }
+    // FIXASC (groovychange)
+    	try {
+    		iterating = true;
+    // FIXASC (groovychange) end
+	        Iterator keys = names.iterator();
+	        while (keys.hasNext()) {
+	            String name = (String) keys.next();
+	            SourceUnit source = (SourceUnit) sources.get(name);
+	            if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
+	                try {
+	                    body.call(source);
+	                } catch (CompilationFailedException e) {
+	                    throw e;
+	                } catch (Exception e) {
+	                    GroovyBugError gbe = new GroovyBugError(e);
+	                    changeBugText(gbe, source);
+	                    throw gbe;
+	                } catch (GroovyBugError e) {
+	                    changeBugText(e, source);
+	                    throw e;
+	                }
+	            }
+	        }
+    // FIXASC (groovychange)
+    	} finally {
+    		iterating = false;
+    	}
+    // FIXASC (groovychange) end
 
 
         getErrorCollector().failIfErrors();
