@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.MethodNode;
 
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.core.runtime.CoreException;
@@ -67,7 +66,8 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 	}
 
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-		if (node instanceof ClassExpression || node instanceof ConstructorCallExpression || node instanceof Parameter
+		// don't do constructor calls. They are found through the class node inside of it
+		if (node instanceof ClassExpression || /* node instanceof ConstructorCallExpression || */node instanceof Parameter
 				|| node instanceof DeclarationExpression || node instanceof ClassNode || node instanceof ImportNode
 				|| node instanceof FieldNode || node instanceof MethodNode || node instanceof VariableExpression) {
 
@@ -96,10 +96,10 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 						node = ((ImportNode) node).getType();
 						start = node.getStart();
 						end = node.getEnd();
-					} else if (node instanceof ConstructorCallExpression) {
-						node = maybeGetComponentType(((ConstructorCallExpression) node).getType());
-						start = node.getStart();
-						end = node.getEnd();
+						// } else if (node instanceof ConstructorCallExpression) {
+						// node = maybeGetComponentType(((ConstructorCallExpression) node).getType());
+						// start = node.getStart();
+						// end = node.getEnd();
 					} else if (node instanceof ClassExpression) {
 						start = node.getStart();
 						end = start + ((ClassExpression) node).getType().getNameWithoutPackage().length();
