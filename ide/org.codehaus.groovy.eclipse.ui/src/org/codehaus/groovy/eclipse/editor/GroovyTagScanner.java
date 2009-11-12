@@ -270,7 +270,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED)) {
             RGB gjdkRGB = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
-            IToken gjdkToken = new Token(new TextAttribute(new Color(null,gjdkRGB), null, SWT.BOLD));
+            IToken gjdkToken = new Token(new TextAttribute(manager.getColor(gjdkRGB), null, SWT.BOLD));
             for (int j = 0; j < gjdkWords.length; ++j) {
                 keywordsRule.addWord(gjdkWords[j],gjdkToken);
             }
@@ -285,14 +285,14 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED)) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
-            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
+            IToken token = new Token(new TextAttribute(manager.getColor(rgb), null, SWT.BOLD));
             for (int j = 0; j < keywords.length; ++j) {
                 keywordsRule.addWord(keywords[j],token);
             }
         }
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED)) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR);
-            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
+            IToken token = new Token(new TextAttribute(manager.getColor(rgb), null, SWT.BOLD));
             for (int j = 0; j < groovyKeywords.length; ++j) {
                 keywordsRule.addWord(groovyKeywords[j],token);
             }
@@ -305,26 +305,26 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         }
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_ENABLED)) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
-            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.BOLD));
+            IToken token = new Token(new TextAttribute(manager.getColor(rgb), null, SWT.BOLD));
             for (int j = 0; j < types.length; ++j) {
                 keywordsRule.addWord(types[j],token);
             }
         }
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED)) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR);
-            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.NONE));
+            IToken token = new Token(new TextAttribute(manager.getColor(rgb), null, SWT.NONE));
             rules.add( new NumberRule(token));
         }
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED)) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR);
-            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.NONE));
+            IToken token = new Token(new TextAttribute(manager.getColor(rgb), null, SWT.NONE));
             rules.add( new EndOfLineRule("//", token));
             rules.add( new EndOfLineRule("#!", token));
         }
         
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED)) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-            IToken token = new Token(new TextAttribute(new Color(null,rgb), null, SWT.ITALIC));
+            IToken token = new Token(new TextAttribute(manager.getColor(rgb), null, SWT.ITALIC));
             rules.add( new SingleLineRule("/", "/", token, '\\'));
         }
         rules.add(keywordsRule); 
