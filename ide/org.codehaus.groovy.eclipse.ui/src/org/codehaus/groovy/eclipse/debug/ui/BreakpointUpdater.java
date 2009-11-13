@@ -29,6 +29,7 @@ import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.debug.core.IJavaLineBreakpoint;
+import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.debug.core.JDIDebugPlugin;
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint;
 import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
@@ -106,6 +107,9 @@ public class BreakpointUpdater implements IMarkerUpdater {
      */
     private GroovyCompilationUnit getCompilationUnit(IMarker marker) {
         IResource resource = marker.getResource();
+        if (!Util.isJavaLikeFileName(resource.getName())) {
+            return null;
+        }
         ICompilationUnit unit = JavaPlugin.getDefault().getCompilationUnitDocumentProvider().getWorkingCopy(resource);
         if (unit == null && resource.getType() == IResource.FILE) {
             // nope...must create from new
