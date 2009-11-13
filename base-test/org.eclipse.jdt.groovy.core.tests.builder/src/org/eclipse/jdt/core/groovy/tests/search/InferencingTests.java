@@ -18,57 +18,16 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.groovy.search.ITypeRequestor;
-import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.eclipse.jdt.groovy.search.TypeLookupResult;
-
 /**
  * Lots of tests to see that expressions have the proper type associated with them
  * @author Andrew Eisenberg
  * @created Nov 4, 2009
  *
  */
-public class InferencingTests extends AbstractGroovySearchTest {
+public class InferencingTests extends AbstractInferencingTest {
  
     public static Test suite() {
         return buildTestSuite(InferencingTests.class);
-    }
-
-    public class SearchRequestor implements ITypeRequestor {
-
-        private final int start;
-        private final int end;
-        
-        TypeLookupResult result;
-        ASTNode node;
-        
-        public SearchRequestor(int start, int end) {
-            super();
-            this.start = start;
-            this.end = end;
-        }
-
-
-
-        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
-                IJavaElement enclosingElement) {
-            
-            if (node.getStart() == start && node.getEnd() == end && !(node instanceof MethodNode /* ignore the run() method*/)) {
-                this.result = result;
-                this.node = node;
-                return VisitStatus.STOP_VISIT;
-            }
-            return VisitStatus.CONTINUE;
-        }
-        
-        String getTypeName() {
-            return result.type.getName();
-        }
     }
 
     public InferencingTests(String name) {
@@ -122,28 +81,5 @@ public class InferencingTests extends AbstractGroovySearchTest {
     
     public void testInferBoolean1() throws Exception {
         assertType("!x", "java.lang.Boolean");
-    }
-    
-    private void assertType(String contents, String expectedType) {
-        assertType(contents, 0, contents.length(), expectedType);
-    }
-    
-    private void assertType(String contents, int exprStart, int exprEnd, String expectedType) {
-        GroovyCompilationUnit unit = createUnit("Search", contents);
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-        SearchRequestor requestor = new SearchRequestor(exprStart, exprEnd);
-        visitor.visitCompilationUnit(requestor);
-        
-        assertNotNull("Did not find expected ASTNode", requestor.node);
-        if (! expectedType.equals(requestor.getTypeName())) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Expected type not found.\n");
-            sb.append("Expected: " + expectedType + "\n");
-            sb.append("Found: " + requestor.getTypeName() + "\n");
-            sb.append("Declaring type: " + requestor.result.declaringType.getName() + "\n");
-            sb.append("ASTNode: " + requestor.node + "\n");
-            fail(sb.toString());
-            
-        }
     }
 }

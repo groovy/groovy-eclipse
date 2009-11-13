@@ -93,6 +93,13 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     	IPath path = env.addGroovyClass(project.getFolder("src").getFullPath(), name, contents);
     	return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
+    
+    protected ICompilationUnit createJavaUnit(String name, String contents) {
+        IPath path = env.addClass(project.getFolder("src").getFullPath(), name, contents);
+        return JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+    }
+    
+    
 
     protected GroovyCompilationUnit createUnit(String pkg, String name, String contents) throws CoreException {
         IFolder folder = project.getFolder("src").getFolder(new Path(pkg));
