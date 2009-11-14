@@ -39,19 +39,24 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
  */
 public class VariableScope {
 
-	private static final ClassNode DGM_CLASS_NODE = new ClassNode(DefaultGroovyMethods.class);
-
+	public static final ClassNode DGM_CLASS_NODE = new ClassNode(DefaultGroovyMethods.class);
 	public static final ClassNode OBJECT_CLASS_NODE = new ClassNode(Object.class);
 	public static final ClassNode LIST_CLASS_NODE = new ClassNode(List.class);
-	public static final ClassNode BOOLEAN_CLASS_NODE = new ClassNode(Boolean.class);
 	public static final ClassNode VOID_CLASS_NODE = new ClassNode(Void.class);
 	public static final ClassNode GSTRING_CLASS_NODE = new ClassNode(GString.class);
 	public static final ClassNode STRING_CLASS_NODE = new ClassNode(String.class);
 	public static final ClassNode PATTERN_CLASS_NODE = new ClassNode(Pattern.class);
 	public static final ClassNode MAP_CLASS_NODE = new ClassNode(Map.class);
 	public static final ClassNode NUMBER_CLASS_NODE = new ClassNode(Number.class);
+
 	public static final ClassNode INTEGER_CLASS_NODE = new ClassNode(Integer.class);
 	public static final ClassNode LONG_CLASS_NODE = new ClassNode(Long.class);
+	public static final ClassNode SHORT_CLASS_NODE = new ClassNode(Short.class);
+	public static final ClassNode FLOAT_CLASS_NODE = new ClassNode(Float.class);
+	public static final ClassNode DOUBLE_CLASS_NODE = new ClassNode(Double.class);
+	public static final ClassNode BYTE_CLASS_NODE = new ClassNode(Byte.class);
+	public static final ClassNode BOOLEAN_CLASS_NODE = new ClassNode(Boolean.class);
+	public static final ClassNode CHARACTER_CLASS_NODE = new ClassNode(Character.class);
 
 	public static class VariableInfo {
 		public final ClassNode type;
@@ -126,10 +131,10 @@ public class VariableScope {
 	 * @return the variable info or null if not found
 	 */
 	public VariableInfo lookupName(String name) {
-		if ("this".equals(name)) {
+		if ("this".equals(name)) { //$NON-NLS-1$
 			ClassNode declaringType = getEnclosingTypeDeclaration();
 			return new VariableInfo(declaringType, declaringType);
-		} else if ("super".equals(name)) {
+		} else if ("super".equals(name)) { //$NON-NLS-1$
 			ClassNode declaringType = getEnclosingTypeDeclaration();
 			ClassNode superType = declaringType != null ? declaringType.getSuperClass() : null;
 			return new VariableInfo(superType, superType);
@@ -159,4 +164,30 @@ public class VariableScope {
 			return null;
 		}
 	}
+
+	@SuppressWarnings("nls")
+	public static ClassNode maybeConvertFromPrimitive(ClassNode type) {
+		if (Character.isUpperCase(type.getNameWithoutPackage().charAt(0)) || type.getName().contains(".")) {
+			return type;
+		}
+		if (type.getName().equals("int")) {
+			return VariableScope.INTEGER_CLASS_NODE;
+		} else if (type.getName().equals("boolean")) {
+			return VariableScope.BOOLEAN_CLASS_NODE;
+		} else if (type.getName().equals("byte")) {
+			return VariableScope.BYTE_CLASS_NODE;
+		} else if (type.getName().equals("double")) {
+			return VariableScope.DOUBLE_CLASS_NODE;
+		} else if (type.getName().equals("float")) {
+			return VariableScope.FLOAT_CLASS_NODE;
+		} else if (type.getName().equals("char")) {
+			return VariableScope.CHARACTER_CLASS_NODE;
+		} else if (type.getName().equals("short")) {
+			return VariableScope.SHORT_CLASS_NODE;
+		} else if (type.getName().equals("long")) {
+			return VariableScope.LONG_CLASS_NODE;
+		}
+		return type;
+	}
+
 }

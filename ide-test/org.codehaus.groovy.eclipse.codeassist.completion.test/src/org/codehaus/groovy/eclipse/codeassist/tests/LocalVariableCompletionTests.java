@@ -11,8 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor;
-import org.codehaus.groovy.eclipse.codeassist.completion.jdt.LocalVariableProcessor;
+import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -40,7 +39,7 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
     // should not find local vars here
     public void testLocalVarsInJavaFile() throws Exception {
         ICompilationUnit unit = createJava();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "y\n"), LocalVariableProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "y\n"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "xxx", 0);
         proposalExists(proposals, "xx", 0);
         proposalExists(proposals, "y", 0);
@@ -49,7 +48,7 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
     // should not find local vars here.. They are calculated by JDT
     public void testLocalVarsInGroovyFile() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "y\n"), LocalVariableProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "y\n"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "xxx", 0);
         proposalExists(proposals, "xx", 0);
         proposalExists(proposals, "y", 0);
@@ -58,7 +57,7 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
     // should find local vars here
     public void testLocalVarsInScript() throws Exception {
         ICompilationUnit unit = createGroovyForScript();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "}\n"), LocalVariableProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "}\n"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "xxx", 1);
         proposalExists(proposals, "xx", 1);
         proposalExists(proposals, "y", 1);
@@ -67,7 +66,7 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
     // should find local vars here
     public void testLocalVarsInClosureInScript() throws Exception {
         ICompilationUnit unit = createGroovyForScript();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "print t\n"), LocalVariableProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "print t\n"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "xxx", 1);
         proposalExists(proposals, "xx", 1);
         proposalExists(proposals, "y", 1);
@@ -76,7 +75,7 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
     // should not find local vars here
     public void testLocalVarsInClosureInScript2() throws Exception {
         ICompilationUnit unit = createGroovyForScript2();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS2, "print t\n.toStr"), LocalVariableProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS2, "print t\n.toStr"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "xxx", 0);
         proposalExists(proposals, "xx", 0);
         proposalExists(proposals, "y", 0);
@@ -85,7 +84,7 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
     // should find local vars here
     public void testLocalVarsInClosureInMethod() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "print t\n"), LocalVariableProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "print t\n"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "xxx", 1);
         proposalExists(proposals, "xx", 1);
         proposalExists(proposals, "y", 1);
@@ -95,7 +94,7 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
     // see GRECLIPSE-369
     public void testSelfReferencingLocalVar() throws Exception {
         ICompilationUnit unit = createGroovyForSelfReferencingScript();
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(SELFREFERENCINGSCRIPT, "xx."), GeneralGroovyCompletionProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(SELFREFERENCINGSCRIPT, "xx."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "abs", 1);
     }
     

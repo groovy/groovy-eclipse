@@ -15,10 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing;
 
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.osgi.framework.BundleContext;
 
 public class GroovyBrowsingPlugin extends AbstractUIPlugin {
 	// The shared instance.
@@ -26,22 +24,6 @@ public class GroovyBrowsingPlugin extends AbstractUIPlugin {
 
 	public GroovyBrowsingPlugin() {
 		plugin = this;
-	}
-
-	@Override
-    public void start(BundleContext context) throws Exception {
-		super.start(context);
-        // TODO consider turning this into an extension point.
-		// This object needs to be injected into GroovyCompilationUnit
-		// before code selection starts.
-		GroovyCompilationUnit.setSelectHelper(new org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper());
-	}
-
-	@Override
-    public void stop(BundleContext context) throws Exception {
-		super.stop(context);
-        GroovyCompilationUnit.setSelectHelper(null);
-		plugin = null;
 	}
 
 	public static GroovyBrowsingPlugin getDefault() {

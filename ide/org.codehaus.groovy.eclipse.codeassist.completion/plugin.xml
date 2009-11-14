@@ -16,14 +16,30 @@
  -->
 <plugin>
    <extension
-         id="org.codehaus.groovy.eclipse.codeassist.completion.category"
+         id="org.codehaus.groovy.eclipse.codeassist.category"
          name="Groovy Content"
          point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
       <proposalCategory
             icon="icons/groovy_file.gif"></proposalCategory>
    </extension>
    
+
+	  <extension
+   			 name="Groovy Code Completions"
+   			 id="org.codehaus.groovy.eclipse.codeassist.completion.groovy"
+         point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+      <javaCompletionProposalComputer
+            activate="true"
+            categoryId="org.codehaus.groovy.eclipse.codeassist.category"
+            class="org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer">
+         <partition
+               type="__dftl_partition_content_type">
+         </partition>
+      </javaCompletionProposalComputer>
+   </extension>
+	
    
+   <!--
   <extension
    			 name="Groovy Code Completions"
    			 id="org.codehaus.groovy.eclipse.codeassist.completion.groovy"
@@ -31,7 +47,7 @@
       <javaCompletionProposalComputer
             activate="true"
             categoryId="org.codehaus.groovy.eclipse.codeassist.completion.category"
-            class="org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor">
+            class="org.codehaus.groovy.eclipse.codeassist.jdt.GeneralGroovyCompletionProcessor">
          <partition
                type="__dftl_partition_content_type">
          </partition>
@@ -44,10 +60,11 @@
       <javaCompletionProposalComputer
             activate="true"
             categoryId="org.codehaus.groovy.eclipse.codeassist.completion.category"
-            class="org.codehaus.groovy.eclipse.codeassist.completion.jdt.LocalVariableProcessor">
+            class="org.codehaus.groovy.eclipse.codeassist.jdt.LocalVariableProcessor">
          <partition
                type="__dftl_partition_content_type">
          </partition>
       </javaCompletionProposalComputer>
    </extension>
+   -->
 </plugin>

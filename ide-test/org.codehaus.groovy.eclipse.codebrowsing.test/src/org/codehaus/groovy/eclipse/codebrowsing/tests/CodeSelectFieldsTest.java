@@ -11,7 +11,6 @@
 
 package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
-import org.codehaus.groovy.eclipse.codebrowsing.CodeSelectHelper;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
@@ -30,8 +29,6 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        // set up the code selection support
-        new CodeSelectHelper();
     }
 
     public void testCodeSelectVarInScript() throws Exception {

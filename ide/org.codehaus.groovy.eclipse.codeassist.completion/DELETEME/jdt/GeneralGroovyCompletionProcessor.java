@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.codehaus.groovy.eclipse.codeassist.completion.jdt;
+package org.codehaus.groovy.eclipse.codeassist.jdt;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.eclipse.codeassist.completion.Activator;
+import org.codehaus.groovy.eclipse.codeassist.Activator;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodProposal;
 import org.codehaus.groovy.eclipse.core.DocumentSourceBuffer;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
@@ -327,7 +328,7 @@ public class GeneralGroovyCompletionProcessor extends
                     proposals.add(ParameterGuessingProposal.createProposal(
                             proposal, javaContext, isGuessArguments));
                 } else {
-                    proposals.add(new GroovyMethodCompletionProposal(proposal,
+                    proposals.add(new GroovyJavaMethodProposal(proposal,
                             javaContext));
                 }
             }

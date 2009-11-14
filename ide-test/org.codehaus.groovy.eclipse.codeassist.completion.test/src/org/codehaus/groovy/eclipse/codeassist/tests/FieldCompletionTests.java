@@ -11,7 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor;
+import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -33,8 +33,8 @@ public class FieldCompletionTests extends CompletionTestCase {
     public void testSafeDeferencing() throws Exception {
         String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { someProperty?.x}}";
         ICompilationUnit unit = create(contents);
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "?."), GeneralGroovyCompletionProcessor.class);
-        proposalExists(proposals, "getInteger", 3);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "?."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "abs", 1);
     }
 
     private ICompilationUnit create(String contents) throws Exception {

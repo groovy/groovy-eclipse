@@ -1,4 +1,4 @@
-package org.codehaus.groovy.eclipse.codeassist.completion.jdt;
+package org.codehaus.groovy.eclipse.codeassist.jdt;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

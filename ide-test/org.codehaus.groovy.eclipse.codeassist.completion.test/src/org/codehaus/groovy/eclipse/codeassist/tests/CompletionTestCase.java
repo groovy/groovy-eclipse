@@ -13,7 +13,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor;
+import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -192,6 +192,7 @@ public abstract class CompletionTestCase extends BuilderTests {
                 if (timeout == timeoutThreshold) {
                     fail("Failure to finish indexing project.  Timed out...");
                 }
-                return performContentAssist(unit, completionOffset, GeneralGroovyCompletionProcessor.class);
+                return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
+                
             }
 }

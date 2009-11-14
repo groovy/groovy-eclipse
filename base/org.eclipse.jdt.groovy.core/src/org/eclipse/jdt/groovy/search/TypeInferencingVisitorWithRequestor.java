@@ -74,6 +74,7 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -82,6 +83,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
+import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -441,6 +443,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
+	private boolean handleStatement(Statement node) {
+		// don't check the lookups because statements have no type.
+		// but individual requestors may choose to end the visit here
+		TypeLookupResult noLookup = new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE,
+				VariableScope.OBJECT_CLASS_NODE, TypeConfidence.EXACT, scopes.peek());
+		VisitStatus status = handleRequestor(node, requestor, noLookup);
+		switch (status) {
+			case CONTINUE:
+				return true;
+			case CANCEL_BRANCH:
+				return false;
+			case STOP_VISIT:
+			default:
+				throw new VisitCompleted();
+		}
+
+	}
+
 	private boolean handleExpression(Expression node) {
 		TypeLookupResult result = null;
 		ClassNode objectExprType = null;
@@ -545,9 +565,34 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBinaryExpression(BinaryExpression node) {
-		boolean shouldContinue = handleExpression(node);
-		if (shouldContinue) {
-			super.visitBinaryExpression(node);
+		if (node.getOperation().equals(Types.EQUALS)) {
+			boolean shouldContinue = handleExpression(node);
+			if (shouldContinue) {
+				super.visitBinaryExpression(node);
+			}
+		} else {
+
+			propertyExpression.push(node);
+			node.getRightExpression().visit(this);
+			boolean shouldContinue = handleExpression(node);
+
+			// the declaration itself is the property node
+			ClassNode propType = propertyExpressionType.pop();
+			propertyExpression.pop();
+
+			if (shouldContinue) {
+				node.getLeftExpression().visit(this);
+
+				if (isObjectExpression(node)) {
+					// returns true if this declaration expression is the property field of another property expression
+					objectExpressionType.push(propType);
+				}
+			} else {
+				propertyExpression.pop();
+
+				// not popped earlier because the method field of the expression was not examined
+				objectExpressionType.pop();
+			}
 		}
 	}
 
@@ -600,7 +645,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (shouldContinue) {
 			if (node.getParameters() != null && node.getParameters().length > 0) {
 				handleParameterList(node.getParameters());
-			} else {
+			}
+			if (scope.lookupName("it") == null) {
 				scope.addVariable("it", VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE);
 			}
 			super.visitClosureExpression(node);
@@ -611,7 +657,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitBlockStatement(BlockStatement block) {
 		scopes.push(new VariableScope(scopes.peek(), block));
-		super.visitBlockStatement(block);
+		boolean shouldContinue = handleStatement(block);
+		if (shouldContinue) {
+			super.visitBlockStatement(block);
+		}
 		scopes.pop();
 	}
 
@@ -653,16 +702,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitDeclarationExpression(DeclarationExpression node) {
-		boolean shouldContinue = handleExpression(node);
-		if (shouldContinue) {
-			// don't call super, or else this expression is handled twice
-			node.getLeftExpression().visit(this);
-
-			// visit the type of the variable declaration
-			internalVisitTypeReference(node.getLeftExpression().getType());
-
-			node.getRightExpression().visit(this);
-		}
+		// visit the type of the variable declaration
+		internalVisitTypeReference(node.getLeftExpression().getType());
+		visitBinaryExpression(node);
 	}
 
 	@Override
@@ -1048,6 +1090,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof MethodCallExpression) {
 				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
 				return prop.getObjectExpression() == node;
+			} else if (maybeProperty instanceof BinaryExpression) {
+				BinaryExpression prop = (BinaryExpression) maybeProperty;
+				return prop.getRightExpression() == node;
 			} else if (maybeProperty instanceof AttributeExpression) {
 				AttributeExpression prop = (AttributeExpression) maybeProperty;
 				return prop.getObjectExpression() == node;
@@ -1068,6 +1113,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof MethodCallExpression) {
 				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
 				return prop.getMethod() == node;
+			} else if (maybeProperty instanceof BinaryExpression) {
+				// note that here it is the binary expression itself that
+				// is the property, rather than its LHS
+				// this allows the type to be available during the inferencing stage
+				return maybeProperty == node;
 			} else if (maybeProperty instanceof AttributeExpression) {
 				AttributeExpression prop = (AttributeExpression) maybeProperty;
 				return prop.getProperty() == node;

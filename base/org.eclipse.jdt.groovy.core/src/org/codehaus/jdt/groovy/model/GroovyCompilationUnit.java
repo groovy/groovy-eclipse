@@ -25,12 +25,14 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.PerformanceStats;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -71,10 +73,6 @@ import org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.Region;
-import org.eclipse.osgi.framework.adaptor.StatusException;
-import org.eclipse.osgi.framework.internal.core.AbstractBundle;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 
 /**
  * @author Andrew Eisenberg
@@ -86,37 +84,40 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 	private static ICodeSelectHelper selectHelper;
 
-	// TODO This implicitly injects the CodeSelectHelper. Really, this should be
-	// injected using an extension point.
+	// Inject the code select helper
+	private final static String CODE_SELECT_HELPER_EXTENSION = "org.eclipse.jdt.groovy.core.codeSelectHelper";
 	static {
-		Bundle bundle = Platform.getBundle("org.codehaus.groovy.eclipse.codebrowsing"); //$NON-NLS-1$
+
+		// Exactly one code select helper is allowed. Do a check for this.
+		IExtensionPoint extPoint = Platform.getExtensionRegistry().getExtensionPoint(CODE_SELECT_HELPER_EXTENSION);
+		IExtension[] exts = extPoint.getExtensions();
+		if (exts.length < 1) {
+			throw new IllegalArgumentException("No Code Select Helper found");
+		} else if (exts.length > 1) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Too many Code Select Helpers found:\n");
+			for (IExtension ext : exts) {
+				sb.append("    " + ext.getNamespaceIdentifier() + "." + ext.getSimpleIdentifier());
+			}
+			throw new IllegalArgumentException(sb.toString());
+		}
+		IConfigurationElement[] elts = exts[0].getConfigurationElements();
+		if (elts.length < 1) {
+			throw new IllegalArgumentException("No Code Select Helper found");
+		} else if (elts.length > 1) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Too many Code Select Helpers found:\n");
+			for (IConfigurationElement elt : elts) {
+				sb.append("    " + elt.getNamespaceIdentifier());
+			}
+			throw new IllegalArgumentException(sb.toString());
+		}
+
+		// all good. Now, instantiate and assign the code select helper
 		try {
-			bundle.start(Bundle.START_TRANSIENT);
-		} catch (Exception e) {
-			// check to see if we really care
-			// a bundle exception is thrown when org.ecliopse.jdt.groovy.core is started by
-			// the org.codehaus.groovy.eclipse.codebrowsing bundle. This is because
-			// of recursive starting
-			boolean canIgnore = false;
-			if (bundle instanceof AbstractBundle) {
-				AbstractBundle aBundle = (AbstractBundle) bundle;
-				if (e instanceof BundleException) {
-					Throwable t = ((BundleException) e).getNestedException();
-					if (t instanceof StatusException) {
-						Object obj = ((StatusException) t).getStatus();
-						if (aBundle.testStateChanging(obj)) {
-							canIgnore = true;
-						}
-					}
-				}
-			} else {
-				canIgnore = true;
-			}
-			if (!canIgnore) {
-				Activator.getDefault().getLog().log(
-						new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-								"Error starting  org.codehaus.groovy.eclipse.codebrowsing bundle")); //$NON-NLS-1$
-			}
+			selectHelper = (ICodeSelectHelper) elts[0].createExecutableExtension("class");
+		} catch (CoreException e) {
+			throw new IllegalArgumentException(e);
 		}
 	}
 

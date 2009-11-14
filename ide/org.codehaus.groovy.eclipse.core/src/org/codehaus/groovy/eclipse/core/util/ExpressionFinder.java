@@ -102,7 +102,7 @@ public class ExpressionFinder {
 		if (token != null) {
 			return sourceBuffer.subSequence(token.startOffset, endOffset).toString().trim();
 		}
-		return null;
+		return "";
 	}
 
 	/**

@@ -66,19 +66,22 @@ public class TypeLookupResult {
 	public final ClassNode type;
 	public final ClassNode declaringType;
 	public final AnnotatedNode declaration;
+	public final VariableScope scope;
 
 	/**
 	 * create a TypeLookupResult with a class node.
 	 * 
 	 * @param type the type of the expression being analyzed
 	 * @param declaringType the declaring type of the expression if the expression is a field, method, or type reference
-	 * @param the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
 	 * @param confidence the confidence in this type assertion
+	 * @param scope TODO
+	 * @param the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
 	 */
-	public TypeLookupResult(ClassNode type, ClassNode declaringType, AnnotatedNode declaration, TypeConfidence confidence) {
+	public TypeLookupResult(ClassNode type, ClassNode declaringType, AnnotatedNode declaration, TypeConfidence confidence, VariableScope scope) {
 		this.confidence = confidence;
 		this.type = type;
 		this.declaringType = declaringType;
 		this.declaration = declaration;
+		this.scope = scope;
 	}
 }

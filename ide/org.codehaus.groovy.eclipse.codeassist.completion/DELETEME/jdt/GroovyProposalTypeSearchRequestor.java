@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.codehaus.groovy.eclipse.codeassist.completion.jdt;
+package org.codehaus.groovy.eclipse.codeassist.jdt;
 
 import java.util.Collections;
 import java.util.LinkedList;

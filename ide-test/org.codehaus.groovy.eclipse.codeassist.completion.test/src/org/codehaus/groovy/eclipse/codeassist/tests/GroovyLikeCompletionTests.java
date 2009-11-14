@@ -11,7 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.completion.jdt.GeneralGroovyCompletionProcessor;
+import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -33,20 +33,20 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     
     public void testMethodWithClosure() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GeneralGroovyCompletionProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "any { }", 1);
     }
 
     public void testMethodWithNoArgs() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GeneralGroovyCompletionProcessor.class);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "clone()", 1);
     }
     
     public void testMethodWith2Args() throws Exception {
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GeneralGroovyCompletionProcessor.class);
-        checkReplacementString(proposals, "findIndexOf arg1, { }", 1);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "findIndexOf param1, { }", 1);
     }
     
     private ICompilationUnit createGroovy() throws Exception {

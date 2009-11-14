@@ -42,48 +42,43 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 public class InferenceByAssignmentStatement implements ITypeLookup {
 
 	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-		if (node instanceof DeclarationExpression) {
-			DeclarationExpression declExpr = (DeclarationExpression) node;
-			if (declExpr.isMultipleAssignmentDeclaration()) {
-				ArgumentListExpression args = (ArgumentListExpression) declExpr.getLeftExpression();
-				for (Expression argExpr : args.getExpressions()) {
-					// probable won't get anything out of here
-					throw new RuntimeException("Not implemented.  Please raise a bug for this.");
-				}
-			} else {
-				if (declExpr.getLeftExpression() instanceof VariableExpression) {
-					VariableExpression var = (VariableExpression) declExpr.getLeftExpression();
-					ClassNode type = var.getType();
-					if (type.equals(VariableScope.OBJECT_CLASS_NODE)) {
-						type = declExpr.getRightExpression().getType();
-					}
-					ClassNode declaringType = var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var
-							.getAccessedVariable()).getDeclaringClass() : VariableScope.OBJECT_CLASS_NODE;
-					scope.addVariable(var.getName(), type, declaringType);
+		if (node instanceof BinaryExpression) {
+			if (node instanceof DeclarationExpression) {
+				DeclarationExpression declExpr = (DeclarationExpression) node;
 
-					return new TypeLookupResult(type, declaringType, declExpr.getLeftExpression(), TypeConfidence.EXACT);
+				// we don't support multiple assignments yet
+				if (declExpr.isMultipleAssignmentDeclaration()) {
+					ArgumentListExpression args = (ArgumentListExpression) declExpr.getLeftExpression();
+					for (Expression argExpr : args.getExpressions()) {
+						// probable won't get anything out of here
+						throw new RuntimeException("Not implemented...Please raise a bug for this.");
+					}
 				}
 			}
 
-		} else if (node instanceof BinaryExpression) {
 			BinaryExpression assign = (BinaryExpression) node;
 			if (assign.getOperation().getType() == Types.EQUALS) {
-				ClassNode type = assign.getRightExpression().getType();
-				ClassNode declaringType;
-				// FIXADE M2 hmmmm...can't get 'foo = some.value'
 				if (assign.getLeftExpression() instanceof VariableExpression) {
 					VariableExpression var = (VariableExpression) assign.getLeftExpression();
-					declaringType = var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var.getAccessedVariable())
-							.getDeclaringClass()
-							: VariableScope.OBJECT_CLASS_NODE;
-					scope.addVariable(var.getName(), type, declaringType);
+					ClassNode declaringType = var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var
+							.getAccessedVariable()).getDeclaringClass() : VariableScope.OBJECT_CLASS_NODE;
+					if (objectExpressionType != null && !objectExpressionType.equals(VariableScope.VOID_CLASS_NODE)) {
+						scope.addVariable(var.getName(), objectExpressionType, declaringType);
+						return new TypeLookupResult(objectExpressionType, declaringType, assign.getLeftExpression(),
+								TypeConfidence.INFERRED, scope);
+					} else {
+						// no object expression available probably a local var decl w/o any assignment
+						// add the type of the LHS to the scope, but only if not there already
+						if (scope.lookupName(var.getName()) == null) {
+							scope.addVariable(var);
+							return new TypeLookupResult(var.getType(), declaringType, null, TypeConfidence.INFERRED, scope);
+						}
+					}
 				} else {
 					// FIXADE M2 this is a property node, eg- 'foo.bar = somevalue' just do Object type
-					declaringType = VariableScope.OBJECT_CLASS_NODE;
 				}
-
-				return new TypeLookupResult(type, declaringType, null, TypeConfidence.INFERRED);
 			}
+
 		}
 		return null;
 	}

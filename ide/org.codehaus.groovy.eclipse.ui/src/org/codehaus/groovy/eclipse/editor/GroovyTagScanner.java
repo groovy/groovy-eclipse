@@ -38,7 +38,6 @@ import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
 import org.eclipse.jface.text.rules.WordRule;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 
 public class GroovyTagScanner extends AbstractJavaScanner {
@@ -239,7 +238,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 
 
     @Override
-    protected List createRules() {
+    protected List<IRule> createRules() {
         return createGroovyRules(manager, additionalRules, additionalGJDKKeywords, additionalGroovyKeywords);
     }
     

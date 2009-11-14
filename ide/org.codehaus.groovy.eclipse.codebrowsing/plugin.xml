@@ -109,5 +109,11 @@
          </adapter>
       </factory>
    </extension>
+   <extension
+         point="org.eclipse.jdt.groovy.core.codeSelectHelper">
+      <helper
+            class="org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper">
+      </helper>
+   </extension>
   
 </plugin>
