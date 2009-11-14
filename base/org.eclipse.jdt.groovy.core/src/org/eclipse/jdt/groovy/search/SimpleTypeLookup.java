@@ -52,6 +52,7 @@ import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.syntax.Types;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
@@ -203,16 +204,19 @@ public class SimpleTypeLookup implements ITypeLookup {
 				}
 				confidence = UNKNOWN;
 				return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
-			} else if (node instanceof BinaryExpression) {
+			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {
 				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
 			}
-		} else if (node instanceof ConstantExpression) {
+		}
+
+		// no object expression, look at the kind of expression
+		if (node instanceof ConstantExpression) {
 			// here, we know that since there is no object expression, this is not part
 			// of a dotted anything, so we can safely assume that it is a quoted string or
 			// some other constant
 			ConstantExpression constExpr = (ConstantExpression) node;
 
-			if (constExpr.isTrueExpression() || constExpr.isTrueExpression()) {
+			if (constExpr.isTrueExpression() || constExpr.isFalseExpression()) {
 				return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
 			} else if (constExpr.isNullExpression()) {
 				return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, confidence, scope);
