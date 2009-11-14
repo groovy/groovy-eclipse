@@ -36,7 +36,17 @@ public class MockSearchRequestor extends SearchRequestor {
 
     @Override
     public void acceptSearchMatch(SearchMatch match) throws CoreException {
-        matches.add(match);
+    	boolean added = false;
+    	for (int i = 0; i < matches.size(); i++) {
+    	    if (matches.get(i).getOffset() > match.getOffset()) {
+    	    	matches.add(i, match);
+    	    	added = true;
+    	    	break;
+    	    }
+    	}
+    	if (!added) {
+    		matches.add(match);
+    	}
     }
     
     String printMatches() {

@@ -99,7 +99,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 	}
 
 	public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
-		return new TypeLookupResult(node.getType(), scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, EXACT, scope);
+		return new TypeLookupResult(node.getType(), scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, EXACT,
+				scope);
 	}
 
 	/**
@@ -202,6 +203,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 				}
 				confidence = UNKNOWN;
 				return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
+			} else if (node instanceof BinaryExpression) {
+				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
 			}
 		} else if (node instanceof ConstantExpression) {
 			// here, we know that since there is no object expression, this is not part
@@ -223,7 +226,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return new TypeLookupResult(VariableScope.LIST_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof BinaryExpression) {
-			// FIXDE M2 should actually get the type from the object expression
+			// Object expression was null, so go for the left expression.
 			return new TypeLookupResult(((BinaryExpression) node).getLeftExpression().getType(), null, null, confidence, scope);
 
 		} else if (node instanceof BooleanExpression || node instanceof NotExpression) {
