@@ -93,6 +93,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         }
         checkParameters(node.getParameters());
         super.visitConstructorOrMethod(node, isConstructor);
+        check(node);
     }
 
     /**
@@ -122,6 +123,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     public void visitField(FieldNode node) {
         check(node.getType());
         super.visitField(node);
+        check(node);
     }
     
     @Override
