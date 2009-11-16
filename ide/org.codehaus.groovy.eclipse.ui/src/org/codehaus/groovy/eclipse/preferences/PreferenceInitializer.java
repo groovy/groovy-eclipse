@@ -94,6 +94,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         PreferenceConverter.setDefault(store,
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
                 new RGB(205, 50, 0));
+
+        // default color
+        PreferenceConverter.setDefault(store,
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
+                new RGB(0, 0, 0));
         
         // JUnit Monospace font
         store.setDefault(
@@ -173,6 +178,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
                 new RGB(205, 50, 0));
         
+        // default color
+        PreferenceConverter.setDefault(store,
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
+                new RGB(0, 0, 0));
+
         // JUnit Monospace font
         store.setValue(
                 PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,

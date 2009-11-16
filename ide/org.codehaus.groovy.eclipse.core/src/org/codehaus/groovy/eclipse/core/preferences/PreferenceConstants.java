@@ -47,6 +47,8 @@ public class PreferenceConstants {
 	public static final String GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED = "groovy.editor.highlight.numbers.enabled"; //$NON-NLS-1$
 	public static final String GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR = "groovy.editor.highlight.numbers.color"; //$NON-NLS-1$
 
+	public static final String GROOVY_EDITOR_DEFAULT_COLOR = "groovy.editor.highlight.default.color"; //$NON-NLS-1$
+
 	// this preference will add the plugin trace statements to the error in order
 	// to make it easier to track down problems at runtime
 	public static final String GROOVY_LOG_TRACE_MESSAGES_ENABLED = "groovy.log.trace.messages.enabled"; //$NON-NLS-1$

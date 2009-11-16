@@ -33,12 +33,15 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager;
 import org.eclipse.jdt.internal.ui.text.JavaPresentationReconciler;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
+import org.eclipse.jdt.ui.text.IJavaColorConstants;
+import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPartSite;
@@ -241,8 +244,10 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     
     public GroovySemanticReconciler() { 
+        RGB colorRGB = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
+                PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
         GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
-        Color color = colorManager.getColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
+        Color color = colorManager.getColor(colorRGB);
         undefinedRefHighlighting = new HighlightingStyle(new TextAttribute(color, null, TextAttribute.UNDERLINE), true);
     }
     
