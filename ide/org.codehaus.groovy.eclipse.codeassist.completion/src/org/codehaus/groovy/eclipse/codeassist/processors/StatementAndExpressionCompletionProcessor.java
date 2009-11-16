@@ -91,6 +91,7 @@ public class StatementAndExpressionCompletionProcessor extends
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
+        long start = System.currentTimeMillis();
         
         TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(getContext().unit);
@@ -116,6 +117,8 @@ public class StatementAndExpressionCompletionProcessor extends
         for (IGroovyProposal groovyProposal : groovyProposals) {
             javaProposals.add(groovyProposal.createJavaProposal(getContext(), getJavaContext()));
         }
+        long end = System.currentTimeMillis();
+        System.out.println("Time for statement content assist (ms): " + (end - start));
         return javaProposals;
     }
 

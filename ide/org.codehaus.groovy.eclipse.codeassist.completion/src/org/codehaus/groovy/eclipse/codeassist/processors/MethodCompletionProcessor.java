@@ -84,7 +84,7 @@ public GroovyOverrideCompletionProposal(IJavaProject jproject,
     }
     
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
-        List<MethodNode> unimplementedMethods = getAllUnimplementedMethods((ClassNode) getContext().containingCodeBlock);
+        List<MethodNode> unimplementedMethods = getAllUnimplementedMethods(getClassNode());
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
         IType enclosingType = getEnclosingType();
         if (enclosingType != null) {
@@ -93,6 +93,15 @@ public GroovyOverrideCompletionProposal(IJavaProject jproject,
             }
         }
         return proposals;
+    }
+
+    /**
+     * @return
+     */
+    private ClassNode getClassNode() {
+        // if the current completion is inside a script, then the containing code block will be a Block object, not a ClassNode
+        // Must get class node in a different way.
+        return getContext().containingCodeBlock instanceof ClassNode ? (ClassNode) getContext().containingCodeBlock : getContext().unit.getModuleNode().getScriptClassDummy();
     }
 
     private ICompletionProposal createProposal(MethodNode method,

@@ -199,7 +199,23 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // if we get here, then it is because the block statement
         // has been swapped with a new one that has not had
         // its locaitons set properly
-        createContext(node.getCode(), node.getCode(), node.getDeclaringClass().isScript() ? SCRIPT : STATEMENT);
+        createContext(node.getCode(), node.getCode(), expressionScriptOrStatement(node));
+    }
+
+    /**
+     * @param node
+     * @return
+     */
+    private ContentAssistLocation expressionScriptOrStatement(MethodNode node) {
+        return node.getDeclaringClass().isScript() ? 
+                expressionOrScript() : expressionOrStatement();
+    }
+
+    /**
+     * @return
+     */
+    private ContentAssistLocation expressionOrScript() {
+        return (supportingNodeEnd == -1 ? SCRIPT : EXPRESSION);
     }
     
     @Override

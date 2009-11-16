@@ -79,7 +79,8 @@ public class GroovyCompletionProposalComputer implements
 
     public List<ICompletionProposal> computeCompletionProposals(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {
-        
+        long start = System.currentTimeMillis();
+
         if (! (context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
         }
@@ -119,7 +120,10 @@ public class GroovyCompletionProposalComputer implements
             }        
             
             // filter or sort proposals???
-        }        
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("Time for statement content assist (ms): " + (end - start));
+
         return proposals;
     }
 

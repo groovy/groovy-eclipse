@@ -25,7 +25,6 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 /**
- * Largely copied from FilledArgumentNamesMethodProposal
  * @author Andrew Eisenberg
  * @created Aug 11, 2009
  *
