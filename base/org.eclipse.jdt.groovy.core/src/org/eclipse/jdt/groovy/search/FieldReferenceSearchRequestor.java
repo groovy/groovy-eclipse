@@ -159,6 +159,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 	 * @return
 	 */
 	private ClassNode removeArray(ClassNode declaration) {
-		return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
+		return (declaration != null && declaration.getComponentType() != null) ? removeArray(declaration.getComponentType())
+				: declaration;
 	}
 }
