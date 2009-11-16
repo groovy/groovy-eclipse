@@ -42,9 +42,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         fullBuild();
         // ensure that there is no ArrayIndexOutOfBoundsException thrown.
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "this."), GroovyCompletionProposalComputer.class);
-//        proposalExists(proposals, "i", 1);
-        // should be one, but we are not yet filtering out fields and properties
-        proposalExists(proposals, "i", 2);
+        proposalExists(proposals, "i", 1);
     }
     
     // type signatures were popping up in various places in the display string
@@ -94,9 +92,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "().th"), GroovyCompletionProposalComputer.class);
         
-        // really should be found 1 time, but we are not filtering out properties and fields yet.
-        proposalExists(proposals, "theB", 2);
-//        proposalExists(proposals, "theB", 1);
+        proposalExists(proposals, "theB", 1);
         assertEquals("theB : B - C (Groovy)", proposals[0].getDisplayString());
             
     }
