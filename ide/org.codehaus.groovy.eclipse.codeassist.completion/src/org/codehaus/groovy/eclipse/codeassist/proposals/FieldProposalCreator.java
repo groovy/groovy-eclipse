@@ -25,11 +25,12 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 
 /**
  * @author Andrew Eisenberg
  * @created Nov 12, 2009
- *
+ * FIXADE M2 this class should no longer be necessary when JDTClassNodes properly create property node
  */
 public class FieldProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
@@ -52,9 +53,12 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         getAllSupers(thisType, types);
         List<FieldNode> allFields = new LinkedList<FieldNode>();
         for (ClassNode type : types) {
-            for (FieldNode field : type.getFields()) {
-                if (checkName(field.getName())) {
-                    allFields.add(field);
+            // GRECLIPSE-512, JDTClassNodes do not have properties yet
+            if (type instanceof JDTClassNode) {
+                for (FieldNode field : type.getFields()) {
+                    if (checkName(field.getName())) {
+                        allFields.add(field);
+                    }
                 }
             }
         }
