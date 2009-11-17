@@ -193,6 +193,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	/**
+	 * @return the *groovy* compilation unit shared by all files in the same project
+	 */
+	public CompilationUnit getCompilationUnit() {
+		return groovyCompilationUnit;
+	}
+
+	/**
 	 * Populate the compilation unit based on the successful parse.
 	 */
 	public void populateCompilationUnitDeclaration() {
@@ -1439,6 +1446,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * Check any comments from the source file for task tag markers.
 	 */
 	private void checkForTags() {
+		if (this.compilerOptions == null) {
+			return;
+		}
 		List<Comment> comments = groovySourceUnit.getComments();
 		char[][] taskTags = this.compilerOptions.taskTags;
 		char[][] taskPriorities = this.compilerOptions.taskPriorites;
