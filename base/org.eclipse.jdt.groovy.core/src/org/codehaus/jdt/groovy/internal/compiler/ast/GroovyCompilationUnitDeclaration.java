@@ -1450,6 +1450,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			return;
 		}
 		List<Comment> comments = groovySourceUnit.getComments();
+		if (comments == null) {
+			return;
+		}
 		char[][] taskTags = this.compilerOptions.taskTags;
 		char[][] taskPriorities = this.compilerOptions.taskPriorites;
 		boolean caseSensitiveTags = this.compilerOptions.isTaskCaseSensitive;
