@@ -26,6 +26,8 @@ import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLoca
 import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.SCRIPT;
 import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.STATEMENT;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Stack;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -55,6 +57,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
  * @author Andrew Eisenberg
@@ -94,51 +97,71 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         visitImports(module);
         // visit script last because sometimes its
         // source locations wrap around the other classes
-        ClassNode script = module.getScriptClassDummy();
+        ClassNode script = null;
         for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
-            if (clazz != script) {
+            if (clazz.isScript()) {
+                script = clazz;
+            } else {
                 visitClass(clazz);
             }
         }
-        visitClass(script);
+        if (script != null) {
+            visitClass(script);
+        }
     }
     
     
-    @Override
     public void visitImports(ModuleNode node) {
-        for (ImportNode importNode : node.getImports()) {
+        for (ImportNode importNode : (Iterable<ImportNode>) node.getImports()) {
             visitAnnotations(importNode);
             if (doTest(importNode.getType())) {
                 currentDeclaration = importNode;
                 createContext(null, importNode, IMPORT);
             }
         }
-        for (ImportNode importStarNode : node.getStarImports()) {
+        // for 1.7 stream only
+        for (ImportNode importStarNode : getImports(node, "getStarImports")) {
             visitAnnotations(importStarNode);
             if (doTest(importStarNode.getType())) {
                 currentDeclaration = importStarNode;
                 createContext(null, importStarNode, IMPORT);
-             }
+            }
         }
-        for (ImportNode importStaticNode : node.getStaticImports().values()) {
+        for (ImportNode importStaticNode : getImports(node, "getStaticImports")) {
             visitAnnotations(importStaticNode);
             if (doTest(importStaticNode.getType())) {
                 currentDeclaration = importStaticNode;
                 createContext(null, importStaticNode, IMPORT);
             }
         }
-        for (ImportNode importStaticStarNode : node.getStaticStarImports().values()) {
+        for (ImportNode importStaticStarNode : getImports(node, "getStaticStarImports")) {
             visitAnnotations(importStaticStarNode);
             if (doTest(importStaticStarNode.getType())) {
                 currentDeclaration = importStaticStarNode;
                 createContext(null, importStaticStarNode, IMPORT);
             }
         }
-        
-        
-        super.visitImports(node);
     }
 
+
+    /**
+     * Use reflection because this is a 1.7 only method
+     * @return
+     */
+    private Iterable<ImportNode> getImports(ModuleNode node, String methodName) {
+        try {
+            Object obj = ReflectionUtils.executePrivateMethod(ModuleNode.class, 
+                    methodName, new Class<?>[0], node, new Object[0]);
+            if (obj instanceof Iterable<?>) {
+                return (Iterable<ImportNode>) obj;
+            } else if (obj instanceof Map<?,?>) {
+                return (Iterable<ImportNode>) ((Map<?,ImportNode>) obj).values();
+            }
+        } catch (Exception e) {
+            // using 1.6.5
+        }
+        return Collections.emptyList();
+    }
 
     @Override
     public void visitClass(ClassNode node) {
@@ -163,7 +186,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         node.visitContents(this);
 
         currentDeclaration = node;
-        for (Statement element : node.getObjectInitializerStatements()) {
+        for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
             element.visit(this);
         }
         

@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -101,7 +102,22 @@ public GroovyOverrideCompletionProposal(IJavaProject jproject,
     private ClassNode getClassNode() {
         // if the current completion is inside a script, then the containing code block will be a Block object, not a ClassNode
         // Must get class node in a different way.
-        return getContext().containingCodeBlock instanceof ClassNode ? (ClassNode) getContext().containingCodeBlock : getContext().unit.getModuleNode().getScriptClassDummy();
+        return getContext().containingCodeBlock instanceof ClassNode ? 
+                (ClassNode) getContext().containingCodeBlock : 
+                    getScript();
+    }
+
+    /**
+     * 
+     */
+    private ClassNode getScript() {
+        ModuleNode module = getContext().unit.getModuleNode();
+        for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
+            if (clazz.isScript()) {
+                return clazz;
+            }
+        }
+        throw new IllegalArgumentException("Expecting script in current module: " + module.getPackageName());
     }
 
     private ICompletionProposal createProposal(MethodNode method,

@@ -58,15 +58,14 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 		this.visitImports(node);
 
-		for (ClassNode clazz : node.getClasses()) {
+		for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
 			this.visitClass(clazz);
 		}
 	}
 
-	@Override
 	public void visitImports(ModuleNode node) {
 		if (node != null) {
-			for (ImportNode importNode : node.getImports()) {
+			for (ImportNode importNode : (Iterable<ImportNode>) node.getImports()) {
 				visitAnnotations(importNode);
 				try {
 					importNode.visit(this);
@@ -76,13 +75,13 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 				}
 				handleType(importNode.getType(), false, true);
 			}
-			for (ClassNode staticImportClasses : node.getStaticImportClasses().values()) {
+			for (ClassNode staticImportClasses : (Iterable<ClassNode>) node.getStaticImportClasses().values()) {
 				handleType(staticImportClasses, false, true);
 			}
-			for (ClassNode staticImportAliases : node.getStaticImportAliases().values()) {
+			for (ClassNode staticImportAliases : (Iterable<ClassNode>) node.getStaticImportAliases().values()) {
 				handleType(staticImportAliases, false, true);
 			}
-			for (String fieldName : node.getStaticImportFields().values()) {
+			for (String fieldName : (Iterable<String>) node.getStaticImportFields().values()) {
 				requestor.acceptUnknownReference(fieldName.toCharArray(), 0);
 			}
 		}
@@ -183,7 +182,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 		// super.visitClass(node);
 		visitAnnotations(node);
 		node.visitContents(this);
-		for (Statement element : node.getObjectInitializerStatements()) {
+		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
 			element.visit(this);
 		}
 
@@ -201,7 +200,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	@Override
 	public void visitAnnotations(AnnotatedNode node) {
-		for (AnnotationNode an : node.getAnnotations()) {
+		for (AnnotationNode an : (Iterable<AnnotationNode>) node.getAnnotations()) {
 			handleType(an.getClassNode(), true, true);
 		}
 		super.visitAnnotations(node);

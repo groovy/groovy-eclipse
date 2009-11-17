@@ -21,6 +21,7 @@ import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFE
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 import java.util.List;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -159,7 +160,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			VariableScope scope, TypeConfidence confidence) {
 		// check first to see if we have this type inferred
 		if (node instanceof Variable) {
-			AnnotatedNode declaration = node;
+			ASTNode declaration = node;
 			if (node instanceof VariableExpression) {
 				Variable accessedVar = ((VariableExpression) node).getAccessedVariable();
 				if (accessedVar != null && accessedVar instanceof AnnotatedNode) {

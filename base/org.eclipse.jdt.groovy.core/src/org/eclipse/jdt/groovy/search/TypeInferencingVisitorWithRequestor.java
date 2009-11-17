@@ -175,7 +175,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	// @Override
-	@Override
 	public void visitPackage(PackageNode p) {
 		// do nothing for now
 	}
@@ -325,7 +324,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			currentScope.addVariable(method.getName(), method.getReturnType(), method.getDeclaringClass());
 		}
 
-		for (Statement element : node.getObjectInitializerStatements()) {
+		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
 			element.visit(this);
 		}
 		// don't visit contents, the visitJDT methods are used instead
@@ -414,16 +413,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitAnnotations(AnnotatedNode node) {
-		for (AnnotationNode annotation : node.getAnnotations()) {
+		for (AnnotationNode annotation : (Iterable<AnnotationNode>) node.getAnnotations()) {
 			visitAnnotation(annotation);
 		}
 		super.visitAnnotations(node);
 	}
 
 	// @Override
-	@Override
 	public void visitImports(ModuleNode node) {
-		for (ImportNode imp : node.getImports()) {
+		for (ImportNode imp : (Iterable<ImportNode>) node.getImports()) {
 			TypeLookupResult result = null;
 			for (ITypeLookup lookup : lookups) {
 				result = lookup.lookupType(imp, scopes.peek());
@@ -796,7 +794,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				if (args.getExpressions().size() >= 2 && args.getExpressions().get(1) instanceof ClosureExpression) {
 					// really, should be doing inference on the first expression and seeing if it
 					// is a class node, but looking up in scope is good enough for now
-					Expression expr = args.getExpressions().get(0);
+					Expression expr = ((List<Expression>) args.getExpressions()).get(0);
 					if (expr instanceof ClassExpression) {
 						return expr.getType();
 					} else if (expr instanceof VariableExpression && expr.getText() != null) {
@@ -1059,7 +1057,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	private ClassNode findClassWithName(String simpleName) {
-		for (ClassNode clazz : getModuleNode().getClasses()) {
+		for (ClassNode clazz : (Iterable<ClassNode>) getModuleNode().getClasses()) {
 			if (clazz.getNameWithoutPackage().equals(simpleName)) {
 				return clazz;
 			}

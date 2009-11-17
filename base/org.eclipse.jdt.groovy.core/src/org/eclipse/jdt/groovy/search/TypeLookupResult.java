@@ -16,7 +16,7 @@
 
 package org.eclipse.jdt.groovy.search;
 
-import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 
 /**
@@ -65,7 +65,8 @@ public class TypeLookupResult {
 	public final TypeConfidence confidence;
 	public final ClassNode type;
 	public final ClassNode declaringType;
-	public final AnnotatedNode declaration;
+	public final/* AnnotatedNode */ASTNode declaration; // the type should be AnnotatedNode, but in Groovy 1.6.5, this type is not
+	// compatible with expression nodes
 	public final VariableScope scope;
 
 	/**
@@ -77,7 +78,8 @@ public class TypeLookupResult {
 	 * @param scope TODO
 	 * @param the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
 	 */
-	public TypeLookupResult(ClassNode type, ClassNode declaringType, AnnotatedNode declaration, TypeConfidence confidence, VariableScope scope) {
+	public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeConfidence confidence,
+			VariableScope scope) {
 		this.confidence = confidence;
 		this.type = type;
 		this.declaringType = declaringType;

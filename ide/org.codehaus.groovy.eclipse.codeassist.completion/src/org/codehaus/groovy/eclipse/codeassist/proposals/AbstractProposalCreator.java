@@ -41,7 +41,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         }
         set.add(type);
         getAllSupers(type.getSuperClass(), set);
-        for (ClassNode inter : type.getAllInterfaces()) {
+        for (ClassNode inter : (Iterable<ClassNode>) type.getAllInterfaces()) {
             if (! inter.getName().equals(type.getName())) {
                 getAllSupers(inter, set);
             }
@@ -59,7 +59,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         }
         set.add(type.getName());
         getAllSupersAsStrings(type.getSuperClass(), set);
-        for (ClassNode inter : type.getAllInterfaces()) {
+        for (ClassNode inter : (Iterable<ClassNode>) type.getAllInterfaces()) {
             if (! inter.getName().equals(type.getName())) {
                 getAllSupersAsStrings(inter, set);
             }
