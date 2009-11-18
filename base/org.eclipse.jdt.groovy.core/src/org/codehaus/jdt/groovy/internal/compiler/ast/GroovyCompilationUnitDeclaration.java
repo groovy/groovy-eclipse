@@ -19,8 +19,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
-
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -115,9 +113,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private SourceUnit groovySourceUnit;
 
 	private CompilerOptions compilerOptions;
-
-	// FIXASC (M2) decide if we need this resolution stack
-	private Stack<GroovyTypeDeclaration> typeDecls = new Stack<GroovyTypeDeclaration>();
 
 	private static final boolean DEBUG_TASK_TAGS = false;
 
@@ -450,73 +445,61 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 
 			GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(compilationResult, classNode);
-			try {
-				pushTypeDecl(typeDeclaration);
-				typeDeclaration.annotations = transformAnnotations(classNode.getAnnotations());
-				typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
 
-				boolean isInterface = classNode.isInterface();
-				int mods = classNode.getModifiers();
-				if ((mods & Opcodes.ACC_ENUM) != 0) {
-					// remove final
-					mods = mods & ~Opcodes.ACC_FINAL;
-				}
-				// FIXASC (M2) should this modifier be set?
-				// mods |= Opcodes.ACC_PUBLIC;
-				// FIXASC (M2) inner class support when it is in groovy 1.7
-				// FIXASC (M2) should not do this for inner classes, just for top level types
-				// FIXASC (M2) does this make things visible that shouldn't be?
-				mods = mods & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
-				typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
+			typeDeclaration.annotations = transformAnnotations(classNode.getAnnotations());
+			typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
 
-				// FIXADE (M2) only type declarations not named after the compilation unit should be secondary
-				typeDeclaration.bits |= ASTNode.IsSecondaryType;
-
-				fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
-
-				if (classNode.getGenericsTypes() != null) {
-					GenericsType[] genericInfo = classNode.getGenericsTypes();
-					// Example case here: Foo<T extends Number & I>
-					// the type parameter is T, the 'type' is Number and the bounds for the type parameter are just the extra bound
-					// I.
-					typeDeclaration.typeParameters = new TypeParameter[genericInfo.length];
-					for (int tp = 0; tp < genericInfo.length; tp++) {
-						TypeParameter typeParameter = new TypeParameter();
-						typeParameter.name = genericInfo[tp].getName().toCharArray();
-						ClassNode[] upperBounds = genericInfo[tp].getUpperBounds();
-						if (upperBounds != null) {
-							// FIXASC (M3) Positional info for these references?
-							typeParameter.type = createTypeReferenceForClassNode(upperBounds[0]);
-							typeParameter.bounds = (upperBounds.length > 1 ? new TypeReference[upperBounds.length - 1] : null);
-							for (int b = 1, max = upperBounds.length; b < max; b++) {
-								typeParameter.bounds[b - 1] = createTypeReferenceForClassNode(upperBounds[b]);
-								typeParameter.bounds[b - 1].bits |= ASTNode.IsSuperType;
-							}
-						}
-						typeDeclaration.typeParameters[tp] = typeParameter;
-					}
-				}
-
-				boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
-				configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum);
-				configureSuperInterfaces(typeDeclaration, classNode);
-				typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, compilationResult);
-				typeDeclaration.fields = createFieldDeclarations(classNode);
-				typeDeclaration.properties = classNode.getProperties();
-			} finally {
-				popTypeDecl();
+			boolean isInterface = classNode.isInterface();
+			int mods = classNode.getModifiers();
+			if ((mods & Opcodes.ACC_ENUM) != 0) {
+				// remove final
+				mods = mods & ~Opcodes.ACC_FINAL;
 			}
+			// FIXASC (M2) should this modifier be set?
+			// mods |= Opcodes.ACC_PUBLIC;
+			// FIXASC (M2) inner class support when it is in groovy 1.7
+			// FIXASC (M2) should not do this for inner classes, just for top level types
+			// FIXASC (M2) does this make things visible that shouldn't be?
+			mods = mods & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
+			typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
+
+			// FIXADE (M2) only type declarations not named after the compilation unit should be secondary
+			typeDeclaration.bits |= ASTNode.IsSecondaryType;
+
+			fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
+
+			if (classNode.getGenericsTypes() != null) {
+				GenericsType[] genericInfo = classNode.getGenericsTypes();
+				// Example case here: Foo<T extends Number & I>
+				// the type parameter is T, the 'type' is Number and the bounds for the type parameter are just the extra bound
+				// I.
+				typeDeclaration.typeParameters = new TypeParameter[genericInfo.length];
+				for (int tp = 0; tp < genericInfo.length; tp++) {
+					TypeParameter typeParameter = new TypeParameter();
+					typeParameter.name = genericInfo[tp].getName().toCharArray();
+					ClassNode[] upperBounds = genericInfo[tp].getUpperBounds();
+					if (upperBounds != null) {
+						// FIXASC (M3) Positional info for these references?
+						typeParameter.type = createTypeReferenceForClassNode(upperBounds[0]);
+						typeParameter.bounds = (upperBounds.length > 1 ? new TypeReference[upperBounds.length - 1] : null);
+						for (int b = 1, max = upperBounds.length; b < max; b++) {
+							typeParameter.bounds[b - 1] = createTypeReferenceForClassNode(upperBounds[b]);
+							typeParameter.bounds[b - 1].bits |= ASTNode.IsSuperType;
+						}
+					}
+					typeDeclaration.typeParameters[tp] = typeParameter;
+				}
+			}
+
+			boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
+			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum);
+			configureSuperInterfaces(typeDeclaration, classNode);
+			typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, compilationResult);
+			typeDeclaration.fields = createFieldDeclarations(classNode);
+			typeDeclaration.properties = classNode.getProperties();
 			typeDeclarations.add(typeDeclaration);
 		}
 		types = typeDeclarations.toArray(new TypeDeclaration[typeDeclarations.size()]);
-	}
-
-	private void pushTypeDecl(GroovyTypeDeclaration typeDeclaration) {
-		typeDecls.push(typeDeclaration);
-	}
-
-	private void popTypeDecl() {
-		typeDecls.pop();
 	}
 
 	/**
@@ -1456,7 +1439,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		char[][] taskTags = this.compilerOptions.taskTags;
 		char[][] taskPriorities = this.compilerOptions.taskPriorites;
 		boolean caseSensitiveTags = this.compilerOptions.isTaskCaseSensitive;
-		// FIXASC (M2) sort task by priority (see Scanner)
 		try {
 			if (taskTags != null) {
 				// For each comment find all task tags within it and cope with

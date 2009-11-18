@@ -31,13 +31,23 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
  * 
  * @author Andy Clement
  */
-// FIXASC (M2) groovy mutator methods should through an exception
 @SuppressWarnings("restriction")
 class GroovyClassFile extends ClassFile {
 
 	private byte[] bytes;
 	private char[][] name;
 	private char[] filename;
+
+	public GroovyClassFile(String name, byte[] bs, SourceTypeBinding sourceTypeBinding, String filename) {
+		this.name = CharOperation.splitOn('.', name.toCharArray());
+		this.bytes = bs;
+		this.referenceBinding = sourceTypeBinding;
+		this.header = new byte[0];
+		this.headerOffset = 0;
+		this.contents = bs;
+		this.contentsOffset = bs.length;
+		this.filename = filename.toCharArray();
+	}
 
 	@Override
 	public void addAbstractMethod(AbstractMethodDeclaration method, MethodBinding methodBinding) {
@@ -222,63 +232,46 @@ class GroovyClassFile extends ClassFile {
 
 	@Override
 	protected void initByteArrays() {
-		// FIXASC (M2) Auto-generated method stub
-		super.initByteArrays();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void initialize(SourceTypeBinding type, ClassFile parentClassFile, boolean createProblemType) {
-		// FIXASC (M2) Auto-generated method stub
-		super.initialize(type, parentClassFile, createProblemType);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public ClassFile outerMostEnclosingClassFile() {
-		// FIXASC (M2) Auto-generated method stub
-		return super.outerMostEnclosingClassFile();
+		// FIXASC (RC1) Does this ever get called for Groovy?
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void recordInnerClasses(TypeBinding binding) {
-		// FIXASC (M2) Auto-generated method stub
-		super.recordInnerClasses(binding);
+		// FIXASC (RC1) Does this ever get called for Groovy?
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void reset(SourceTypeBinding typeBinding) {
-		// FIXASC (M2) Auto-generated method stub
-		super.reset(typeBinding);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setForMethodInfos() {
-		// FIXASC (M2) Auto-generated method stub
-		super.setForMethodInfos();
+		throw new UnsupportedOperationException();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength,
 			ArrayList frames, boolean isClinit) {
-		// FIXASC (M2) Auto-generated method stub
-		super.traverse(methodBinding, maxLocals, bytecodes, codeOffset, codeLength, frames, isClinit);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public char[] utf8At(byte[] reference, int absoluteOffset, int bytesAvailable) {
-		// FIXASC (M2) Auto-generated method stub
-		return super.utf8At(reference, absoluteOffset, bytesAvailable);
-	}
-
-	public GroovyClassFile(String name, byte[] bs, SourceTypeBinding sourceTypeBinding, String filename) {
-		this.name = CharOperation.splitOn('.', name.toCharArray());
-		this.bytes = bs;
-		this.referenceBinding = sourceTypeBinding;
-		this.header = new byte[0];
-		this.headerOffset = 0;
-		this.contents = bs;
-		this.contentsOffset = bs.length;
-		this.filename = filename.toCharArray();
+		throw new UnsupportedOperationException();
 	}
 
 }
