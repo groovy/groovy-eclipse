@@ -483,7 +483,15 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         redirect().modifiers = modifiers;
     }
 
+    // FIXASC (groovychange) overridable method for JDTClassNode
+    protected void ensurePropertiesInitialized() {	
+    }
+    // FIXASC (groovychange) end
+
     public List<PropertyNode> getProperties() {
+        // FIXASC (groovychange)
+    	redirect().ensurePropertiesInitialized();
+        // FIXASC (groovychange) end
         return redirect().properties;
     }
 

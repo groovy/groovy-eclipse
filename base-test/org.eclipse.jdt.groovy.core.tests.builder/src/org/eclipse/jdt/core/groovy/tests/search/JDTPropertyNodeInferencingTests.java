@@ -58,21 +58,23 @@ public class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
         String contents = "def x = new JavaUnit()\nx";
         assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, "JavaUnit");
     }
+    
     public void testPropertyNodeFromJava1() throws Exception {
-        assertType("new JavaUnit().foo", INTEGER);
+    	String contents = "new JavaUnit().foo";
+        assertType(contents,contents.lastIndexOf("foo"),contents.length(), "int");
     }
     
     public void testPropertyNodeFromJava2() throws Exception {
         String contents = "def x = new JavaUnit().foo\nx";
-        assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, INTEGER);
+        assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, "int");
     }
     public void testPropertyNodeFromJava3() throws Exception {
         String contents = "def x = new JavaUnit().javaUnit.foo\nx";
-        assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, INTEGER);
+        assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, "int");
     }
     public void testPropertyNodeFromJava4() throws Exception {
         String contents = "def x = new JavaUnit()\nx.javaUnit.foo";
-        assertType(contents, contents.lastIndexOf("foo"), contents.lastIndexOf("foo")+"foo".length(), INTEGER);
+        assertType(contents, contents.lastIndexOf("foo"), contents.lastIndexOf("foo")+"foo".length(), "int");
     }
     
 }

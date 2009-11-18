@@ -21,6 +21,9 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -66,7 +69,8 @@ public class JDTClassNode extends ClassNode {
 
 	// Configuration flags
 	private int bits = 0;
-	private static final int ANNOTATIONS_INITIALIZED = 0x001;
+	private static final int ANNOTATIONS_INITIALIZED = 0x0001;
+	private static final int PROPERTIES_INITIALIZED = 0x0002;
 
 	static final ClassNode unboundWildcard; // represents plain old '?'
 
@@ -189,11 +193,11 @@ public class JDTClassNode extends ClassNode {
 			interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
 		}
 		setInterfaces(interfaces);
-		initializeMethodsAndConstructors();
+		initializeMembers();
 		resolver.popTypeGenerics();
 	}
 
-	private void initializeMethodsAndConstructors() {
+	private void initializeMembers() {
 		MethodBinding[] bindings = jdtBinding.methods();
 		if (bindings != null) {
 			for (int i = 0; i < bindings.length; i++) {
@@ -404,6 +408,83 @@ public class JDTClassNode extends ClassNode {
 			bits |= ANNOTATIONS_INITIALIZED;
 		}
 		return super.getAnnotations();
+	}
+
+	protected void ensurePropertiesInitialized() {
+		if ((bits & PROPERTIES_INITIALIZED) == 0) {
+			lazyClassInit();
+			// getX methods
+			for (MethodNode methodNode : getMethods()) {
+				if (isGetter(methodNode)) {
+					super.addProperty(createPropertyNodeForMethodNode(methodNode));
+				}
+			}
+			// fields - FIXASC (M2) nyi for fields
+			// for (FieldNode fieldNode : getFields()) {
+			// super.addProperty(createPropertyNodeFromFieldNode(fieldNode));
+			// }
+
+			bits |= PROPERTIES_INITIALIZED;
+		}
+	}
+
+	private PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {
+		ClassNode propertyType = methodNode.getReturnType();
+		String methodName = methodNode.getName();
+		StringBuffer propertyName = new StringBuffer();
+		propertyName.append(Character.toLowerCase(methodName.charAt(3)));
+		if (methodName.length() > 4) {
+			propertyName.append(methodName.substring(4));
+		}
+		int mods = methodNode.getModifiers();
+		return new PropertyNode(propertyName.toString(), mods, propertyType, this, null, null, null);
+	}
+
+	/**
+	 * @return true if the methodNode looks like a setter method for a property: method starting set<Something> with a void return
+	 *         type and taking one parameter
+	 */
+	private boolean isSetter(MethodNode methodNode) {
+		return methodNode.getReturnType() == ClassHelper.VOID_TYPE && methodNode.getParameters().length == 1
+				&& methodNode.getName().startsWith("set") && methodNode.getName().length() > 3;
+	}
+
+	/**
+	 * @return true if the methodNode looks like a getter method for a property: method starting get<Something> with a non void
+	 *         return type and taking no parameters
+	 */
+	private boolean isGetter(MethodNode methodNode) {
+		return methodNode.getReturnType() != ClassHelper.VOID_TYPE && methodNode.getParameters().length == 0
+				&& methodNode.getName().startsWith("get") && methodNode.getName().length() > 3;
+	}
+
+	@Override
+	public List<PropertyNode> getProperties() {
+		ensurePropertiesInitialized();
+		return super.getProperties();
+	}
+
+	@Override
+	public PropertyNode getProperty(String name) {
+		ensurePropertiesInitialized();
+		return super.getProperty(name);
+	}
+
+	@Override
+	public boolean hasProperty(String name) {
+		ensurePropertiesInitialized();
+		return super.hasProperty(name);
+	}
+
+	@Override
+	public void addProperty(PropertyNode node) {
+		throw new IllegalAccessError("JDTClassNode instances are immutable");
+	}
+
+	@Override
+	public PropertyNode addProperty(String name, int modifiers, ClassNode type, Expression initialValueExpression,
+			Statement getterBlock, Statement setterBlock) {
+		throw new IllegalAccessError("JDTClassNode instances are immutable");
 	}
 
 }

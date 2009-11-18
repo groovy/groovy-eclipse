@@ -1192,10 +1192,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         super.visitClass(node);
 
-        currentClass = oldNode;
         // FIXASC (groovychange)
         finishedResolution();
         // end
+        currentClass = oldNode;
     }
 
     public void visitCatchStatement(CatchStatement cs) {
