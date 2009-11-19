@@ -1,0 +1,62 @@
+###prop
+selectionInFile=SomeOtherClass.groovy
+startLine=7
+startColumn=7
+endLine=7
+endColumn=8
+newFieldName=newNAME
+###src
+Package=code
+Filename=Abc.java
+:::
+public class Abc {
+	public String myString;
+}
+#NEXT
+Package=code
+Filename=TestClass.groovy
+:::
+public class TestClass{
+ def myString	
+}
+#NEXT
+Package=code
+Filename=SomeOtherClass.groovy
+:::
+public class SomeOtherClass{
+	def method() {
+		TestClass t = new TestClass()
+		Abc a = new Abc()
+		
+		t.myString = "hello"
+		a.myString = "world"
+	}
+}
+###exp
+Package=code
+Filename=Abc.java
+:::
+public class Abc {
+	public String newNAME;
+}
+#NEXT
+Package=code
+Filename=TestClass.groovy
+:::
+public class TestClass{
+ def myString	
+}
+#NEXT
+Package=code
+Filename=SomeOtherClass.groovy
+:::
+public class SomeOtherClass{
+	def method() {
+		TestClass t = new TestClass()
+		Abc a = new Abc()
+		
+		t.myString = "hello"
+		a.newNAME = "world"
+	}
+}
+###end

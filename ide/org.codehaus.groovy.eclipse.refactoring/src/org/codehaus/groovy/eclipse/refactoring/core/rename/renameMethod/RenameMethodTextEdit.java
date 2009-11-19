@@ -19,6 +19,7 @@
 package org.codehaus.groovy.eclipse.refactoring.core.rename.renameMethod;
 
 import java.util.List;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;

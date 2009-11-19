@@ -1051,9 +1051,7 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 			if (isInterestingProject && LanguageSupportFactory.isInterestingSourceFile(possibleMatch.document.getPath())) {
 				boolean matchPerformed = LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor);
 				if (matchPerformed) {
-					// FIXADE (M2) determine how much to update the progress monitor by.
 					alreadyMatched.add(possibleMatch);
-					continue;
 				}
 			}
 			// GROOVY end
@@ -1122,14 +1120,7 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 		PossibleMatch possibleMatch = this.matchesToProcess[i];
 		this.matchesToProcess[i] = null; // release reference to processed possible match
 		try {
-			// GROOVY start
-			// old 
-//			 process(possibleMatch, bindingsWereCreated);
-			// new
-			if (!alreadyMatched.contains(possibleMatch)) {
-				process(possibleMatch, bindingsWereCreated);
-			}
-			// GROOVY end
+			 process(possibleMatch, bindingsWereCreated);
 		} catch (AbortCompilation e) {
 			// problem with class path: it could not find base classes
 			// continue and try next matching openable reporting innacurate matches (since bindings will be null)
@@ -1152,9 +1143,25 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 							new String(possibleMatch.parsedUnit.getFileName())
 						}));
 			// cleanup compilation unit result
-			possibleMatch.cleanUp();
+			// GROOVY Start
+			// delay cleanup of groovy possible matches until later
+			// the clean up will null-out back pointers to scopes used by other CompilationUnitDeclarations
+			// old
+			// possibleMatch.cleanUp();
+			// new
+			if (!alreadyMatched.contains(possibleMatch)) {
+				possibleMatch.cleanUp();
+			}
+			// GROOVY End
 		}
 	}
+	// GROOVY Start
+	// now do the clean up of groovy matches
+	for (Iterator iterator = alreadyMatched.iterator(); iterator.hasNext();) {
+		PossibleMatch match = (PossibleMatch) iterator.next();
+		match.cleanUp();
+	}
+	// GROOVY End		
 }
 /**
  * Locate the matches amongst the possible matches.
@@ -1644,7 +1651,16 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
 					this.lookupEnvironment.buildTypeBindings(parsedUnit, null /*no access restriction*/);
 				}
 				if (hasAlreadyDefinedType(parsedUnit)) return false; // skip type has it is hidden so not visible
-				getMethodBodies(parsedUnit, possibleMatch.nodeSet);
+				
+				// GROOVY Start
+				// old
+				// getMethodBodies(parsedUnit, possibleMatch.nodeSet);
+				// new
+				// Only getMethodBodies for Java files
+				if (!LanguageSupportFactory.isInterestingSourceFile(new String(parsedUnit.getFileName()))) {
+					getMethodBodies(parsedUnit, possibleMatch.nodeSet);
+				}
+				// GROOVY End
 				if (this.patternLocator.mayBeGeneric && !mustResolve && possibleMatch.nodeSet.mustResolve) {
 					// special case: possible match node set force resolution although pattern does not
 					// => we need to build types for this compilation unit
@@ -1668,6 +1684,14 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
  * Process a compilation unit already parsed and build.
  */
 protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated) throws CoreException {
+	// GROOVY Start
+	// Do not process non-Java files.  They use a separate delegated search
+	if (LanguageSupportFactory.isInterestingSourceFile(new String(possibleMatch.getFileName()))) {
+		possibleMatch.parsedUnit.resolve();
+		return;
+	}
+	// GROOVY End
+	
 	this.currentPossibleMatch = possibleMatch;
 	CompilationUnitDeclaration unit = possibleMatch.parsedUnit;
 	try {

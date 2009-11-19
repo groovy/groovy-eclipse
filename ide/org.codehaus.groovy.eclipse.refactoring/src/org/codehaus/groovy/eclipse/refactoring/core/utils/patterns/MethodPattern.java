@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -32,6 +33,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.StaticFieldImport;
 import org.eclipse.jface.text.IDocument;
+import org.objectweb.asm.Opcodes;
 
 /**
  * 
@@ -192,7 +194,42 @@ public class MethodPattern {
     public boolean equals(Object obj) {
 		if(obj instanceof MethodPattern) {
 			MethodPattern t = (MethodPattern) obj;
-			return(t.classType.equals(classType) && t.equalSignature(this));
+			if (t.classType != null && classType != null) {
+				return(t.classType.equals(classType) && t.equalSignature(this));
+			} else {
+				return t.equalSignature(this);
+			}
+		}
+		return false;
+	}
+	
+	public boolean equalsExactly(Object obj) {
+		if (obj instanceof MethodPattern) {
+			MethodPattern other = (MethodPattern)obj;
+			boolean equalsClass = false;
+			if (classType != null && other.getClassType() != null) {
+				equalsClass = classType.getName().equals(other.getClassType().getName());
+			}
+			boolean equalsName = methodName.equals(other.getMethodName());
+			boolean equalsParamters = true;
+			if (argSize==other.argSize) {
+				for (int i=0; i < argSize; i++) {
+					Expression my = arguments.getExpression(i);
+					Expression his = other.getArguments().getExpression(i);
+					if (my instanceof VariableExpression && his instanceof VariableExpression) {
+						VariableExpression myVar = (VariableExpression)my;
+						VariableExpression otherVar = (VariableExpression)his;
+						if (!myVar.getName().equals(otherVar.getName())) {
+							equalsParamters = false;
+						}
+					} else {
+						equalsParamters = false;
+					}
+				}
+			} else {
+				equalsParamters = false;
+			}
+			return equalsClass && equalsName && equalsParamters;
 		}
 		return false;
 	}
@@ -200,9 +237,46 @@ public class MethodPattern {
 	public boolean equalSignature(Object obj){
 		if(obj instanceof MethodPattern) {
 			MethodPattern t = (MethodPattern) obj;
+			if (node instanceof MethodNode && t.getNode() instanceof MethodNode) {
+				MethodNode thisNode = (MethodNode)node;
+				MethodNode otherNode = (MethodNode)t.getNode();
+				// ignore the ABSTRACT opcode so that concrete classes can be compared with their abstract superclass 
+				int thisNodeModifiers = thisNode.getModifiers() | Opcodes.ACC_ABSTRACT;
+                int otherNodeModifiers = otherNode.getModifiers() | Opcodes.ACC_ABSTRACT;
+                if (thisNodeModifiers != otherNodeModifiers) return false;
+			}
 			return(t.methodName.equals(methodName) && t.argSize == argSize);
 		}
 		return false;
+	}
+	
+	public String getSignature() {
+		StringBuilder sig = new StringBuilder();
+		if (node instanceof MethodNode) {
+			MethodNode methodNode = (MethodNode)node;
+			sig.append(methodNode.getDeclaringClass().getName());
+			sig.append(".");
+			sig.append(methodNode.getName());
+			sig.append("(");
+			for (Parameter parameter : methodNode.getParameters()) {
+				sig.append(parameter.getType().getNameWithoutPackage());
+				sig.append(",");
+			}
+			if (sig.charAt(sig.length()-1) == ',') {
+				sig.deleteCharAt(sig.length()-1);
+			}
+			sig.append(")");
+		} else {
+			sig.append(classType.getName() + ".");
+			sig.append(methodName);
+			
+			sig.append("(" + argSize +")");
+		}
+		return sig.toString();
+	}
+	
+	public boolean isDynamicCall() {
+		return classType.equals(ClassHelper.make(Object.class));
 	}
 	
 	public UserSelection getPosition() {

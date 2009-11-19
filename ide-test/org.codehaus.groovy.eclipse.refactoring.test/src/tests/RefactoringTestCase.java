@@ -21,6 +21,7 @@ package tests;
 import java.io.File;
 import junit.framework.AssertionFailedError;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyChange;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.NoRefactoringForASTNodeException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
@@ -40,7 +41,12 @@ public abstract class RefactoringTestCase extends BaseTestCase {
 	 */
 	public void testRefactoring() throws Throwable {
 		try {
-			preAction();
+		    try {
+		        preAction();
+		    } catch (NoRefactoringForASTNodeException e) {
+		        // if we get here, then there is an expected failure
+		        return;
+		    }
 			RefactoringStatus rs = checkInitialCondition();
 			simulateUserInput();
 			rs.merge(checkFinalCondition());
@@ -82,7 +88,7 @@ public abstract class RefactoringTestCase extends BaseTestCase {
 		return true;
 	}
 	
-	public abstract void preAction();
+	public abstract void preAction() throws NoRefactoringForASTNodeException;
 	
 	public abstract RefactoringStatus checkInitialCondition() throws OperationCanceledException, CoreException;
 	

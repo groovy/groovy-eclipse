@@ -48,7 +48,13 @@ public class HierarchyTreeBuilder {
 		pool.putAll(container);
 		HierarchyNode startNode = pool.get(startClass.getName());
 		
-		candiatesB.put(startNode.className, pool.remove(startNode.className));
+		if (startNode == null) {
+			// Set Java class as begin
+			startNode = new HierarchyNode(startClass); 
+			candiatesB.put(startNode.className, startNode);
+		} else {
+			candiatesB.put(startNode.className, pool.remove(startNode.className));
+		}
 		while(!candiatesB.isEmpty()) {
 
 			for(HierarchyNode currentNode : candiatesB.values()) {

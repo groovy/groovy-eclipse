@@ -21,11 +21,14 @@ package org.codehaus.groovy.eclipse.refactoring.core.extractMethod;
 import java.util.ArrayList;
 import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.DoWhileStatement;
@@ -51,7 +54,7 @@ public class StatementFinder extends CodeVisitorSupport {
 
 	private List<Statement> preSelection, inSelection, postSelection;
 	private boolean isInClosure;
-	private MethodNode methodNode,actualMethod;
+	private AnnotatedNode methodNode,actualMethod;
 	private ClassNode classNode,actualClass;
 	private final UserSelection selection;
 	private final IDocument document;
@@ -79,7 +82,7 @@ public class StatementFinder extends CodeVisitorSupport {
 	 * @return
 	 */
 	public boolean isStatic() {
-		return methodNode.isStatic();
+		return methodNode instanceof MethodNode ? ((MethodNode) methodNode).isStatic() : ((FieldNode) methodNode).isStatic();
 	}
 	
 	/**
@@ -87,7 +90,7 @@ public class StatementFinder extends CodeVisitorSupport {
 	 * @return
 	 */
 	public boolean isInConstructor() {
-		return (methodNode != null && methodNode.getName().equals("<init>"));
+		return (methodNode instanceof MethodNode && ((MethodNode) methodNode).getName().equals("<init>"));
 	}
 
 	/**
@@ -139,7 +142,7 @@ public class StatementFinder extends CodeVisitorSupport {
 	 * 
 	 * @return
 	 */
-	public MethodNode getMethodNode() {
+	public AnnotatedNode getMethodNode() {
 		return methodNode;
 	}
 	
@@ -198,11 +201,32 @@ public class StatementFinder extends CodeVisitorSupport {
 				for (MethodNode method : (List<MethodNode>) cl.getMethods()) {
 					scanMethod(cl, method);
 				}
+				for (FieldNode field : (List<FieldNode>) cl.getFields()) {
+				    scanField(cl, field);
+				}
+				
 			}
 		}
 	}
 
-	private void scanMethod(ClassNode cl, MethodNode method) {
+	/**
+     * @param cl
+     * @param field
+     */
+    private void scanField(ClassNode cl, FieldNode field) {
+        if (testSelection(selection, field, document, false)) {
+            if (field.getInitialExpression() instanceof ClosureExpression) {
+                Statement closureBlock = ((ClosureExpression) field.getInitialExpression()).getCode();
+                if (closureBlock instanceof BlockStatement) {
+                    actualMethod = field;
+                    visitBlockStatement((BlockStatement) closureBlock);
+                }
+            }
+        }
+        
+    }
+
+    private void scanMethod(ClassNode cl, MethodNode method) {
 		if (testSelection(selection, method, document, false)
 				|| (cl.isScript() && method.getName() != "main")) {
 			if(method.getCode() instanceof BlockStatement) {

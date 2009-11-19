@@ -30,6 +30,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.PerformanceStats;
 import org.eclipse.core.runtime.Platform;
@@ -45,7 +46,6 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.util.CompilerUtils;
-import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
@@ -162,7 +162,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * This is potentially a long running operation. This method ensures that this CompilationUnit is a working copy and that it is
 	 * consistent (if not a reconcile operation is performed).
 	 * 
-	 * Probably should raise an exception if ModuleNode cannot be created
 	 */
 	public ModuleNode getModuleNode() {
 		try {
@@ -177,12 +176,25 @@ public class GroovyCompilationUnit extends CompilationUnit {
 				return ModuleNodeMapper.getInstance().get(info);
 			}
 		} catch (JavaModelException e) {
-			// TODO error reporting?
-			Activator.getDefault().getLog().log(e.getStatus());
+			Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName()); //$NON-NLS-1$
 		}
-		// TODO I don't like returning null. Should we rethrow exception or
-		// should we return dummy moduleNode?
+		// return null if not found. Means that there was a problem with build structure
 		return null;
+	}
+
+	/**
+	 * Gets the module node for this compilation unit. Bypasses the cached module node and creates a new one, which is then placed
+	 * in the cache
+	 * 
+	 * @return
+	 */
+	public ModuleNode getNewModuleNode() {
+		try {
+			openWhenClosed(createElementInfo(), new NullProgressMonitor());
+		} catch (JavaModelException e) {
+			Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName()); //$NON-NLS-1$
+		}
+		return getModuleNode();
 	}
 
 	@Override
@@ -574,5 +586,13 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		}
 
 		return true;
+	}
+
+	@Override
+	public void rename(String newName, boolean force, IProgressMonitor monitor) throws JavaModelException {
+		// FIXADE RC1 re-enable renaming for groovy CUs in a way that works for groovy files
+		String message = "Rename Compilation Unit currently disabled in groovy.  File: " + this.getElementName();
+		Util.log(null, message);
+		System.out.println(message);
 	}
 }

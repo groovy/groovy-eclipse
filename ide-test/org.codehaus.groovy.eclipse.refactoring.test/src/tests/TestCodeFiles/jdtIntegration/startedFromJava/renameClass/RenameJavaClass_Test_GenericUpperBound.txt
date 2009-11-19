@@ -1,0 +1,35 @@
+###prop
+selectionInFile=Field.java
+className=Field
+newClassName=MyNewField
+###src
+Package=code
+Filename=MyClass.groovy
+:::
+import java.util.ArrayList
+public class MyClass {
+	private ArrayList<? extends Field> variable
+}
+#NEXT
+Package=code
+Filename=Field.java
+:::
+public class Field {
+	public static String field;
+}
+###exp
+Package=code
+Filename=MyClass.groovy
+:::
+import java.util.ArrayList
+public class MyClass {
+	private ArrayList<? extends MyNewField> variable
+}
+#NEXT
+Package=code
+Filename=MyNewField.java
+:::
+public class MyNewField {
+	public static String field;
+}
+###end

@@ -1,0 +1,48 @@
+###prop
+selectionInFile=Coll.groovy
+startLine=3
+startColumn=17
+endLine=3
+endColumn=18
+newClassName=MyNewException
+###src
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	def method() {
+		throw new MyException("here")
+	}
+}
+#NEXT
+Package=code
+Filename=MyException.java
+:::
+public class MyException {
+	private String message = "Exception was thrown";
+	
+	public MyException(String where) {
+		message = message + " - " + where;
+	}
+}
+###exp
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	def method() {
+		throw new MyNewException("here")
+	}
+}
+#NEXT
+Package=code
+Filename=MyNewException.java
+:::
+public class MyNewException {
+	private String message = "Exception was thrown";
+	
+	public MyNewException(String where) {
+		message = message + " - " + where;
+	}
+}
+###end

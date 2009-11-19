@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
@@ -31,6 +32,10 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 
 public abstract class MultiFileRefactoringProvider extends RefactoringProvider {
 	
@@ -42,8 +47,7 @@ public abstract class MultiFileRefactoringProvider extends RefactoringProvider {
 	protected ASTNode selectedASTNode;
 	protected static final String JAVA_LANG_OBJECT = "java.lang.Object";
 
-	public MultiFileRefactoringProvider(IGroovyFileProvider fileProvider, UserSelection selection) {
-		super(selection);
+	public MultiFileRefactoringProvider(IGroovyFileProvider fileProvider) {
 		this.fileProvider = fileProvider;
 		this.selectionDocument = fileProvider.getSelectionDocument();
 	}
@@ -63,6 +67,10 @@ public abstract class MultiFileRefactoringProvider extends RefactoringProvider {
 	
 	public List<IGroovyDocumentProvider> getUsedDocuments() {
 		return fileProvider.getAllSourceFiles();
+	}
+	
+	public IGroovyFileProvider getFileProvider() {
+		return fileProvider;
 	}
 	
 	@Override
@@ -125,12 +133,33 @@ public abstract class MultiFileRefactoringProvider extends RefactoringProvider {
 		definitiveCandidates.get(docProvider).remove(node);
 	}
 	
+	public void removeAmbiguousEntry(IGroovyDocumentProvider docProvider, ASTNode node) {
+		ambiguousCandidates.get(docProvider).remove(node);
+	}
+	
+	public void removeAllAmbiguousEntrys() {
+		ambiguousCandidates.clear();
+	}
+	
 	public Map<IGroovyDocumentProvider, List<ASTNode>> getAmbiguousCandidates() {
 		return ambiguousCandidates;
 	}
 
 	public Map<IGroovyDocumentProvider, List<ASTNode>> getDefinitiveCandidates() {
 		return definitiveCandidates;
+	}
+	
+	public boolean hasCandidates() {
+		prepareCandidateLists();
+		int nrOfCandidates = 0;
+		// FIXME: Values or keys?
+		for(List<ASTNode> list : definitiveCandidates.values()) {
+			nrOfCandidates += list.size();
+		}
+		for(List<ASTNode> list : ambiguousCandidates.values()) {
+			nrOfCandidates += list.size();
+		};
+		return nrOfCandidates > 0;
 	}
 	
 	public boolean refactoringIsAmbiguous(){
@@ -143,4 +172,67 @@ public abstract class MultiFileRefactoringProvider extends RefactoringProvider {
 	}
 
 	protected abstract void prepareCandidateLists();
+	
+	public abstract String getOldName();
+	
+	protected boolean hasCandidateLists() {
+		return definitiveCandidates != null 
+				&& ambiguousCandidates != null;
+	}
+
+	private class SelectionPicker implements Runnable {
+		public int lineNumber = -1;
+		public void run() {
+			IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+			if (window == null) return;
+			IEditorPart part = window.getActivePage().getActiveEditor();
+//			if (part instanceof GroovyEditor) {
+//				GroovyEditor editor = (GroovyEditor)part;
+//				ITextSelection ts = (ITextSelection) editor.getSelectionProvider().getSelection();
+//				if (ts.getStartLine()==ts.getEndLine()) {
+//					lineNumber = ts.getStartLine();
+//				}
+//			}
+		}
+	};
+	
+	public void moveSelectionToDefinitiveCandidates() {
+		int lineNumber = getSelectedLineNumber();
+		if (lineNumber > -1) {
+			IGroovyDocumentProvider doc = null;
+			ASTNode selectedNode = null;
+			for (Entry<IGroovyDocumentProvider, List<ASTNode>> entry : ambiguousCandidates.entrySet()) {
+				for(ASTNode node : entry.getValue()) {
+					if (node.getLineNumber()==lineNumber) {
+						doc = entry.getKey();
+						selectedNode = node;
+					}
+				}
+			}
+			
+			if (doc != null && selectedNode != null) {
+				addDefinitiveEntry(doc, selectedNode);
+				removeAmbiguousEntry(doc, selectedNode);
+			}
+		}
+	}
+
+	private int getSelectedLineNumber() {
+		SelectionPicker picker = new SelectionPicker();
+		int lineNumber = -1;
+		IWorkbench workbench = null;
+		try {
+			workbench = PlatformUI.getWorkbench();
+		} catch (IllegalStateException e) { 
+			if (selectedASTNode != null) {
+				lineNumber = selectedASTNode.getLineNumber();
+			}
+		}
+		if (workbench != null ) {
+			workbench.getDisplay().syncExec(picker);
+			lineNumber = picker.lineNumber;
+		}
+		lineNumber++;
+		return lineNumber;
+	}
 }

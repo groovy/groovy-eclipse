@@ -236,7 +236,7 @@ public class OrganizeImportsTest extends EclipseTestCase {
             """ 
             import other.ThirdClass
             import javax.swing.text.html.HTML
-import other.SecondClass
+            import other.SecondClass
             class Main {
                 HTML f = null
             }

@@ -119,6 +119,10 @@ public class GroovyRuntime {
         return false;
     }
 
+    /**
+     * Not used, but could be used to exclude all groovy files from compilation
+     * @param javaProject
+     */
     public static void excludeGroovyFilesFromOutput(
             final IJavaProject javaProject) {
         // make sure .groovy files are not copied to the output dir
@@ -133,6 +137,10 @@ public class GroovyRuntime {
         }
     }
 
+    /**
+     * Not used, but could be used to include all groovy files for compilation
+     * @param javaProject
+     */
     public static void includeGroovyFilesInOutput(final IJavaProject javaProject) {
         // make sure .groovy files are not copied to the output dir
         final String[] excludedResourcesArray = StringUtils.split(

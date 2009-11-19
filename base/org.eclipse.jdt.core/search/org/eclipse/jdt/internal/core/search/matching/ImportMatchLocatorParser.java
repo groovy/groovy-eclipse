@@ -13,11 +13,20 @@ package org.eclipse.jdt.internal.core.search.matching;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
+// GROOVY Start
+public
+// GROOVY End
 class ImportMatchLocatorParser extends MatchLocatorParser {
 
 	boolean reportImportMatch;
 
-protected ImportMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
+// GROOVY Start
+// old
+// protected 
+// new
+public
+// GROOVY End
+ImportMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
 	super(problemReporter, locator);
 	this.reportImportMatch = this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.IMPORT_DECLARATION_TYPE_REFERENCE) != 0;
 }

@@ -75,6 +75,18 @@ public class GroovyRefactoringMessages extends NLS {
 	public static String FormattingAction_Syntax_Errors;
 	public static String FormattingAction_RootNode_Errors;
 	
+	public static String CandidateSelection_Title;
+	public static String CandidateSelection_Message;
+	public static String CandidateSelection_SelectionOK;
+	public static String CandidateSelection_SelectionNotOK;
+	
+	public static String JavaClassUpdateRefactoring;
+	public static String JavaFieldUpdateRefactoring;
+	public static String JavaMethodUpdateRefactoring;
+	public static String JavaSyntheticFieldUpdateRefactoring;
+	
+	public static String ParticipantDispatcherError;
+	
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, GroovyRefactoringMessages.class);

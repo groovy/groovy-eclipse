@@ -18,14 +18,25 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameTextEditProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry;
+import org.eclipse.ltk.core.refactoring.TextChange;
+import org.eclipse.ltk.core.refactoring.TextFileChange;
+import org.eclipse.text.edits.DeleteEdit;
+import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.TextEdit;
 
 
 /**
@@ -38,6 +49,9 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry;
 abstract public class RefactoringProvider {
 
 	protected UserSelection selection;
+	protected Map<Object,TextChange> javaChanges;
+	
+	public RefactoringProvider() {}
 	
 	public RefactoringProvider(UserSelection selecion) {
 		this.selection = selecion;
@@ -71,4 +85,52 @@ abstract public class RefactoringProvider {
 			throws CoreException, OperationCanceledException;
 	
 	public abstract IGroovyDocumentProvider getDocumentProvider();
+
+	public void setJavaChanges(Map<Object, TextChange> changes) {
+		javaChanges = changes;
+	}
+
+	public Map<Object, TextChange> getJavaChanges() {
+		if(javaChanges != null)
+			return javaChanges;
+		else
+			return new HashMap<Object, TextChange>();
+	}
+
+	protected MultiTextEdit removeDublicatedTextedits(RenameTextEditProvider textEditProvider) {
+		ArrayList<TextEdit> doubleEdits = new ArrayList<TextEdit>();
+		MultiTextEdit multi = textEditProvider.getMultiTextEdit();
+		IFile thisFile = textEditProvider.getDocProvider().getFile();
+	
+		TextEdit javaChange = getJavaTextEdit(thisFile);
+		for (TextEdit edit : multi.getChildren()) {
+			for(TextEdit jedit : javaChange.getChildren()) {
+				if(edit.getRegion().equals(jedit.getRegion())) {
+					doubleEdits.add(edit);
+				}
+			}
+		}
+	
+		for (TextEdit editToRemove : doubleEdits) {
+			multi.removeChild(editToRemove);
+		}
+		return multi;
+	}
+
+	private TextEdit getJavaTextEdit(IFile thisFile) {
+		TextEdit javaChange = new DeleteEdit(0, 0);
+		if (javaChanges != null) {
+			for (TextChange javaEdit : javaChanges.values()) {
+				if (javaEdit instanceof TextFileChange) {
+					TextFileChange tfc = (TextFileChange) javaEdit;
+					IFile remoteRile = tfc.getFile();
+					if (remoteRile.equals(thisFile)) {
+						javaChange = tfc.getEdit();
+					}
+				}
+			}
+		}
+		return javaChange;
+	}
+	
 }

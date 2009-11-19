@@ -27,10 +27,17 @@ import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.IAmbiguousRenameInfo;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -49,7 +56,7 @@ public class RenameFileSelectionPage extends UserInputWizardPage {
 	private static final String ASTNODE = "astnode";
 	
 	private IAmbiguousRenameInfo info;
-	private Text sourceCodePreviewText;
+	private SourceViewer sourceCodePreviewViewer;
 	private Table possibilityTable;
 	private Table definitiveTable;
 
@@ -101,8 +108,7 @@ public class RenameFileSelectionPage extends UserInputWizardPage {
 
 	private void initSourceCodePreview(Composite control) {
 		GridData data;
-		sourceCodePreviewText = new Text (control, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		sourceCodePreviewText.setText ("");
+		sourceCodePreviewViewer = createViewer(control);
 		data = new GridData ();
 		data.minimumWidth = WIDTH;
 		data.widthHint = WIDTH;
@@ -112,8 +118,22 @@ public class RenameFileSelectionPage extends UserInputWizardPage {
 		data.verticalSpan = 4;
 		data.grabExcessHorizontalSpace = true;
 		data.grabExcessVerticalSpace = true;
-		sourceCodePreviewText.setLayoutData (data);
+		sourceCodePreviewViewer.getTextWidget().setLayoutData(data);
 	}
+	
+    protected SourceViewer createViewer(Composite parent) {
+        SourceViewer viewer = new SourceViewer(parent, null, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+          
+        IDocument document = new Document();       
+        viewer.configure(new MinimalGroovyConfiguration());
+        viewer.setDocument(document);
+        viewer.setEditable(false);  
+        Font font= JFaceResources.getFont(JFaceResources.TEXT_FONT);
+        viewer.getTextWidget().setFont(font);    
+                
+        return viewer;
+    }
+
 
 	private void initPossibilityTable(Composite control) {
 		possibilityTable = new Table (control, SWT.BORDER | SWT.CHECK);
@@ -223,10 +243,9 @@ public class RenameFileSelectionPage extends UserInputWizardPage {
 			}
 			
 			IGroovyDocumentProvider documentOfTableElement = (IGroovyDocumentProvider) selectedTableItem.getData(DOCUMENT);
-			String documentContent = documentOfTableElement.getDocumentContent();
 			UserSelection start = new UserSelection(nodeOfTableElement, documentOfTableElement.getDocument());
-			sourceCodePreviewText.setText(documentContent);
-			sourceCodePreviewText.setSelection(start.getOffset(), start.getOffset() + start.getLength());
+			sourceCodePreviewViewer.setDocument(documentOfTableElement.getDocument());
+			sourceCodePreviewViewer.setSelection(new TextSelection(start.getOffset(), start.getOffset() + start.getLength()));
 		}
 	}
 

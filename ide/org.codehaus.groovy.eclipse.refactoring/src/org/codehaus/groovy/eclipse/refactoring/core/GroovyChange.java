@@ -24,7 +24,6 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
 import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -40,7 +39,6 @@ public class GroovyChange {
 	
 	private Map<IGroovyDocumentProvider, MultiTextEdit> edits = new HashMap<IGroovyDocumentProvider, MultiTextEdit>();
 	private String name;
-	private CompositeChange javaChange = new CompositeChange("Java changes");
 	
 	public GroovyChange(String name) {
 		this.name = name;
@@ -51,7 +49,7 @@ public class GroovyChange {
 	 * the testenvironment
 	 * @return Changeobject that contains the edits
 	 */
-	public Change createChange() {
+	public CompositeChange createChange() {
 		CompositeChange change = new CompositeChange(name);
 		for (IGroovyDocumentProvider docProvider : edits.keySet()) {
 			WorkspaceDocumentProvider workspaceProvider = (WorkspaceDocumentProvider)docProvider;
@@ -62,12 +60,7 @@ public class GroovyChange {
 				change.add(textFileChange);
 			}
 		}
-		//change.add(javaChange);
 		return change;
-	}
-	
-	public void addChange(Change change) {
-		this.javaChange.add(change);
 	}
 	
 	public void addEdit(IGroovyDocumentProvider docProvider, MultiTextEdit edit) {

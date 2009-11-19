@@ -1,0 +1,64 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=9
+startColumn=8
+endLine=9
+endColumn=10
+newClassName=MyNewField
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	private Field var;
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Field{
+	public static def method(){}
+}
+
+public class GroovyClass {
+	private Field var
+	def method(){
+		switch (var) {
+		case Field:
+			println("Yes")
+			break;
+		default:
+			println("I don't know")
+			break;
+		}
+	}
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	private MyNewField var;
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class MyNewField{
+	public static def method(){}
+}
+
+public class GroovyClass {
+	private MyNewField var
+	def method(){
+		switch (var) {
+		case MyNewField:
+			println("Yes")
+			break;
+		default:
+			println("I don't know")
+			break;
+		}
+	}
+}
+###end

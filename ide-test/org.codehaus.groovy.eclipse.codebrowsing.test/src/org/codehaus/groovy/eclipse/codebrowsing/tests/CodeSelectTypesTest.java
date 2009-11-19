@@ -58,6 +58,18 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
         assertTrue("Java Element for type 'Super' should exist", elt[0].exists());
     }
     
+    public void testSelectThisClass() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class This { }";
+        env.addGroovyClass(root, "", "This", contents);
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "This.groovy");
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("This"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found super type 'This'", "This", elt[0].getElementName());
+        assertTrue("Java Element for type 'This' should exist", elt[0].exists());
+    }
+    
     
     public void testSelectFieldType() throws Exception {
         IPath projectPath = createGenericProject();

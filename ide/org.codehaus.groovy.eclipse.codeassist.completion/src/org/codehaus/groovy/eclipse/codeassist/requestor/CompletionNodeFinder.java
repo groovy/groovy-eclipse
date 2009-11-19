@@ -39,6 +39,7 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -278,6 +279,24 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         blockStack.pop();
         createNullContext();
     }
+    
+    @Override
+    public void visitProperty(PropertyNode node) {
+        if (!doTest(node)) {
+            return;
+        }
+        
+        currentDeclaration = node;
+        ClassNode type = node.getType();
+        if (type != null && doTest(type)) {
+            createContext(null, node.getDeclaringClass(), CLASS_BODY);
+        }
+        blockStack.push(node);
+        super.visitProperty(node);
+        blockStack.pop();
+        createNullContext();
+    }
+
 
 
     @Override
@@ -397,6 +416,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             createContext(expression, expression.getCode(), expressionOrStatement());
         }
     }
+    
     
     private void internalVisitParameters(Parameter[] ps, ASTNode declaringNode) {
         if (ps != null) {

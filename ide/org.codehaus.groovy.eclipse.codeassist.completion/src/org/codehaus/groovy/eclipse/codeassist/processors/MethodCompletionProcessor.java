@@ -140,7 +140,7 @@ public GroovyOverrideCompletionProposal(IJavaProject jproject,
 //        proposal.setDeclarationKey(null);  don't know what to do here
 //        proposal.setParameterPackageNames(parameterPackageNames);
 //        proposal.setPackageName(method.getReturnType().qualifiedPackageName());
-        proposal.setFlags(convertFromGroovyModifiers(method.getModifiers()));
+        proposal.setFlags(method.getModifiers());
         proposal.setRelevance(relevance);
         
         OverrideCompletionProposal override = new GroovyOverrideCompletionProposal(context.unit.getJavaProject(), 

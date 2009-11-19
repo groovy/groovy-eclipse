@@ -1,0 +1,53 @@
+// Special kind of compiler problem, sometimes works, sometimes not
+###prop
+selectionInFile=JavaClass.java
+startLine=3
+startColumn=4
+endLine=3
+endColumn=6
+newClassName=MyNewField
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	private void x() {
+		Element.method();
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Element{
+	public static def method(){}
+}
+
+public class GroovyClass {
+	def m() {
+		Element.method()
+	}
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	private void x() {
+		MyNewField.method();
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class MyNewField{
+	public static def method(){}
+}
+
+public class GroovyClass {
+	def m() {
+		MyNewField.method()
+	}
+}
+###end

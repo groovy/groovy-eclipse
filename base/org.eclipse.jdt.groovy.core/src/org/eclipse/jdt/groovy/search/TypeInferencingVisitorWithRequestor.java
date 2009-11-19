@@ -16,6 +16,7 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -74,7 +75,6 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -85,6 +85,7 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -136,7 +137,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	TypeInferencingVisitorWithRequestor(GroovyCompilationUnit unit, ITypeLookup[] lookups) {
 		super();
 		this.unit = unit;
-		enclosingDeclarationNode = unit.getModuleNode();
+		enclosingDeclarationNode = createModuleNode(unit);
 		this.lookups = lookups;
 		scopes = new Stack<VariableScope>();
 		propertyExpression = new Stack<Expression>();
@@ -400,6 +401,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		switch (status) {
 			case CONTINUE:
 				visitClassReference(node.getReturnType());
+				if (node.getExceptions() != null) {
+					for (ClassNode e : node.getExceptions()) {
+						visitClassReference(e);
+					}
+				}
+
 				if (handleParameterList(node.getParameters())) {
 					super.visitConstructorOrMethod(node, isConstructor);
 				}
@@ -508,7 +515,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 						break;
 					}
 				}
-				VisitStatus status = handleRequestor(node.getType(), requestor, result);
+				// visit the parameter itself
+				VisitStatus status = handleRequestor(node, requestor, result);
+				switch (status) {
+					case CONTINUE:
+						break;
+					case CANCEL_BRANCH:
+						return false;
+					case STOP_VISIT:
+						throw new VisitCompleted();
+				}
+
+				// visit the parameter type
+				status = handleRequestor(node.getType(), requestor, result);
 				switch (status) {
 					case CONTINUE:
 						break;
@@ -529,6 +548,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitVariableExpression(VariableExpression node) {
+		if (node.getAccessedVariable() == node) {
+			internalVisitTypeReference(node.getType());
+		}
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			super.visitVariableExpression(node);
@@ -563,34 +585,26 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBinaryExpression(BinaryExpression node) {
-		if (node.getOperation().equals(Types.EQUALS)) {
-			boolean shouldContinue = handleExpression(node);
-			if (shouldContinue) {
-				super.visitBinaryExpression(node);
+		propertyExpression.push(node);
+		node.getRightExpression().visit(this);
+		boolean shouldContinue = handleExpression(node);
+
+		// the declaration itself is the property node
+		ClassNode propType = propertyExpressionType.pop();
+		propertyExpression.pop();
+
+		if (shouldContinue) {
+			node.getLeftExpression().visit(this);
+
+			if (isObjectExpression(node)) {
+				// returns true if this declaration expression is the property field of another property expression
+				objectExpressionType.push(propType);
 			}
 		} else {
-
-			propertyExpression.push(node);
-			node.getRightExpression().visit(this);
-			boolean shouldContinue = handleExpression(node);
-
-			// the declaration itself is the property node
-			ClassNode propType = propertyExpressionType.pop();
 			propertyExpression.pop();
 
-			if (shouldContinue) {
-				node.getLeftExpression().visit(this);
-
-				if (isObjectExpression(node)) {
-					// returns true if this declaration expression is the property field of another property expression
-					objectExpressionType.push(propType);
-				}
-			} else {
-				propertyExpression.pop();
-
-				// not popped earlier because the method field of the expression was not examined
-				objectExpressionType.pop();
-			}
+			// not popped earlier because the method field of the expression was not examined
+			objectExpressionType.pop();
 		}
 	}
 
@@ -700,8 +714,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitDeclarationExpression(DeclarationExpression node) {
-		// visit the type of the variable declaration
-		internalVisitTypeReference(node.getLeftExpression().getType());
+		// this is ok. the variable expression is visited appropriately
 		visitBinaryExpression(node);
 	}
 
@@ -982,6 +995,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		switch (status) {
 			case CONTINUE:
+				if (node.getMembers() != null) {
+					Collection<Expression> exprs = (Collection<Expression>) node.getMembers().values();
+					for (Expression expr : exprs) {
+						expr.visit(this);
+					}
+				}
+				break;
 			case CANCEL_BRANCH:
 				return;
 			case STOP_VISIT:
@@ -1063,6 +1083,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Get the module node. Potentially forces creation of a new module node if the working copy owner is non-default. This is
+	 * necessary because a non-default working copy owner implies that this may be a search related to refactoring and therefore,
+	 * the ModuleNode must be based on the most recent working copies.
+	 */
+	private ModuleNode createModuleNode(GroovyCompilationUnit unit) {
+		if (unit.getOwner() == DefaultWorkingCopyOwner.PRIMARY) {
+			return unit.getModuleNode();
+		} else {
+			return unit.getNewModuleNode();
+		}
 	}
 
 	private ModuleNode getModuleNode() {

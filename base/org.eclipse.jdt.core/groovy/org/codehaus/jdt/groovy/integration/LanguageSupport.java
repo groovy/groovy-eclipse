@@ -26,6 +26,9 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.search.matching.ImportMatchLocatorParser;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
 public interface LanguageSupport {
@@ -34,6 +37,10 @@ public interface LanguageSupport {
 
 	IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, 
 			boolean optimizeStringLiterals, boolean useSourceJavadocParser);
+	
+	MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator);
+
+	ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator);
 	
     CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner);
     

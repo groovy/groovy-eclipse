@@ -1,0 +1,51 @@
+// Interfaces not searchable yet
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=5
+startColumn=38
+endLine=5
+endColumn=40
+newClassName=NewStartable
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass implements Startable {
+
+	public int start() {
+		return 0;
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public interface Startable {
+	public int start();
+}
+
+public class GroovyClass implements Startable {
+	public int start() {0}
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass implements NewStartable {
+
+	public int start() {
+		return 0;
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public interface NewStartable {
+	public int start();
+}
+
+public class GroovyClass implements NewStartable {
+	public int start() {0}
+}
+###end

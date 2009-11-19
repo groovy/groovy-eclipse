@@ -34,7 +34,11 @@ public interface IAmbiguousRenameInfo {
 	public abstract Map<IGroovyDocumentProvider, List<ASTNode>> getDefinitiveCandidates();
 
 	public abstract void addDefinitiveEntry(IGroovyDocumentProvider docProvider, ASTNode node);
+	
+	public abstract void removeAmbiguousEntry(IGroovyDocumentProvider docProvider, ASTNode node);
 
 	public abstract void removeDefinitiveEntry(IGroovyDocumentProvider docProvider, ASTNode node);
+
+	public abstract void removeAllAmbiguousEntrys();
 
 }

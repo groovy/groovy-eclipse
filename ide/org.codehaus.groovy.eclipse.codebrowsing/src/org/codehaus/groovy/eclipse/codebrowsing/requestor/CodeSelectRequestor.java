@@ -19,6 +19,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -63,7 +64,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
             IJavaElement enclosingElement) {
-        if (node == nodeToLookFor) {
+        if (node instanceof ImportNode) {
+            node = ((ImportNode) node).getType();
+        }
+        
+        if (doTest(node)) {
             if (result.declaration != null) {
                 if (result.declaration instanceof VariableExpression) {
                     // look in the local scope
@@ -132,6 +137,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
             return VisitStatus.STOP_VISIT;
         }
         return VisitStatus.CONTINUE;
+    }
+
+
+    /**
+     * @param node
+     * @return
+     */
+    private boolean doTest(ASTNode node) {
+        return node.getClass() == nodeToLookFor.getClass() && nodeToLookFor.getStart() == node.getStart() && nodeToLookFor.getEnd() == node.getEnd();
     }
 
     /**

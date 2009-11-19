@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -52,6 +53,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.text.edits.MultiTextEdit;
 
 /**
  * 
@@ -70,16 +72,24 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 
 	protected List<RenameTextEditProvider> textEditProviders = new ArrayList<RenameTextEditProvider>();
 
-	public RenameMethodProvider(IGroovyFileProvider docProvider,
-			UserSelection selection, MethodPattern selectedNode) {
-		
-		super(docProvider, selection);
+	public RenameMethodProvider(IGroovyFileProvider docProvider, MethodPattern selectedNode) {
+		super(docProvider);
 		this.selectedMethodPattern = selectedNode;
 		this.selectedASTNode = selectedMethodPattern.getNode();
 	}
-
+	
+	public RenameMethodProvider(IGroovyFileProvider docProvider, UserSelection selection, MethodPattern selectedNode) {
+		this(docProvider, selectedNode);
+		setSelection(selection);
+	}
+	
 	@Override
     protected void prepareCandidateLists() {
+		
+		// FIXME: Why do candidates need to be collected several times?
+		// This is a small workaround to fix it, but maybe dangerous
+		if (hasCandidateLists()) return;
+		
 		textEditProviders = new ArrayList<RenameTextEditProvider>();
 		definitiveCandidates = new HashMap<IGroovyDocumentProvider, List<ASTNode>>();
 		ambiguousCandidates = new HashMap<IGroovyDocumentProvider, List<ASTNode>>();
@@ -89,6 +99,8 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 		}
 		
 		removeCandidatesWithInvalidPositions();
+		
+		
 		
 		//We have an exact pattern that contains a class, this 
 		//fact allows us to eliminate some candidates
@@ -100,7 +112,19 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 		//be moved to the list of ambiguous candidates
 		moveAmbiguousCandidates(ambiguousCandidates);
 		
+		//If called programmatically
+		if (selectedASTNode == null && !definitiveCandidates.values().isEmpty()) {
+			for(List<ASTNode> list : definitiveCandidates.values()) {
+				for(ASTNode node : list) {
+					selectedASTNode = node;
+					continue;
+				}
+			}	
+		}
+		
 		checkUniqueMethodDefinitions();
+		
+		moveSelectionToDefinitiveCandidates();
 		
 		//interface handling:
 		//if selected method is defined in a interface, all
@@ -359,9 +383,11 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 			throws CoreException, OperationCanceledException {
 		//Iteration over all documents in the workspace to look, where the method to rename is used
 		GroovyChange change = new GroovyChange(GroovyRefactoringMessages.RenameMethodRefactoring);
-		for(RenameTextEditProvider textEdit : textEditProviders){
-			change.addEdit(textEdit);
+		for (RenameTextEditProvider textEditProvider : textEditProviders) {
+			MultiTextEdit multi = removeDublicatedTextedits(textEditProvider);
+			change.addEdit(textEditProvider.getDocProvider(), multi);
 		}
+
 		/*
 		 * Would also look for java method, that are affected. It's just a prototype.
 		 */
@@ -425,6 +451,10 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 	public String getOldName() {
 		return selectedMethodPattern.getMethodName();
 	}
+	
+	public MethodPattern getMethodPattern() {
+		return selectedMethodPattern;
+	}
 
 	public void setNewName(String newName) {
 		newMethodName = newName;
@@ -433,6 +463,10 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 		for(RenameTextEditProvider provider : textEditProviders){
 			provider.setNewName(newName);
 		}
+	}
+	
+	public String getNewName() {
+		return newMethodName;
 	}
 	
 	/**

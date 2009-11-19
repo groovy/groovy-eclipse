@@ -22,12 +22,15 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.codehaus.groovy.eclipse.refactoring.core.participation.ParticipantDispatcher;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ui.IEditorInput;
@@ -41,17 +44,18 @@ import org.eclipse.ui.part.MultiEditorInput;
 /**
  * Base Class of all Refactorings of Groovy-Eclipse
  * @author Michael Klenk mklenk@hsr.ch
- *
  */
 public abstract class GroovyRefactoring extends Refactoring {
 
 	protected RefactoringInfo refactoringInfo;
 	protected List<IWizardPage> pages;
+	private ParticipantDispatcher dispatcher;
 	private String name;
 
 	public GroovyRefactoring(RefactoringInfo info) {
 		this();
 		this.refactoringInfo = info;
+		dispatcher = new ParticipantDispatcher(info.getProvider());
 	}
 
 	public GroovyRefactoring() {
@@ -78,19 +82,26 @@ public abstract class GroovyRefactoring extends Refactoring {
 	@Override
     public RefactoringStatus checkFinalConditions(IProgressMonitor pm)
 			throws CoreException, OperationCanceledException {
-		return refactoringInfo.checkFinalConditions(pm);
+		RefactoringStatus status = refactoringInfo.checkFinalConditions(pm);	
+		status.merge(dispatcher.checkFinalConditions(pm));
+		return status;
 	}
 
 	@Override
     public Change createChange(IProgressMonitor pm) throws CoreException,
 			OperationCanceledException {
-		return refactoringInfo.createGroovyChange(pm).createChange();
+		CompositeChange groovyChange = refactoringInfo.createGroovyChange(pm).createChange();
+		groovyChange.addAll(dispatcher.createChanges(pm));
+		return groovyChange;
 	}
 
 	@Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor pm) {
 		try {
-			return refactoringInfo.checkInitialConditions(pm);
+			RefactoringStatus status = refactoringInfo.checkInitialConditions(pm);
+			status.merge(dispatcher.checkInitialConditions(pm));
+			return status;
+			
 		} catch (OperationCanceledException e) {
 			return RefactoringStatus.createErrorStatus(e.getMessage());
 		} catch (CoreException e) {

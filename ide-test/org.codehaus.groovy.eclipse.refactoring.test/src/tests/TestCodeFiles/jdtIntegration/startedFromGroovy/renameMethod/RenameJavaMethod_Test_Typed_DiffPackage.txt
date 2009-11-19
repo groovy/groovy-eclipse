@@ -1,0 +1,64 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=6
+startColumn=8
+endLine=6
+endColumn=10
+newMethodName=newNAME
+###src
+Package=code_groovy
+Filename=GroovyClass.groovy
+:::
+import code_java.*
+public class GroovyClass{
+	def meth() {
+		JavaClass j = new JavaClass()
+	
+		j.setNumber(25)
+		j.getNumber()
+	}
+}
+#NEXT
+Package=code_java
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	private int number = 0;
+	
+	public void setNumber(int newValue) {
+		number = newValue;
+	}
+	
+	public int getNumber() {
+		return number;
+	}
+}
+###exp
+Package=code_groovy
+Filename=GroovyClass.groovy
+:::
+import code_java.*
+public class GroovyClass{
+	def meth() {
+		JavaClass j = new JavaClass()
+	
+		j.newNAME(25)
+		j.getNumber()
+	}
+}
+#NEXT
+Package=code_java
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	private int number = 0;
+	
+	public void newNAME(int newValue) {
+		number = newValue;
+	}
+	
+	public int getNumber() {
+		return number;
+	}
+}
+###end

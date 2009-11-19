@@ -5,7 +5,7 @@ startColumn=14
 endLine=12
 endColumn=12
 newMethodName=NEWMETHNAME
-acceptLines=someOtherClass:4
+acceptLines=someOtherClass:12
 ###src
 class differentClass{
 }

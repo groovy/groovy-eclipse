@@ -1,0 +1,56 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=8
+startColumn=5
+endLine=8
+endColumn=8
+newFieldName=newNAME
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public void meth(){
+		Field a = new Field();
+		assert a.number == 12;
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Field{
+	public int number = 12; 
+}
+
+public class GroovyClass {
+	def m(){
+		Field f = new Field()
+		f.number = 0
+	}
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public void meth(){
+		Field a = new Field();
+		assert a.newNAME == 12;
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Field{
+	public int newNAME = 12; 
+}
+
+public class GroovyClass {
+	def m(){
+		Field f = new Field()
+		f.newNAME = 0
+	}
+}
+###end

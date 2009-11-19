@@ -1,17 +1,18 @@
 ###prop
 selectionType=points
 startLine=6
-startColumn=12
+startColumn=8
 endLine=6
-endColumn=13
+endColumn=9
 newMethodName=NEWMETHNAME
+acceptLines=simple:6
 ###src
 public class simple{
 	def YYY(){
 	}
 	def call(){
 		simple a = new simple()
-        a.YYY()
+    a.YYY()
 	}
 }
 ###exp
@@ -20,7 +21,7 @@ public class simple{
 	}
 	def call(){
 		simple a = new simple()
-        a.NEWMETHNAME()
+    a.NEWMETHNAME()
 	}
 }
 ###end

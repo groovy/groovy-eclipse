@@ -21,6 +21,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.rename.renameClass;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.RefactoringCodeVisitorSupport;

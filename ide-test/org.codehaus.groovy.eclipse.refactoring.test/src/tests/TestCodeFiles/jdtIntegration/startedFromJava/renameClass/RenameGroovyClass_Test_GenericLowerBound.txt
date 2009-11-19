@@ -1,0 +1,46 @@
+###prop
+selectionInFile=JavaClass.java
+startLine=3
+startColumn=30
+endLine=3
+endColumn=32
+newClassName=MyNewElement
+###src
+Package=code
+Filename=JavaClass.java
+:::
+import java.util.ArrayList;
+public class JavaClass {
+	private ArrayList<? super Element> variable;
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+import java.util.ArrayList
+public class Element {
+}
+
+public class GroovyClass {
+	ArrayList<Element> list
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+import java.util.ArrayList;
+public class JavaClass {
+	private ArrayList<? super MyNewElement> variable;
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+import java.util.ArrayList
+public class MyNewElement {
+}
+
+public class GroovyClass {
+	ArrayList<MyNewElement> list
+}
+###end

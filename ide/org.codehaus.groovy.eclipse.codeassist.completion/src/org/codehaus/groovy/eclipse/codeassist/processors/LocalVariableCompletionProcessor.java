@@ -31,8 +31,8 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.eclipse.core.types.TypeUtil;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Signature;
@@ -83,7 +83,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
                      inBounds = true;
                  }
                  
-                if (inBounds && TypeUtil.looselyMatches(prefix, var.getName())) {
+                if (inBounds && ProposalUtils.looselyMatches(prefix, var.getName())) {
                     nameTypeMap.put(var.getName(), var.getType());
                 }
              }

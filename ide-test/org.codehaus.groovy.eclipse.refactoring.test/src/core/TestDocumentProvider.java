@@ -20,6 +20,7 @@ package core;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IDocument;
 
 /**
@@ -66,6 +67,10 @@ public class TestDocumentProvider implements IGroovyDocumentProvider {
 
 	public boolean isReadOnly() {
 		return isReadOnly;
+	}
+
+	public IFile getFile() {
+		return null;
 	}
 
 }

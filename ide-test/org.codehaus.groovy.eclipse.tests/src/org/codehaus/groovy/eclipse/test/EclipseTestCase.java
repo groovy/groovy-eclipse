@@ -19,12 +19,15 @@ import junit.framework.TestCase;
 
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.internal.jobs.JobManager;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IPackageFragment;
 
 /**
@@ -70,10 +73,14 @@ public abstract class EclipseTestCase extends TestCase {
      * @throws Exception
      */
     protected void fullProjectBuild() throws Exception {
-        testProject.getProject().build(IncrementalProjectBuilder.FULL_BUILD,
-                null);
+        ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, null);
     }
 
+    
+    protected void waitForIndexes() throws Exception {
+    	SynchronizationUtils.waitForIndexingToComplete();
+    }
+    
     protected IMarker[] getFailureMarkers() throws CoreException {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         return root.findMarkers("org.codehaus.groovy.eclipse.groovyFailure",

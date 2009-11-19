@@ -1,0 +1,36 @@
+###prop
+selectionInFile=MyClass.groovy
+startLine=2
+startColumn=38
+endLine=2
+endColumn=39
+newClassName=MyNewField
+###src
+Package=code
+Filename=MyClass.groovy
+:::
+import java.util.ArrayList
+class C<Y,T extends Map<Field,Map<Y,Field>>> {
+}
+#NEXT
+Package=code
+Filename=Field.java
+:::
+public class Field {
+	public static String field;
+}
+###exp
+Package=code
+Filename=MyClass.groovy
+:::
+import java.util.ArrayList
+class C<Y,T extends Map<MyNewField,Map<Y,MyNewField>>> {
+}
+#NEXT
+Package=code
+Filename=MyNewField.java
+:::
+public class MyNewField {
+	public static String field;
+}
+###end

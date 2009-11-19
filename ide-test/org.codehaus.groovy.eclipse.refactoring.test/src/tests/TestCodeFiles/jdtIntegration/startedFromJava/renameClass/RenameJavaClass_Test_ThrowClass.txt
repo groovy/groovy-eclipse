@@ -1,0 +1,33 @@
+###prop
+selectionInFile=MyException.java
+className=MyException
+newClassName=MyNewEx
+###src
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	def method() throws MyException {
+	}
+}
+#NEXT
+Package=code
+Filename=MyException.java
+:::
+public class MyException {
+}
+###exp
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	def method() throws MyNewEx {
+	}
+}
+#NEXT
+Package=code
+Filename=MyNewEx.java
+:::
+public class MyNewEx {
+}
+###end

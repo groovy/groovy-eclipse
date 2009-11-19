@@ -41,9 +41,8 @@ public class InlineMethodAction extends GroovyRefactoringAction {
 		}
 	}
 
-	@Override
-    protected int getUIFlags() {
-		return RefactoringWizard.DIALOG_BASED_USER_INTERFACE
+    public static int getUIFlags() {
+        return RefactoringWizard.DIALOG_BASED_USER_INTERFACE
 				| RefactoringWizard.PREVIEW_EXPAND_FIRST_NODE;
 	}
 }

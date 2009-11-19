@@ -1,0 +1,44 @@
+###prop
+selectionInFile=JavaClass.java
+startLine=2
+startColumn=9
+endLine=2
+endColumn=11
+newClassName=NewE
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public Noed[] n = new Noed[0];
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Noed{
+	def a = "HELLO";	
+}
+
+public class GroovyClass{
+	private Noed x = new Noed()
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public NewE[] n = new NewE[0];
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class NewE{
+	def a = "HELLO";	
+}
+
+public class GroovyClass{
+	private NewE x = new NewE()
+}
+###end

@@ -18,7 +18,6 @@
  */
 package rename;
 
-import core.RenameDispatcherMock;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -34,9 +34,10 @@ import org.codehaus.groovy.eclipse.refactoring.core.GroovyChange;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.CandidateCollector;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.GroovyRefactoringDispatcher;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.IAmbiguousRenameInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.NoRefactoringForASTNodeException;
-import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameDispatcher;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameField.RenameFieldInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameMethod.RenameMethodInfo;
@@ -44,7 +45,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+
 import tests.MultiFileTestCase;
+import core.CandidateCollectorMock;
+import core.GroovyRefactoringDispatcherMock;
 
 /**
  * Testcase for all of the rename refactorings
@@ -54,7 +58,7 @@ import tests.MultiFileTestCase;
  */
 public class RenameTestCase extends MultiFileTestCase {
 
-	private RenameDispatcher dispatcher;
+	private CandidateCollector collector;
 	private RenameInfo renameInfo;
 
 	private IAmbiguousRenameInfo renMethInfo;
@@ -67,14 +71,36 @@ public class RenameTestCase extends MultiFileTestCase {
 	}
 
 	@Override
-    public void preAction() {
-		dispatcher = new RenameDispatcherMock(getDocumentProvider(), selection, getFileProvider());
+    public void preAction() throws NoRefactoringForASTNodeException {
+		collector = new CandidateCollectorMock(getDocumentProvider(), selection, getFileProvider());
 		GroovyRefactoring refactoring;
 		try {
-			refactoring = dispatcher.dispatchRenameRefactoring();
-			renameInfo = (RenameInfo) refactoring.getInfo();
+			ASTNode candidates[] = collector.getGroovyCandidates();
+			String candidate = properties.get("candidateNr");
+			int selected = 0;
+			if (candidate != null) {
+				selected = Integer.parseInt(candidate)-1;
+			}
+			if (candidates.length > 0) {
+    			GroovyRefactoringDispatcher dispatcher = 
+    				new GroovyRefactoringDispatcherMock(candidates[selected], 
+    						getDocumentProvider(), selection, getFileProvider());
+    			refactoring = dispatcher.dispatchGroovyRenameRefactoring();
+    			renameInfo = (RenameInfo) refactoring.getInfo();
+			} else {
+				throw new NoRefactoringForASTNodeException(collector.getSelectedNode());
+			}
 		} catch (NoRefactoringForASTNodeException e1) {
-			fail(e1.getMessage());
+            // Maybe this is supposed to fail
+		    if(shouldFail) {
+                //Test the errorMessage
+                if (properties.get("failMessage")!= null) {
+                    assertEquals(properties.get("failMessage"),e1.getMessage());
+                }
+                throw e1;
+            } else {
+                fail(e1.getMessage());
+            }
 		}
 	}
 

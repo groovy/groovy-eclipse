@@ -398,12 +398,22 @@ class CompilationUnitResolver extends Compiler {
 		boolean statementsRecovery = (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0;
 		compilerOptions.performMethodsFullRecovery = statementsRecovery;
 		compilerOptions.performStatementsRecovery = statementsRecovery;
-		Parser parser = new CommentRecorderParser(
-			new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
-					compilerOptions,
-					new DefaultProblemFactory()),
-			false);
+		// GROOVY Start
+		// old
+		//		Parser parser = new CommentRecorderParser(
+		// new ProblemReporter(
+		// DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+		// compilerOptions,
+		// new DefaultProblemFactory()),
+		// false);
+		// new
+		Parser parser = LanguageSupportFactory.getParser(
+				compilerOptions, new ProblemReporter(
+						DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+						compilerOptions,
+						new DefaultProblemFactory()),
+						false, 2 /* comment recorder parser */);
+		// GROOVY End
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		CompilationUnitDeclaration compilationUnitDeclaration = parser.dietParse(sourceUnit, compilationResult);
 

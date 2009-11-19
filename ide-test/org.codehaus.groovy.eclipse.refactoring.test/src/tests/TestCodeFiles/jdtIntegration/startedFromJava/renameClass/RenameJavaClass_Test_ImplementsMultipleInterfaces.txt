@@ -1,0 +1,42 @@
+// Interfaces not searchable yet
+###prop
+selectionInFile=Startable.java
+className=Startable
+newClassName=NewStartable
+###src
+Package=code
+Filename=MyClass.groovy
+:::
+public interface IFace {}
+
+public class MyClass implements IFace, Startable {
+	int start() {
+		println("hello")
+	}
+}
+#NEXT
+Package=code
+Filename=Startable.java
+:::
+public interface Startable {
+	public int start();
+}
+###exp
+Package=code
+Filename=MyClass.groovy
+:::
+public interface IFace {}
+
+public class MyClass implements IFace, NewStartable {
+	int start() {
+		println("hello")
+	}
+}
+#NEXT
+Package=code
+Filename=NewStartable.java
+:::
+public interface NewStartable {
+	public int start();
+}
+###end

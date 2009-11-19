@@ -56,5 +56,9 @@ public class RefactoringInfo extends Observable{
 			OperationCanceledException {
 		return provider.createGroovyChange(pm);
 	}
+	
+	public RefactoringProvider getProvider() {
+		return provider;
+	}
 
 }

@@ -1,0 +1,54 @@
+###prop
+selectionInFile=MyGClass.groovy
+startLine=2
+startColumn=11
+endLine=2
+endColumn=12
+newClassName=MyNewClass
+###src
+Package=code
+Filename=MyGClass.groovy
+:::
+public class MyGClass {
+	private MyClass a
+
+}
+#NEXT
+Package=code
+Filename=MyClass.java
+:::
+public class MyClass {
+
+}
+#NEXT
+Package=code
+Filename=JClass.java
+:::
+public class JClass {
+	MyClass a = new MyClass();
+	
+}
+###exp
+Package=code
+Filename=MyGClass.groovy
+:::
+public class MyGClass {
+	private MyNewClass a
+
+}
+#NEXT
+Package=code
+Filename=MyNewClass.java
+:::
+public class MyNewClass {
+
+}
+#NEXT
+Package=code
+Filename=JClass.java
+:::
+public class JClass {
+	MyNewClass a = new MyNewClass();
+	
+}
+###end

@@ -18,33 +18,87 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.CandidateCollector;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.GroovyRefactoringDispatcher;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.NoRefactoringForASTNodeException;
-import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameDispatcher;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameCandidates;
+import org.codehaus.groovy.eclipse.refactoring.ui.selection.ElementSelectionDialog;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.ui.refactoring.RenameSupport;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 
 /**
  * @author martin
- * 
+ * extended by Stefan Reinhard
  */
 public class RenameDispatcherAction extends GroovyRefactoringAction {
-
+	
 	public void run(IAction action) {
 		if (initRefactoring()) {
-			GroovyRefactoring refactoring = null;
-			RenameDispatcher dispatcher = new RenameDispatcher(docProvider, selection);
+			CandidateCollector dispatcher = new CandidateCollector(docProvider, selection);
 			try {
-				refactoring = dispatcher.dispatchRenameRefactoring();
-				openRefactoringWizard(refactoring);
-			} catch (NoRefactoringForASTNodeException e) {
+				IJavaElement[] javaCandidates = dispatcher.getJavaCandidates();	
+				ASTNode[] groovyCandidates = dispatcher.getGroovyCandidates();
+				int totalNumberOfCandidates = javaCandidates.length + groovyCandidates.length;
+				if (totalNumberOfCandidates > 1) {		
+					dispatchFromSelectionDialog(javaCandidates, groovyCandidates);
+				} else if (javaCandidates.length == 1) {
+					openJavaRefactoringWizard((IJavaElement)javaCandidates[0]);
+				} else if (groovyCandidates.length == 1){
+					openGroovyRefactoringWizard((ASTNode)groovyCandidates[0]);
+				} else {
+					displayErrorDialog("No candidates for Refactoring found!");
+				}
+			} catch (CoreException e) {
 				displayErrorDialog(e.getMessage());
 			}
 		}
 	}
 
-	@Override
-    protected int getUIFlags() {
+	private void dispatchFromSelectionDialog(IJavaElement[] javaCandidates, ASTNode[] groovyCandidates)
+	throws CoreException {
+		Object selected = openSelectionDialog(javaCandidates, groovyCandidates);
+		if (selected instanceof IJavaElement) {
+			openJavaRefactoringWizard((IJavaElement)selected);
+		} else if (selected instanceof ASTNode) {
+			openGroovyRefactoringWizard((ASTNode)selected);
+		}
+	}
+
+	private Object openSelectionDialog(IJavaElement[] javaCandidates, ASTNode[] groovyCandidates) throws CoreException {
+		Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		RenameCandidates c = new RenameCandidates(groovyCandidates, javaCandidates);
+		ElementSelectionDialog dialog = new ElementSelectionDialog(s, c);
+		dialog.setInput(c);
+		dialog.open();
+		return dialog.getFirstResult();
+	}
+	
+	private void openGroovyRefactoringWizard(ASTNode node) {
+		GroovyRefactoringDispatcher dispatcher = new GroovyRefactoringDispatcher(node, selection, docProvider);
+		try {
+			GroovyRefactoring refactoring = dispatcher.dispatchGroovyRenameRefactoring();
+			openRefactoringWizard(refactoring);
+		} catch (NoRefactoringForASTNodeException e) {
+			displayErrorDialog(e.getMessage());
+		}
+	}
+
+	private void openJavaRefactoringWizard(IJavaElement element) throws CoreException {
+		JavaRefactoringDispatcher dispatcher = new JavaRefactoringDispatcher(element);
+		RenameSupport refactoring = dispatcher.dispatchJavaRenameRefactoring();
+		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		refactoring.openDialog(shell);
+	}
+	
+	public static int getUIFlags() {
 		return RefactoringWizard.DIALOG_BASED_USER_INTERFACE
 				| RefactoringWizard.PREVIEW_EXPAND_FIRST_NODE;
 	}

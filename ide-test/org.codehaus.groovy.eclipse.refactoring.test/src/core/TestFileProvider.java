@@ -27,6 +27,7 @@ import java.util.Map;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.text.Document;
 
 /**
@@ -97,5 +98,9 @@ public class TestFileProvider implements IGroovyFileProvider{
 			getAllSourceFiles();
 		}
 		return selectionDocument;
+	}
+	
+	public IProject getProject() {
+		return null;
 	}
 }

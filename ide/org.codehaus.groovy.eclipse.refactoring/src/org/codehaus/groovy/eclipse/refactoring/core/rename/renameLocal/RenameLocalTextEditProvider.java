@@ -19,6 +19,7 @@
 package org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal;
 
 import java.util.List;
+
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameTextEditProvider;

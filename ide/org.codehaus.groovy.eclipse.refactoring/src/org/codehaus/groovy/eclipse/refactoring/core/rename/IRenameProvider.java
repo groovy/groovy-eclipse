@@ -25,6 +25,8 @@ public interface IRenameProvider{
 	
 	public abstract void setNewName(String newName);
 	
+	public abstract String getNewName();
+	
 	public abstract String getOldName();
 	
 	public abstract void checkUserInput(RefactoringStatus status, String text);

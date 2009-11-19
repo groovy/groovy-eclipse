@@ -228,7 +228,6 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
         
         new JUnit4TestFinder().findTestsInContainer(JavaCore.create(project), testTypes, new NullProgressMonitor());
         
-        assertEquals("Should have found 6 test classes", 6, testTypes.size());
         boolean testerFound = false;
         boolean helloFound = false;
         boolean hello2Found = false;
@@ -249,5 +248,7 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
         assertTrue("T2 should be a test type", t2Found);
         assertTrue("T3 should be a test type", t3Found);
         assertTrue("Tester should be a test type", testerFound);
+
+        assertEquals("Should have found 6 test classes", 6, testTypes.size());
     }
 }

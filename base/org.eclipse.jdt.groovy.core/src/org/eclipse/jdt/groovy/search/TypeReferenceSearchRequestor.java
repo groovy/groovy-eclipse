@@ -17,15 +17,10 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.MethodNode;
-
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -67,53 +62,22 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
 		// don't do constructor calls. They are found through the class node inside of it
-		if (node instanceof ClassExpression || /* node instanceof ConstructorCallExpression || */node instanceof Parameter
-				|| node instanceof DeclarationExpression || node instanceof ClassNode || node instanceof ImportNode
-				|| node instanceof FieldNode || node instanceof MethodNode || node instanceof VariableExpression) {
+		if (node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode
+				|| node instanceof AnnotationNode) {
 
-			if (result.declaringType != null) {
-				String qualifiedName = removeArray(result.declaringType).getName();
+			if (result.type != null) {
+				String qualifiedName = removeArray(result.type).getName();
 				if (qualifiedNameMatches(qualifiedName)) {
 					int start;
 					int end;
 
-					// try to tease out the source location for the type only
-					if (node instanceof DeclarationExpression) {
-						node = ((DeclarationExpression) node).getLeftExpression();
-						start = node.getStart();
-						end = node.getEnd();
-						// we are potentially left with a VariableExpression, so fall through to the next if clause
-					}
-					if (node instanceof VariableExpression) {
-						node = maybeGetComponentType(((VariableExpression) node).getType());
-						start = node.getStart();
-						end = node.getEnd();
-					} else if (node instanceof Parameter) {
-						node = maybeGetComponentType(((Parameter) node).getType());
-						start = node.getStart();
-						end = node.getEnd();
-					} else if (node instanceof ImportNode) {
+					if (node instanceof ImportNode) {
 						node = ((ImportNode) node).getType();
 						start = node.getStart();
 						end = node.getEnd();
-						// } else if (node instanceof ConstructorCallExpression) {
-						// node = maybeGetComponentType(((ConstructorCallExpression) node).getType());
-						// start = node.getStart();
-						// end = node.getEnd();
 					} else if (node instanceof ClassExpression) {
 						start = node.getStart();
 						end = start + ((ClassExpression) node).getType().getNameWithoutPackage().length();
-					} else if (node instanceof MethodNode) {
-						ClassNode ret = maybeGetComponentType(((MethodNode) node).getReturnType());
-						start = ret.getStart();
-						end = ret.getEnd();
-						if (end == 0) {
-							end = simpleName.length();
-						}
-					} else if (node instanceof FieldNode) {
-						ClassNode type = maybeGetComponentType(((FieldNode) node).getType());
-						start = type.getStart();
-						end = type.getEnd();
 					} else if (node instanceof ClassNode) {
 						node = maybeGetComponentType((ClassNode) node);
 						start = node.getStart();

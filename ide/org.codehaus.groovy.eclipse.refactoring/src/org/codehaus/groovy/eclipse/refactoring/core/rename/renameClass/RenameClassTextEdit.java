@@ -34,6 +34,8 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.SourceCodePoint;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ClassImport;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.StaticClassImport;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.StaticFieldImport;
+import org.eclipse.text.edits.ReplaceEdit;
+import org.eclipse.text.edits.TextEdit;
 
 public class RenameClassTextEdit extends RenameTextEdit {
 	
@@ -89,7 +91,13 @@ public class RenameClassTextEdit extends RenameTextEdit {
     	}
 		SourceCodePoint typeStart = new SourceCodePoint(node,SourceCodePoint.BEGIN);
 		if (isNodeToRename(node) && !typeStart.equals(startOfDeclarationClassNode) ) {
-			edits.addChild(EditHelper.getDefaultReplaceEdit(node, renameAll, document, oldName, newName));
+			ReplaceEdit edit = EditHelper.getDefaultReplaceEdit(node, renameAll, document, oldName, newName);
+			for (TextEdit existing : edits.getChildren()) {
+				if (existing.covers(edit)) {
+					edit = null;
+				}
+			}
+			if (edit != null) edits.addChild(edit);
 		}
 	}
 

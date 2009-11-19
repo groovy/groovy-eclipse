@@ -1,0 +1,33 @@
+###prop
+selectionInFile=MyBaseClass.java
+className=MyBaseClass
+newClassName=MyNewBaseClass
+###src
+Package=code
+Filename=MyClass.groovy
+:::
+public class MyClass extends MyBaseClass {
+
+}
+#NEXT
+Package=code
+Filename=MyBaseClass.java
+:::
+public class MyBaseClass {
+
+}
+###exp
+Package=code
+Filename=MyClass.groovy
+:::
+public class MyClass extends MyNewBaseClass {
+
+}
+#NEXT
+Package=code
+Filename=MyNewBaseClass.java
+:::
+public class MyNewBaseClass {
+
+}
+###end

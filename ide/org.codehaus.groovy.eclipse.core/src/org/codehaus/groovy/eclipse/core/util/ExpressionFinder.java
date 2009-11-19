@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.core.util;
 
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
-import org.codehaus.groovy.eclipse.core.types.TypeEvaluator;
 
 /**
  * An expression finder. Used to find expressions that are suitable for type evaluation and code completion.
@@ -112,7 +111,7 @@ public class ExpressionFinder {
 	 *            The expression returned by the {@link #findForCompletions(ISourceBuffer, int)} method.
 	 * @return A string pair, the expression to complete, and the prefix to be completed.<br>
 	 *         Null if the string cannot be split for code completion.<br>
-	 *         String[0] is an expression suitable for the {@link TypeEvaluator}.<br>
+	 *         String[0] is an expression .<br>
 	 *         String[1] is the empty string if the last character is a '.'.<br>
 	 *         String[1] is 'ident' if the expression ends with '.ident'.<br>
 	 *         String[1] is null if the expression itself is to be used for completion.

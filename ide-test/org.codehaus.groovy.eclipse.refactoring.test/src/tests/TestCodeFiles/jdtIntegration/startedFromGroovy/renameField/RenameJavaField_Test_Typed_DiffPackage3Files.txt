@@ -1,0 +1,109 @@
+###prop
+selectionInFile=MyGroovyClass.groovy
+startLine=13
+startColumn=16
+endLine=13
+endColumn=17
+newFieldName=newNAME
+###src
+Filename=MyJavaClass.java
+Package=javaCode
+:::
+public class MyJavaClass {
+	public int count;
+	
+	public MyJavaClass() {
+		count =2;
+	}
+	
+	public void out(String msg) {
+		for (int i=0; i<count;i++) {
+			System.out.println(msg);
+		}
+	}
+}
+#NEXT
+Package=groovyCode
+Filename=MyGroovyBaseClass.groovy
+:::
+import javaCode.MyJavaClass
+public class MyGroovyBaseClass{
+	def count = 4
+	public MyJavaClass javaClass = new MyJavaClass()
+	
+	public def out(){
+		String a = count
+		javaClass.out(a)
+	}
+}
+#NEXT
+Package=groovyCode
+Filename=MyGroovyClass.groovy
+AcceptLine=13
+:::
+public class MyGroovyClass extends MyGroovyBaseClass{
+	
+	def setTo(def i) {
+		count = i
+	}
+	
+	static void main (args) {
+		MyGroovyClass x = new MyGroovyClass()
+		x.out()
+		x.setTo(5)
+		x.out()
+		x.javaClass.out("das Wars")
+		x.javaClass.count = 12
+	}
+}
+###exp
+Package=javaCode
+Filename=MyJavaClass.java
+:::
+public class MyJavaClass {
+	public int newNAME;
+	
+	public MyJavaClass() {
+		newNAME =2;
+	}
+	
+	public void out(String msg) {
+		for (int i=0; i<newNAME;i++) {
+			System.out.println(msg);
+		}
+	}
+}
+#NEXT
+Package=groovyCode
+Filename=MyGroovyBaseClass.groovy
+:::
+import javaCode.MyJavaClass
+public class MyGroovyBaseClass{
+	def count = 4
+	public MyJavaClass javaClass = new MyJavaClass()
+	
+	public def out(){
+		String a = count
+		javaClass.out(a)
+	}
+}
+#NEXT
+Package=groovyCode
+Filename=MyGroovyClass.groovy
+:::
+public class MyGroovyClass extends MyGroovyBaseClass{
+	
+	def setTo(def i) {
+		count = i
+	}
+	
+	static void main (args) {
+		MyGroovyClass x = new MyGroovyClass()
+		x.out()
+		x.setTo(5)
+		x.out()
+		x.javaClass.out("das Wars")
+		x.javaClass.newNAME = 12
+	}
+}
+###end

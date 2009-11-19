@@ -1,0 +1,59 @@
+###prop
+selectionInFile=Abc.java
+MethodName=void out(String)
+newMethodName=newNAME
+###src
+Package=code
+Filename=Abc.java
+:::
+public class Abc {
+	
+	public void out(String a) {
+		System.out.println(a);
+	}
+	
+	public void out(String a, String b) {
+		System.out.println(a + " - " + b);
+	}
+}
+#NEXT
+Package=code
+Filename=WhatAGroovyClass.groovy
+:::
+public class WhatAGroovyClass{
+
+	def meth() {
+		Abc vari = new Abc();
+	
+		vari.out("1")
+		vari.out("1", "2")
+	}
+}
+###exp
+Package=code
+Filename=Abc.java
+:::
+public class Abc {
+	
+	public void newNAME(String a) {
+		System.out.println(a);
+	}
+	
+	public void out(String a, String b) {
+		System.out.println(a + " - " + b);
+	}
+}
+#NEXT
+Package=code
+Filename=WhatAGroovyClass.groovy
+:::
+public class WhatAGroovyClass{
+
+	def meth() {
+		Abc vari = new Abc();
+	
+		vari.newNAME("1")
+		vari.out("1", "2")
+	}
+}
+###end

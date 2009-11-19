@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.eclipse.refactoring.core.MultiFileRefactoringProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.IAmbiguousRenameInfo;
@@ -34,11 +35,11 @@ import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameInfo;
  */
 public class RenameMethodInfo extends RenameInfo implements IAmbiguousRenameInfo {
 	
-	RenameMethodProvider renMethprovider;
+	MultiFileRefactoringProvider renMethprovider;
 	
 	public RenameMethodInfo(RefactoringProvider provider) {
 		super(provider);
-		renMethprovider = (RenameMethodProvider) provider;
+		renMethprovider = (MultiFileRefactoringProvider) provider;
 	}
 	
 	public boolean refactoringIsAmbiguous(){
@@ -59,6 +60,14 @@ public class RenameMethodInfo extends RenameInfo implements IAmbiguousRenameInfo
 
 	public void removeDefinitiveEntry(IGroovyDocumentProvider docProvider, ASTNode node){
 		renMethprovider.removeDefinitveEntry(docProvider, node);
+	}
+
+	public void removeAmbiguousEntry(IGroovyDocumentProvider docProvider, ASTNode node) {
+		renMethprovider.removeAmbiguousEntry(docProvider, node);
+	}
+
+	public void removeAllAmbiguousEntrys() {
+		renMethprovider.removeAllAmbiguousEntrys();
 	}
 
 }

@@ -17,10 +17,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.IOpenable;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -43,10 +40,15 @@ public class TypeInferencingVisitorFactory {
 	public TypeInferencingVisitorWithRequestor createVisitor(PossibleMatch possibleMatch) {
 
 		try {
-			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(possibleMatch.document.getPath()));
-			GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-			TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorWithRequestor(unit, createLookups());
-			return visitor;
+			IOpenable openable = possibleMatch.openable;
+			if (openable instanceof GroovyCompilationUnit) {
+				TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorWithRequestor(
+						(GroovyCompilationUnit) openable, createLookups());
+				return visitor;
+			} else {
+				Util.log(new RuntimeException(), "Attempted to do a groovy visit on a non-groovy file: "
+						+ new String(possibleMatch.getFileName()));
+			}
 		} catch (Exception e) {
 			Util.log(e, "Exception when creating TypeInferencingVisitorWithRequestor for " + possibleMatch.document.getPath()); //$NON-NLS-1$
 		}
@@ -57,7 +59,6 @@ public class TypeInferencingVisitorFactory {
 		return new TypeInferencingVisitorWithRequestor(unit, createLookups());
 	}
 
-	// maybe this can be populated via an extension point.
 	private ITypeLookup[] createLookups() {
 		ITypeLookup[] lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new CategoryTypeLookup(),
 				new SimpleTypeLookup() };

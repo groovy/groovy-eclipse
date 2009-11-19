@@ -5,7 +5,8 @@ startColumn=14
 endLine=16
 endColumn=15
 newMethodName=NEWMETHNAME
-acceptLines=TestClass:8,TestClass:12
+acceptLines=TestClass:8,TestClass:12,TestClass:16
+candidateNr=2
 ###src
 class differentClass{
 }

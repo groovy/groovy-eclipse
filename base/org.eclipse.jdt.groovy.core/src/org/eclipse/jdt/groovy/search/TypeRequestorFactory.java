@@ -16,10 +16,15 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
+import org.eclipse.jdt.internal.core.search.matching.OrPattern;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 
@@ -44,11 +49,30 @@ public class TypeRequestorFactory {
 			return new FieldReferenceSearchRequestor((FieldPattern) pattern, requestor, possibleMatch.document.getParticipant());
 		} else if (pattern instanceof MethodPattern) {
 			return new MethodReferenceSearchRequestor((MethodPattern) pattern, requestor, possibleMatch.document.getParticipant());
-			// return new FieldReferenceSearchRequestor((MethodPattern) pattern, requestor,
-			// possibleMatch.document.getParticipant());
+		} else if (pattern instanceof OrPattern) {
+			SearchPattern[] patterns = getPatterns((OrPattern) pattern);
+			List<ITypeRequestor> requestors = new ArrayList<ITypeRequestor>(patterns.length);
+			for (SearchPattern orPattern : patterns) {
+				if (orPattern != null) {
+					ITypeRequestor maybeRequestor = createRequestor(possibleMatch, orPattern, requestor);
+					if (maybeRequestor != null) {
+						requestors.add(maybeRequestor);
+					}
+				}
+			}
+
+			return new OrPatternRequestor(requestors);
 		}
 
 		return null;
+	}
+
+	/**
+	 * @param pattern
+	 * @return
+	 */
+	private SearchPattern[] getPatterns(OrPattern pattern) {
+		return (SearchPattern[]) ReflectionUtils.getPrivateField(OrPattern.class, "patterns", pattern); //$NON-NLS-1$
 	}
 
 }

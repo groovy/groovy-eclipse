@@ -31,29 +31,48 @@ import org.eclipse.core.resources.IProject;
  * the current workspace
  * 
  * @author reto kleeb
- *
  */
 public class WorkspaceFileProvider implements IGroovyFileProvider{
 	
 	private LinkedList<IGroovyDocumentProvider> documentList;
+	private IProject groovyProject;
 	private WorkspaceDocumentProvider selectionDocument;
 	
 	public WorkspaceFileProvider(WorkspaceDocumentProvider docProvider) {
 		this.selectionDocument = docProvider;
+		groovyProject = selectionDocument.getFile().getProject();
 		documentList = new LinkedList<IGroovyDocumentProvider>();
 	}
 	
+	public WorkspaceFileProvider(IProject project) {
+		groovyProject = project;
+		documentList = new LinkedList<IGroovyDocumentProvider>();
+		getAllSourceFiles();
+	}
+	
+	public WorkspaceFileProvider(IProject project,
+			WorkspaceDocumentProvider docProvider) {
+		groovyProject = project;
+		documentList = new LinkedList<IGroovyDocumentProvider>();
+		selectionDocument = docProvider;
+	}
+
 	public List<IGroovyDocumentProvider> getAllSourceFiles(){
 		if (documentList.isEmpty()) {
-			IProject groovyProject = selectionDocument.getFile().getProject();
 			List<IFile> groovySourceFiles = new GroovySourceFileVisitor(groovyProject).getGroovySourceFiles();
 			for(IFile source : groovySourceFiles){
 				documentList.add(new WorkspaceDocumentProvider(source));
+				if (selectionDocument == null) {
+					selectionDocument = new WorkspaceDocumentProvider(source);
+				}
 			}
 		}
 		return documentList;
 	}
 
+	public IProject getProject() {
+		return groovyProject;
+	}
 
 	public IGroovyDocumentProvider getSelectionDocument() {
 		return selectionDocument;

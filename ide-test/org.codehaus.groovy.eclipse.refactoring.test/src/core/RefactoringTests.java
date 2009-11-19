@@ -18,6 +18,7 @@
  */
 package core;
 
+import jdtIntegration.UnitTestSuite;
 import formatter.FormatterTestSuite;
 import inlineMethod.InlineMethodTestSuite;
 import junit.framework.Test;
@@ -60,6 +61,7 @@ public class RefactoringTests extends TestCase {
 	         suite.addTestSuite(ASTToolsTest.class);
 	         suite.addTest(RenameTestSuite.suite());
 	         suite.addTest(FormatterTestSuite.suite());
+	         suite.addTest(UnitTestSuite.suite());
 	         suite.addTestSuite(HierarchyTreeTestCase.class);
 	         //Commented out on purpose
 	         //

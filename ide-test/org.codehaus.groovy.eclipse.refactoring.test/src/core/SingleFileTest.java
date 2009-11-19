@@ -23,7 +23,6 @@ import java.util.List;
 
 import junit.framework.TestSuite;
 import rename.RenameTestCase;
-
 import tests.BaseTestSuite;
 
 /**

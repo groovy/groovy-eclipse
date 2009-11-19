@@ -17,6 +17,7 @@
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ICodeSelectHelper;
@@ -37,6 +38,11 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         if (module != null) {
             ASTNode nodeToLookFor = findASTNodeAt(module, r);
             if (nodeToLookFor != null) {
+                // shortcut.  Check to see if we are looking for this type itself
+                if (isTypeDeclaration(module, nodeToLookFor)) {
+                    return returnThisNode(unit, nodeToLookFor);
+                }
+                
                 CodeSelectRequestor requestor = new CodeSelectRequestor(nodeToLookFor, unit);
                 TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
                 visitor.visitCompilationUnit(requestor);
@@ -44,6 +50,32 @@ public class CodeSelectHelper implements ICodeSelectHelper {
             }
         }
         return new IJavaElement[0];
+    }
+
+    /**
+     * @param unit
+     * @param nodeToLookFor
+     * @return
+     */
+    private IJavaElement[] returnThisNode(GroovyCompilationUnit unit,
+            ASTNode nodeToLookFor) {
+        return new IJavaElement[] { unit.getType(((ClassNode) nodeToLookFor).getNameWithoutPackage()) };
+    }
+
+    /**
+     * @param module
+     * @param nodeToLookFor
+     * @return
+     */
+    private boolean isTypeDeclaration(ModuleNode module, ASTNode nodeToLookFor) {
+        if (nodeToLookFor instanceof ClassNode) {
+            for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
+                if (clazz == nodeToLookFor) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

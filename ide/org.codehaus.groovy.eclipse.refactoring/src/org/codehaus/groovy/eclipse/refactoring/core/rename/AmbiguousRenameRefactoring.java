@@ -19,8 +19,9 @@
 
 package org.codehaus.groovy.eclipse.refactoring.core.rename;
 
+import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.ui.pages.rename.RenameFileSelectionPage;
-import org.codehaus.groovy.eclipse.refactoring.ui.pages.rename.AmbiguousRenameFirstPage;
+import org.codehaus.groovy.eclipse.refactoring.ui.pages.rename.RenamePage;
 
 /**
  * main class for the refactoring rename method,
@@ -28,13 +29,13 @@ import org.codehaus.groovy.eclipse.refactoring.ui.pages.rename.AmbiguousRenameFi
  * @author reto
  *
  */
-public class AmbiguousRenameRefactoring extends RenameRefactoring {
+public class AmbiguousRenameRefactoring extends GroovyRefactoring {
 
 	public AmbiguousRenameRefactoring(IAmbiguousRenameInfo info, String refactoringName) {
-		super((RenameInfo)info, refactoringName);
+		super((RenameInfo)info);
+		setName(refactoringName);
+		pages.add(new RenamePage(refactoringName, (RenameInfo)info));
 		if(info.refactoringIsAmbiguous()){
-			pages.clear();
-			pages.add(new AmbiguousRenameFirstPage(refactoringName, info));
 			pages.add(new RenameFileSelectionPage(refactoringName,info));
 		}
 	}

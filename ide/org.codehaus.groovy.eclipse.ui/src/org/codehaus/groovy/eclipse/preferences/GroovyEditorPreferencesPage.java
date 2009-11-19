@@ -28,9 +28,7 @@ import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.G
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.codehaus.groovy.eclipse.core.types.GroovyDeclaration;
 import org.codehaus.groovy.eclipse.editor.GroovyColorManager;
-import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.text.IJavaColorConstants;
 import org.eclipse.jface.preference.BooleanFieldEditor;

@@ -19,6 +19,7 @@
 package org.codehaus.groovy.eclipse.refactoring.core.documentProvider;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IDocument;
 
 /**
@@ -31,6 +32,7 @@ public interface IGroovyDocumentProvider {
 	public abstract String getDocumentContent();
 	public abstract IDocument getDocument();
 	public abstract boolean fileExists();
+	public abstract IFile getFile();
 	public abstract String getName();
 	public abstract boolean isReadOnly();
 

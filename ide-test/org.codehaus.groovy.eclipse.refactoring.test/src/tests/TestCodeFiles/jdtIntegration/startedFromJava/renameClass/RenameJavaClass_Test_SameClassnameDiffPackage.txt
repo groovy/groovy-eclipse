@@ -1,0 +1,47 @@
+###prop
+selectionInFile=Field.java
+className=Field
+newClassName=MyNewField
+###src
+Package=code
+Filename=Coll.groovy
+:::
+import otherCode.GroovyField
+public class Coll{
+	private Field field1
+	private GroovyField field2
+}
+#NEXT
+Package=code
+Filename=Field.java
+:::
+public class Field {
+}
+#NEXT
+Package=otherCode
+Filename=GroovyField.groovy
+:::
+public class GroovyField{
+}
+###exp
+Package=code
+Filename=Coll.groovy
+:::
+import otherCode.GroovyField
+public class Coll{
+	private MyNewField field1
+	private GroovyField field2
+}
+#NEXT
+Package=code
+Filename=MyNewField.java
+:::
+public class MyNewField {
+}
+#NEXT
+Package=otherCode
+Filename=GroovyField.groovy
+:::
+public class GroovyField{
+}
+###end

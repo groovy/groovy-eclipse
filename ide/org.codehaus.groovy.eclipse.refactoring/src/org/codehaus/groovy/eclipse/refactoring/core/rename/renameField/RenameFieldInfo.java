@@ -57,4 +57,13 @@ public class RenameFieldInfo extends RenameInfo implements IAmbiguousRenameInfo{
 		renFieldprovider.removeDefinitveEntry(docProvider, node);
 	}
 
+	public void removeAmbiguousEntry(IGroovyDocumentProvider docProvider,
+			ASTNode node) {
+		renFieldprovider.removeAmbiguousEntry(docProvider, node);	
+	}
+
+	public void removeAllAmbiguousEntrys() {
+		renFieldprovider.removeAllAmbiguousEntrys();
+	}
+
 }

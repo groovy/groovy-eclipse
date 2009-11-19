@@ -45,6 +45,10 @@ public class FieldPattern {
 	public FieldPattern(ClassNode declaringClass, ClassNode typeOfProperty, String nameOfProperty) {
 		this(declaringClass, typeOfProperty, nameOfProperty, null);
 	}
+	
+	public FieldPattern(ClassNode declaringClass, String nameOfProperty) {
+		this(declaringClass, null, nameOfProperty, null);
+	}
 
 	public FieldPattern(FieldNode original, ASTNode selectedASTNode) {
 		this(original.getDeclaringClass(), original.getType(), original.getName(), selectedASTNode);
@@ -64,8 +68,7 @@ public class FieldPattern {
     public boolean equals(Object obj) {
 		if(obj instanceof FieldPattern){
 			FieldPattern otherFieldPattern = (FieldPattern) obj;
-			return this.declaringClass.equals(otherFieldPattern.getDeclaringClass()) &&
-				this.typeOfProperty.equals(otherFieldPattern.getTypeOfProperty()) &&
+			return declaringClass.equals(otherFieldPattern.getDeclaringClass()) &&
 				equalsName(obj);
 		}
 		return false;
@@ -85,6 +88,10 @@ public class FieldPattern {
 
 	public String getNameOfProperty() {
 		return nameOfProperty;
+	}
+	
+	public String getFullyQualifiedName() {
+		return declaringClass.getName() + "." + nameOfProperty;
 	}
 
 	public boolean equalsName(Object obj) {

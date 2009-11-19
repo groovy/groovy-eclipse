@@ -18,21 +18,22 @@
  */
 package ExtractMethod;
 
-import core.TestPrefInitializer;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyChange;
 import org.codehaus.groovy.eclipse.refactoring.core.extractMethod.ExtractMethodInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.extractMethod.ExtractMethodProvider;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Preferences;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.objectweb.asm.Opcodes;
+
 import tests.RefactoringTestCase;
+import core.TestPrefInitializer;
 
 /**
  * Test Case to test the ExtractMethod refactoring

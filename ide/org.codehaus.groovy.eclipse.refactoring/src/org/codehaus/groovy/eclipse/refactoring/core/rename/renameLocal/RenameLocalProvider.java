@@ -20,6 +20,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal;
 
 import java.text.MessageFormat;
 import java.util.List;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -55,6 +56,10 @@ public class RenameLocalProvider extends SingleFileRefactoringProvider implement
 		super(docProvider, selecion);
 		this.selectedNode = selectedNode;
 		this.textEditProvider = new RenameLocalTextEditProvider(docProvider, selectedNode,method);
+	}
+	
+	public RenameLocalProvider(IGroovyDocumentProvider docProvider, VariableProxy selectedNode, MethodNode method) {
+		this(docProvider, null, selectedNode, method);
 	}
 	
 	public void setNewName(String newVarName) {
@@ -98,6 +103,10 @@ public class RenameLocalProvider extends SingleFileRefactoringProvider implement
 
 	public String getOldName() {
 		return selectedNode.getName();
+	}
+	
+	public String getNewName() {
+		return textEditProvider.getNewName();
 	}
 	
 	public static VariableProxy giveVariableExpressionToRename(ASTNode node){

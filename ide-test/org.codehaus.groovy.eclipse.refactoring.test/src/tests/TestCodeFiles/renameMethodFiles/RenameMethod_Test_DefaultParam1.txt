@@ -6,7 +6,7 @@ endLine=7
 endColumn=5
 newMethodName=NEWMETHODNAME
 shouldFail=true
-failMessage=The selected method has default parameters, the refactoring is unable to rename all invocations!
+failMessage=No Refactoring for this node implemented
 ###src
 class C1{
     static m1(a=5){

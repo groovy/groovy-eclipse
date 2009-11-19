@@ -45,6 +45,9 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.search.matching.ImportMatchLocatorParser;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -73,6 +76,14 @@ public class GroovyLanguageSupport implements LanguageSupport {
 				useSourceJavadocParser);
 	}
 
+	public MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
+		return new MultiplexingMatchLocatorParser(problemReporter, locator);
+	}
+
+	public ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
+		return new MultiplexingImportMatchLocatorParser(problemReporter, locator);
+	}
+
 	public CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
 
 		// should use a content type here
@@ -95,7 +106,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
 			// FIXASC (M2) missing the classloader configuration (eg. to include transformers)
 			org.codehaus.groovy.control.CompilationUnit groovyCU = new org.codehaus.groovy.control.CompilationUnit(
 					groovyCompilerConfig);
-			//groovyCU.removeOutputPhaseOperation();
+			// groovyCU.removeOutputPhaseOperation();
 			JDTResolver resolver = new JDTResolver(groovyCU);
 			groovyCU.setResolveVisitor(resolver);
 

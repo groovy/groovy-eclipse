@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.eclipse.core.types.Modifiers;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -90,34 +89,6 @@ public class ProposalUtils {
         } else {
             return node.getNameWithoutPackage().toCharArray();
         }
-    }
-    
-    /**
-     * Convert flags from an ast representation to a GroovyEclipse one.
-     * 
-     * @param astFlags
-     * @return
-     */
-    public static int convertFromGroovyModifiers(int modifiers) {
-        int flags = 0;
-        flags |= ((modifiers & Opcodes.ACC_ABSTRACT) != 0) ? Modifiers.ACC_ABSTRACT : 0;
-        flags |= ((modifiers & Opcodes.ACC_PUBLIC) != 0) ? Modifiers.ACC_PUBLIC : 0;
-        flags |= ((modifiers & Opcodes.ACC_PRIVATE) != 0) ? Modifiers.ACC_PRIVATE : 0;
-        flags |= ((modifiers & Opcodes.ACC_PROTECTED) != 0) ? Modifiers.ACC_PROTECTED : 0;
-        flags |= ((modifiers & Opcodes.ACC_STATIC) != 0) ? Modifiers.ACC_STATIC : 0;
-        flags |= ((modifiers & Opcodes.ACC_FINAL) != 0) ? Modifiers.ACC_FINAL : 0;
-        return flags;
-    }
-
-    public static int convertFromJavaModifiers(int modifiers) {
-        int flags = 0;
-        flags |= ((modifiers & Modifier.ABSTRACT) != 0) ? Modifiers.ACC_ABSTRACT : 0;
-        flags |= ((modifiers & Modifier.PUBLIC) != 0) ? Modifiers.ACC_PUBLIC : 0;
-        flags |= ((modifiers & Modifier.PRIVATE) != 0) ? Modifiers.ACC_PRIVATE : 0;
-        flags |= ((modifiers & Modifier.PROTECTED) != 0) ? Modifiers.ACC_PROTECTED : 0;
-        flags |= ((modifiers & Modifier.STATIC) != 0) ? Modifiers.ACC_STATIC : 0;
-        flags |= ((modifiers & Modifier.FINAL) != 0) ? Modifiers.ACC_FINAL : 0;
-        return flags;
     }
     
     public static Image getImage(CompletionProposal proposal) {
@@ -196,5 +167,4 @@ public class ProposalUtils {
         Collections.reverse(parts);
         return parts.toArray(new String[parts.size()]);
     }
-
 }

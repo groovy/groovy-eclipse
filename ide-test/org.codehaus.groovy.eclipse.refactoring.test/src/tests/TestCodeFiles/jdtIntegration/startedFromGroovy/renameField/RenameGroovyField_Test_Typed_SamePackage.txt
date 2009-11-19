@@ -1,0 +1,56 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=8
+startColumn=6
+endLine=8
+endColumn=7
+newFieldName=newNAME
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	Field f = new Field();
+	public void m() {
+		f.myString = "World";
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Field{
+	public String myString = "12" 
+}
+
+public class GroovyClass {
+	def m(){
+		Field f = new Field()
+		f.myString = "Hello"
+	}
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	Field f = new Field();
+	public void m() {
+		f.newNAME = "World";
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Field{
+	public String newNAME = "12" 
+}
+
+public class GroovyClass {
+	def m(){
+		Field f = new Field()
+		f.newNAME = "Hello"
+	}
+}
+###end

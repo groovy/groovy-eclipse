@@ -20,6 +20,7 @@
 package org.codehaus.groovy.eclipse.refactoring.core.rename.renameField;
 
 import java.util.List;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameTextEdit;

@@ -1,0 +1,44 @@
+###prop
+selectionInFile=JavaClass.java
+startLine=3
+startColumn=30
+endLine=3
+endColumn=32
+newClassName=MyNewField
+###src
+Package=code
+Filename=JavaClass.java
+:::
+import java.util.ArrayList;
+public class JavaClass {
+	private ArrayList<? extends Element> variable;
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Element {
+}
+
+public class GroovyClass {
+	Element e;
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+import java.util.ArrayList;
+public class JavaClass {
+	private ArrayList<? extends MyNewField> variable;
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class MyNewField {
+}
+
+public class GroovyClass {
+	MyNewField e;
+}
+###end

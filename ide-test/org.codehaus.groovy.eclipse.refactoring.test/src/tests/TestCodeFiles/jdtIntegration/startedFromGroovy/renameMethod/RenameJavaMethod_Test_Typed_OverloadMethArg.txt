@@ -1,0 +1,62 @@
+###prop
+selectionInFile=WhatAGroovyClass.groovy
+startLine=6
+startColumn=8
+endLine=6
+endColumn=9
+newMethodName=newNAME
+###src
+Package=code
+Filename=Abc.java
+:::
+public class Abc {
+	
+	public void out(String a) {
+		System.out.println(a);
+	}
+	
+	public void out(int a) {
+		System.out.println(a);
+	}
+}
+#NEXT
+Package=code
+Filename=WhatAGroovyClass.groovy
+:::
+public class WhatAGroovyClass{
+
+	def meth() {
+		Abc vari = new Abc();
+	
+		vari.out("1")
+		vari.out(2)
+	}
+}
+###exp
+Package=code
+Filename=Abc.java
+:::
+public class Abc {
+	
+	public void newNAME(String a) {
+		System.out.println(a);
+	}
+	
+	public void out(int a) {
+		System.out.println(a);
+	}
+}
+#NEXT
+Package=code
+Filename=WhatAGroovyClass.groovy
+:::
+public class WhatAGroovyClass{
+
+	def meth() {
+		Abc vari = new Abc();
+	
+		vari.newNAME("1")
+		vari.newNAME(2)
+	}
+}
+###end

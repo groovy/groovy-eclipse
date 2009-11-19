@@ -1,0 +1,44 @@
+###prop
+selectionInFile=JavaClass.java
+startLine=3
+startColumn=20
+endLine=3
+endColumn=24
+newClassName=Field
+###src
+Package=code
+Filename=JavaClass.java
+:::
+import java.util.ArrayList;
+public class JavaClass {
+	private ArrayList<Element> list = new ArrayList<Element>();
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Element {
+}
+
+public class GroovyClass {
+	Element e;
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+import java.util.ArrayList;
+public class JavaClass {
+	private ArrayList<Field> list = new ArrayList<Field>();
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Field {
+}
+
+public class GroovyClass {
+	Field e;
+}
+###end

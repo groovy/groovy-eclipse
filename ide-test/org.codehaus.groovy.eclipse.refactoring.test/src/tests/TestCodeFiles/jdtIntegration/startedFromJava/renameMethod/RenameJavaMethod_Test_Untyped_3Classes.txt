@@ -1,0 +1,58 @@
+###prop
+selectionInFile=Simple.java
+MethodName=void simpleMethod()
+newMethodName=newNAME
+###src
+Package=code
+Filename=Simple.java
+:::
+public class Simple {
+	void simpleMethod() {
+	}
+}
+#NEXT
+Package=code
+Filename=groovyClass.groovy
+AcceptLine=11
+:::
+public class Simple_Groovy{
+	void simpleMethod() {
+	}
+	
+}
+public class Caller{
+	def method() {
+		def a = new Simple()
+		def b = new Simple_Groovy()
+	
+		a.simpleMethod()
+		b.simpleMethod()
+	}
+}
+###exp
+Package=code
+Filename=Simple.java
+:::
+public class Simple {
+	void newNAME() {
+	}
+}
+#NEXT
+Package=code
+Filename=groovyClass.groovy
+:::
+public class Simple_Groovy{
+	void simpleMethod() {
+	}
+	
+}
+public class Caller{
+	def method() {
+		def a = new Simple()
+		def b = new Simple_Groovy()
+	
+		a.newNAME()
+		b.simpleMethod()
+	}
+}
+###end

@@ -1,0 +1,36 @@
+###prop
+selectionInFile=Coll.groovy
+startLine=2
+startColumn=32
+endLine=2
+endColumn=33
+newClassName=NewE
+###src
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	def variable = variable2 as Element
+}
+#NEXT
+Package=code
+Filename=Element.java
+:::
+public class Element {
+	private int i;
+}
+###exp
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	def variable = variable2 as NewE
+}
+#NEXT
+Package=code
+Filename=NewE.java
+:::
+public class NewE {
+	private int i;
+}
+###end

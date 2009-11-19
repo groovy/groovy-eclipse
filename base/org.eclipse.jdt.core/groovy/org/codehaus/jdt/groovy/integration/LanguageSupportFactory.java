@@ -28,7 +28,9 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.search.matching.ImportMatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.osgi.framework.Bundle;
@@ -46,6 +48,14 @@ public class LanguageSupportFactory {
 	public static IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, 
 			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
 		return getLanguageSupport().getIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
+	}
+	
+	public static MatchLocatorParser getMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
+		return getLanguageSupport().getMatchLocatorParserParser(problemReporter, locator);
+	}
+	
+	public static ImportMatchLocatorParser getImportMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
+		return getLanguageSupport().getImportMatchLocatorParserParser(problemReporter, locator);
 	}
 	
 	public static CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {

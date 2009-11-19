@@ -55,7 +55,7 @@ public class GroovyCategoryMethodProposal extends AbstractGroovyProposal {
         proposal.setParameterTypeNames(removeFirst(createParameterTypeNames(method)));
         proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), 
                 context.completionLocation - context.completionExpression.length());
-        proposal.setFlags(ProposalUtils.convertFromGroovyModifiers(method.getModifiers() & ~Opcodes.ACC_STATIC));  // should not be static
+        proposal.setFlags(method.getModifiers() & ~Opcodes.ACC_STATIC);  // category methods are defined as static, but should not appear as such when a proposal
         proposal.setAdditionalFlags(CompletionFlags.Default);
         char[] methodSignature = ProposalUtils.createMethodSignature(method, 1);
         proposal.setKey(methodSignature);

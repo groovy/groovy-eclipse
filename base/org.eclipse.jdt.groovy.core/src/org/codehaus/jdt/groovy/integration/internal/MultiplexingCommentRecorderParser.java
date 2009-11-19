@@ -43,11 +43,15 @@ public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 	@Override
 	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
 		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
+			// even though the Java scanner is not used, its contents can be asked for.
+			if (this.scanner != null) {
+				this.scanner.setSource(sourceUnit.getContents());
+			}
 			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
 			// FIXASC (M2) ought to reuse to ensure types end up in same groovy CU
-			 return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter).dietParse(
-			 sourceUnit, compilationResult);
-//			return groovyParser.dietParse(sourceUnit, compilationResult);
+			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter).dietParse(
+					sourceUnit, compilationResult);
+			// return groovyParser.dietParse(sourceUnit, compilationResult);
 		} else {
 			return super.dietParse(sourceUnit, compilationResult);
 		}

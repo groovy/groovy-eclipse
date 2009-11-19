@@ -1,0 +1,51 @@
+###prop
+selectionInFile=G.groovy
+startLine=5
+startColumn=5
+endLine=5
+endColumn=6
+newFieldName=newNAME
+###src
+Package=code
+Filename=G.groovy
+AcceptLine=5
+:::
+public class G {
+	def a = 4
+	def m() {
+		def j = new Jclass()
+		j.qwer = 12
+	}
+}
+#NEXT
+Package=code
+Filename=Jclass.java
+:::
+public class Jclass {
+	public int qwer;
+	public void doX (int a) {
+		qwer = a;
+	}
+}
+###exp
+Package=code
+Filename=G.groovy
+:::
+public class G {
+	def a = 4
+	def m() {
+		def j = new Jclass()
+		j.newNAME = 12
+	}
+}
+#NEXT
+Package=code
+Filename=Jclass.java
+:::
+public class Jclass {
+	public int newNAME;
+	public void doX (int a) {
+		newNAME = a;
+	}
+}
+###end

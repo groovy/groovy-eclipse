@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -46,6 +47,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.text.edits.MultiTextEdit;
 
 /**
  * Contains all the information for the Rename Field refactoring
@@ -53,24 +55,35 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
  * @author reto kleeb
  */
 public class RenameFieldProvider extends MultiFileRefactoringProvider implements IRenameProvider {
-
+	
 	private final String oldFieldName;
 	private final FieldPattern patternOfAccessedField;
 	private String newFieldName;
 	private int nrOfFieldNodes;
 	private FieldNode relevantFieldNode;
 	private IGroovyDocumentProvider documentOfFieldNode;
+	private boolean checkUniqueFieldDefinitions = true;
 	protected List<RenameTextEditProvider> textEditProviders = new ArrayList<RenameTextEditProvider>();
 
-	public RenameFieldProvider(IGroovyFileProvider docProvider, UserSelection selecion, FieldPattern accessedField) {
-		super(docProvider, selecion);
+	public RenameFieldProvider(IGroovyFileProvider docProvider, FieldPattern accessedField) {
+		super(docProvider);
 		oldFieldName = accessedField.getName();
 		patternOfAccessedField = accessedField;
 		this.selectedASTNode = patternOfAccessedField.getSelectedASTNode();
 	}
 	
+	public RenameFieldProvider(IGroovyFileProvider docProvider, UserSelection selection, FieldPattern accessedField) {
+		this(docProvider, accessedField);
+		setSelection(selection);
+	}
+	
 	@Override
     protected void prepareCandidateLists(){
+		
+		// FIXME: Why do candidates need to be collected several times?
+		// This is a small workaround to fix it, but maybe dangerous
+		if (hasCandidateLists()) return;
+		
 		textEditProviders = new ArrayList<RenameTextEditProvider>();
 		definitiveCandidates = new HashMap<IGroovyDocumentProvider, List<ASTNode>>();
 		ambiguousCandidates = new HashMap<IGroovyDocumentProvider, List<ASTNode>>();
@@ -86,8 +99,22 @@ public class RenameFieldProvider extends MultiFileRefactoringProvider implements
 		//Some candidates are ambiguous and will therefore
 		//be moved to the list of ambiguous candidates
 		moveAmbiguousCandidates(ambiguousCandidates);
+		
+		//If called programmatically
+		if (selectedASTNode == null && !definitiveCandidates.values().isEmpty()) {
+			for(List<ASTNode> list : definitiveCandidates.values()) {
+				for(ASTNode node : list) {
+					selectedASTNode = node;
+					continue;
+				}
+			}	
+		}
+		
+		moveSelectionToDefinitiveCandidates();
 
-		checkUniqueFieldDefinitions();
+		if(checkUniqueFieldDefinitions) {
+			checkUniqueFieldDefinitions();
+		}
 	}
 	
 	private void checkUniqueFieldDefinitions() {
@@ -97,7 +124,7 @@ public class RenameFieldProvider extends MultiFileRefactoringProvider implements
 		checkMapForFieldNodes(definitiveCandidates);
 		checkMapForFieldNodes(ambiguousCandidates);
 		
-		if(nrOfFieldNodes == 1){
+		if(nrOfFieldNodes == 1 && relevantFieldNode != null){
 			addNodeToACandidateListList(definitiveCandidates, documentOfFieldNode, relevantFieldNode);
 			if(ambiguousCandidates.get(documentOfFieldNode) != null){
 				ambiguousCandidates.get(documentOfFieldNode).remove(relevantFieldNode);
@@ -207,8 +234,9 @@ public class RenameFieldProvider extends MultiFileRefactoringProvider implements
 	@Override
     public GroovyChange createGroovyChange(IProgressMonitor pm) throws CoreException, OperationCanceledException {
 		GroovyChange change = new GroovyChange(GroovyRefactoringMessages.RenameFieldRefactoring);
-		for(RenameTextEditProvider textEdit : textEditProviders){
-			change.addEdit(textEdit);
+		for (RenameTextEditProvider textEditProvider : textEditProviders) {
+			MultiTextEdit multi = removeDublicatedTextedits(textEditProvider);
+			change.addEdit(textEditProvider.getDocProvider(), multi);
 		}
 		return change;
 	}
@@ -223,6 +251,10 @@ public class RenameFieldProvider extends MultiFileRefactoringProvider implements
 		return oldFieldName;
 	}
 	
+	public FieldPattern getFieldPattern() {
+		return patternOfAccessedField;
+	}
+	
 	public void setTextProviders(){
 		for(IGroovyDocumentProvider document : fileProvider.getAllSourceFiles()){
 			if(definitiveCandidates.get(document) != null){
@@ -235,6 +267,14 @@ public class RenameFieldProvider extends MultiFileRefactoringProvider implements
 		newFieldName = newName;
 		prepareCandidateLists();
 		setTextProviders();
+	}
+	
+	public String getNewName() {
+		return newFieldName;
+	}
+	
+	public void checkUniqueFieldDefinitions(boolean b) {
+		checkUniqueFieldDefinitions = b;
 	}
 
 	public static FieldPattern giveFieldNodeToRename(ASTNode node) {

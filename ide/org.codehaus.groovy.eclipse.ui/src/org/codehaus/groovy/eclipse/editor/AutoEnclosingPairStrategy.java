@@ -15,8 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
-import static org.codehaus.groovy.eclipse.core.util.MapUtil.newMap;
-
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.ui.text.IJavaPartitions;
@@ -34,7 +33,7 @@ import org.eclipse.jface.text.IDocumentExtension3;
  * @author emp
  */
 public class AutoEnclosingPairStrategy implements IAutoEditStrategy {
-	private static Map<String, IPairInPartitionStrategy> mapPartitionToStrategy = newMap();
+	private static Map<String, IPairInPartitionStrategy> mapPartitionToStrategy = new HashMap<String, IPairInPartitionStrategy>();
 
 
 	static {

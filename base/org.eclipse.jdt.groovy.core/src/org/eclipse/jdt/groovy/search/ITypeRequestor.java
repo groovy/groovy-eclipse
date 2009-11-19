@@ -30,7 +30,25 @@ public interface ITypeRequestor {
 	 * Specifies whether the visit should continue, the branch should be canceled, or the entire visit should be stopped
 	 */
 	public static enum VisitStatus {
-		CONTINUE, CANCEL_BRANCH, STOP_VISIT
+		CONTINUE(0), CANCEL_BRANCH(1), STOP_VISIT(2);
+
+		int val;
+
+		private VisitStatus(int val) {
+			this.val = val;
+		}
+
+		/**
+		 * @param status
+		 * @param acceptASTNode
+		 * @return
+		 */
+		public static VisitStatus merge(VisitStatus status1, VisitStatus status2) {
+			if (status1.val > status2.val) {
+				return status1;
+			}
+			return status2;
+		}
 	}
 
 	/**

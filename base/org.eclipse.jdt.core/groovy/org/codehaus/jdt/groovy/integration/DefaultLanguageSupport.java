@@ -27,6 +27,9 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.search.matching.ImportMatchLocatorParser;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -49,6 +52,15 @@ class DefaultLanguageSupport implements LanguageSupport {
 			boolean useSourceJavadocParser) {
 		return new IndexingParser(requestor, problemFactory, options, reportLocalDeclarations, 
 				optimizeStringLiterals, useSourceJavadocParser);
+	}
+
+	public ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter,
+			MatchLocator locator) {
+		return new ImportMatchLocatorParser(problemReporter, locator);
+	}
+
+	public MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
+		return new MatchLocatorParser(problemReporter, locator);
 	}
 
 	public CompilationUnit newCompilationUnit(PackageFragment parent,

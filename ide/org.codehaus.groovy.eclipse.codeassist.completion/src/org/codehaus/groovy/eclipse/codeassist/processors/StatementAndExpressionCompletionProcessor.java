@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.eclipse.codeassist.proposals.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -39,6 +40,7 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -60,13 +62,21 @@ public class StatementAndExpressionCompletionProcessor extends
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
             
-            if (completionNode == node) {
+            if (doTest(node)) {
                 resultingType = result.type;
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
+        }
+
+        /**
+         * @param node
+         * @return
+         */
+        private boolean doTest(ASTNode node) {
+            return completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd();
         }
         
         public ClassNode getResultingType() {
@@ -100,23 +110,25 @@ public class StatementAndExpressionCompletionProcessor extends
         // can we do only a partial request???
         visitor.visitCompilationUnit(requestor);
         
-        if (!requestor.isVisitSuccessful()) {
-            return Collections.emptyList();
-        }
-        
-        // get all proposal creators
-        IProposalCreator[] creators = getAllProposalCreators();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
-        for (IProposalCreator creator : creators) {
-            groovyProposals.addAll(creator.findAllProposals(getCompletionType(requestor), requestor.categories, 
-                    getContext().completionExpression, isStatic()));
+        if (requestor.isVisitSuccessful()) {
+            // get all proposal creators
+            IProposalCreator[] creators = getAllProposalCreators();
+            for (IProposalCreator creator : creators) {
+                groovyProposals.addAll(creator.findAllProposals(getCompletionType(requestor), requestor.categories, 
+                        getContext().completionExpression, isStatic()));
+            }
+        } else {
+            // we are at the statement location of a script
+            // return the category proposals only
+            groovyProposals.addAll(new CategoryProposalCreator().findAllProposals((ClassNode) getContext().containingDeclaration, Collections.singleton(VariableScope.DGM_CLASS_NODE), getContext().completionExpression, false));
         }
-        
         // filter??? sort???
         List<ICompletionProposal> javaProposals = new ArrayList<ICompletionProposal>(groovyProposals.size());
         for (IGroovyProposal groovyProposal : groovyProposals) {
             javaProposals.add(groovyProposal.createJavaProposal(getContext(), getJavaContext()));
         }
+
         long end = System.currentTimeMillis();
         System.out.println("Time for statement content assist (ms): " + (end - start));
         return javaProposals;

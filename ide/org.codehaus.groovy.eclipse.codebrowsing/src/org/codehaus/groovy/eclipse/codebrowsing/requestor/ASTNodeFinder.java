@@ -20,6 +20,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -181,6 +182,12 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitClass(ClassNode node) {
+        // special case...could be selecting the class name itself
+        if (node.getNameStart() <= r.getOffset() && node.getNameEnd()+1 >= r.getOffset()+r.getLength()) {
+            nodeFound = node;
+            throw new VisitCompleteException();
+        }
+        
         if (node.getUnresolvedSuperClass() != null) {
             check(node.getUnresolvedSuperClass());  // use unresolved to maintain source locations 
         }
@@ -190,7 +197,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             }
         }
         if (node.getObjectInitializerStatements() != null) {
-            for (Statement s : node.getObjectInitializerStatements()) {
+            for (Statement s : (Iterable<Statement>) node.getObjectInitializerStatements()) {
                 super.visitStatement(s);
             }
         }
@@ -221,6 +228,10 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      */
     public ASTNode doVisit(ModuleNode module) {
         try {
+            for (ImportNode importNode : module.getImports()) {
+                check(importNode.getType());
+            }
+            
             for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
                 this.visitClass(clazz);
             }

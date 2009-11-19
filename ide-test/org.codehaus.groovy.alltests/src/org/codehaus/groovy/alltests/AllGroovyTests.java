@@ -32,10 +32,10 @@ public class AllGroovyTests {
         TestSuite suite = new TestSuite("All Groovy Tests"); //$NON-NLS-1$
         suite.addTest(AllUITests.suite());
         suite.addTest(AllCoreTests.suite());
-        suite.addTest(RefactoringTests.suite());
         suite.addTest(AllJUnitTests.suite());
         suite.addTest(AllCompletionTests.suite());
         suite.addTest(AllBrowsingTests.suite());
+        suite.addTest(RefactoringTests.suite());
         return suite;
     }
 }

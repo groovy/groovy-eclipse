@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTNodeInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
@@ -100,7 +101,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
 	private void initCodebase() throws Exception {
 		
-		System.out.println(formattedDocument.get());
+	    GroovyCore.trace(formattedDocument.get());
 		
 		tokens = new Vector<Token>();
 		tokenLines = new Vector<Vector<Token>>();

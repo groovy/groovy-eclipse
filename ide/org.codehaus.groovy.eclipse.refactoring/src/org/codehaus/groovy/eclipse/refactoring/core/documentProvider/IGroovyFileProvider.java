@@ -21,9 +21,12 @@ package org.codehaus.groovy.eclipse.refactoring.core.documentProvider;
 
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
+
 public interface IGroovyFileProvider {
 	
 	public List<IGroovyDocumentProvider> getAllSourceFiles();
 	public IGroovyDocumentProvider getSelectionDocument();
+	public IProject getProject();
 	
 }

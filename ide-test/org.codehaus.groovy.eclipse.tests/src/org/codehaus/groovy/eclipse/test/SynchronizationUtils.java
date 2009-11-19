@@ -45,7 +45,6 @@ public class SynchronizationUtils {
 				Job.getJobManager().join(ResourcesPlugin.FAMILY_MANUAL_BUILD, null);
 				wasInterrupted = false;
 			} catch (OperationCanceledException e) {
-				e.printStackTrace();
 			} catch (InterruptedException e) {
 				wasInterrupted = true;
 			}
@@ -133,4 +132,40 @@ public class SynchronizationUtils {
         }
         System.out.println("==========================");
     }
+	
+	public static void waitForIndexingToComplete() {
+       SynchronizationUtils.joinBackgroudActivities();
+        Job[] jobs = Job.getJobManager().find(null);
+        for (int i = 0; i < jobs.length; i++) {
+            if (jobs[i].getName().startsWith("Java indexing")) {
+                boolean wasInterrupted = true;
+                while (wasInterrupted) {
+                try {
+                    wasInterrupted = false;
+                    jobs[i].join();
+                } catch (InterruptedException e) {
+                    wasInterrupted = true;
+                }
+                }
+            }
+        }
+	}
+
+	public static void waitForRefactoringToComplete() {
+	    SynchronizationUtils.joinBackgroudActivities();
+	    Job[] jobs = Job.getJobManager().find(null);
+	    for (int i = 0; i < jobs.length; i++) {
+	        if (jobs[i].getName().startsWith("Java indexing")) {
+	            boolean wasInterrupted = true;
+	            while (wasInterrupted) {
+	                try {
+	                    wasInterrupted = false;
+	                    jobs[i].join();
+	                } catch (InterruptedException e) {
+	                    wasInterrupted = true;
+	                }
+	            }
+	        }
+	    }
+	}
 }

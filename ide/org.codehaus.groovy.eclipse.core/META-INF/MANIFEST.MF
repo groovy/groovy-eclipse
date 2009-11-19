@@ -34,16 +34,10 @@ Export-Package: org.apache.commons.io,
  org.codehaus.groovy.eclipse.core.adapters,
  org.codehaus.groovy.eclipse.core.builder,
  org.codehaus.groovy.eclipse.core.compiler,
- org.codehaus.groovy.eclipse.core.context,
- org.codehaus.groovy.eclipse.core.context.impl,
  org.codehaus.groovy.eclipse.core.impl,
- org.codehaus.groovy.eclipse.core.inference.internal,
  org.codehaus.groovy.eclipse.core.model,
  org.codehaus.groovy.eclipse.core.preferences,
  org.codehaus.groovy.eclipse.core.templates,
- org.codehaus.groovy.eclipse.core.types,
- org.codehaus.groovy.eclipse.core.types.impl,
- org.codehaus.groovy.eclipse.core.types.internal,
  org.codehaus.groovy.eclipse.core.util
 Bundle-Vendor: The Codehaus
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

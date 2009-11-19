@@ -28,10 +28,7 @@ public class AllCoreTests {
         // $JUnit-END$
         suite.addTest(org.codehaus.groovy.eclipse.core.compiler.AllTests
                 .suite());
-        suite.addTest(org.codehaus.groovy.eclipse.core.context.impl.AllTests
-                .suite());
         suite.addTest(org.codehaus.groovy.eclipse.core.impl.AllTests.suite());
-        suite.addTest(org.codehaus.groovy.eclipse.core.type.AllTests.suite());
         suite.addTest(org.codehaus.groovy.eclipse.core.util.AllTests.suite());
         return suite;
     }

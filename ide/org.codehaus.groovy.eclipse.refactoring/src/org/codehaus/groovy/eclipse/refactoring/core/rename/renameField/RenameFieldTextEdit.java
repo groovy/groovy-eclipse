@@ -20,6 +20,7 @@
 package org.codehaus.groovy.eclipse.refactoring.core.rename.renameField;
 
 import java.util.List;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.expr.AttributeExpression;

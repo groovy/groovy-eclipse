@@ -21,7 +21,8 @@ package org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -247,18 +248,16 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 	}
 
     public void visitAnnotations(AnnotatedNode node) {
-        List annotionMap = node.getAnnotations();
+        List<AnnotationNode> annotionMap = node.getAnnotations();
         if (annotionMap.isEmpty()) return;
         
-        Iterator it = annotionMap.iterator(); 
+        Iterator<AnnotationNode> it = annotionMap.iterator(); 
         while (it.hasNext()) {
             AnnotationNode an = (AnnotationNode) it.next();
             //skip builtin properties
             if (an.isBuiltIn()) continue;
-            for (Iterator iter = an.getMembers().entrySet().iterator(); iter.hasNext();) {
-                Map.Entry member = (Map.Entry) iter.next();
-                Expression memberValue = (Expression) member.getValue();
-                memberValue.visit(this);
+            for (Entry<String, Expression> element : (Iterable<Entry<String, Expression>>) an.getMembers().entrySet()) {
+                element.getValue().visit(this);
             }  
         }
     }

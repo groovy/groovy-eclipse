@@ -16,11 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.groovy.eclipse.refactoring.Activator;
-import org.codehaus.groovy.eclipse.refactoring.core.*;
+import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
+import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceFileProvider;
@@ -38,8 +40,6 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
@@ -52,8 +52,7 @@ import org.eclipse.ui.PlatformUI;
  * @author reto kleeb
  * 
  */
-public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionDelegate,
-		IEditorActionDelegate {
+public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionDelegate, IEditorActionDelegate {
 
 	protected GroovyEditor editor;
 	protected UserSelection selection;
@@ -67,9 +66,9 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 		IFile sourceFile = ((IFileEditorInput) editor.getEditorInput()).getFile();
 		docProvider = new WorkspaceDocumentProvider(sourceFile);
 		WorkspaceFileProvider fileProv = new WorkspaceFileProvider(new WorkspaceDocumentProvider(sourceFile));
-		
+
 		try {
-			for(IGroovyDocumentProvider dp : fileProv.getAllSourceFiles()) {
+			for (IGroovyDocumentProvider dp : fileProv.getAllSourceFiles()) {
 				if (dp instanceof WorkspaceDocumentProvider) {
 					WorkspaceDocumentProvider currDocProv = (WorkspaceDocumentProvider) dp;
 					IMarker[] markers = currDocProv.getFile().findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_ONE);
@@ -85,7 +84,7 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 					}
 				}
 			}
-			if(docProvider.getRootNode() == null) {
+			if (docProvider.getRootNode() == null) {
 				displayErrorDialog(GroovyRefactoringMessages.GroovyRefactoringAction_No_Module_Node);
 				return false;
 			}
@@ -99,26 +98,27 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 	protected void displayErrorDialog(String message) {
 	    ErrorDialog error = new ErrorDialog(
 	            editor.getSite().getShell(), "Groovy Refactoring error", message, 
-	            new Status(IStatus.ERROR, Activator.PLUGIN_ID, message), 
+	            new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message), 
 	            IStatus.ERROR | IStatus.WARNING);
 		error.open();
 	}
 
-	protected void openRefactoringWizard(GroovyRefactoring refactoring) {
-		
+	public static void openRefactoringWizard(GroovyRefactoring refactoring) {
 		GroovyRefactoringWizard wizard = new GroovyRefactoringWizard(refactoring, getUIFlags());
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
-		Shell shell = editor.getSite().getShell();
-		String titleForFailedChecks = "Refactoring"; //$NON-NLS-1$
-		
+		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		String titleForFailedChecks = "Groovy Refactoring"; //$NON-NLS-1$
+
 		try {
 			op.run(shell, titleForFailedChecks);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
 
 	public void dispose() {
+	    editor = null;
+	    selection = null;
+	    docProvider = null;
 	}
 
 	public void init(IWorkbenchWindow window) {
@@ -130,8 +130,8 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 	public void setActiveEditor(IAction action, IEditorPart targetEditor) {
 	}
 
-	protected int getUIFlags() {
-		return RefactoringWizard.WIZARD_BASED_USER_INTERFACE;
+	public static int getUIFlags() {
+		return RefactoringWizard.DIALOG_BASED_USER_INTERFACE | RefactoringWizard.PREVIEW_EXPAND_FIRST_NODE;
 	}
 
 }

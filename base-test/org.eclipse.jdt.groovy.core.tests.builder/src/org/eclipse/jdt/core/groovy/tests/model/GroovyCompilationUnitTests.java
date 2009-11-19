@@ -158,6 +158,13 @@ public class GroovyCompilationUnitTests extends BuilderTests {
         assertTrue("ModuleNodeMapper should be empty when there are no working copies", ModuleNodeMapper.isEmpty());
     }
     
+    public void testGetNewModuleNode() throws Exception {
+        IFile groovyFile = createSimpleGroovyProject();
+        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        ModuleNode module1 = unit1.getModuleNode();
+        ModuleNode module2 = unit1.getNewModuleNode();
+        assertTrue("getNewModuleNode() should have forced creation of a new module node", module1 != module2);
+    }
     
     
     public void testMarkerAnnotation_1() throws Exception {
