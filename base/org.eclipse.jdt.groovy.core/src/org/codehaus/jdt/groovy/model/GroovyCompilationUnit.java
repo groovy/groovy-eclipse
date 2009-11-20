@@ -12,13 +12,10 @@
 package org.codehaus.jdt.groovy.model;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -505,46 +502,11 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	@Override
 	protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu, int offset, int length,
 			WorkingCopyOwner o) throws JavaModelException {
-		// IJavaElement[] elts = super.codeSelect(cu, offset, length, o);
-		//
-		// // filter out ones we know are wrong
-		Set<IJavaElement> realElts = new HashSet<IJavaElement>();
-		// for (IJavaElement elt : elts) {
-		// if (elt.getElementType() == IJavaElement.TYPE) {
-		// // filter out classes x, y, z, and all lower case single letter
-		// // classes
-		// if (elt.getElementName().length() == 1 && Character.isLowerCase(elt.getElementName().charAt(0))) {
-		// continue;
-		// }
-		// }
-		// realElts.add(elt);
-		// }
+
 		if (selectHelper != null && isOnBuildPath()) {
-			IJavaElement[] elts = selectHelper.select(this, new Region(offset, length));
-			if (elts != null) {
-				for (IJavaElement elt : elts) {
-					realElts.add(elt);
-				}
-			}
-
-			// a common scenario is that JDT will find the declaring type, while Groovy will
-			// find the actual type or method. Here we handle this case
-			// really, this should not be happening in the first place, but
-			// this will work for now.
-			if (realElts.size() == 2) {
-				Iterator<IJavaElement> iter = realElts.iterator();
-				IJavaElement first = iter.next();
-				IJavaElement second = iter.next();
-				if (second.equals(first.getParent())) {
-					realElts.remove(second);
-				}
-				if (first.equals(second.getParent())) {
-					realElts.remove(first);
-				}
-			}
+			return selectHelper.select(this, new Region(offset, length));
 		}
-
-		return realElts.toArray(new IJavaElement[realElts.size()]);
+		return new IJavaElement[0];
 	}
 
 	/**
