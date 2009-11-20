@@ -393,7 +393,11 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     @Override
     public void visitStaticMethodCallExpression(
             StaticMethodCallExpression call) {
-        if (doTest(call.getOwnerType())) {
+        // don't check here if the type reference is implicit
+        // we know that the type is not implicit if the name
+        // location is filled in.
+        if (call.getOwnerType().getNameEnd() == 0 && 
+                doTest(call.getOwnerType())) {
             createContext(call.getOwnerType(), blockStack.peek(), expressionOrStatement());
         }
         // the method itself is not an expression, but only a string

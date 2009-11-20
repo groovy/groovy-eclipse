@@ -35,36 +35,11 @@
          <partition
                type="__dftl_partition_content_type">
          </partition>
+         <partition
+               type="__java_string">
+         </partition>
       </javaCompletionProposalComputer>
    </extension>
 	
    
-   <!--
-  <extension
-   			 name="Groovy Code Completions"
-   			 id="org.codehaus.groovy.eclipse.codeassist.completion.groovy"
-         point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
-      <javaCompletionProposalComputer
-            activate="true"
-            categoryId="org.codehaus.groovy.eclipse.codeassist.completion.category"
-            class="org.codehaus.groovy.eclipse.codeassist.jdt.GeneralGroovyCompletionProcessor">
-         <partition
-               type="__dftl_partition_content_type">
-         </partition>
-      </javaCompletionProposalComputer>
-   </extension>
-  <extension
-   			 name="Groovy Local Variable Completions"
-   			 id="org.codehaus.groovy.eclipse.codeassist.completion.local"
-         point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
-      <javaCompletionProposalComputer
-            activate="true"
-            categoryId="org.codehaus.groovy.eclipse.codeassist.completion.category"
-            class="org.codehaus.groovy.eclipse.codeassist.jdt.LocalVariableProcessor">
-         <partition
-               type="__dftl_partition_content_type">
-         </partition>
-      </javaCompletionProposalComputer>
-   </extension>
-   -->
 </plugin>

@@ -96,7 +96,27 @@ public class OtherCompletionTests extends CompletionTestCase {
         assertEquals("theB : B - C (Groovy)", proposals[0].getDisplayString());
             
     }
+    
+    public void testGString1() throws Exception {
+        String groovyClass = 
+            "\"${new String().c}\"";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, ".c"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "center", 2);
+    }
 
+    
+    // not working in multiline strings yet
+//    public void testGString2() throws Exception {
+//        String groovyClass = 
+//            "\"\"\"${new String().c}\"\"\"";
+//        ICompilationUnit groovyUnit = create(groovyClass);
+//        fullBuild();
+//        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, ".c"), GroovyCompletionProposalComputer.class);
+//        proposalExists(proposals, "center", 2);
+//    }
+    
     private ICompilationUnit create(String contents) throws Exception {
         IPath projectPath = createGenericProject();
         IPath src = projectPath.append("src");
