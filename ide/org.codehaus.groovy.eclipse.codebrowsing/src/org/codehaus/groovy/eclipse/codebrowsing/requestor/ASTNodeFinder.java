@@ -188,7 +188,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     @Override
     public void visitClass(ClassNode node) {
         // special case...could be selecting the class name itself
-        if (node.getNameStart() <= r.getOffset() && node.getNameEnd()+1 >= r.getOffset()+r.getLength()) {
+        if (node.getNameEnd() > 0 && node.getNameStart() <= r.getOffset() && node.getNameEnd()+1 >= r.getOffset()+r.getLength()) {
             nodeFound = node;
             throw new VisitCompleteException();
         }
