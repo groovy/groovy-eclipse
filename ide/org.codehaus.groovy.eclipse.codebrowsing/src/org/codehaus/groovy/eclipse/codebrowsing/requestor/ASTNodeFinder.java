@@ -173,7 +173,12 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     @Override
     public void visitStaticMethodCallExpression(
             StaticMethodCallExpression call) {
-        check(call.getOwnerType());
+    	// don't check here if the type reference is implicit
+    	// we know that the type is not implicit if the name
+    	// location is filled in.
+    	if(call.getOwnerType().getNameEnd() == 0) {
+    	    check(call.getOwnerType());
+    	}
         // the method itself is not an expression, but only a string
         // so this check call will test for open declaration on the method
         check(call);

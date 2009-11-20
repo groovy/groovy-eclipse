@@ -54,6 +54,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         List<FieldNode> allFields = new LinkedList<FieldNode>();
         for (ClassNode type : types) {
             // GRECLIPSE-512, JDTClassNodes do not have properties yet
+            type = type.redirect();
             if (type instanceof JDTClassNode) {
                 for (FieldNode field : type.getFields()) {
                     if (checkName(field.getName())) {

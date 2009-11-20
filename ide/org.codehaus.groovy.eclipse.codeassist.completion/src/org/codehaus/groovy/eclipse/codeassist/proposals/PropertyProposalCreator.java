@@ -52,6 +52,7 @@ public class PropertyProposalCreator extends AbstractProposalCreator implements 
         getAllSupers(thisType, types);
         List<PropertyNode> allProperties = new LinkedList<PropertyNode>();
         for (ClassNode type : types) {
+            type = type.redirect();
             for (PropertyNode property : (Iterable<PropertyNode>) type.getProperties()) {
                 if (checkName(property.getName())) {
                     allProperties.add(property);

@@ -77,7 +77,7 @@ public abstract class EclipseTestCase extends TestCase {
     }
 
     
-    protected void waitForIndexes() throws Exception {
+    protected void waitForIndexes() {
     	SynchronizationUtils.waitForIndexingToComplete();
     }
     

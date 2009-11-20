@@ -161,21 +161,28 @@ public class SimpleTypeLookup implements ITypeLookup {
 		// check first to see if we have this type inferred
 		if (node instanceof Variable) {
 			ASTNode declaration = node;
+			Variable var = (Variable) node;
+			Variable accessedVar = null;
 			if (node instanceof VariableExpression) {
-				Variable accessedVar = ((VariableExpression) node).getAccessedVariable();
+				accessedVar = ((VariableExpression) node).getAccessedVariable();
 				if (accessedVar != null && accessedVar instanceof AnnotatedNode) {
 					declaration = (AnnotatedNode) accessedVar;
 				}
 			}
 
-			Variable var = (Variable) node;
 			VariableInfo info = scope.lookupName(var.getName());
 			if (info != null) {
+				if (accessedVar instanceof DynamicVariable) {
+					// this is actually a reference to a field or method in a type
+					// find this reference
+					ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), info.declaringType);
+					if (maybeDeclaration != null) {
+						declaration = maybeDeclaration;
+					}
+				}
 				confidence = TypeConfidence.findLessPrecise(confidence, INFERRED);
 				return new TypeLookupResult(info.type, declaringType, declaration, confidence, scope);
 			} else if (var instanceof VariableExpression) {
-				VariableExpression varExpr = (VariableExpression) var;
-				Variable accessedVar = varExpr.getAccessedVariable();
 				if (accessedVar instanceof DynamicVariable) {
 					confidence = UNKNOWN;
 				}
@@ -255,6 +262,13 @@ public class SimpleTypeLookup implements ITypeLookup {
 			}
 		} else if (node instanceof ClassExpression) {
 			return new TypeLookupResult(node.getType(), declaringType, node.getType(), confidence, scope);
+		} else if (node instanceof StaticMethodCallExpression) {
+			StaticMethodCallExpression expr = (StaticMethodCallExpression) node;
+			List<MethodNode> methods = expr.getOwnerType().getMethods(expr.getMethod());
+			if (methods.size() > 0) {
+				MethodNode method = methods.get(0);
+				return new TypeLookupResult(method.getReturnType(), declaringType, method, confidence, scope);
+			}
 		}
 
 		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)
@@ -265,6 +279,27 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 		// don't know
 		return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
+	}
+
+	/**
+	 * @param name
+	 * @param declaringType
+	 * @return
+	 */
+	private ASTNode findDeclaration(String name, ClassNode declaringType) {
+		AnnotatedNode maybe = declaringType.getProperty(name);
+		if (maybe != null) {
+			return maybe;
+		}
+		maybe = declaringType.getField(name);
+		if (maybe != null) {
+			return maybe;
+		}
+		List<MethodNode> maybeMethods = declaringType.getMethods(name);
+		if (maybeMethods != null && maybeMethods.size() > 0) {
+			return maybeMethods.get(0);
+		}
+		return null;
 	}
 
 	/**

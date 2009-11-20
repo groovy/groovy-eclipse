@@ -69,13 +69,13 @@ public abstract class RenameTestCase extends BaseTestCase {
 		IFile file = testProject.getProject().getFile(getSelectedFilePath());
 		IJavaElement element = JavaCore.create(file);
 		if (element instanceof ICompilationUnit) {
-	
+
 			ICompilationUnit cu = (ICompilationUnit)element;
             IJavaElement[] elements= cu.codeSelect(selection.getOffset() + selection.getLength(), 0);
             
             // don't want to wait for indexes to complete when we don't need them to.
             if (elements.length == 0 || elements[0].isReadOnly()) {
-                SynchronizationUtils.waitForIndexingToComplete();
+                waitForIndexes();
                 elements= cu.codeSelect(selection.getOffset() + selection.getLength(), 0);
             }
             

@@ -130,7 +130,16 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     public GroovyProposalTypeSearchRequestor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, NameLookup nameLookup, IProgressMonitor monitor) {
-        this.offset = context.completionLocation-context.completionExpression.length();
+
+        // remove "new"
+        int completionLength;
+        if (context.completionExpression.startsWith("new ")) {
+            completionLength = context.completionExpression.substring("new ".length()).trim().length();
+        } else {
+            completionLength = context.completionExpression.length();
+        }
+        
+        this.offset = context.completionLocation-completionLength;
         this.javaContext = javaContext;
         this.module = context.unit.getModuleNode();
         this.replaceLength = context.completionExpression.length();

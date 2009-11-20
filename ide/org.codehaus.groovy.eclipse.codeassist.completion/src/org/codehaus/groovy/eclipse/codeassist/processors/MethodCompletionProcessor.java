@@ -62,7 +62,7 @@ public GroovyOverrideCompletionProposal(IJavaProject jproject,
             String repl = completionProposal + 
                     " {\n\t\t// TODO Groovy Auto-generated method stub\n" +
                     "\t\t// Only partially implemented. Perform organize imports\n" +
-                    "\t\tto properly import parameter and return types\n\t}";
+                    "\t\t// to properly import parameter and return types\n\t}";
             setReplacementString(repl);
         }
     }
