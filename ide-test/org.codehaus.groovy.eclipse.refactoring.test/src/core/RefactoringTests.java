@@ -61,9 +61,10 @@ public class RefactoringTests extends TestCase {
 	         suite.addTestSuite(ASTToolsTest.class);
 	         suite.addTest(RenameTestSuite.suite());
 	         suite.addTest(FormatterTestSuite.suite());
-	         suite.addTest(UnitTestSuite.suite());
 	         suite.addTestSuite(HierarchyTreeTestCase.class);
 	         //Commented out on purpose
+	         // the jdt-groovy refactoring tests are hanging on the build server
+//	         suite.addTest(UnitTestSuite.suite());
 	         //
 	         //suite.addTestSuite(ArchivedFailingTestSuite.class);
 		
