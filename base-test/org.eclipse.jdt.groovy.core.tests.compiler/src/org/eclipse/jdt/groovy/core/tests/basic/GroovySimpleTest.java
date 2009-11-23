@@ -13,10 +13,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import junit.framework.Test;
 
+import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.IGroovyDebugRequestor;
@@ -199,6 +202,102 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"success");		
 	}
 	
+//	public void testTargetMetaAnnotation() {
+//		this.runNegativeTest(new String[] {
+//			"Anno.java",
+//			"import java.lang.annotation.*;\n" + 
+//			"@Target(ElementType.METHOD) @interface Anno {}\n",
+//			"Bar.groovy",
+//			"@Anno\n"+
+//			"class Bar {}\n"
+//		},"xx");		
+//	}
+	
+	/**
+	 * The groovy object method augmentation (in GroovyClassScope) should only apply to types directly implementing GroovyObject, rather than
+	 * adding them all the way down the hierarchy.  This mirrors what happens in the compiler.
+	 */
+	/**
+	 * First a class extending another.  The superclass gets augmented but not the subclass.
+	 */
+	public void testClassHierarchiesAndGroovyObjectMethods() {
+		try {
+			GroovyClassScope.debugListener = new EventListener("augment");
+			this.runConformTest(new String[] {
+				"Foo.groovy",
+				"class Foo {\n"+
+				"  static main(args) { print 'abc'} \n"+
+				"}\n" + 
+				"class Two extends Foo {\n" +
+				"  public void m() {\n"+
+				"    Object o = getMetaClass();\n"+
+				"  }\n"+
+				"}\n",
+			},"abc");	
+			assertEventCount(1,GroovyClassScope.debugListener);
+			assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
+			System.err.println(GroovyClassScope.debugListener.toString());
+		} finally {
+			GroovyClassScope.debugListener=null;
+		}
+	}
+	
+	/**
+	 * Now a class implementing an interface.  The subclass gets augmented because the superclass did not.
+	 */
+	public void testClassHierarchiesAndGroovyObjectMethods2() {
+		try {
+			GroovyClassScope.debugListener = new EventListener("augment");
+			this.runConformTest(new String[] {
+				"Foo.groovy",
+				"class Foo implements One {\n" +
+				"  public void m() {\n"+
+				"    Object o = getMetaClass();\n"+
+				"  }\n"+
+				"  static main(args) { print 'abc'} \n"+
+				"}\n"+
+				"interface One {\n"+
+				"}\n",
+			},"abc");		
+			assertEventCount(1,GroovyClassScope.debugListener);
+			assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
+			System.err.println(GroovyClassScope.debugListener.toString());
+		} finally {
+			GroovyClassScope.debugListener=null;
+		}
+	}
+	
+	/**
+	 * Now a class extending a java type which extends a base groovy class.  Super groovy type should get them.
+	 * 
+	 * This looks odd to me, not sure why Foo and One both get the methods when One inherits them through Foo - 
+	 * perhaps the java type in the middle makes a difference.  Anyway by augmenting both of these we
+	 * are actually doing the same as groovyc, and that is the main thing.
+	 */
+	public void testClassHierarchiesAndGroovyObjectMethods3() {
+		try {
+			GroovyClassScope.debugListener = new EventListener();
+			this.runConformTest(new String[] {
+				"Foo.groovy",
+				"class Foo extends Two {\n" +
+				"  public void m() {\n"+
+				"    Object o = getMetaClass();\n"+
+				"  }\n"+
+				"  static main(args) { print 'abc'} \n"+
+				"}\n"+
+				"class One {\n"+
+				"}\n",
+				"Two.java",
+				"class Two extends One {}\n",
+			},"abc");		
+			assertEventCount(2,GroovyClassScope.debugListener);
+			assertEvent("augment: type One having GroovyObject methods added",GroovyClassScope.debugListener);
+			assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
+		} finally {
+			GroovyClassScope.debugListener=null;
+		}
+	}
+	
 	
 	public void testStandaloneGroovyFile2() {
 		this.runConformTest(new String[] {
@@ -213,7 +312,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"success");	
 		checkGCUDeclaration("X.groovy", 		
 				"package p;\n" + 
-				"public class X extends java.lang.Object {\n" + 
+				"public class X {\n" + 
 				"  public X() {\n" + 
 				"  }\n" + 
 				// for: public static void main(String[] args) {
@@ -222,8 +321,30 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"  public static void main(public java.lang.String... args) {\n" + 
 				"  }\n" + 
 				"}\n"
-);
+		);
 	}
+
+	public void testParentIsObject_GRE528() {
+		this.runConformTest(new String[] {
+			"p/X.groovy",
+			"package p;\n" + 
+			"public class X {\n" + 
+			"  static main(args) {\n"+
+			"    print \"success\"\n" + 
+			"  }\n"+
+			"}\n",
+		},"success");	
+		checkGCUDeclaration("X.groovy", 		
+				"package p;\n" + 
+				"public class X {\n" + 
+				"  public X() {\n" + 
+				"  }\n" + 
+				"  public static void main(public java.lang.String... args) {\n" + 
+				"  }\n" + 
+				"}\n"
+		);
+	}
+
 	
 	public void testBrokenPackage() {
 		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
@@ -310,7 +431,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"----------\n"
 				);
 		checkGCUDeclaration("XXX.groovy",
-				"public class C extends java.lang.Object {\n" + 
+				"public class C {\n" + 
 				"  public C() {\n" + 
 				"  }\n" + 
 				"  public void m() {\n" + 
@@ -347,7 +468,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"----------\n"
 				);
 		checkGCUDeclaration("XXX.groovy",
-				"public class C extends java.lang.Object {\n" + 
+				"public class C {\n" + 
 				"  public C() {\n" + 
 				"  }\n" + 
 				"  public void m() {\n" + 
@@ -434,7 +555,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"----------\n"
 				);
 		checkGCUDeclaration("XXX.groovy",
-				"public class C extends java.lang.Object {\n" + 
+				"public class C {\n" + 
 				"  public C() {\n" + 
 				"  }\n" + 
 				"  public void m() {\n" + 
@@ -462,7 +583,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"Groovy:missing type for constructor call @ line 3, column 1.\n" + 
 				"----------\n");
 		checkGCUDeclaration("Foo.groovy",
-				"public class C extends java.lang.Object {\n" + 
+				"public class C {\n" + 
 				"  public C() {\n" + 
 				"  }\n" + 
 				"  static void <clinit>() {\n" + 
@@ -525,7 +646,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n"
 		);
 		checkGCUDeclaration("XXX.groovy",
-				"public class Sample extends java.lang.Object {\n" + 
+				"public class Sample {\n" + 
 				"  private java.lang.Object x;\n" + 
 				"  public Sample() {\n" + 
 				"  }\n" + 
@@ -743,7 +864,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 	
 	
-	// FIXASC (M2) appears to be a groovy bug - the java.util.Set is missing generics info - as if it had none
+	// FIXASC (RC1) appears to be a groovy bug - the java.util.Set is missing generics info - as if it had none
 //	public void testGenericsPositions_4_GRE267() {
 //		this.runConformTest(new String[] { 
 //			"X.groovy",
@@ -2516,7 +2637,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},		
 		"success");
 
-		String expectedOutput = "public @Anno class X extends java.lang.Object {";
+		String expectedOutput = "public @Anno class X {";
 		checkGCUDeclaration("X.groovy",expectedOutput);
 		
 		expectedOutput = 
@@ -5409,7 +5530,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"abcabc");
 		String expectedOutput = 
 			"package p;\n" + 
-			"public class G extends java.lang.Object {\n" + 
+			"public class G {\n" + 
 			"  public G() {\n" + 
 			"  }\n" + 
 			"  public void m(public String s, public Integer i) {\n" + 
@@ -5455,7 +5576,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 		String expectedOutput = 
 			"package p;\n" + 
-			"public class G extends java.lang.Object {\n" + 
+			"public class G {\n" + 
 			"  public G() {\n" + 
 			"  }\n" + 
 			"  public void m(public String s, public Integer i, public String j, public String k, public float f, public String l) {\n" + 
@@ -5516,7 +5637,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"abcabc");
 		String expectedOutput=
 			"package p;\n" + 
-			"public class G extends java.lang.Object {\n" + 
+			"public class G {\n" + 
 			"  private java.lang.Object msg;\n" + 
 			"  public G(public Integer i, public String m) {\n" + 
 			"  }\n" + 
@@ -6809,7 +6930,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n"); 
 
 		String expectedOutput = 
-			"public class SomeClass extends java.lang.Object {\n" + 
+			"public class SomeClass {\n" + 
 			"  private int someProperty;\n" + 
 			"  public SomeClass() {\n" + 
 			"  }\n" + 
@@ -6994,6 +7115,27 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			}
 		}
 		return null;
+	}
+
+	private void assertEventCount(int expectedCount, EventListener listener) {
+		if (listener.eventCount()!=expectedCount) {
+			fail("Expected "+expectedCount+" events but found "+listener.eventCount()+"\nEvents:\n"+listener.toString());
+		}
+	}
+
+	private void assertEvent(String eventText, EventListener listener) {
+		boolean found = false;
+		Iterator eventIter = listener.getEvents().iterator();
+		while (eventIter.hasNext()) {
+			String s = (String) eventIter.next();
+			if (s.equals(eventText)) {
+				found=true;
+				break;
+			}
+		}
+		if (!found) {
+			fail("Expected event '"+eventText+"'\nEvents:\n"+listener.toString());
+		}
 	}
 
 }

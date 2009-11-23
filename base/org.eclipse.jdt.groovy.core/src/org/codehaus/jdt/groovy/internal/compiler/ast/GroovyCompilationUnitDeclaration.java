@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -56,6 +55,8 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
+import org.eclipse.jdt.internal.compiler.ast.MarkerAnnotation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -70,12 +71,10 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
-import org.eclipse.jdt.internal.compiler.ast.MarkerAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.StringLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -107,14 +106,10 @@ import org.objectweb.asm.Opcodes;
 @SuppressWarnings("restriction")
 public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration {
 
-	// FIXASC (M2) need to look at all callers of getTypeClass() on the ClassNode to see what they want it for !
-
 	// The groovy compilation unit shared by all files in the same project
 	private CompilationUnit groovyCompilationUnit;
-
 	// The groovy sourceunit (a member of the groovyCompilationUnit)
 	private SourceUnit groovySourceUnit;
-
 	private CompilerOptions compilerOptions;
 
 	private static final boolean DEBUG_TASK_TAGS = false;
@@ -219,13 +214,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// this should be changed so that the importNode itself has the locations
 				ImportReference ref = null;
 
-				// FIXASC (M2) cheating here - seeing if it is an alias by whether the alias matches the end of the typename
-				// (wrong!)
-				if (importNode.getAlias() != null && importNode.getAlias().length() > 0
-				// && !importNode.getType().getName().endsWith(importNode.getAlias())
-				) {
-					// aliased import!
-					// FIXASC (M2) will need extra positional info for the 'as' and the alias
+				if (importNode.getAlias() != null && importNode.getAlias().length() > 0) {
+					// FIXASC (RC1) will need extra positional info for the 'as' and the alias
 					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positionsFor(splits,
 							startOffset(importNode.getType()), endOffset(importNode.getType())), false,
 							ClassFileConstants.AccDefault);
@@ -343,12 +333,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						annotation.memberValue = new ClassLiteralAccess(value.getEnd(), ref);
 						annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length();
 						annotations.add(annotation);
-						// FIXASC (M2) underlying for SuppressWarnings doesn't seem right when included in messages
+						// FIXASC (M2) underlining for SuppressWarnings doesn't seem right when included in messages
 					} else if (annoType.getName().equals("SuppressWarnings")
 							&& (value instanceof ConstantExpression || value instanceof ListExpression)) {
 						if (value instanceof ListExpression) {
 							ListExpression listExpression = (ListExpression) value;
-							// FIXASC (M2) tidy up all this junk
+							// FIXASC (RC1) tidy up all this junk (err, i mean 'refactor') once we have confidence in test coverage
 							List<Expression> listOfExpressions = listExpression.getExpressions();
 							TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 							annotationReference.sourceStart = annotationNode.getStart();
@@ -382,7 +372,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							ConstantExpression constantExpression = (ConstantExpression) value;
 							if (value.getType().getName().equals("java.lang.String")) {
 								// single value, eg. @SuppressWarnings("unchecked")
-								// FIXASC (M2) test positional info for conjured up anno refs
+								// FIXASC (RC1) tidy up all this junk (err, i mean 'refactor') once we have confidence in test
+								// coverage
+								// FIXASC (RC1) test positional info for conjured up anno refs
 								TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 								annotationReference.sourceStart = annotationNode.getStart();
 								annotationReference.sourceEnd = annotationNode.getEnd() - 1;
@@ -850,7 +842,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// Don't wire it in, JDT will do it
 			typeDeclaration.superclass = null;
 		} else {
-			typeDeclaration.superclass = createTypeReferenceForClassNode(superclass);
+			// If the start position is 0 the superclass wasn't actually declared, it was added by Groovy
+			if (!(superclass.getStart() == 0 && superclass.equals(ClassHelper.OBJECT_TYPE))) {
+				typeDeclaration.superclass = createTypeReferenceForClassNode(superclass);
+			}
 		}
 	}
 

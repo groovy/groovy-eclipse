@@ -27,9 +27,9 @@ import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
-// FIXASC (M2) immutable from outside
 /**
  * An annotation node that is backed by a JDT reference binding, members are created lazily
  * 
@@ -37,6 +37,8 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
  */
 @SuppressWarnings("restriction")
 public class JDTAnnotationNode extends AnnotationNode {
+
+	private static final char[] jlString = "Ljava/lang/String;".toCharArray();
 
 	private boolean membersInitialized = false;
 	private AnnotationBinding annotationBinding;
@@ -50,13 +52,11 @@ public class JDTAnnotationNode extends AnnotationNode {
 
 	@Override
 	public void addMember(String name, Expression value) {
-		// FIXASC (M2) Auto-generated method stub
-		super.addMember(name, value);
+		throw new ImmutableException();
 	}
 
 	@Override
 	public ClassNode getClassNode() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.getClassNode();
 	}
 
@@ -74,29 +74,21 @@ public class JDTAnnotationNode extends AnnotationNode {
 
 	@Override
 	public boolean hasClassRetention() {
-		return super.hasClassRetention();
-		// return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationClassRetention) ==
-		// TagBits.AnnotationClassRetention;
+		return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationClassRetention) == TagBits.AnnotationClassRetention;
 	}
 
 	@Override
 	public boolean hasRuntimeRetention() {
-		// FIXASC (M2) check it is resolved?
-		// return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationRuntimeRetention) ==
-		// TagBits.AnnotationRuntimeRetention;
-		return super.hasRuntimeRetention();
+		return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationRuntimeRetention) == TagBits.AnnotationRuntimeRetention;
 	}
 
 	@Override
 	public boolean hasSourceRetention() {
-		// return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention) ==
-		// TagBits.AnnotationSourceRetention;
-		return super.hasSourceRetention();
+		return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention) == TagBits.AnnotationSourceRetention;
 	}
 
 	@Override
 	public boolean isBuiltIn() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.isBuiltIn();
 	}
 
@@ -108,32 +100,27 @@ public class JDTAnnotationNode extends AnnotationNode {
 
 	@Override
 	public void setAllowedTargets(int bitmap) {
-		// FIXASC (M2) Auto-generated method stub
-		super.setAllowedTargets(bitmap);
-	}
-
-	@Override
-	public void setClassRetention(boolean flag) {
-		// FIXASC (M2) Auto-generated method stub
-		super.setClassRetention(flag);
-	}
-
-	@Override
-	public void setMember(String name, Expression value) {
-		// FIXASC (M2) Auto-generated method stub
-		super.setMember(name, value);
+		throw new ImmutableException();
 	}
 
 	@Override
 	public void setRuntimeRetention(boolean flag) {
-		// FIXASC (M2) Auto-generated method stub
-		super.setRuntimeRetention(flag);
+		throw new ImmutableException();
 	}
 
 	@Override
 	public void setSourceRetention(boolean flag) {
-		// FIXASC (M2) Auto-generated method stub
-		super.setSourceRetention(flag);
+		throw new ImmutableException();
+	}
+
+	@Override
+	public void setClassRetention(boolean flag) {
+		throw new ImmutableException();
+	}
+
+	@Override
+	public void setMember(String name, Expression value) {
+		throw new ImmutableException();
 	}
 
 	private void ensureMembersInitialized() {
@@ -149,8 +136,6 @@ public class JDTAnnotationNode extends AnnotationNode {
 			super.addMember(new String(name), valueExpression);
 		}
 	}
-
-	private static final char[] jlString = "Ljava/lang/String;".toCharArray();
 
 	// FIXASC (M2) does not cope with all variants of value types, see AnnotationVisitor.visitExpression() for the code to utilise
 	private Expression createExpressionFor(TypeBinding b, Object value) {

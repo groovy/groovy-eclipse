@@ -35,6 +35,9 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 @SuppressWarnings("restriction")
 public class GroovyClassScope extends ClassScope {
 
+	// SET FOR TESTING ONLY, enables tests to listen for interesting events
+	public static EventListener debugListener = null;
+
 	public GroovyClassScope(Scope parent, TypeDeclaration typeDecl) {
 		super(parent, typeDecl);
 	}
@@ -45,8 +48,10 @@ public class GroovyClassScope extends ClassScope {
 		return noProblems;
 	}
 
+	// FIXASC (RC1) pull out into common util area (see GCUScope too)
 	char[] GROOVY = "groovy".toCharArray(); //$NON-NLS-1$
 	char[][] GROOVY_LANG_METACLASS = { GROOVY, TypeConstants.LANG, "MetaClass".toCharArray() }; //$NON-NLS-1$
+	char[][] GROOVY_LANG_GROOVYOBJECT = { GROOVY, TypeConstants.LANG, "GroovyObject".toCharArray() }; // $NON-NLS-1$
 
 	public final ReferenceBinding getGroovyLangMetaClassBinding() {
 		CompilationUnitScope unitScope = compilationUnitScope();
@@ -54,6 +59,9 @@ public class GroovyClassScope extends ClassScope {
 		return unitScope.environment.getResolvedType(GROOVY_LANG_METACLASS, this);
 	}
 
+	/**
+	 * Add any groovy specific method bindings to the set determined by the compiler. These
+	 */
 	@Override
 	protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
 
@@ -63,28 +71,51 @@ public class GroovyClassScope extends ClassScope {
 			return methodBindings;
 		}
 
-		// Now add the groovy.lang.GroovyObject methods:
-		//
-		// Object invokeMethod(String name, Object args);
-		// Object getProperty(String propertyName);
-		// void setProperty(String propertyName, Object newValue);
-		// MetaClass getMetaClass();
-		// void setMetaClass(MetaClass metaClass);
+		boolean implementsGroovyLangObject = false;
 
-		TypeBinding bindingJLO = getJavaLangObject();
-		TypeBinding bindingJLS = getJavaLangString();
-		TypeBinding bindingGLM = getGroovyLangMetaClassBinding();
-		// FIXASC (M2) check visibility - which should be synthetic?
+		ReferenceBinding[] superInterfaces = this.referenceContext.binding.superInterfaces;
+		for (int i = 0, max = superInterfaces.length; i < max; i++) {
+			char[][] interfaceName = superInterfaces[i].compoundName;
+			if (CharOperation.equals(interfaceName, GROOVY_LANG_GROOVYOBJECT)) {
+				implementsGroovyLangObject = true;
+				break;
+			}
+		}
 
 		List<MethodBinding> groovyMethods = new ArrayList<MethodBinding>();
-		createMethod("invokeMethod", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, bindingJLO, groovyMethods,
-				methodBindings);
-		createMethod("getProperty", false, "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings);
-		createMethod("setProperty", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, TypeBinding.VOID, groovyMethods,
-				methodBindings);
-		createMethod("getMetaClass", false, "", null, bindingGLM, groovyMethods, methodBindings);
-		createMethod("setMetaClass", false, "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods, methodBindings);
 
+		// If we don't then a supertype did and these methods do not have to be added here
+		if (implementsGroovyLangObject) {
+			if (debugListener != null) {
+				debugListener.record("augment: type " + new String(this.referenceContext.name)
+						+ " having GroovyObject methods added");
+			}
+			TypeBinding bindingJLO = getJavaLangObject();
+			TypeBinding bindingJLS = getJavaLangString();
+			TypeBinding bindingGLM = getGroovyLangMetaClassBinding();
+
+			// Now add the groovy.lang.GroovyObject methods:
+			//
+			// Object invokeMethod(String name, Object args);
+			// Object getProperty(String propertyName);
+			// void setProperty(String propertyName, Object newValue);
+			// MetaClass getMetaClass();
+			// void setMetaClass(MetaClass metaClass);
+
+			// Note on synthetic
+			// javac/ecj don't see synthetic methods when considering if a type implements an interface. So don't make these
+			// synthetic
+
+			// Visibility is public and possibly static/abstract depending on the containing type
+			createMethod("invokeMethod", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, bindingJLO, groovyMethods,
+					methodBindings);
+			createMethod("getProperty", false, "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings);
+			createMethod("setProperty", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, TypeBinding.VOID, groovyMethods,
+					methodBindings);
+			createMethod("getMetaClass", false, "", null, bindingGLM, groovyMethods, methodBindings);
+			createMethod("setMetaClass", false, "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods,
+					methodBindings);
+		}
 		// FIXASC (M2) decide what difference this makes - should we not be adding anything at all?
 		// will not be an instance of GroovyTypeDeclaration if created through
 		// SourceTypeConverter
@@ -143,7 +174,7 @@ public class GroovyClassScope extends ClassScope {
 						}
 					}
 				}
-				// FIXASC (M2) consider return type?
+				// FIXASC (RC1) consider return type?
 				if (equalParameters) {
 					found = true;
 					break;

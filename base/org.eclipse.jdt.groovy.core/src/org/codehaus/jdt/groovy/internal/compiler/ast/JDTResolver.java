@@ -310,7 +310,6 @@ public class JDTResolver extends ResolveVisitor {
 	 * Create a ClassNode based on the type of the JDT binding, this takes account of all the possible kinds of JDT binding.
 	 */
 	private ClassNode createClassNode(TypeBinding jdtTypeBinding) {
-		// Simple cases first for now:
 		if (jdtTypeBinding instanceof WildcardBinding) {
 			return createClassNodeForWildcardBinding((WildcardBinding) jdtTypeBinding);
 		} else if (jdtTypeBinding instanceof BaseTypeBinding) {
@@ -377,13 +376,15 @@ public class JDTResolver extends ResolveVisitor {
 			}
 			throw new GroovyEclipseBug("Unexpected type variable reference.  Declaring element is "
 					+ typeVariableBinding.declaringElement);
-			// FIXASC (M2) unwrapping turned off - remove it?
-			// } else if (jdtTypeBinding instanceof SourceTypeBinding) {
-			// // check if it is a placeholder for a groovy type
-			// // FIXASC (M2) only unwrap if same Groovy CompilationUnit?
-			// SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) jdtTypeBinding;
+			// Next case handles: RawTypeBinding, ParameterizedTypeBinding, SourceTypeBinding
+		} else if (jdtTypeBinding instanceof ReferenceBinding) {
+
+			// It could be possible to unwrap SourceTypeBindings that have been built for Groovy types
+			// (and thus get back to the original ClassNode, rather than building another one here). However,
+			// they are not always reusable due to a link with the Groovy CompilationUnit that led to
+			// their creation.
+			// Unwrap code is something like:
 			// if (sourceTypeBinding.scope != null) {
-			// // FIXASC (M2) why would scope ever be null? (if there is an error elsewhere!)
 			// TypeDeclaration typeDeclaration = sourceTypeBinding.scope.referenceContext;
 			// if (typeDeclaration instanceof GroovyTypeDeclaration) {
 			// GroovyTypeDeclaration groovyTypeDeclaration = (GroovyTypeDeclaration) typeDeclaration;
@@ -391,20 +392,11 @@ public class JDTResolver extends ResolveVisitor {
 			// return wrappedNode;
 			// }
 			// }
-			// // should be building another lightweight JDT ClassNode
-			// // return convertToClassNode(jdtTypeBinding);// resolver.createJDTClassNode(jdtTypeBinding);
-			// return new JDTClassNode((SourceTypeBinding) jdtTypeBinding, this);
-		} else if (jdtTypeBinding instanceof ReferenceBinding) {
-			// } else if (jdtTypeBinding instanceof RawTypeBinding) {
-			// return configureParameterizedType((ParameterizedTypeBinding) jdtTypeBinding);
-			// } else if (jdtTypeBinding instanceof ParameterizedTypeBinding) {
-			// return configureParameterizedType((ParameterizedTypeBinding) jdtTypeBinding);
+
 			if (jdtTypeBinding.id == TypeIds.T_JavaLangObject) {
 				return ClassHelper.OBJECT_TYPE;
 			}
 			return new JDTClassNode((ReferenceBinding) jdtTypeBinding, this);
-			// throw new GroovyBugError("Should have treated this as something else! " + jdtTypeBinding.getClass());
-			// return createClassNode(jdtTypeBinding);// resolver.createJDTClassNode(jdtTypeBinding);
 		} else {
 			throw new GroovyEclipseBug("Unable to convert this binding: " + jdtTypeBinding.getClass());
 		}
