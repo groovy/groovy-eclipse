@@ -139,6 +139,19 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 		
 		addField(stringColor);
 
+		// Number Coloring
+		addField(new BooleanFieldEditor(
+		        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED,
+		        Messages
+		        .getString("GroovyEditorPreferencesPage.Enable_Number_coloring"), getFieldEditorParent())); //$NON-NLS-1$
+		
+		final ColorFieldEditor numberColor = new ColorFieldEditor(
+		        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
+		        Messages.getString("GroovyEditorPreferencesPage.Number_color"), getFieldEditorParent()); //$NON-NLS-1$
+		
+		addField(numberColor);
+		
+		// GroovyDoc Keyword
 		addField(new BooleanFieldEditor(
 				PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_KEYWORD_ENABLED,
 				Messages
@@ -151,6 +164,8 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 
 		addField(groovyDocKeywordColor);
 
+		
+		// GroovyDoc Tag
 		addField(new BooleanFieldEditor(
 				PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_TAG_ENABLED,
 				Messages
@@ -163,6 +178,8 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 
 		addField(groovyDocTagColor);
 
+		
+		// GroovyDoc Link
 		addField(new BooleanFieldEditor(
 				PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_LINK_ENABLED,
 				Messages
@@ -175,6 +192,8 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 
         addField(groovyDocLinkColor);
 
+        
+        // Default color
         final ColorFieldEditor groovyDefaultColor = new ColorFieldEditor(
                 PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
                 Messages
@@ -182,6 +201,8 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 
         addField(groovyDefaultColor);
 
+        
+        // Change to Java Defaults
         Button javaColorButton = new Button(super.getFieldEditorParent(),
                 SWT.BUTTON1);
         
@@ -198,6 +219,10 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 						IJavaColorConstants.JAVA_STRING);
 				stringColor.getColorSelector().setColorValue(rgb);
 
+				rgb = PreferenceConverter.getColor(store,
+                        IJavaColorConstants.JAVA_DEFAULT);
+                numberColor.getColorSelector().setColorValue(rgb);
+				
 				rgb = PreferenceConverter.getColor(store,
 						IJavaColorConstants.JAVA_KEYWORD);
 				javaKeywordColor.getColorSelector().setColorValue(rgb);
