@@ -16,7 +16,6 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * Utility class, contains helpers for configuring the compiler options based on the project.  If the project is a groovy project it
@@ -26,7 +25,8 @@ import org.eclipse.jdt.internal.core.JavaModelManager;
  */
 public class CompilerUtils {
 
-	// FIXASC (M2) class is mess, tidy up!
+	public static final int IsGrails = 0x0001;
+
 	
 	/**
 	 * Configure a real compiler options object based on the project.  If anything goes wrong it will configure the options to just build java.
@@ -67,23 +67,23 @@ public class CompilerUtils {
 					// will need bit manipulation here when another flag added
 					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(IsGrails));
 				} else {
-					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0");
+					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0"); //$NON-NLS-1$
 				}
 			} else {
 				optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
-				optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0");
+				optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0"); //$NON-NLS-1$
 			}
 		} catch (CoreException e) {
 			e.printStackTrace();
 			optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
-			optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0");
+			optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0"); //$NON-NLS-1$
 		}
 	}
 	
-	public static final int IsGrails = 0x0001;
 	
 	/**
-	 * Crude way to determine it...
+	 * Crude way to determine it... basically check for a folder called 'grails-app'.  The reason we need to know is because of the extra
+	 * transform that will run if it is a grails-app (tagging domain classes).
 	 */
 	private static boolean isProbablyGrailsProject(IProject project) {
 	    try {
@@ -104,7 +104,6 @@ public class CompilerUtils {
 	 * @param javaProject the project involved right now (may have the groovy nature)
 	 */
 	public static void setGroovyClasspath(CompilerOptions compilerOptions, IJavaProject javaProject) {
-		// FIXASC (M3) temporary way to get compiler stuff configured when there is no UI for it
 		Map newOptions = new HashMap();
 		setGroovyClasspath(newOptions, javaProject);
 		compilerOptions.groovyProjectName = javaProject.getProject().getName();
@@ -201,8 +200,6 @@ public class CompilerUtils {
 					// relative example: grails/lib/hibernate3-3.3.1.jar  (where grails is the project name)
 					// absolute example: f:/grails-111/dist/grails-core-blah.jar
 					// javaProject path is f:\grails\grails
-					// FIXASC (M2) is this really fool proof for determining classpath stuff?
-					// FIXASC (M2) need a caching mechanism for this or performance will suffer
 					IPath cpePath = cpe.getPath();
 					String pathElement = null;
 					String prefix = cpePath.segment(0);

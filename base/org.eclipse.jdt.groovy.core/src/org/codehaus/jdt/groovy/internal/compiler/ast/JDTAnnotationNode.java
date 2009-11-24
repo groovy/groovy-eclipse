@@ -137,11 +137,11 @@ public class JDTAnnotationNode extends AnnotationNode {
 		}
 	}
 
-	// FIXASC (M2) does not cope with all variants of value types, see AnnotationVisitor.visitExpression() for the code to utilise
+	// FIXASC (RC1) does not cope with all variants of value types, see AnnotationVisitor.visitExpression() for the code to utilise
 	private Expression createExpressionFor(TypeBinding b, Object value) {
 		if (b.isArrayType()) {
 			ListExpression listExpression = new ListExpression();
-			// FIXASC (M2) is it a groovy optimization that if the value is expected to be an array you don't have to
+			// FIXASC (RC1) is it a groovy optimization that if the value is expected to be an array you don't have to
 			// write it as such
 			if (value.getClass().isArray()) {
 				Object[] values = (Object[]) value;

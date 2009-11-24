@@ -37,7 +37,7 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 		return classNode;
 	}
 
-	// FIXASC (M2) understand why this is here and all the implications
+	// FIXASC (RC1) is this always what we want to do - are there any other implications?
 	/*
 	 * Prevent groovy types from having their methods re-parsed
 	 */
