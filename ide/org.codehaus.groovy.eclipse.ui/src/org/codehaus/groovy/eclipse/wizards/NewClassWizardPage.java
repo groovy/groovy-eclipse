@@ -17,14 +17,17 @@ package org.codehaus.groovy.eclipse.wizards;
 
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages;
+import org.eclipse.swt.widgets.Composite;
 
 /**
  * @author MelamedZ
@@ -46,6 +49,19 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 	    return typeName + ".groovy";
 	}
 	
+	@Override
+	protected void createTypeMembers(IType type, ImportsManager imports,
+	        IProgressMonitor monitor) throws CoreException {
+	    super.createTypeMembers(type, imports, monitor);
+	    if (isCreateMain()) {
+	        // replace main method with a more groovy version
+	        IMethod main = type.getMethod("main", new String[] {"[QString;"} );
+	        if (main != null && main.exists()) {
+	            main.delete(true, monitor);
+	            type.createMethod("static main(args) {\n\n}", null, true, monitor); 
+	        }
+	    }
+	}
 
 	@Override
 	protected IStatus typeNameChanged() {
@@ -92,7 +108,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         } else {
             return typeNameWithParameters.substring(0, angleBracketOffset);
         }
-    }
+   }
 
    @Override
    public int getModifiers() {
