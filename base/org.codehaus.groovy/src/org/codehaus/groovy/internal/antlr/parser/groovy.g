@@ -1438,6 +1438,9 @@ classField!  {Token first = LT(1);}
         exception
         catch [RecognitionException e] {
         	reportError(e);
+        	// Create a fake variable definition for this 'thing' and get the position right.  
+        	// Type is object
+        	#classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2))); 
         	consumeUntil(NLS);
         }    ;
 
@@ -1553,7 +1556,7 @@ variableDefinitions[AST mods, AST t] {Token first = cloneToken(LT(1));
         // declared to throw
         ((nls "throws") =>  tc:throwsClause!  )?
 
-        // the method body is an open block
+        // the method body is an open block 
         // but, it may have an optional constructor call (for constructors only)
         // this constructor clause is only used for constructors using 'def'
         // which look like method declarations

@@ -402,6 +402,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n");
 		checkGCUDeclaration("Simple.groovy",
 				"public class Simple {\n" + 
+				"  private java.lang.Object asdf;\n"+
 				"  public Simple() {\n" + 
 				"  }\n" + 
 				"  public java.lang.Object getNumber() {\n" + 
@@ -429,6 +430,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		checkGCUDeclaration("MyDomainClass.groovy",
 				"public class MyDomainClass {\n" + 
 				"  private int intField;\n" + 
+				"  private java.lang.Object belo;\n"+
 				"  public MyDomainClass() {\n" + 
 				"  }\n" + 
 				"}\n");
