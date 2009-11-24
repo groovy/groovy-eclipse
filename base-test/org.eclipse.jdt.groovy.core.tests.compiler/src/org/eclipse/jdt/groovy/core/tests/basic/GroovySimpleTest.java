@@ -360,6 +360,62 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"----------\n");
 	}
 	
+	
+	public void testParsingRecovery_GRE494() {
+		this.runNegativeTest(new String[] {
+			"Simple.groovy",
+			"class Simple {\n"+
+			"	\n"+
+			"	def getNumber() {\n"+
+			"		return 42\n"+
+			"	}\n"+
+			"\n"+
+			"	asdf\n"+
+			"		\n"+
+			"	static main(args) {\n"+
+			"		print new Simple().getNumber()\n"+
+			"	}\n"+
+			"}\n"},
+			"----------\n" + 
+			"1. ERROR in Simple.groovy (at line 7)\n" + 
+			"	asdf\n" + 
+			"	^\n" + 
+			"Groovy:unexpected token: asdf @ line 7, column 2.\n" + 
+			"----------\n");
+		checkGCUDeclaration("Simple.groovy",
+				"public class Simple {\n" + 
+				"  public Simple() {\n" + 
+				"  }\n" + 
+				"  public java.lang.Object getNumber() {\n" + 
+				"  }\n" + 
+				"  public static void main(public java.lang.String... args) {\n" + 
+				"  }\n" + 
+				"}\n");
+	}
+
+	public void testParsingRecovery_GRE494_2() {
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"class MyDomainClass {\n"+
+			"  int intField\n"+
+			"\n"+
+			"belo\n"+
+			"\n"+
+			"}\n"},
+			"----------\n" + 
+			"1. ERROR in MyDomainClass.groovy (at line 4)\n" + 
+			"	belo\n" + 
+			"	^\n" + 
+			"Groovy:unexpected token: belo @ line 4, column 1.\n" + 
+			"----------\n");
+		checkGCUDeclaration("MyDomainClass.groovy",
+				"public class MyDomainClass {\n" + 
+				"  private int intField;\n" + 
+				"  public MyDomainClass() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}	
+	
 	/*
 	public void testParsingMissingCurlyRecovery1_GRE468() {
 		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser

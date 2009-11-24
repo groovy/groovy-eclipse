@@ -1406,7 +1406,7 @@ classField!  {Token first = LT(1);}
         (constructorStart)=>
         mc:modifiersOpt! ctor:constructorDefinition[#mc]
         {#classField = #ctor;}
-    |
+    | 
         (genericMethodStart)=>
         dg:genericMethod
         {#classField = #dg;}
@@ -1434,7 +1434,12 @@ classField!  {Token first = LT(1);}
     // "{ ... }" instance initializer
     |   s4:compoundStatement
         {#classField = #(create(INSTANCE_INIT,"INSTANCE_INIT",first,LT(1)), s4);}
-    ;
+	// RECOVERY: GRECLIPSE-494
+        exception
+        catch [RecognitionException e] {
+        	reportError(e);
+        	consumeUntil(NLS);
+        }    ;
 
 // Now the various things that can be defined inside a interface
 interfaceField!
