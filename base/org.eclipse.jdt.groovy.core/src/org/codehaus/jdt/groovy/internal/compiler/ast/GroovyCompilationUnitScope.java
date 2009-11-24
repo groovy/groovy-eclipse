@@ -12,7 +12,10 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -44,10 +47,7 @@ import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
 @SuppressWarnings("restriction")
 public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
-	// FIXASC (M2) determine if these caches are worth the effort?
-	// Caches of typenames (eg. java.foo.Bar) to ClassNodes. This is a cache of types that can be correctly seen from this scope
-	// private Map<String, JDTClassNode> jdtSourceBindingCache = new HashMap<String, JDTClassNode>();
-	// private Map<String, JDTClassNode> jdtBinaryBindingCache = new HashMap<String, JDTClassNode>();
+	private Map<String, ClassNode> bindingToClassNodeCache = new HashMap<String, ClassNode>();
 
 	// Matches ResolveVisitor - these are the additional automatic imports for groovy files
 	private static final char[][] javaIo;
@@ -127,12 +127,11 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		}
 	}
 
-	// FIXASC (M2) move this into GroovyClassScope
+	// FIXASC (RC1) move this into GroovyClassScope
 	/**
 	 * Ensure Groovy types extend groovy.lang.GroovyObject
 	 */
 	private void augmentTypeHierarchy(SourceTypeBinding typeBinding) {
-		// FIXASC (M2) others to exclude here?
 		if (typeBinding.isAnnotationType() || typeBinding.isInterface()) {
 			return;
 		}
@@ -156,13 +155,17 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	 * Look in the local cache, if we don't find it then ask JDT. If JDT responds with a SourceTypeBinding then it has been found.
 	 * If JDT responds with some other kind of binding, we consider that 'not found as source' and return null.
 	 * 
+	 * Not quite the right name for this method, because on an incremental build it will find BinaryTypeBindings for types that were
+	 * SourceTypeBindings during the full build
+	 * 
 	 */
 	// FIXASC (M2:optimization) cache any non SourceTypeBinding found and use that information in the lookupClassNodeForBinary
 	public ClassNode lookupClassNodeForSource(String typename, JDTResolver jdtResolver) {
-		// ClassNode node = jdtSourceBindingCache.get(typename);
-		// if (node != null) {
-		// return node;
-		// }
+		ClassNode node = bindingToClassNodeCache.get(typename);
+		if (node != null) {
+			return node;
+		}
+
 		char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());
 		TypeBinding jdtBinding = null;
 		try {
@@ -175,29 +178,28 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 			}
 		}
 
-		if (jdtBinding != null && (jdtBinding instanceof SourceTypeBinding)) {
-			// log("GCUScope.lookupClassNodeForSource: JDTBinding for '" + typename + "' found to be "
-			// + jdtBinding.getClass().getSimpleName());
-			ClassNode newNode = jdtResolver.convertToClassNode(jdtBinding);
-			// if (newNode != null) {
-			// jdtSourceBindingCache.put(typename, newNode);
-			// }
-			return newNode;
-		}
-		// FIXASC (RC1) better to look it up properly as a member type rather than catch the problem and unwrap!
-		// FIXASC (RC1) make sure enough thinking has gone into verifying this is reasonable.
-		// FIXASC (RC1) think about renaming the method due to it now using BTBs
-		// on an incremental build we see BTBs for what we previously saw STBs
-		if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
-			ClassNode newNode = jdtResolver.convertToClassNode(jdtBinding);
-			return newNode;
+		if (jdtBinding != null) {
+			if (jdtBinding instanceof SourceTypeBinding) {
+				ClassNode classNode = jdtResolver.convertToClassNode(jdtBinding);
+				if (classNode != null) {
+					bindingToClassNodeCache.put(typename, classNode);
+				}
+				return classNode;
+			} else if (jdtBinding instanceof BinaryTypeBinding) {
+				ClassNode newNode = jdtResolver.convertToClassNode(jdtBinding);
+				if (newNode != null) {
+					bindingToClassNodeCache.put(typename, newNode);
+				}
+				return newNode;
+			}
 		}
 
+		// FIXASC (RC1) better to look it up properly as a member type rather than catch the problem and unwrap!
 		if (jdtBinding != null && (jdtBinding instanceof ProblemReferenceBinding)) {
 			ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
 			if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
 				jdtBinding = prBinding.closestMatch();
-				// FIXASC (M2) caching for this too
+				// FIXASC (RC1) caching for this too?
 				if (jdtBinding != null && (jdtBinding instanceof SourceTypeBinding)) {
 					return jdtResolver.convertToClassNode(jdtBinding);
 				}
@@ -209,29 +211,23 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		return null;
 	}
 
+	// FIXASC (RC1) worth a cache for binary bindings or would it just not get hit due to the binary binding support in the other
+	// lookup method?
 	public ClassNode lookupClassNodeForBinary(String typename, JDTResolver jdtResolver) {
-		// ClassNode node = jdtBinaryBindingCache.get(typename);
-		// if (node != null) {
-		// return node;
-		// }
 		char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());
 		TypeBinding jdtBinding = getType(compoundName, compoundName.length);
 
 		if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
 			// log("GCUScope.lookupClassNodeForBinary(): JDTBinding for '" + typename + "' found to be "
 			// + jdtBinding.getClass().getSimpleName());
-			ClassNode newNode = jdtResolver.convertToClassNode(jdtBinding);
-			// if (newNode != null) {
-			// jdtBinaryBindingCache.put(typename, newNode);
-			// }
-			return newNode;
+			ClassNode classNode = jdtResolver.convertToClassNode(jdtBinding);
+			return classNode;
 		}
 
 		if (jdtBinding != null && (jdtBinding instanceof ProblemReferenceBinding)) {
 			ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
 			if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
 				jdtBinding = prBinding.closestMatch();
-				// FIXASC (M2) caching for this too
 				if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
 					return jdtResolver.convertToClassNode(jdtBinding);
 				}
@@ -245,7 +241,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	// public void verifyMethods(MethodVerifier verifier) {
 	// }
 
-	// FIXASC (M2) Policing this might avoid the problem of JUnit not finding tests because the typename differs from the filename
 	@Override
 	protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {
 	}
@@ -254,7 +249,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	protected void recordImportProblem(ImportReference importReference, Binding importBinding) {
 	}
 
-	// FIXASC (M2) is this true just for scripts or for anything at all?
 	@Override
 	protected void reportPackageIsNotExpectedPackage(CompilationUnitDeclaration referenceContext) {
 	}
@@ -284,7 +278,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		return false;
 	}
 
-	// FIXASC (M2) verify that groovy sees all
 	@Override
 	protected boolean canBeSeenBy(ReferenceBinding type, PackageBinding fPackage) {
 		return true;
@@ -294,53 +287,5 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	public boolean scannerAvailable() {
 		return false;
 	}
-
-	// public ClassNode lookupInner(String typename, JDTResolver jdtResolver) {
-	// ClassNode node = null;// jdtBindingCache.get(typename);
-	// if (node != null) {
-	// return node;
-	// }
-	// char[][] innerref = CharOperation.splitOn('$', typename.toCharArray());
-	// Binding jdtBinding = getTypeOrPackage(innerref);
-	// if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
-	// // log("GCUScope.lookupClassNodeForBinary(): JDTBinding for '" + typename + "' found to be "
-	// // + jdtBinding.getClass().getSimpleName());
-	// ClassNode newNode = jdtResolver.createJDTClassNode(jdtBinding);
-	// return newNode;
-	// }
-	// return null;
-	// }
-
-	// FIXASC (M2) Does not appear to be necessary since the imports are now setup correctly
-	// @Override
-	// protected void faultInImports() {
-	// if (this.typeOrPackageCache != null) {
-	// // can be called when a field constant is resolved before static imports
-	// return;
-	// }
-	//
-	// // Special for groovy - want to insert BigDecimal/BigInteger
-	// if (referenceContext.imports == null) {
-	// this.typeOrPackageCache = new HashtableOfObject(3);
-	// Binding jmBigDecimal = environment.getType(CharOperation.splitOn('.', "java.math.BigDecimal".toCharArray()));
-	// typeOrPackageCache.put("BigDecimal".toCharArray(), jmBigDecimal);
-	// Binding jmBigInteger = environment.getType(CharOperation.splitOn('.', "java.math.BigInteger".toCharArray()));
-	// typeOrPackageCache.put("BigInteger".toCharArray(), jmBigInteger);
-	// return;
-	// } else {
-	// super.faultInImports();
-	// // Add entries for aliased imports
-	// ImportReference[] importReferences = referenceContext.imports;
-	// for (int i = 0; i < referenceContext.imports.length; i++) {
-	// if (importReferences[i] instanceof AliasImportReference) {
-	// AliasImportReference aliasImportReference = (AliasImportReference) importReferences[i];
-	// char[][] importName = aliasImportReference.getImportName();
-	// Binding importBinding = findSingleImport(importName, Binding.TYPE | Binding.FIELD | Binding.METHOD, false);//
-	// importReference.isStatic());
-	// typeOrPackageCache.put(aliasImportReference.getSimpleName(), importBinding);
-	// }
-	// }
-	// }
-	// }
 
 }
