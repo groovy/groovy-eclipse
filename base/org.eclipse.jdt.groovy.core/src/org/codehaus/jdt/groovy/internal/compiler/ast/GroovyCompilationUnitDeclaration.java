@@ -1516,157 +1516,144 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public void abort(int abortLevel, CategorizedProblem problem) {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) look at callers of this, should we be following the abort on first problem policy?
 		super.abort(abortLevel, problem);
 	}
 
 	@Override
 	public void checkUnusedImports() {
-		// FIXASC (M2) Auto-generated method stub
 		super.checkUnusedImports();
 	}
 
 	@Override
 	public void cleanUp() {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) any tidy up for us to do?
 		super.cleanUp();
 	}
 
 	@Override
 	public CompilationResult compilationResult() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.compilationResult();
 	}
 
 	@Override
 	public TypeDeclaration declarationOfType(char[][] typeName) {
-		// FIXASC (M2) Auto-generated method stub
 		return super.declarationOfType(typeName);
 	}
 
 	@Override
 	public void finalizeProblems() {
-		// FIXASC (M2) Auto-generated method stub
 		super.finalizeProblems();
 	}
 
 	@Override
 	public char[] getFileName() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.getFileName();
 	}
 
 	@Override
 	public char[] getMainTypeName() {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) necessary to return something for groovy?
 		return super.getMainTypeName();
 	}
 
 	@Override
 	public boolean hasErrors() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.hasErrors();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.isEmpty();
 	}
 
 	@Override
 	public boolean isPackageInfo() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.isPackageInfo();
 	}
 
 	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) additional stuff to print?
 		return super.print(indent, output);
 	}
 
 	@Override
 	public void propagateInnerEmulationForAllLocalTypes() {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) anything to do here for groovy inner types?
 		super.propagateInnerEmulationForAllLocalTypes();
 	}
 
 	@Override
 	public void record(LocalTypeBinding localType) {
-		// FIXASC (M2) Auto-generated method stub
 		super.record(localType);
 	}
 
 	@Override
 	public void recordStringLiteral(StringLiteral literal, boolean fromRecovery) {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) assert not called for groovy, surely
 		super.recordStringLiteral(literal, fromRecovery);
 	}
 
 	@Override
 	public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation, int scopeStart, int scopeEnd) {
-		// FIXASC (M2) Auto-generated method stub
 		super.recordSuppressWarnings(irritants, annotation, scopeStart, scopeEnd);
 	}
 
 	@Override
 	public void tagAsHavingErrors() {
-		// FIXASC (M2) Auto-generated method stub
 		super.tagAsHavingErrors();
 	}
 
 	@Override
 	public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) are we well formed enough for this?
 		super.traverse(visitor, unitScope);
 	}
 
 	@Override
 	public ASTNode concreteStatement() {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) assert not called for groovy, surely
 		return super.concreteStatement();
 	}
 
 	@Override
 	public boolean isImplicitThis() {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) assert not called for groovy, surely
 		return super.isImplicitThis();
 	}
 
 	@Override
 	public boolean isSuper() {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) assert not called for groovy, surely
 		return super.isSuper();
 	}
 
 	@Override
 	public boolean isThis() {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) assert not called for groovy, surely
 		return super.isThis();
 	}
 
 	@Override
 	public int sourceEnd() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.sourceEnd();
 	}
 
 	@Override
 	public int sourceStart() {
-		// FIXASC (M2) Auto-generated method stub
 		return super.sourceStart();
 	}
 
 	@Override
 	public String toString() {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) anything to add?
 		return super.toString();
 	}
 
 	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
-		// FIXASC (M2) Auto-generated method stub
+		// FIXASC (RC1) in a good state for traversal? what would cause this to trigger?
 		super.traverse(visitor, scope);
 	}
 
