@@ -365,7 +365,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 	
 	public void testBrokenPackage() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"Foo.groovy",
 				"package \n"+
@@ -485,7 +484,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	 * Simple case of a new reference missing () in a method body
 	 */
 	public void testParsingNewRecovery1_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"XXX.groovy",
 				"class C {\n"+
@@ -520,7 +518,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	 * Simple case of a new reference missing () followed by valid code
 	 */
 	public void testParsingNewRecovery2_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"XXX.groovy",
 				"class C {\n"+
@@ -556,7 +553,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	 * Missing type name for new call
 	 */
 	public void testParsingNewRecovery3_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"Foo.groovy",
 				"new\n"+
@@ -581,7 +577,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testParsingNewRecovery4_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+//		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"XXX.groovy",
 				"class C {\n"+
@@ -644,7 +640,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	 * Missing type name for new call
 	 */
 	public void testParsingNewRecovery5_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"Foo.groovy",
 				"class C { \n"+
@@ -703,7 +698,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 //	}
 
 	public void testParsingNewRecovery6_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"XXX.groovy",
 				"class Sample {\n"+
@@ -731,7 +725,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testParsingNewRecovery7_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"XXX.groovy",
 				"import javax.swing.text.html.HTML\n"+
@@ -754,7 +747,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testParsingNewRecovery8_GRE468() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+//		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"XXX.groovy",
 				"import javax.swing.text.html.HTML\n"+
@@ -804,7 +797,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 
 	public void testBrokenPackage2() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"Foo.groovy",
 				"package ;\n"+
@@ -819,7 +811,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 	// does the second error now get reported after the package problem
 	public void testBrokenPackage3() {
-		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 		this.runNegativeTest(new String[] {
 				"Foo.groovy",
 				"package ;\n"+

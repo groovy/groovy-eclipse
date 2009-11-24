@@ -10,6 +10,7 @@ import antlr.LexerSharedInputState;
 import antlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
 import antlr.TokenStreamRecognitionException;
+import org.codehaus.groovy.ast.Comment;
 
 public interface GroovyTokenTypes {
 	int EOF = 1;
@@ -213,19 +214,20 @@ public interface GroovyTokenTypes {
 	int DOLLAR = 200;
 	int WS = 201;
 	int ONE_NL = 202;
-	int SL_COMMENT = 203;
-	int ML_COMMENT = 204;
-	int STRING_CH = 205;
-	int REGEXP_LITERAL = 206;
-	int REGEXP_CTOR_END = 207;
-	int REGEXP_SYMBOL = 208;
-	int ESC = 209;
-	int STRING_NL = 210;
-	int HEX_DIGIT = 211;
-	int VOCAB = 212;
-	int LETTER = 213;
-	int DIGIT = 214;
-	int EXPONENT = 215;
-	int FLOAT_SUFFIX = 216;
-	int BIG_SUFFIX = 217;
+	int ONE_NL_KEEP = 203;
+	int SL_COMMENT = 204;
+	int ML_COMMENT = 205;
+	int STRING_CH = 206;
+	int REGEXP_LITERAL = 207;
+	int REGEXP_CTOR_END = 208;
+	int REGEXP_SYMBOL = 209;
+	int ESC = 210;
+	int STRING_NL = 211;
+	int HEX_DIGIT = 212;
+	int VOCAB = 213;
+	int LETTER = 214;
+	int DIGIT = 215;
+	int EXPONENT = 216;
+	int FLOAT_SUFFIX = 217;
+	int BIG_SUFFIX = 218;
 }

@@ -17,6 +17,7 @@ import antlr.LexerSharedInputState;
 import antlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
 import antlr.TokenStreamRecognitionException;
+import org.codehaus.groovy.ast.Comment;
 }
 
 /** JSR-241 Groovy Recognizer
@@ -262,6 +263,9 @@ tokens {
     List errorList;
     public List getErrorList() { return errorList; }
 
+	List<Comment> comments = new ArrayList<Comment>();
+	public List<Comment> getComments() { return comments; }
+	
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
@@ -312,6 +316,28 @@ tokens {
         return attachLast(create(type, txt, first), last);
     }
     
+	private Stack<Integer> commentStartPositions = new Stack<Integer>();
+
+	public void startComment(int line, int column) {
+		// System.out.println(">> comment at l"+line+"c"+column);
+		commentStartPositions.push((line<<16)+column);
+	}
+
+	public void endComment(int type, int line, int column,String text) {
+		// System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
+		int lineAndColumn = commentStartPositions.pop();
+		int startLine = lineAndColumn>>>16;
+		int startColumn = lineAndColumn&0xffff;
+		if (type==0) {
+			Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+			comments.add(comment);
+		} else if (type==1) {
+			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+			comments.add(comment);
+		} 
+	}
+	
+	
     /** 
     *   Clones the token
     */
@@ -382,6 +408,30 @@ tokens {
         catch (TokenStreamException ee) { }
         if (lt == null)  lt = Token.badToken;
 
+        Map row = new HashMap();
+        row.put("error" ,message);
+        row.put("filename", getFilename());
+        row.put("line", new Integer(lt.getLine()));
+        row.put("column", new Integer(lt.getColumn()));
+        errorList.add(row);
+    }
+    
+    /**
+     * Report a recovered error and specify the token.
+     */
+    public void reportError(String message, Token lt) {
+        Map row = new HashMap();
+        row.put("error" ,message);
+        row.put("filename", getFilename());
+        row.put("line", new Integer(lt.getLine()));
+        row.put("column", new Integer(lt.getColumn()));
+        errorList.add(row);
+    }
+    
+    /**
+     * Report a recovered error and specify the token.
+     */
+    public void reportError(String message, AST lt) {
         Map row = new HashMap();
         row.put("error" ,message);
         row.put("filename", getFilename());
@@ -531,8 +581,16 @@ snippetUnit
 
 // Package statement: optional annotations followed by "package" then the package identifier.
 packageDefinition
+        {Token first = LT(1);}
         //TODO? options {defaultErrorHandler = true;} // let ANTLR handle errors
-    :   annotationsOpt p:"package"^ {#p.setType(PACKAGE_DEF);} identifier
+    :   an:annotationsOpt! "package"! (id:identifier!)?
+        { // error recovery for missing package name
+            if (id_AST==null) {
+				reportError("Invalid package specification",LT(0));
+			} else {
+                #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);
+			}
+        }
     ;
 
 
@@ -1357,7 +1415,15 @@ classField!  {Token first = LT(1);}
     // "{ ... }" instance initializer
     |   s4:compoundStatement
         {#classField = #(create(INSTANCE_INIT,"INSTANCE_INIT",first,LT(1)), s4);}
-    ;
+	// RECOVERY: GRECLIPSE-494
+        exception
+        catch [RecognitionException e] {
+        	reportError(e);
+        	// Create a fake variable definition for this 'thing' and get the position right.  
+        	// Type is object
+        	#classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2))); 
+        	consumeUntil(NLS);
+        }    ;
 
 // Now the various things that can be defined inside a interface
 interfaceField!
@@ -3032,8 +3098,8 @@ identPrimary
  *                         2
  *
  */
-newExpression {Token first = LT(1);}
-    :   "new"! nls! (ta:typeArguments!)? t:type!
+newExpression {Token first = LT(1); int jumpBack = mark();}
+    :   "new"! nls! (ta:typeArguments!)? (t:type!)?
         (   nls!
             mca:methodCallArgs[null]!
 
@@ -3070,8 +3136,41 @@ newExpression {Token first = LT(1);}
             {#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#ad);}
 
         )
-        // DECIDE:  Keep 'new x()' syntax?
-    ;
+        // RECOVERY: missing '(' or '['
+        exception
+        catch [RecognitionException e] {
+            if (#t==null) {
+			    reportError("missing type for constructor call",first);
+				#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null); 
+                // currentAST.root = newExpression_AST;
+				// currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+				// newExpression_AST.getFirstChild() : newExpression_AST;
+				// currentAST.advanceChildToEnd();
+				// probably others to include - or make this the default?
+				if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
+					// int i = ((MismatchedTokenException)e).token.getType();
+					rewind(jumpBack);
+					consumeUntil(NLS);
+				}      
+            } else if (#mca==null && #ad==null) {
+                reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
+                #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);               
+				//currentAST.root = newExpression_AST;
+				//currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+				//newExpression_AST.getFirstChild() : newExpression_AST;
+				//currentAST.advanceChildToEnd();
+				if (e instanceof MismatchedTokenException) {
+					Token t =  ((MismatchedTokenException)e).token;
+					int i = ((MismatchedTokenException)e).token.getType();
+					rewind(jumpBack);
+					consume();
+					consumeUntil(NLS);
+				}   
+            } else {
+              throw e;
+            }
+        }
+        ;
 
 /*NYI*
 anonymousInnerClassBlock
@@ -3657,6 +3756,23 @@ options {
         }
     ;
 
+    protected
+ONE_NL_KEEP[boolean check]
+options {
+    paraphrase="a newline";
+}
+ :   // handle newlines, which are significant in Groovy
+        (   options {generateAmbigWarnings=false;}
+        :   "\r\n"  // Evil DOS
+        |   '\r'    // Macintosh
+        |   '\n'    // Unix (the right way)
+        )
+        {
+            // update current line number for error reporting
+            newlineCheck(check);
+        }
+    ;
+
 // Group any number of newlines (with comments and whitespace) into a single token.
 // This reduces the amount of parser lookahead required to parse around newlines.
 // It is an invariant that the parser never sees NLS tokens back-to-back.
@@ -3688,13 +3804,17 @@ options {
     paraphrase="a single line comment";
 }
     :   "//"
+          { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
         (
             options {  greedy = true;  }:
             // '\uffff' means the EOF character.
             // This will fix the issue GROOVY-766 (infinite loop).
             ~('\n'|'\r'|'\uffff')
         )*
-        { if (!whitespaceIncluded)  $setType(Token.SKIP); }
+        { 
+         parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+          if (!whitespaceIncluded)  $setType(Token.SKIP); 
+        }
         //This might be significant, so don't swallow it inside the comment:
         //ONE_NL
     ;
@@ -3721,6 +3841,7 @@ options {
     paraphrase="a comment";
 }
     :   "/*"
+      { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
         (   /*  '\r' '\n' can be matched in one alternative or by matching
                 '\r' in one iteration and '\n' in another. I am trying to
                 handle any flavor of newline that comes in, but the language
@@ -3733,11 +3854,14 @@ options {
             }
         :
             ( '*' ~'/' ) => '*'
-        |   ONE_NL[true]
+        |   ONE_NL_KEEP[true]
         |   ~('*'|'\n'|'\r'|'\uffff')
         )*
         "*/"
-        { if (!whitespaceIncluded)  $setType(Token.SKIP); }
+        { 
+          parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+          if (!whitespaceIncluded)  $setType(Token.SKIP); 
+        }
     ;
 
 
