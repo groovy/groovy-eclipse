@@ -31,8 +31,6 @@ public class MultiplexingParser extends Parser {
 
 	GroovyParser groovyParser;
 
-	// FIXASC (M2) how often is the LanguageSupport impl looked up? should be once then
-	// we remember what happened
 	public MultiplexingParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean optimizeStringLiterals) {
 		super(problemReporter, optimizeStringLiterals);
 		// The superclass that is extended is in charge of parsing .java files
