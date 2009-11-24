@@ -161,8 +161,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			if (alreadyHasProblems) {
 				// do not log the error because it is likely to have
 				// occurred because of the existing problem
-				System.out.println("Groovy Bug error thrown, but can ignore because "
-						+ "likely to have been caused by existing syntax problems");
+				System.err.println("Ignoring GroovyBugError since it is likely caused by earlier issues.  Ignored problem is '"
+						+ gbr.getMessage() + "'");
 			} else {
 				System.err.println("Groovy Bug --- " + gbr.getBugText());
 				gbr.printStackTrace();

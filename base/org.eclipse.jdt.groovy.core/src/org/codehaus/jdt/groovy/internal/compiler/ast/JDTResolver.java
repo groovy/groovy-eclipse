@@ -20,6 +20,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ResolveVisitor;
+import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
@@ -497,13 +498,19 @@ public class JDTResolver extends ResolveVisitor {
 		GroovyTypeDeclaration gtDeclaration = scopes.get(this.currentClass);
 		activeScope = null;
 		if (gtDeclaration == null) {
-			GroovyEclipseBug geb = new GroovyEclipseBug("JDTResolver.configure(): no declaration found for class " + currentClass);
+			GroovyEclipseBug geb = new GroovyEclipseBug("commencingResolution failed: no declaration found for class "
+					+ currentClass);
 			geb.printStackTrace();
 			throw geb;
 		}
 		if (gtDeclaration.scope == null) {
-			GroovyEclipseBug geb = new GroovyEclipseBug("JDTResolver.configure(): declaration found, but no scope found for "
-					+ currentClass);
+			// The scope may be null if there were errors in the code - let's not freak out the user here
+			if (gtDeclaration.hasErrors()) {
+				throw new GroovyEclipseBug("commencingResolution failed: aborting resolution, type " + currentClass.getName()
+						+ " had earlier problems");
+			}
+			GroovyEclipseBug geb = new GroovyEclipseBug(
+					"commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
 			geb.printStackTrace();
 			throw geb;
 		}
@@ -537,6 +544,14 @@ public class JDTResolver extends ResolveVisitor {
 
 	private void log(String string, ClassNode type, boolean foundit) {
 		System.err.println("Resolver: " + string + " " + type.getName() + "  ?" + foundit);
+	}
+
+	public void startResolving(ClassNode node, SourceUnit source) {
+		try {
+			super.startResolving(node, source);
+		} catch (AbortResolutionException are) {
+			// Can occur if there are other problems with the node (syntax errors) - so don't try resolving it
+		}
 	}
 
 }

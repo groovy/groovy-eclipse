@@ -168,6 +168,24 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     	}
     }
     
+    public void testDuplicateClassesUnnecessaryExceptions() {
+    	this.runNegativeTest(new String[]{
+    			"A.groovy",
+    			"class Foo {}\n"+
+    			"class Foo {}"},
+    			"----------\n" + 
+    			"1. ERROR in A.groovy (at line 2)\n" + 
+    			"	class Foo {}\n" + 
+    			"	^\n" + 
+    			"Groovy:Invalid duplicate class definition of class Foo : The source A.groovy contains at least two definitions of the class Foo.\n" + 
+    			"----------\n" + 
+    			"2. ERROR in A.groovy (at line 2)\n" + 
+    			"	class Foo {}\n" + 
+    			"	      ^^^\n" + 
+    			"The type Foo is already defined\n" + 
+    			"----------\n");
+    }
+    
     public void testNewRuleInLatestGroovy() {
 //    	if (isGroovy16()) { // FIXASC (M2) should also break in 17b2
 	    	this.runNegativeTest(new String[]{
@@ -531,6 +549,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"  }\n" + 
 				"}\n");
 	}
+	
 	/**
 	 * Missing type name for new call
 	 */
