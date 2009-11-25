@@ -16,7 +16,11 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.List;
+
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IOpenable;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -43,7 +47,8 @@ public class TypeInferencingVisitorFactory {
 			IOpenable openable = possibleMatch.openable;
 			if (openable instanceof GroovyCompilationUnit) {
 				TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorWithRequestor(
-						(GroovyCompilationUnit) openable, createLookups());
+						(GroovyCompilationUnit) openable, createLookups(((GroovyCompilationUnit) openable).getJavaProject()
+								.getProject()));
 				return visitor;
 			} else {
 				Util.log(new RuntimeException(), "Attempted to do a groovy visit on a non-groovy file: "
@@ -56,12 +61,23 @@ public class TypeInferencingVisitorFactory {
 	}
 
 	public TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit unit) {
-		return new TypeInferencingVisitorWithRequestor(unit, createLookups());
+		return new TypeInferencingVisitorWithRequestor(unit, createLookups(unit.getJavaProject().getProject()));
 	}
 
-	private ITypeLookup[] createLookups() {
-		ITypeLookup[] lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new CategoryTypeLookup(),
-				new SimpleTypeLookup() };
+	// Order matters!!! InferenceByAssignmentStatement must be first and SimpleTypeLookup must be last
+	private ITypeLookup[] createLookups(IProject project) {
+		ITypeLookup[] lookups;
+		try {
+			List<ITypeLookup> lookupsList = TypeLookupRegistry.getRegistry().getLookupsFor(project);
+			lookupsList.add(new CategoryTypeLookup());
+			lookupsList.add(new SimpleTypeLookup());
+			lookupsList.add(0, new InferenceByAssignmentStatement());
+			lookups = (ITypeLookup[]) lookupsList.toArray(new ITypeLookup[0]);
+
+		} catch (CoreException e) {
+			Util.log(e, "Exception creating type lookups for project " + project.getName() + ".  Using default instead");
+			lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new CategoryTypeLookup(), new SimpleTypeLookup() };
+		}
 		return lookups;
 	}
 

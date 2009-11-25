@@ -15,6 +15,7 @@
     limitations under the License.
  -->
 <plugin>
+   <extension-point id="completionProposalProvider" name="Groovy Completion Proposals Provider" schema="schema/completionProposalProvider.exsd"/>
    <extension
          id="org.codehaus.groovy.eclipse.codeassist.category"
          name="Groovy Content"

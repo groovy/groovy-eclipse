@@ -34,6 +34,8 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -101,10 +103,9 @@ public class StatementAndExpressionCompletionProcessor extends
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
-        long start = System.currentTimeMillis();
-        
         TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(getContext().unit);
+        ContentAssistContext context = getContext();
+        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(context.unit);
         ExpressionCompletionRequestor requestor = new ExpressionCompletionRequestor();
         
         // can we do only a partial request???
@@ -113,24 +114,40 @@ public class StatementAndExpressionCompletionProcessor extends
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         if (requestor.isVisitSuccessful()) {
             // get all proposal creators
+            boolean isStatic = isStatic();
             IProposalCreator[] creators = getAllProposalCreators();
+            ClassNode completionType = getCompletionType(requestor);
             for (IProposalCreator creator : creators) {
-                groovyProposals.addAll(creator.findAllProposals(getCompletionType(requestor), requestor.categories, 
-                        getContext().completionExpression, isStatic()));
+                groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories, 
+                        context.completionExpression, isStatic));
             }
         } else {
             // we are at the statement location of a script
             // return the category proposals only
-            groovyProposals.addAll(new CategoryProposalCreator().findAllProposals((ClassNode) getContext().containingDeclaration, Collections.singleton(VariableScope.DGM_CLASS_NODE), getContext().completionExpression, false));
+            groovyProposals.addAll(new CategoryProposalCreator().findAllProposals((ClassNode) context.containingDeclaration, 
+                    Collections.singleton(VariableScope.DGM_CLASS_NODE), context.completionExpression, false));
         }
+        
+        // get proposals from providers
+        try {
+            List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
+            for (IProposalProvider provider : providers) {
+                List<IGroovyProposal> otherProposals = provider.getStatementAndExpressionProposals(context);
+                if (otherProposals != null) {
+                    groovyProposals.addAll(otherProposals);
+                }
+            }
+        } catch (CoreException e) {
+            GroovyCore.logException("Exception accessing proposal provider registry", e);
+        }
+        
         // filter??? sort???
         List<ICompletionProposal> javaProposals = new ArrayList<ICompletionProposal>(groovyProposals.size());
+        JavaContentAssistInvocationContext javaContext = getJavaContext();
         for (IGroovyProposal groovyProposal : groovyProposals) {
-            javaProposals.add(groovyProposal.createJavaProposal(getContext(), getJavaContext()));
+            javaProposals.add(groovyProposal.createJavaProposal(context, javaContext));
         }
 
-        long end = System.currentTimeMillis();
-        System.out.println("Time for statement content assist (ms): " + (end - start));
         return javaProposals;
     }
 
@@ -142,7 +159,7 @@ public class StatementAndExpressionCompletionProcessor extends
      */
     private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
          return getContext().location == ContentAssistLocation.EXPRESSION ? requestor.resultingType : 
-             getContext().containingDeclaration.getDeclaringClass();
+             getContext().getEnclosingGroovyType();
     }
 
     /**

@@ -18,7 +18,12 @@ package org.codehaus.groovy.eclipse.codeassist.requestor;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * @author Andrew Eisenberg
@@ -48,4 +53,25 @@ public class ContentAssistContext {
         this.unit = unit;
         this.containingDeclaration = containingDeclaration;
     }
+    
+    public IType getEnclosingType() {
+        try {
+            IJavaElement element = unit.getElementAt(completionLocation);
+            if (element != null) {
+                return (IType) element.getAncestor(IJavaElement.TYPE);
+            }
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Exception finding completion for " + unit, e);
+        }
+        return null;
+    }
+
+    public ClassNode getEnclosingGroovyType() {
+        if (containingDeclaration instanceof ClassNode) {
+            return (ClassNode) containingDeclaration;
+        } else {
+            return containingDeclaration.getDeclaringClass();
+        }
+    }
+    
 }

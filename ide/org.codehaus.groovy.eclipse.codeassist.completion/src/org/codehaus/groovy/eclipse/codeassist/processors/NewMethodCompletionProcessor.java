@@ -27,6 +27,8 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.*;
+
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -48,11 +50,11 @@ import org.objectweb.asm.Opcodes;
  * @created Nov 10, 2009
  *
  */
-public class MethodCompletionProcessor extends AbstractGroovyCompletionProcessor {
+public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProcessor {
     
     class GroovyOverrideCompletionProposal extends OverrideCompletionProposal {
         
-public GroovyOverrideCompletionProposal(IJavaProject jproject,
+        public GroovyOverrideCompletionProposal(IJavaProject jproject,
                 ICompilationUnit cu, String methodName, String[] paramTypes,
                 int start, int length, StyledString displayName,
                 String completionProposal) {
@@ -68,31 +70,35 @@ public GroovyOverrideCompletionProposal(IJavaProject jproject,
     }
 
     
-    public MethodCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+    public NewMethodCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
-    }
-    
-    public IType getEnclosingType() {
-        try {
-            IJavaElement element = getContext().unit.getElementAt(getContext().completionLocation);
-            if (element != null) {
-                return (IType) element.getAncestor(IJavaElement.TYPE);
-            }
-        } catch (JavaModelException e) {
-            GroovyCore.logException("Exception finding completion for " + getContext().unit, e);
-        }
-        return null;
     }
     
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         List<MethodNode> unimplementedMethods = getAllUnimplementedMethods(getClassNode());
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
-        IType enclosingType = getEnclosingType();
+        ContentAssistContext context = getContext();
+        IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
             for (MethodNode method : unimplementedMethods) {
-                proposals.add(createProposal(method, getContext(), enclosingType));
+                proposals.add(createProposal(method, context, enclosingType));
             }
         }
+        // now add proposals from relevant proposal providers
+        try {
+            List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
+            for (IProposalProvider provider : providers) {
+                List<MethodNode> newProposals = provider.getNewMethodProposals(context);
+                if (newProposals != null) {
+                    for (MethodNode methodNode : newProposals) {
+                        proposals.add(createProposal(methodNode, context, enclosingType));
+                    }
+                }
+            }
+        } catch (CoreException e) {
+            GroovyCore.logException("Exception looking for proposal providers in " + context.unit.getElementName(), e);
+        }
+        
         return proposals;
     }
 

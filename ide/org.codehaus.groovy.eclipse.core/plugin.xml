@@ -16,7 +16,6 @@
  -->
 
 <plugin>
-   <extension-point id="types" name="GroovyEclipse Types Extensions" schema="schema/org.codehaus.groovy.eclipse.core.types.exsd"/>
    <extension
          id="groovyFailure"
          name="GroovyFailureMarker"

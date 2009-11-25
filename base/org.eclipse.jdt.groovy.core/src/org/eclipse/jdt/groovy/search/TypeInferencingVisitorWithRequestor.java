@@ -150,10 +150,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// no module node, can't do anything
 			return;
 		}
+
 		this.requestor = requestor;
 		enclosingElement = unit;
 		rethrowVisitComplete = true;
-		scopes.push(new VariableScope(null, enclosingDeclarationNode));
+		VariableScope topLevelScope = new VariableScope(null, enclosingDeclarationNode);
+		scopes.push(topLevelScope);
+
+		for (ITypeLookup lookup : lookups) {
+			lookup.initialize(unit, topLevelScope);
+		}
 
 		try {
 			visitPackage(((ModuleNode) enclosingDeclarationNode).getPackage());
@@ -323,6 +329,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		for (Iterator methodIter = node.getMethods().iterator(); methodIter.hasNext();) {
 			MethodNode method = (MethodNode) methodIter.next();
 			currentScope.addVariable(method.getName(), method.getReturnType(), method.getDeclaringClass());
+		}
+
+		// visit <clinit> body because this is where static field initializers are placed
+		MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
+		if (clinit != null && clinit.getCode() instanceof BlockStatement) {
+			for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {
+				element.visit(this);
+			}
 		}
 
 		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
@@ -1091,7 +1105,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * the ModuleNode must be based on the most recent working copies.
 	 */
 	private ModuleNode createModuleNode(GroovyCompilationUnit unit) {
-		if (unit.getOwner() == DefaultWorkingCopyOwner.PRIMARY) {
+		if (unit.getOwner() == null || unit.owner == DefaultWorkingCopyOwner.PRIMARY) {
 			return unit.getModuleNode();
 		} else {
 			return unit.getNewModuleNode();

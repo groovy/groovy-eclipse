@@ -10,8 +10,9 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.factories.ExpressionCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.IGroovyCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.LocalVariableCompletionProcessorFactory;
-import org.codehaus.groovy.eclipse.codeassist.factories.MethodCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ModifiersCompletionProcessorFactory;
+import org.codehaus.groovy.eclipse.codeassist.factories.NewFieldCompletionProcessorFactory;
+import org.codehaus.groovy.eclipse.codeassist.factories.NewMethodCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.TypeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
 import org.codehaus.groovy.eclipse.core.DocumentSourceBuffer;
@@ -41,7 +42,8 @@ public class GroovyCompletionProposalComputer implements
 
         List<IGroovyCompletionProcessorFactory> factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
         factories.add(new ModifiersCompletionProcessorFactory());
-        factories.add(new MethodCompletionProcessorFactory());
+        factories.add(new NewMethodCompletionProcessorFactory());
+        factories.add(new NewFieldCompletionProcessorFactory());
         factories.add(new TypeCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.CLASS_BODY, factories);
         
@@ -66,7 +68,8 @@ public class GroovyCompletionProposalComputer implements
 
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
         factories.add(new ModifiersCompletionProcessorFactory());
-        factories.add(new MethodCompletionProcessorFactory());
+        factories.add(new NewMethodCompletionProcessorFactory());
+        factories.add(new NewFieldCompletionProcessorFactory());
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new ExpressionCompletionProcessorFactory());
         factories.add(new LocalVariableCompletionProcessorFactory());
@@ -79,7 +82,6 @@ public class GroovyCompletionProposalComputer implements
 
     public List<ICompletionProposal> computeCompletionProposals(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {
-        long start = System.currentTimeMillis();
         if (! (context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
         }
@@ -120,9 +122,6 @@ public class GroovyCompletionProposalComputer implements
             
             // filter or sort proposals???
         }
-        long end = System.currentTimeMillis();
-        GroovyCore.trace("Time for statement content assist (ms): " + (end - start));
-
         return proposals;
     }
 

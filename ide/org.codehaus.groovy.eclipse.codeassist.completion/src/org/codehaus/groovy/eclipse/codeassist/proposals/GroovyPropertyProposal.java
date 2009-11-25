@@ -43,8 +43,8 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         
         return new JavaCompletionProposal(property.getName(), context.completionLocation-context.completionExpression.length(),
                 property.getName().length(), getImageFor(property),
-                createDisplayString(property),
-                getRelevance(property.getName().toCharArray()));
+                createDisplayString(property), 2000);
+//                getRelevance(property.getName().toCharArray()));
     }
 
     protected StyledString createDisplayString(PropertyNode property) {

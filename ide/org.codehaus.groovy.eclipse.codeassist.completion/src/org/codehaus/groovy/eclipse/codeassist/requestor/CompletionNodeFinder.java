@@ -185,7 +185,17 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             }
         }
         node.visitContents(this);
-
+        
+        // visit <clinit> body because this is where static field initializers are placed
+        MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
+        if (clinit != null && clinit.getCode() instanceof BlockStatement) {
+            blockStack.push(clinit.getCode());
+            for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {
+                element.visit(this);
+            }
+            blockStack.pop();
+        }
+        
         currentDeclaration = node;
         for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
             element.visit(this);
@@ -269,14 +279,22 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             return;
         }
         
+        
         currentDeclaration = node;
         ClassNode type = node.getType();
         if (type != null && doTest(type)) {
             createContext(null, node.getDeclaringClass(), CLASS_BODY);
         }
+
         blockStack.push(node);
         super.visitField(node);
         blockStack.pop();
+        
+        // do not create a null context here.
+        // in this case, the static initializer has moved to the <clinit> method
+        if (node.isStatic() && !node.hasInitialExpression()) {
+            return;
+        }
         createNullContext();
     }
     
@@ -294,10 +312,46 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         blockStack.push(node);
         super.visitProperty(node);
         blockStack.pop();
+        
+        // do not create a null context here.
+        // in this case, the static initializer has moved to the <clinit> method
+        if (node.isStatic() && !node.hasInitialExpression()) {
+            return;
+        }
+
         createNullContext();
     }
 
 
+
+    /**
+     * @param field
+     */
+    private void maybeCreateEmptyInitialExpression(FieldNode field) {
+        // disable!  I think we don't need this
+        if (true) return;
+        // check that field has no initial expr and offset is after the name 
+        if (! field.hasInitialExpression() && completionOffset > field.getNameEnd() && completionOffset <= field.getEnd()) {
+            Statement block = new BlockStatement();
+            Expression expr = new ClosureExpression(new Parameter[0], block);
+            // since we don't know the real start and end, borrow it from the actual field
+            block.setStart(field.getNameEnd());
+            block.setEnd(field.getEnd());
+            block.setLineNumber(field.getLineNumber());
+            block.setColumnNumber(field.getColumnNumber());
+            block.setLastLineNumber(field.getLastLineNumber());
+            block.setLastColumnNumber(field.getLastColumnNumber());
+            
+            expr.setStart(field.getNameEnd());
+            expr.setEnd(field.getEnd());
+            expr.setLineNumber(field.getLineNumber());
+            expr.setColumnNumber(field.getColumnNumber());
+            expr.setLastLineNumber(field.getLastLineNumber());
+            expr.setLastColumnNumber(field.getLastColumnNumber());
+            
+            field.setInitialValueExpression(expr);
+        }
+    }
 
     @Override
     public void visitVariableExpression(VariableExpression expression) {

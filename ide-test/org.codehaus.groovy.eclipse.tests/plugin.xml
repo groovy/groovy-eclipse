@@ -32,5 +32,17 @@
        </run>
     </runtime>
  </extension>
+ <extension id="testLookup"
+       point="org.eclipse.jdt.groovy.core.typeLookup">
+    <lookup
+          lookup="org.codehaus.groovy.eclipse.tests.TestTypeLookup">
+       <appliesTo
+             projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
+       </appliesTo>
+       <appliesTo
+             projectNature="org.codehaus.groovy.eclipse.tests.testNature2">
+       </appliesTo>
+    </lookup>
+ </extension>
 
 </plugin>

@@ -31,10 +31,16 @@ import org.eclipse.jface.viewers.StyledString;
  */
 public class GroovyFieldProposal extends AbstractGroovyProposal {
 
-    private final FieldNode field;
     
+    private final FieldNode field;
+    private final int relevance;
     public GroovyFieldProposal(FieldNode field) {
         this.field = field;
+        this.relevance = -1;
+    }
+    public GroovyFieldProposal(FieldNode field, int relevance) {
+        this.field = field;
+        this.relevance = relevance;
     }
 
     public IJavaCompletionProposal createJavaProposal(
@@ -47,6 +53,11 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
                 getRelevance(field.getName().toCharArray()));
     }
 
+    @Override
+    protected int getRelevance(char[] name) {
+        return relevance >= 0 ? relevance : super.getRelevance(name);
+    }
+    
     protected StyledString createDisplayString(FieldNode field) {
         StyledString ss = new StyledString();
         

@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
@@ -120,6 +121,10 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 	 */
 	private boolean isObjectType(Expression init) {
 		return init == null || ClassHelper.OBJECT_TYPE.equals(init.getType());
+	}
+
+	public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+		// do nothing
 	}
 
 }

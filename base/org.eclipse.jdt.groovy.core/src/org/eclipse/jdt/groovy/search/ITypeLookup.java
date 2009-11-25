@@ -24,12 +24,15 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 
 /**
  * @author Andrew Eisenberg
  * @created Aug 29, 2009
  *          <p>
  *          Instances of this interface will attempt to determine the type of a Groovy ASTNode that is passed in.
+ *          <p>
+ *          Type Lookups are meant to be stateless. All interesting state should be stored in the variable lookup
  */
 public interface ITypeLookup {
 
@@ -57,7 +60,7 @@ public interface ITypeLookup {
 	 * Determine the type for a method node.
 	 * 
 	 * @param node the AST Node to determine the type for
-	 * @param scope TODO
+	 * @param scope the variable scope available at this location
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
 	TypeLookupResult lookupType(MethodNode node, VariableScope scope);
@@ -66,7 +69,7 @@ public interface ITypeLookup {
 	 * Determine the type for an annotation node.
 	 * 
 	 * @param node the AST Node to determine the type for
-	 * @param scope TODO
+	 * @param scope the variable scope available at this location
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
 	TypeLookupResult lookupType(AnnotationNode node, VariableScope scope);
@@ -75,7 +78,7 @@ public interface ITypeLookup {
 	 * Determine the type for an expression node.
 	 * 
 	 * @param node the AST Node to determine the type for
-	 * @param scope TODO
+	 * @param scope the variable scope available at this location
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
 	TypeLookupResult lookupType(ImportNode node, VariableScope scope);
@@ -85,7 +88,7 @@ public interface ITypeLookup {
 	 * type passed in.
 	 * 
 	 * @param node the AST Node to determine the type for
-	 * @param scope TODO
+	 * @param scope the variable scope available at this location
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
 	TypeLookupResult lookupType(ClassNode node, VariableScope scope);
@@ -94,9 +97,17 @@ public interface ITypeLookup {
 	 * Determine the type for a Parameter node.
 	 * 
 	 * @param node the AST Node to determine the type for
-	 * @param scope TODO
+	 * @param scope the variable scope available at this location
 	 * @return the type for the node and confidence in that type, or null if cannot determine
 	 */
 	TypeLookupResult lookupType(Parameter node, VariableScope scope);
+
+	/**
+	 * A hook to perform any initialization for this lookup. Primary use is to add proper default variables in the variable scope
+	 * 
+	 * @param unit
+	 * @param topLevelScope
+	 */
+	void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope);
 
 }

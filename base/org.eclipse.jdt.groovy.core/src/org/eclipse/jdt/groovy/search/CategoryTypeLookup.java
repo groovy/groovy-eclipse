@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
@@ -121,6 +122,10 @@ public class CategoryTypeLookup implements ITypeLookup {
 
 	public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
 		return null;
+	}
+
+	public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+		// do nothing
 	}
 
 }

@@ -1,24 +1,24 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="org.eclipse.jdt.groovy.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<schema targetNamespace="org.codehaus.groovy.eclipse.codeassist.completion" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
-      <appinfo>
-         <meta.schema plugin="org.eclipse.jdt.groovy.core" id="typeLookup" name="Type Lookup"/>
-      </appinfo>
+      <appInfo>
+         <meta.schema plugin="org.codehaus.groovy.eclipse.codeassist.completion" id="completionProposalProvider" name="Groovy Completion Proposals Provider"/>
+      </appInfo>
       <documentation>
-         Provides a means for extenders to add their own type lookups to the type inferencing engine.
+         Plugs into the Groovy content assist engine and allows clients to propose their own proposals.
       </documentation>
    </annotation>
 
    <element name="extension">
       <annotation>
-         <appinfo>
+         <appInfo>
             <meta.element />
-         </appinfo>
+         </appInfo>
       </annotation>
       <complexType>
-         <sequence minOccurs="1" maxOccurs="unbounded">
-            <element ref="lookup"/>
+         <sequence>
+            <element ref="proposalProvider"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -39,27 +39,27 @@
                <documentation>
                   
                </documentation>
-               <appinfo>
+               <appInfo>
                   <meta.attribute translatable="true"/>
-               </appinfo>
+               </appInfo>
             </annotation>
          </attribute>
       </complexType>
    </element>
 
-   <element name="lookup">
+   <element name="proposalProvider">
       <complexType>
          <sequence minOccurs="1" maxOccurs="unbounded">
             <element ref="appliesTo"/>
          </sequence>
-         <attribute name="lookup" type="string" use="required">
+         <attribute name="proposalProvider" type="string" use="required">
             <annotation>
                <documentation>
                   
                </documentation>
-               <appinfo>
-                  <meta.attribute kind="java" basedOn=":org.eclipse.jdt.groovy.search.ITypeLookup"/>
-               </appinfo>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider"/>
+               </appInfo>
             </annotation>
          </attribute>
       </complexType>
@@ -68,7 +68,7 @@
    <element name="appliesTo">
       <annotation>
          <documentation>
-            Project nature that this lookup applies to.
+            Project nature that this provider applies to.
          </documentation>
       </annotation>
       <complexType>
@@ -77,49 +77,25 @@
                <documentation>
                   Project nature id
                </documentation>
-               <appinfo>
+               <appInfo>
                   <meta.attribute kind="identifier" basedOn="org.eclipse.core.resources.natures/@point"/>
-               </appinfo>
+               </appInfo>
             </annotation>
          </attribute>
       </complexType>
    </element>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="since"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          2.0.0M2
       </documentation>
    </annotation>
 
-   <annotation>
-      <appinfo>
-         <meta.section type="examples"/>
-      </appinfo>
-      <documentation>
-         See CategoryTypeLookup, SimpleTypeLookup, and InferenceByAssignmentStatement.
-      </documentation>
-   </annotation>
 
-   <annotation>
-      <appinfo>
-         <meta.section type="apiinfo"/>
-      </appinfo>
-      <documentation>
-         [Enter API information here.]
-      </documentation>
-   </annotation>
 
-   <annotation>
-      <appinfo>
-         <meta.section type="implementation"/>
-      </appinfo>
-      <documentation>
-         See CategoryTypeLookup, SimpleTypeLookup, and InferenceByAssignmentStatement.
-      </documentation>
-   </annotation>
 
 
 </schema>

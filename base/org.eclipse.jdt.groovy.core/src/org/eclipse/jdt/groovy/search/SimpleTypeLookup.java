@@ -19,7 +19,10 @@ package org.eclipse.jdt.groovy.search;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXACT;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -54,6 +57,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
@@ -198,17 +202,34 @@ public class SimpleTypeLookup implements ITypeLookup {
 				String name = constExpr.getText();
 				PropertyNode property = objectExpressionType.getProperty(name);
 				if (property != null) {
-					return new TypeLookupResult(property.getType(), objectExpressionType, property, confidence, scope);
+					return new TypeLookupResult(property.getType(), property.getDeclaringClass(), property, confidence, scope);
 				}
 				// do not distinguish between method variants
 				List<MethodNode> methods = objectExpressionType.getMethods(name);
 				if (methods.size() > 0) {
-					return new TypeLookupResult(methods.get(0).getReturnType(), declaringType, methods.get(0), confidence, scope);
+					MethodNode methodNode = methods.get(0);
+					return new TypeLookupResult(methodNode.getReturnType(), methodNode.getDeclaringClass(), methodNode, confidence,
+							scope);
+				}
+				if (objectExpressionType.isInterface()) {
+					// super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
+					MethodNode interfaceMethod = findMethodInInterface(objectExpressionType, name);
+					if (interfaceMethod != null) {
+						return new TypeLookupResult(interfaceMethod.getReturnType(), interfaceMethod.getDeclaringClass(),
+								interfaceMethod, confidence, scope);
+					}
+
+					// do the same for properties
+					PropertyNode interfaceProperty = findPropertyInInterface(objectExpressionType, name);
+					if (interfaceProperty != null) {
+						return new TypeLookupResult(interfaceProperty.getType(), interfaceProperty.getDeclaringClass(),
+								interfaceProperty, confidence, scope);
+					}
 				}
 
 				FieldNode field = objectExpressionType.getField(name);
 				if (field != null) {
-					return new TypeLookupResult(field.getType(), declaringType, field, confidence, scope);
+					return new TypeLookupResult(field.getType(), field.getDeclaringClass(), field, confidence, scope);
 				}
 				confidence = UNKNOWN;
 				return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
@@ -279,6 +300,53 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 		// don't know
 		return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
+	}
+
+	/**
+	 * @param objectExpressionType
+	 * @param name
+	 * @return
+	 */
+	private MethodNode findMethodInInterface(ClassNode objectExpressionType, String name) {
+		Set<ClassNode> allInterfaces = new HashSet<ClassNode>();
+		findAllInterfaces(objectExpressionType, allInterfaces);
+		for (ClassNode interf : allInterfaces) {
+			List<MethodNode> methods = interf.getDeclaredMethods(name);
+			if (methods != null && methods.size() > 0) {
+				return methods.get(0);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @param objectExpressionType
+	 * @param name
+	 * @return
+	 */
+	private PropertyNode findPropertyInInterface(ClassNode objectExpressionType, String name) {
+		Set<ClassNode> allInterfaces = new HashSet<ClassNode>();
+		findAllInterfaces(objectExpressionType, allInterfaces);
+		for (ClassNode interf : allInterfaces) {
+			PropertyNode prop = interf.getProperty(name);
+			if (prop != null) {
+				return prop;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @param interf
+	 * @param allInterfaces
+	 */
+	private void findAllInterfaces(ClassNode interf, Set<ClassNode> allInterfaces) {
+		allInterfaces.add(interf);
+		if (!allInterfaces.contains(interf) && interf.getInterfaces() != null) {
+			for (ClassNode superInterface : interf.getInterfaces()) {
+				findAllInterfaces(superInterface, allInterfaces);
+			}
+		}
 	}
 
 	/**
@@ -355,4 +423,9 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return null;
 		}
 	}
+
+	public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+		// do nothing
+	}
+
 }

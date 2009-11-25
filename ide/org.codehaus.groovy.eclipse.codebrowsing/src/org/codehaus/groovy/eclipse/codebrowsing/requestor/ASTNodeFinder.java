@@ -34,6 +34,7 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -202,10 +203,19 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             }
         }
         if (node.getObjectInitializerStatements() != null) {
-            for (Statement s : (Iterable<Statement>) node.getObjectInitializerStatements()) {
-                super.visitStatement(s);
+            for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
+                element.visit(this);
             }
         }
+        
+        // visit <clinit> body because this is where static field initializers are placed
+        MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
+        if (clinit != null && clinit.getCode() instanceof BlockStatement) {
+            for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {
+                element.visit(this);
+            }
+        }
+        
         super.visitClass(node);
     }
 

@@ -16,14 +16,18 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Manages type lookups
@@ -32,12 +36,42 @@ import org.eclipse.core.runtime.Platform;
  * @created Nov 17, 2009
  */
 public class TypeLookupRegistry {
-	private final String TYPE_LOOKUP_EXTENSION = "org.eclipse.jdt.groovy.core.typeLookp";
+	private static final String APPLIES_TO = "appliesTo"; //$NON-NLS-1$
+
+	private static final String NATURE = "projectNature"; //$NON-NLS-1$
+
+	private static final String LOOKUP = "lookup"; //$NON-NLS-1$
+
+	private static final String TYPE_LOOKUP_EXTENSION = "org.eclipse.jdt.groovy.core.typeLookup"; //$NON-NLS-1$
+
+	private final static TypeLookupRegistry DEFAULT = new TypeLookupRegistry();
+
+	static TypeLookupRegistry getRegistry() {
+		return DEFAULT;
+	}
 
 	// maps from project nature to lists of type lookup classes
-	private Map<String, List<Class<ITypeLookup>>> natureLookupMap = new HashMap<String, List<Class<ITypeLookup>>>();
+	private Map<String, List<IConfigurationElement>> natureLookupMap = new HashMap<String, List<IConfigurationElement>>();
 
-	TypeLookupRegistry() {
+	List<ITypeLookup> getLookupsFor(IProject project) throws CoreException {
+		String[] natures = project.getDescription().getNatureIds();
+		List<ITypeLookup> lookups = new ArrayList<ITypeLookup>();
+		for (String nature : natures) {
+			List<IConfigurationElement> configs = natureLookupMap.get(nature);
+			if (configs != null) {
+				for (IConfigurationElement config : configs) {
+					try {
+						lookups.add((ITypeLookup) config.createExecutableExtension(LOOKUP));
+					} catch (CoreException e) {
+						Util.log(e, "Problem creating lookup for type " + config.getAttribute(LOOKUP));
+					}
+				}
+			}
+		}
+		return lookups;
+	}
+
+	private TypeLookupRegistry() {
 		initialize();
 	}
 
@@ -56,6 +90,27 @@ public class TypeLookupRegistry {
 	 * @param config
 	 */
 	private void createLookup(IConfigurationElement config) {
-
+		try {
+			if (config.getName().equals(LOOKUP)) {
+				if (config.getAttribute(LOOKUP) != null) {
+					IConfigurationElement[] appliesTos = config.getChildren(APPLIES_TO);
+					for (IConfigurationElement appliesTo : appliesTos) {
+						String nature = appliesTo.getAttribute(NATURE);
+						List<IConfigurationElement> elts;
+						if (natureLookupMap.containsKey(nature)) {
+							elts = natureLookupMap.get(nature);
+						} else {
+							elts = new ArrayList<IConfigurationElement>(3);
+							natureLookupMap.put(nature, elts);
+						}
+						elts.add(config);
+					}
+				} else {
+					Util.log(new RuntimeException(), "Type lookup registry extension found with no type lookup class.");
+				}
+			}
+		} catch (Exception e) {
+			Util.log(e, "Problem registering type lookups");
+		}
 	}
 }

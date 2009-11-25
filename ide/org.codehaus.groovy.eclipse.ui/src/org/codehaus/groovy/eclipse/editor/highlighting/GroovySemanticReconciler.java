@@ -33,7 +33,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager;
 import org.eclipse.jdt.internal.ui.text.JavaPresentationReconciler;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
-import org.eclipse.jdt.ui.text.IJavaColorConstants;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.TextAttribute;
