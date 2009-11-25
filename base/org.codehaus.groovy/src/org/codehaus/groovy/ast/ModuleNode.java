@@ -16,6 +16,16 @@
 package org.codehaus.groovy.ast;
 
 import groovy.lang.Binding;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -26,9 +36,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerHelper;
 import org.objectweb.asm.Opcodes;
-
-import java.io.File;
-import java.util.*;
 
 /**
  * Represents a module, which consists typically of a class declaration
@@ -82,10 +89,27 @@ public class ModuleNode extends ASTNode implements Opcodes {
         }
         return classes;
     }
-
+    
+    // FIXASC (groovychange) faster
+    // old
+	//    private boolean isPackageInfo() {
+	//    	return context != null && context.getName() != null && context.getName().endsWith("package-info.groovy");
+	//    }
+    // new
+    private int knowIfPackageInfo = 0; // 0=dontknow 1=yes 2=no
+    
     private boolean isPackageInfo() {
-        return context != null && context.getName() != null && context.getName().endsWith("package-info.groovy");
+    	if (knowIfPackageInfo==0) {
+	    	if (context != null && context.getName() != null && context.getName().endsWith("package-info.groovy")) {
+	    		knowIfPackageInfo=1;
+	    	} else {
+	    		knowIfPackageInfo=2;
+	    	}
+    	}
+    	return knowIfPackageInfo==1;
     }
+    // FIXASC (groovychange) end
+
 
     public List<ImportNode> getImports() {
         return new ArrayList<ImportNode>(imports.values());
