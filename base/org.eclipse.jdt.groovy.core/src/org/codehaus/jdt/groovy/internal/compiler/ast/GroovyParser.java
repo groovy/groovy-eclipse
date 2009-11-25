@@ -15,12 +15,10 @@ import java.io.File;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import groovy.lang.GroovyClassLoader;
 
-import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -175,8 +173,20 @@ public class GroovyParser {
 		CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
 		// groovyCompilerConfig.setPluginFactory(new ErrorRecoveredCSTParserPluginFactory(null));
 		ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilerConfig);
-		SourceUnit groovySourceUnit = new SourceUnit(new String(sourceUnit.getFileName()), new String(sourceCode),
-				groovyCompilerConfig, groovyCompilationUnit.getClassLoader(), errorCollector);
+		String filepath = null;
+
+		// This check is necessary because the filename is short (as in the last part, eg. Foo.groovy) for types coming in
+		// from the hierarchy resolver. If there is the same type in two different packages then the compilation process
+		// is going to go wrong because the filename is used as a key in some groovy data structures. This can lead to false
+		// complaints about the same file defining duplicate types.
+		if (sourceUnit instanceof org.eclipse.jdt.internal.compiler.batch.CompilationUnit) {
+			filepath = new String(((org.eclipse.jdt.internal.compiler.batch.CompilationUnit) sourceUnit).fileName);
+		} else {
+			filepath = new String(sourceUnit.getFileName());
+		}
+
+		SourceUnit groovySourceUnit = new SourceUnit(filepath, new String(sourceCode), groovyCompilerConfig, groovyCompilationUnit
+				.getClassLoader(), errorCollector);
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
 				sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);
 		// FIXASC (M2) get this from the Antlr parser
