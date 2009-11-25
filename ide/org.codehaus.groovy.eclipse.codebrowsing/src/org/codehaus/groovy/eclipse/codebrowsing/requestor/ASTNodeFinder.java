@@ -84,6 +84,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     @Override
     protected void visitConstructorOrMethod(MethodNode node,
             boolean isConstructor) {
+        // check to see if synthetic run method of scripts
+        if (isRunMethod(node)) {
+            return;
+        }
+        
         ClassNode expression = node.getReturnType();
         if (expression != null) {
             check(expression);
@@ -96,6 +101,18 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         checkParameters(node.getParameters());
         super.visitConstructorOrMethod(node, isConstructor);
         check(node);
+    }
+
+    /**
+     * @param node
+     * @return
+     */
+    private boolean isRunMethod(MethodNode node) {
+        if (node.getName().equals("run") && node.getParameters().length == 0) {
+            ClassNode declaring = node.getDeclaringClass();
+            return (node.getStart() == declaring.getStart() && node.getEnd() == declaring.getEnd());
+        }
+        return false;
     }
 
     /**

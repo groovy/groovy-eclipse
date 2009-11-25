@@ -160,7 +160,7 @@ public class LocationSupportTests extends TestCase {
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getStatementBlock().getStart());
-        assertEquals("def x = 7\n  x++\n  def y = []".length(), module.getStatementBlock().getEnd());
+        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}".length(), module.getStatementBlock().getEnd());
         assertEquals("".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
         assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
         assertEquals("def x = 7\n  ".length(), ((ASTNode) module.getStatementBlock().getStatements().get(1)).getStart());
