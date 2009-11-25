@@ -219,7 +219,31 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 		},"success");		
 	}
-	
+
+//	// fails on 1.7b2
+//	public void testRecursion_GR531() {
+//		this.runConformTest(new String[] {
+//			"XXX.groovy",
+//			"class XXX extends XXX {\n" + 
+////			"  public static void main(String[] argv) {\n"+
+////			"    print \"success\"\n" + 
+////			"  }\n"+
+//			"}\n",
+//		},"success");		
+//	}
+//
+//	// fails on 1.6.5 and 1.7b2
+//	public void testRecursion_GR531_2() {
+//		this.runConformTest(new String[] {
+//			"XXX.groovy",
+//			"class XXX extends XXX {\n" + 
+//			"  public static void main(String[] argv) {\n"+
+//			"    print \"success\"\n" + 
+//			"  }\n"+
+//			"}\n",
+//		},"success");		
+//	}
+
 //	public void testTargetMetaAnnotation() {
 //		this.runNegativeTest(new String[] {
 //			"Anno.java",
