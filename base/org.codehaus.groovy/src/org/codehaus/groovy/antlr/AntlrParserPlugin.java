@@ -245,38 +245,73 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         output.setLastLineNumber(locations.getEndLine());
         
         // only occurs if in a script
+        // start location should be the start of either the first method or statement
+        // end location should be the end of either the last method or statement
         BlockStatement statements = output.getStatementBlock();
-        if (statements != null && statements.getStatements() != null && statements.getStatements().size() > 0) {
-            Statement first = statements.getStatements().get(0);
-            Statement last = statements.getStatements().get(statements.getStatements().size()-1);
-            statements.setStart(first.getStart());
-            statements.setLineNumber(first.getLineNumber());
-            statements.setColumnNumber(first.getColumnNumber());
-            statements.setEnd(last.getEnd());
-            statements.setLastLineNumber(last.getLastLineNumber());
-            statements.setLastColumnNumber(last.getLastColumnNumber());
+        List<MethodNode> methods = output.getMethods();
+        if (hasScriptMethodsOrStatements(statements, methods)) {
+            ASTNode first = getFirst(statements, methods);
+            ASTNode last = getLast(statements, methods);
+            if (hasScriptStatements(statements)) {
+                statements.setStart(first.getStart());
+                statements.setLineNumber(first.getLineNumber());
+                statements.setColumnNumber(first.getColumnNumber());
+                statements.setEnd(last.getEnd());
+                statements.setLastLineNumber(last.getLastLineNumber());
+                statements.setLastColumnNumber(last.getLastColumnNumber());
+            }
             if (output.getClasses().size() > 0) {
             	ClassNode scriptClass = output.getClasses().get(0);
-            	scriptClass.setStart(statements.getStart());
-            	scriptClass.setLineNumber(statements.getLineNumber());
-            	scriptClass.setColumnNumber(statements.getColumnNumber());
-            	scriptClass.setEnd(statements.getEnd());
-            	scriptClass.setLastLineNumber(statements.getLastLineNumber());
-            	scriptClass.setLastColumnNumber(statements.getLastColumnNumber());
+            	scriptClass.setStart(first.getStart());
+            	scriptClass.setLineNumber(first.getLineNumber());
+            	scriptClass.setColumnNumber(first.getColumnNumber());
+            	scriptClass.setEnd(last.getEnd());
+            	scriptClass.setLastLineNumber(last.getLastLineNumber());
+            	scriptClass.setLastColumnNumber(last.getLastColumnNumber());
             	
             	// fix the run method to contain the start and end locations of the statement block
             	MethodNode runMethod = scriptClass.getDeclaredMethod("run", new Parameter[0]);
-            	runMethod.setStart(statements.getStart());
-            	runMethod.setLineNumber(statements.getLineNumber());
-            	runMethod.setColumnNumber(statements.getColumnNumber());
-            	runMethod.setEnd(statements.getEnd());
-            	runMethod.setLastLineNumber(statements.getLastLineNumber());
-            	runMethod.setLastColumnNumber(statements.getLastColumnNumber());
+            	runMethod.setStart(first.getStart());
+            	runMethod.setLineNumber(first.getLineNumber());
+            	runMethod.setColumnNumber(first.getColumnNumber());
+            	runMethod.setEnd(last.getEnd());
+            	runMethod.setLastLineNumber(last.getLastLineNumber());
+            	runMethod.setLastColumnNumber(last.getLastColumnNumber());
             }
         }
     }
-    // end
 
+    // return the first ast node in the script, either a method or a statement
+    private ASTNode getFirst(BlockStatement statements, List<MethodNode> methods) {
+        Statement firstStatement = hasScriptStatements(statements) ? statements.getStatements().get(0) : null;
+        MethodNode firstMethod = hasScriptMethods(methods) ? methods.get(0) : null;
+        int statementStart = firstStatement != null ? firstStatement.getStart() : Integer.MAX_VALUE;
+        int methodStart = firstMethod != null ? firstMethod.getStart() : Integer.MAX_VALUE;
+        return statementStart <= methodStart ? firstStatement : firstMethod;
+    }
+
+    // return the last ast node in the script, either a method or a statement
+    private ASTNode getLast(BlockStatement statements, List<MethodNode> methods) {
+        Statement lastStatement = hasScriptStatements(statements) ? statements.getStatements().get(statements.getStatements().size()-1) : null;
+        MethodNode lastMethod = hasScriptMethods(methods) ? methods.get(methods.size()-1) : null;
+        int statementStart = lastStatement != null ? lastStatement.getEnd() : Integer.MIN_VALUE;
+        int methodStart = lastMethod != null ? lastMethod.getStart() : Integer.MIN_VALUE;
+        return statementStart >= methodStart ? lastStatement : lastMethod;
+    }
+    
+    private boolean hasScriptMethodsOrStatements(BlockStatement statements, List<MethodNode> methods) {
+        return hasScriptStatements(statements) ||
+               hasScriptMethods(methods);
+    }
+    private boolean hasScriptMethods(List<MethodNode> methods) {
+        return methods != null && methods.size() > 0;
+    }
+    private boolean hasScriptStatements(BlockStatement statements) {
+        return statements != null && statements.getStatements() != null && statements.getStatements().size() > 0;
+    }
+    // end fix source locations
+
+    
     /**
      * Converts the Antlr AST to the Groovy AST
      */

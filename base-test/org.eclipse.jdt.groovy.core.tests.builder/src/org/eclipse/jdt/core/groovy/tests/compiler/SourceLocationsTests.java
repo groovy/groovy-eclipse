@@ -172,8 +172,56 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
 	}
+	
+	public void testSourceLocationsForScript1() throws Exception {
+        String source = "package p1;\n"+
+        "def x";
+        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+        assertScript(source, unit, "def x", "def x");	    
+        assertUnit(unit, source);
+	}
 
-	public void testSourceLocationsConstructorWithDefaultParams() throws Exception {
+	public void testSourceLocationsForScript2() throws Exception {
+	    String source = "package p1;\n"+
+	    "def x() { }";
+	    ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+	    assertScript(source, unit, "def x", "{ }");	    
+	    assertUnit(unit, source);
+	}
+	
+	public void testSourceLocationsForScript3() throws Exception {
+	    String source = "package p1;\n"+
+	    "x() \n def x() { }";
+	    ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+	    assertScript(source, unit, "x()", "{ }");	    
+	    assertUnit(unit, source);
+	}
+	
+	public void testSourceLocationsForScript4() throws Exception {
+	    String source = "package p1;\n"+
+	    "def x() { }\nx()";
+	    ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+	    assertScript(source, unit, "def x", "x()");	    
+	    assertUnit(unit, source);
+	}
+	
+	public void testSourceLocationsForScript5() throws Exception {
+	    String source = "package p1;\n"+
+	    "def x() { }\nx()\ndef y() { }";
+	    ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+	    assertScript(source, unit, "def x", "def y() { }");	    
+	    assertUnit(unit, source);
+	}
+	
+	public void testSourceLocationsForScript6() throws Exception {
+	    String source = "package p1;\n"+
+	    "x()\n def x() { }\n\ndef y() { }\ny()";
+	    ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+	    assertScript(source, unit, "x()", "\ny()");	    
+	    assertUnit(unit, source);
+	}
+	
+    public void testSourceLocationsConstructorWithDefaultParams() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
 		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\", String blargs = \"8\") {\n"+
@@ -260,6 +308,18 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 		assertEquals(unit + "\nhas incorrect source end value", source.length(), unit.getSourceRange().getLength());
 	}
 	
+    private void assertScript(String source, ICompilationUnit unit, String startText, String endText) throws Exception {
+        IType script = unit.getTypes()[0];
+        IMethod runMethod = script.getMethod("run", new String[0]);
+        int start = source.indexOf(startText);
+        int end = source.lastIndexOf(endText)+endText.length()+1;
+        assertEquals("Wrong start for script class.  Text:\n" + source, start, script.getSourceRange().getOffset());
+        assertEquals("Wrong end for script class.  Text:\n" + source, end, script.getSourceRange().getOffset()+script.getSourceRange().getLength());
+        assertEquals("Wrong start for run method.  Text:\n" + source, start, runMethod.getSourceRange().getOffset());
+        assertEquals("Wrong end for run method.  Text:\n" + source, end, runMethod.getSourceRange().getOffset()+script.getSourceRange().getLength());
+    }
+
+
 	
 	private IPath createGenericProject() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
