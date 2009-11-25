@@ -24,9 +24,14 @@ import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
@@ -39,21 +44,46 @@ import org.eclipse.ui.IWorkbenchPart;
  */
 public class RemoveGroovyNatureAction implements IObjectActionDelegate {
     private List<IProject> currSelected = new LinkedList<IProject>();
+    
+    private IWorkbenchPart targetPart;
+    
+    private boolean shouldAskToRemoveJars = true;
+
 
     public void run(final IAction action) {
         
         if (currSelected != null && currSelected.size() > 0) {
-            GroovyCore.trace("AddGroovySupportAction.run()");
+            GroovyCore.trace("RemoveGroovySupportAction.run()");
             
             for (IProject project : currSelected) {
                 GroovyCore.trace("   to " + project.getName());
                 try {
 					GroovyRuntime.removeGroovyNature(project);
+					IJavaProject javaProject = JavaCore.create(project);
+					if (GroovyRuntime.hasGroovyClasspathContainer(javaProject)) {
+					    boolean shouldRemove;
+					    if (shouldAskToRemoveJars) {
+					        shouldRemove = MessageDialog.openQuestion(getShell(), "Remove Groovy jars?", "Do you want to also remove the groovy runtime jars from project " + project.getName() + "?");
+					    } else {
+					        // do automatically during testing
+					        shouldRemove = true;
+					    }
+					    if (shouldRemove) {
+					        GroovyRuntime.removeGroovyClasspathContainer(javaProject);
+					    }
+					}
 				} catch (CoreException e) {
 					GroovyCore.logException("Error removing Groovy nature", e);
 				}
             }
         }
+    }
+
+    /**
+     * @return
+     */
+    private Shell getShell() {
+        return targetPart != null ? targetPart.getSite().getShell() : Display.getDefault().getActiveShell();
     }
 
     /**
@@ -94,5 +124,11 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
      * @see IEditorActionDelegate#setActivePart
      */
     public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
+        this.targetPart = targetPart;
+    }
+    
+    // for testing ensure there is no ui modal dialog
+    public void doNotAskToRemoveJars() {
+        this.shouldAskToRemoveJars = false;
     }
 }

@@ -47,6 +47,7 @@ public class GroovyNatureActionTestCase extends EclipseTestCase {
 		GroovyRuntime.removeGroovyNature(testProject.getProject());
 		addGroovyAction = new AddGroovyNatureAction();
 		removeGroovyAction = new RemoveGroovyNatureAction();
+		removeGroovyAction.doNotAskToRemoveJars();
 		convert = new ConvertLegacyProject();
 	}
 	
@@ -66,17 +67,18 @@ public class GroovyNatureActionTestCase extends EclipseTestCase {
 		addGroovyAction.selectionChanged(null, selection);
 		
 		assertFalse("testProject should not have Groovy nature before testing action", hasGroovyNature());
-		
+		// groovy runtime added automatically for testProject
+//        assertFalse("testProject should not have Groovy jars after running remove nature action", hasGroovyJars());
+
 		addGroovyAction.run(null);
 		
 		assertTrue("testProject should have Groovy nature after testing action", hasGroovyNature());
+        assertTrue("testProject should have Groovy jars after running remove nature action", hasGroovyJars());
 
 		addGroovyAction.run(null);
 		
 		assertTrue("testProject should still have Groovy nature after testing action twice", hasGroovyNature());
-		
-		
-		
+        assertTrue("testProject should have Groovy jars after running remove nature action", hasGroovyJars());
 	}
 	
 	/**
@@ -114,21 +116,26 @@ public class GroovyNatureActionTestCase extends EclipseTestCase {
         removeGroovyAction.selectionChanged(null, selection);
         
         assertFalse("testProject should not have Groovy nature before testing action", hasGroovyNature());
+        assertTrue("testProject should have Groovy jars after running add nature action", hasGroovyJars());
         
         removeGroovyAction.run(null);
         
         assertFalse("testProject should not have Groovy nature after running remove nature action", hasGroovyNature());
+        assertFalse("testProject should not have Groovy jars after running remove nature action", hasGroovyJars());
 
         addGroovyAction.run(null);
         
         assertTrue("testProject should have Groovy nature after testing action", hasGroovyNature());
+        assertTrue("testProject should have Groovy jars after running add nature action", hasGroovyJars());
 
         removeGroovyAction.run(null);
         
         assertFalse("testProject should not have Groovy nature after running remove nature action", hasGroovyNature());
+        assertFalse("testProject should not have Groovy jars after running remove nature action", hasGroovyJars());
     }
 	
-	public void testConvertLegacyAction() throws Exception {
+
+    public void testConvertLegacyAction() throws Exception {
 	    // can't add old nature since it doesn't exist
 //	    testProject.addNature(ConvertLegacyProject.OLD_NATURE);
 	    testProject.addBuilder(ConvertLegacyProject.OLD_BUILDER);
@@ -153,4 +160,11 @@ public class GroovyNatureActionTestCase extends EclipseTestCase {
         return false;
     }
 
+    /**
+     * @return
+     * @throws CoreException 
+     */
+    private boolean hasGroovyJars() throws CoreException {
+        return GroovyRuntime.hasGroovyClasspathContainer(testProject.getJavaProject());
+    }
 }

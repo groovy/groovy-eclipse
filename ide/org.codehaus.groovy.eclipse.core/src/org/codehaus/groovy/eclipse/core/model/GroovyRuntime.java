@@ -119,55 +119,55 @@ public class GroovyRuntime {
         return false;
     }
 
-    /**
-     * Not used, but could be used to exclude all groovy files from compilation
-     * @param javaProject
-     */
-    public static void excludeGroovyFilesFromOutput(
-            final IJavaProject javaProject) {
-        // make sure .groovy files are not copied to the output dir
-        String excludedResources = javaProject.getOption(
-                JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER, true);
-        if (excludedResources.indexOf("*.groovy") == -1) {
-            excludedResources = excludedResources.length() == 0 ? "*.groovy"
-                    : excludedResources + ",*.groovy";
-            javaProject.setOption(
-                    JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER,
-                    excludedResources);
-        }
-    }
-
-    /**
-     * Not used, but could be used to include all groovy files for compilation
-     * @param javaProject
-     */
-    public static void includeGroovyFilesInOutput(final IJavaProject javaProject) {
-        // make sure .groovy files are not copied to the output dir
-        final String[] excludedResourcesArray = StringUtils.split(
-                javaProject.getOption(
-                        JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER, true),
-                ",");
-        final List<String> excludedResources = newEmptyList();
-        for (int i = 0; i < excludedResourcesArray.length; i++) {
-            final String excluded = excludedResourcesArray[i].trim();
-            if (excluded.endsWith("*.groovy"))
-                continue;
-            excludedResources.add(excluded);
-        }
-        javaProject.setOption(JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER,
-                StringUtils.join(excludedResources, ","));
-    }
+//    /**
+//     * Not used, but could be used to exclude all groovy files from compilation
+//     * @param javaProject
+//     */
+//    public static void excludeGroovyFilesFromOutput(
+//            final IJavaProject javaProject) {
+//        // make sure .groovy files are not copied to the output dir
+//        String excludedResources = javaProject.getOption(
+//                JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER, true);
+//        if (excludedResources.indexOf("*.groovy") == -1) {
+//            excludedResources = excludedResources.length() == 0 ? "*.groovy"
+//                    : excludedResources + ",*.groovy";
+//            javaProject.setOption(
+//                    JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER,
+//                    excludedResources);
+//        }
+//    }
+//
+//    /**
+//     * Not used, but could be used to include all groovy files for compilation
+//     * @param javaProject
+//     */
+//    public static void includeGroovyFilesInOutput(final IJavaProject javaProject) {
+//        // make sure .groovy files are not copied to the output dir
+//        final String[] excludedResourcesArray = StringUtils.split(
+//                javaProject.getOption(
+//                        JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER, true),
+//                ",");
+//        final List<String> excludedResources = newEmptyList();
+//        for (int i = 0; i < excludedResourcesArray.length; i++) {
+//            final String excluded = excludedResourcesArray[i].trim();
+//            if (excluded.endsWith("*.groovy"))
+//                continue;
+//            excludedResources.add(excluded);
+//        }
+//        javaProject.setOption(JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER,
+//                StringUtils.join(excludedResources, ","));
+//    }
 
     public static void addGroovyClasspathContainer(
             final IJavaProject javaProject) {
         try {
-            if (hasGroovyClasspathContainer(javaProject))
+            if (hasGroovyClasspathContainer(javaProject)) {
                 return;
-
+            }
+            
             final IClasspathEntry containerEntry = JavaCore.newContainerEntry(
                     GroovyClasspathContainer.CONTAINER_ID, true);
             addClassPathEntry(javaProject, containerEntry);
-            excludeGroovyFilesFromOutput(javaProject);
         } catch (final CoreException ce) {
             GroovyCore.logException("Failed to add groovy classpath container:"
                     + ce.getMessage(), ce);
@@ -175,6 +175,30 @@ public class GroovyRuntime {
         }
     }
 
+    public static void removeGroovyClasspathContainer(
+            final IJavaProject javaProject) {
+        try {
+            if (!hasGroovyClasspathContainer(javaProject)) {
+                return;
+            }
+            
+            IClasspathEntry[] entries = javaProject.getRawClasspath();
+            int removeIndex = -1;
+            for (int i = 0; i < entries.length; i++) {
+                if (entries[i].getPath().equals(GroovyClasspathContainer.CONTAINER_ID)) {
+                    removeIndex = i;
+                    break;
+                }
+            }
+            IClasspathEntry[] newEntries = (IClasspathEntry[]) ArrayUtils.remove(entries, removeIndex);
+            javaProject.setRawClasspath(newEntries, null);
+        } catch (final CoreException ce) {
+            GroovyCore.logException("Failed to add groovy classpath container:"
+                    + ce.getMessage(), ce);
+            throw new RuntimeException(ce);
+        }
+    }
+    
     /**
      * Adds a library/folder that already exists in the project to the
      * classpath. Only added if it is not already on the classpath.
@@ -231,6 +255,22 @@ public class GroovyRuntime {
         project.setRawClasspath(newEntries, null);
     }
 
+    /**
+     * Removes a classpath entry to a project
+     * 
+     * @param project
+     *            The project to remove the entry.
+     * @param newEntry
+     *            The entry to remove.
+     * @throws JavaModelException
+     */
+    public static void removeClassPathEntry(IJavaProject project,
+            IClasspathEntry newEntry) throws JavaModelException {
+        IClasspathEntry[] newEntries = (IClasspathEntry[]) ArrayUtils.removeElement(
+                project.getRawClasspath(), newEntry);
+        project.setRawClasspath(newEntries, null);
+    }
+    
     /**
      * Looks through a set of classpath entries and checks to see if the path is
      * in them.
