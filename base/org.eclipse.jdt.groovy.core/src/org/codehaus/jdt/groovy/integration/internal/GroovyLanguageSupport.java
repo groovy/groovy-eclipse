@@ -61,12 +61,13 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings("restriction")
 public class GroovyLanguageSupport implements LanguageSupport {
 
-	public Parser getParser(CompilerOptions compilerOptions, ProblemReporter problemReporter,
+	public Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
 			boolean parseLiteralExpressionsAsConstants, int variant) {
 		if (variant == 1) {
-			return new MultiplexingParser(compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
+			return new MultiplexingParser(requestor, compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
 		} else { // variant==2
-			return new MultiplexingCommentRecorderParser(compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
+			return new MultiplexingCommentRecorderParser(requestor, compilerOptions, problemReporter,
+					parseLiteralExpressionsAsConstants);
 		}
 	}
 

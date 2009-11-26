@@ -19,11 +19,13 @@ import java.util.Map;
 
 import groovy.lang.GroovyClassLoader;
 
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -31,6 +33,8 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
+import org.eclipse.jdt.internal.core.builder.BuildNotifier;
 
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates with the groovy parser and translates results
@@ -48,6 +52,7 @@ public class GroovyParser {
 	private String gclClasspath;
 	public static IGroovyDebugRequestor debugRequestor;
 	private CompilerOptions compilerOptions;
+	private Object requestor;
 
 	/*
 	 * Each project is allowed a GroovyClassLoader that will be used to load transform definitions and supporting classes. A cache
@@ -80,10 +85,14 @@ public class GroovyParser {
 		// System.out.println("Cleaning up loader for project " + projectName + "?" + (removed == null ? "no" : "yes"));
 	}
 
-	// FIXASC (RC1) review callers who pass null for options
 	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
-		String path = (options == null ? null : options.groovyClassLoaderPath);
+		this(null, options, problemReporter);
+	}
 
+	// FIXASC (RC1) review callers who pass null for options
+	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter) {
+		String path = (options == null ? null : options.groovyClassLoaderPath);
+		this.requestor = requestor;
 		// FIXASC (M2) set parent of the loader to system or context class loader?
 
 		// record any paths we use for a project so that when the project is cleared,
@@ -193,7 +202,16 @@ public class GroovyParser {
 		compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode);
 		groovyCompilationUnit.addSource(groovySourceUnit);
 
-		// boolean success =
+		// Check if it is worth plugging in a callback listener for parse/geneation
+		if (requestor instanceof org.eclipse.jdt.internal.compiler.Compiler) {
+			org.eclipse.jdt.internal.compiler.Compiler compiler = ((org.eclipse.jdt.internal.compiler.Compiler) requestor);
+			if (compiler.requestor instanceof BatchImageBuilder) {
+				BuildNotifier notifier = ((BatchImageBuilder) compiler.requestor).notifier;
+				if (notifier != null) {
+					groovyCompilationUnit.setProgressListener(new ProgressListenerImpl(notifier));
+				}
+			}
+		}
 		gcuDeclaration.processToPhase(Phases.CONVERSION);
 
 		// Groovy moduleNode is null when there is a fatal error
@@ -209,6 +227,55 @@ public class GroovyParser {
 			debugRequestor.acceptCompilationUnitDeclaration(gcuDeclaration);
 		}
 		return gcuDeclaration;
+	}
+
+	/**
+	 * ProgressListener is called back when parsing of a file or generation of a classfile completes. By calling back to the build
+	 * notifier we ignore those long pauses where it look likes it has hung!
+	 * 
+	 * Note: this does not move the progress bar, it merely updates the text
+	 */
+	static class ProgressListenerImpl implements ProgressListener {
+
+		private BuildNotifier notifier;
+
+		public ProgressListenerImpl(BuildNotifier notifier) {
+			this.notifier = notifier;
+		}
+
+		public void parseComplete(int phase, String sourceUnitName) {
+			try {
+				// Chop it down to the containing package folder
+				int lastSlash = sourceUnitName.lastIndexOf("/");
+				if (lastSlash == -1) {
+					lastSlash = sourceUnitName.lastIndexOf("\\");
+				}
+				if (lastSlash != -1) {
+					StringBuffer msg = new StringBuffer();
+					msg.append("Parsing groovy source in ");
+					msg.append(sourceUnitName, 0, lastSlash);
+					notifier.subTask(msg.toString());
+				}
+			} catch (Exception e) {
+				// doesn't matter
+			}
+			notifier.checkCancel();
+		}
+
+		public void generateComplete(int phase, ClassNode classNode) {
+			try {
+				String pkgName = classNode.getPackageName();
+				if (pkgName != null && pkgName.length() > 0) {
+					StringBuffer msg = new StringBuffer();
+					msg.append("Generating groovy classes in ");
+					msg.append(pkgName);
+					notifier.subTask(msg.toString());
+				}
+			} catch (Exception e) {
+				// doesn't matter
+			}
+			notifier.checkCancel();
+		}
 	}
 
 	public void reset() {

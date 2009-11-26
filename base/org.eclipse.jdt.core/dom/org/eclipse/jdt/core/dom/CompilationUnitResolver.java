@@ -18,7 +18,6 @@ import java.util.Map;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -53,7 +52,6 @@ import org.eclipse.jdt.internal.compiler.util.Messages;
 import org.eclipse.jdt.internal.core.BinaryMember;
 import org.eclipse.jdt.internal.core.CancelableNameEnvironment;
 import org.eclipse.jdt.internal.core.CancelableProblemFactory;
-import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.SourceRefElement;
@@ -307,7 +305,7 @@ class CompilationUnitResolver extends Compiler {
 		// old
 		// this.parser = new CommentRecorderParser(this.problemReporter, false);
 		// new
-		this.parser = LanguageSupportFactory.getParser(this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant);
+		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant);
 		// GROOVY end
 	}
 	public void process(CompilationUnitDeclaration unit, int i) {
@@ -407,7 +405,7 @@ class CompilationUnitResolver extends Compiler {
 		// new DefaultProblemFactory()),
 		// false);
 		// new
-		Parser parser = LanguageSupportFactory.getParser(
+		Parser parser = LanguageSupportFactory.getParser(null, 
 				compilerOptions, new ProblemReporter(
 						DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 						compilerOptions,

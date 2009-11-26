@@ -41,8 +41,8 @@ public class LanguageSupportFactory {
 	
 	public static final int CommentRecorderParserVariant = 2;
 	
-	public static Parser getParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
-		return getLanguageSupport().getParser(compilerOptions,problemReporter,parseLiteralExpressionsAsConstants, variant);
+	public static Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
+		return getLanguageSupport().getParser(requestor, compilerOptions,problemReporter,parseLiteralExpressionsAsConstants, variant);
 	}
 	
 	public static IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, 

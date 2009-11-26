@@ -31,10 +31,11 @@ public class MultiplexingParser extends Parser {
 
 	GroovyParser groovyParser;
 
-	public MultiplexingParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean optimizeStringLiterals) {
+	public MultiplexingParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
+			boolean optimizeStringLiterals) {
 		super(problemReporter, optimizeStringLiterals);
 		// The superclass that is extended is in charge of parsing .java files
-		groovyParser = new GroovyParser(compilerOptions, problemReporter);
+		groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter);
 	}
 
 	@Override

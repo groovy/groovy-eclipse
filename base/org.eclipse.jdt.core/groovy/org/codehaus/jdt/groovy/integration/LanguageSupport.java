@@ -33,7 +33,7 @@ import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
 public interface LanguageSupport {
 
-	Parser getParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant);
+	Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant);
 
 	IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, 
 			boolean optimizeStringLiterals, boolean useSourceJavadocParser);

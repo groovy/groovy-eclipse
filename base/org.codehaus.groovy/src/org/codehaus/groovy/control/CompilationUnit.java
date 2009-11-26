@@ -462,6 +462,22 @@ public class CompilationUnit extends ProcessingUnit {
 
         public abstract void call(ProcessingUnit context, int phase) throws CompilationFailedException;
     }
+    
+    // FIXASC (groovychange)
+    public interface ProgressListener {
+		void parseComplete(int phase, String sourceUnitName);
+		void generateComplete(int phase, ClassNode classNode);    
+    }
+    
+    private ProgressListener getProgressListener() {
+    	return this.listener;
+    }
+    
+    public void setProgressListener(ProgressListener listener) {
+    	this.listener = listener;
+    }
+    private ProgressListener listener;
+    // FIXASC (groovychange) end
 
     /**
      * Sets a ProgressCallback.  You can have only one, and setting
@@ -909,6 +925,11 @@ public class CompilationUnit extends ProcessingUnit {
 	            if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
 	                try {
 	                    body.call(source);
+	                    // FIXASC (groovychange) start
+	                    if (phase==Phases.CONVERSION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {
+	                    	getProgressListener().parseComplete(phase,name);
+	                    }
+	                    // FIXASC (groovychange)
 	                } catch (CompilationFailedException e) {
 	                    throw e;
 	                } catch (Exception e) {
@@ -1103,6 +1124,11 @@ public class CompilationUnit extends ProcessingUnit {
                 if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {                
                 // end
                     body.call(context, new GeneratorContext(this.ast), classNode);
+                    // FIXASC (groovychange)
+                    if (phase==Phases.CLASS_GENERATION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {
+                    	getProgressListener().generateComplete(phase,classNode);
+                    }
+                    // FIXASC (groovychange) end
                 }
             } catch (CompilationFailedException e) {
                 // fall through, getErrorReporter().failIfErrors() will triger
@@ -1146,7 +1172,8 @@ public class CompilationUnit extends ProcessingUnit {
             //
             GroovyClass gclass = (GroovyClass) iterator.next();
             try {
-                body.call(gclass);	
+                body.call(gclass);
+               
             } catch (CompilationFailedException e) {
                 // fall thorugh, getErrorREporter().failIfErrors() will triger
             } catch (NullPointerException npe) {
