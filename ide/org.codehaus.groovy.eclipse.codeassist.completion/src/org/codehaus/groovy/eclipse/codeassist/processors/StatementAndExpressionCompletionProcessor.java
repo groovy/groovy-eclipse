@@ -120,8 +120,10 @@ public class StatementAndExpressionCompletionProcessor extends
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(context.unit);
         ExpressionCompletionRequestor requestor = new ExpressionCompletionRequestor();
         
-        // can we do only a partial request???
-        visitor.visitCompilationUnit(requestor);
+        // if completion node is null, then it is likely because of a syntax error
+        if (completionNode != null) {
+            visitor.visitCompilationUnit(requestor);
+        }
         
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         if (requestor.isVisitSuccessful()) {

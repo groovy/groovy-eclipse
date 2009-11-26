@@ -36,6 +36,24 @@ public class FieldCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "?."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "abs", 1);
     }
+    public void testSpaces1() throws Exception {
+        String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "someProperty", 1);
+    }
+    public void testSpaces2() throws Exception {
+        String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, ". "), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "someProperty", 1);
+    }
+    public void testSpaces3() throws Exception {
+        String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, ". "), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "someProperty", 1);
+    }
 
     private ICompilationUnit create(String contents) throws Exception {
         IPath projectPath = createGenericProject();

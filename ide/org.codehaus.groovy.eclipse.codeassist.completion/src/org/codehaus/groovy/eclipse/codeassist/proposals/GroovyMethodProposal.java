@@ -59,7 +59,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setKey(methodSignature);
         proposal.setSignature(methodSignature);
         proposal.setRelevance(getRelevance(proposal.getName()));
-        // FIXADE M2 decide if we should support parameter guessing proposals
+        // FIXADE RC1 decide if we should support parameter guessing proposals
         // if (isGuessArguments) 
 //        proposals.add(ParameterGuessingProposal.createProposal(
 //                proposal, javaContext, isGuessArguments));

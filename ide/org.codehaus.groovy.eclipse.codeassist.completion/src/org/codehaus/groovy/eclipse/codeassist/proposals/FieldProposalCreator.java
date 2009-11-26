@@ -30,20 +30,22 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 /**
  * @author Andrew Eisenberg
  * @created Nov 12, 2009
- * FIXADE M2 this class should no longer be necessary when JDTClassNodes properly create property node
+ * GRECLIPSE-512, JDTClassNodes now have properties in them.  Properties override the
+ * fields, so this class is not a no-op.  Likely safe to remove.  Are there any situations
+ * where fields exist but properties don't?
  */
 public class FieldProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
-        Collection<FieldNode> allFields = getAllFields(type);
+//        Collection<FieldNode> allFields = getAllFields(type);
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
-        for (FieldNode field : allFields) {
-            if ((!isStatic || field.isStatic()) &&
-                    ProposalUtils.looselyMatches(prefix, field.getName())) {
-                groovyProposals.add(new GroovyFieldProposal(field));
-            }
-        }
+//        for (FieldNode field : allFields) {
+//            if ((!isStatic || field.isStatic()) &&
+//                    ProposalUtils.looselyMatches(prefix, field.getName())) {
+//                groovyProposals.add(new GroovyFieldProposal(field));
+//            }
+//        }
         
         return groovyProposals;
     }

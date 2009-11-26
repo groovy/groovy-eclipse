@@ -261,7 +261,6 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	 * @param node
 	 * @return
 	 */
-	// FIXADE this is probably because LastLineNumber was being set incorrectly before
 	private boolean isMultilineNodeType(ASTNode node) {
 		if (node != null && node.getLineNumber() < node.getLastLineNumber()) {
 			if (node instanceof ExpressionStatement)

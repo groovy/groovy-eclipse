@@ -70,9 +70,25 @@ public class CategoryTypeLookup implements ITypeLookup {
 	}
 
 	/**
+	 * @param interf
+	 * @param allInterfaces
+	 */
+	private void findAllSupers(ClassNode clazz, Set<String> allSupers) {
+		if (!allSupers.contains(clazz.getName())) {
+			allSupers.add(clazz.getName());
+			if (clazz.getSuperClass() != null) {
+				findAllSupers(clazz.getSuperClass(), allSupers);
+			}
+			if (clazz.getInterfaces() != null) {
+				for (ClassNode superInterface : clazz.getInterfaces()) {
+					findAllSupers(superInterface, allSupers);
+				}
+			}
+		}
+	}
+
+	/**
 	 * can from be assigned to to?
-	 * 
-	 * FIXADE M2 ensure we don't visit interfaces more than once
 	 * 
 	 * @param from
 	 * @param to
@@ -81,23 +97,15 @@ public class CategoryTypeLookup implements ITypeLookup {
 	private boolean isAssignableFrom(ClassNode from, ClassNode to) {
 		if (from == null || to == null) {
 			return false;
-		} else if (from.equals(to)) {
-			return true;
-		} else if (from.getName().equals("java.lang.Object")) {
-			return false;
-		} else if (isAssignableFrom(from.getSuperClass(), to)) {
-			return true;
-		} else {
-			if (to.isInterface()) {
-				// checking super interfaces here may mean that there are duplicated checks
-				for (ClassNode superInterface : from.getInterfaces()) {
-					if (isAssignableFrom(superInterface, to)) {
-						return true;
-					}
-				}
-			}
-			return false;
 		}
+		Set<String> allSupers = new HashSet<String>();
+		findAllSupers(from, allSupers);
+		for (String supr : allSupers) {
+			if (to.getName().equals(supr)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {

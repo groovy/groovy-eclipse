@@ -288,7 +288,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 																						 * creating a DOM AST
 																						 */);
 		parser.reportOnlyOneSyntaxError = !computeProblems;
-		// FIXADE (M2) likely not needed for groovy
+		// maybe not needed for groovy, but I don't want to find out.
 		parser.setMethodsFullRecovery(true);
 		parser.setStatementsRecovery((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
 

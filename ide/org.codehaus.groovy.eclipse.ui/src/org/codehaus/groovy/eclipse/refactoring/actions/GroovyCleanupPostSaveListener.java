@@ -58,9 +58,9 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
             }
         }
         if (doImports && doFormat) {
-            return new ICleanUp[] { new GroovyImportsCleanup2(settings), new GroovyCodeFormatCleanUp(FormatKind.FORMAT) };
+            return new ICleanUp[] { new GroovyImportsCleanup(settings), new GroovyCodeFormatCleanUp(FormatKind.FORMAT) };
         } else if (doImports) {
-            return new ICleanUp[] { new GroovyImportsCleanup2(settings) };
+            return new ICleanUp[] { new GroovyImportsCleanup(settings) };
         } else if (doFormat) {
             return new ICleanUp[] { new GroovyCodeFormatCleanUp(FormatKind.FORMAT) };
         } else {

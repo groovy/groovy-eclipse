@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
@@ -41,7 +42,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         String toSearch = context.completionExpression.startsWith("new ") ? context.completionExpression.substring(4) : context.completionExpression;
-        if (toSearch.length() == 0) {
+        if (toSearch.length() == 0 && context.location != ContentAssistLocation.IMPORT) { // always show types in import area
             return Collections.emptyList();
         }
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(

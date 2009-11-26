@@ -142,8 +142,8 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         StringBuffer completion = new StringBuffer();
         createMethod(method, completion);
         proposal.setCompletion(completion.toString().toCharArray());
-        // FIXADE M2 figure out a unique key here and fill in the other fields
-//        proposal.setDeclarationKey(null);  don't know what to do here
+        proposal.setDeclarationKey(method.getDeclaringClass().getName().toCharArray());
+        // don't think these are necessary
 //        proposal.setParameterPackageNames(parameterPackageNames);
 //        proposal.setPackageName(method.getReturnType().qualifiedPackageName());
         proposal.setFlags(method.getModifiers());
@@ -188,7 +188,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         List<MethodNode> thisClassMethods = declaring.getMethods();
         List<MethodNode> unimplementedMethods = new ArrayList<MethodNode>(allMethods.size()-thisClassMethods.size());
         
-        // FIXADE M2 uggh n^2 loop.  Make more efficient
+        // FIXADE RC1 uggh n^2 loop.  Make more efficient
         for (MethodNode allMethodNode : allMethods) {
             
             if (allMethodNode.getName().startsWith(getContext().completionExpression)) {
@@ -241,7 +241,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         ASTNode.printModifiers(insertedModifiers, completion);
 
         //// Type parameters
-        // FIXADE M2 ignore
+        // ignore too difficult and not really needed for Groovy
 
 //        GenericsType[] typeVariableBindings = method.getGenericsTypes();
 //        if(typeVariableBindings != null && typeVariableBindings.length != 0) {
@@ -298,7 +298,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         }
     }
 
-    // FIXADE M2 ignore type variables for now
+    // ignore.  Too difficult and not really needed for groovy.
 //    private void createTypeVariable(GenericsType typeVariable, StringBuffer completion) {
 //        completion.append(typeVariable.getName());
 //

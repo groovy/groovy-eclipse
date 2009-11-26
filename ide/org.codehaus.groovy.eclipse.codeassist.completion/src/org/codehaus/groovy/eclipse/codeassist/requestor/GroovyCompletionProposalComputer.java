@@ -102,10 +102,8 @@ public class GroovyCompletionProposalComputer implements
         String completionText = findCompletionText(context.getDocument(), context.getInvocationOffset());
         String[] completionExpressions = findCompletionExpression(completionText);
         
-        
-        // FIXADE M2 for now assume that there are no spaces around the '.'
         int supportingNodeEnd = completionExpressions[1] == null ? -1 : 
-            context.getInvocationOffset() - completionText.length() + completionExpressions[0].length();
+            context.getInvocationOffset() - completionText.length() + completionExpressions[0].length() -1;
         CompletionNodeFinder finder = new CompletionNodeFinder(context.getInvocationOffset(), supportingNodeEnd, completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1]);
         ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();

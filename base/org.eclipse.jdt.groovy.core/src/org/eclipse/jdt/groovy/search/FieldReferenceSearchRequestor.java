@@ -103,7 +103,6 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		} else if (node instanceof VariableExpression) {
 			VariableExpression vnode = (VariableExpression) node;
 			if (CharOperation.equals(name, vnode.getName().toCharArray())) {
-				// FIXADE what about isAssignment???
 				doCheck = true;
 				start = vnode.getStart();
 				end = start + vnode.getName().length();
@@ -111,6 +110,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		}
 
 		if (doCheck) {
+			// GRECLIPSE-540 still unresolved is that all field and variable references are considered reads.  We don't know about writes
 			boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
 			if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess))
 					&& ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {

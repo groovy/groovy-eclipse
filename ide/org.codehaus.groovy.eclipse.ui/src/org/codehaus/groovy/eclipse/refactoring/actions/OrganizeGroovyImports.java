@@ -186,7 +186,7 @@ public class OrganizeGroovyImports {
                             new SourceRange(node.getStart(), node.getEnd()-node.getStart()));
                 }
             } else {
-                // FIXADE M2 We don't know exactly what the
+                // FIXADE RC1 We don't know exactly what the
                 // text is.  We just know how it resolves
                 // This can be a problem if an inner class.
                 // We don't really know what is in the text 
@@ -433,8 +433,6 @@ public class OrganizeGroovyImports {
      * @see OrganizeImportsOperation.TypeReferenceProcessor#process(org.eclipse.core.runtime.IProgressMonitor)
      * @param missingType
      */
-    // FIXADE use search engine instead of NameLookup.  This will provide ability to find all names at
-    // once as well as ability to find inner types
     private TypeNameMatch[] resolveType(String missingType, NameLookup lookup, boolean lookForAnnotation) {
         final List<TypeNameMatch> resolved = new LinkedList<TypeNameMatch>();
         IJavaElementRequestor requestor = new IJavaElementRequestor() {

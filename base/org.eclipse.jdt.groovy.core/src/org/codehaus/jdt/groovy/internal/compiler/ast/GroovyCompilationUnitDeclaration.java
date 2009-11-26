@@ -467,7 +467,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			mods = mods & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
 			typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
 
-			// FIXADE (M2) only type declarations not named after the compilation unit should be secondary
+			// FIXASC (M2) only type declarations not named after the compilation unit should be secondary
 			typeDeclaration.bits |= ASTNode.IsSecondaryType;
 
 			fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);

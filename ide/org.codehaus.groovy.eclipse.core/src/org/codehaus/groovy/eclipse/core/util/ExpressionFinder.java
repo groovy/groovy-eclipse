@@ -99,7 +99,7 @@ public class ExpressionFinder {
 			}
 		}
 		if (token != null) {
-			return sourceBuffer.subSequence(token.startOffset, endOffset).toString().trim();
+			return sourceBuffer.subSequence(token.startOffset, endOffset).toString();
 		}
 		return "";
 	}
@@ -137,13 +137,13 @@ public class ExpressionFinder {
 			token2 = stream.next();
 
 			if ((token0.type == Token.DOT || token0.type == Token.SAFE_DEREF || token0.type == Token.SPREAD) && isValidBeforeDot(token1.type)) {
-				ret[0] = expression.substring(0, token1.endOffset);
+				ret[0] = expression.substring(0, token1.endOffset).trim();
 				ret[1] = "";
 			} else if (token0.type == Token.IDENT && token1.type == Token.DOT && isValidBeforeDot(token2.type)) {
-				ret[0] = expression.substring(0, token2.endOffset);
-				ret[1] = expression.substring(token0.startOffset, expression.length());
+				ret[0] = expression.substring(0, token2.endOffset).trim();
+				ret[1] = expression.substring(token0.startOffset, expression.length()).trim();
 			} else if (token0.type == Token.IDENT) {
-				ret[0] = expression;
+				ret[0] = expression.trim();
 			} else {
 				ret = null;
 			}

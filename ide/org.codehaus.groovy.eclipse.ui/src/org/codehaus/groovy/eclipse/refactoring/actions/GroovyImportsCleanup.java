@@ -45,17 +45,16 @@ import org.eclipse.text.edits.TextEdit;
  * @author Andrew Eisenberg
  * @created Aug 17, 2009
  * 
- * FIXADE M2 Change this class name to GroovyImportsCleanup, but SVN keeps giving me problems when I try to. 
  */
-public class GroovyImportsCleanup2 extends AbstractCleanUp {
+public class GroovyImportsCleanup extends AbstractCleanUp {
     
     private RefactoringStatus fStatus;
 
-    public GroovyImportsCleanup2(Map options) {
+    public GroovyImportsCleanup(Map options) {
         super(options);
     }
 
-    public GroovyImportsCleanup2() {
+    public GroovyImportsCleanup() {
         super();
     }
 

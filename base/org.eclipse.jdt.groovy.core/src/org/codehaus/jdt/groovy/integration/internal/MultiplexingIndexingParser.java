@@ -45,7 +45,6 @@ public class MultiplexingIndexingParser extends IndexingParser {
 	public MultiplexingIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options,
 			boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
 		super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
-		// FIXADE (M2) this code is copied from MultiplexingSourceElementParser. Should combine
 		this.notifier = (SourceElementNotifier) ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
 		this.groovyReportReferenceInfo = reportLocalDeclarations;
 		this.requestor = requestor;
@@ -60,7 +59,6 @@ public class MultiplexingIndexingParser extends IndexingParser {
 	@Override
 	public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit unit, boolean fullParse, IProgressMonitor pm) {
 		if (ContentTypeUtils.isGroovyLikeFileName(unit.getFileName())) {
-			// FIXADE (M2) this code is copied from MultiplexingSourceElementParser. Should combine
 
 			// ASSUMPTIONS:
 			// 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
@@ -77,10 +75,6 @@ public class MultiplexingIndexingParser extends IndexingParser {
 			HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);
 			GroovyIndexingVisitor visitor = new GroovyIndexingVisitor(requestor);
 			visitor.doVisit(cud.getModuleNode(), cud.currentPackage);
-			// cud.types[0].sourceStart = 25;
-			// cud.types[0].sourceEnd = 35;
-			// cud.types[0].methods[3].sourceStart = 30;
-			// cud.types[0].methods[3].sourceEnd = 68;
 
 			notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, sourceEnds,
 			/* We don't care about the @category tag, so pass empty map */Collections.EMPTY_MAP);
@@ -90,8 +84,8 @@ public class MultiplexingIndexingParser extends IndexingParser {
 		}
 	}
 
-	// FIXADE (M2) this code is copied from MultiplexingSourceElementParser. Should combine
-	// FIXADE (M2) This should be calculated in GroovyCompilationUnitDeclaration
+	// FIXASC RC1 this code is copied from MultiplexingSourceElementParser. Should combine
+	// FIXASC RC1 This should be calculated in GroovyCompilationUnitDeclaration
 	private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
 		HashtableOfObjectToInt table = new HashtableOfObjectToInt();
 		if (cDecl.types != null) {
@@ -102,8 +96,8 @@ public class MultiplexingIndexingParser extends IndexingParser {
 		return table;
 	}
 
-	// FIXADE (M2) this code is copied from MultiplexingSourceElementParser. Should combine
-	// FIXADE (M2) This should be calculated in GroovyCompilationUnitDeclaration
+	// FIXASC RC1 this code is copied from MultiplexingSourceElementParser. Should combine
+	// FIXASC RC1 This should be calculated in GroovyCompilationUnitDeclaration
 	private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
 		table.put(tDecl, tDecl.sourceEnd);
 		if (tDecl.fields != null) {

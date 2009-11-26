@@ -348,8 +348,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @param allInterfaces
 	 */
 	private void findAllInterfaces(ClassNode interf, Set<ClassNode> allInterfaces) {
-		allInterfaces.add(interf);
 		if (!allInterfaces.contains(interf) && interf.getInterfaces() != null) {
+			allInterfaces.add(interf);
 			for (ClassNode superInterface : interf.getInterfaces()) {
 				findAllInterfaces(superInterface, allInterfaces);
 			}

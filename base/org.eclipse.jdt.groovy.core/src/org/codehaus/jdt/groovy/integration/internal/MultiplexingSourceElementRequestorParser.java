@@ -104,7 +104,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		}
 	}
 
-	// FIXADE (M2) This should be calculated in GroovyCompilationUnitDeclaration
+	// FIXASC RC1 This should be calculated in GroovyCompilationUnitDeclaration
 	private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
 		HashtableOfObjectToInt table = new HashtableOfObjectToInt();
 		if (cDecl.types != null) {
@@ -120,7 +120,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		parser.reset();
 	}
 
-	// FIXADE (M2) This should be calculated in GroovyCompilationUnitDeclaration
+	// FIXASC RC1 This should be calculated in GroovyCompilationUnitDeclaration
 	private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
 		table.put(tDecl, tDecl.sourceEnd);
 		if (tDecl.fields != null) {
