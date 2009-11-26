@@ -22,6 +22,9 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class TypeCompletionTests extends CompletionTestCase {
 
+    
+    private static final String A_TEST = "ATest";
+    private static final String RUN_WITH = "RunWith";
     private static final String HTML = "HTML";
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html";
     private static final String HTML_ANCHOR = "HTMLAnchorElement";
@@ -84,6 +87,35 @@ public class TypeCompletionTests extends CompletionTestCase {
         String contents = "class X implements HTMLAnchorElement { }";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML_ANCHOR));
         proposalExists(proposals, HTML_ANCHOR_PROPOSAL, 1);
+    }
+    public void testCompletionTypesInAnnotation1() throws Exception {
+        String contents = "@RunWith(ATest)\n" + 
+        "class ATest { }\n" +
+        "@interface RunWith {\n" +
+        "Class value()\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, RUN_WITH));
+        proposalExists(proposals, RUN_WITH, 1, true);
+    }
+    public void testCompletionTypesInAnnotation2() throws Exception {
+        String contents = "@RunWith(ATest)\n" + 
+        "class ATest { }\n" +
+        "@interface RunWith {\n" +
+        "Class value()\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, A_TEST));
+        proposalExists(proposals, A_TEST, 1, true);
+    }
+    public void testCompletionTypesInAnnotation3() throws Exception {
+        String contents = "@RunWith(Foo.FOO1)\n" + 
+            "class ATest { }";
+        String javaContents = 
+            "enum Foo {\n" +
+            "FOO1, FOO2\n" +
+            "} \n" +
+            "@interface RunWith {\n" +
+                "Foo value();\n" +
+            "}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, javaContents, getIndexOf(contents, "FOO"));
+        proposalExists(proposals, "FOO1", 1);
     }
 
 }

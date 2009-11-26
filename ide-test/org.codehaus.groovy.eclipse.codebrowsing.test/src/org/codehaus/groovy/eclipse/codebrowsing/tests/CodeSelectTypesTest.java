@@ -140,5 +140,62 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
         assertTrue("Java Element for type 'List' should exist", elt[0].exists());
     }
     
+    public void testSelectTypeInAnnotation1() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "@RunWith(ATest)\n" + 
+            "class ATest { }\n" +
+            "@interface RunWith {\n" +
+            "Class value()\n}";
+        env.addGroovyClass(root, "", "Sub2", contents);
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("ATest"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found super type 'ATest'", "ATest", elt[0].getElementName());
+        assertTrue("Java Element for type 'ATest' should exist", elt[0].exists());
+    }
+    
+    public void testSelectTypeInAnnotation2() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String javaContents = "enum Foo {\n" +
+            "FOO1, FOO2\n" +
+        "} \n" +
+        "@interface RunWith {\n" +
+            "Foo value();\n" +
+        "}";
+        env.addClass(root, "Foo", javaContents);
+        String contents = "@RunWith(Foo.FOO1)\n" + 
+            "class ATest { }\n" +
+            "@interface RunWith {\n" +
+            "Class value()\n}";
+        env.addGroovyClass(root, "", "Sub2", contents);
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("Foo"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found super type 'Foo'", "Foo", elt[0].getElementName());
+        assertTrue("Java Element for type 'Foo' should exist", elt[0].exists());
+    }
+    public void testSelectTypeInAnnotation3() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String javaContents = "enum Foo {\n" +
+            "FOO1, FOO2\n" +
+        "} \n" +
+        "@interface RunWith {\n" +
+            "Foo value();\n" +
+        "}";
+        env.addClass(root, "Foo", javaContents);
+        String contents = "@RunWith(Foo.FOO1)\n" + 
+            "class ATest { }\n" +
+            "@interface RunWith {\n" +
+            "Class value()\n}";
+        env.addGroovyClass(root, "", "Sub2", contents);
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("FOO1"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found super type 'FOO1'", "FOO1", elt[0].getElementName());
+        assertTrue("Java Element for type 'FOO1' should exist", elt[0].exists());
+    }
     
 }

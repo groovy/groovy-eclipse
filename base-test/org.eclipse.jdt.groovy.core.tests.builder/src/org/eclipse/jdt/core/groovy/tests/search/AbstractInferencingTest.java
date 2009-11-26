@@ -18,6 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -79,7 +80,9 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
             
-            if (node.getStart() == start && node.getEnd() == end && !(node instanceof MethodNode /* ignore the run() method*/)) {
+            if (node.getStart() == start && node.getEnd() == end && 
+                    !(node instanceof MethodNode /* ignore the run() method*/) &&
+                    !(node instanceof Statement /* ignore all statements */)) {
                 this.result = result;
                 this.node = node;
                 return VisitStatus.STOP_VISIT;

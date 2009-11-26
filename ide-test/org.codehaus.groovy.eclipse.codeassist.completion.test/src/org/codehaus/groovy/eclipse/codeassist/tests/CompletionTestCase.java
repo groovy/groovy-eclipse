@@ -112,8 +112,11 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
     
     protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount) {
-        int foundCount = 0;
         boolean isType = name.contains(" - ");
+        proposalExists(proposals, name, expectedCount, isType);
+    }
+    protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType) {
+        int foundCount = 0;
         for (ICompletionProposal proposal : proposals) {
             // if a field
             if (proposal.getDisplayString().startsWith(name + " ")) {
@@ -171,12 +174,23 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
 
     protected ICompletionProposal[] createProposalsAtOffset(String contents, int completionOffset)
+        throws Exception {
+        return createProposalsAtOffset(contents, null, completionOffset);
+        
+    }
+    protected ICompletionProposal[] createProposalsAtOffset(String contents, String javaContents, int completionOffset)
             throws Exception {
                 IPath projectPath = createGenericProject();
                 IPath pack = projectPath.append("src");
-                IPath pathToJavaClass = env.addGroovyClass(pack, "TransformerTest2", contents);
-                incrementalBuild();
-                ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
+                if (javaContents != null) {
+                    IPath pathToJavaClass = env.addClass(pack, "JavaClass", "public class JavaClass { }\n" + javaContents);
+                    ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
+                    unit.becomeWorkingCopy(null);
+                }
+                
+                IPath pathToGroovyClass = env.addGroovyClass(pack, "TransformerTest2", contents);
+                fullBuild();
+                ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
                 unit.becomeWorkingCopy(null);
                 
                 // necessary???

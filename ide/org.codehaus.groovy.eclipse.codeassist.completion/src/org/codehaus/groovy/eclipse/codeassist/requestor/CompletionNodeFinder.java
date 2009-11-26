@@ -170,7 +170,9 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             return;
         }
         currentDeclaration = node;
+        blockStack.push(node);
         visitAnnotations(node);
+        blockStack.pop();
         ClassNode supr = node.getUnresolvedSuperClass();
         if (supr != null && doTest(supr)) {
             createContext(null, node, EXTENDS);

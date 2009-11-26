@@ -16,7 +16,12 @@
 
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -31,6 +36,7 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -233,6 +239,26 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         visitAnnotations(node);
         node.visitContents(this);
     }
+    
+    /**
+     * Super implementation doesn't visit the annotation type itself
+     */
+    @Override
+    public void visitAnnotations(AnnotatedNode node) {
+        List<AnnotationNode> annotations = node.getAnnotations();
+        if (annotations.isEmpty()) return;
+        for (AnnotationNode an : annotations) {
+            // skip built-in properties
+            if (an.isBuiltIn()) continue;
+            
+            check(an.getClassNode());
+            
+            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
+                member.getValue().visit(this);
+            }
+        }
+    }
+
 
     /**
      * @param node
