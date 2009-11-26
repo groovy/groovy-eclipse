@@ -47,7 +47,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 	public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
 		if (node instanceof ConstantExpression) {
 			ClassNode declaringType = objectExpressionType != null ? objectExpressionType : scope.getEnclosingTypeDeclaration();
-			TypeAndDeclaration tAndD = lookupTypeAndDeclaration(declaringType, ((ConstantExpression) node).getConstantName(), scope);
+			TypeAndDeclaration tAndD = lookupTypeAndDeclaration(declaringType, ((ConstantExpression) node).getText(), scope);
 			if (tAndD != null) {
 				return new TypeLookupResult(tAndD.type, declaringType, tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope);
 			}

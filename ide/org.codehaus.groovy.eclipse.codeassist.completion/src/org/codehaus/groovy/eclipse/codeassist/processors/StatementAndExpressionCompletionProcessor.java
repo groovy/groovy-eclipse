@@ -28,7 +28,9 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.proposals.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IProposalCreator;
@@ -78,7 +80,17 @@ public class StatementAndExpressionCompletionProcessor extends
          * @return
          */
         private boolean doTest(ASTNode node) {
-            return completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd();
+            return isNotExpressionAndStatement(completionNode, node) && completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd();
+        }
+        
+        private boolean isNotExpressionAndStatement(ASTNode thisNode, ASTNode otherNode) {
+            if (thisNode instanceof Expression) {
+                return !(otherNode instanceof Statement);
+            } else if (thisNode instanceof Statement) {
+                return !(otherNode instanceof Expression);
+            } else {
+                return true;
+            }
         }
         
         public ClassNode getResultingType() {

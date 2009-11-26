@@ -231,6 +231,13 @@ public class SimpleTypeLookup implements ITypeLookup {
 				if (field != null) {
 					return new TypeLookupResult(field.getType(), field.getDeclaringClass(), field, confidence, scope);
 				}
+				// might be somewhere in the variable scope
+				if (declaringType.equals(scope.getEnclosingTypeDeclaration())) {
+					VariableInfo varInfo = scope.lookupName(name);
+					if (varInfo != null) {
+						return new TypeLookupResult(varInfo.type, varInfo.declaringType, varInfo.declaringType, confidence, scope);
+					}
+				}
 				confidence = UNKNOWN;
 				return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
 			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {

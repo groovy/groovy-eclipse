@@ -72,6 +72,7 @@ import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
@@ -688,6 +689,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			super.visitBlockStatement(block);
 		}
 		scopes.pop();
+	}
+
+	@Override
+	public void visitReturnStatement(ReturnStatement ret) {
+		boolean shouldContinue = handleStatement(ret);
+		if (shouldContinue) {
+			super.visitReturnStatement(ret);
+		}
 	}
 
 	@Override
