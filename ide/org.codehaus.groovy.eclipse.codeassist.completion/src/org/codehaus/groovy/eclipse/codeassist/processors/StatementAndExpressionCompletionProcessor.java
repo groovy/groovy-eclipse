@@ -70,6 +70,7 @@ public class StatementAndExpressionCompletionProcessor extends
                 resultingType = result.type;
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
+                isStatic = node instanceof ClassExpression;
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
@@ -128,7 +129,7 @@ public class StatementAndExpressionCompletionProcessor extends
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         if (requestor.isVisitSuccessful()) {
             // get all proposal creators
-            boolean isStatic = isStatic();
+            boolean isStatic = isStatic() || requestor.isStatic;
             IProposalCreator[] creators = getAllProposalCreators();
             ClassNode completionType = getCompletionType(requestor);
             for (IProposalCreator creator : creators) {

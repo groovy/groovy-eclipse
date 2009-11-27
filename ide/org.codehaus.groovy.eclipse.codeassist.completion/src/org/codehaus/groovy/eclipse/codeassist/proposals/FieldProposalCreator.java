@@ -26,46 +26,56 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
+import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg
  * @created Nov 12, 2009
- * GRECLIPSE-512, JDTClassNodes now have properties in them.  Properties override the
- * fields, so this class is not a no-op.  Likely safe to remove.  Are there any situations
- * where fields exist but properties don't?
+ * 
+ * GRECLIPSE-512: most fields have properties created for them, so we want to 
+ * avoid duplicate proposals.
+ * Constants are an exception, so return them here.
+ * I may have missed something, so be prepared to add more kinds of fields here.
  */
 public class FieldProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
-//        Collection<FieldNode> allFields = getAllFields(type);
+        Collection<FieldNode> allFields = getAllConstants(type);
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
-//        for (FieldNode field : allFields) {
-//            if ((!isStatic || field.isStatic()) &&
-//                    ProposalUtils.looselyMatches(prefix, field.getName())) {
-//                groovyProposals.add(new GroovyFieldProposal(field));
-//            }
-//        }
+        for (FieldNode field : allFields) {
+            if ((!isStatic || field.isStatic()) &&
+                    ProposalUtils.looselyMatches(prefix, field.getName())) {
+                groovyProposals.add(new GroovyFieldProposal(field));
+            }
+        }
         
         return groovyProposals;
     }
     
-    private Collection<FieldNode> getAllFields(ClassNode thisType) {
+    private Collection<FieldNode> getAllConstants(ClassNode thisType) {
         Set<ClassNode> types = new HashSet<ClassNode>();
         getAllSupers(thisType, types);
         List<FieldNode> allFields = new LinkedList<FieldNode>();
         for (ClassNode type : types) {
-            // GRECLIPSE-512, JDTClassNodes do not have properties yet
             type = type.redirect();
             if (type instanceof JDTClassNode) {
                 for (FieldNode field : type.getFields()) {
-                    if (checkName(field.getName())) {
+                    if (checkName(field.getName()) && checkModifiers(field)) {
                         allFields.add(field);
                     }
                 }
             }
         }
         return allFields;
+    }
+
+    /**
+     * @param field
+     * @return
+     */
+    private boolean checkModifiers(FieldNode field) {
+        return (field.getModifiers() & (Opcodes.ACC_STATIC | Opcodes.ACC_FINAL)) != 0;
     }
 
 }

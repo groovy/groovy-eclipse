@@ -67,6 +67,11 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.indexOf('\''), contents.lastIndexOf('\'')+1, "java.lang.String");
     }
     
+    public void testInferString4() throws Exception {
+        String contents = "false ? '' : ''";
+        assertType(contents, "java.lang.String");
+    }
+    
     public void testInferList1() throws Exception {
         assertType("[]", "java.util.List");
     }
@@ -101,6 +106,11 @@ public class InferencingTests extends AbstractInferencingTest {
     public void testStaticMethodCall4() throws Exception {
         String contents = "class Two {\n def other() { \n x } \n static String x() {\n \"\" } } ";
         String expr = "x ";  // extra space b/c variable expression end offset is wrong
+        assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
+    }
+    public void testSuperFieldReference() throws Exception {
+        String contents = "class B extends A {\n def other() { \n myOther } } \n class A { String myOther } ";
+        String expr = "myOther "; // extra space b/c variable expression end offset is wrong
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 }

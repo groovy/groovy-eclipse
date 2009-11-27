@@ -75,8 +75,8 @@ public class TypeLookupResult {
 	 * @param type the type of the expression being analyzed
 	 * @param declaringType the declaring type of the expression if the expression is a field, method, or type reference
 	 * @param confidence the confidence in this type assertion
-	 * @param scope TODO
 	 * @param the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
+	 * @param scope the variable scope at this location
 	 */
 	public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeConfidence confidence,
 			VariableScope scope) {

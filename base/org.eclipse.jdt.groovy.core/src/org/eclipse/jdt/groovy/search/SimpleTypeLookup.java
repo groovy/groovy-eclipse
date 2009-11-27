@@ -55,6 +55,7 @@ import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -187,10 +188,27 @@ public class SimpleTypeLookup implements ITypeLookup {
 				confidence = TypeConfidence.findLessPrecise(confidence, INFERRED);
 				return new TypeLookupResult(info.type, declaringType, declaration, confidence, scope);
 			} else if (var instanceof VariableExpression) {
+				ClassNode type = var.getType();
 				if (accessedVar instanceof DynamicVariable) {
-					confidence = UNKNOWN;
+					// first check to see if this is a field or method reference from a super class
+					ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), declaringType);
+					if (maybeDeclaration != null) {
+						declaration = maybeDeclaration;
+						if (maybeDeclaration instanceof FieldNode)
+							type = ((FieldNode) maybeDeclaration).getType();
+						else if (maybeDeclaration instanceof MethodNode)
+							type = ((MethodNode) maybeDeclaration).getReturnType();
+						else if (maybeDeclaration instanceof PropertyNode)
+							type = ((PropertyNode) maybeDeclaration).getType();
+						else
+							type = accessedVar.getType();
+					} else {
+						// nope...we don't know what this is.
+						confidence = UNKNOWN;
+						type = accessedVar.getType(); // probably object..
+					}
 				}
-				return new TypeLookupResult(accessedVar.getType(), declaringType, declaration, confidence, scope);
+				return new TypeLookupResult(type, declaringType, declaration, confidence, scope);
 			}
 		}
 
@@ -241,6 +259,9 @@ public class SimpleTypeLookup implements ITypeLookup {
 				confidence = UNKNOWN;
 				return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
 			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {
+				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
+			} else if (node instanceof TernaryExpression) {
+				// return the object expression type
 				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
 			}
 		}

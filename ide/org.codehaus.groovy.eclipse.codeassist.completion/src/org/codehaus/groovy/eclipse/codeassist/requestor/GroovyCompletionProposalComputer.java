@@ -103,7 +103,7 @@ public class GroovyCompletionProposalComputer implements
         String[] completionExpressions = findCompletionExpression(completionText);
         
         int supportingNodeEnd = completionExpressions[1] == null ? -1 : 
-            context.getInvocationOffset() - completionText.length() + completionExpressions[0].length() -1;
+            context.getInvocationOffset() - completionText.length() + completionExpressions[0].length();
         CompletionNodeFinder finder = new CompletionNodeFinder(context.getInvocationOffset(), supportingNodeEnd, completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1]);
         ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();

@@ -119,7 +119,7 @@ public class ExpressionFinder {
 	public String[] splitForCompletion(String expression) {
 		String[] ret = new String[2];
 
-		if (expression.length() < 1 ){
+		if (expression.trim().length() < 1 ){
 			ret[0] = "";
 			ret[1] = null;
 			return ret;

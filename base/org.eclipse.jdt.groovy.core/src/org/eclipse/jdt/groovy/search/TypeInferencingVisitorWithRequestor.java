@@ -955,9 +955,27 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitTernaryExpression(TernaryExpression node) {
+		node.getBooleanExpression().visit(this);
+
+		// arbitrarily, we choose the if clause to be the type of this expression
+		propertyExpression.push(node);
+		node.getTrueExpression().visit(this);
 		boolean shouldContinue = handleExpression(node);
+
+		// the declaration itself is the property node
+		ClassNode exprType = propertyExpressionType.pop();
+		propertyExpression.pop();
+
 		if (shouldContinue) {
-			super.visitTernaryExpression(node);
+			node.getFalseExpression().visit(this);
+
+			if (isObjectExpression(node)) {
+				// returns true if this declaration expression is the property field of another property expression
+				objectExpressionType.push(exprType);
+			}
+		} else {
+			propertyExpression.pop();
+
 		}
 	}
 
@@ -1150,6 +1168,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof AttributeExpression) {
 				AttributeExpression prop = (AttributeExpression) maybeProperty;
 				return prop.getObjectExpression() == node;
+			} else if (maybeProperty instanceof TernaryExpression) {
+				TernaryExpression prop = (TernaryExpression) maybeProperty;
+				return prop.getTrueExpression() == node;
 			} else {
 				return false;
 			}
@@ -1167,7 +1188,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof MethodCallExpression) {
 				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
 				return prop.getMethod() == node;
-			} else if (maybeProperty instanceof BinaryExpression) {
+			} else if (maybeProperty instanceof BinaryExpression || maybeProperty instanceof TernaryExpression) {
 				// note that here it is the binary expression itself that
 				// is the property, rather than its LHS
 				// this allows the type to be available during the inferencing stage
