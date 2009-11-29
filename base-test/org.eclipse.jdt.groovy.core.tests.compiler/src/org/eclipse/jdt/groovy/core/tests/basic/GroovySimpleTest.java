@@ -60,7 +60,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
 		groovyLevel=17;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-beta-2.jar");
+    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-rc-1.jar");
     	if (groovyJar==null) {
     		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.5.jar");
     		groovyLevel=16;
@@ -90,7 +90,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
         	groovyLevel=17;
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-beta-2.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-rc-1.jar");
         	if (groovyJar==null) {
         		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.5.jar");
         		groovyLevel=16;
@@ -219,6 +219,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 		},"success");		
 	}
+	
 
 //	// fails on 1.7b2
 //	public void testRecursion_GR531() {
@@ -1278,27 +1279,27 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"	^^^\n" + 
 			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
 			"----------\n" + 
-			"9. ERROR in X.groovy (at line 15)\n" + 
-			"	Command command\n" + 
-			"	^\n" + 
-			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command \n" + 
-			"----------\n" + 
-			"10. ERROR in X.groovy (at line 33)\n" + 
+//			"9. ERROR in X.groovy (at line 15)\n" + 
+//			"	Command command\n" + 
+//			"	^\n" + 
+//			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command \n" + 
+//			"----------\n" + 
+			"9. ERROR in X.groovy (at line 33)\n" + 
 			"	commands << new GCommand(source: source, prop: name, value: newValue)\n" + 
 			"	            ^\n" + 
 			"Groovy:unable to resolve class GCommand \n" + 
 			"----------\n" + 
-			"11. ERROR in X.groovy (at line 34)\n" + 
+			"10. ERROR in X.groovy (at line 34)\n" + 
 			"	links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n" + 
 			"	                         ^\n" + 
 			"Groovy:unable to resolve class GCommand \n" + 
 			"----------\n" + 
-			"12. ERROR in X.groovy (at line 36)\n" + 
+			"11. ERROR in X.groovy (at line 36)\n" + 
 			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
 			"	                ^\n" + 
 			"Groovy:unable to resolve class GCommand \n" + 
 			"----------\n" + 
-			"13. ERROR in X.groovy (at line 37)\n" + 
+			"12. ERROR in X.groovy (at line 37)\n" + 
 			"	} else { return new GCommand(source: source, prop: name, value: newValue) }\n" + 
 			"	                ^\n" + 
 			"Groovy:unable to resolve class GCommand \n" + 
