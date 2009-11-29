@@ -16,6 +16,12 @@
 
 package org.codehaus.groovy.transform;
 
+import groovy.lang.GroovyClassLoader;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.List;
+
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -26,13 +32,6 @@ import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 
-import groovy.lang.GroovyClassLoader;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.List;
-
 /**
  * This visitor walks the AST tree and collects references to Annotations that
  * are annotated themselves by {@link GroovyASTTransformation}. Each such
@@ -42,6 +41,7 @@ import java.util.List;
  * SEMANTIC_ANALYSIS phase of compilation.
  *
  * @author Danno Ferrin (shemnon)
+ * @author Roshan Dawrani (roshandawrani)
  */
 public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSupport {
     private SourceUnit source;
@@ -63,9 +63,12 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         super.visitClass(classNode);
         classNode = oldClass;
     }
+    
+    private final static String[] NONE = new String[0];
+    private final static Class[] NO_CLASSES = new Class[0];
 
     // FIXASC (groovychange)
-    private String[] getTransformClasses(ClassNode cn) {
+    private String[] getTransformClassNames(ClassNode cn) {
     	if (!cn.hasClass()) { 
         	List<AnnotationNode> annotations = cn.getAnnotations();
         	AnnotationNode transformAnnotation = null;
@@ -91,12 +94,13 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     		// FIXASC (M2) check haven't broken transforms for 'vanilla' (outside of eclipse) execution of groovyc
 	        Annotation transformClassAnnotation = getTransformClassAnnotation(cn);
 	        if (transformClassAnnotation == null) {
-	        	return null;
+	        	return NONE;
 	        }
-	        return getTransformClasses(transformClassAnnotation);
+	        return getTransformClassNames(transformClassAnnotation);
     	}
     }
     // end
+    
     /**
      * If the annotation is annotated with {@link GroovyASTTransformation}
      * the annotation is added to <code>stageVisitors</code> at the appropriate processor visitor.
@@ -105,78 +109,102 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
      */
     public void visitAnnotations(AnnotatedNode node) {
         super.visitAnnotations(node);
-        // FIXASC (groovychange)
-        // oldcode
-       /* for (AnnotationNode annotation : node.getAnnotations()) {
-            Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
-            if (transformClassAnnotation == null) {
-                // skip if there is no such annotation
-                continue;
-            }
-            for (String transformClass : getTransformClasses(transformClassAnnotation)) {*/
-            // newcode
-                    for (AnnotationNode annotation : (Collection<AnnotationNode>) node.getAnnotations()) {
-        	String[] transformClasses = getTransformClasses(annotation.getClassNode());
+        for (AnnotationNode annotation : node.getAnnotations()) {
+        	// FIXASC (groovychange) under eclipse we may be asking a node that has no backing class
+        	// oldcode:
 //            Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
 //            if (transformClassAnnotation == null) {
 //                // skip if there is no such annotation
 //                continue;
 //            }
-        	if (transformClasses ==null) {
+//            addTransformsToClassNode(annotation, transformClassAnnotation);
+            // newcode:
+        	String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
+        	if (transformClassNames==null) {
         		continue;
         	}
-            for (String transformClass : transformClasses) { //getTransformClasses(transformClassAnnotation)) {
-            
-            // end
-                try {
-                    Class klass = transformLoader.loadClass(transformClass, false, true, false);
-                    if (ASTTransformation.class.isAssignableFrom(klass)) {
-                        classNode.addTransform(klass, annotation);
-                    } else {
-                        source.getErrorCollector().addError(
-                                new SimpleMessage(
-                                        "Not an ASTTransformation: " + transformClass
-                                                + " declared by " + annotation.getClassNode().getName(),
-                                        source));
-                    }
-                } catch (ClassNotFoundException e) {
-                    source.getErrorCollector().addErrorAndContinue(
-                            new SimpleMessage(
-                                    "Could not find class for Transformation Processor " + transformClass
-                                            + " declared by " + annotation.getClassNode().getName(),
-                                    source));
-                }
+        	Class[] transformClasses = NO_CLASSES;// FIXASC (RC1) not yet implemented
+            addTransformsToClassNode(annotation, transformClassNames,transformClasses);
+        	// end
+        }
+    }
+    
+    // FIXASC (groovychange) slight refactoring to provide a new method that can work with a real annotation
+    private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
+        String[] transformClassNames = getTransformClassNames(annotation.getClassNode()); 
+        Class[] transformClasses = getTransformClasses(transformClassAnnotation);
+        addTransformsToClassNode(annotation,transformClassNames,transformClasses);
+    }
+        
+    private void addTransformsToClassNode(AnnotationNode annotation, String[] transformClassNames, Class[] transformClasses) {
+
+        if(transformClassNames.length == 0 && transformClasses.length == 0) {
+            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " + 
+                    annotation.getClassNode().getName() + " does not specify any transform class names/classes", source));
+        }
+
+        if(transformClassNames.length > 0 && transformClasses.length > 0) {
+            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " + 
+                    annotation.getClassNode().getName() +  " should specify transforms only by class names or by classes and not by both", source));
+        }
+
+        for (String transformClass : transformClassNames) {
+            try {
+                Class klass = transformLoader.loadClass(transformClass, false, true, false);
+                verifyClassAndAddTransform(annotation, klass);
+            } catch (ClassNotFoundException e) {
+                source.getErrorCollector().addErrorAndContinue(
+                        new SimpleMessage(
+                                "Could not find class for Transformation Processor " + transformClass
+                                + " declared by " + annotation.getClassNode().getName(),
+                                source));
             }
+        }
+        for (Class klass : transformClasses) {
+            verifyClassAndAddTransform(annotation, klass);
+        }
+    }
+    
+    private void verifyClassAndAddTransform(AnnotationNode annotation, Class klass) {
+        if (ASTTransformation.class.isAssignableFrom(klass)) {
+            classNode.addTransform(klass, annotation);
+        } else {
+            source.getErrorCollector().addError(new SimpleMessage("Not an ASTTransformation: " + 
+                    klass.getName() + " declared by " + annotation.getClassNode().getName(), source));
         }
     }
 
     private static Annotation getTransformClassAnnotation(ClassNode annotatedType) {
         if (!annotatedType.isResolved()) return null;
-        // FIXASC (groovychange) recognizing annotations - care about this code now? do we even come in here
-        if (!annotatedType.hasClass()) { 
-        	List<AnnotationNode> annotations = annotatedType.getAnnotations();
-        	return null;
-        }
-        //end
         for (Annotation ann : annotatedType.getTypeClass().getAnnotations()) {
             // because compiler clients are free to choose any GroovyClassLoader for
             // resolving ClassNodeS such as annotatedType, we have to compare by name,
             // and cannot cast the return value to GroovyASTTransformationClass
-            if (ann.annotationType().getName().equals(GroovyASTTransformationClass.class.getName())) {
+            if (ann.annotationType().getName().equals(GroovyASTTransformationClass.class.getName())){
                 return ann;
             }
-        }
+        }  
 
         return null;
     }
 
-    private String[] getTransformClasses(Annotation transformClassAnnotation) {
+    private String[] getTransformClassNames(Annotation transformClassAnnotation) {
         try {
             Method valueMethod = transformClassAnnotation.getClass().getMethod("value");
             return (String[]) valueMethod.invoke(transformClassAnnotation);
         } catch (Exception e) {
             source.addException(e);
             return new String[0];
+        }
+    }
+
+    private Class[] getTransformClasses(Annotation transformClassAnnotation) {
+        try {
+            Method classesMethod = transformClassAnnotation.getClass().getMethod("classes");
+            return (Class[]) classesMethod.invoke(transformClassAnnotation);
+        } catch (Exception e) {
+            source.addException(e);
+            return new Class[0];
         }
     }
 }

@@ -38,10 +38,12 @@ import java.io.*;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -726,7 +728,19 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         element = element.getNextSibling();
         if (element!=null) {
             init = expression(element);
-            if (isType(ELIST,element)) {
+            ClassNode innerClass = getAnonymousInnerClassNode(init);
+            
+            if (innerClass!=null) {
+                // we have to handle an enum that defines a class for a constant
+                // for example the constant having overwriting a method. we need 
+                // to configure the inner class 
+                innerClass.setSuperClass(classNode);
+                innerClass.setModifiers(classNode.getModifiers() | Opcodes.ACC_FINAL);
+                // we use a ClassExpression for transportation o EnumVisitor
+                init = new ClassExpression(innerClass);
+                // and remove the final modifier from classNode to allow the sub class
+                classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_FINAL);
+            } else if (isType(ELIST,element)) {
             	if(init instanceof ListExpression && !((ListExpression)init).isWrapped()) {
                     ListExpression le = new ListExpression();
                     le.addExpression(init);
@@ -1113,6 +1127,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         boolean access = false;
         int answer = 0;
+        Map<ClassNode, AnnotationNode> tmpAnnotations = new HashMap<ClassNode, AnnotationNode>();
 
         for (AST node = modifierNode.getFirstChild(); node != null; node = node.getNextSibling()) {
             int type = node.getType();
@@ -1123,7 +1138,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
                     // annotations
                 case ANNOTATION:
-                    annotations.add(annotation(node));
+                    AnnotationNode annNode = annotation(node);
+                    AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annNode.getClassNode(), annNode);
+                    if(anyPrevAnnNode != null) {
+                        throw new ASTRuntimeException(modifierNode, 
+                                "Cannot specify duplicate annotation on the same member : " + annNode.getClassNode().getName());
+                    }
+                    annotations.add(annNode);
                     break;
 
                     // core access scope modifiers
@@ -2224,14 +2245,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression leftExpression = expression(leftNode);
 
         AST rightNode = leftNode.getNextSibling();
-        ClassNode type = buildName(rightNode);
+        ClassNode type = makeTypeWithArguments(rightNode);
 
         return CastExpression.asExpression(type, leftExpression);
     }
 
     protected Expression castExpression(AST castNode) {
         AST node = castNode.getFirstChild();
-        ClassNode type = buildName(node);
+        ClassNode type = makeTypeWithArguments(node);
         assertTypeNotNull(type, node);
 
         AST expressionNode = node.getNextSibling();
@@ -2515,6 +2536,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             } else {
                 expressions.add(last);
             }
+        } else if (arguments instanceof AnonymousInnerClassCarrier) {
+            AnonymousInnerClassCarrier carrier = (AnonymousInnerClassCarrier) arguments;
+            return carrier.innerClass;
         }
         return null;
     }
@@ -2877,7 +2901,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             basicType.setGenericsTypes(typeArgumentList.toArray(new GenericsType[typeArgumentList.size()]));
         } else {
         	// super type source locations is not right, so set them here
-        	// FIXADE RC1 what to do about generics?
+        	// FIXASC (groovychange) what to do about generics?
       	    configureAST(basicType, rootNode);
       	}
         return basicType;

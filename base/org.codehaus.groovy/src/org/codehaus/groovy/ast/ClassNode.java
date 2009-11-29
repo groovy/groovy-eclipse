@@ -95,7 +95,7 @@ import groovy.lang.GroovyObject;
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Jochen Theodorou
- * @version $Revision: 17799 $
+ * @version $Revision: 18396 $
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
     private static class MapOfLists {
@@ -127,13 +127,13 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private int modifiers;
     private ClassNode[] interfaces;
     private MixinNode[] mixins;
-    private final List<ConstructorNode> constructors = new ArrayList<ConstructorNode>();
-    private final List<Statement> objectInitializers = new ArrayList<Statement>();
+    private List<ConstructorNode> constructors;
+    private List<Statement> objectInitializers;
     private MapOfLists methods;
     private List<MethodNode> methodsList;
-    private final LinkedList<FieldNode> fields = new LinkedList<FieldNode>();
-    private final List<PropertyNode> properties = new ArrayList<PropertyNode>();
-    private final Map<String, FieldNode> fieldIndex = new HashMap<String, FieldNode>();
+    private LinkedList<FieldNode> fields;
+    private List<PropertyNode> properties;
+    private Map<String, FieldNode> fieldIndex;
     private ModuleNode module;
     private CompileUnit compileUnit;
     private boolean staticClass = false;
@@ -141,6 +141,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private boolean script;
     private ClassNode superClass;
     protected boolean isPrimaryNode;
+    protected List<InnerClassNode> innerClasses;
 
     /**
      * The ASTTransformations to be applied to the Class
@@ -196,7 +197,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * represented by this ClassNode
      */
     public ClassNode makeArray() {
-        if (redirect!=null) return redirect().makeArray();
+        if (redirect!=null) {
+            ClassNode res = redirect().makeArray();
+            res.componentType = this;
+            return res;
+        }
         ClassNode cn;
         if (clazz!=null) {
             Class ret = Array.newInstance(clazz,0).getClass();
@@ -362,6 +367,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public List<FieldNode> getFields() {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         if (redirect!=null) return redirect().getFields();
+        if (fields == null)
+            fields = new LinkedList<FieldNode> ();
         return fields;
     }
 
@@ -471,6 +478,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return redirect().name;
     }
 
+    public String getUnresolvedName() {
+        return name;
+    }
+
     public String setName(String name) {
         return redirect().name=name;
     }
@@ -492,12 +503,18 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         // FIXASC (groovychange)
     	redirect().ensurePropertiesInitialized();
         // FIXASC (groovychange) end
-        return redirect().properties;
+		final ClassNode r = redirect();
+        if (r.properties == null)
+            r.properties = new ArrayList<PropertyNode> ();
+        return r.properties;    
     }
 
     public List<ConstructorNode> getDeclaredConstructors() {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        return redirect().constructors;
+        final ClassNode r = redirect();
+        if (r.constructors == null)
+            r.constructors = new ArrayList<ConstructorNode> ();
+        return r.constructors;
     }
 
     public ModuleNode getModule() {
@@ -516,24 +533,37 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void addField(FieldNode node) {
-        node.setDeclaringClass(redirect());
-        node.setOwner(redirect());
-        redirect().fields.add(node);
-        redirect().fieldIndex.put(node.getName(), node);
+        final ClassNode r = redirect();
+        node.setDeclaringClass(r);
+        node.setOwner(r);
+        if (r.fields == null)
+            r.fields = new LinkedList<FieldNode> ();
+        if (r.fieldIndex == null)
+            r.fieldIndex = new HashMap<String,FieldNode> ();
+        r.fields.add(node);
+        r.fieldIndex.put(node.getName(), node);
     }
 
     public void addFieldFirst(FieldNode node) {
-        node.setDeclaringClass(redirect());
-        node.setOwner(redirect());
-        redirect().fields.addFirst(node);
-        redirect().fieldIndex.put(node.getName(), node);
+        final ClassNode r = redirect();
+        node.setDeclaringClass(r);
+        node.setOwner(r);
+        if (r.fields == null)
+            r.fields = new LinkedList<FieldNode> ();
+        if (r.fieldIndex == null)
+            r.fieldIndex = new HashMap<String,FieldNode> ();
+        r.fields.addFirst(node);
+        r.fieldIndex.put(node.getName(), node);
     }
 
     public void addProperty(PropertyNode node) {
         node.setDeclaringClass(redirect());
         FieldNode field = node.getField();
         addField(field);
-        redirect().properties.add(node);
+        final ClassNode r = redirect();
+        if (r.properties == null)
+            r.properties = new ArrayList<PropertyNode> ();
+        r.properties.add(node);
     }
 
     public PropertyNode addProperty(String name,
@@ -575,7 +605,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public void addConstructor(ConstructorNode node) {
         node.setDeclaringClass(this);
-        redirect().constructors.add(node);
+        final ClassNode r = redirect();
+        if (r.constructors == null)
+            r.constructors = new ArrayList<ConstructorNode> ();
+        r.constructors.add(node);
     }
 
     public ConstructorNode addConstructor(int modifiers, Parameter[] parameters, ClassNode[] exceptions, Statement code) {
@@ -707,7 +740,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the method matching the given name and parameters or null
      */
     public FieldNode getDeclaredField(String name) {
-        return redirect().fieldIndex.get(name);
+        ClassNode r = redirect ();
+        if (r.fieldIndex == null)
+            r.fieldIndex = new HashMap<String,FieldNode> ();
+        return r.fieldIndex.get(name);
     }
 
     /**
@@ -747,10 +783,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @param statements the statement to be added
      */
     public void addObjectInitializerStatements(Statement statements) {
-        objectInitializers.add(statements);
+        getObjectInitializerStatements().add(statements);
     }
 
     public List<Statement> getObjectInitializerStatements() {
+        if (objectInitializers == null)
+            objectInitializers = new ArrayList<Statement> ();
         return objectInitializers;
     }
 
@@ -969,6 +1007,16 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public void setUnresolvedSuperClass(ClassNode sn) {
         superClass = sn;
+    }
+
+    public ClassNode [] getUnresolvedInterfaces() {
+        return getUnresolvedInterfaces(true);
+    }
+
+    public ClassNode [] getUnresolvedInterfaces(boolean useRedirect) {
+        if (!useRedirect) return interfaces;
+        if (!redirect().lazyInitDone) redirect().lazyClassInit();
+        return redirect().interfaces;
     }
 
     public CompileUnit getCompileUnit() {
@@ -1366,13 +1414,23 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void renameField(String oldName, String newName) {
-        final Map<String,FieldNode> index = redirect().fieldIndex;
+        ClassNode r = redirect ();
+        if (r.fieldIndex == null)
+            r.fieldIndex = new HashMap<String,FieldNode> ();
+        final Map<String,FieldNode> index = r.fieldIndex;
         index.put(newName, index.remove(oldName));
     }
     
     public boolean isEnum() {
         return (getModifiers()&Opcodes.ACC_ENUM) != 0;
      }
+    
+    /**
+     * @return iterator of inner classes defined inside this one
+     */
+    public Iterator<InnerClassNode> getInnerClasses() {
+        return (innerClasses == null ? Collections.<InnerClassNode>emptyList() : innerClasses).iterator();
+    }
      
      // FIXASC (groovychange)
 	public String getClassInternalName() {

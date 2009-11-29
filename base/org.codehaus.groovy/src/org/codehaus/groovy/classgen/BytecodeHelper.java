@@ -31,7 +31,7 @@ import java.math.BigInteger;
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Revision: 16296 $
+ * @version $Revision: 18195 $
  */
 public class BytecodeHelper implements Opcodes {
 
@@ -813,9 +813,14 @@ public class BytecodeHelper implements Opcodes {
         if (types == null) return;
         ret.append(start);
         for (int i = 0; i < types.length; i++) {
-            String name = types[i].getName();
+            if (types[i].getType().isArray()) {
+                ret.append("[");
+                addSubTypes(ret, new GenericsType[]{new GenericsType(types[i].getType().getComponentType())}, "", "");
+            }
+            else {
             if (types[i].isPlaceholder()) {
                 ret.append('T');
+                    String name = types[i].getName();
                 ret.append(name);
                 ret.append(';');
             } else if (types[i].isWildcard()) {
@@ -831,6 +836,7 @@ public class BytecodeHelper implements Opcodes {
             } else {
                 writeGenericsBounds(ret, types[i], false);
             }
+        }
         }
         ret.append(end);
     }

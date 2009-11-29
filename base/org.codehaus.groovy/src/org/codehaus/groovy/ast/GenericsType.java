@@ -41,10 +41,10 @@ public class GenericsType extends ASTNode {
     
     public GenericsType(ClassNode type, ClassNode[] upperBounds, ClassNode lowerBound) {
         this.type = type;
-        this.name = type.getName();
+        this.name = type.isGenericsPlaceHolder() ? type.getUnresolvedName() : type.getName();
         this.upperBounds = upperBounds;
         this.lowerBound = lowerBound;
-        placeholder = false;
+        placeholder = type.isGenericsPlaceHolder();
         resolved = false;
     }
     // FIXASC (groovychange)
@@ -91,6 +91,7 @@ public class GenericsType extends ASTNode {
 
     public void setPlaceholder(boolean placeholder) {
         this.placeholder = placeholder;
+        type.setGenericsPlaceHolder(true);
     }
     
     public boolean isResolved() {

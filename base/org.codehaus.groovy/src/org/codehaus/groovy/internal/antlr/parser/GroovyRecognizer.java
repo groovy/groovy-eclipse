@@ -2078,6 +2078,7 @@ inputState.guessing--;
 		{
 			typeParameters();
 			tp_AST = (AST)returnAST;
+			nls();
 			break;
 		}
 		case LITERAL_extends:
@@ -6259,8 +6260,8 @@ inputState.guessing--;
 							if (inputState.guessing==0) {
 								
 									reportError(e);
-									// Create a fake variable definition for this 'thing' and get the position right.  The null type will later 
-									// be converted to Object
+									// Create a fake variable definition for this 'thing' and get the position right.  
+									// Type is object
 									classField_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(null).add(create(TYPE,"java.lang.Object",LT(1),LT(2))).add(create(IDENT,first.getText(),LT(1),LT(2)))); 
 									consumeUntil(NLS);
 								

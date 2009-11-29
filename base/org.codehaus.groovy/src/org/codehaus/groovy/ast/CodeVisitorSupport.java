@@ -26,7 +26,7 @@ import java.util.List;
  * just walks the code and expression tree
  * 
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 15807 $
+ * @version $Revision: 18094 $
  */
 public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
@@ -54,7 +54,15 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     public void visitIfElse(IfStatement ifElse) {
         ifElse.getBooleanExpression().visit(this);
         ifElse.getIfBlock().visit(this);
-        ifElse.getElseBlock().visit(this);
+
+        Statement elseBlock = ifElse.getElseBlock(); 
+        if (elseBlock instanceof EmptyStatement) {
+            // dispatching to EmptyStatement will not call back visitor, 
+            // must call our visitEmptyStatement explicitly
+            visitEmptyStatement((EmptyStatement)elseBlock); 
+        } else {
+            elseBlock.visit(this);
+        }
     }
 
     public void visitExpressionStatement(ExpressionStatement statement) {
@@ -75,7 +83,18 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
         for (CatchStatement catchStatement : statement.getCatchStatements() ) {
             catchStatement.visit(this);
         }
-        statement.getFinallyStatement().visit(this);
+        Statement finallyStatement = statement.getFinallyStatement(); 
+        if (finallyStatement instanceof EmptyStatement) {
+            // dispatching to EmptyStatement will not call back visitor, 
+            // must call our visitEmptyStatement explicitly
+            visitEmptyStatement((EmptyStatement)finallyStatement); 
+        } else {
+            finallyStatement.visit(this);
+        }
+    }
+
+    protected void visitEmptyStatement(EmptyStatement statement) {
+        // noop
     }
 
     public void visitSwitch(SwitchStatement statement) {

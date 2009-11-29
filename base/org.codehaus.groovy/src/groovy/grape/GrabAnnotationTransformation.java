@@ -17,6 +17,7 @@
 package groovy.grape;
 
 import groovy.lang.Grab;
+import groovy.lang.GrabResolver;
 import groovy.lang.Grapes;
 import groovy.lang.GrabExclude;
 import groovy.lang.GrabConfig;
@@ -27,6 +28,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
+import org.codehaus.groovy.transform.ASTTransformationVisitor;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
@@ -55,8 +57,13 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
     private static final String GRAPES_DOT_NAME = dotName(GRAPES_CLASS_NAME);
     private static final String GRAPES_SHORT_NAME = shortName(GRAPES_DOT_NAME);
 
+    private static final String GRABRESOLVER_CLASS_NAME = GrabResolver.class.getName();
+    private static final String GRAPERESOLVER_DOT_NAME = dotName(GRABRESOLVER_CLASS_NAME);
+    private static final String GRABRESOLVER_SHORT_NAME = shortName(GRAPERESOLVER_DOT_NAME);
+    
     private static final ClassNode THREAD_CLASSNODE = new ClassNode(Thread.class);
     private static final List<String> GRABEXCLUDE_REQUIRED = Arrays.asList("group", "module");
+    private static final List<String> GRAPERESOLVER_REQUIRED = Arrays.asList("name", "root");
     private static final List<String> GRAB_REQUIRED = Arrays.asList("group", "module", "version");
     private static final List<String> GRAB_OPTIONAL = Arrays.asList("classifier", "transitive", "conf", "ext");
     private static final Collection<String> GRAB_ALL = DefaultGroovyMethods.plus(GRAB_REQUIRED, GRAB_OPTIONAL);
@@ -86,6 +93,10 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
     Set<String> grapesAliases;
     List<AnnotationNode> grapesAnnotations;
 
+    boolean allowShortGrabResolver;
+    Set<String> grabResolverAliases;
+    List<AnnotationNode> grabResolverAnnotations;
+    
     SourceUnit sourceUnit;
     ClassLoader loader;
     boolean initContextClassLoader;
@@ -111,10 +122,12 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
         allowShortGrabExcludes = true;
         allowShortGrabConfig = true;
         allowShortGrapes = true;
+        allowShortGrabResolver = true;
         grabAliases = new HashSet<String>();
         grabExcludeAliases = new HashSet<String>();
         grabConfigAliases = new HashSet<String>();
         grapesAliases = new HashSet<String>();
+        grabResolverAliases = new HashSet<String>();
         for (ImportNode im : mn.getImports()) {
             String alias = im.getAlias();
             String className = im.getClassName();
@@ -132,6 +145,13 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             } else if (GRAPES_CLASS_NAME.equals(className)) {
                 grapesAliases.add(im.getAlias());
             }
+            if ((className.endsWith(GRAPERESOLVER_DOT_NAME) && ((alias == null) || (alias.length() == 0)))
+                || (GRABRESOLVER_CLASS_NAME.equals(alias)))
+            {
+                allowShortGrabResolver = false;
+            } else if (GRABRESOLVER_CLASS_NAME.equals(className)) {
+                grabResolverAliases.add(im.getAlias());
+            }
         }
 
         List<Map<String,Object>> grabMaps = new ArrayList<Map<String,Object>>();
@@ -142,11 +162,31 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             grabExcludeAnnotations = new ArrayList<AnnotationNode>();
             grabConfigAnnotations = new ArrayList<AnnotationNode>();
             grapesAnnotations = new ArrayList<AnnotationNode>();
+            grabResolverAnnotations = new ArrayList<AnnotationNode>();
 
             visitClass(classNode);
 
             ClassNode grapeClassNode = new ClassNode(Grape.class);
 
+            if (!grabResolverAnnotations.isEmpty()) {
+                grabResolverAnnotationLoop:
+                for (AnnotationNode node : grabResolverAnnotations) {
+                    Map<String, Object> grapeResolverMap = new HashMap<String, Object>();
+                    for (String s : GRAPERESOLVER_REQUIRED) {
+                        Expression member = node.getMember(s);
+                        if (member == null) {
+                            addError("The missing attribute \"" + s + "\" is required in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
+                            continue grabResolverAnnotationLoop;
+                        } else if (member != null && !(member instanceof ConstantExpression)) {
+                            addError("Attribute \"" + s + "\" has value " + member.getText() + " but should be an inline constant in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
+                            continue grabResolverAnnotationLoop;
+                        }
+                        grapeResolverMap.put(s, ((ConstantExpression)member).getValue());
+                    }
+                    Grape.addResolver(grapeResolverMap);
+                }
+            }
+            
             if (!grapesAnnotations.isEmpty()) {
                 for (AnnotationNode node : grapesAnnotations) {
                     Expression init = node.getMember("initClass");
@@ -215,9 +255,8 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                     callGrabAsStaticInitIfNeeded(classNode, grapeClassNode, node, grabExcludeMaps);
                 }
             }
-
-
         }
+
         if (!grabMaps.isEmpty()) {
             Map<String, Object> basicArgs = new HashMap<String, Object>();
             basicArgs.put("classLoader", loader != null ? loader : sourceUnit.getClassLoader());
@@ -225,6 +264,8 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
             try {
                 Grape.grab(basicArgs, grabMaps.toArray(new Map[grabMaps.size()]));
+                // grab may have added more transformations through new URLs added to classpath, so do one more scan
+                ASTTransformationVisitor.addGlobalTransformsAfterGrab();
             } catch (RuntimeException re) {
                 // Decided against syntax exception since this is not a syntax error.
                 // The down side is we lose line number information for the offending
@@ -374,6 +415,11 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                     || (grabConfigAliases.contains(name))) {
                 grabConfigAnnotations.add(annotation);
             }
+            if ((GRABRESOLVER_CLASS_NAME.equals(name))
+                    || (allowShortGrabResolver && GRABRESOLVER_SHORT_NAME.equals(name))
+                    || (grabResolverAliases.contains(name))) {
+                grabResolverAnnotations.add(annotation);
+            }            
         }
     }
 
@@ -405,6 +451,11 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                     || (allowShortGrapes && GRAPES_SHORT_NAME.equals(name))
                     || (grapesAliases.contains(name))) {
                 grapesAnnotations.add(an);
+            }
+            if ((GRABRESOLVER_CLASS_NAME.equals(name))
+                    || (allowShortGrabResolver && GRABRESOLVER_SHORT_NAME.equals(name))
+                    || (grabResolverAliases.contains(name))) {
+                grabResolverAnnotations.add(an);
             }
         }
     }

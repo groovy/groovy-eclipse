@@ -64,6 +64,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private boolean isSpecialConstructorCall = false;
 
     private Map<String, GenericsType> genericParameterNames = new HashMap<String, GenericsType>();
+    private Set<FieldNode> fieldTypesChecked = new HashSet<FieldNode>();
 
     /**
      * we use ConstructedClassWithPackage to limit the resolving the compiler
@@ -170,7 +171,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public void visitField(FieldNode node) {
         ClassNode t = node.getType();
+        if(!fieldTypesChecked.contains(node)) {
         resolveOrFail(t, node);
+        }
         super.visitField(node);
     }
 
@@ -178,6 +181,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         ClassNode t = node.getType();
         resolveOrFail(t, node);
         super.visitProperty(node);
+        fieldTypesChecked.add(node.getField());
     }
 
     private boolean resolveToInner (ClassNode type) {
@@ -1184,7 +1188,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
 
         ClassNode sn = node.getUnresolvedSuperClass();
-        if (sn != null) resolveOrFail(sn, node, true);
+        if (sn != null) {
+            resolveOrFail(sn, node, true);
+            checkCyclicInheritence(node);
+        }
 
         for (ClassNode anInterface : node.getInterfaces()) {
             resolveOrFail(anInterface, node, true);
@@ -1196,6 +1203,21 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         finishedResolution();
         // end
         currentClass = oldNode;
+    }
+
+    private void checkCyclicInheritence(ClassNode node) {
+        ClassNode sn = node;
+        while(true) {
+            sn = sn.getUnresolvedSuperClass();
+            if(sn == null) break;
+
+            if(node == sn.redirect()) {
+                addError("Cyclic inheritance involving " + sn.getName() + " in class " + node.getName(), node);
+                break;
+            }
+            
+            if(sn == ClassHelper.OBJECT_TYPE) break;
+        }
     }
 
     public void visitCatchStatement(CatchStatement cs) {
