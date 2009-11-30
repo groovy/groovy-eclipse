@@ -37,7 +37,7 @@ import java.util.*;
  *
  * @author Jochen Theodorou
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 14020 $
+ * @version $Revision: 17875 $
  */
 public class ModuleNode extends ASTNode implements Opcodes {
 
@@ -219,6 +219,8 @@ public class ModuleNode extends ASTNode implements Opcodes {
             classNode.setScript(true);
             classNode.setScriptBody(true);
         
+        handleMainMethodIfPresent(methods);
+
         // return new Foo(new ShellContext(args)).run()
         classNode.addMethod(
             new MethodNode(
@@ -267,6 +269,34 @@ public class ModuleNode extends ASTNode implements Opcodes {
             classNode.addMethod(node);
         }
         return classNode;
+    }
+
+    /*
+     * If a main method is provided by user, account for it under run() as scripts generate their own 'main' so they can run.  
+     */
+    private void handleMainMethodIfPresent(List methods) {
+        for (Iterator iter = methods.iterator(); iter.hasNext();) {
+            MethodNode node = (MethodNode) iter.next();
+            if(node.getName().equals("main")) {
+                int modifiers = node.getModifiers();
+                if (node.isStatic() && node.getParameters().length == 1) {
+                    boolean retTypeMatches, argTypeMatches;
+                    ClassNode argType = node.getParameters()[0].getType();
+                    ClassNode retType = node.getReturnType();
+
+                    argTypeMatches = (argType.equals(ClassHelper.OBJECT_TYPE) || argType.getName().contains("String[]"));
+                    retTypeMatches = (retType == ClassHelper.VOID_TYPE || retType == ClassHelper.OBJECT_TYPE);
+                    
+                    if(retTypeMatches && argTypeMatches) {
+                        // if script has both loose statements as well as main(), then main() is ignored
+                        if(statementBlock.isEmpty()) {
+                            addStatement(node.getCode());
+                        }
+                        iter.remove();
+                    }
+                }
+            }
+        }
     }
 
     protected String extractClassFromFileDescription() {

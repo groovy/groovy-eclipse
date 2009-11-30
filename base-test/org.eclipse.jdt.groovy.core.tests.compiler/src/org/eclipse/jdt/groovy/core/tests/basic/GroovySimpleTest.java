@@ -62,7 +62,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		groovyLevel=17;
     	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-rc-1.jar");
     	if (groovyJar==null) {
-    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.5.jar");
+    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.6.jar");
     		groovyLevel=16;
     	}
 	}
@@ -92,7 +92,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         	groovyLevel=17;
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-rc-1.jar");
         	if (groovyJar==null) {
-        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.5.jar");
+        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.6.jar");
         		groovyLevel=16;
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();

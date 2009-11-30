@@ -196,11 +196,9 @@ public class Java5 implements VMPlugin {
             if (!(exp instanceof ListExpression)) return;
             ListExpression le = (ListExpression) exp;
             int bitmap = 0;
-            List listE = le.getExpressions();
-            for (Iterator iterator = listE.iterator(); iterator.hasNext();) {
-				Expression e = (Expression) iterator.next();
-				
-                PropertyExpression element = (PropertyExpression) e;
+
+            for (Iterator it=le.getExpressions().iterator(); it.hasNext();) {
+                PropertyExpression element = (PropertyExpression) it.next();
                 String name = element.getPropertyAsString();
                 ElementType value = ElementType.valueOf(name);
                 bitmap |= getElementCode(value);

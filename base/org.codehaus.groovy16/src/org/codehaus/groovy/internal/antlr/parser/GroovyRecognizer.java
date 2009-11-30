@@ -2060,6 +2060,7 @@ inputState.guessing--;
 		{
 			typeParameters();
 			tp_AST = (AST)returnAST;
+			nls();
 			break;
 		}
 		case LITERAL_extends:
@@ -9190,7 +9191,7 @@ inputState.guessing--;
 		{
 		_loop343:
 		do {
-			if ((LA(1)==NLS||LA(1)==LITERAL_catch) && (LA(2)==LPAREN||LA(2)==LITERAL_catch)) {
+			if (((LA(1)==NLS||LA(1)==LITERAL_catch) && (LA(2)==LPAREN||LA(2)==LITERAL_catch))&&(!(LA(1) == NLS && LA(2) == LPAREN))) {
 				nls();
 				handler();
 				h_AST = (AST)returnAST;

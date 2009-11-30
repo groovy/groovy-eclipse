@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -253,7 +254,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             
             check(an.getClassNode());
             
-            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
+            for (Map.Entry<String, Expression> member : (Collection<Map.Entry<String,Expression>>)(an.getMembers().entrySet())) {
                 member.getValue().visit(this);
             }
         }
@@ -284,7 +285,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      */
     public ASTNode doVisit(ModuleNode module) {
         try {
-            for (ImportNode importNode : module.getImports()) {
+            for (ImportNode importNode : (Collection<ImportNode>)module.getImports()) {
                 check(importNode.getType());
             }
             

@@ -40,7 +40,7 @@ import java.util.*;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 17819 $
+ * @version $Revision: 18251 $
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
@@ -356,6 +356,20 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         node.visitContents(this);
     }
 
+    /**
+     * Helper method to add a new method to a ClassNode.  Depending on the shouldBeSynthetic flag the 
+     * call will either be made to ClassNode.addSyntheticMethod() or ClassNode.addMethod(). If a non-synthetic method 
+     * is to be added the ACC_SYNTHETIC modifier is removed if it has been accidentally supplied.
+     */
+    private void addMethod(ClassNode node, boolean shouldBeSynthetic, String name, int modifiers, ClassNode returnType, Parameter[] parameters,
+            ClassNode[] exceptions, Statement code) {
+        if (shouldBeSynthetic) {
+            node.addSyntheticMethod(name,modifiers,returnType,parameters,exceptions,code);
+        } else {
+            node.addMethod(name,modifiers&~ACC_SYNTHETIC,returnType,parameters,exceptions,code);            
+        }
+    }
+
     protected void addTimeStamp(ClassNode node) {
         FieldNode timeTagField = new FieldNode(
                 Verifier.__TIMESTAMP,
@@ -462,12 +476,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         else if (!node.isAbstract()) {
             if (!(statement instanceof BytecodeSequence)) {
                 BlockStatement newBlock = new BlockStatement();
+                newBlock.setVariableScope(node.getVariableScope());
                 if (statement instanceof BlockStatement) {
                     newBlock.addStatements(((BlockStatement)statement).getStatements());
-                    // FIXASC (groovychange)
-                    // set the variable scope so that we don't lose information
-                    newBlock.setVariableScope(((BlockStatement) statement).getVariableScope());
-                    // end
                 } else {
                     newBlock.addStatement(statement);
                 }
