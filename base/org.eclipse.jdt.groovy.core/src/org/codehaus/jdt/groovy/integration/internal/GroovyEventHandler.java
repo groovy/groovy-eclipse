@@ -18,6 +18,7 @@ import org.eclipse.jdt.internal.core.JavaProject;
 public class GroovyEventHandler implements EventHandler {
 
 	// Recognized events:
+	//
 	// "cleanOutputFolders" - called when a clean occurs (either when forced or when part of a full build)
 	// "close" - called when a java project is closed
 	public void handle(JavaProject javaProject, String event) {
