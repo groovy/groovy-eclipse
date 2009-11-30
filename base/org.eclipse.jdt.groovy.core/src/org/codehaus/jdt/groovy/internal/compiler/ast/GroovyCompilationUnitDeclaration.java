@@ -111,6 +111,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	// The groovy sourceunit (a member of the groovyCompilationUnit)
 	private SourceUnit groovySourceUnit;
 	private CompilerOptions compilerOptions;
+	private boolean checkGenerics;
+	public static boolean defaultCheckGenerics = false;
 
 	private static final boolean DEBUG_TASK_TAGS = false;
 
@@ -120,6 +122,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		this.groovyCompilationUnit = groovyCompilationUnit;
 		this.groovySourceUnit = groovySourceUnit;
 		this.compilerOptions = compilerOptions;
+		this.checkGenerics = defaultCheckGenerics;
 	}
 
 	/**
@@ -1040,7 +1043,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		if (name.indexOf(".") == -1) {
 			if (typeArguments == null) {
-				return verify(new SingleTypeReference(name.toCharArray(), toPos(start, end - 1)));
+				TypeReference tr = verify(new SingleTypeReference(name.toCharArray(), toPos(start, end - 1)));
+
+				if (!checkGenerics) {
+					tr.bits |= TypeReference.IgnoreRawTypeCheck;
+				}
+				return tr;
 			} else {
 				// FIXASC (M2) determine when array dimension used in this case,
 				// is it 'A<T[]> or some silliness?
@@ -1051,7 +1059,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		} else {
 			char[][] compoundName = CharOperation.splitOn('.', name.toCharArray());
 			if (typeArguments == null) {
-				return new QualifiedTypeReference(compoundName, positionsFor(compoundName, start, end));
+				TypeReference tr = new QualifiedTypeReference(compoundName, positionsFor(compoundName, start, end));
+				if (!checkGenerics) {
+					tr.bits |= TypeReference.IgnoreRawTypeCheck;
+				}
+				return tr;
 			} else {
 				// FIXASC (M2) support individual parameterization of component
 				// references A<String>.B<Wibble>

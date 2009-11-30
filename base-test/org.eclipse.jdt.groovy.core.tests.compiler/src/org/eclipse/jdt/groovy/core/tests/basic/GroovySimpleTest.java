@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -57,6 +58,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
+		GroovyCompilationUnitDeclaration.defaultCheckGenerics=true;
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
 		groovyLevel=17;
@@ -73,6 +75,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	
 	protected void tearDown() throws Exception {
 		super.tearDown();
+		GroovyCompilationUnitDeclaration.defaultCheckGenerics=false;
 		GroovyParser.debugRequestor = null; 
 	}
 
@@ -218,6 +221,59 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"  }\n"+
 			"}\n",
 		},"success");		
+	}
+	
+	public void testTurningOffGenericsWarnings() {
+		Map options = getCompilerOptions();
+		options.put(CompilerOptions.OPTIONG_GroovyFlags,"0");
+
+//		runConformTest(new String[] {
+//				"Assertions.groovy",
+//				"import spock.lang.*\n"+
+//				"@Speck\n"+
+//				"class Assertions {\n"+
+////				"  public static void main(String[] argv) { new Assertions().comparingXandY();}\n"+
+//				"  def comparingXandY() {\n"+
+//				"    def x = 1\n"+
+//				"    def y = 2\n"+
+//				"    \n"+
+////				" print 'a'\n"+
+//				"    expect:\n"+
+//				"    x < y    // OK\n"+
+//				"    x == y   // BOOM!\n"+
+//				" }\n"+
+//				"}"},
+//				"----------\n" + 
+//				"1. ERROR in Assertions.groovy (at line 4)\n" + 
+//				"	public static void main(String[] argv) {\n" + 
+//				"	^^\n" + 
+//				"Groovy:Feature methods must not be static @ line 4, column 2.\n" + 
+//				"----------\n",
+//				null,
+//				true,
+//				null,
+//				options,
+//				null);
+//		this.runNegativeTest(new String[] {
+//			"p/X.groovy",
+//			"package p;\n" + 
+//			"public class X {\n" + 
+//			"  List l = new ArrayList();\n" + 
+//			"  public static void main(String[] argv) {\n"+
+//			"    print 'success'\n"+
+//			"  }\n"+
+//			"}\n"},
+//			"----------\n" + 
+//			"1. ERROR in Assertions.groovy (at line 4)\n" + 
+//			"	public static void main(String[] argv) {\n" + 
+//			"	^^\n" + 
+//			"Groovy:Feature methods must not be static @ line 4, column 2.\n" + 
+//			"----------\n",
+//			null,
+//			true,
+//			null,
+//			options,
+//			null);	
 	}
 	
 
