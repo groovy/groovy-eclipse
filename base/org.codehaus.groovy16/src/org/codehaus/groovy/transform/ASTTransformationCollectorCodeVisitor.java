@@ -69,6 +69,12 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     private final static Class[] NO_CLASSES = new Class[0];
 
     // FIXASC (groovychange)
+    /**
+     * For the supplied classnode, this method will check if there is an annotation on it of kind 'GroovyASTTransformationClass'.  If there is then
+     * the 'value' member of that annotation will be retrieved and the value considered to be the class name of a transformation.
+     * 
+     * @return null if no annotation found, otherwise a String[] of classnames - this will be size 0 if no value was specified
+     */
     private String[] getTransformClassNames(ClassNode cn) {
     	if (!cn.hasClass()) { 
         	List<AnnotationNode> annotations = cn.getAnnotations();
@@ -95,10 +101,39 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     		// FIXASC (M2) check haven't broken transforms for 'vanilla' (outside of eclipse) execution of groovyc
 	        Annotation transformClassAnnotation = getTransformClassAnnotation(cn);
 	        if (transformClassAnnotation == null) {
-	        	return NONE;
+	        	return null;
 	        }
 	        return getTransformClassNames(transformClassAnnotation);
     	}
+    }
+    
+
+    private Class[] getTransformClasses(ClassNode classNode) {
+    	if (!classNode.hasClass()) { 
+        	List<AnnotationNode> annotations = classNode.getAnnotations();
+        	AnnotationNode transformAnnotation = null;
+        	for (AnnotationNode anno: annotations) {
+        		if (anno.getClassNode().getName().equals(GroovyASTTransformationClass.class.getName())){
+                    transformAnnotation = anno; 
+                    break; 
+                }
+            }  
+        	if (transformAnnotation!=null) {
+        		Expression expression = (Expression)transformAnnotation.getMember("classes");
+        		if (expression!=null) {
+        			// Will need to extract the classnames
+        			throw new RuntimeException("nyi implemented in eclipse");
+        		}
+        	}
+        	return null;
+    	} else {
+	        Annotation transformClassAnnotation = getTransformClassAnnotation(classNode);
+	        if (transformClassAnnotation == null) {
+	        	return null;
+	        }
+	        return getTransformClasses(transformClassAnnotation);
+    	}
+    	
     }
     // end
     
@@ -121,11 +156,13 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
 //            addTransformsToClassNode(annotation, transformClassAnnotation);
             // newcode:
         	String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
-        	if (transformClassNames==null) {
+        	Class[] transformClasses = getTransformClasses(annotation.getClassNode());
+        	if (transformClassNames==null && transformClasses == null) {
         		continue;
         	}
-        	Class[] transformClasses = NO_CLASSES;// FIXASC (RC1) not yet implemented
-            addTransformsToClassNode(annotation, transformClassNames,transformClasses);
+        	if (transformClassNames == null) { transformClassNames = NONE; }
+        	if (transformClasses == null) { transformClasses = NO_CLASSES; }
+            addTransformsToClassNode(annotation, transformClassNames, transformClasses);
         	// end
         }
     }
@@ -136,6 +173,9 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         Class[] transformClasses = getTransformClasses(transformClassAnnotation);
         addTransformsToClassNode(annotation,transformClassNames,transformClasses);
     }
+    
+
+
         
     private void addTransformsToClassNode(AnnotationNode annotation, String[] transformClassNames, Class[] transformClasses) {
 

@@ -1202,6 +1202,11 @@ public void cleanBuild() {
 			}
 		} while (wasInterrupted);
 	}
+	
+	public void addJar(IPath projectPath, String path) throws Exception {
+		URL jar = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry(path);
+        addExternalJar(projectPath, FileLocator.resolve(jar).getFile());
+	}
 
 	public void addGroovyJars(IPath projectPath) throws Exception {
 		URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-rc-1.jar");

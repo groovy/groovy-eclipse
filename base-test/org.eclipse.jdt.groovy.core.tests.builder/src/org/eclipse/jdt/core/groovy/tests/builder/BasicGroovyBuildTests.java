@@ -183,6 +183,48 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 	}
 	
+	
+	// http://jira.codehaus.org/browse/GRECLIPSE-558
+	/**
+	 * The aim of this test is to verify the processing in ASTTransformationCollectorCodeVisitor - to check it finds everything it expects.
+	 */
+	public void testSpock_GRE558() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addJar(projectPath,"lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
+	    env.addJar(projectPath,"lib/junit4_4.5.0.jar"); //$NON-NLS-1$
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "MyTest",
+				"import org.junit.runner.RunWith\n"+
+				"import spock.lang.Specification \n"+
+				"import spock.lang.Sputnik;\n"+
+				"\n"+
+				"@RunWith(Sputnik)\n"+
+				"class MyTest extends Specification {\n"+
+				"//deleting extends Specification is sufficient to remove all 3 errors,\n"+ 
+				"//necessary to remove model.SpecMetadata\n"+
+				"\n"+
+				"def aField; //delete line to remove the model.FieldMetadata error.\n"+
+				"\n"+
+				"def noSuchLuck() { expect: //delete line to remove model.FeatureMetadata error. \n" +
+				"  println hello }\n"+
+				"public static void main(String[] argv) { print 'success';}\n"+
+				"}");
+		
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("MyTest");
+		executeClass(projectPath, "MyTest", "success", null);
+	}
+	
 			
 	
 	// build .groovy file hello world then run it
