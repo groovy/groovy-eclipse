@@ -498,7 +498,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
 		}
 		return false;
 	}
-    // FIXASC (groovychange) end
+    // FIXASC (groovychange) end 
 
     private static boolean inImmutableList(Class typeClass) {
         return Arrays.asList(immutableList).contains(typeClass);
