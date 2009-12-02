@@ -113,4 +113,16 @@ public class InferencingTests extends AbstractInferencingTest {
         String expr = "myOther "; // extra space b/c variable expression end offset is wrong
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
+    
+    public void testTernaryExpression() throws Exception {
+        String contents = "true ? '' : ''";
+        assertType(contents, "java.lang.String");
+    }
+    
+    public void testElvisExpression() throws Exception {
+        String contents = "'' ?: ''";
+        assertType(contents, "java.lang.String");
+    }
+    
+    
 }

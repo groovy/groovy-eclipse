@@ -56,6 +56,7 @@ import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -66,7 +67,8 @@ import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
  * @author Andrew Eisenberg
  * @created Aug 29, 2009
  * 
- *          Looks at the type associated with the ASTNode for the type
+ *          Looks at the type associated with the ASTNode for the type <br>
+ *          FIXADE RC1 This class is getting really, really ugly. Clean this up!
  */
 public class SimpleTypeLookup implements ITypeLookup {
 
@@ -245,9 +247,25 @@ public class SimpleTypeLookup implements ITypeLookup {
 					}
 				}
 
-				FieldNode field = objectExpressionType.getField(name);
-				if (field != null) {
-					return new TypeLookupResult(field.getType(), field.getDeclaringClass(), field, confidence, scope);
+				ASTNode maybeDecl = findDeclaration(name, objectExpressionType);
+				if (maybeDecl != null) {
+					ClassNode type;
+					ClassNode declaringClass;
+					if (maybeDecl instanceof FieldNode) {
+						type = ((FieldNode) maybeDecl).getType();
+						declaringClass = ((FieldNode) maybeDecl).getDeclaringClass();
+					} else if (maybeDecl instanceof PropertyNode) {
+						type = ((PropertyNode) maybeDecl).getType();
+						declaringClass = ((PropertyNode) maybeDecl).getDeclaringClass();
+					} else if (maybeDecl instanceof MethodNode) {
+						type = ((MethodNode) maybeDecl).getReturnType();
+						declaringClass = ((MethodNode) maybeDecl).getDeclaringClass();
+					} else {
+						// maybeDecl == null
+						type = VariableScope.OBJECT_CLASS_NODE;
+						declaringClass = objectExpressionType;
+					}
+					return new TypeLookupResult(type, declaringClass, maybeDecl, confidence, scope);
 				}
 				// might be somewhere in the variable scope
 				if (declaringType.equals(scope.getEnclosingTypeDeclaration())) {
@@ -322,7 +340,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)
 				&& !(node instanceof MapEntryExpression) && !(node instanceof PropertyExpression)
-				&& node.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+				&& !(node instanceof TupleExpression) && node.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
 			confidence = UNKNOWN;
 		}
 
@@ -342,6 +360,23 @@ public class SimpleTypeLookup implements ITypeLookup {
 			List<MethodNode> methods = interf.getDeclaredMethods(name);
 			if (methods != null && methods.size() > 0) {
 				return methods.get(0);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @param objectExpressionType
+	 * @param name
+	 * @return
+	 */
+	private PropertyNode findPropertyInClass(ClassNode objectExpressionType, String name) {
+		Set<ClassNode> allClasses = new HashSet<ClassNode>();
+		findAllClasses(objectExpressionType, allClasses);
+		for (ClassNode interf : allClasses) {
+			PropertyNode prop = interf.getProperty(name);
+			if (prop != null) {
+				return prop;
 			}
 		}
 		return null;
@@ -377,13 +412,27 @@ public class SimpleTypeLookup implements ITypeLookup {
 		}
 	}
 
+	private void findAllClasses(ClassNode clazz, Set<ClassNode> allClasses) {
+		if (!allClasses.contains(clazz)) {
+			allClasses.add(clazz);
+			if (clazz.getSuperClass() != null) {
+				findAllClasses(clazz.getSuperClass(), allClasses);
+			}
+			if (clazz.getInterfaces() != null) {
+				for (ClassNode superInterface : clazz.getInterfaces()) {
+					findAllInterfaces(superInterface, allClasses);
+				}
+			}
+		}
+	}
+
 	/**
 	 * @param name
 	 * @param declaringType
 	 * @return
 	 */
 	private ASTNode findDeclaration(String name, ClassNode declaringType) {
-		AnnotatedNode maybe = declaringType.getProperty(name);
+		AnnotatedNode maybe = findPropertyInClass(declaringType, name);
 		if (maybe != null) {
 			return maybe;
 		}

@@ -45,7 +45,7 @@ public class ReflectionUtils {
 		} catch (Exception e) {
 			Activator.getDefault().getLog().log(
 					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error getting private field '" + fieldName //$NON-NLS-1$
-							+ "' on class " + clazz)); //$NON-NLS-1$
+							+ "' on class " + clazz, e)); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -63,7 +63,7 @@ public class ReflectionUtils {
 		} catch (Exception e) {
 			Activator.getDefault().getLog().log(
 					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error setting private field '" + fieldName //$NON-NLS-1$
-							+ "' on class " + clazz)); //$NON-NLS-1$
+							+ "' on class " + clazz, e)); //$NON-NLS-1$
 		}
 	}
 
@@ -75,10 +75,18 @@ public class ReflectionUtils {
 			return method.invoke(target, args);
 		} catch (Exception e) {
 			Activator.getDefault().getLog().log(
-					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error setting private field '" + methodName //$NON-NLS-1$
-							+ "' on class " + clazz)); //$NON-NLS-1$
+					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error executing private method '" + methodName //$NON-NLS-1$
+							+ "' on class " + clazz, e)); //$NON-NLS-1$
 		}
 		return null;
+	}
+
+	public static <T> Object throwableExecutePrivateMethod(Class<T> clazz, String methodName, Class<?>[] types, Object target,
+			Object[] args) throws Exception {
+		// forget caching for now...
+		Method method = clazz.getDeclaredMethod(methodName, types);
+		method.setAccessible(true);
+		return method.invoke(target, args);
 	}
 
 }

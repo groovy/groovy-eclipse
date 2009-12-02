@@ -82,7 +82,6 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     
     private void installSemanticHighlighting() {
-        // only install if magic system property is set
         try {
             semanticReconciler = new GroovySemanticReconciler();
             semanticReconciler.install(this, (JavaSourceViewer) this.getSourceViewer());
@@ -94,15 +93,20 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
     
     private void uninstallSemanticHighlighting() {
-        // only install if magic system property is set
-        try {
-            semanticReconciler.uninstall();
-            ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener", 
-                    new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
-            semanticReconciler = null;
-        } catch (SecurityException e) {
-            GroovyCore.logException("Unable to uninstall semantic reconciler for groovy editor", e);
+        if (semanticHighlightingInstalled()) {
+            try {
+                semanticReconciler.uninstall();
+                ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener", 
+                        new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
+                semanticReconciler = null;
+            } catch (SecurityException e) {
+                GroovyCore.logException("Unable to uninstall semantic reconciler for groovy editor", e);
+            }
         }
+    }
+    
+    private boolean semanticHighlightingInstalled() {
+        return semanticReconciler != null;
     }
 
     
@@ -139,6 +143,8 @@ public class GroovyEditor extends CompilationUnitEditor {
     	super.setSelection(reference, moveCursor);
 
     	// must override functionality because JavaEditor expects that there is a ';' at end of declaration
+    	// also, offsets are wrong for import declarations, they start 7 characters too early and
+    	// end 7 characters too early.
     	try {
 			if (reference instanceof IImportDeclaration && moveCursor) {
 				int offset;
@@ -146,17 +152,23 @@ public class GroovyEditor extends CompilationUnitEditor {
 				ISourceRange range = ((ISourceReference) reference).getSourceRange();
 				String content= reference.getSource();
 				if (content != null) {
-					int start= content.indexOf("import") + 6; //$NON-NLS-1$
+					int start = Math.max(content.indexOf("import") + 6, 7); //$NON-NLS-1$
 					while (start < content.length() && content.charAt(start) == ' ')
 						start++;
 					
 					int end= content.trim().length();
 					do {
 						end--;
-					} while (end >= 0 && content.charAt(end) == ' ');
+					} while (end >= 0 && (content.charAt(end) == ' ' || content.charAt(end) == ';'));
 					
 					offset= range.getOffset() + start;
-					length= end - start + 1;
+					length= end - start + 8;
+					
+					// just in case...
+					int docLength = ((IImportDeclaration) reference).getOpenable().getBuffer().getLength();
+					if (docLength < offset+length) {
+					    offset = docLength;
+					}
 				} else {
 					// fallback
 					offset= range.getOffset();
@@ -279,12 +291,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
     
     public GroovyCompilationUnit getGroovyCompilationUnit() {
-        IFile file = getFile();
-        if (file != null) {
-            return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-        } else {
-            return null;    
-        }
+        return (GroovyCompilationUnit) getInputJavaElement();
     }
     
     public ModuleNode getModuleNode() {
@@ -332,10 +339,17 @@ public class GroovyEditor extends CompilationUnitEditor {
      */
     @Override
     protected void doSetInput(IEditorInput input) throws CoreException {
+        boolean wasInstalled = semanticHighlightingInstalled();
+        if (wasInstalled) {
+            uninstallSemanticHighlighting();
+        }
         internalInput = input;
         super.doSetInput(input);
         unsetJavaBreakpointUpdater();
         internalInput = null;
+        if (wasInstalled) {
+            installSemanticHighlighting();
+        }
     }
     
     

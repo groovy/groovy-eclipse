@@ -282,8 +282,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * @param node
 	 */
 	private void visitClassInternal(ClassNode node) {
-		TypeLookupResult result = null;
 		visitAnnotations(node);
+
+		TypeLookupResult result = null;
+		result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scopes.peek());
+		VisitStatus status = handleRequestor(node, requestor, result);
+		switch (status) {
+			case CONTINUE:
+				break;
+			case CANCEL_BRANCH:
+				return;
+			case STOP_VISIT:
+				throw new VisitCompleted();
+		}
 
 		ClassNode supr = node.getSuperClass();
 		for (ITypeLookup lookup : lookups) {
@@ -293,7 +304,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 		// use unresolved super to maintain source locations
-		VisitStatus status = handleRequestor(node.getUnresolvedSuperClass(false), requestor, result);
+		status = handleRequestor(node.getUnresolvedSuperClass(false), requestor, result);
 		switch (status) {
 			case CONTINUE:
 				break;
@@ -922,9 +933,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitShortTernaryExpression(ElvisOperatorExpression node) {
+		// arbitrarily, we choose the if clause to be the type of this expression
+		propertyExpression.push(node);
+		node.getTrueExpression().visit(this);
 		boolean shouldContinue = handleExpression(node);
+
+		// the declaration itself is the property node
+		ClassNode exprType = propertyExpressionType.pop();
+		propertyExpression.pop();
+
 		if (shouldContinue) {
-			super.visitShortTernaryExpression(node);
+			node.getFalseExpression().visit(this);
+
+			if (isObjectExpression(node)) {
+				// returns true if this declaration expression is the property field of another property expression
+				objectExpressionType.push(exprType);
+			}
+		} else {
+			propertyExpression.pop();
 		}
 	}
 

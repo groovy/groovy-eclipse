@@ -161,22 +161,33 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * 
 	 */
 	public ModuleNode getModuleNode() {
-		try {
-			if (!isWorkingCopy()) {
-				becomeWorkingCopy(null);
+		synchronized (this) {
+			try {
+				// discard the working copy after finishing
+				// if there was no working copy to begin with
+				boolean becameWorkingCopy = false;
+				try {
+					if (becameWorkingCopy = !isWorkingCopy()) {
+						becomeWorkingCopy(null);
+					}
+					if (!isConsistent()) {
+						reconcile(true, null);
+					}
+					PerWorkingCopyInfo info = getPerWorkingCopyInfo();
+					if (info != null) {
+						return ModuleNodeMapper.getInstance().get(info);
+					}
+				} finally {
+					if (becameWorkingCopy) {
+						discardWorkingCopy();
+					}
+				}
+			} catch (JavaModelException e) {
+				Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName()); //$NON-NLS-1$
 			}
-			if (!isConsistent()) {
-				reconcile(true, null);
-			}
-			PerWorkingCopyInfo info = getPerWorkingCopyInfo();
-			if (info != null) {
-				return ModuleNodeMapper.getInstance().get(info);
-			}
-		} catch (JavaModelException e) {
-			Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName()); //$NON-NLS-1$
+			// return null if not found. Means that there was a problem with build structure
+			return null;
 		}
-		// return null if not found. Means that there was a problem with build structure
-		return null;
 	}
 
 	/**
@@ -552,9 +563,16 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 	@Override
 	public void rename(String newName, boolean force, IProgressMonitor monitor) throws JavaModelException {
+//		super.rename(newName, force, monitor);
+//		// FIXADE RC1 we should not have to do this. Somewhere, a working copy is being created and not discarded
+//		if (this.isWorkingCopy()) {
+//			this.discardWorkingCopy();
+//		}
 		// FIXADE RC1 re-enable renaming for groovy CUs in a way that works for groovy files
 		String message = "Rename Compilation Unit currently disabled in groovy.  File: " + this.getElementName();
 		Util.log(null, message);
 		System.out.println(message);
+
 	}
+
 }

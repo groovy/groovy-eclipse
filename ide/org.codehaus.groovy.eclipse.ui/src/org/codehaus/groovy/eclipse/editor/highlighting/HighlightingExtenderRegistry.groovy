@@ -97,7 +97,7 @@ public class HighlightingExtenderRegistry {
 		extraGJDKKeywords
 	}
 	List<IRule> getAdditionalRulesForProject(IProject project) {
-		if (!project) {
+		if (!project || !project.isAccessible()) {
 		    return
 		}
 		def extraRules = []

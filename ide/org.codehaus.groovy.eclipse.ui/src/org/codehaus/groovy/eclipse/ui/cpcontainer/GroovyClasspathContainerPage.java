@@ -143,6 +143,9 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
 
     public void initialize(final IJavaProject project,
             final IClasspathEntry[] currentEntries) {
+        if (project == null) {
+            return;
+        }
         jProject = project;
         prefStore = preferenceStore(jProject.getProject());
     }

@@ -65,9 +65,16 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 		if (node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode
 				|| node instanceof AnnotationNode) {
 
+			ASTNode noArray;
+			if (node instanceof ClassNode) {
+				noArray = removeArray((ClassNode) node);
+			} else {
+				noArray = node;
+			}
+
 			if (result.type != null) {
 				String qualifiedName = removeArray(result.type).getName();
-				if (qualifiedNameMatches(qualifiedName)) {
+				if (qualifiedNameMatches(qualifiedName) && noArray.getEnd() > 0) {
 					int start;
 					int end;
 

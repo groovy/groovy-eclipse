@@ -69,11 +69,8 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     
     private IProject getProject() {
         ITextEditor editor = getEditor();
-        if (editor != null) {
-            IEditorInput input = editor.getEditorInput();
-            if (input == null && editor instanceof GroovyEditor) {
-                input = ((GroovyEditor) editor).internalInput;
-            }
+        if (editor != null && editor instanceof GroovyEditor) {
+            IEditorInput input = ((GroovyEditor) editor).internalInput;
             if (input instanceof FileEditorInput) {
                 IFile file = ((FileEditorInput) input).getFile();
                 return file.getProject();

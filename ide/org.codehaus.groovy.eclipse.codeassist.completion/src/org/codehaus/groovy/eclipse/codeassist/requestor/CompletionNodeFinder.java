@@ -123,14 +123,14 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // for 1.7 stream only
         for (ImportNode importStarNode : getImports(node, "getStarImports")) {
             visitAnnotations(importStarNode);
-            if (doTest(importStarNode.getType())) {
+            if (importStarNode.getType() != null && doTest(importStarNode.getType())) {
                 currentDeclaration = importStarNode;
                 createContext(null, importStarNode, IMPORT);
             }
         }
         for (ImportNode importStaticNode : getImports(node, "getStaticImports")) {
             visitAnnotations(importStaticNode);
-            if (doTest(importStaticNode.getType())) {
+            if (importStaticNode.getType() != null && doTest(importStaticNode.getType())) {
                 currentDeclaration = importStaticNode;
                 createContext(null, importStaticNode, IMPORT);
             }
@@ -151,7 +151,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
      */
     private Iterable<ImportNode> getImports(ModuleNode node, String methodName) {
         try {
-            Object obj = ReflectionUtils.executePrivateMethod(ModuleNode.class, 
+            Object obj = ReflectionUtils.throwableExecutePrivateMethod(ModuleNode.class, 
                     methodName, new Class<?>[0], node, new Object[0]);
             if (obj instanceof Iterable<?>) {
                 return (Iterable<ImportNode>) obj;

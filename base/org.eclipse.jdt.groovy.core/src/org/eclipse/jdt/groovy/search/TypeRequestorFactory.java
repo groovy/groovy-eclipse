@@ -26,6 +26,7 @@ import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
 import org.eclipse.jdt.internal.core.search.matching.OrPattern;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
+import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern;
 import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 
 /**
@@ -44,6 +45,9 @@ public class TypeRequestorFactory {
 	public ITypeRequestor createRequestor(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
 		if (pattern instanceof TypeReferencePattern) {
 			return new TypeReferenceSearchRequestor((TypeReferencePattern) pattern, requestor, possibleMatch.document
+					.getParticipant());
+		} else if (pattern instanceof TypeDeclarationPattern) {
+			return new TypeDeclarationSearchRequestor((TypeDeclarationPattern) pattern, requestor, possibleMatch.document
 					.getParticipant());
 		} else if (pattern instanceof FieldPattern) {
 			return new FieldReferenceSearchRequestor((FieldPattern) pattern, requestor, possibleMatch.document.getParticipant());

@@ -68,8 +68,10 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     protected void tearDown() throws Exception {
         super.tearDown();
         ICompilationUnit[] units = JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true);
-        for (int i = 0; i < units.length; i++) {
-            units[i].discardWorkingCopy();
+        if (units != null) {
+            for (int i = 0; i < units.length; i++) {
+                units[i].discardWorkingCopy();
+            }
         }
     }
     

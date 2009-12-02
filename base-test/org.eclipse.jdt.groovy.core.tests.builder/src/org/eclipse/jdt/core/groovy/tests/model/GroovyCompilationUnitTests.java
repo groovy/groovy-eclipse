@@ -86,57 +86,73 @@ public class GroovyCompilationUnitTests extends BuilderTests {
     public void testGetModuleNode_1() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
         ModuleNode node2 = unit1.getModuleNode();
         assertTrue ("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node1 == node2);
+        unit1.discardWorkingCopy();
     }
     
     public void testGetModuleNode_2() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
         GroovyCompilationUnit unit2 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit2.becomeWorkingCopy(null);
         ModuleNode node2 = unit2.getModuleNode();
         assertTrue ("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node1 == node2);
+        unit1.discardWorkingCopy();
+        unit2.discardWorkingCopy();
     }
     
     public void testGetModuleNode_3() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
         unit1.reconcile(AST.JLS3, true, unit1.owner, null);
         ModuleNode node2 = unit1.getModuleNode();
         assertTrue ("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node1 == node2);
+        unit1.discardWorkingCopy();
     }
     
     @SuppressWarnings("unchecked")
 	public void testGetModuleNode_4() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
         unit1.makeConsistent(AST.JLS3, true, ICompilationUnit.FORCE_PROBLEM_DETECTION, new HashMap(), null);
         ModuleNode node2 = unit1.getModuleNode();
         assertTrue ("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node1 == node2);
+        unit1.discardWorkingCopy();
     }
     public void testGetModuleNode_5() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
         unit1.getBuffer().append(" ");
         ModuleNode node2 = unit1.getModuleNode();
         assertTrue ("Multiple calls to getModuleNode should return different objects if something has changed underneath", node1 != node2);
+        unit1.discardWorkingCopy();
     }
     
     public void testGetModuleNode_6() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
         GroovyCompilationUnit unit2 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit2.becomeWorkingCopy(null);
         ModuleNode node2 = unit2.getModuleNode();
         unit1.getBuffer().append(" ");
         ModuleNode node3 = unit1.getModuleNode();
         ModuleNode node4 = unit2.getModuleNode();
-        
+        unit1.discardWorkingCopy();
+        unit2.discardWorkingCopy();
+
         assertTrue ("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node1 == node2);
         assertTrue ("Multiple calls to getModuleNode should return different objects if something has changed underneath", node1 != node3);
         assertTrue ("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node3 == node4);
@@ -145,8 +161,10 @@ public class GroovyCompilationUnitTests extends BuilderTests {
     public void testGetModuleNode_7() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
         unit1.getModuleNode();
         GroovyCompilationUnit unit2 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit2.becomeWorkingCopy(null);
         unit2.getModuleNode();
         unit1.getBuffer().append(" ");
         unit1.getModuleNode();
@@ -156,6 +174,14 @@ public class GroovyCompilationUnitTests extends BuilderTests {
         unit2.discardWorkingCopy();
         
         assertTrue("ModuleNodeMapper should be empty when there are no working copies", ModuleNodeMapper.isEmpty());
+    }
+    
+    public void testGetModuleNode_8() throws Exception {
+        IFile groovyFile = createSimpleGroovyProject();
+        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        ModuleNode node1 = unit1.getModuleNode();
+        ModuleNode node2 = unit1.getModuleNode();
+        assertFalse("Multiple calls to getModuleNode should return the different objects if unit is not a working copy", node1 == node2);
     }
     
     public void testGetNewModuleNode() throws Exception {

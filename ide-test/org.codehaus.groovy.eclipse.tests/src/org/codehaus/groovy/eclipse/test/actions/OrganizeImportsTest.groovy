@@ -263,6 +263,31 @@ public class OrganizeImportsTest extends EclipseTestCase {
 		doAddImportTest(contents, expectedImports)
     }
     
+    void testGRECLISPE546a() {
+        String contents = 
+            """ 
+            import java.text.DateFormat;
+            
+            class Foo {
+                Foo(DateFormat arg) { }
+            }
+            """
+            def expectedImports = [ ] // none added, none removed
+                                    doAddImportTest(contents, expectedImports)
+    }
+    
+    void testGRECLISPE546b() {
+        String contents = 
+            """ 
+            
+            class Foo {
+            Foo(DateFormat arg) { }
+            }
+            """
+            def expectedImports = [ 'java.text.DateFormat']
+                                    doAddImportTest(contents, expectedImports)
+    }
+    
 
 
     void doAddImportTest(contents, expectedImports) {

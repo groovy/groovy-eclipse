@@ -26,6 +26,7 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -178,6 +179,10 @@ public class GroovyParser {
 	 */
 	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
 		char[] sourceCode = sourceUnit.getContents();
+		if (sourceCode == null) {
+			sourceCode = CharOperation.NO_CHAR; // pretend empty from thereon
+		}
+
 		// FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
 		CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
 		// groovyCompilerConfig.setPluginFactory(new ErrorRecoveredCSTParserPluginFactory(null));

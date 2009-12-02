@@ -10,6 +10,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
@@ -105,6 +106,16 @@ public class OrganizeGroovyImports {
                 handleType(node.getType(), false);
             }
             super.visitField(node);
+        }
+        
+        @Override
+        public void visitConstructor(ConstructorNode node) {
+            if (!node.isSynthetic()) {
+                for (Parameter param : node.getParameters()) {
+                    handleType(param.getType(), false);
+                }
+            }
+            super.visitConstructor(node);
         }
         
         @Override
