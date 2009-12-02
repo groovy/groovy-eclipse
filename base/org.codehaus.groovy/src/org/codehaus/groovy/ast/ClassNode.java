@@ -15,25 +15,36 @@
  */
 package org.codehaus.groovy.ast;
 
+import groovy.lang.GroovyObject;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
+
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
 import org.objectweb.asm.Opcodes;
-
-import java.lang.reflect.Array;
-import java.util.*;
-
-import groovy.lang.GroovyObject;
 
 /**
  * Represents a class in the AST.<br/>
@@ -1319,7 +1330,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
     // end
 
-    public Class getTypeClass(){
+    public Class getTypeClass(){ 
         Class c = redirect().clazz;
         if (c!=null) return c;
         ClassNode component = redirect().componentType;
