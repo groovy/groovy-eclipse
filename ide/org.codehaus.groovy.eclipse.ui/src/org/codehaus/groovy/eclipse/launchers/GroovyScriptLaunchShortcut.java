@@ -16,11 +16,13 @@
 package org.codehaus.groovy.eclipse.launchers;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,9 +30,13 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.ui.ILaunchShortcut;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.osgi.framework.Bundle;
 
@@ -58,7 +64,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
             }
         }
         
-        if( candidates.size() == 1 ) {
+        if (candidates.size() == 1) {
             returnValue = candidates.get(0);
         } else {
             returnValue = LaunchShortcutHelper.chooseClassNode(candidates);
@@ -79,9 +85,10 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, 
                 "org.codehaus.groovy.tools.GroovyStarter");
+        IJavaProject javaProject = runType.getJavaProject();
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, 
-                runType.getJavaProject().getElementName());
+                javaProject.getElementName());
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, 
                 "-Dgroovy.starter.conf="+getGroovyConf() + 
@@ -89,13 +96,63 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
                 );
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
-                "--main groovy.ui.GroovyMain "
-                + className
-                    );
+                "--classpath " + getClasspath(javaProject) +
+                " --main groovy.ui.GroovyMain " +
+                className);
      
         return launchConfigProperties;
     }
 
+
+    /**
+     * @return the classpath as a string.  need to include only the source and output folders.
+     * source folders come first since source should be checked before binary for scripts
+     */
+    private String getClasspath(IJavaProject javaProject) {
+        StringBuilder sbSrc = new StringBuilder();
+        StringBuilder sbBin = new StringBuilder();
+        sbSrc.append("\"");
+        try {
+            IClasspathEntry[] entries = javaProject.getRawClasspath();
+            for (IClasspathEntry entry : entries) {
+                int kind = entry.getEntryKind();
+                if (kind == IClasspathEntry.CPE_SOURCE) {
+                    IPath srcPath = entry.getPath();
+                    if (srcPath.segmentCount() > 1) {
+                        sbSrc.append(srcPath.removeFirstSegments(1).toOSString() + File.pathSeparator);
+                    } else {
+                        sbSrc.append("." + File.pathSeparator);
+                    }
+                    IPath outPath = entry.getOutputLocation();
+                    if (outPath != null) {
+                        if (outPath.segmentCount() > 1) {
+                            sbBin.append(outPath.removeFirstSegments(1).toOSString() + File.pathSeparator);
+                        } else {
+                            sbBin.append("." + File.pathSeparator);
+                        }
+                    }
+                }
+            }
+            IPath defaultOutPath = javaProject.getOutputLocation();
+            if (defaultOutPath != null) {
+                if (defaultOutPath.segmentCount() > 1) {
+                    sbBin.append(defaultOutPath.removeFirstSegments(1).toOSString());
+                } else {
+                    sbBin.append(".");
+                }
+            }
+            if (sbBin.length() > 0) {
+                sbSrc.append(sbBin);
+            } else {
+                // remove trailing file separator
+                sbSrc.replace(sbBin.length()-1, sbBin.length(), "");
+            }
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Exception launching groovy script", e);
+        }
+        sbSrc.append("\"");
+        return sbSrc.toString();
+    }
 
     @SuppressWarnings("unchecked")
     private String getGroovyConf() {
