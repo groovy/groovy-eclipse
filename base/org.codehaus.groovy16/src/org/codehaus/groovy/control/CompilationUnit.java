@@ -207,11 +207,19 @@ public class CompilationUnit extends ProcessingUnit {
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
       //  addPhaseOperation(output);
-
-        ASTTransformationVisitor.addPhaseOperations(this);
-
+        // FIXASC (groovychange)
+        if (transformLoader!=null) {
+        // FIXASC (groovychange) end
+        	ASTTransformationVisitor.addPhaseOperations(this);
+        }
         this.classgenCallback = null;
     }
+
+    // FIXASC (groovychange) force the phase on
+    public void ensureASTTransformVisitorAdded() {
+    	ASTTransformationVisitor.addPhaseOperations(this);
+    }
+    // FIXASC (groovychange)
 
     /**
      * Returns the class loader for loading AST transformations.
