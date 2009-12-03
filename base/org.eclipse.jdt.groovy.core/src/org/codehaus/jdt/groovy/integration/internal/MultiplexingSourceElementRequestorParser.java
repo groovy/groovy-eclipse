@@ -64,7 +64,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		// The superclass that is extended is in charge of parsing .java files
 		this.groovyRequestor = requestor;
 		this.notifier = new SourceElementNotifier(requestor, reportLocalDeclarations);
-		this.parser = new GroovyParser(this.options, problemReporter);
+		this.parser = new GroovyParser(this.options, problemReporter, false);
 	}
 
 	@Override
@@ -80,7 +80,8 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 
 			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
 			// FIXASC (M2) ought to reuse to ensure types end up in same groovy CU
-			CompilationUnitDeclaration cud = new GroovyParser(this.options, problemReporter).dietParse(unit, compilationResult);
+			CompilationUnitDeclaration cud = new GroovyParser(this.options, problemReporter, false).dietParse(unit,
+					compilationResult);
 
 			// CompilationUnitDeclaration cud = parser.dietParse(unit, compilationResult);
 

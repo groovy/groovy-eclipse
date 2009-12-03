@@ -90,8 +90,16 @@ public class GroovyParser {
 		this(null, options, problemReporter);
 	}
 
-	// FIXASC (RC1) review callers who pass null for options
+	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms) {
+		this(null, options, problemReporter, allowTransforms);
+	}
+
 	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter) {
+		this(requestor, options, problemReporter, true);
+	}
+
+	// FIXASC (RC1) review callers who pass null for options
+	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms) {
 		String path = (options == null ? null : options.groovyClassLoaderPath);
 		this.requestor = requestor;
 		// FIXASC (M2) set parent of the loader to system or context class loader?
@@ -124,7 +132,10 @@ public class GroovyParser {
 		this.compilerOptions = options;
 		// FIXASC (M2) Grab support
 		GroovyClassLoader grabbyLoader = null;// avoid this for now: new GrapeAwareGroovyClassLoader();
-		this.groovyCompilationUnit = new CompilationUnit(null, null, grabbyLoader, gcl);
+		this.groovyCompilationUnit = new CompilationUnit(null, null, grabbyLoader, allowTransforms ? gcl : null);
+		if (gcl == null && allowTransforms) {
+			this.groovyCompilationUnit.ensureASTTransformVisitorAdded();
+		}
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
 		if ((options.groovyFlags & 0x01) != 0) {
 			// its probably grails!
@@ -284,6 +295,7 @@ public class GroovyParser {
 	}
 
 	public void reset() {
+		// FIXASC (RC1) not sure the reset is resetting it to be the same as originally constructed
 		GroovyClassLoader gcl = new GroovyClassLoader();
 		configureClasspath(gcl, gclClasspath);
 		this.groovyCompilationUnit = new CompilationUnit(gcl);

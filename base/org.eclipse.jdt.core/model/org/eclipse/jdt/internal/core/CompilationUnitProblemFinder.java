@@ -273,7 +273,7 @@ public class CompilationUnitProblemFinder extends Compiler {
         // old
         // this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
         // new
-        this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, LanguageSupportFactory.CommentRecorderParserVariant);
+        this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 3 /*CommentRecorderParserVariant with no transforms */);
         // GROOVY end
 	}
 }

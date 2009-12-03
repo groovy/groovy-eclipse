@@ -30,14 +30,21 @@ import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 
 	GroovyParser groovyParser;
+	private boolean allowTransforms = true;
 
 	// FIXASC (M2) how often is the LanguageSupport impl looked up? should be once then
 	// we remember what happened
 	public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
-			boolean optimizeStringLiterals) {
+			boolean optimizeStringLiterals, boolean allowTransforms) {
 		super(problemReporter, optimizeStringLiterals);
 		// The superclass that is extended is in charge of parsing .java files
-		groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter);
+		groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, allowTransforms);
+		this.allowTransforms = allowTransforms;
+	}
+
+	public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
+			boolean optimizeStringLiterals) {
+		this(requestor, compilerOptions, problemReporter, optimizeStringLiterals, true);
 	}
 
 	@Override
@@ -49,8 +56,8 @@ public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 			}
 			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
 			// FIXASC (M2) ought to reuse to ensure types end up in same groovy CU
-			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter).dietParse(
-					sourceUnit, compilationResult);
+			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter, allowTransforms)
+					.dietParse(sourceUnit, compilationResult);
 			// return groovyParser.dietParse(sourceUnit, compilationResult);
 		} else {
 			return super.dietParse(sourceUnit, compilationResult);

@@ -65,9 +65,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
 			boolean parseLiteralExpressionsAsConstants, int variant) {
 		if (variant == 1) {
 			return new MultiplexingParser(requestor, compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
-		} else { // variant==2
+		} else if (variant == 2) {
 			return new MultiplexingCommentRecorderParser(requestor, compilerOptions, problemReporter,
 					parseLiteralExpressionsAsConstants);
+		} else { // (variant == 3) { similar to '2' but does not allow transforms
+			return new MultiplexingCommentRecorderParser(requestor, compilerOptions, problemReporter,
+					parseLiteralExpressionsAsConstants, false);
 		}
 	}
 

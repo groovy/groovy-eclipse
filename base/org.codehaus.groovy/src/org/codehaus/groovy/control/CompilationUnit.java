@@ -132,7 +132,7 @@ public class CompilationUnit extends ProcessingUnit {
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
         this(configuration, security, loader, null);
     }
-
+    
     /**
      * Initializes the CompilationUnit with a CodeSource for controlling
      * security stuff, a class loader for loading classes, and a class
@@ -201,11 +201,20 @@ public class CompilationUnit extends ProcessingUnit {
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
 //        addPhaseOperation(output);
-
-        ASTTransformationVisitor.addPhaseOperations(this);
+        // FIXASC (groovychange)
+        if (transformLoader!=null) {
+        // FIXASC (groovychange) end
+        	ASTTransformationVisitor.addPhaseOperations(this);
+        }
 
         this.classgenCallback = null;
     }
+    
+    // FIXASC (groovychange) force the phase on
+    public void ensureASTTransformVisitorAdded() {
+    	ASTTransformationVisitor.addPhaseOperations(this);
+    }
+    // FIXASC (groovychange)
 
     /**
      * Returns the class loader for loading AST transformations.

@@ -16,12 +16,6 @@
 
 package org.codehaus.groovy.transform;
 
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.classgen.GeneratorContext;
-import org.codehaus.groovy.control.*;
-import org.codehaus.groovy.control.messages.SimpleMessage;
-import org.codehaus.groovy.control.messages.WarningMessage;
-
 import groovy.lang.GroovyClassLoader;
 
 import java.io.BufferedReader;
@@ -29,7 +23,31 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.control.CompilationFailedException;
+import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilePhase;
+import org.codehaus.groovy.control.Phases;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.control.messages.WarningMessage;
 
 /**
  * This class handles the invocation of the ASTAnnotationTransformation
@@ -197,13 +215,29 @@ public class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             while (globalServices.hasMoreElements()) {
                 URL service = globalServices.nextElement();
                 String className;
-
+                
+                // FIXASC (groovychange) don't consume our own META-INF entries - bit of a hack...
+                try {
+					String file = service.getFile().toString();
+					if (file.indexOf("jar!")==-1) {
+						// it is a 'local' services file
+						// eg. /META-INF/services/org.codehaus.groovy.transform.ASTTransformation
+						// whereas a jar related one would be:
+						// eg. file:/N:/workspaces/groovy35/org.codehaus.groovy/lib/groovy-all-1.7-rc-1.jar!/META-INF/services/org.codehaus.groovy.transform.ASTTransformation
+						continue;
+					}
+                } catch (Throwable t) {
+                	t.printStackTrace();
+                }
+                // FIXASC (groovychange) end
                 // FIXASC (groovychange)
                 // was
-//                BufferedReader svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
+                // BufferedReader svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
                 // now
+           
                 InputStream is = service.openStream();
                 BufferedReader svcIn = new BufferedReader(new InputStreamReader(is));
+               
                 // FIXASC (groovychange)
                 try {
                     className = svcIn.readLine();
