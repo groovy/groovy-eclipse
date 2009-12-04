@@ -16,8 +16,48 @@
 package org.codehaus.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.DynamicVariable;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.VariableScope;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
@@ -25,15 +65,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.syntax.Types;
-import org.codehaus.groovy.GroovyBugError;
 import org.objectweb.asm.Opcodes;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.*;
 
 /**
  * Visitor to resolve Types and convert VariableExpression to
@@ -1059,16 +1091,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
 
         ClassNode sn = node.getUnresolvedSuperClass();
-        if (sn != null) {
-            resolveOrFail(sn, node, true);
-            checkCyclicInheritence(node);
-        }
+        if (sn != null) resolveOrFail(sn, node, true);
 
         ClassNode[] interfaces = node.getInterfaces();
         for (int i = 0; i < interfaces.length; i++) {
             resolveOrFail(interfaces[i], node, true);
-
         }
+
+        checkCyclicInheritence(node, node.getUnresolvedSuperClass(), node.getInterfaces());
 
         super.visitClass(node);
 
@@ -1078,18 +1108,31 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // end
     }
     
-    private void checkCyclicInheritence(ClassNode node) {
-        ClassNode sn = node;
-        while(true) {
-            sn = sn.getUnresolvedSuperClass();
-            if(sn == null) break;
-
-            if(node == sn.redirect()) {
-                addError("Cyclic inheritance involving " + sn.getName() + " in class " + node.getName(), node);
-                break;
+    private void checkCyclicInheritence(ClassNode originalNode, ClassNode parentToCompare, ClassNode[] interfacesToCompare) {
+        if(!originalNode.isInterface()) {
+            if(parentToCompare == null) return;
+            if(originalNode == parentToCompare.redirect()) {
+                addError("Cyclic inheritance involving " + parentToCompare.getName() + " in class " + originalNode.getName(), originalNode);
+                return;
             }
-            
-            if(sn == ClassHelper.OBJECT_TYPE) break;
+            if(parentToCompare == ClassHelper.OBJECT_TYPE) return;
+            checkCyclicInheritence(originalNode, parentToCompare.getUnresolvedSuperClass(), null);
+        } else {
+            if(interfacesToCompare != null && interfacesToCompare.length > 0) {
+                // check interfaces at this level first
+                for(ClassNode intfToCompare : interfacesToCompare) {
+                    if(originalNode == intfToCompare.redirect()) {
+                        addError("Cyclic inheritance involving " + intfToCompare.getName() + " in interface " + originalNode.getName(), originalNode);
+                        return;
+                    }
+                }
+                // check next level of interfaces
+                for(ClassNode intf : interfacesToCompare) {
+                    checkCyclicInheritence(originalNode, null, intf.getInterfaces());
+                }
+            } else {
+                return;
+            }
         }
     }
 

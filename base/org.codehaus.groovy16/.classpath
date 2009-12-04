@@ -9,6 +9,6 @@
 	<classpathentry exported="true" kind="lib" path="lib/asm-tree-2.2.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/bsf-2.4.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-cli-1.2.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-1.6.6.jar" sourcepath="lib/groovy-1.6.6-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-1.6.7.jar" sourcepath="lib/groovy-1.6.7-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

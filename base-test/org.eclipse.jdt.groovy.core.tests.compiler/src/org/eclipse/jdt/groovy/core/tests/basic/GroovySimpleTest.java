@@ -29,7 +29,6 @@ import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -64,7 +63,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		groovyLevel=17;
     	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-rc-1.jar");
     	if (groovyJar==null) {
-    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.6.jar");
+    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
     		groovyLevel=16;
     	}
 	}
@@ -95,7 +94,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         	groovyLevel=17;
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7-rc-1.jar");
         	if (groovyJar==null) {
-        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.6.jar");
+        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
         		groovyLevel=16;
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
