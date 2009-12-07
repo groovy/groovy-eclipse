@@ -354,7 +354,12 @@ public class JDTResolver extends ResolveVisitor {
 				GenericsType matchingGenericType = findMatchingGenericType(genericTypes, typeVariableName);
 				if (matchingGenericType != null) {
 					ClassNode newNode = ClassHelper.makeWithoutCaching(typeVariableName);
-					newNode.setRedirect(matchingGenericType.getType());
+					ClassNode[] upper = matchingGenericType.getUpperBounds();
+					if (upper != null && upper.length > 0) {
+						newNode.setRedirect(upper[0]);
+					} else {
+						newNode.setRedirect(matchingGenericType.getType());
+					}
 					newNode.setGenericsTypes(new GenericsType[] { matchingGenericType });
 					newNode.setGenericsPlaceHolder(true);
 					return newNode;

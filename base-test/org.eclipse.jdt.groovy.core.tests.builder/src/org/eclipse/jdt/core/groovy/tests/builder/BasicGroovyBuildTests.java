@@ -425,7 +425,65 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingNoProblems();
 
 	}
-	
+
+	public void testIncrementalGenericsAndBinaryTypeBindings_GRE566() throws Exception {
+		IPath projectPath = env.addProject("GRE566","1.5"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(root, "pkg", "Intface",
+			"package pkg;\n"+
+			"public interface Intface<E extends Event> {\n"+
+			"   void onApplicationEvent(E event);\n"+
+			"}\n"
+			);
+
+		env.addClass(root, "pkg", "Event",
+				"package pkg;\n"+
+				"public class Event {}\n"
+				);
+
+		env.addClass(root, "pkg", "EventImpl",
+				"package pkg;\n"+
+				"public class EventImpl extends Event {}\n"
+				);
+
+
+		env.addClass(root, "pkg", "Jaas",
+				"package pkg;\n"+
+				"public class Jaas implements Intface<EventImpl> {\n" +
+				"  public void onApplicationEvent(EventImpl ei) {}\n"+
+				"}\n"
+				);
+		
+		env.addGroovyClass(root, "pkg", "GExtender",
+			"package pkg;\n"+
+			"class GExtender extends Jaas{\n"+
+			"}\n"
+			);
+			
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("pkg.Event","pkg.EventImpl","pkg.Intface","pkg.Jaas","pkg.GExtender");
+		expectingNoProblems();
+		
+		env.addGroovyClass(root, "pkg", "GExtender",
+				"package pkg\n"+
+				"class GExtender extends Jaas{\n"+
+				"}\n"
+				);
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("pkg.GExtender");
+	}
+
 	public void testIncrementalCompilationTheBasics2_changingJavaDependedUponByGroovy() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1006,6 +1064,11 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		}
 		JavaCore.setOptions(options);
 	}
+	
+	
+	
+	
+	
 //	
 //	/*
 //	 * Ensures that a task tag is not user editable
