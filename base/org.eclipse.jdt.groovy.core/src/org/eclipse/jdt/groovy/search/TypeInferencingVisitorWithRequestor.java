@@ -237,6 +237,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		enclosingElement = field;
 		this.requestor = requestor;
 		FieldNode fieldNode = findFieldNode(field);
+		// want to see npes if they happen because we shouldn't be getting that here.
+		// if (fieldNode != null) {
 		enclosingDeclarationNode = fieldNode;
 		scopes.push(new VariableScope(scopes.peek(), fieldNode));
 		try {
@@ -250,6 +252,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			enclosingElement = oldEnclosing;
 			scopes.pop();
 		}
+		// }
 	}
 
 	public void visitJDT(IMethod method, ITypeRequestor requestor) {
@@ -257,6 +260,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		ASTNode oldEnclosingNode = enclosingDeclarationNode;
 		enclosingElement = method;
 		MethodNode methodNode = findMethodNode(method);
+
+		// want to see npes if they happen because we shouldn't be getting that here.
+		// if (method != null) {
 		enclosingDeclarationNode = methodNode;
 		this.requestor = requestor;
 		scopes.push(new VariableScope(scopes.peek(), methodNode));
@@ -274,6 +280,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			enclosingDeclarationNode = oldEnclosingNode;
 			scopes.pop();
 		}
+		// }
 	}
 
 	/**
@@ -797,6 +804,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		propertyExpression.push(node);
 		node.getObjectExpression().visit(this);
 		boolean shouldContinue = handleExpression(node);
+		// boolean shouldContinue = true;
 		if (shouldContinue) {
 			node.getMethod().visit(this);
 			// this is the type of this property expression
@@ -1113,7 +1121,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (groovyParams.length != jdtParamTypes.length) {
 						continue;
 					}
-					// FIXDE M2 this is not precise. Doesn't take into account generics
+					// FIXADE RC1 this is not precise. Doesn't take into account generics
 					for (int i = 0; i < groovyParams.length; i++) {
 						String groovyClassType = groovyParams[i].getType().getName();
 						if (!groovyClassType.startsWith("[")) { //$NON-NLS-1$

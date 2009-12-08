@@ -29,13 +29,13 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  * @created Aug 11, 2009
  *
  */
-public class GroovyJavaMethodProposal extends JavaMethodCompletionProposal {
+public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProposal {
 
     private int[] fArgumentOffsets;
     private int[] fArgumentLengths;
     private IRegion fSelectedRegion; // initialized by apply()
 
-    public GroovyJavaMethodProposal(CompletionProposal proposal,
+    public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
             JavaContentAssistInvocationContext context) {
         super(proposal, context);
     }

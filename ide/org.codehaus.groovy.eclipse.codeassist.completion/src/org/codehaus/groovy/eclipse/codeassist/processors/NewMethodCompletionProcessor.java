@@ -16,6 +16,12 @@
 
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createDisplayString;
+import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createMethodSignatureStr;
+import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createSimpleTypeName;
+import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createTypeSignature;
+import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.getImage;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,16 +32,12 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.*;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;

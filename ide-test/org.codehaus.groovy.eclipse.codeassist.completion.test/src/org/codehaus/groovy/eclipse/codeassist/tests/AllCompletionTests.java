@@ -27,6 +27,7 @@ public class AllCompletionTests {
         suite.addTestSuite(LocalVariableCompletionTests.class);
         suite.addTestSuite(InferencingCompletionTests.class);
         suite.addTestSuite(FieldCompletionTests.class);
+        suite.addTestSuite(MethodCompletionTests.class);
         suite.addTestSuite(TypeCompletionTests.class);
         suite.addTestSuite(GroovyLikeCompletionTests.class);
         

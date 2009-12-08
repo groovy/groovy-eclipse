@@ -49,6 +49,7 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
@@ -326,35 +327,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
 
 
-    /**
-     * @param field
-     */
-    private void maybeCreateEmptyInitialExpression(FieldNode field) {
-        // disable!  I think we don't need this
-        if (true) return;
-        // check that field has no initial expr and offset is after the name 
-        if (! field.hasInitialExpression() && completionOffset > field.getNameEnd() && completionOffset <= field.getEnd()) {
-            Statement block = new BlockStatement();
-            Expression expr = new ClosureExpression(new Parameter[0], block);
-            // since we don't know the real start and end, borrow it from the actual field
-            block.setStart(field.getNameEnd());
-            block.setEnd(field.getEnd());
-            block.setLineNumber(field.getLineNumber());
-            block.setColumnNumber(field.getColumnNumber());
-            block.setLastLineNumber(field.getLastLineNumber());
-            block.setLastColumnNumber(field.getLastColumnNumber());
-            
-            expr.setStart(field.getNameEnd());
-            expr.setEnd(field.getEnd());
-            expr.setLineNumber(field.getLineNumber());
-            expr.setColumnNumber(field.getColumnNumber());
-            expr.setLastLineNumber(field.getLastLineNumber());
-            expr.setLastColumnNumber(field.getLastColumnNumber());
-            
-            field.setInitialValueExpression(expr);
-        }
-    }
-
     @Override
     public void visitVariableExpression(VariableExpression expression) {
         if (doTest(expression)) {
@@ -477,6 +449,17 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
     }
     
+    
+    @Override
+    public void visitMethodCallExpression(MethodCallExpression call) {
+        if (!doTest(call)) {
+            return;
+        }
+        super.visitMethodCallExpression(call);
+        // if we are still here, this means that the location is part of 
+        // the open/close paren
+        createContext(call.getMethod(), blockStack.peek(), expressionOrStatement());
+    }
     
     private void internalVisitParameters(Parameter[] ps, ASTNode declaringNode) {
         if (ps != null) {

@@ -19,7 +19,8 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
+import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.viewers.StyledString;
@@ -47,10 +48,7 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
         
-        return new JavaCompletionProposal(field.getName(), context.completionLocation-context.completionExpression.length(),
-                field.getName().length(), getImageFor(field),
-                createDisplayString(field),
-                getRelevance(field.getName().toCharArray()));
+        return new GroovyJavaFieldCompletionProposal(createProposal(context), getImageFor(field), createDisplayString(field));
     }
 
     @Override
@@ -70,4 +68,16 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         return ss;
     }
 
+    private CompletionProposal createProposal(ContentAssistContext context) {
+        InternalCompletionProposal proposal = (InternalCompletionProposal) CompletionProposal.create(CompletionProposal.FIELD_REF, context.completionLocation);
+        proposal.setFlags(field.getModifiers());
+        proposal.setName(field.getName().toCharArray());
+        proposal.setCompletion(proposal.getName());
+        proposal.setSignature(ProposalUtils.createTypeSignature(field.getType()));
+        proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(field.getDeclaringClass()));
+        proposal.setRelevance(getRelevance(proposal.getName()));
+        int startIndex = context.completionLocation-context.completionExpression.length();
+        proposal.setReplaceRange(startIndex, context.completionLocation);
+        return proposal;
+    }
 }

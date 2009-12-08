@@ -65,7 +65,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 //        proposals.add(ParameterGuessingProposal.createProposal(
 //                proposal, javaContext, isGuessArguments));
 
-        return new GroovyJavaMethodProposal(proposal,
+        return new GroovyJavaMethodCompletionProposal(proposal,
                     javaContext);
 
     }

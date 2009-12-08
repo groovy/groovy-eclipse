@@ -17,7 +17,6 @@
 package org.codehaus.groovy.eclipse.codeassist.factories;
 
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
-import org.codehaus.groovy.eclipse.codeassist.processors.NewMethodCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.processors.ModifiersCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;

@@ -19,7 +19,8 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
+import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.viewers.StyledString;
@@ -41,10 +42,10 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
         
-        return new JavaCompletionProposal(property.getName(), context.completionLocation-context.completionExpression.length(),
-                property.getName().length(), getImageFor(property),
-                createDisplayString(property), 2000);
-//                getRelevance(property.getName().toCharArray()));
+        return new GroovyJavaFieldCompletionProposal(createProposal(context), getImageFor(property), createDisplayString(property));
+//        return new JavaCompletionProposal(property.getName(), context.completionLocation-context.completionExpression.length(),
+//                property.getName().length(), getImageFor(property),
+//                createDisplayString(property), 2000);
     }
 
     protected StyledString createDisplayString(PropertyNode property) {
@@ -59,4 +60,17 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         return ss;
     }
 
+    
+    private CompletionProposal createProposal(ContentAssistContext context) {
+        InternalCompletionProposal proposal = (InternalCompletionProposal) CompletionProposal.create(CompletionProposal.FIELD_REF, context.completionLocation);
+        proposal.setFlags(property.getModifiers());
+        proposal.setName(property.getName().toCharArray());
+        proposal.setCompletion(proposal.getName());
+        proposal.setSignature(ProposalUtils.createTypeSignature(property.getType()));
+        proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(property.getDeclaringClass()));
+        proposal.setRelevance(2000);
+        int startIndex = context.completionLocation-context.completionExpression.length();
+        proposal.setReplaceRange(startIndex, context.completionLocation);
+        return proposal;
+    }
 }

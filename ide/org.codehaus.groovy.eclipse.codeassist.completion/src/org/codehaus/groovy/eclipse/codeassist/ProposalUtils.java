@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.codeassist;
 
 import static org.codehaus.groovy.eclipse.core.util.ListUtil.newEmptyList;
 
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,7 +30,6 @@ import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
-import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg
