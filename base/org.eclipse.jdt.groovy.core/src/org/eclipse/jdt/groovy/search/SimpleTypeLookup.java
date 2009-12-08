@@ -172,8 +172,13 @@ public class SimpleTypeLookup implements ITypeLookup {
 			Variable accessedVar = null;
 			if (node instanceof VariableExpression) {
 				accessedVar = ((VariableExpression) node).getAccessedVariable();
-				if (accessedVar != null && accessedVar instanceof AnnotatedNode) {
-					declaration = (AnnotatedNode) accessedVar;
+				if (accessedVar != null) {
+					if (accessedVar instanceof AnnotatedNode) {
+						declaration = (AnnotatedNode) accessedVar;
+					} else if (accessedVar instanceof VariableExpression) {
+						// only necessary for 1.6 stream since variable expressions in 1.6 are not annotated nodes
+						declaration = (VariableExpression) accessedVar;
+					}
 				}
 			}
 

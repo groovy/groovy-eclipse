@@ -23,8 +23,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.refactoring.core.GroovySourceFileVisitor;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.JavaCore;
 
 /**
  * class returns a collection of all groovy source files in 
@@ -61,9 +63,10 @@ public class WorkspaceFileProvider implements IGroovyFileProvider{
 		if (documentList.isEmpty()) {
 			List<IFile> groovySourceFiles = new GroovySourceFileVisitor(groovyProject).getGroovySourceFiles();
 			for(IFile source : groovySourceFiles){
-				documentList.add(new WorkspaceDocumentProvider(source));
+				documentList.add(new GroovyCompilationUnitDocumentProvider((GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(source)));
+//				documentList.add(new WorkspaceDocumentProvider(source));
 				if (selectionDocument == null) {
-					selectionDocument = new WorkspaceDocumentProvider(source);
+//				    selectionDocument = new WorkspaceDocumentProvider(source);
 				}
 			}
 		}

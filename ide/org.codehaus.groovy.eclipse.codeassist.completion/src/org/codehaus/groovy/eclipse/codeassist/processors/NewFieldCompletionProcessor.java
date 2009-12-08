@@ -44,9 +44,9 @@ import org.eclipse.swt.graphics.Image;
  * @created Nov 10, 2009
  */
 public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcessor {
-    static class GroovyFieldCompletionProposal extends JavaCompletionProposal {
+    static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
         
-        GroovyFieldCompletionProposal(String fieldName,
+        NewGroovyFieldCompletionProposal(String fieldName,
                 int replacementOffset, int replacementLength, int relevance) {
             super(createReplacementString(fieldName), replacementOffset, replacementLength, createImage(),
                     createDisplayString(fieldName), relevance);
@@ -109,7 +109,7 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
     private ICompletionProposal createProposal(String fieldName,
             ContentAssistContext context, IType enclosingType) {
         int relevance= 5;
-        return new GroovyFieldCompletionProposal(fieldName, context.completionLocation, context.completionExpression.length(), relevance);
+        return new NewGroovyFieldCompletionProposal(fieldName, context.completionLocation, context.completionExpression.length(), relevance);
     }
     
     

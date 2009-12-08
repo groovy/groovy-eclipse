@@ -31,12 +31,14 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.PerformanceStats;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
@@ -153,6 +155,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		super(parent, name, owner);
 	}
 
+	private Object moduleNodeLock = new Object();
+
 	/**
 	 * Returns the module node for this GroovyCompilationUnit creates one if one doesn't exist.
 	 * 
@@ -161,7 +165,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * 
 	 */
 	public ModuleNode getModuleNode() {
-		synchronized (this) {
+		synchronized (moduleNodeLock) {
 			try {
 				// discard the working copy after finishing
 				// if there was no working copy to begin with
@@ -563,16 +567,24 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 	@Override
 	public void rename(String newName, boolean force, IProgressMonitor monitor) throws JavaModelException {
-//		super.rename(newName, force, monitor);
-//		// FIXADE RC1 we should not have to do this. Somewhere, a working copy is being created and not discarded
-//		if (this.isWorkingCopy()) {
-//			this.discardWorkingCopy();
-//		}
-		// FIXADE RC1 re-enable renaming for groovy CUs in a way that works for groovy files
-		String message = "Rename Compilation Unit currently disabled in groovy.  File: " + this.getElementName();
-		Util.log(null, message);
-		System.out.println(message);
-
+		super.rename(newName, force, monitor);
+		// FIXADE RC1 we should not have to do this. Somewhere, a working copy is being created and not discarded
+		if (this.isWorkingCopy()) {
+			this.discardWorkingCopy();
+		}
 	}
 
+	protected void codeComplete(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu,
+			org.eclipse.jdt.internal.compiler.env.ICompilationUnit unitToSkip, int position, CompletionRequestor requestor,
+			WorkingCopyOwner owner, ITypeRoot typeRoot, IProgressMonitor monitor) throws JavaModelException {
+
+		// allow a delegate to perform completion if required
+		// this is used by the grails plugin when editing in gsp editor
+		ICodeCompletionDelegate delegate = (ICodeCompletionDelegate) getAdapter(ICodeCompletionDelegate.class);
+		if (delegate != null && delegate.shouldCodeComplete(requestor, typeRoot)) {
+			delegate.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
+		} else {
+			super.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
+		}
+	}
 }

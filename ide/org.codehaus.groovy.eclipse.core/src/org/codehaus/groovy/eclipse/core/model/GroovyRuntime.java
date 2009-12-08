@@ -15,13 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.core.model;
 
-import static org.codehaus.groovy.eclipse.core.util.ListUtil.newEmptyList;
-
-import java.util.List;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -161,7 +156,7 @@ public class GroovyRuntime {
     public static void addGroovyClasspathContainer(
             final IJavaProject javaProject) {
         try {
-            if (hasGroovyClasspathContainer(javaProject)) {
+            if (javaProject == null || hasGroovyClasspathContainer(javaProject)) {
                 return;
             }
             

@@ -17,7 +17,6 @@ import org.eclipse.ui.internal.SharedImages;
 /**
  * @author Stefan Reinhard
  */
-@SuppressWarnings("restriction")
 public class LabelDispatcher extends LabelProvider {
 	
 	JavaLabelProvider javaLabel = new JavaLabelProvider();

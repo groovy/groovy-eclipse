@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -29,6 +30,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPage;
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPageExtension;
 import org.eclipse.jdt.ui.wizards.NewElementWizardPage;
@@ -68,8 +70,10 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
 
     public boolean finish() {
         try {
-            if (prefStore == null)
-                return false;
+            if (prefStore == null) {
+                return true;
+            }
+            
             final String preference = getPreference();
             if (versionCombo.getSelectionIndex() == 0) {
                 if (preference == null || preference.trim().length() == 0) {
@@ -94,7 +98,7 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
     }
 
     public IClasspathEntry getSelection() {
-        return this.containerEntryResult;
+        return this.containerEntryResult != null ? this.containerEntryResult : JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID);
     }
 
     public void setSelection(final IClasspathEntry containerEntry) {
@@ -123,7 +127,7 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
         versionCombo.setItems(options.toArray(new String[0]));
         versionCombo.setFont(composite.getFont());
         String pref = getPreference();
-        if (pref != null || pref.trim().length() > 0)
+        if (pref != null && pref.trim().length() > 0)
             versionCombo.select(1);
         final GridData data = new GridData(GridData.BEGINNING, GridData.CENTER,
                 false, false, 1, 1);

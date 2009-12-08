@@ -52,10 +52,9 @@ public class GroovyChange {
 	public CompositeChange createChange() {
 		CompositeChange change = new CompositeChange(name);
 		for (IGroovyDocumentProvider docProvider : edits.keySet()) {
-			WorkspaceDocumentProvider workspaceProvider = (WorkspaceDocumentProvider)docProvider;
-			MultiTextEdit multiEdit = edits.get(workspaceProvider);
+			MultiTextEdit multiEdit = edits.get(docProvider);
 			if (multiEdit.hasChildren()) {
-				TextFileChange textFileChange = new TextFileChange(workspaceProvider.getName(),workspaceProvider.getFile());
+				TextFileChange textFileChange = new TextFileChange(docProvider.getName(),docProvider.getFile());
 				textFileChange.setEdit(multiEdit);
 				change.add(textFileChange);
 			}

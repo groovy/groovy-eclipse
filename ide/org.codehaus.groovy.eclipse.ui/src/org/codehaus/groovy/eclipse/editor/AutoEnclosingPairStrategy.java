@@ -37,7 +37,7 @@ public class AutoEnclosingPairStrategy implements IAutoEditStrategy {
 
 
 	static {
-		mapPartitionToStrategy.put(IJavaPartitions.JAVA_CHARACTER,
+		mapPartitionToStrategy.put(IJavaPartitions.JAVA_STRING,
 				new CharacterPartitionPairStrategy());
 		mapPartitionToStrategy.put(IJavaPartitions.JAVA_SINGLE_LINE_COMMENT,
 				new SingleLineStringPartitionPairStrategy());

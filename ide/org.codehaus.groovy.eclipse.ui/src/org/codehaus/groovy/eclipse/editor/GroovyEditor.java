@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,7 +38,6 @@ import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.ITypeRoot;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.CompilationUnit;
@@ -46,6 +46,7 @@ import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
+import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
 import org.eclipse.jdt.ui.actions.RefactorActionGroup;
@@ -54,6 +55,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
@@ -328,6 +330,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         super.createPartControl(parent);
         unsetJavaBreakpointUpdater();
         installSemanticHighlighting();
+        forceDisableAutoCloseStrings();
     }
     
     // temporary storage for editor input
@@ -388,5 +391,33 @@ public class GroovyEditor extends CompilationUnitEditor {
                 }
             }
         }
+    }
+    
+    /** Preference key for automatically closing strings */
+    private final static String CLOSE_STRINGS= PreferenceConstants.EDITOR_CLOSE_STRINGS;
+    @Override
+    protected void handlePreferenceStoreChanged(PropertyChangeEvent event) {
+        if (CLOSE_STRINGS.equals(event.getProperty())) {
+            // GRECLISPE-493
+            forceDisableAutoCloseStrings();
+        } else {
+            super.handlePreferenceStoreChanged(event);
+        }
+    }
+ 
+    /**
+     * GRECLIPSE-493: disable auto closing of strings because this is 
+     * very, very annoying when trying to work with multi-line strings
+     */
+    private void forceDisableAutoCloseStrings() {
+        Object fBracketInserter = ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fBracketInserter", this);
+        try {
+            Method method = fBracketInserter.getClass().getMethod("setCloseStringsEnabled", boolean.class);
+            method.setAccessible(true);
+            method.invoke(fBracketInserter, false);
+        } catch(Exception e) {
+            GroovyCore.logException("Exception disabling auto-closing of strings", e);
+        }
+        
     }
 }

@@ -50,8 +50,9 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setCompletion(completionName());
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
         proposal.setName(method.getName().toCharArray());
-        proposal.setParameterNames(createParameterNames(method));
-        proposal.setParameterTypeNames(createParameterTypeNames(method));
+        char[][] parameterTypeNames = createParameterTypeNames(method);
+        proposal.setParameterTypeNames(parameterTypeNames);
+        proposal.setParameterNames(createParameterNames(method, parameterTypeNames));
         proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionLocation - context.completionExpression.length());
         proposal.setFlags(method.getModifiers());
         proposal.setAdditionalFlags(CompletionFlags.Default);
@@ -74,7 +75,31 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         return (method.getName() + "()").toCharArray();
     }
     
-    private char[][] createParameterNames(MethodNode method) {
+    // FIXADE RC1 parameter names not in JDTClassNodes
+    private char[][] createParameterNames(MethodNode method, char[][] parameterTypeNames) {
+//        ClassNode clazz = method.getDeclaringClass();
+//        if (clazz instanceof JDTClassNode) {
+//            ReferenceBinding binding = ((JDTClassNode) clazz).getJdtBinding();
+//            MethodBinding[] methodBindings = binding.methods();
+//            for (MethodBinding methodBinding : methodBindings) {
+//                if (parameterTypeNames.length == method.getParameters().length) {
+//                    if (CharOperation.equals(methodBinding.selector, method.getName().toCharArray())) {
+//                        boolean found = true;
+//                        inner:
+//                        for (int i = 0; i < parameterTypeNames.length; i++) {
+//                            if (! CharOperation.equals(parameterTypeNames[i], methodBinding.parameters[i].signature())) {
+//                                found = false;
+//                                break inner;
+//                            }
+//                        }
+//                        if (found) {
+//                            methodBinding.parameters
+//                        }
+//                    }
+//                }
+//            }
+//        }
+        
         Parameter[] params = method.getParameters();
         char[][] paramNames = new char[params.length][];
         for (int i = 0; i < params.length; i++) {

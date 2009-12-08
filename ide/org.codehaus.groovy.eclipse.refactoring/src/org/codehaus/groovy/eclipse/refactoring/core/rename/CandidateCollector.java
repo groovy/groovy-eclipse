@@ -76,8 +76,8 @@ public class CandidateCollector {
 		renameFieldNode = RenameFieldProvider.giveFieldNodeToRename(selectedASTNode);
 		renameMethodPattern = RenameMethodProvider.giveMethodNodeToRename(selectedASTNode,docProvider, parentClass);
 		renameLocalNode = RenameLocalProvider.giveVariableExpressionToRename(selectedASTNode);
-		if (docProvider instanceof WorkspaceDocumentProvider) {
-			IProject sourceProject = ((WorkspaceDocumentProvider)docProvider).getFile().getProject();
+		if (docProvider.getFile() != null) {
+			IProject sourceProject = docProvider.getFile().getProject();
 			project = JavaCore.create(sourceProject);
 		}
 	}	
@@ -265,8 +265,10 @@ public class CandidateCollector {
 				}
 			}
 		}
-		//Used for rename method, to find out, where the method is defined
-		findParentClass(infoBuilder, currentCandidate);
+		//Used for rename method, to find out where the method is defined
+		if (currentCandidate != null) {
+		    findParentClass(infoBuilder, currentCandidate);
+		}
 		
 		//Dispatch on a ConstantExpression is not possible -> the parent can be a PropertyExpression,
 		//AttributeExpression or MethodCallExpression
@@ -301,7 +303,8 @@ public class CandidateCollector {
 	}
 	
 	protected IGroovyFileProvider getWSFileProvider() {
-		return new WorkspaceFileProvider((WorkspaceDocumentProvider)docProvider);
+	    // FIXADE RC1 create a CompilationUnitFileProvider
+		return new WorkspaceFileProvider(new WorkspaceDocumentProvider(docProvider.getFile()));
 	}
 	
 }

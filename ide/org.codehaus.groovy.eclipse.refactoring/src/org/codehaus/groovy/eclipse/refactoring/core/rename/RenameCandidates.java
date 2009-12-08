@@ -31,8 +31,8 @@ public class RenameCandidates {
 		}
 	};
 	
-	public static final String GROOVY = "Groovy";
-	public static final String JAVA = "Java";
+	public static final String GROOVY = "Groovy (no files will be renamed)";
+	public static final String JAVA = "Java (files renamed if selected element is a primary type)";
 	
 	private List<CandidateList<? extends Object>> candidateMap;
 

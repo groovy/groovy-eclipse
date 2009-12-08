@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyChange;
 import org.codehaus.groovy.eclipse.refactoring.core.MultiFileRefactoringProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
@@ -66,7 +67,11 @@ public class RenameClassProvider extends MultiFileRefactoringProvider implements
 			ClassNode selectedNode) {
 		super(docProvider);
 		this.selectedNode = selectedNode;
-		createProvidersConsideringAlias();
+		try {
+		    createProvidersConsideringAlias();
+		} catch (NullPointerException e) {
+		    GroovyCore.logException("Exception creating rename participant", e);
+		}
 	}
 
 	public RenameClassProvider(IGroovyFileProvider docProvider,

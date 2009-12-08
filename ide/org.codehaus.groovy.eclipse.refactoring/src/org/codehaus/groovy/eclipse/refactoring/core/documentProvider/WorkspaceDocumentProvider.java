@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -49,15 +50,22 @@ public class WorkspaceDocumentProvider implements IGroovyDocumentProvider {
 	public String getDocumentContent() {
 		StringBuilder out = new StringBuilder();
 		try {
-			InputStream in = file.getContents();
-			byte[] b = new byte[4096];
-			for (int n; (n = in.read(b)) != -1;) {
-				out.append(new String(b, 0, n));
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+    		InputStream in = file.getContents();
+    		try {
+    			byte[] b = new byte[4096];
+    			for (int n; (n = in.read(b)) != -1;) {
+    				out.append(new String(b, 0, n));
+    			}
+    		} catch (IOException e) {
+                GroovyCore.logException(e.getMessage(), e);
+    		} finally {
+    		    try {
+                    in.close();
+                } catch (IOException e) {
+                }
+    		}
 		} catch (CoreException e) {
-			e.printStackTrace();
+            GroovyCore.logException(e.getMessage(), e);
 		}
 		return out.toString();
 	}

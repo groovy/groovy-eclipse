@@ -16,53 +16,6 @@
  -->
 
 <plugin>
-   <extension point="org.eclipse.ui.popupMenus">
-      <viewerContribution
-            targetID="#GroovyEditorContext"
-            id="org.codehaus.groovy.eclipse.refactoring.RefactoringContext">
-<!--
-         <menu
-               id="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu"
-               label="Refac&amp;tor"
-               path="edit">
-            <separator
-                  name="additions">
-            </separator>
-            <groupMarker
-                  name="content">
-            </groupMarker>
-         </menu>
-         <action
-               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.InlineMethodAction"
-               definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
-               id="org.codehaus.groovy.eclipse.refactoring.inlineMethod.action"
-               label="Inline Method..."
-               menubarPath="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu/content">
-         </action>
-         <action
-               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.ExtractMethodAction"
-               definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-               id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
-               label="Extract Method..."
-               menubarPath="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu/content">
-         </action>
-         <action
-               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.RenameDispatcherAction"
-               definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
-               id="org.codehaus.groovy.eclipse.refactoring.Rename.action"
-               label="Rename..."
-               menubarPath="org.codehaus.groovy.eclipse.refactoring.RefactorPopupMenu/content">
-         </action>
-         <action
-               class="org.codehaus.groovy.eclipse.refactoring.popup.actions.TypeHierarchyAction"
-               definitionId="org.codehaus.groovy.eclipse.refactoring.typehierarchy"
-               id="org.codehaus.groovy.eclipse.refactoring.action.typeHierarchy"
-               label="Open Type Hierarchy"
-               menubarPath="additions">
-         </action>
--->
-      </viewerContribution>
-   </extension>
    <extension
          point="org.eclipse.ui.commands">
       <category
@@ -102,18 +55,6 @@
             id="org.codehaus.groovy.eclipse.editor.commands.Indentation"
             name="Correct Indentation">
       </command>
-<!--
-      <category
-            id="org.codehaus.groovy.eclipse.refactoring.Navigate"
-            name="Navigate Category">
-      </category>
-      <command
-            categoryId="org.codehaus.groovy.eclipse.refactoring.Navigate"
-            description="Type Hierarchy"
-            id="org.codehaus.groovy.eclipse.refactoring.typehierarchy"
-            name="Type Hierarchy">
-      </command>
--->
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -163,6 +104,7 @@
             </with>
          </enablement>        
       </renameParticipant>
+      <!-- No need now that groovy locations are being found by Java
       <renameParticipant
             class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.ClassRenameParticipant"
             id="org.codehaus.groovy.eclipse.refactoring.ClassRenameParticipant"
@@ -176,6 +118,7 @@
             </with>
          </enablement>
       </renameParticipant>
+      -->
       <renameParticipant
             class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.MethodRenameParticipant"
             id="org.codehaus.groovy.eclipse.refactoring.MethodRenameParticipant"

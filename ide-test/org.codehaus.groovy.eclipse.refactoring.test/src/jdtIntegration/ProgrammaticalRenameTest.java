@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import junit.framework.TestCase;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyChange;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
@@ -68,7 +69,7 @@ public class ProgrammaticalRenameTest extends TestCase {
 			GroovyChange gc = provider.createGroovyChange(npm);
 			gc.performChanges();
 		} catch (Exception e) {
-			e.printStackTrace();
+		    GroovyCore.logException(e.getMessage(), e);
 		}
 		IGroovyDocumentProvider gdoc = fileProvider.getAllSourceFiles().get(0);
 		String code = gdoc.getDocumentContent();

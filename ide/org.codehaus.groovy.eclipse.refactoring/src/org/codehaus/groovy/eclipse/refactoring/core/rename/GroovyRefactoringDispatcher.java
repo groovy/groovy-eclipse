@@ -105,7 +105,8 @@ public class GroovyRefactoringDispatcher {
 	}
 
 	protected IGroovyFileProvider getWSFileProvider() {
-		return new WorkspaceFileProvider((WorkspaceDocumentProvider)docProvider);
+        // FIXADE RC1 create a CompilationUnitFileProvider
+        return new WorkspaceFileProvider(new WorkspaceDocumentProvider(docProvider.getFile()));
 	}
 	
 	private ASTNode getLocalMethodASTNode(

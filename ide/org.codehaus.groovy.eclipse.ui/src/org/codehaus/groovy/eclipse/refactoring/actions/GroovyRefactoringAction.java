@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.GroovyCompilationUnitDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceFileProvider;
@@ -64,10 +65,12 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 		ITextSelection ts = (ITextSelection) editor.getSelectionProvider().getSelection();
 		selection = new UserSelection(ts.getOffset(), ts.getLength());
 		IFile sourceFile = ((IFileEditorInput) editor.getEditorInput()).getFile();
-		docProvider = new WorkspaceDocumentProvider(sourceFile);
-		WorkspaceFileProvider fileProv = new WorkspaceFileProvider(new WorkspaceDocumentProvider(sourceFile));
+		docProvider = new GroovyCompilationUnitDocumentProvider(editor.getGroovyCompilationUnit());
 
+		// FIXADE RC1 is this too strict?  We should allow refactoring even if there is an error somewhere in the project...
+		WorkspaceFileProvider fileProv = new WorkspaceFileProvider(new WorkspaceDocumentProvider(sourceFile));
 		try {
+		    
 			for (IGroovyDocumentProvider dp : fileProv.getAllSourceFiles()) {
 				if (dp instanceof WorkspaceDocumentProvider) {
 					WorkspaceDocumentProvider currDocProv = (WorkspaceDocumentProvider) dp;

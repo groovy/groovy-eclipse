@@ -34,9 +34,11 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
 /**
+ * 
  * Visitor to visit groovy sourcefiles inside a eclipse workspace
  * @author reto kleeb
  */
+// FIXADE RC1 this is wrong.  This class should be checking the content type of each file
 public class GroovySourceFileVisitor implements IResourceVisitor {
 
 	private List<IFile> groovySourceFiles = new LinkedList<IFile>();

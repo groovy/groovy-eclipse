@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests;
 import org.eclipse.jdt.core.groovy.tests.compiler.LocationSupportTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyCompilationUnitTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyContentTypeTests;
+import org.eclipse.jdt.core.groovy.tests.model.MoveRenameCopyTests;
 import org.eclipse.jdt.core.groovy.tests.search.AllSearchTests;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
 
@@ -34,9 +35,12 @@ public class GroovyJDTTests {
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite("Groovy JDT Tests"); //$NON-NLS-1$
 
-        // Builder tests
+        // Model tests
         suite.addTest(GroovyCompilationUnitTests.suite());
         suite.addTest(GroovyContentTypeTests.suite());
+        suite.addTest(MoveRenameCopyTests.suite());
+
+        // Builder tests
         suite.addTest(BasicGroovyBuildTests.suite());
         suite.addTestSuite(LocationSupportTests.class);
         
