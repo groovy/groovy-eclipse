@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
@@ -66,6 +67,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
             IJavaElement enclosingElement) {
         if (node instanceof ImportNode) {
             node = ((ImportNode) node).getType();
+            if (node == null) {
+                return VisitStatus.CONTINUE;
+            }
+                
         }
         
         if (doTest(node)) {
@@ -158,6 +163,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
 
     /**
+     * May return null
      * @param type
      * @param text
      * @return
@@ -180,7 +186,18 @@ public class CodeSelectRequestor implements ITypeRequestor {
             }
         }
         
-        return type.getField(text);
+        IField field = type.getField(text);
+        if (!field.exists() && text.length() > 3 &&
+                (text.startsWith("get") || text.startsWith("set"))) {
+            // this is a property
+            String newName = Character.toLowerCase(text.charAt(3)) + text.substring(4);
+            field = type.getField(newName);
+        }
+        if (field.exists()) {
+            return field;
+        } else {
+            return null;
+        }
     }
 
 

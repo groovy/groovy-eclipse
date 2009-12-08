@@ -256,4 +256,33 @@ public class CodeSelectFieldsTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found method 'z'", "z", elt[0].getElementName());
     }
+
+    // GRECLIPSE-516
+    public void testCodeSelectOfGeneratedGetter() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class C { \n int num\ndef foo() {\n getNum() } }";
+        env.addGroovyClass(root, "", "Hello", contents);
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
+        assertTrue("Hello groovy unit should exist", unit.exists());
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("getNum"), "getNum".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'num'", "num", elt[0].getElementName());
+        assertTrue("Element should exist", elt[0].exists());
+        
+    }
+    // GRECLIPSE-516
+    public void testCodeSelectOfGeneratedSetter() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class C { \n int num\ndef foo() {\n setNum() } }";
+        env.addGroovyClass(root, "", "Hello", contents);
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
+        assertTrue("Hello groovy unit should exist", unit.exists());
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("setNum"), "setNum".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'num'", "num", elt[0].getElementName());
+        assertTrue("Element should exist", elt[0].exists());
+        
+    }
 }
