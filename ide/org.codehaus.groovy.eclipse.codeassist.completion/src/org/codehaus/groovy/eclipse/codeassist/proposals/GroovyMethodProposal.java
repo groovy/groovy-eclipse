@@ -21,8 +21,17 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.core.search.StringOperation;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
@@ -34,7 +43,7 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 public class GroovyMethodProposal extends AbstractGroovyProposal {
     
     
-    private final MethodNode method;
+    protected final MethodNode method;
     
     public GroovyMethodProposal(MethodNode method) {
         super();
@@ -50,13 +59,12 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setCompletion(completionName());
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
         proposal.setName(method.getName().toCharArray());
-        char[][] parameterTypeNames = createParameterTypeNames(method);
-        proposal.setParameterTypeNames(parameterTypeNames);
-        proposal.setParameterNames(createParameterNames(method, parameterTypeNames));
+        proposal.setParameterNames(createParameterNames(context.unit));
+        proposal.setParameterTypeNames(createParameterTypeNames(method));
         proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionLocation - context.completionExpression.length());
-        proposal.setFlags(method.getModifiers());
+        proposal.setFlags(getModifiers());
         proposal.setAdditionalFlags(CompletionFlags.Default);
-        char[] methodSignature = ProposalUtils.createMethodSignature(method);
+        char[] methodSignature = createMethodSignature();
         proposal.setKey(methodSignature);
         proposal.setSignature(methodSignature);
         proposal.setRelevance(getRelevance(proposal.getName()));
@@ -69,6 +77,14 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                     javaContext);
 
     }
+    
+    protected char[] createMethodSignature() {
+        return ProposalUtils.createMethodSignature(method);
+    }
+
+    protected int getModifiers() {
+        return method.getModifiers();
+    }
 
 
     protected char[] completionName() {
@@ -76,39 +92,22 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
     
     // FIXADE RC1 parameter names not in JDTClassNodes
-    private char[][] createParameterNames(MethodNode method, char[][] parameterTypeNames) {
-//        ClassNode clazz = method.getDeclaringClass();
-//        if (clazz instanceof JDTClassNode) {
-//            ReferenceBinding binding = ((JDTClassNode) clazz).getJdtBinding();
-//            MethodBinding[] methodBindings = binding.methods();
-//            for (MethodBinding methodBinding : methodBindings) {
-//                if (parameterTypeNames.length == method.getParameters().length) {
-//                    if (CharOperation.equals(methodBinding.selector, method.getName().toCharArray())) {
-//                        boolean found = true;
-//                        inner:
-//                        for (int i = 0; i < parameterTypeNames.length; i++) {
-//                            if (! CharOperation.equals(parameterTypeNames[i], methodBinding.parameters[i].signature())) {
-//                                found = false;
-//                                break inner;
-//                            }
-//                        }
-//                        if (found) {
-//                            methodBinding.parameters
-//                        }
-//                    }
-//                }
-//            }
-//        }
+    protected char[][] createParameterNames(ICompilationUnit unit) {
+        
+        char[][] paramNames = getParameterNames(unit, method);
+        if (paramNames != null) {
+            return paramNames;
+        }
         
         Parameter[] params = method.getParameters();
-        char[][] paramNames = new char[params.length][];
+        paramNames = new char[params.length][];
         for (int i = 0; i < params.length; i++) {
             paramNames[i] = params[i].getName().toCharArray();
         }
         return paramNames;
     }
 
-    private char[][] createParameterTypeNames(MethodNode method) {
+    protected char[][] createParameterTypeNames(MethodNode method) {
         char[][] typeNames = new char[method.getParameters().length][];
         int i = 0;
         for (Parameter param : method.getParameters()) {
@@ -118,4 +117,39 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         return typeNames;
     }
 
+    /**
+     * FIXADE RC1 I am concerned that this takes a long time since we are doing a lookup for each method
+     * any way to cache?
+     * FIXADE RC1 cannot find parameters with type parameters.
+     * @throws JavaModelException 
+     */
+    protected char[][] getParameterNames(ICompilationUnit unit, MethodNode method) {
+        try {
+            IType type = unit.getJavaProject().findType(method.getDeclaringClass().getName(), new NullProgressMonitor());
+            if (type != null && type.exists()) {
+                Parameter[] params = method.getParameters();
+                String[] parameterTypeSignatures = new String[params == null ? 0 : params.length];
+                boolean doResolved = type.isBinary();
+                for (int i = 0; i < parameterTypeSignatures.length; i++) {
+                    if (doResolved) {
+                        parameterTypeSignatures[i] = ProposalUtils.createTypeSignatureStr(params[i].getType());
+                    } else {
+                        parameterTypeSignatures[i] = ProposalUtils.createUnresolvedTypeSignatureStr(params[i].getType());
+                    }
+                }
+                IMethod jdtMethod = type.getMethod(method.getName(), parameterTypeSignatures);
+                if (jdtMethod != null && jdtMethod.exists()) {
+                    String[] paramNames = jdtMethod.getParameterNames();
+                    char[][] paramNamesChar = new char[paramNames.length][];
+                    for (int i = 0; i < paramNames.length; i++) {
+                        paramNamesChar[i] = paramNames[i].toCharArray();
+                    }
+                    return paramNamesChar;
+                }
+            }
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Exception while looking for parameter types of " + method.getName(), e);
+        }
+        return null;
+    }
 }

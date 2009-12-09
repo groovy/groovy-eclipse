@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Signature;
@@ -46,6 +47,15 @@ public class ProposalUtils {
     }
     public static String createTypeSignatureStr(ClassNode node) {
         String name = node.getName();
+        if (name.startsWith("[")) {
+            return name;
+        } else {
+            return Signature.createTypeSignature(name, true);
+        }
+    }
+    
+    public static String createUnresolvedTypeSignatureStr(ClassNode node) {
+        String name = node.getNameWithoutPackage();
         if (name.startsWith("[")) {
             return name;
         } else {

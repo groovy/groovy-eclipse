@@ -11,9 +11,19 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import java.util.List;
+
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -23,11 +33,26 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * Tests that Method completions are working properly
  */
 public class MethodCompletionTests extends CompletionTestCase {
+    
+    private class MockGroovyMethodProposal extends GroovyMethodProposal {
+        public MockGroovyMethodProposal(MethodNode method) {
+            super(method);
+        }
+        @Override
+        protected char[][] createParameterNames(ICompilationUnit unit) {
+            return super.createParameterNames(unit);
+        }
+    }
 
     public MethodCompletionTests(String name) {
         super(name);
     }
-
+    
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        env.setAutoBuilding(true);
+    }
 
     public void testAfterParens1() throws Exception {
         String contents = "HttpRetryException f() {\nnull\n}\nf().";
@@ -71,12 +96,137 @@ public class MethodCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "cause", 1);
     }
     
+    
+    public void testParameterNames1() throws Exception {
+        String contents = "import org.codehaus.groovy.runtime.DefaultGroovyMethods\nnew DefaultGroovyMethods()";
+        ICompilationUnit unit = create(contents);
+        ClassNode clazz = extract((GroovyCompilationUnit) unit);
+        List<MethodNode> methods = clazz.getMethods("is");
+        for (MethodNode method : methods) {
+            if (method.getParameters().length == 2) {
+                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
+                char[][] names = proposal.createParameterNames(unit);
+                checkNames(new char[][] {"self".toCharArray(), "other".toCharArray() }, names);
+            }
+        }
+        if (methods.size() != 1) {
+            fail("expecting to find 1 'is' method, but instead found " + methods.size() + ":\n" + methods);
+        }
+    }
+    
+    public void testParameterNames2() throws Exception {
+        String contents = "MyClass\nclass MyClass { def m(int x) { }\ndef m(String x, int y) { }}";
+        ICompilationUnit unit = create(contents);
+        ClassNode clazz = extract((GroovyCompilationUnit) unit);
+        List<MethodNode> methods = clazz.getMethods("m");
+        for (MethodNode method : methods) {
+            if (method.getParameters().length == 1) {
+                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
+                char[][] names = proposal.createParameterNames(unit);
+                checkNames(new char[][] {"x".toCharArray()}, names);
+            }
+            if (method.getParameters().length == 2) {
+                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
+                char[][] names = proposal.createParameterNames(unit);
+                checkNames(new char[][] {"x".toCharArray(), "y".toCharArray()}, names);
+            }
+        }
+        if (methods.size() != 2) {
+            fail("expecting to find 2 m methods, but instead found " + methods.size() + ":\n" + methods);
+        }
+    }
+
+    public void testParameterNames3() throws Exception {
+        env.setAutoBuilding(false);
+        String contents = "class MyClass { def m(int x) { }\ndef m(String x, int y) { }}";
+        create(contents);
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) create("new MyClass()", "Other");
+        env.fullBuild();
+        expectingNoProblems();
+        // for some reason, need to wait for indices to be built before this can work
+        SynchronizationUtils.waitForIndexingToComplete();
+        ClassNode clazz = extract(unit);
+        List<MethodNode> methods = clazz.getMethods("m");
+        for (MethodNode method : methods) {
+            if (method.getParameters().length == 1) {
+                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
+                char[][] names = proposal.createParameterNames(unit);
+                checkNames(new char[][] {"x".toCharArray()}, names);
+            }
+            if (method.getParameters().length == 2) {
+                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
+                char[][] names = proposal.createParameterNames(unit);
+                checkNames(new char[][] {"x".toCharArray(), "y".toCharArray()}, names);
+            }
+        }
+        if (methods.size() != 2) {
+            fail("expecting to find 2 'm' methods, but instead found " + methods.size() + ":\n" + methods);
+        }
+    }
+
+    public void testParameterNames4() throws Exception {
+        env.setAutoBuilding(false);
+        ICompilationUnit unit = create("new MyJavaClass()", "Other");
+        String contents = "public class MyJavaClass { void m(int x) { }\nvoid m(String x, int y) { }}";
+        createJava(contents, "MyJavaClass");
+        env.fullBuild();
+        ClassNode clazz = extract((GroovyCompilationUnit) unit);
+        List<MethodNode> methods = clazz.getMethods("m");
+        for (MethodNode method : methods) {
+            if (method.getParameters().length == 1) {
+                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
+                char[][] names = proposal.createParameterNames(unit);
+                checkNames(new char[][] {"x".toCharArray()}, names);
+            }
+            if (method.getParameters().length == 2) {
+                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
+                char[][] names = proposal.createParameterNames(unit);
+                checkNames(new char[][] {"x".toCharArray(), "y".toCharArray()}, names);
+            }
+        }
+        if (methods.size() != 2) {
+            fail("expecting to find 2 m methods, but instead found " + methods.size() + ":\n" + methods);
+        }
+    }
+    
+    private void checkNames(char[][] expected, char[][] names) {
+        if (!CharOperation.equals(expected, names)) {
+            fail("Wrong number of parameter names.  Expecting:\n" + 
+                    CharOperation.toString(expected) + "\n\nbut found:\n" + CharOperation.toString(names));
+        }
+    }
+
+
+    private ClassNode extract(GroovyCompilationUnit unit) {
+        return ((Expression) ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression()).getType();
+    }
+
+
     private ICompilationUnit create(String contents) throws Exception {
-        IPath projectPath = createGenericProject();
+        return create(contents, "GroovyClass");
+    }
+    private ICompilationUnit create(String contents, String cuName) throws Exception {
+        IPath projectPath;
+        if (genericProjectExists()) {
+            projectPath = env.getProject("Project").getFullPath();
+        } else {
+            projectPath = createGenericProject();
+        }
         IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "GroovyClass", contents);
+        IPath pathToJavaClass = env.addGroovyClass(src, cuName, contents);
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         return unit;
+    }
+    
+    private void createJava(String contents, String cuName) throws Exception {
+        IPath projectPath;
+        if (genericProjectExists()) {
+            projectPath = env.getProject("Project").getFullPath();
+        } else {
+            projectPath = createGenericProject();
+        }
+        IPath src = projectPath.append("src");
+        env.addClass(src, cuName, contents);
     }
 }

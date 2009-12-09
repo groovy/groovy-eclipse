@@ -69,6 +69,10 @@ public abstract class CompletionTestCase extends BuilderTests {
         env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
         return projectPath;
     }
+    
+    protected boolean genericProjectExists() {
+        return env.getProject("Project") != null && env.getProject("Project").exists();
+    }
 
     protected IFile getFile(IPath projectPath, String fileName) {
         return ResourcesPlugin.getWorkspace().getRoot().getFile(projectPath.append(fileName));

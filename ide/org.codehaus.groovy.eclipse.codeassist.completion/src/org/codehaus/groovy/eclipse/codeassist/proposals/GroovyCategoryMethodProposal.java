@@ -17,14 +17,8 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
-import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
-import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.eclipse.jdt.core.CompletionFlags;
-import org.eclipse.jdt.core.CompletionProposal;
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
-import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -32,48 +26,34 @@ import org.objectweb.asm.Opcodes;
  * @created Nov 12, 2009
  *
  */
-public class GroovyCategoryMethodProposal extends AbstractGroovyProposal {
+public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
     
     
-    private final MethodNode method;
     
     public GroovyCategoryMethodProposal(MethodNode method) {
-        super();
-        this.method = method;
+        super(method);
     }
 
-    public IJavaCompletionProposal createJavaProposal(
-            ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext) {
-        GroovyCompletionProposal proposal = new GroovyCompletionProposal(
-                CompletionProposal.METHOD_REF, context.completionLocation);
-        
-        proposal.setCompletion(completionName());
-        proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
-        proposal.setName(method.getName().toCharArray());
-        proposal.setParameterNames(removeFirst(createParameterNames(method)));
-        proposal.setParameterTypeNames(removeFirst(createParameterTypeNames(method)));
-        proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), 
-                context.completionLocation - context.completionExpression.length());
-        proposal.setFlags(method.getModifiers() & ~Opcodes.ACC_STATIC);  // category methods are defined as static, but should not appear as such when a proposal
-        proposal.setAdditionalFlags(CompletionFlags.Default);
-        char[] methodSignature = ProposalUtils.createMethodSignature(method, 1);
-        proposal.setKey(methodSignature);
-        proposal.setSignature(methodSignature);
-        proposal.setRelevance(getRelevance(proposal.getName()));
-        // FIXADE RC1 support parameter guessing proposals
-        // if (isGuessArguments) 
-//        proposals.add(ParameterGuessingProposal.createProposal(
-//                proposal, javaContext, isGuessArguments));
-
-        return new GroovyJavaMethodCompletionProposal(proposal,
-                    javaContext);
-
+    @Override
+    protected int getModifiers() {
+        return method.getModifiers()  & ~Opcodes.ACC_STATIC;  // category methods are defined as static, but should not appear as such when a proposal
     }
 
-    /**
-     * @return
-     */
+    @Override
+    protected char[] createMethodSignature() {
+        return ProposalUtils.createMethodSignature(method, 1);
+    }
+
+    @Override
+    protected char[][] createParameterNames(ICompilationUnit unit) {
+        return removeFirst(super.createParameterNames(unit));
+    }
+
+    @Override
+    protected char[][] createParameterTypeNames(MethodNode method) {
+        return removeFirst(super.createParameterTypeNames(method));
+    }
+
     private char[][] removeFirst(char[][] array) {
         if (array.length > 0) {
             char[][] newArray = new char[array.length-1][];
@@ -83,30 +63,6 @@ public class GroovyCategoryMethodProposal extends AbstractGroovyProposal {
             // shouldn't happen
             return array;
         }
-    }
-
-
-    protected char[] completionName() {
-        return (method.getName() + "()").toCharArray();
-    }
-    
-    private char[][] createParameterNames(MethodNode method) {
-        Parameter[] params = method.getParameters();
-        char[][] paramNames = new char[params.length][];
-        for (int i = 0; i < params.length; i++) {
-            paramNames[i] = params[i].getName().toCharArray();
-        }
-        return paramNames;
-    }
-
-    private char[][] createParameterTypeNames(MethodNode method) {
-        char[][] typeNames = new char[method.getParameters().length][];
-        int i = 0;
-        for (Parameter param : method.getParameters()) {
-            typeNames[i] = ProposalUtils.createSimpleTypeName(param.getType());
-            i++;
-        }
-        return typeNames;
     }
 
 }
