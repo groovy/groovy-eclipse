@@ -75,12 +75,25 @@ public class OtherCompletionTests extends CompletionTestCase {
             
         proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "collect", 2);
-        assertTrue ( ((proposals[0].getDisplayString().equals("collect(Closure param1) : List - DefaultGroovyMethods (Groovy)")) ||
-                     (proposals[1].getDisplayString().equals("collect(Closure param1) : List - DefaultGroovyMethods (Groovy)"))));
-        assertTrue ( ((proposals[0].getDisplayString().equals("collect(Collection param1, Closure param2) : Collection - DefaultGroovyMethods (Groovy)")) ||
-                     (proposals[1].getDisplayString().equals("collect(Collection param1, Closure param2) : Collection - DefaultGroovyMethods (Groovy)"))));
+        assertTrue (printProposals(proposals), ((proposals[0].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Groovy)")) ||
+                     (proposals[1].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Groovy)"))));
+        assertTrue (printProposals(proposals), ((proposals[0].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)")) ||
+                     (proposals[1].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)"))));
     }
     
+    /**
+     * @param proposals
+     * @return
+     */
+    private String printProposals(ICompletionProposal[] proposals) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Incorrect proposals:\n");
+        for (ICompletionProposal proposal : proposals) {
+            sb.append(proposal.getDisplayString() + "\n");
+        }
+        return sb.toString();
+    }
+
     public void testVisibility() throws Exception {
         String groovyClass = 
 "class B { }\n" +

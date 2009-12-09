@@ -46,7 +46,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     public void testMethodWith2Args() throws Exception {
         ICompilationUnit unit = createGroovy();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "findIndexOf param1, { }", 1);
+        checkReplacementString(proposals, "findIndexOf arg1, { }", 1);
     }
     
     private ICompilationUnit createGroovy() throws Exception {
