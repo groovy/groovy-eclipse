@@ -104,7 +104,6 @@ Export-Package: antlr,
  org.objectweb.asm,
  org.objectweb.asm.signature,
  org.objectweb.asm.tree
-Eclipse-BuddyPolicy: dependent
 Require-Bundle: org.apache.ant,
  org.junit,
  org.eclipse.core.runtime,
