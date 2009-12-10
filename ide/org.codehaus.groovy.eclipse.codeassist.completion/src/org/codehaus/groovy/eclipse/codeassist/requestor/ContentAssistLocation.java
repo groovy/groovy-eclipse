@@ -31,5 +31,5 @@ public enum ContentAssistLocation {
     CONSTRUCTOR, // a constructor call types and their constructors are available
     STATEMENT, // start of a new statement.  So, everything from expressions are available, but also local variables should be included
     CLASS_BODY,  // inside a class body.  Here, type proposals, modifiers, and overridable methods should appear
-    SCRIPT  // inside a script, but in an expression.  Here, type proposals, modifiers, and overridable methods, as well as statements should appear
+    SCRIPT  // inside a script, but not in an expression.  Here, type proposals, modifiers, and overridable methods, as well as statements should appear
 }

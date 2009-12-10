@@ -125,13 +125,14 @@ public class StatementAndExpressionCompletionProcessor extends
         if (completionNode != null) {
             visitor.visitCompilationUnit(requestor);
         }
-        
+        ClassNode completionType;
+        boolean isStatic;
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         if (requestor.isVisitSuccessful()) {
             // get all proposal creators
-            boolean isStatic = isStatic() || requestor.isStatic;
+            isStatic = isStatic() || requestor.isStatic;
             IProposalCreator[] creators = getAllProposalCreators();
-            ClassNode completionType = getCompletionType(requestor);
+            completionType = getCompletionType(requestor);
             for (IProposalCreator creator : creators) {
                 groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories, 
                         context.completionExpression, isStatic));
@@ -141,13 +142,15 @@ public class StatementAndExpressionCompletionProcessor extends
             // return the category proposals only
             groovyProposals.addAll(new CategoryProposalCreator().findAllProposals((ClassNode) context.containingDeclaration, 
                     Collections.singleton(VariableScope.DGM_CLASS_NODE), context.completionExpression, false));
+            completionType = null;
+            isStatic = false;
         }
         
         // get proposals from providers
         try {
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
             for (IProposalProvider provider : providers) {
-                List<IGroovyProposal> otherProposals = provider.getStatementAndExpressionProposals(context);
+                List<IGroovyProposal> otherProposals = provider.getStatementAndExpressionProposals(context, completionType, isStatic, requestor.categories);
                 if (otherProposals != null) {
                     groovyProposals.addAll(otherProposals);
                 }
