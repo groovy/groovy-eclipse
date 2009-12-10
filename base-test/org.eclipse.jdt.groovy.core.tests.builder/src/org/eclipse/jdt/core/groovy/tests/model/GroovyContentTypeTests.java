@@ -166,6 +166,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         proj.getFile(new Path("src/p1/HelloGroovytest.groovytest")).touch(null);
         
         env.incrementalBuild();
+        env.waitForAutoBuild();
         expectingNoProblems();
     
         assertTrue(javaClass + " should exist", javaClass.exists());
