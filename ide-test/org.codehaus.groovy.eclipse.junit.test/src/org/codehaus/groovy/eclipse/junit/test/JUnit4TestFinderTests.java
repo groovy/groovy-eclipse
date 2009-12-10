@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.junit.JUnitPropertyTester;
 import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder;
 
 
@@ -251,4 +252,23 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
 
         assertEquals("Should have found 6 test classes", 6, testTypes.size());
     }
+    
+    // GRECLIPSE-569 @Test(expected = RuntimeException) not being found
+    public void testFindTestWithExpectedException() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        IPath unitPath = env.addGroovyClass(root, "p2", "Tester",
+                "import org.junit.Test\n" +
+                "public class Tester {\n"+
+                "  @Test(expected = RuntimeException)" +
+                "  void someMethod() { }" +
+                "}\n"
+                );
+        incrementalBuild(projectPath);
+        expectingNoProblems();
+        
+        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(unitPath));
+        boolean found = new JUnitPropertyTester().test(unit, "canLaunchAsJUnit", new Object[0], null);
+        assertTrue("Tester should be a test type for " + unit, found);
+    }    
 }

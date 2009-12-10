@@ -296,110 +296,127 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					MarkerAnnotation annotation = new MarkerAnnotation(annotationReference, annotationNode.getStart());
 					annotation.declarationSourceEnd = annotation.sourceEnd;
 					annotations.add(annotation);
-				} else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
-					// Single member annotation
+				} else {
 
-					// Code written to only manage a single class literal value annotation - so that @RunWith works
-					Expression value = memberValuePairs.get("value");
-					if (value instanceof PropertyExpression) {
-						String pExpression = ((PropertyExpression) value).getPropertyAsString();
-						if (pExpression.equals("class")) {
+					if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
+						// Single member annotation
+
+						// Code written to only manage a single class literal value annotation - so that @RunWith works
+						Expression value = memberValuePairs.get("value");
+						if (value instanceof PropertyExpression) {
+							String pExpression = ((PropertyExpression) value).getPropertyAsString();
+							if (pExpression.equals("class")) {
+								TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
+								annotationReference.sourceStart = annotationNode.getStart();
+								annotationReference.sourceEnd = annotationNode.getEnd();
+								SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
+										.getStart());
+								annotation.memberValue = new ClassLiteralAccess(value.getEnd(),
+										classLiteralToTypeReference((PropertyExpression) value));
+								annotation.declarationSourceEnd = annotation.sourceStart
+										+ annoType.getNameWithoutPackage().length();
+								annotations.add(annotation);
+							}
+						} else if (value instanceof VariableExpression && annoType.getName().endsWith("RunWith")) {
+							// FIXASC (M2) special case for 'RunWith(Foo)' where for some reason groovy doesn't mind the missing
+							// '.class'
+							// FIXASC (M2) test this
 							TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 							annotationReference.sourceStart = annotationNode.getStart();
 							annotationReference.sourceEnd = annotationNode.getEnd();
 							SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
 									.getStart());
-							annotation.memberValue = new ClassLiteralAccess(value.getEnd(),
-									classLiteralToTypeReference((PropertyExpression) value));
+							String v = ((VariableExpression) value).getName();
+							TypeReference ref = null;
+							int start = annotationReference.sourceStart;
+							int end = annotationReference.sourceEnd;
+							if (v.indexOf(".") == -1) {
+								ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
+							} else {
+								char[][] splits = CharOperation.splitOn('.', v.toCharArray());
+								ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
+							}
+							annotation.memberValue = new ClassLiteralAccess(value.getEnd(), ref);
 							annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length();
 							annotations.add(annotation);
-						}
-					} else if (value instanceof VariableExpression && annoType.getName().endsWith("RunWith")) {
-						// FIXASC (M2) special case for 'RunWith(Foo)' where for some reason groovy doesn't mind the missing
-						// '.class'
-						// FIXASC (M2) test this
-						TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
-						annotationReference.sourceStart = annotationNode.getStart();
-						annotationReference.sourceEnd = annotationNode.getEnd();
-						SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
-								.getStart());
-						String v = ((VariableExpression) value).getName();
-						TypeReference ref = null;
-						int start = annotationReference.sourceStart;
-						int end = annotationReference.sourceEnd;
-						if (v.indexOf(".") == -1) {
-							ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
-						} else {
-							char[][] splits = CharOperation.splitOn('.', v.toCharArray());
-							ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
-						}
-						annotation.memberValue = new ClassLiteralAccess(value.getEnd(), ref);
-						annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length();
-						annotations.add(annotation);
-						// FIXASC (M2) underlining for SuppressWarnings doesn't seem right when included in messages
-					} else if (annoType.getName().equals("SuppressWarnings")
-							&& (value instanceof ConstantExpression || value instanceof ListExpression)) {
-						if (value instanceof ListExpression) {
-							ListExpression listExpression = (ListExpression) value;
-							// FIXASC (RC1) tidy up all this junk (err, i mean 'refactor') once we have confidence in test coverage
-							List<Expression> listOfExpressions = listExpression.getExpressions();
-							TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
-							annotationReference.sourceStart = annotationNode.getStart();
-							annotationReference.sourceEnd = annotationNode.getEnd() - 1;
-							SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
-									.getStart());
-
-							ArrayInitializer arrayInitializer = new ArrayInitializer();
-							arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
-									.size()];
-							for (int c = 0; c < listOfExpressions.size(); c++) {
-								ConstantExpression cExpression = (ConstantExpression) listOfExpressions.get(c);
-								String v = (String) cExpression.getValue();
-								TypeReference ref = null;
-								int start = cExpression.getStart();
-								int end = cExpression.getEnd() - 1;
-								if (v.indexOf(".") == -1) {
-									ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
-									annotation.declarationSourceEnd = annotation.sourceStart
-											+ annoType.getNameWithoutPackage().length() - 1;
-								} else {
-									char[][] splits = CharOperation.splitOn('.', v.toCharArray());
-									ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
-									annotation.declarationSourceEnd = annotation.sourceStart + annoType.getName().length() - 1;
-								}
-								arrayInitializer.expressions[c] = new StringLiteral(v.toCharArray(), start, end, -1);
-							}
-							annotation.memberValue = arrayInitializer;
-							annotations.add(annotation);
-						} else {
-							ConstantExpression constantExpression = (ConstantExpression) value;
-							if (value.getType().getName().equals("java.lang.String")) {
-								// single value, eg. @SuppressWarnings("unchecked")
+							// FIXASC (M2) underlining for SuppressWarnings doesn't seem right when included in messages
+						} else if (annoType.getName().equals("SuppressWarnings")
+								&& (value instanceof ConstantExpression || value instanceof ListExpression)) {
+							if (value instanceof ListExpression) {
+								ListExpression listExpression = (ListExpression) value;
 								// FIXASC (RC1) tidy up all this junk (err, i mean 'refactor') once we have confidence in test
 								// coverage
-								// FIXASC (RC1) test positional info for conjured up anno refs
+								List<Expression> listOfExpressions = listExpression.getExpressions();
 								TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 								annotationReference.sourceStart = annotationNode.getStart();
 								annotationReference.sourceEnd = annotationNode.getEnd() - 1;
 								SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
 										.getStart());
-								String v = (String) constantExpression.getValue();
-								TypeReference ref = null;
-								int start = constantExpression.getStart();
-								int end = constantExpression.getEnd() - 1;
-								if (v.indexOf(".") == -1) {
-									ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
-									annotation.declarationSourceEnd = annotation.sourceStart
-											+ annoType.getNameWithoutPackage().length() - 1;
-								} else {
-									char[][] splits = CharOperation.splitOn('.', v.toCharArray());
-									ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
-									annotation.declarationSourceEnd = annotation.sourceStart + annoType.getName().length() - 1;
+
+								ArrayInitializer arrayInitializer = new ArrayInitializer();
+								arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
+										.size()];
+								for (int c = 0; c < listOfExpressions.size(); c++) {
+									ConstantExpression cExpression = (ConstantExpression) listOfExpressions.get(c);
+									String v = (String) cExpression.getValue();
+									TypeReference ref = null;
+									int start = cExpression.getStart();
+									int end = cExpression.getEnd() - 1;
+									if (v.indexOf(".") == -1) {
+										ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
+										annotation.declarationSourceEnd = annotation.sourceStart
+												+ annoType.getNameWithoutPackage().length() - 1;
+									} else {
+										char[][] splits = CharOperation.splitOn('.', v.toCharArray());
+										ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
+										annotation.declarationSourceEnd = annotation.sourceStart + annoType.getName().length() - 1;
+									}
+									arrayInitializer.expressions[c] = new StringLiteral(v.toCharArray(), start, end, -1);
 								}
-								annotation.memberValue = new StringLiteral(v.toCharArray(), start, end, -1);
+								annotation.memberValue = arrayInitializer;
 								annotations.add(annotation);
+							} else {
+								ConstantExpression constantExpression = (ConstantExpression) value;
+								if (value.getType().getName().equals("java.lang.String")) {
+									// single value, eg. @SuppressWarnings("unchecked")
+									// FIXASC (RC1) tidy up all this junk (err, i mean 'refactor') once we have confidence in test
+									// coverage
+									// FIXASC (RC1) test positional info for conjured up anno refs
+									TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
+									annotationReference.sourceStart = annotationNode.getStart();
+									annotationReference.sourceEnd = annotationNode.getEnd() - 1;
+									SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference,
+											annotationNode.getStart());
+									String v = (String) constantExpression.getValue();
+									TypeReference ref = null;
+									int start = constantExpression.getStart();
+									int end = constantExpression.getEnd() - 1;
+									if (v.indexOf(".") == -1) {
+										ref = new SingleTypeReference(v.toCharArray(), toPos(start, end - 1));
+										annotation.declarationSourceEnd = annotation.sourceStart
+												+ annoType.getNameWithoutPackage().length() - 1;
+									} else {
+										char[][] splits = CharOperation.splitOn('.', v.toCharArray());
+										ref = new QualifiedTypeReference(splits, positionsFor(splits, start, end - 2));
+										annotation.declarationSourceEnd = annotation.sourceStart + annoType.getName().length() - 1;
+									}
+									annotation.memberValue = new StringLiteral(v.toCharArray(), start, end, -1);
+									annotations.add(annotation);
+								}
 							}
 						}
+					} else {
+						// normal annotation (with at least one member value pair)
+						// GRECLIPSE-569
+						// treat as a marker annotation
+						// this is specifically written so that annotations like @Test(expected = FooException) can be found
+						TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
+						annotationReference.sourceStart = annotationNode.getStart();
+						annotationReference.sourceEnd = annotationNode.getEnd();
+
+						MarkerAnnotation annotation = new MarkerAnnotation(annotationReference, annotationNode.getStart());
+						annotation.declarationSourceEnd = annotation.sourceEnd;
+						annotations.add(annotation);
 					}
 				}
 			}

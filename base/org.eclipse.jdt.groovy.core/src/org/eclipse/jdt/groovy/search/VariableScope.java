@@ -27,6 +27,8 @@ import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
@@ -42,7 +44,7 @@ public class VariableScope {
 	public static final ClassNode DGM_CLASS_NODE = new ClassNode(DefaultGroovyMethods.class);
 	public static final ClassNode OBJECT_CLASS_NODE = new ClassNode(Object.class);
 	public static final ClassNode LIST_CLASS_NODE = new ClassNode(List.class);
-	public static final ClassNode VOID_CLASS_NODE = new ClassNode(Void.class);
+	public static final ClassNode VOID_CLASS_NODE = new ClassNode(void.class);
 	public static final ClassNode GSTRING_CLASS_NODE = new ClassNode(GString.class);
 	public static final ClassNode STRING_CLASS_NODE = new ClassNode(String.class);
 	public static final ClassNode PATTERN_CLASS_NODE = new ClassNode(Pattern.class);
@@ -160,6 +162,26 @@ public class VariableScope {
 			return (ClassNode) enclosingNode;
 		} else if (parent != null) {
 			return parent.getEnclosingTypeDeclaration();
+		} else {
+			return null;
+		}
+	}
+
+	public FieldNode getEnclosingFieldDeclaration() {
+		if (enclosingNode instanceof FieldNode) {
+			return (FieldNode) enclosingNode;
+		} else if (parent != null) {
+			return parent.getEnclosingFieldDeclaration();
+		} else {
+			return null;
+		}
+	}
+
+	public MethodNode getEnclosingMethodDeclaration() {
+		if (enclosingNode instanceof FieldNode) {
+			return (MethodNode) enclosingNode;
+		} else if (parent != null) {
+			return parent.getEnclosingMethodDeclaration();
 		} else {
 			return null;
 		}
