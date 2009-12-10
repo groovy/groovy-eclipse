@@ -55,11 +55,6 @@
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
       <launchConfigurationTypeImage
-            icon="icons/run_groovy_class.gif"
-            configTypeID="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration"
-            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyApplication">
-      </launchConfigurationTypeImage>
-      <launchConfigurationTypeImage
             configTypeID="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
             icon="icons/run_groovy_class.gif"
             id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyShell">
@@ -72,12 +67,6 @@
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
-      <launchConfigurationTabGroup
-            class="org.codehaus.groovy.eclipse.launchers.GroovyApplicationLaunchConfigurationTabGroup"
-            description="Launch a Groovy Application"
-            id="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration.tabGroup"
-            type="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration">
-      </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
             class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchConfigurationTabGroup"
             description="Launch an interactive Groovy Shell for a given project"
@@ -93,35 +82,6 @@
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchShortcuts">
-      <shortcut
-            class="org.codehaus.groovy.eclipse.launchers.GroovyApplicationLaunchShortcut"
-            description="Run a Groovy application"
-            icon="icons/run_groovy_class.gif"
-            id="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration"
-            label="Groovy Application"
-            modes="run,debug">
-         <contextualLaunch>
-           <enablement>
-              <with variable="selection">
-                 <count value="1"/>
-              <iterate>
-                 <test property="org.eclipse.debug.ui.projectNature" value="org.eclipse.jdt.groovy.core.groovyNature"/>
-                 <or>
-					<test property="org.codehaus.groovy.eclipse.ui.hasMain"/>
-	             </or>
-              </iterate>
-              </with>
-           </enablement>
-        </contextualLaunch>
-         <description
-               description="Run a Groovy application"
-               mode="run">
-         </description>
-         <description
-               description="Debug a Groovy application"
-               mode="debug">
-         </description>
-      </shortcut>
       <shortcut
             class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchShortcut"
             description="Launch an interactive Groovy Shell in the given project"
