@@ -405,7 +405,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 								}
 							}
 						}
-					} else {
+					} else if (annoType.getNameWithoutPackage().equals("Test")) {
 						// normal annotation (with at least one member value pair)
 						// GRECLIPSE-569
 						// treat as a marker annotation

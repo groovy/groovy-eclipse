@@ -495,13 +495,11 @@ public class GroovyCompilationUnitTests extends BuilderTests {
             );
         incrementalBuild();
         env.waitForAutoBuild();
-//        expectingNoProblems();
+        expectingNoProblems();
         IFile file = getFile("Project/src/p/X.groovy");
         GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
         IType type = unit.getType("X");
-        // Anno3 should not be found, but Anno4 should be found
-        assertEquals("Should have found one annotation", 1, type.getAnnotations().length);
-        assertEquals("Should have found one annotation", "Anno4", type.getAnnotations()[0].getElementName());
+        assertEquals("These annotations should not be included in the model", 0, type.getAnnotations().length);
 	}
     
     
