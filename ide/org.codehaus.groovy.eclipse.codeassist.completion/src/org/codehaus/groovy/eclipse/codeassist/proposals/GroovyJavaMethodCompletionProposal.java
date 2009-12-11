@@ -1,5 +1,6 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -31,13 +32,25 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  */
 public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProposal {
 
+    public static class ProposalOptions {
+        public ProposalOptions(boolean noParensAroundArgs,
+                boolean useBracketsForClosures) {
+            this.noParensAroundArgs = noParensAroundArgs;
+            this.useBracketsForClosures = useBracketsForClosures;
+        }
+        public final boolean noParensAroundArgs;
+        public final boolean useBracketsForClosures;
+    }
+    
     private int[] fArgumentOffsets;
     private int[] fArgumentLengths;
     private IRegion fSelectedRegion; // initialized by apply()
+    private final ProposalOptions groovyFormatterPrefs;
 
     public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
-            JavaContentAssistInvocationContext context) {
+            JavaContentAssistInvocationContext context, ProposalOptions groovyFormatterPrefs) {
         super(proposal, context);
+        this.groovyFormatterPrefs = groovyFormatterPrefs;
     }
     
     
@@ -112,6 +125,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
      */
     @Override
     protected String computeReplacementString() {
+        // with no arguments, there is nothing groovy to do.
         if (!hasArgumentList()) {
             return super.computeReplacementString();
         }
@@ -123,11 +137,16 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         FormatterPrefs prefs= getFormatterPrefs();
 
         if (hasParameters()) {
-            // remove the openning paren
-            buffer.replace(buffer.length()-1, buffer.length(), "");
-            // add space if not already there
-            if (!prefs.beforeOpeningParen) {
-                buffer.append(SPACE);
+
+            if (groovyFormatterPrefs.noParensAroundArgs) {
+                // remove the openning paren
+                buffer.replace(buffer.length()-1, buffer.length(), "");
+
+                // add space if not already there
+                // would be added by call to appendMethodNameReplacement
+                if (!prefs.beforeOpeningParen) {
+                    buffer.append(SPACE);
+                }
             }
             
             // now add the parameters
@@ -150,7 +169,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
                 fArgumentOffsets[i]= buffer.length();
                 
-                if (new String(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {
+                if (groovyFormatterPrefs.useBracketsForClosures &&
+                        new String(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {
                     buffer.append("{ }");
                     fArgumentLengths[i] = 3;
                     if (i == 0) {
@@ -166,6 +186,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 }
             }
 
+            if (!groovyFormatterPrefs.noParensAroundArgs) {
+                buffer.append(RPAREN);
+            }
             
         } else {
             if (prefs.inEmptyList) {

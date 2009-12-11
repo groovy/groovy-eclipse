@@ -76,4 +76,10 @@ public class PreferenceConstants {
 	public static final String GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS = "groovy.plugin.ask.to.convert";
 	
 	public static final String GROOVY_SEMANTIC_HIGHLIGHTING = "groovy.semantic.highlighting";
+
+	// if true do not use parens around methods
+	public static final String GROOVY_CONTENT_ASSIST_NOPARENS = "groovy.contentassist.noparens";
+
+	// if true use brackets for closure args
+	public static final String GROOVY_CONTENT_ASSIST_BRACKETS = "groovy.contentassist.brackets";
 }

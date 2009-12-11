@@ -18,11 +18,13 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompletionProposal.ProposalOptions;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -30,10 +32,9 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.core.search.StringOperation;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * @author Andrew Eisenberg
@@ -44,10 +45,18 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     
     
     protected final MethodNode method;
+    private final ProposalOptions groovyFormatterPrefs;
     
     public GroovyMethodProposal(MethodNode method) {
         super();
         this.method = method;
+        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
+        groovyFormatterPrefs = 
+            new ProposalOptions(
+                    prefs.getBoolean(
+                            PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS), 
+                    prefs.getBoolean(
+                            PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS));
     }
 
     public IJavaCompletionProposal createJavaProposal(
@@ -68,13 +77,11 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setKey(methodSignature);
         proposal.setSignature(methodSignature);
         proposal.setRelevance(getRelevance(proposal.getName()));
-        // FIXADE RC1 decide if we should support parameter guessing proposals
-        // if (isGuessArguments) 
-//        proposals.add(ParameterGuessingProposal.createProposal(
-//                proposal, javaContext, isGuessArguments));
 
+        // maybe some point in the distant future, we can look at 
+        // FilledArgumentNamesMethodProposal, but this will be difficult
         return new GroovyJavaMethodCompletionProposal(proposal,
-                    javaContext);
+                    javaContext, groovyFormatterPrefs);
 
     }
     
