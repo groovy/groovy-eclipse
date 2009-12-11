@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,12 +35,14 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -99,6 +102,8 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return buffer.toString();
         }
     }
+    
+    
     private final static int CHECK_CANCEL_FREQUENCY = 50;
 
     private int foundTypesCount = 0;
@@ -106,6 +111,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private final IProgressMonitor monitor;
 
     private ObjectVector acceptedTypes;
+    private List<char[]> acceptedPackages;
 
     private boolean importCachesInitialized;
 
@@ -129,17 +135,9 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private final NameLookup nameLookup;
 
     public GroovyProposalTypeSearchRequestor(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext, NameLookup nameLookup, IProgressMonitor monitor) {
+            JavaContentAssistInvocationContext javaContext, int exprStart, NameLookup nameLookup, IProgressMonitor monitor) {
 
-        // remove "new"
-        int completionLength;
-        if (context.completionExpression.startsWith("new ")) {
-            completionLength = context.completionExpression.substring("new ".length()).trim().length();
-        } else {
-            completionLength = context.completionExpression.length();
-        }
-        
-        this.offset = context.completionLocation-completionLength;
+        this.offset = exprStart;
         this.javaContext = javaContext;
         this.module = context.unit.getModuleNode();
         this.replaceLength = context.completionExpression.length();
@@ -156,7 +154,13 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             char[][] parameterNames, int typeModifiers, char[] packageName,
             int extraFlags, String path, AccessRestriction access) { }
 
-    public void acceptPackage(char[] packageName) { }
+    public void acceptPackage(char[] packageName) {
+        this.checkCancel();
+        if (acceptedPackages == null) {
+            acceptedPackages = new ArrayList<char[]>();
+        }
+        acceptedPackages.add(packageName);
+    }
 
     public void acceptType(char[] packageName, char[] simpleTypeName,
             char[][] enclosingTypeNames, int modifiers,
@@ -468,6 +472,25 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             imports[i][1] = DEFAULT_GROOVY_IMPORTS[j];
             i++;
         }
+    }
+    
+    List<ICompletionProposal> processAcceptedPackages() {
+        this.checkCancel();
+        List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
+        if (acceptedPackages != null && acceptedPackages.size() > 0) {
+            for (char[] packageName : acceptedPackages) {
+                GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, this.actualCompletionPosition);
+                proposal.setDeclarationSignature(packageName);
+                proposal.setPackageName(packageName);
+                proposal.setCompletion(packageName);
+                proposal.setReplaceRange(this.offset, this.actualCompletionPosition);
+                proposal.setTokenRange(this.offset, this.actualCompletionPosition);
+                proposal.setRelevance(9);
+                LazyJavaCompletionProposal javaProposal = new LazyJavaCompletionProposal(proposal, javaContext);
+                proposals.add(javaProposal);
+            }
+        }
+        return proposals;
     }
     
     protected final GroovyCompletionProposal createProposal(int kind, int completionOffset) {

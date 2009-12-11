@@ -13,6 +13,7 @@ import org.codehaus.groovy.eclipse.codeassist.factories.LocalVariableCompletionP
 import org.codehaus.groovy.eclipse.codeassist.factories.ModifiersCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.NewFieldCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.NewMethodCompletionProcessorFactory;
+import org.codehaus.groovy.eclipse.codeassist.factories.PackageCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.TypeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
 import org.codehaus.groovy.eclipse.core.DocumentSourceBuffer;
@@ -45,10 +46,12 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new NewMethodCompletionProcessorFactory());
         factories.add(new NewFieldCompletionProcessorFactory());
         factories.add(new TypeCompletionProcessorFactory());
+        factories.add(new PackageCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.CLASS_BODY, factories);
         
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
         factories.add(new TypeCompletionProcessorFactory());
+        factories.add(new PackageCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.EXCEPTIONS, factories);
         locationFactoryMap.put(ContentAssistLocation.EXTENDS, factories);
         locationFactoryMap.put(ContentAssistLocation.IMPLEMENTS, factories);
@@ -58,12 +61,14 @@ public class GroovyCompletionProposalComputer implements
 
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
         factories.add(new ExpressionCompletionProcessorFactory());
+        factories.add(new PackageCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.EXPRESSION, factories);
 
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new ExpressionCompletionProcessorFactory());
         factories.add(new LocalVariableCompletionProcessorFactory());
+        factories.add(new PackageCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.STATEMENT, factories);
 
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
@@ -73,6 +78,7 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new ExpressionCompletionProcessorFactory());
         factories.add(new LocalVariableCompletionProcessorFactory());
+        factories.add(new PackageCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.SCRIPT, factories);
     }
     
@@ -99,12 +105,12 @@ public class GroovyCompletionProposalComputer implements
             return Collections.EMPTY_LIST;
         }
         
-        String completionText = findCompletionText(context.getDocument(), context.getInvocationOffset());
-        String[] completionExpressions = findCompletionExpression(completionText);
+        String fullCompletionText = findCompletionText(context.getDocument(), context.getInvocationOffset());
+        String[] completionExpressions = findCompletionExpression(fullCompletionText);
         
         int supportingNodeEnd = completionExpressions[1] == null ? -1 : 
-            context.getInvocationOffset() - completionText.length() + completionExpressions[0].length();
-        CompletionNodeFinder finder = new CompletionNodeFinder(context.getInvocationOffset(), supportingNodeEnd, completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1]);
+            context.getInvocationOffset() - fullCompletionText.length() + completionExpressions[0].length();
+        CompletionNodeFinder finder = new CompletionNodeFinder(context.getInvocationOffset(), supportingNodeEnd, completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1], fullCompletionText);
         ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         if (assistContext != null) {

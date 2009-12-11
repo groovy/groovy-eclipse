@@ -117,5 +117,67 @@ public class TypeCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, javaContents, getIndexOf(contents, "FOO"));
         proposalExists(proposals, "FOO1", 1);
     }
+    
+    public void testCompleteFullyQualifiedTypeInScript() throws Exception {
+        String contents = "javax.swing.text.html.HTMLDocume";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "HTMLDocume"));
+        proposalExists(proposals, "HTMLDocument", 1, true);
+    }
 
+    public void testCompleteFullyQualifiedTypeInClass() throws Exception {
+        String contents = "class Foo { javax.swing.text.html.HTMLDocume }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "HTMLDocume"));
+        proposalExists(proposals, "HTMLDocument", 1, true);
+    }
+    
+    public void testCompleteFullyQualifiedTypeInMethod() throws Exception {
+        String contents = "class Foo { def x() { javax.swing.text.html.HTMLDocume } }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "HTMLDocume"));
+        proposalExists(proposals, "HTMLDocument", 1, true);
+    }
+    
+    public void testCompleteFullyQualifiedTypeInMethodParams() throws Exception {
+        String contents = "class Foo { def x(javax.swing.text.html.HTMLDocume) { } }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "HTMLDocume"));
+        proposalExists(proposals, "HTMLDocument", 1, true);
+    }
+    
+    public void testCompleteFullyQualifiedTypeInImports() throws Exception {
+        String contents = "import javax.swing.text.html.HTMLDocume";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "HTMLDocume"));
+        proposalExists(proposals, "HTMLDocument", 1, true);
+    }
+    
+    public void testCompletePackageInClass() throws Exception {
+        String contents = "class Foo { javax.swing.text.html.i }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".i"));
+        proposalExists(proposals, "javax.swing.text.html.icons", 1, true);
+        // ensure no type proposals exist
+        proposalExists(proposals, "Icons", 0, true);
+    }
+    
+    public void testCompletePackageInMethod() throws Exception {
+        String contents = "class Foo { def x() { javax.swing.text.html.i } }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".i"));
+        proposalExists(proposals, "javax.swing.text.html.icons", 1, true);
+        // ensure no type proposals exist
+        proposalExists(proposals, "Icons", 0, true);
+    }
+    
+    public void testCompletePackageInMethodParams() throws Exception {
+        String contents = "class Foo { def x(javax.swing.text.html.i ) { } }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".i"));
+        proposalExists(proposals, "javax.swing.text.html.icons", 1, true);
+        // ensure no type proposals exist
+        proposalExists(proposals, "Icons", 0, true);
+    }
+    
+    public void testCompletePackageInImports() throws Exception {
+        String contents = "import javax.swing.text.html.i";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".i"));
+        proposalExists(proposals, "javax.swing.text.html.icons", 1, true);
+        // ensure no type proposals exist
+        proposalExists(proposals, "Icons", 0, true);
+    }
+    
 }

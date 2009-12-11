@@ -75,14 +75,16 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     private int completionOffset;
     private int supportingNodeEnd;
     private String completionExpression;
+    private String fullCompletionExpression;
     private GroovyCompilationUnit unit;    
     private ContentAssistContext context;
     
     public CompletionNodeFinder(int completionOffset, int supportingNodeEnd,
-            String completionExpression) {
+            String completionExpression, String fullCompletionExpression) {
         this.completionOffset = completionOffset;
         this.supportingNodeEnd = supportingNodeEnd;
         this.completionExpression = completionExpression;
+        this.fullCompletionExpression = fullCompletionExpression;
         this.blockStack = new Stack<ASTNode>();
     }
 
@@ -225,8 +227,13 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             }
         }
         
+        blockStack.push(node);
+        visitAnnotations(node);
+        blockStack.pop();
         
-        super.visitConstructorOrMethod(node, isConstructor);
+        Statement code = node.getCode();
+        visitClassCodeContainer(code);
+        
         
         if (completionOffset < node.getCode().getStart()) {
             // probably inside an empty parameters list
@@ -490,7 +497,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
     
     private void createContext(ASTNode completionNode, ASTNode declaringNode, ContentAssistLocation location) {
-        context = new ContentAssistContext(completionOffset, completionExpression, 
+        context = new ContentAssistContext(completionOffset, completionExpression, fullCompletionExpression,
                 completionNode, declaringNode, location, unit, currentDeclaration);
         throw new VisitCompleteException();
     }

@@ -42,11 +42,13 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         String toSearch = context.completionExpression.startsWith("new ") ? context.completionExpression.substring(4) : context.completionExpression;
-        if (toSearch.length() == 0 && context.location != ContentAssistLocation.IMPORT) { // always show types in import area
+        if (shouldShowTypes(context, toSearch)) {
             return Collections.emptyList();
         }
+        
+        int expressionStart = findExpressionStart(context);
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-                context, getJavaContext(), getNameEnvironment().nameLookup, monitor);
+                context, getJavaContext(), expressionStart, getNameEnvironment().nameLookup, monitor);
         
         getNameEnvironment().findTypes(toSearch.toCharArray(), true, // all member
                                                             // types, should
@@ -59,6 +61,36 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
         List<ICompletionProposal> typeProposals = requestor
                 .processAcceptedTypes();
         return typeProposals;
+    }
+
+    /**
+     * Don't show types if there is no previous text (except if in imports)
+     * Also, don't show types if there is a '.' 
+     * @param context
+     * @param toSearch
+     * @return
+     */
+    private boolean shouldShowTypes(ContentAssistContext context,
+            String toSearch) {
+        return (toSearch.length() == 0 && context.location != ContentAssistLocation.IMPORT) ||
+                context.fullCompletionExpression.contains(".");
+    }
+
+    /**
+     * @param context
+     * @return
+     */
+    private int findExpressionStart(ContentAssistContext context) {
+        // remove "new"
+        int completionLength;
+        if (context.completionExpression.startsWith("new ")) {
+            completionLength = context.completionExpression.substring("new ".length()).trim().length();
+        } else {
+            completionLength = context.completionExpression.length();
+        }
+        
+        int expressionStart = context.completionLocation-completionLength;
+        return expressionStart;
     }
 
     /**

@@ -125,11 +125,11 @@ public abstract class CompletionTestCase extends BuilderTests {
             // if a field
             if (proposal.getDisplayString().startsWith(name + " ")) {
                 foundCount ++;
-            }
+            } else
             // if a method
             if (proposal.getDisplayString().startsWith(name + "(")) {
                 foundCount ++;
-            }
+            } else
             // if a type
             if (isType && proposal.getDisplayString().startsWith(name)) {
                 foundCount ++;

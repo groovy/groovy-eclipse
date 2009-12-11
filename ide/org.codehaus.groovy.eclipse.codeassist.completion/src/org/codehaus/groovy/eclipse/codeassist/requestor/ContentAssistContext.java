@@ -34,6 +34,7 @@ public class ContentAssistContext {
 
     public final int completionLocation;  // the caret location where completion occurs
     public final String completionExpression; // the phrase that is being completed.  not null, but might be empty.
+    public final String fullCompletionExpression; // the full phrase of the entire statement being completed
     public final ASTNode completionNode;  // the ast node that provides the type being completed.  might be null if there is none
     public final ASTNode containingCodeBlock;  // the import, method, field, class. or code block that contains this completion request
     public final ContentAssistLocation location; // the location of this content assist
@@ -41,12 +42,13 @@ public class ContentAssistContext {
     public final AnnotatedNode containingDeclaration;  // the class, method or field containing the completion location
 
     public ContentAssistContext(int completionLocation,
-            String completionExpression, ASTNode completionNode,
+    		String completionExpression, String fullCompletionExpression, ASTNode completionNode,
             ASTNode containingCodeBlock, ContentAssistLocation location,
             GroovyCompilationUnit unit, AnnotatedNode containingDeclaration) {
         super();
         this.completionLocation = completionLocation;
         this.completionExpression = completionExpression;
+        this.fullCompletionExpression = fullCompletionExpression;
         this.completionNode = completionNode;
         this.containingCodeBlock = containingCodeBlock;
         this.location = location;
