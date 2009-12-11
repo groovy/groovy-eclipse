@@ -114,6 +114,15 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(
                 PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
                 true);
+        
+        // Groovier Content assist
+        store.setDefault(
+                PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS,
+                true);
+        store.setDefault(
+                PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
+                true);
+
     }
     
     public void reset() {
@@ -191,6 +200,20 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         // Ask to convert Legacy Projects at startup
         store.setValue(
                 PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS,
+                true);
+
+        
+        // Semantic highlighting
+        store.setValue(
+                PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
+                true);
+
+        // Groovier Content assist
+        store.setValue(
+                PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS,
+                true);
+        store.setValue(
+                PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
                 true);
 
     }

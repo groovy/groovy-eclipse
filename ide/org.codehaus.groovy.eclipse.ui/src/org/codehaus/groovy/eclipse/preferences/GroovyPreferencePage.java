@@ -109,6 +109,13 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, "Underline staticly unknown references", getFieldEditorParent()));
         
+        Label contentAssistLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
+        contentAssistLabel.setText("\n\nGroovy Content assist options to make your content assist Groovier.");
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, 
+                "Do not use parens around methods with arguments", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, 
+                "Use brackets for closure arguments", getFieldEditorParent()));
+        
         // legacy projects
         ConvertLegacyProject convert = new ConvertLegacyProject();
         final IProject[] oldProjects = convert.getAllOldProjects();
