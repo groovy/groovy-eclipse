@@ -19,7 +19,6 @@ import java.util.Map;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -320,7 +319,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		// underlying resource is null in the case of a working copy on a class
 		// file in a jar
 		if (underlyingResource != null) {
-			ReflectionUtils.setPrivateField(CompilationUnitElementInfo.class, "timestamp", unitInfo, ((IFile) underlyingResource) //$NON-NLS-1$
+			ReflectionUtils.setPrivateField(CompilationUnitElementInfo.class, "timestamp", unitInfo, underlyingResource //$NON-NLS-1$
 					.getModificationStamp());
 		}
 
@@ -500,6 +499,11 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			@Override
 			public CompilationUnit originalFromClone() {
 				return GroovyCompilationUnit.this;
+			}
+
+			@Override
+			public char[] getFileName() {
+				return GroovyCompilationUnit.this.getFileName();
 			}
 		};
 	}

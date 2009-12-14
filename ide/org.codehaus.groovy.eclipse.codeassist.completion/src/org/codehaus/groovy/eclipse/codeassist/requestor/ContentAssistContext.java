@@ -33,10 +33,10 @@ import org.eclipse.jdt.core.JavaModelException;
 public class ContentAssistContext {
 
     public final int completionLocation;  // the caret location where completion occurs
-    public final String completionExpression; // the phrase that is being completed.  not null, but might be empty.
-    public final String fullCompletionExpression; // the full phrase of the entire statement being completed
+    public final String completionExpression; // the phrase that is being completed.  not null, but might be empty.  
+    public final String fullCompletionExpression; // the full phrase of the entire statement being completed.  ie- if the full phrase is foo.bar.baz.someTh^, the completion expression will be someTh 
     public final ASTNode completionNode;  // the ast node that provides the type being completed.  might be null if there is none
-    public final ASTNode containingCodeBlock;  // the import, method, field, class. or code block that contains this completion request
+    public final ASTNode containingCodeBlock;  // the import, method, field, class, or code block that contains this completion request
     public final ContentAssistLocation location; // the location of this content assist
     public final GroovyCompilationUnit unit;
     public final AnnotatedNode containingDeclaration;  // the class, method or field containing the completion location

@@ -16,44 +16,7 @@
  -->
 
 <plugin>
-   <extension-point id="declarationSearch" name="Groovy Code Browsing" schema="schema/declarationSearch.exsd"/>
 
-   <extension
-         point="org.eclipse.ui.contexts">
-      <context
-            id="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
-            name="Editing Groovy Source"
-            parentId="org.eclipse.ui.textEditorScope"/>
-   </extension>
-   <extension
-         point="org.eclipse.ui.commands">
-      <category
-            id="org.codehaus.groovy.eclipse.codebrowsing"
-            name="Groovy - Navigation"/>
-      <command
-            categoryId="org.codehaus.groovy.eclipse.codebrowsing"
-            id="org.codehaus.groovy.eclipse.codebrowsing.OpenDeclaration"
-            name="Open Declaration"/>
-      <command
-            categoryId="org.codehaus.groovy.eclipse.codebrowsing"
-            id="org.codehaus.groovy.eclipse.codebrowsing.ShowOutline"
-            name="Show Outline">
-      </command>
-   </extension>
-   <extension
-         point="org.eclipse.ui.bindings">
-      <key
-            commandId="org.codehaus.groovy.eclipse.codebrowsing.OpenDeclaration"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="F3"/>
-      <key
-            commandId="org.codehaus.groovy.eclipse.codebrowsing.ShowOutline"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+O">
-      </key>
-   </extension>
    <!--
    <extension
          point="org.eclipse.ui.editorActions">

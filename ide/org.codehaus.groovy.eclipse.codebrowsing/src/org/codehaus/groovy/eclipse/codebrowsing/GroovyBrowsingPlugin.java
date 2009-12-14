@@ -15,10 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.core.runtime.Plugin;
 
-public class GroovyBrowsingPlugin extends AbstractUIPlugin {
+public class GroovyBrowsingPlugin extends Plugin {
 	// The shared instance.
 	private static GroovyBrowsingPlugin plugin;
 
@@ -28,18 +27,5 @@ public class GroovyBrowsingPlugin extends AbstractUIPlugin {
 
 	public static GroovyBrowsingPlugin getDefault() {
 		return plugin;
-	}
-
-	/**
-	 * Returns an image descriptor for the image file at the given plug-in
-	 * relative path.
-	 * 
-	 * @param path
-	 *            the path
-	 * @return the image descriptor
-	 */
-	public static ImageDescriptor getImageDescriptor(String path) {
-		return AbstractUIPlugin.imageDescriptorFromPlugin(
-				"org.codehaus.groovy.eclipse.codebrowsing", path);
 	}
 }
