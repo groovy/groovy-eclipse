@@ -170,6 +170,7 @@ public class MethodCompletionTests extends CompletionTestCase {
         String contents = "public class MyJavaClass { void m(int x) { }\nvoid m(String x, int y) { }}";
         createJava(contents, "MyJavaClass");
         env.fullBuild();
+        SynchronizationUtils.waitForIndexingToComplete();
         ClassNode clazz = extract((GroovyCompilationUnit) unit);
         List<MethodNode> methods = clazz.getMethods("m");
         for (MethodNode method : methods) {
