@@ -124,5 +124,15 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, "java.lang.String");
     }
     
+    public void testRangeExpression1() throws Exception {
+        String contents = "0 .. 5";
+        assertType(contents, "java.util.List");
+    }
+    
+    public void testRangeExpression2() throws Exception {
+        String contents = "0 ..< 5";
+        assertType(contents, "java.util.List");
+    }
+    
     
 }

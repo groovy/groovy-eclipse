@@ -54,6 +54,7 @@ import org.codehaus.groovy.ast.expr.NotExpression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.RangeExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
@@ -306,7 +307,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 				return new TypeLookupResult(node.getType(), null, null, confidence, scope);
 			}
 
-		} else if (node instanceof ArgumentListExpression || node instanceof ListExpression) {
+		} else if (node instanceof ArgumentListExpression || node instanceof ListExpression || node instanceof RangeExpression) {
 			return new TypeLookupResult(VariableScope.LIST_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof BinaryExpression) {
