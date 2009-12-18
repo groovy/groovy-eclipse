@@ -18,6 +18,8 @@ package org.codehaus.groovy.eclipse.core.compiler;
 
 import static org.eclipse.core.runtime.FileLocator.resolve;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -27,6 +29,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.internal.baseadaptor.StateManager;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.DisabledInfo;
@@ -221,4 +224,34 @@ public class CompilerUtils {
                 "Disabled via PDE", desc); //$NON-NLS-1$
         return info;
     }
+    
+    
+    private static String getDotGroovyLibLocation() {
+        String home = FrameworkProperties.getProperty("user.home");
+        if (home != null) {
+            home += "/.groovy/lib";
+        }
+        return home;
+    }
+    
+    
+    public static File[] findJarsInDotGroovyLocation() {
+        String home = getDotGroovyLibLocation();
+        if (home != null) {
+            File libDir = new File(home);
+            if (libDir.isDirectory()) {
+                File[] files = libDir.listFiles(new FilenameFilter() {
+                    
+                    public boolean accept(File dir, String name) {
+                        return !(new File(dir, name).isDirectory()) &&
+                                name.endsWith(".jar"); 
+                    }
+                });
+                return files;
+            }
+        }
+        return new File[0];
+    }
+    
+    
 }

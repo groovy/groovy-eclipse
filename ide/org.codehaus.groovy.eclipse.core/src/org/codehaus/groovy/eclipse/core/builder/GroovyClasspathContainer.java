@@ -16,13 +16,12 @@
 package org.codehaus.groovy.eclipse.core.builder;
 
 import static org.codehaus.groovy.eclipse.core.util.ListUtil.newList;
-import static org.eclipse.core.runtime.FileLocator.resolve;
 import static org.eclipse.jdt.core.JavaCore.newLibraryEntry;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -33,8 +32,6 @@ import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.internal.core.ClasspathAttribute;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 
 public class GroovyClasspathContainer implements IClasspathContainer {
     public static Path CONTAINER_ID = new Path("GROOVY_SUPPORT");
@@ -43,13 +40,17 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
     private IClasspathEntry[] entries;
 
-    public IClasspathEntry[] getClasspathEntries() {
+    public synchronized IClasspathEntry[] getClasspathEntries() {
     	if (entries == null) {
     		updateEntries();
     	}
         return entries;
     }
 
+    synchronized void reset() {
+        entries = null;
+    }
+    
     // Theoretically, we can support multiple versions of org.codehaus.groovy here
     private void updateEntries() {
         final List<IClasspathEntry> newEntries = newList();
@@ -77,6 +78,9 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	        		srcJarPath, null, null,
 	                attrs, true);
 	        newEntries.add(entry);
+	        
+	        newEntries.addAll(getGroovyJarsInDotGroovyLib());
+	        
 	        entries = newEntries.toArray(new IClasspathEntry[0]);
         } catch (Exception e) {
         	GroovyCore.logException("Problem finding groovy runtime", e);
@@ -88,6 +92,23 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     
 
     
+    /**
+     * Finds all the jars in the ~/.groovy/lib directory and adds them 
+     * to the classpath
+     * @return
+     */
+    private Collection<IClasspathEntry> getGroovyJarsInDotGroovyLib() {
+        File[] files = CompilerUtils.findJarsInDotGroovyLocation();
+        final List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>(files.length);
+        for (File file : files) {
+            IClasspathEntry entry = newLibraryEntry(new Path(file.getAbsolutePath()),
+                    null, null, null,
+                    new IClasspathAttribute[0], true);
+            newEntries.add(entry);
+        }
+        return newEntries;
+    }
+
     public String getDescription() {
         return DESC;
     }
