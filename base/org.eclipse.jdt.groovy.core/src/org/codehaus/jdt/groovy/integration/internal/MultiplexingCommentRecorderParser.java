@@ -32,7 +32,7 @@ public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 	GroovyParser groovyParser;
 	private boolean allowTransforms = true;
 
-	// FIXASC (M2) how often is the LanguageSupport impl looked up? should be once then
+	// FIXASC how often is the LanguageSupport impl looked up? should be once then
 	// we remember what happened
 	public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
 			boolean optimizeStringLiterals, boolean allowTransforms) {
@@ -54,8 +54,8 @@ public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 			if (this.scanner != null) {
 				this.scanner.setSource(sourceUnit.getContents());
 			}
-			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-			// FIXASC (M2) ought to reuse to ensure types end up in same groovy CU
+			// FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
+			// FIXASC ought to reuse to ensure types end up in same groovy CU
 			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter, allowTransforms)
 					.dietParse(sourceUnit, compilationResult);
 			// return groovyParser.dietParse(sourceUnit, compilationResult);

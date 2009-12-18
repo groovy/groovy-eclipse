@@ -22,7 +22,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
 
 // Andys version of GrailsAwareInjectionOperation
-// FIXASC (M2) ensure we have a grails nature and a way to determine grails level
+// FIXASC ensure we have a grails nature and a way to determine grails level
 /**
  * In Grails 1.1 an extra compiler phase is added to the compiler by grails. During compilation this phase operation adds properties
  * like 'identity' to domain objects, based upon whether they are in the directory grails-app/domain. Under Grails 1.2 this is a

@@ -264,7 +264,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 	    		else if (n.equals("float")) { return "F"; }
 	    		else if (n.equals("double")) { return "D"; }
     		}
-    		// FIXASC (M2) wasteful way to build strings
+    		// FIXASC wasteful way to build strings
     		return "L"+componentType.getName()+";";
     	}
     }
@@ -1308,7 +1308,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         redirect().clazz!=null || (componentType != null && componentType.isResolved());
     }
     
-    // FIXASC (M2) hacky, rework (remove?) this if it behaves as an approach
+    // FIXASC hacky, rework (remove?) this if it behaves as an approach
     // enables the redirect to be a JDTClassNode and satisfy 'isResolved()'
     public boolean isReallyResolved() {
     	return false;

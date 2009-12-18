@@ -1174,7 +1174,7 @@ public class CompilationUnit extends ProcessingUnit {
                 // oldcode
 //                if (context == null || context.phase <= phase) {
                 // newcode
-                // FIXASC (M2) get to the bottom of this - why are operations running multiple times that should only run once?
+                // FIXASC get to the bottom of this - why are operations running multiple times that should only run once?
                 if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {                
                 // end
                     body.call(context, new GeneratorContext(this.ast), classNode);

@@ -14,6 +14,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
@@ -173,7 +174,12 @@ public class CompilerUtils {
 		if (path!=null) {
 			String prefix = path.segment(0);
 			if (prefix.equals(project.getName())) {
-				realLocation =  project.getFile(path.removeFirstSegments(1)).getRawLocation().toOSString();
+				if (path.segmentCount()==1) {		
+					// the path is actually to the project root
+					realLocation =  project.getRawLocation().toOSString();
+				} else {
+					realLocation =  project.getFile(path.removeFirstSegments(1)).getRawLocation().toOSString();
+				}
 			} else {
 				realLocation = path.toOSString();
 			}
@@ -206,9 +212,18 @@ public class CompilerUtils {
 					if (prefix.equals(projectName)) {
 						pathElement = project.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
 					} else {
-						pathElement = cpe.getPath().toOSString();
+						if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+							// the classpath entry is a dependency on another project - we need the output folders of that project
+							IProject iproject = project.getWorkspace().getRoot().getProject(prefix);
+							IJavaProject ijp = JavaCore.create(iproject);
+							pathElement = pathToString(ijp.getOutputLocation(),iproject);
+							// FIXASC this ought to also allow for separate output folders in the project we depend upon *sigh*
+							// FIXASC what does all this look like for batch compilation?  Should it be passed in rather than computed here
+						} else {
+							pathElement = cpe.getPath().toOSString();
+						}
 					}
-					path.append(pathElement);
+ 					path.append(pathElement);
 					path.append(File.pathSeparator);
 				}
 				path.append(defaultOutputLocation); // for picking up transforms built earlier in the process

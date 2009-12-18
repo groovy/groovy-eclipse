@@ -1223,12 +1223,15 @@ classBlock  {Token first = LT(1);}
         ( classField )? ( sep! ( classField )? )*
         RCURLY!
         {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);  }
-// unfinished recovery for missing final '}'
-//        exception
-//        catch [RecognitionException e] {
-//        	
-//        	reportError(e);
-//        }
+// general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
+        exception
+        catch [RecognitionException e] {  
+        	reportError(e);
+            #classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);  	
+        	currentAST.root = classBlock_AST;
+			currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+			currentAST.advanceChildToEnd();	
+        }
     ;
 
 // This is the body of an interface. You can have interfaceField and extra semicolons.
@@ -1745,6 +1748,19 @@ parameterDeclaration!
                       pm, #(create(TYPE,"TYPE",first,LT(1)),t), id, exp);
             }
         }
+        // RECOVERY:
+      /*  exception
+        catch [RecognitionException e] {
+        if (t_AST==null) { // possibly 'public void foo(XMLContant'
+					// create the best thing we can... all we have is the type - no name
+					parameterDeclaration_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(PARAMETER_DEF,"PARAMETER_DEF",first,LT(1))).add(pm_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))));
+			}
+        	//if (pathElement_AST==null) {
+			//	throw e;
+			//}
+        	reportError(e);
+        }
+        */
     ;
 
 /*OBS*

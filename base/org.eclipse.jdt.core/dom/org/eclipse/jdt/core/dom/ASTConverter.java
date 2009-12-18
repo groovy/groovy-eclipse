@@ -73,6 +73,10 @@ class ASTConverter {
 	protected boolean resolveBindings;
 	Scanner scanner;
 	private DefaultCommentMapper commentMapper;
+	
+	// GROOVY start
+	private boolean scannerUsable;
+	// GROOVY end
 
 	public ASTConverter(Map options, boolean resolveBindings, IProgressMonitor monitor) {
 		this.resolveBindings = resolveBindings;
@@ -178,7 +182,18 @@ class ASTConverter {
 				case 1 :
 					methodsIndex++;
 					if (!nextMethodDeclaration.isDefaultConstructor() && !nextMethodDeclaration.isClinit()) {
-						typeDecl.bodyDeclarations().add(convert(nextMethodDeclaration));
+						// GROOVY start - a little ugly, but allows the conversion of the method declaration
+						// to know if it is occurring within a pure java type or not
+						boolean originalValue = this.scannerUsable;
+						try {
+							this.scannerUsable = typeDeclaration.isScannerUsableOnThisDeclaration();
+							// GROOVY end
+							typeDecl.bodyDeclarations().add(convert(nextMethodDeclaration));
+						// GROOVY start
+						} finally {
+							this.scannerUsable = originalValue;
+						}
+						// GROOVY end
 					}
 					break;
 				case 2 :
@@ -612,6 +627,9 @@ class ASTConverter {
 
 	// GROOVY start
 	private boolean scannerAvailable(Scope scope) {
+		if (!scannerUsable) {
+			return false;
+		}
 		if (scope!=null) {
 			CompilationUnitScope cuScope = scope.compilationUnitScope();
 			if (cuScope!=null) {

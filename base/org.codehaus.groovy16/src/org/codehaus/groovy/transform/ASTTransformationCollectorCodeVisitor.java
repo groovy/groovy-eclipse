@@ -98,7 +98,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         	}
         	return null;
     	} else {
-    		// FIXASC (M2) check haven't broken transforms for 'vanilla' (outside of eclipse) execution of groovyc
+    		// FIXASC check haven't broken transforms for 'vanilla' (outside of eclipse) execution of groovyc
 	        Annotation transformClassAnnotation = getTransformClassAnnotation(cn);
 	        if (transformClassAnnotation == null) {
 	        	return null;

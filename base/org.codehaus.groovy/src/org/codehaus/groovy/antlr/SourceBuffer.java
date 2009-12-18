@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.antlr;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple buffer that provides line/col access to chunks of source code
@@ -122,7 +122,7 @@ public class SourceBuffer {
     
     private boolean prevWasCarriageReturn = false;
     private int col = 0;
-    // FIXASC (RC1) tidy this up, looks slow
+    // FIXASC tidy this up, looks slow
     public void write(int c) {
         if (c != -1) {
         	col++;

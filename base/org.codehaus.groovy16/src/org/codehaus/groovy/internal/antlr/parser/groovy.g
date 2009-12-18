@@ -1210,6 +1210,15 @@ classBlock  {Token first = LT(1);}
         ( classField )? ( sep! ( classField )? )*
         RCURLY!
         {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);}
+        // general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
+        exception
+        catch [RecognitionException e] {  
+        	reportError(e);
+            #classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);  	
+        	currentAST.root = classBlock_AST;
+			currentAST.child = classBlock_AST!=null && classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+			currentAST.advanceChildToEnd();	
+        }
     ;
 
 // This is the body of an interface. You can have interfaceField and extra semicolons.

@@ -3100,7 +3100,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.setStart(locations.findOffset(sline,scol));
         node.setLastColumnNumber(ecol);
         node.setLastLineNumber(eline);
-        // FIXASC (RC1) think about this -1 - is it right for what groovy likes to see or just for eclipse?
+        // FIXASC  think about this -1 - is it right for what groovy likes to see or just for eclipse?
         node.setEnd(locations.findOffset(eline,ecol)-1);	
     }
     // end

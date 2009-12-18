@@ -279,7 +279,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
 		}
 
-		// FIXASC (M2) deal with the case of project==null to reduce duplication in this next line and call to setGroovyClasspath
+		// FIXASC deal with the case of project==null to reduce duplication in this next line and call to setGroovyClasspath
 		// Required for Groovy, but not for Java
 		options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 

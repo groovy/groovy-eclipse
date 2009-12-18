@@ -127,7 +127,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		}
 	}
 
-	// FIXASC (RC1) move this into GroovyClassScope
+	// FIXASC move this into GroovyClassScope
 	/**
 	 * Ensure Groovy types extend groovy.lang.GroovyObject
 	 */
@@ -159,7 +159,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	 * SourceTypeBindings during the full build
 	 * 
 	 */
-	// FIXASC (M2:optimization) cache any non SourceTypeBinding found and use that information in the lookupClassNodeForBinary
+	// FIXASC (optimization) cache any non SourceTypeBinding found and use that information in the lookupClassNodeForBinary
 	public ClassNode lookupClassNodeForSource(String typename, JDTResolver jdtResolver) {
 		ClassNode node = bindingToClassNodeCache.get(typename);
 		if (node != null) {
@@ -194,12 +194,12 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 			}
 		}
 
-		// FIXASC (RC1) better to look it up properly as a member type rather than catch the problem and unwrap!
+		// FIXASC better to look it up properly as a member type rather than catch the problem and unwrap!
 		if (jdtBinding != null && (jdtBinding instanceof ProblemReferenceBinding)) {
 			ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
 			if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
 				jdtBinding = prBinding.closestMatch();
-				// FIXASC (RC1) caching for this too?
+				// FIXASC caching for this too?
 				if (jdtBinding != null && (jdtBinding instanceof SourceTypeBinding)) {
 					return jdtResolver.convertToClassNode(jdtBinding);
 				}
@@ -211,7 +211,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		return null;
 	}
 
-	// FIXASC (RC1) worth a cache for binary bindings or would it just not get hit due to the binary binding support in the other
+	// FIXASC worth a cache for binary bindings or would it just not get hit due to the binary binding support in the other
 	// lookup method?
 	public ClassNode lookupClassNodeForBinary(String typename, JDTResolver jdtResolver) {
 		char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());

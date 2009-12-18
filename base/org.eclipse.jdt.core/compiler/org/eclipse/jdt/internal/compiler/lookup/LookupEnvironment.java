@@ -19,7 +19,10 @@ import org.eclipse.jdt.internal.compiler.ClassFilePool;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.env.*;
+import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
+import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ITypeRequestor;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -200,7 +203,7 @@ public void completeTypeBindings() {
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY;
 
-	// FIXASC (M2) doesn't this sometimes bring MetaClass/MOP in that need hierarchy connecting? (see 30-Jun comments)
+	// FIXASC doesn't this sometimes bring MetaClass/MOP in that need hierarchy connecting? (see 30-Jun comments)
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
 		CompilationUnitScope unitScope = (this.unitBeingCompleted = this.units[i]).scope;
 		unitScope.checkParameterizedTypes();

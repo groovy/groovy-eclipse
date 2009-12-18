@@ -107,7 +107,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
 			SourceUnit groovySourceUnit = new SourceUnit(new String(compilationResult.getFileName()),
 					new String(unit.getContents()), groovyCompilerConfig, null, errorCollector);
 
-			// FIXASC (M2) missing the classloader configuration (eg. to include transformers)
+			// FIXASC missing the classloader configuration (eg. to include transformers)
 			org.codehaus.groovy.control.CompilationUnit groovyCU = new org.codehaus.groovy.control.CompilationUnit(
 					groovyCompilerConfig);
 			// groovyCU.removeOutputPhaseOperation();
@@ -166,7 +166,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
 	}
 
 	public EventHandler getEventHandler() {
-		// FIXASC (M2) could be une singleton?
+		// FIXASC could be une singleton?
 		return new GroovyEventHandler();
 	}
 }

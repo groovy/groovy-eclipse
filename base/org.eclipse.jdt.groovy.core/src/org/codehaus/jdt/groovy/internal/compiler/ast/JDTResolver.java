@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import groovy.lang.GroovyClassLoader;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -18,9 +20,11 @@ import java.util.Stack;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser.GrapeAwareGroovyClassLoader;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
@@ -199,30 +203,29 @@ public class JDTResolver extends ResolveVisitor {
 			type.setRedirect(node);
 			return true;
 		}
-		// FIXASC (M2) Grab support
-		// GroovyClassLoader loader = compilationUnit.getClassLoader();
-		// if (loader instanceof GrapeAwareGroovyClassLoader) {
-		// GrapeAwareGroovyClassLoader gagc = (GrapeAwareGroovyClassLoader) loader;
-		// if (gagc.grabbed) {
-		// Class cls;
-		// try {
-		// // NOTE: it's important to do no lookup against script files
-		// // here since the GroovyClassLoader would create a new CompilationUnit
-		// cls = loader.loadClass(type.getName(), false, true);
-		// } catch (ClassNotFoundException cnfe) {
-		// // cachedClasses.put(name, SCRIPT);
-		// return false;
-		// } catch (CompilationFailedException cfe) {
-		// // compilationUnit.getErrorCollector().addErrorAndContinue(new ExceptionMessage(cfe, true, source));
-		// return false;
-		// }
-		// if (cls == null)
-		// return false;
-		// node = ClassHelper.make(cls);
-		// type.setRedirect(node);
-		// return true;
-		// }
-		// }
+		// Rudimentary grab support - if the compilation unit has our special classloader and a
+		// grab has occurred, try and find the class through it
+		GroovyClassLoader loader = compilationUnit.getClassLoader();
+		if (loader instanceof GrapeAwareGroovyClassLoader) {
+			GrapeAwareGroovyClassLoader gagc = (GrapeAwareGroovyClassLoader) loader;
+			if (gagc.grabbed) {
+				// System.out.println("Checking grabbed loader for " + type.getName());
+				Class<?> cls;
+				try {
+					cls = loader.loadClass(type.getName(), false, true);
+				} catch (ClassNotFoundException cnfe) {
+					return false;
+				} catch (CompilationFailedException cfe) {
+					return false;
+				}
+				if (cls == null) {
+					return false;
+				}
+				node = ClassHelper.make(cls);
+				type.setRedirect(node);
+				return true;
+			}
+		}
 		return false;
 		// boolean foundit = super.resolveToClass(type);
 		// if (debug) {
@@ -251,7 +254,7 @@ public class JDTResolver extends ResolveVisitor {
 		return super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
 	}
 
-	// FIXASC (M2) callers could check if it is a 'funky' type before always recording a depedency
+	// FIXASC callers could check if it is a 'funky' type before always recording a depedency
 	// by 'funky' I mean that the type was constructed just to try something (org.foo.bar.java$lang$Wibble doesn't want recording!)
 	private void recordDependency(String typename) {
 		GroovyCompilationUnitScope gcuScope = getScope();
@@ -466,7 +469,7 @@ public class JDTResolver extends ResolveVisitor {
 	}
 
 	private ClassNode createClassNodeForWildcardBinding(WildcardBinding wildcardBinding) {
-		// FIXASC (M2) could use LazyGenericsType object here
+		// FIXASC could use LazyGenericsType object here
 		ClassNode base = ClassHelper.makeWithoutCaching("?");
 		ClassNode lowerBound = null;
 		ClassNode[] allUppers = null;
@@ -538,7 +541,7 @@ public class JDTResolver extends ResolveVisitor {
 		System.err.println("Resolver: " + string);
 	}
 
-	// FIXASC (M2) can the relationship here from classNode to scope be better preserved to remove the need for this map?
+	// FIXASC can the relationship here from classNode to scope be better preserved to remove the need for this map?
 	/**
 	 * When recorded, the jdt resolver will be able to (later on) navigate from the classnode back to the JDT scope that should be
 	 * used.

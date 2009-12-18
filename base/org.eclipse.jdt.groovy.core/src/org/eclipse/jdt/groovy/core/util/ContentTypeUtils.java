@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
+import org.eclipse.core.runtime.content.IContentTypeManager;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -113,7 +114,13 @@ public class ContentTypeUtils {
 	 */
 	public static char[][] getGroovyLikeExtensions() {
 		if (GROOVY_LIKE_EXTENSIONS == null) {
-			IContentType groovyContentType = Platform.getContentTypeManager().getContentType(GROOVY_SOURCE_CONTENT_TYPE);
+			IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
+			if (contentTypeManager == null) {
+				// batch
+				GROOVY_LIKE_EXTENSIONS = new char[][] { "java".toCharArray(), "groovy".toCharArray() };
+				return GROOVY_LIKE_EXTENSIONS;
+			}
+			IContentType groovyContentType = contentTypeManager.getContentType(GROOVY_SOURCE_CONTENT_TYPE);
 			HashSet<String> fileExtensions = new HashSet<String>();
 			// content types derived from groovy content type should be included
 			// (https://bugs.eclipse.org/bugs/show_bug.cgi?id=121715)

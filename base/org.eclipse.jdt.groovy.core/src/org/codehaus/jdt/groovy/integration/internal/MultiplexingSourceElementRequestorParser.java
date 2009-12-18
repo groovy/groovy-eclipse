@@ -78,8 +78,8 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 
 			CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
 
-			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-			// FIXASC (M2) ought to reuse to ensure types end up in same groovy CU
+			// FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
+			// FIXASC ought to reuse to ensure types end up in same groovy CU
 			CompilationUnitDeclaration cud = new GroovyParser(this.options, problemReporter, false).dietParse(unit,
 					compilationResult);
 
@@ -105,7 +105,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		}
 	}
 
-	// FIXASC RC1 This should be calculated in GroovyCompilationUnitDeclaration
+	// FIXASC This should be calculated in GroovyCompilationUnitDeclaration
 	private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
 		HashtableOfObjectToInt table = new HashtableOfObjectToInt();
 		if (cDecl.types != null) {
@@ -121,7 +121,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		parser.reset();
 	}
 
-	// FIXASC RC1 This should be calculated in GroovyCompilationUnitDeclaration
+	// FIXASC This should be calculated in GroovyCompilationUnitDeclaration
 	private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
 		table.put(tDecl, tDecl.sourceEnd);
 		if (tDecl.fields != null) {

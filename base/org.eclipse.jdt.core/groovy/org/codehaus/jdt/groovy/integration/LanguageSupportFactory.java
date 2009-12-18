@@ -89,7 +89,7 @@ public class LanguageSupportFactory {
 	}
 	
 	
-	//FIXASC (M2) static state issues?
+	//FIXASC static state issues?
 	private static LanguageSupport getLanguageSupport() {
 		if (languageSupport==null) {
 			languageSupport = /*new GroovyLanguageSupport();*/tryInstantiate("org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport"); //$NON-NLS-1$
@@ -107,11 +107,17 @@ public class LanguageSupportFactory {
 				int separator= className.indexOf(':');
 				Bundle bundle= null;
 				if (separator == -1) {
-					bundle= JavaCore.getJavaCore().getBundle();
+					JavaCore javaCore = JavaCore.getJavaCore();
+					if (javaCore==null) {
+						Class clazz = Class.forName(className);
+						return (LanguageSupport)clazz.newInstance();
+					} else {
+						bundle= javaCore.getBundle();
+					}
 				} else {
-					String bundleName= className.substring(0, separator);
-					className= className.substring(separator + 1);
-					bundle= Platform.getBundle(bundleName);
+					String bundleName = className.substring(0, separator);
+					className = className.substring(separator + 1);
+					bundle = Platform.getBundle(bundleName);
 				}
 				Class c= bundle.loadClass(className);
 				instance= (LanguageSupport) c.newInstance();

@@ -242,13 +242,13 @@ class GroovyClassFile extends ClassFile {
 
 	@Override
 	public ClassFile outerMostEnclosingClassFile() {
-		// FIXASC (RC1) Does this ever get called for Groovy?
+		// FIXASC Does this ever get called for Groovy?
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void recordInnerClasses(TypeBinding binding) {
-		// FIXASC (RC1) Does this ever get called for Groovy?
+		// FIXASC Does this ever get called for Groovy?
 		throw new UnsupportedOperationException();
 	}
 

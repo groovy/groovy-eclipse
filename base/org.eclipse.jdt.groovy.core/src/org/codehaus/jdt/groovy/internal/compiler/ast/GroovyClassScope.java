@@ -48,7 +48,7 @@ public class GroovyClassScope extends ClassScope {
 		return noProblems;
 	}
 
-	// FIXASC (RC1) pull out into common util area (see GCUScope too)
+	// FIXASC pull out into common util area (see GCUScope too)
 	char[] GROOVY = "groovy".toCharArray(); //$NON-NLS-1$
 	char[][] GROOVY_LANG_METACLASS = { GROOVY, TypeConstants.LANG, "MetaClass".toCharArray() }; //$NON-NLS-1$
 	char[][] GROOVY_LANG_GROOVYOBJECT = { GROOVY, TypeConstants.LANG, "GroovyObject".toCharArray() }; // $NON-NLS-1$
@@ -116,7 +116,7 @@ public class GroovyClassScope extends ClassScope {
 			createMethod("setMetaClass", false, "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods,
 					methodBindings);
 		}
-		// FIXASC (M2) decide what difference this makes - should we not be adding anything at all?
+		// FIXASC decide what difference this makes - should we not be adding anything at all?
 		// will not be an instance of GroovyTypeDeclaration if created through
 		// SourceTypeConverter
 		if (this.referenceContext instanceof GroovyTypeDeclaration) {
@@ -157,7 +157,7 @@ public class GroovyClassScope extends ClassScope {
 		boolean found = false;
 		for (MethodBinding existingMethod : existingMethods) {
 			if (new String(existingMethod.selector).equals(name)) {
-				// FIXASC (M2) safe to do this resolution so early?
+				// FIXASC safe to do this resolution so early?
 				((SourceTypeBinding) existingMethod.declaringClass).resolveTypesFor(existingMethod);
 				boolean equalParameters = true;
 				if (parameterTypes == null) {
@@ -174,12 +174,12 @@ public class GroovyClassScope extends ClassScope {
 						}
 					}
 				}
-				// FIXASC (RC1) consider return type?
+				// FIXASC consider return type?
 				if (equalParameters) {
 					found = true;
 					break;
 				}
-				// FIXASC (M2) what about inherited methods - what if the supertype
+				// FIXASC what about inherited methods - what if the supertype
 				// provides an implementation, does the subtype get a new method?
 			}
 		}
@@ -193,7 +193,7 @@ public class GroovyClassScope extends ClassScope {
 			}
 			MethodBinding mb = new MethodBinding(modifiers, name.toCharArray(), returnType, parameterTypes, null,
 					this.referenceContext.binding);
-			// FIXASC (M2) parameter names - what value would it have to set them correctly?
+			// FIXASC parameter names - what value would it have to set them correctly?
 			groovyMethods.add(mb);
 		}
 	}

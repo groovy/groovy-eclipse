@@ -71,6 +71,7 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
+import org.eclipse.jdt.internal.compiler.ast.Javadoc;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
@@ -123,6 +124,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		this.groovySourceUnit = groovySourceUnit;
 		this.compilerOptions = compilerOptions;
 		this.checkGenerics = defaultCheckGenerics;
+	}
+
+	/**
+	 * Take the comments information from the parse and apply it to the compilation unit
+	 */
+	private void setComments() {
+		List<Comment> groovyComments = this.groovySourceUnit.getComments();
+		if (groovyComments == null || groovyComments.size() == 0) {
+			return;
+		}
+		this.comments = new int[groovyComments.size()][2];
+		for (int c = 0, max = groovyComments.size(); c < max; c++) {
+			Comment groovyComment = groovyComments.get(c);
+			this.comments[c] = groovyComment.getPositions(compilationResult.lineSeparatorPositions);
+			// System.out.println("Comment recorded on " + groovySourceUnit.getName() + "  " + this.comments[c][0] + ">"
+			// + this.comments[c][1]);
+		}
 	}
 
 	/**
@@ -218,7 +236,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				ImportReference ref = null;
 
 				if (importNode.getAlias() != null && importNode.getAlias().length() > 0) {
-					// FIXASC (RC1) will need extra positional info for the 'as' and the alias
+					// FIXASC will need extra positional info for the 'as' and the alias
 					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positionsFor(splits,
 							startOffset(importNode.getType()), endOffset(importNode.getType())), false,
 							ClassFileConstants.AccDefault);
@@ -279,7 +297,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * @return an array of annotations or null if there are none
 	 */
 	private Annotation[] transformAnnotations(List<AnnotationNode> groovyAnnotations) {
-		// FIXASC (M2) positions are crap
+		// FIXASC positions are crap
 		if (groovyAnnotations != null && groovyAnnotations.size() > 0) {
 			List<Annotation> annotations = new ArrayList<Annotation>();
 			for (AnnotationNode annotationNode : groovyAnnotations) {
@@ -318,9 +336,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 								annotations.add(annotation);
 							}
 						} else if (value instanceof VariableExpression && annoType.getName().endsWith("RunWith")) {
-							// FIXASC (M2) special case for 'RunWith(Foo)' where for some reason groovy doesn't mind the missing
+							// FIXASC special case for 'RunWith(Foo)' where for some reason groovy doesn't mind the missing
 							// '.class'
-							// FIXASC (M2) test this
+							// FIXASC test this
 							TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 							annotationReference.sourceStart = annotationNode.getStart();
 							annotationReference.sourceEnd = annotationNode.getEnd();
@@ -339,12 +357,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							annotation.memberValue = new ClassLiteralAccess(value.getEnd(), ref);
 							annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length();
 							annotations.add(annotation);
-							// FIXASC (M2) underlining for SuppressWarnings doesn't seem right when included in messages
+							// FIXASC underlining for SuppressWarnings doesn't seem right when included in messages
 						} else if (annoType.getName().equals("SuppressWarnings")
 								&& (value instanceof ConstantExpression || value instanceof ListExpression)) {
 							if (value instanceof ListExpression) {
 								ListExpression listExpression = (ListExpression) value;
-								// FIXASC (RC1) tidy up all this junk (err, i mean 'refactor') once we have confidence in test
+								// FIXASC tidy up all this junk (err, i mean 'refactor') once we have confidence in test
 								// coverage
 								List<Expression> listOfExpressions = listExpression.getExpressions();
 								TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
@@ -379,9 +397,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 								ConstantExpression constantExpression = (ConstantExpression) value;
 								if (value.getType().getName().equals("java.lang.String")) {
 									// single value, eg. @SuppressWarnings("unchecked")
-									// FIXASC (RC1) tidy up all this junk (err, i mean 'refactor') once we have confidence in test
+									// FIXASC tidy up all this junk (err, i mean 'refactor') once we have confidence in test
 									// coverage
-									// FIXASC (RC1) test positional info for conjured up anno refs
+									// FIXASC test positional info for conjured up anno refs
 									TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 									annotationReference.sourceStart = annotationNode.getStart();
 									annotationReference.sourceEnd = annotationNode.getEnd() - 1;
@@ -431,7 +449,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// should be a class literal node
 		assert value.getPropertyAsString().equals("class");
 
-		// FIXASC (M2) ignore type parameters for now
+		// FIXASC ignore type parameters for now
 		Expression candidate = value.getObjectExpression();
 		List<char[]> nameParts = new LinkedList<char[]>();
 		while (candidate instanceof PropertyExpression) {
@@ -458,6 +476,28 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	/**
+	 * Find any javadoc that terminates on one of the two lines before the specified line, return the first bit encountered. A
+	 * little crude but will cover a lot of common cases... <br>
+	 */
+	// FIXASC when the parser correctly records javadoc for nodes alongside them during a parse, we will not have to search
+	private Javadoc findJavadoc(int line) {
+		// System.out.println("Looking for javadoc for line " + line);
+		for (Comment comment : groovySourceUnit.getComments()) {
+			if (comment.isJavadoc()) {
+				// System.out.println("Checking against comment ending on " + comment.getLastLine());
+				if (comment.getLastLine() + 1 == line || comment.getLastLine() + 2 == line) {
+					int[] pos = comment.getPositions(compilationResult.lineSeparatorPositions);
+					// System.out.println("Comment says it is from line=" + comment.sline + ",col=" + comment.scol + " to line="
+					// + comment.eline + ",col=" + comment.ecol);
+					// System.out.println("Returning positions " + pos[0] + ">" + pos[1]);
+					return new Javadoc(pos[0], pos[1]);
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Build JDT TypeDeclarations for the groovy type declarations that were parsed from the source file.
 	 */
 	private void createTypeDeclarations(ModuleNode moduleNode) {
@@ -479,15 +519,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// remove final
 				mods = mods & ~Opcodes.ACC_FINAL;
 			}
-			// FIXASC (M2) should this modifier be set?
+			// FIXASC hould this modifier be set?
 			// mods |= Opcodes.ACC_PUBLIC;
-			// FIXASC (M2) inner class support when it is in groovy 1.7
-			// FIXASC (M2) should not do this for inner classes, just for top level types
-			// FIXASC (M2) does this make things visible that shouldn't be?
+			// FIXASC inner class support when it is in groovy 1.7
+			// FIXASC should not do this for inner classes, just for top level types
+			// FIXASC does this make things visible that shouldn't be?
 			mods = mods & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
 			typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
 
-			// FIXASC (M2) only type declarations not named after the compilation unit should be secondary
+			// FIXASC only type declarations not named after the compilation unit should be secondary
 			typeDeclaration.bits |= ASTNode.IsSecondaryType;
 
 			fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
@@ -558,7 +598,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					// 4000 == AccEnum
 					fieldDeclaration.modifiers = fieldNode.getModifiers() & ~0x4000;
 					fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
-
+					fieldDeclaration.javadoc = new Javadoc(108, 132);
 					fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode);
 					fieldDeclarations.add(fieldDeclaration);
 				}
@@ -595,7 +635,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			fixupSourceLocationsForConstructorDeclaration(constructorDeclaration, constructorNode);
 
 			constructorDeclaration.annotations = transformAnnotations(constructorNode.getAnnotations());
-			// FIXASC (M2) should we just use the constructor node modifiers or does groovy make all constructors public apart from
+			// FIXASC should we just use the constructor node modifiers or does groovy make all constructors public apart from
 			// those on enums?
 			constructorDeclaration.modifiers = isEnum ? ClassFileConstants.AccPrivate : ClassFileConstants.AccPublic;
 			constructorDeclaration.selector = classNode.getNameWithoutPackage().toCharArray();
@@ -657,6 +697,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 			MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, methodNode, isEnum, compilationResult);
+			// methodDeclaration.javadoc = new Javadoc(0, 20);
 			if (methodNode.hasDefaultValue()) {
 				createMethodVariants(methodNode, methodDeclaration, accumulatedDeclarations, compilationResult);
 			} else {
@@ -736,7 +777,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				if (mdArgsLen == vmdArgsLen) {
 					boolean argsTheSame = true;
 					for (int i = 0; i < mdArgsLen; i++) {
-						// FIXASC (M2) this comparison can fail if some are fully qualified and some not - in fact it
+						// FIXASC this comparison can fail if some are fully qualified and some not - in fact it
 						// suggests that default param variants should be built by augmentMethod() in a similar way to
 						// the GroovyObject methods, rather than during type declaration construction - but not super urgent right
 						// now
@@ -905,7 +946,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * characters off the end (set to the start of the method name...) - we are just computing the positional information from the
 	 * start.
 	 */
-	// FIXASC (M2) seems that sometimes, especially for types that are defined as 'def', but are converted to java.lang.Object, end
+	// FIXASC seems that sometimes, especially for types that are defined as 'def', but are converted to java.lang.Object, end
 	// < start. This causes no end of problems. I don't think it is so much the 'declaration' as the fact that is no reference and
 	// really what is computed here is the reference for something actually specified in the source code. Coming up with fake
 	// positions for something not specified is not entirely unreasonable we should check
@@ -922,7 +963,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				pos += 2; // jump onto the following '.' then off it
 			}
 		} else {
-			// FIXASC (M2) this case shouldn't happen (end<start) - uncomment following if to collect diagnostics
+			// FIXASC this case shouldn't happen (end<start) - uncomment following if to collect diagnostics
 			long pos = (start << 32) | start;
 			for (int i = 0, max = result.length; i < max; i++) {
 				result[i] = pos;
@@ -978,7 +1019,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		if (genericsType.isWildcard()) {
 			ClassNode[] bounds = genericsType.getUpperBounds();
 			if (bounds != null) {
-				// FIXASC (M2) other bounds?
+				// FIXASC other bounds?
 				// positions example: (29>31)Set<(33>54)? extends (43>54)Serializable>
 				TypeReference boundReference = createTypeReferenceForClassNode(bounds[0]);
 				Wildcard wildcard = new Wildcard(Wildcard.EXTENDS);
@@ -1000,7 +1041,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				w.sourceEnd = genericsType.getStart();
 				return w;
 			}
-			// FIXASC (M2) what does the check on this next really line mean?
+			// FIXASC what does the check on this next really line mean?
 		} else if (!genericsType.getType().isGenericsPlaceHolder()) {
 			TypeReference typeReference = createTypeReferenceForClassNode(genericsType.getType());
 			return typeReference;
@@ -1067,7 +1108,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 				return tr;
 			} else {
-				// FIXASC (M2) determine when array dimension used in this case,
+				// FIXASC determine when array dimension used in this case,
 				// is it 'A<T[]> or some silliness?
 				long l = toPos(start, end - 1);
 				return new ParameterizedSingleTypeReference(name.toCharArray(), typeArguments
@@ -1082,7 +1123,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 				return tr;
 			} else {
-				// FIXASC (M2) support individual parameterization of component
+				// FIXASC support individual parameterization of component
 				// references A<String>.B<Wibble>
 				TypeReference[][] typeReferences = new TypeReference[compoundName.length][];
 				typeReferences[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
@@ -1092,7 +1133,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		}
 	}
 
-	// FIXASC (M2) this is useless - use proper positions
+	// FIXASC this is useless - use proper positions
 	private long[] getPositionsFor(char[][] compoundName) {
 		long[] ls = new long[compoundName.length];
 		for (int i = 0; i < compoundName.length; i++) {
@@ -1101,14 +1142,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		return ls;
 	}
 
-	// FIXASC (M2) are costly regens being done for all the classes???
+	// FIXASC are costly regens being done for all the classes???
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void generateCode() {
 		boolean successful = processToPhase(Phases.ALL);
 		if (successful) {
-			// FIXASC (M2:optimize) should make the CompilationUnit smarter to preserve
+			// FIXASC (optimize) should make the CompilationUnit smarter to preserve
 			// the information we are about to dig for
 
 			// this returns all the classes and we only want those caused by
@@ -1137,7 +1178,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				byte[] classbytes = groovyClass.getBytes();
 				String path = groovyClass.getName().replace('.', '/');// File.separatorChar);
 				SourceTypeBinding foundBinding = null;
-				// FIXASC (M2:optimize) poor way to discover the binding, improve this - we should already know the binding
+				// FIXASC (optimize) poor way to discover the binding, improve this - we should already know the binding
 				if (types != null && types.length != 0) {
 					for (TypeDeclaration typeDecl : types) {
 						// Going to say that a null binding is because of some other error that prevented it being built
@@ -1147,7 +1188,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 									+ new String(typeDecl.name) + "'");
 						} else {
 							String bindingName = CharOperation.toString(sourceTypeBinding.compoundName);
-							// FIXASC (M2) it appears 'scripts' have a classname and no
+							// FIXASC it appears 'scripts' have a classname and no
 							// package (is that right?) - revisit the second part of
 							// this if clause. 'configtest' is an example script
 							// from grails that does this
@@ -1161,7 +1202,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// we are looking for a class file unrelated to the current
 				// sourceUnit...
 				if (foundBinding == null) {
-					// FIXASC (M2) surface as an error? example of this problem, see DeclarationTests.groovy in groovyc
+					// FIXASC surface as an error? example of this problem, see DeclarationTests.groovy in groovyc
 					// may be too late to register with the CompilationUnit error collector
 					// something like this :
 					// this.groovyCompilationUnit.getErrorCollector().addError(
@@ -1197,7 +1238,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	// here be dragons
 	private void recordProblems(List<?> errors) {
-		// FIXASC (M2) look at this error situation (described below), surely we need to do it?
+		// FIXASC look at this error situation (described below), surely we need to do it?
 		// Due to the nature of driving all groovy entities through compilation together, we can accumulate messages for other
 		// compilation units whilst processing the one we wanted to. Per GRE396 this can manifest as recording the wrong thing
 		// against the wrong type. That is the only case I have seen of it, so I'm not putting in the general mechanism for all
@@ -1207,8 +1248,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// the list of those to process.
 
 		List errorsRecorded = new ArrayList();
-		// FIXASC (M2) poor way to get the errors attached to the files
-		// FIXASC (M2) does groovy ever produce warnings? How are they treated here?
+		// FIXASC poor way to get the errors attached to the files
+		// FIXASC does groovy ever produce warnings? How are they treated here?
 		for (Iterator<?> iterator = errors.iterator(); iterator.hasNext();) {
 			SyntaxException syntaxException = null;
 			Message message = (Message) iterator.next();
@@ -1232,7 +1273,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				SyntaxErrorMessage errorMessage = (SyntaxErrorMessage) message;
 				syntaxException = errorMessage.getCause();
 				sev |= ProblemSeverities.Error;
-				// FIXASC (M2) in the short term, prefixed groovy to indicate
+				// FIXASC in the short term, prefixed groovy to indicate
 				// where it came from
 				msg = "Groovy:" + errorMessage.getCause().getMessage();
 				if (msg.indexOf("\n") != -1) {
@@ -1333,10 +1374,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
 		typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart());
 
-		// start and end of the entire declaration including Javadoc
-		// and ending at the last close bracket
-		typeDeclaration.declarationSourceStart = classNode.getStart();
-		typeDeclaration.declarationSourceEnd = classNode.getEnd();
+		// start and end of the entire declaration including Javadoc and ending at the last close bracket
+		int line = classNode.getLineNumber();
+		Javadoc doc = findJavadoc(line);
+		typeDeclaration.javadoc = doc;
+		typeDeclaration.declarationSourceStart = doc == null ? classNode.getStart() : doc.sourceStart;
+		// Without the -1 we can hit AIOOBE in org.eclipse.jdt.internal.core.Member.getJavadocRange where it calls getText()
+		// because the source range length causes us to ask for more data than is in the buffer. What does this mean?
+		// For hovers, the AIOOBE is swallowed and you just see no hover box.
+		typeDeclaration.declarationSourceEnd = classNode.getEnd() - 1;
 
 		// * start at the opening brace and end at the closing brace
 		// except that scripts do not have a name, use the start instead
@@ -1359,7 +1405,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// start and end of method declaration including JavaDoc
 		// ending with closing '}' or ';' if abstract
-		ctorDeclaration.declarationSourceStart = ctorNode.getStart();
+		int line = ctorNode.getLineNumber();
+		Javadoc doc = findJavadoc(line);
+		ctorDeclaration.javadoc = doc;
+		ctorDeclaration.declarationSourceStart = doc == null ? ctorNode.getStart() : doc.sourceStart;
 		ctorDeclaration.declarationSourceEnd = ctorNode.getEnd();
 
 		// start of method's modifier list (after Javadoc is ended)
@@ -1382,7 +1431,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// start and end of method declaration including JavaDoc
 		// ending with closing '}' or ';' if abstract
-		methodDeclaration.declarationSourceStart = methodNode.getStart();
+		int line = methodNode.getLineNumber();
+		Javadoc doc = findJavadoc(line);
+		methodDeclaration.javadoc = doc;
+		methodDeclaration.declarationSourceStart = doc == null ? methodNode.getStart() : doc.sourceStart;
 		methodDeclaration.declarationSourceEnd = methodNode.getEnd();
 
 		// start of method's modifier list (after Javadoc is ended)
@@ -1411,8 +1463,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		fieldDeclaration.sourceStart = fieldNode.getNameStart();
 		fieldDeclaration.sourceEnd = fieldNode.getNameEnd();
 
-		// * start of the declaration (including javadoc?)
-		fieldDeclaration.declarationSourceStart = fieldNode.getStart();
+		// start of the declaration (including javadoc?)
+		int line = fieldNode.getLineNumber();
+		Javadoc doc = findJavadoc(line);
+		fieldDeclaration.javadoc = doc;
+		fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;
 
 		// the end of the fragment including initializer (and trailing ',')
 		fieldDeclaration.declarationSourceEnd = fieldNode.getEnd();
@@ -1459,6 +1514,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	public void resolve() {
 		processToPhase(Phases.SEMANTIC_ANALYSIS);
 		checkForTags();
+		setComments();
 	}
 
 	/**
@@ -1545,7 +1601,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public void abort(int abortLevel, CategorizedProblem problem) {
-		// FIXASC (RC1) look at callers of this, should we be following the abort on first problem policy?
+		// FIXASC look at callers of this, should we be following the abort on first problem policy?
 		super.abort(abortLevel, problem);
 	}
 
@@ -1556,7 +1612,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public void cleanUp() {
-		// FIXASC (RC1) any tidy up for us to do?
+		// FIXASC any tidy up for us to do?
 		super.cleanUp();
 	}
 
@@ -1582,7 +1638,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public char[] getMainTypeName() {
-		// FIXASC (RC1) necessary to return something for groovy?
+		// FIXASC necessary to return something for groovy?
 		return super.getMainTypeName();
 	}
 
@@ -1603,13 +1659,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
-		// FIXASC (RC1) additional stuff to print?
+		// FIXASC additional stuff to print?
 		return super.print(indent, output);
 	}
 
 	@Override
 	public void propagateInnerEmulationForAllLocalTypes() {
-		// FIXASC (RC1) anything to do here for groovy inner types?
+		// FIXASC anything to do here for groovy inner types?
 		super.propagateInnerEmulationForAllLocalTypes();
 	}
 
@@ -1620,7 +1676,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public void recordStringLiteral(StringLiteral literal, boolean fromRecovery) {
-		// FIXASC (RC1) assert not called for groovy, surely
+		// FIXASC assert not called for groovy, surely
 		super.recordStringLiteral(literal, fromRecovery);
 	}
 
@@ -1636,31 +1692,31 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
-		// FIXASC (RC1) are we well formed enough for this?
+		// FIXASC are we well formed enough for this?
 		super.traverse(visitor, unitScope);
 	}
 
 	@Override
 	public ASTNode concreteStatement() {
-		// FIXASC (RC1) assert not called for groovy, surely
+		// FIXASC assert not called for groovy, surely
 		return super.concreteStatement();
 	}
 
 	@Override
 	public boolean isImplicitThis() {
-		// FIXASC (RC1) assert not called for groovy, surely
+		// FIXASC assert not called for groovy, surely
 		return super.isImplicitThis();
 	}
 
 	@Override
 	public boolean isSuper() {
-		// FIXASC (RC1) assert not called for groovy, surely
+		// FIXASC assert not called for groovy, surely
 		return super.isSuper();
 	}
 
 	@Override
 	public boolean isThis() {
-		// FIXASC (RC1) assert not called for groovy, surely
+		// FIXASC assert not called for groovy, surely
 		return super.isThis();
 	}
 
@@ -1676,13 +1732,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public String toString() {
-		// FIXASC (RC1) anything to add?
+		// FIXASC anything to add?
 		return super.toString();
 	}
 
 	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
-		// FIXASC (RC1) in a good state for traversal? what would cause this to trigger?
+		// FIXASC in a good state for traversal? what would cause this to trigger?
 		super.traverse(visitor, scope);
 	}
 

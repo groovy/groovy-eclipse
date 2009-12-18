@@ -117,7 +117,7 @@ public class JDTClassNode extends ClassNode {
 		if (tb instanceof ReferenceBinding) {
 			return ((ReferenceBinding) tb).modifiers;
 		} else {
-			// FIXASC (M2) need to be smarter here? Who is affected?
+			// FIXASC need to be smarter here? Who is affected?
 			return ClassFileConstants.AccPublic;
 		}
 	}
@@ -177,7 +177,7 @@ public class JDTClassNode extends ClassNode {
 	 * Basic initialization of the node - try and do most resolution lazily but some elements are worth getting correct up front:
 	 * superclass, superinterfaces
 	 */
-	// FIXASC (M2) confusing (and problematic?) that the superclass is setup after the generics information
+	// FIXASC confusing (and problematic?) that the superclass is setup after the generics information
 	void initialize() {
 		resolver.pushTypeGenerics(getGenericsTypes());
 		if (!jdtBinding.isInterface()) {
@@ -268,7 +268,7 @@ public class JDTClassNode extends ClassNode {
 		MethodNode mNode = null;
 		try {
 			resolver.pushMemberGenerics(generics);
-			// FIXASC (M2) What value is there in getting the parameter names correct? (for methods and ctors)
+			// FIXASC What value is there in getting the parameter names correct? (for methods and ctors)
 			// If they need to be correct we need to retrieve the method decl from the binding scope
 			int modifiers = methodBinding.modifiers;
 			if (jdtBinding.isInterface()) {
@@ -276,7 +276,7 @@ public class JDTClassNode extends ClassNode {
 			}
 			ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
 			Parameter[] gParameters = convertJdtParametersToGroovyParameters(methodBinding.parameters);
-			ClassNode[] thrownExceptions = new ClassNode[0]; // FIXASC (M2) use constant of size 0
+			ClassNode[] thrownExceptions = new ClassNode[0]; // FIXASC use constant of size 0
 			if (methodBinding.thrownExceptions != null) {
 				thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
 				for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
@@ -353,7 +353,7 @@ public class JDTClassNode extends ClassNode {
 		return fNode;
 	}
 
-	// FIXASC (M2) Need to override anything else from the supertype?
+	// FIXASC Need to override anything else from the supertype?
 
 	@Override
 	public boolean isReallyResolved() {
@@ -376,7 +376,7 @@ public class JDTClassNode extends ClassNode {
 		if (typeVariables == null || typeVariables.length == 0) {
 			return null;
 		}
-		// FIXASC (M2) anything for RAW types here?
+		// FIXASC anything for RAW types here?
 		GenericsType[] genericTypeInfo = new GenericsType[typeVariables.length];
 		for (int g = 0; g < typeVariables.length; g++) {
 			genericTypeInfo[g] = createGenericsTypeInfoForTypeVariableBinding(typeVariables[g]);
@@ -419,7 +419,7 @@ public class JDTClassNode extends ClassNode {
 					super.addProperty(createPropertyNodeForMethodNode(methodNode));
 				}
 			}
-			// fields - FIXASC (M2) nyi for fields
+			// fields - FIXASC nyi for fields
 			// for (FieldNode fieldNode : getFields()) {
 			// super.addProperty(createPropertyNodeFromFieldNode(fieldNode));
 			// }

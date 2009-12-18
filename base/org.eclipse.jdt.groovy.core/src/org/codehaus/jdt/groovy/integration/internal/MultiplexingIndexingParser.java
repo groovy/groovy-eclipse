@@ -67,7 +67,7 @@ public class MultiplexingIndexingParser extends IndexingParser {
 
 			CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
 
-			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
+			// FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
 			GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration) new GroovyParser(this.options,
 					problemReporter).dietParse(unit, compilationResult);
 
@@ -84,8 +84,8 @@ public class MultiplexingIndexingParser extends IndexingParser {
 		}
 	}
 
-	// FIXASC RC1 this code is copied from MultiplexingSourceElementParser. Should combine
-	// FIXASC RC1 This should be calculated in GroovyCompilationUnitDeclaration
+	// FIXASC this code is copied from MultiplexingSourceElementParser. Should combine
+	// FIXASC This should be calculated in GroovyCompilationUnitDeclaration
 	private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
 		HashtableOfObjectToInt table = new HashtableOfObjectToInt();
 		if (cDecl.types != null) {
@@ -96,8 +96,8 @@ public class MultiplexingIndexingParser extends IndexingParser {
 		return table;
 	}
 
-	// FIXASC RC1 this code is copied from MultiplexingSourceElementParser. Should combine
-	// FIXASC RC1 This should be calculated in GroovyCompilationUnitDeclaration
+	// FIXASC this code is copied from MultiplexingSourceElementParser. Should combine
+	// FIXASC This should be calculated in GroovyCompilationUnitDeclaration
 	private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
 		table.put(tDecl, tDecl.sourceEnd);
 		if (tDecl.fields != null) {

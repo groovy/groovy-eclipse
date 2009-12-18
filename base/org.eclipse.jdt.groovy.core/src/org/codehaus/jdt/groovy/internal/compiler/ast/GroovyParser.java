@@ -98,11 +98,11 @@ public class GroovyParser {
 		this(requestor, options, problemReporter, true);
 	}
 
-	// FIXASC (RC1) review callers who pass null for options
+	// FIXASC review callers who pass null for options
 	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms) {
 		String path = (options == null ? null : options.groovyClassLoaderPath);
 		this.requestor = requestor;
-		// FIXASC (M2) set parent of the loader to system or context class loader?
+		// FIXASC set parent of the loader to system or context class loader?
 
 		// record any paths we use for a project so that when the project is cleared,
 		// the paths (which point to cached classloaders) can be cleared
@@ -130,9 +130,19 @@ public class GroovyParser {
 		}
 		this.gclClasspath = path;
 		this.compilerOptions = options;
-		// FIXASC (M2) Grab support
-		GroovyClassLoader grabbyLoader = null;// avoid this for now: new GrapeAwareGroovyClassLoader();
+		// Grab needs them on, even for reconciling to behave *sigh*, so might as well turn them on for everything
+		allowTransforms = true;
+
+		// Basic grab support: the design here is that a special classloader is created that will be augmented
+		// with URLs when grab processing is running. This classloader is used as a last resort when resolving
+		// types and is *only* called if a grab has occurred somewhere during compilation.
+		// Currently it is not cached but created each time - we'll have to decide if there is a need to cache
+		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
+
 		this.groovyCompilationUnit = new CompilationUnit(null, null, grabbyLoader, allowTransforms ? gcl : null);
+		if (grabbyLoader != null) {
+			grabbyLoader.setCompilationUnit(groovyCompilationUnit);
+		}
 		if (gcl == null && allowTransforms) {
 			this.groovyCompilationUnit.ensureASTTransformVisitorAdded();
 		}
@@ -151,17 +161,25 @@ public class GroovyParser {
 
 	static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
 
-		public boolean grabbed = false;
+		// Could be prodded to indicate a grab has occurred within this compilation unit
+		private CompilationUnit groovyCompilationUnit;
+
+		public boolean grabbed = false; // set to true if any grabbing is done
 
 		@Override
 		public void addURL(URL url) {
+			// System.out.println("Grape aware classloader was augmented with " + url);
 			this.grabbed = true;
 			super.addURL(url);
 		}
 
+		public void setCompilationUnit(CompilationUnit groovyCompilationUnit) {
+			this.groovyCompilationUnit = groovyCompilationUnit;
+		}
+
 	}
 
-	// FIXASC (RC1) perf ok?
+	// FIXASC perf ok?
 	private static void configureClasspath(GroovyClassLoader gcl, String path) {
 		if (path != null) {
 			if (path.indexOf(File.pathSeparator) != -1) {
@@ -214,7 +232,7 @@ public class GroovyParser {
 				.getClassLoader(), errorCollector);
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
 				sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);
-		// FIXASC (M2) get this from the Antlr parser
+		// FIXASC get this from the Antlr parser
 		compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode);
 		groovyCompilationUnit.addSource(groovySourceUnit);
 
@@ -295,7 +313,7 @@ public class GroovyParser {
 	}
 
 	public void reset() {
-		// FIXASC (RC1) not sure the reset is resetting it to be the same as originally constructed
+		// FIXASC not sure the reset is resetting it to be the same as originally constructed
 		GroovyClassLoader gcl = new GroovyClassLoader();
 		configureClasspath(gcl, gclClasspath);
 		this.groovyCompilationUnit = new CompilationUnit(gcl);

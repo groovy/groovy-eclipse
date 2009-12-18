@@ -1,35 +1,37 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyRecognizer.java"$
 
 package org.codehaus.groovy.internal.antlr.parser;
-import org.codehaus.groovy.antlr.*;
-import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
-import antlr.InputBuffer;
-import antlr.LexerSharedInputState;
-import antlr.CommonToken;
-import org.codehaus.groovy.GroovyBugError;
-import antlr.TokenStreamRecognitionException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+
+import org.codehaus.groovy.antlr.GroovySourceAST;
+import org.codehaus.groovy.antlr.SourceBuffer;
+import org.codehaus.groovy.antlr.SourceInfo;
 import org.codehaus.groovy.ast.Comment;
 
-import antlr.TokenBuffer;
-import antlr.TokenStreamException;
-import antlr.TokenStreamIOException;
-import antlr.ANTLRException;
-import antlr.LLkParser;
-import antlr.Token;
-import antlr.TokenStream;
-import antlr.RecognitionException;
-import antlr.NoViableAltException;
-import antlr.MismatchedTokenException;
-import antlr.SemanticException;
-import antlr.ParserSharedInputState;
-import antlr.collections.impl.BitSet;
-import antlr.collections.AST;
-import java.util.Hashtable;
 import antlr.ASTFactory;
 import antlr.ASTPair;
+import antlr.CommonToken;
+import antlr.InputBuffer;
+import antlr.LexerSharedInputState;
+import antlr.MismatchedTokenException;
+import antlr.NoViableAltException;
+import antlr.ParserSharedInputState;
+import antlr.RecognitionException;
+import antlr.SemanticException;
+import antlr.Token;
+import antlr.TokenBuffer;
+import antlr.TokenStream;
+import antlr.TokenStreamException;
+import antlr.TokenStreamRecognitionException;
+import antlr.collections.AST;
 import antlr.collections.impl.ASTArray;
+import antlr.collections.impl.BitSet;
 
 /** JSR-241 Groovy Recognizer
  *
@@ -5396,123 +5398,137 @@ inputState.guessing--;
 		AST classBlock_AST = null;
 		Token first = LT(1);
 		
-		match(LCURLY);
-		{
-		switch ( LA(1)) {
-		case FINAL:
-		case ABSTRACT:
-		case STRICTFP:
-		case LITERAL_static:
-		case LITERAL_def:
-		case IDENT:
-		case LITERAL_class:
-		case LITERAL_interface:
-		case LITERAL_enum:
-		case AT:
-		case LITERAL_void:
-		case LITERAL_boolean:
-		case LITERAL_byte:
-		case LITERAL_char:
-		case LITERAL_short:
-		case LITERAL_int:
-		case LITERAL_float:
-		case LITERAL_long:
-		case LITERAL_double:
-		case LITERAL_private:
-		case LITERAL_public:
-		case LITERAL_protected:
-		case LITERAL_transient:
-		case LITERAL_native:
-		case LITERAL_threadsafe:
-		case LITERAL_synchronized:
-		case LITERAL_volatile:
-		case LCURLY:
-		{
-			classField();
-			astFactory.addASTChild(currentAST, returnAST);
-			break;
-		}
-		case RCURLY:
-		case SEMI:
-		case NLS:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		_loop122:
-		do {
-			if ((LA(1)==SEMI||LA(1)==NLS)) {
-				sep();
-				{
-				switch ( LA(1)) {
-				case FINAL:
-				case ABSTRACT:
-				case STRICTFP:
-				case LITERAL_static:
-				case LITERAL_def:
-				case IDENT:
-				case LITERAL_class:
-				case LITERAL_interface:
-				case LITERAL_enum:
-				case AT:
-				case LITERAL_void:
-				case LITERAL_boolean:
-				case LITERAL_byte:
-				case LITERAL_char:
-				case LITERAL_short:
-				case LITERAL_int:
-				case LITERAL_float:
-				case LITERAL_long:
-				case LITERAL_double:
-				case LITERAL_private:
-				case LITERAL_public:
-				case LITERAL_protected:
-				case LITERAL_transient:
-				case LITERAL_native:
-				case LITERAL_threadsafe:
-				case LITERAL_synchronized:
-				case LITERAL_volatile:
-				case LCURLY:
-				{
-					classField();
-					astFactory.addASTChild(currentAST, returnAST);
-					break;
-				}
-				case RCURLY:
-				case SEMI:
-				case NLS:
-				{
-					break;
-				}
-				default:
-				{
-					throw new NoViableAltException(LT(1), getFilename());
-				}
-				}
-				}
+		try {      // for error handling
+			match(LCURLY);
+			{
+			switch ( LA(1)) {
+			case FINAL:
+			case ABSTRACT:
+			case STRICTFP:
+			case LITERAL_static:
+			case LITERAL_def:
+			case IDENT:
+			case LITERAL_class:
+			case LITERAL_interface:
+			case LITERAL_enum:
+			case AT:
+			case LITERAL_void:
+			case LITERAL_boolean:
+			case LITERAL_byte:
+			case LITERAL_char:
+			case LITERAL_short:
+			case LITERAL_int:
+			case LITERAL_float:
+			case LITERAL_long:
+			case LITERAL_double:
+			case LITERAL_private:
+			case LITERAL_public:
+			case LITERAL_protected:
+			case LITERAL_transient:
+			case LITERAL_native:
+			case LITERAL_threadsafe:
+			case LITERAL_synchronized:
+			case LITERAL_volatile:
+			case LCURLY:
+			{
+				classField();
+				astFactory.addASTChild(currentAST, returnAST);
+				break;
 			}
-			else {
-				break _loop122;
+			case RCURLY:
+			case SEMI:
+			case NLS:
+			{
+				break;
 			}
-			
-		} while (true);
-		}
-		match(RCURLY);
-		if ( inputState.guessing==0 ) {
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			_loop122:
+			do {
+				if ((LA(1)==SEMI||LA(1)==NLS)) {
+					sep();
+					{
+					switch ( LA(1)) {
+					case FINAL:
+					case ABSTRACT:
+					case STRICTFP:
+					case LITERAL_static:
+					case LITERAL_def:
+					case IDENT:
+					case LITERAL_class:
+					case LITERAL_interface:
+					case LITERAL_enum:
+					case AT:
+					case LITERAL_void:
+					case LITERAL_boolean:
+					case LITERAL_byte:
+					case LITERAL_char:
+					case LITERAL_short:
+					case LITERAL_int:
+					case LITERAL_float:
+					case LITERAL_long:
+					case LITERAL_double:
+					case LITERAL_private:
+					case LITERAL_public:
+					case LITERAL_protected:
+					case LITERAL_transient:
+					case LITERAL_native:
+					case LITERAL_threadsafe:
+					case LITERAL_synchronized:
+					case LITERAL_volatile:
+					case LCURLY:
+					{
+						classField();
+						astFactory.addASTChild(currentAST, returnAST);
+						break;
+					}
+					case RCURLY:
+					case SEMI:
+					case NLS:
+					{
+						break;
+					}
+					default:
+					{
+						throw new NoViableAltException(LT(1), getFilename());
+					}
+					}
+					}
+				}
+				else {
+					break _loop122;
+				}
+				
+			} while (true);
+			}
+			match(RCURLY);
+			if ( inputState.guessing==0 ) {
+				classBlock_AST = (AST)currentAST.root;
+				classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));
+				currentAST.root = classBlock_AST;
+				currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ?
+					classBlock_AST.getFirstChild() : classBlock_AST;
+				currentAST.advanceChildToEnd();
+			}
 			classBlock_AST = (AST)currentAST.root;
-			classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));
-			currentAST.root = classBlock_AST;
-			currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ?
-				classBlock_AST.getFirstChild() : classBlock_AST;
-			currentAST.advanceChildToEnd();
 		}
-		classBlock_AST = (AST)currentAST.root;
+		catch (RecognitionException e) {
+			if (inputState.guessing==0) {
+				reportError(e);
+				classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));  	
+				currentAST.root = classBlock_AST;
+				currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+				currentAST.advanceChildToEnd();	
+	
+			} else {
+				throw e;
+			}
+		}
 		returnAST = classBlock_AST;
 	}
 	

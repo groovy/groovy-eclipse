@@ -15,15 +15,20 @@
  */
 package org.codehaus.groovy.classgen;
 
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.reflection.ReflectionCache;
+import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
 
 /**
  * A helper class for bytecode generation with AsmClassGenerator.
@@ -133,7 +138,7 @@ public class BytecodeHelper implements Opcodes {
 //        return getClassInternalName(t.getTypeClass());
 		// newcode
 		// don't call getTypeClass() unless necessary
-        // FIXASC (M2) decide if this can ever get into trouble?  the second part of the if was added because of FindInSource.groovy which
+        // FIXASC decide if this can ever get into trouble?  the second part of the if was added because of FindInSource.groovy which
         // refered to GroovyModel but that could not be found so we were left with an unresolved import and node in the code - crashed
         // whilst doing the code gen
         String name = t.getClassInternalName();

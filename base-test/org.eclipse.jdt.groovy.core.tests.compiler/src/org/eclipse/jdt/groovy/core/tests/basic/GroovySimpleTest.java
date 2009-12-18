@@ -189,7 +189,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     }
     
     public void testNewRuleInLatestGroovy() {
-//    	if (isGroovy16()) { // FIXASC (M2) should also break in 17b2
+//    	if (isGroovy16()) { // FIXASC should also break in 17b2
 	    	this.runNegativeTest(new String[]{
 	    			"Move.groovy",
 	    			"enum Move { ROCK, PAPER, SCISSORS }\n"+
@@ -629,6 +629,32 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"}\n");
 	}
 	
+	public void testRecoveryParameterCompletion() {
+		this.runNegativeTest(new String[]{
+				"XXX.groovy",
+				"package com.example.foo\n"+
+				"class Foo {\n"+
+				"public void foo(XMLConstants\n"+
+				"}\n"},
+				"----------\n" + 
+				"1. ERROR in XXX.groovy (at line 3)\n" + 
+				"	public void foo(XMLConstants\n" + 
+				"	                ^\n" + 
+				"Groovy:unexpected token: XMLConstants @ line 3, column 17.\n" + 
+				"----------\n" + 
+				"2. ERROR in XXX.groovy (at line 4)\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	 ^\n" + 
+				"Groovy:unexpected token:  @ line 4, column 2.\n" + 
+				"----------\n");
+		checkGCUDeclaration("XXX.groovy",
+				"public class Foo {\n" + 
+				"  public Foo() {\n" + 
+				"  }\n" + 
+				"}\n");
+		}
+	
 	/**
 	 * Missing type name for new call
 	 */
@@ -847,7 +873,134 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"  }\n" + 
 		"}\n");
 	}
+	
+	// variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
+	/*
+	public void testParsingNewRecoveryImports1_GRE538() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"import\n"+
+			"\n"+
+			"class Wibble {}\n" 
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	import\n" + 
+		"	 ^\n" + 
+		"Groovy:Invalid import specification @ line 1, column 1.\n" + 
+		"----------\n");
+		// import statement is not mapped from groovy to JDT world so does not appear in the declaration here
+		checkGCUDeclaration("XXX.groovy",
+				"public class Wibble {\n" + 
+				"  public Wibble() {\n" + 
+				"  }\n" + 
+				"}\n");
+		// check it made it through the parse though
+		ModuleNode mn = getModuleNode("XXX.groovy");
+		assertEquals(1,mn.getImports().size());
+		ClassNode cn = ((ImportNode)mn.getImports().get(0)).getType();
+		assertNull(cn);
+	}
 
+	public void testParsingNewRecoveryImports2_GRE538() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"import \n"+
+			"\n"+
+			"class Wibble {}\n" 
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	import \n" + 
+		"	 ^\n" + 
+		"Groovy:Invalid import specification @ line 1, column 1.\n" + 
+		"----------\n");
+		// import statement is not mapped from groovy to JDT world so does not appear in the declaration here
+		checkGCUDeclaration("XXX.groovy",
+				"public class Wibble {\n" + 
+				"  public Wibble() {\n" + 
+				"  }\n" + 
+				"}\n");
+		// check it made it through the parse though
+		ModuleNode mn = getModuleNode("XXX.groovy");
+		assertEquals(1,mn.getImports().size());
+		ClassNode cn = ((ImportNode)mn.getImports().get(0)).getType();
+		assertNull(cn);
+	}
+	
+	public void testParsingNewRecoveryImports3_GRE538() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"import static \n"+
+			"\n"+
+			"class Wibble {}\n" 
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	import static \n" + 
+		"	 ^\n" + 
+		"Groovy:Invalid import specification @ line 1, column 8.\n" + 
+		"----------\n");
+		// import statement is not mapped from groovy to JDT world so does not appear in the declaration here
+		checkGCUDeclaration("XXX.groovy",
+				"public class Wibble {\n" + 
+				"  public Wibble() {\n" + 
+				"  }\n" + 
+				"}\n");
+		// check it made it through the parse though
+		ModuleNode mn = getModuleNode("XXX.groovy");
+		assertEquals(1,mn.getImports().size());
+		ClassNode cn = ((ImportNode)mn.getImports().get(0)).getType();
+		assertNull(cn);
+	}
+
+	public void testParsingNewRecoveryImports4_GRE538() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"import com.\n"+
+			"\n"+
+			"class Wibble {}\n" 
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	import\n" + 
+		"	 ^\n" + 
+		"Groovy:Invalid import specification @ line 1, column 1.\n" + 
+		"----------\n");
+		// import statement is not mapped from groovy to JDT world so does not appear in the declaration here
+		checkGCUDeclaration("XXX.groovy",
+				"public class Wibble {\n" + 
+				"  public Wibble() {\n" + 
+				"  }\n" + 
+				"}\n");
+		// check it made it through the parse though
+		ModuleNode mn = getModuleNode("XXX.groovy");
+		assertEquals(1,mn.getImports().size());
+		ClassNode cn = ((ImportNode)mn.getImports().get(0)).getType();
+		assertNull(cn);
+	}
+	
+	public void testParsingNewRecoveryImports5_GRE538() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"import static com.\n"+
+			"\n"+
+			"class Wibble {}\n" 
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	import\n" + 
+		"	 ^\n" + 
+		"Groovy:Invalid import specification @ line 1, column 1.\n" + 
+		"----------\n");
+		// import statement is not mapped from groovy to JDT world so does not appear in the declaration here
+		checkGCUDeclaration("XXX.groovy",
+				"public class Wibble {\n" + 
+				"  public Wibble() {\n" + 
+				"  }\n" + 
+				"}\n");
+		// check it made it through the parse though
+		ModuleNode mn = getModuleNode("XXX.groovy");
+		assertEquals(1,mn.getImports().size());
+		ClassNode cn = ((ImportNode)mn.getImports().get(0)).getType();
+		assertNull(cn);
+	}
+	 */
 	public void testAliasing_GRE473() {
 		this.runConformTest(new String[] {
 				"Foo.groovy",
@@ -1012,7 +1165,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 	
 	
-	// FIXASC (RC1) appears to be a groovy bug - the java.util.Set is missing generics info - as if it had none
+	// FIXASC appears to be a groovy bug - the java.util.Set is missing generics info - as if it had none
 //	public void testGenericsPositions_4_GRE267() {
 //		this.runConformTest(new String[] { 
 //			"X.groovy",
@@ -1063,7 +1216,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 //		assertEquals("(67>69)Set<(71>71)? super (79>84)Number>",stringify(fDecl.type));
 //	}
 
-	// FIXASC (M2) check tests after porting to recent 1.7 compiler
+	// FIXASC check tests after porting to recent 1.7 compiler
 //	// Multiple generified components in a reference
 //	public void testGenericsPositions_6_GRE267() {
 //		this.runConformTest(new String[] {
@@ -1417,7 +1570,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n");		
 	}
 
-	// FIXASC (M2) line number wrong for the errors
+	// FIXASC line number wrong for the errors
 	public void testGenericsAndGroovyJava_GRE278_1() {
 		this.runNegativeTest(new String[] {
 			"p/Field.java",
@@ -2154,7 +2307,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n");
 		}
 
-    // FIXASC (RC1) less than ideal underlining for error location
+    // FIXASC less than ideal underlining for error location
 	public void testMissingContext_GRE308_2() {
 		this.runNegativeTest(new String[] {
 			"DibDabs.groovy",
@@ -7152,6 +7305,15 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			}
 		}
 	}
+	/* for import recovery tests, if they get activated
+	private ModuleNode getModuleNode(String filename) {
+		GroovyCompilationUnitDeclaration decl = (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
+		if (decl!=null) {
+			return decl.getModuleNode();
+		} else {
+			return null;
+		}
+	}*/
 	
 	private GroovyCompilationUnitDeclaration getDecl(String filename) {
 		return (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);

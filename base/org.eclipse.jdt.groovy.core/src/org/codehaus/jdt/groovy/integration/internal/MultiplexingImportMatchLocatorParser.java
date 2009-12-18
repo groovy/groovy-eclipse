@@ -42,8 +42,8 @@ public class MultiplexingImportMatchLocatorParser extends ImportMatchLocatorPars
 	@Override
 	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
 		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
-			// FIXASC (M2) Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-			// FIXASC (M2) ought to reuse to ensure types end up in same groovy CU
+			// FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
+			// FIXASC ought to reuse to ensure types end up in same groovy CU
 			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter).dietParse(
 					sourceUnit, compilationResult);
 			// return groovyParser.dietParse(sourceUnit, compilationResult);

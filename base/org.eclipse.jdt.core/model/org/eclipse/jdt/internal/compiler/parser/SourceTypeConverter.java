@@ -150,10 +150,10 @@ public class SourceTypeConverter extends TypeConverter {
 		// GROOVY start
 		// trying to avoid building an incorrect TypeDeclaration below (when it should be a GroovyTypeDeclaration).
 		// similar to code below that creates the Parser and calls dietParse
-		// FIXASC (M2) think about doing the necessary rewrite below rather than this - does it make things too slow?
+		// FIXASC think about doing the necessary rewrite below rather than this - does it make things too slow?
 
 //		final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(compilationResult.getCompilationUnit().getjavaBuilder.getProject());
-		// FIXASC (M2) should be 'true' here?
+		// FIXASC should be 'true' here?
 		if (LanguageSupportFactory.isInterestingSourceFile(new String(compilationResult.getFileName()))) {
 			try {
 				return LanguageSupportFactory.getParser(this, problemReporter.options, problemReporter, true, 3).dietParse(this.cu, compilationResult);

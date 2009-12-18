@@ -32,7 +32,7 @@ public class GroovyErrorCollectorForJDT extends ErrorCollector {
 	@Override
 	public void addErrorAndContinue(Message message) {
 		System.err.println(message);
-		// FIXASC (M2) SimpleMessage can be an error, it just isn't a syntax error - should be recorded with appropriate priority.
+		// FIXASC SimpleMessage can be an error, it just isn't a syntax error - should be recorded with appropriate priority.
 		// Look at creators of SimpleMessage - are they all errors?
 		if (message instanceof SimpleMessage) {
 			System.err.println("SimpleMessage: " + ((SimpleMessage) message).getMessage());

@@ -15,16 +15,25 @@
  */
 package org.codehaus.groovy.classgen;
 
-import java.lang.annotation.Target;
-
-import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PackageNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
-import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
+import org.codehaus.groovy.syntax.SyntaxException;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -176,7 +185,7 @@ public class ExtendedVerifier implements GroovyClassVisitor {
     }
 
     protected void addError(String msg, ASTNode expr) {
-    	// FIXASC (RC1) tidy this up
+    	// FIXASC tidy this up
     	// FIXASC (groovychange) use new form of error message that has an end column
     	if (expr instanceof AnnotationNode) {
     		AnnotationNode aNode = (AnnotationNode)expr;

@@ -1835,7 +1835,7 @@ public void configure(String[] argv) {
 				}
 
 
-				// FIXASC (M2) groovy promote that suffix to a constant elsewhere - respect registered java like languages? (does that work for batch environment)
+				// FIXASC groovy promote that suffix to a constant elsewhere - respect registered java like languages? (does that work for batch environment)
 				// GROOVY change start: allow .groovy files through as source
 				// old code:
 				// if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {

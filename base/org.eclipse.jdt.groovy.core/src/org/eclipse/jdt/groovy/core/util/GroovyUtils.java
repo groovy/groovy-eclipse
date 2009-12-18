@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class GroovyUtils {
 
-	// FIXASC (M2) don't use this any more?
+	// FIXASC don't use this any more?
 	public static int[] getSourceLineSeparatorsIn(char[] code) {
 		List<Integer> lineSeparatorsCollection = new ArrayList<Integer>();
 		for (int i = 0, max = code.length; i < max; i++) {

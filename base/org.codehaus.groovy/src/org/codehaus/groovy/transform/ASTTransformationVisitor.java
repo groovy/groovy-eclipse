@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.groovy.GroovyException;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -217,18 +218,20 @@ public class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 String className;
                 
                 // FIXASC (groovychange) don't consume our own META-INF entries - bit of a hack...
-                try {
-					String file = service.getFile().toString();
-					if (file.indexOf("jar!")==-1) {
-						// it is a 'local' services file
-						// eg. /META-INF/services/org.codehaus.groovy.transform.ASTTransformation
-						// whereas a jar related one would be:
-						// eg. file:/N:/workspaces/groovy35/org.codehaus.groovy/lib/groovy-all-1.7-rc-1.jar!/META-INF/services/org.codehaus.groovy.transform.ASTTransformation
-						continue;
-					}
-                } catch (Throwable t) {
-                	t.printStackTrace();
-                }
+//                try {
+//                	// this unfortunately also prevents the execution of transforms from project dependencies!
+//					String file = service.getFile().toString();
+//					System.out.println("TRANSFORM: Processing META-INF file "+file);					
+//					if (file.indexOf("jar!")==-1) {
+//						// it is a 'local' services file
+//						// eg. /META-INF/services/org.codehaus.groovy.transform.ASTTransformation
+//						// whereas a jar related one would be:
+//						// eg. file:/N:/workspaces/groovy35/org.codehaus.groovy/lib/groovy-all-1.7-rc-1.jar!/META-INF/services/org.codehaus.groovy.transform.ASTTransformation
+//						continue;
+//					}
+//                } catch (Throwable t) {
+//                	t.printStackTrace();
+//                }
                 // FIXASC (groovychange) end
                 // FIXASC (groovychange)
                 // was
@@ -344,8 +347,26 @@ public class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 if (ASTTransformation.class.isAssignableFrom(gTransClass)) {
                     final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
                     CompilationUnit.SourceUnitOperation suOp = new CompilationUnit.SourceUnitOperation() {
+                		// FIXASC (groovychange)
+                    	private boolean isBuggered = false;
+                		// FIXASC (groovychange) end
                         public void call(SourceUnit source) throws CompilationFailedException {
+                    		// FIXASC (groovychange)
+                        	if (isBuggered) return;
+                        	try { 
+                        		// FIXASC (groovychange) end
                             instance.visit(new ASTNode[] {source.getAST()}, source);
+                        		// FIXASC (groovychange)
+                        	} catch (NoClassDefFoundError ncdfe) {
+                        		// Suggests that the transform is written in Java but has dependencies on Groovy source
+                        		// within the same project - as this has yet to be compiled, we can't find the class.
+                        		new RuntimeException("Transform "+instance.toString()+" cannot be run",ncdfe).printStackTrace();
+                        		source.addException(new GroovyException(
+                        				"Transform "+instance.toString()+" cannot be run",ncdfe)); 
+                        		// disable this visitor because it is BUGGERED
+                        		isBuggered = true;
+                        	}
+                        	// FIXASC (groovychange) end
                         }
                     }; 
                     if(isFirstScan) {

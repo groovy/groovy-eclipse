@@ -26,12 +26,10 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
@@ -1052,7 +1050,7 @@ public class CompilationUnit extends ProcessingUnit {
                 // oldcode
 //                if (context == null || context.phase <= phase) {
                 // newcode
-                // FIXASC (M2) get to the bottom of this - why are operations running multiple times that should only run once?
+                // FIXASC get to the bottom of this - why are operations running multiple times that should only run once?
                 if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {                
                 // end
                     body.call(context, new GeneratorContext(this.ast), classNode);

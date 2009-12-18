@@ -21,20 +21,31 @@ import java.util.List;
  */
 public abstract class Comment {
 
+	protected static final int BLOCK = 0;
+	protected static final int LINE = 1;
+	protected static final int JAVADOC = 2;
+	
 	protected static final boolean debug = false;
 
 	protected String comment;
+	
+	private int kind;
 
 	// Lines are from 1..N
 	// Columns are from 1..N
-	protected int sline, scol, eline, ecol;
+	public int sline, scol, eline, ecol;
 
-	public Comment(int sline, int scol, int eline, int ecol, String string) {
+	public Comment(int kind, int sline, int scol, int eline, int ecol, String string) {
+		this.kind = kind;
 		this.sline = sline;
 		this.scol = scol;
 		this.eline = eline;
 		this.ecol = ecol;
 		this.comment = string;
+	}
+	
+	public int getLastLine() {
+		return eline;
 	}
 
 	public static Comment makeSingleLineComment(int sline, int scol, int eline, int ecol, String string) {
@@ -47,6 +58,25 @@ public abstract class Comment {
 
 	public abstract List<TaskEntry> getPositionsOf(String taskTag, String taskPriority, int[] lineseps, boolean caseSensitive);
 
+	/**
+	 * Return the positions (offsets) that JDT wants to see.  Special rules here!  For a javadoc comment
+	 * both offsets are positive.  For a line comment '//' both are negative.  For a block comment only the
+	 * end is negative.
+	 */
+	public int[] getPositions(int[] lineseps) {
+		int offsetToStartLine = (sline == 1 ? 0 : lineseps[sline - 2] + 1);
+		int start = offsetToStartLine + (scol - 1);
+		int offsetToEndLine = (eline == 1 ? 0 : lineseps[eline - 2] + 1);
+		int end = offsetToEndLine + (ecol - 1);
+		if (kind==LINE) {
+			return new int[]{-start,-end};			
+		} else if (kind==BLOCK) {
+			return new int[]{start,-end};			
+		} else { // JAVADOC
+			return new int[]{start,end};			
+		}
+	}
+	
 	public String toString() {
 		return comment;
 	}
@@ -100,6 +130,10 @@ public abstract class Comment {
 		}
 	}
 
+	public boolean isJavadoc() {
+		return kind==JAVADOC;
+	}
+
 }
 
 /**
@@ -108,7 +142,7 @@ public abstract class Comment {
 class SingleLineComment extends Comment {
 
 	public SingleLineComment(int sline, int scol, int eline, int ecol, String string) {
-		super(sline, scol, eline, ecol, string);
+		super(LINE, sline, scol, eline, ecol, string);
 		if (debug) {
 			System.out.println("Lexer found SL comment: [" + string + "] at L" + sline + "C" + scol + ">L" + eline + "C" + ecol);
 		}
@@ -140,6 +174,7 @@ class SingleLineComment extends Comment {
 		return tasks;
 	}
 
+
 }
 
 /**
@@ -148,7 +183,7 @@ class SingleLineComment extends Comment {
 class MultiLineComment extends Comment {
 
 	public MultiLineComment(int sline, int scol, int eline, int ecol, String string) {
-		super(sline, scol, eline, ecol, string);
+		super(string.charAt(2)=='*'?JAVADOC:BLOCK,sline, scol, eline, ecol, string);
 		if (debug) {
 			System.out.println("Lexer found ML comment: [" + string + "] at L" + sline + "C" + scol + ">L" + eline + "C" + ecol);
 		}

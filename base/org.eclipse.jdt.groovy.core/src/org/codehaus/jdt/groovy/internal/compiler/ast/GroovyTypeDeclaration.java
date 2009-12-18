@@ -37,7 +37,7 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 		return classNode;
 	}
 
-	// FIXASC (RC1) is this always what we want to do - are there any other implications?
+	// FIXASC is this always what we want to do - are there any other implications?
 	/*
 	 * Prevent groovy types from having their methods re-parsed
 	 */
@@ -45,5 +45,12 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 	public void parseMethods(Parser parser, CompilationUnitDeclaration unit) {
 		// noop
 	}
+
+	// FIXASC (groovychange)
+	@Override
+	public boolean isScannerUsableOnThisDeclaration() {
+		return false;
+	}
+	// FIXASC (groovychange) end
 
 }
