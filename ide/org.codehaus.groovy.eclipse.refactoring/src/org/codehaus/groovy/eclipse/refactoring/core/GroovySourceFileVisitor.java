@@ -32,13 +32,13 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 
 /**
  * 
  * Visitor to visit groovy sourcefiles inside a eclipse workspace
  * @author reto kleeb
  */
-// FIXADE RC1 this is wrong.  This class should be checking the content type of each file
 public class GroovySourceFileVisitor implements IResourceVisitor {
 
 	private List<IFile> groovySourceFiles = new LinkedList<IFile>();
@@ -71,7 +71,7 @@ public class GroovySourceFileVisitor implements IResourceVisitor {
 	private static boolean isGroovyScript(final IResource resource) {
 		return (	resource != null && 
 					resource.getFileExtension() != null && 
-					resource.getFileExtension().equals("groovy"));
+					ContentTypeUtils.isGroovyLikeFileName(resource.getName()));
 	}
 
 	private static boolean isInSourceFolder(IFile file, IProject project) {

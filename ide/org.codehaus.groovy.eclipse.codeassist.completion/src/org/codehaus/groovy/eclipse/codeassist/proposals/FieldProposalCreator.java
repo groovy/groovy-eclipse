@@ -24,8 +24,11 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -38,7 +41,15 @@ import org.objectweb.asm.Opcodes;
  * I may have missed something, so be prepared to add more kinds of fields here.
  */
 public class FieldProposalCreator extends AbstractProposalCreator implements IProposalCreator {
+    
+    private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
 
+    private static GroovyFieldProposal createClassProposal() {
+        FieldNode field = new FieldNode("class", Opcodes.ACC_PUBLIC & Opcodes.ACC_STATIC & Opcodes.ACC_FINAL, VariableScope.CLASS_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, null);
+        field.setDeclaringClass(VariableScope.OBJECT_CLASS_NODE);
+        return new GroovyFieldProposal(field);
+    }
+    
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
         Collection<FieldNode> allFields = getAllConstants(type);
@@ -48,6 +59,10 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                     ProposalUtils.looselyMatches(prefix, field.getName())) {
                 groovyProposals.add(new GroovyFieldProposal(field));
             }
+        }
+        
+        if (isStatic && "class".startsWith(prefix)) {
+            groovyProposals.add(CLASS_PROPOSAL);
         }
         
         return groovyProposals;

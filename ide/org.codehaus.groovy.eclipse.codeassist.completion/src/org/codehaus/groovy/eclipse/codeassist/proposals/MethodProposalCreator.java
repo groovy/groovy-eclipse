@@ -23,6 +23,7 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
  * @author Andrew Eisenberg
@@ -36,12 +37,13 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         List<MethodNode> allMethods = type.getAllDeclaredMethods();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         for (MethodNode method : allMethods) {
-            if ((!isStatic || method.isStatic()) &&
+            if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) &&
                     checkName(method.getName()) &&
                     ProposalUtils.looselyMatches(prefix, method.getName())) {
                 groovyProposals.add(new GroovyMethodProposal(method));
             }
         }
+        
         return groovyProposals;
     }
 

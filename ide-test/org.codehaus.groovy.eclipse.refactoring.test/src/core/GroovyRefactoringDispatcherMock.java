@@ -25,7 +25,7 @@ public class GroovyRefactoringDispatcherMock extends GroovyRefactoringDispatcher
 	private final IGroovyFileProvider fileProvider;
 	
 	public GroovyRefactoringDispatcherMock(ASTNode node, IGroovyDocumentProvider docProvider, UserSelection selection, IGroovyFileProvider fileProvider) {
-		super(node, selection, docProvider);
+		super(node, selection, docProvider,null);
 		this.fileProvider = fileProvider;
 	}
 

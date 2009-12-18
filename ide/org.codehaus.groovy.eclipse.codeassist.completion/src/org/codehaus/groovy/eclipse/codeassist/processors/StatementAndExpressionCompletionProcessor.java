@@ -70,7 +70,10 @@ public class StatementAndExpressionCompletionProcessor extends
                 resultingType = result.type;
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
-                isStatic = node instanceof ClassExpression;
+                isStatic = node instanceof StaticMethodCallExpression ||
+                    (node instanceof ClassExpression && 
+                     // if we are completing on '.class' then never static context
+                     resultingType != VariableScope.CLASS_CLASS_NODE);
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
@@ -186,10 +189,7 @@ public class StatementAndExpressionCompletionProcessor extends
      * @return true iff static
      */
     private boolean isStatic() {
-        if (getContext().location == ContentAssistLocation.EXPRESSION) { 
-            return completionNode instanceof StaticMethodCallExpression ||
-                completionNode instanceof ClassExpression;
-        } else if (getContext().location == ContentAssistLocation.STATEMENT) {
+        if (getContext().location == ContentAssistLocation.STATEMENT) {
             AnnotatedNode annotated = getContext().containingDeclaration;
             if (annotated instanceof FieldNode) {
                 return ((FieldNode) annotated).isStatic();

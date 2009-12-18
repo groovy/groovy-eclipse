@@ -32,7 +32,7 @@ public class MethodRenameConverter {
 	public static RenameMethodProvider createProvider(IMethod renamed) {
 		IGroovyFileProvider fileProvider = RenameRefactoringConverter.getFileProvider(renamed);
 		MethodPattern methodPattern = createMethodPattern(renamed);
-		RenameMethodProvider provider = new RenameMethodProvider(fileProvider, methodPattern);
+		RenameMethodProvider provider = new RenameMethodProvider(fileProvider, methodPattern, renamed.getCompilationUnit());
 		return provider;
 	}
 

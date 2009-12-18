@@ -98,7 +98,9 @@ public class ExpressionFinderTests extends TestCase {
 	void failSplit(String test) {
 		ExpressionFinder finder = new ExpressionFinder();
 		String[] split = finder.splitForCompletion(test);
-		assertNull(split);
+		assertEquals(2, split.length);
+		assertEquals("", split[0]);
+		assertEquals("", split[1]);
 	}
 
 	public void testSimple1() {

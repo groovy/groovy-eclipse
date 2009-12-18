@@ -16,7 +16,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jdt.groovy.core;bundle-version="1.0.0",
  org.eclipse.jdt.ui;bundle-version="3.5.0",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.5.0",
- org.eclipse.ui.editors;bundle-version="3.5.0"
+ org.eclipse.ui.editors;bundle-version="3.5.0",
+ org.eclipse.core.expressions
 Bundle-ActivationPolicy: lazy
 Export-Package: org.codehaus.groovy.eclipse.refactoring;uses:="org.eclipse.jface.resource,org.eclipse.ui.plugin,org.osgi.framework",
  org.codehaus.groovy.eclipse.refactoring.core;

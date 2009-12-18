@@ -180,4 +180,22 @@ public class TypeCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "Icons", 0, true);
     }
     
+    public void testCompleteClass1() throws Exception {
+        String contents = "class Foo { }\n def x \n Foo.clas";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".clas"));
+        proposalExists(proposals, "class", 1, true);
+    }
+    
+    public void testCompleteClass2() throws Exception {
+        String contents = "class Foo { }\n Foo.class.canonicalName";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".canonicalName"));
+        proposalExists(proposals, "canonicalName", 1, true);
+    }
+    
+    public void testCompleteClass3() throws Exception {
+        String contents = "class Foo { }\n Foo.class.getCanonicalName";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".getCanonicalName"));
+        proposalExists(proposals, "getCanonicalName", 1, true);
+    }
+    
 }

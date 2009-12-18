@@ -83,4 +83,8 @@ public class GroovyCompilationUnitDocumentProvider implements
         return unit.isReadOnly();
     }
 
+    
+    public GroovyCompilationUnit getUnit() {
+        return unit;
+    }
 }

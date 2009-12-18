@@ -52,7 +52,7 @@ public class RenameMethodTest extends ProgrammaticalRenameTest {
 		methodNode.setDeclaringClass(cN);
 		
 		MethodPattern mP = new MethodPattern(methodNode, cN);
-		RenameMethodProvider provider = new RenameMethodProvider(fileProvider, mP);
+		RenameMethodProvider provider = new RenameMethodProvider(fileProvider, mP, null);
 		provider.setNewName("method");
 		
 		checkRefactoring(provider);	

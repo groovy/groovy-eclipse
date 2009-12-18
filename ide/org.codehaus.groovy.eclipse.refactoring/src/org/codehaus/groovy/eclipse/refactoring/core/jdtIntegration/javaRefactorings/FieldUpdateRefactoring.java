@@ -54,11 +54,13 @@ public class FieldUpdateRefactoring extends ASTModificationRefactoring {
 				SearchPattern.R_EXACT_MATCH);
 	}
 	
-	protected SimpleNameCollector getCollector() {
+	@Override
+    protected SimpleNameCollector getCollector() {
 		return new FieldCollector(fieldPattern);
 	}
 	
-	protected String getNewName(SimpleName oldName) {
+	@Override
+    protected String getNewName(SimpleName oldName) {
 		return provider.getNewName();
 	}
 	

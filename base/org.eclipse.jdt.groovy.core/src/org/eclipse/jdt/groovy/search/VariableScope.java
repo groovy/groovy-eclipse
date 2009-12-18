@@ -26,9 +26,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
@@ -41,24 +43,31 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
  */
 public class VariableScope {
 
-	public static final ClassNode DGM_CLASS_NODE = new ClassNode(DefaultGroovyMethods.class);
-	public static final ClassNode OBJECT_CLASS_NODE = new ClassNode(Object.class);
-	public static final ClassNode LIST_CLASS_NODE = new ClassNode(List.class);
-	public static final ClassNode VOID_CLASS_NODE = new ClassNode(void.class);
-	public static final ClassNode GSTRING_CLASS_NODE = new ClassNode(GString.class);
-	public static final ClassNode STRING_CLASS_NODE = new ClassNode(String.class);
-	public static final ClassNode PATTERN_CLASS_NODE = new ClassNode(Pattern.class);
-	public static final ClassNode MAP_CLASS_NODE = new ClassNode(Map.class);
-	public static final ClassNode NUMBER_CLASS_NODE = new ClassNode(Number.class);
+	public static final ClassNode DGM_CLASS_NODE = ClassHelper.makeCached(DefaultGroovyMethods.class);
+	public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.makeCached(Object.class);
+	public static final ClassNode LIST_CLASS_NODE = ClassHelper.makeCached(List.class);
+	public static final ClassNode VOID_CLASS_NODE = ClassHelper.makeCached(void.class);
+	public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.makeCached(GString.class);
+	public static final ClassNode STRING_CLASS_NODE = ClassHelper.makeCached(String.class);
+	public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.makeCached(Pattern.class);
+	public static final ClassNode MAP_CLASS_NODE = ClassHelper.makeCached(Map.class);
+	public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.makeCached(Number.class);
 
-	public static final ClassNode INTEGER_CLASS_NODE = new ClassNode(Integer.class);
-	public static final ClassNode LONG_CLASS_NODE = new ClassNode(Long.class);
-	public static final ClassNode SHORT_CLASS_NODE = new ClassNode(Short.class);
-	public static final ClassNode FLOAT_CLASS_NODE = new ClassNode(Float.class);
-	public static final ClassNode DOUBLE_CLASS_NODE = new ClassNode(Double.class);
-	public static final ClassNode BYTE_CLASS_NODE = new ClassNode(Byte.class);
-	public static final ClassNode BOOLEAN_CLASS_NODE = new ClassNode(Boolean.class);
-	public static final ClassNode CHARACTER_CLASS_NODE = new ClassNode(Character.class);
+	// don't cache because we have to add properties
+	public static final ClassNode CLASS_CLASS_NODE = ClassHelper.makeWithoutCaching(Class.class);
+	static {
+		initializeProperties(CLASS_CLASS_NODE);
+	}
+
+	// primitive wrapper classes
+	public static final ClassNode INTEGER_CLASS_NODE = ClassHelper.makeCached(Integer.class);
+	public static final ClassNode LONG_CLASS_NODE = ClassHelper.makeCached(Long.class);
+	public static final ClassNode SHORT_CLASS_NODE = ClassHelper.makeCached(Short.class);
+	public static final ClassNode FLOAT_CLASS_NODE = ClassHelper.makeCached(Float.class);
+	public static final ClassNode DOUBLE_CLASS_NODE = ClassHelper.makeCached(Double.class);
+	public static final ClassNode BYTE_CLASS_NODE = ClassHelper.makeCached(Byte.class);
+	public static final ClassNode BOOLEAN_CLASS_NODE = ClassHelper.makeCached(Boolean.class);
+	public static final ClassNode CHARACTER_CLASS_NODE = ClassHelper.makeCached(Character.class);
 
 	public static class VariableInfo {
 		public final ClassNode type;
@@ -149,6 +158,10 @@ public class VariableScope {
 		return var;
 	}
 
+	public boolean isThisOrSuper(Variable var) {
+		return var.getName().equals("this") || var.getName().equals("super");
+	}
+
 	public void addVariable(String name, ClassNode type, ClassNode declaringType) {
 		nameVariableMap.put(name, new VariableInfo(type, declaringType));
 	}
@@ -187,29 +200,41 @@ public class VariableScope {
 		}
 	}
 
-	@SuppressWarnings("nls")
 	public static ClassNode maybeConvertFromPrimitive(ClassNode type) {
-		if (Character.isUpperCase(type.getNameWithoutPackage().charAt(0)) || type.getName().contains(".")) {
-			return type;
-		}
-		if (type.getName().equals("int")) {
-			return VariableScope.INTEGER_CLASS_NODE;
-		} else if (type.getName().equals("boolean")) {
-			return VariableScope.BOOLEAN_CLASS_NODE;
-		} else if (type.getName().equals("byte")) {
-			return VariableScope.BYTE_CLASS_NODE;
-		} else if (type.getName().equals("double")) {
-			return VariableScope.DOUBLE_CLASS_NODE;
-		} else if (type.getName().equals("float")) {
-			return VariableScope.FLOAT_CLASS_NODE;
-		} else if (type.getName().equals("char")) {
-			return VariableScope.CHARACTER_CLASS_NODE;
-		} else if (type.getName().equals("short")) {
-			return VariableScope.SHORT_CLASS_NODE;
-		} else if (type.getName().equals("long")) {
-			return VariableScope.LONG_CLASS_NODE;
+		if (ClassHelper.isPrimitiveType(type)) {
+			return ClassHelper.getWrapper(type);
 		}
 		return type;
+	}
+
+	private static PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {
+		ClassNode propertyType = methodNode.getReturnType();
+		String methodName = methodNode.getName();
+		StringBuffer propertyName = new StringBuffer();
+		propertyName.append(Character.toLowerCase(methodName.charAt(3)));
+		if (methodName.length() > 4) {
+			propertyName.append(methodName.substring(4));
+		}
+		int mods = methodNode.getModifiers();
+		return new PropertyNode(propertyName.toString(), mods, propertyType, methodNode.getDeclaringClass(), null, null, null);
+	}
+
+	/**
+	 * @return true if the methodNode looks like a getter method for a property: method starting get<Something> with a non void
+	 *         return type and taking no parameters
+	 */
+	private static boolean isGetter(MethodNode methodNode) {
+		return methodNode.getReturnType() != VOID_CLASS_NODE && methodNode.getParameters().length == 0
+				&& methodNode.getName().startsWith("get") && methodNode.getName().length() > 3; //$NON-NLS-1$
+	}
+
+	private static void initializeProperties(ClassNode node) {
+		// getX methods
+		for (MethodNode methodNode : node.getMethods()) {
+			if (isGetter(methodNode)) {
+				node.addProperty(createPropertyNodeForMethodNode(methodNode));
+			}
+		}
 	}
 
 }

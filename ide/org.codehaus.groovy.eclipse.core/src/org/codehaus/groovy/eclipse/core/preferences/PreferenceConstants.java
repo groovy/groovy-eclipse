@@ -82,4 +82,11 @@ public class PreferenceConstants {
 
 	// if true use brackets for closure args
 	public static final String GROOVY_CONTENT_ASSIST_BRACKETS = "groovy.contentassist.brackets";
+	
+	// default location for running scripts
+	// can be: proj_home, script_loc, eclipse_home 
+	public static final String GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY = "groovy.scripts.workingdir";
+	public static final String GROOVY_SCRIPT_PROJECT_HOME = "proj_home";
+	public static final String GROOVY_SCRIPT_SCRIPT_LOC = "script_loc";
+	public static final String GROOVY_SCRIPT_ECLIPSE_HOME = "eclipse_home";
 }

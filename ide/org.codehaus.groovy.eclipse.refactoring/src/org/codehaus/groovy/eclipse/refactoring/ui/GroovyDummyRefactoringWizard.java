@@ -23,7 +23,8 @@ public class GroovyDummyRefactoringWizard extends GroovyRefactoringWizard {
 		this.setForcePreviewReview(false);
 	}
 	
-	public boolean performFinish() {
+	@Override
+    public boolean performFinish() {
 		return true;
 	}
 

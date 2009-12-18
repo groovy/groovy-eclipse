@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -39,6 +39,7 @@ public class GroovyChange {
 	
 	private Map<IGroovyDocumentProvider, MultiTextEdit> edits = new HashMap<IGroovyDocumentProvider, MultiTextEdit>();
 	private String name;
+	private CompositeChange participantChanges = new CompositeChange("Java changes");
 	
 	public GroovyChange(String name) {
 		this.name = name;
@@ -59,11 +60,16 @@ public class GroovyChange {
 				change.add(textFileChange);
 			}
 		}
+		change.add(participantChanges);
 		return change;
 	}
 	
 	public void addEdit(IGroovyDocumentProvider docProvider, MultiTextEdit edit) {
 		edits.put(docProvider, edit);
+	}
+	
+	public void addChange(Change change) {
+		this.participantChanges.add(change);
 	}
 	
 	public void performChanges() throws MalformedTreeException, BadLocationException {

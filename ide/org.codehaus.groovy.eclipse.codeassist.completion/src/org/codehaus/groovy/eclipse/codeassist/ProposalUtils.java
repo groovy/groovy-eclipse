@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Signature;

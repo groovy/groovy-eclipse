@@ -19,6 +19,7 @@
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.CandidateCollector;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.GroovyRefactoringDispatcher;
@@ -27,7 +28,10 @@ import org.codehaus.groovy.eclipse.refactoring.core.rename.NoRefactoringForASTNo
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameCandidates;
 import org.codehaus.groovy.eclipse.refactoring.ui.selection.ElementSelectionDialog;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
@@ -40,6 +44,16 @@ import org.eclipse.ui.PlatformUI;
  */
 public class RenameDispatcherAction extends GroovyRefactoringAction {
 	
+	private final JavaEditor editor;
+
+	public RenameDispatcherAction(JavaEditor editor) {
+		this.editor = editor;
+	}
+	
+	public RenameDispatcherAction() {
+	    editor = null;
+    }
+
 	public void run(IAction action) {
 		if (initRefactoring()) {
 			CandidateCollector dispatcher = new CandidateCollector(docProvider, selection);
@@ -82,7 +96,11 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
 	}
 	
 	private void openGroovyRefactoringWizard(ASTNode node) {
-		GroovyRefactoringDispatcher dispatcher = new GroovyRefactoringDispatcher(node, selection, docProvider);
+		ICompilationUnit unit = ((GroovyEditor) editor).getGroovyCompilationUnit();
+		if (unit == null) {
+			unit = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(editor.getEditorInput(), false);
+		}
+		GroovyRefactoringDispatcher dispatcher = new GroovyRefactoringDispatcher(node, selection, docProvider, unit);
 		try {
 			GroovyRefactoring refactoring = dispatcher.dispatchGroovyRenameRefactoring();
 			openRefactoringWizard(refactoring);

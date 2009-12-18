@@ -72,13 +72,20 @@ public class WorkspaceDocumentProvider implements IGroovyDocumentProvider {
 
 	public ModuleNode getRootNode() {
 		if (rootNode == null) {
-		    ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
+		    ICompilationUnit unit = getUnit();
 		    if (unit instanceof GroovyCompilationUnit) {
 		        rootNode = ((GroovyCompilationUnit) unit) .getModuleNode();
 		    }
 		}
 		return rootNode;
 	}
+
+    /**
+     * @return
+     */
+    public GroovyCompilationUnit getUnit() {
+        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+    }
 
 	public IDocument getDocument() {
 		return new Document(getDocumentContent());

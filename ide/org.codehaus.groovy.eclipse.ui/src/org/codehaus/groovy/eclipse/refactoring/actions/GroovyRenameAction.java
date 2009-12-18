@@ -29,13 +29,12 @@ import org.eclipse.jface.viewers.IStructuredSelection;
  */
 public class GroovyRenameAction extends RenameAction {
 
-    private RenameDispatcherAction renameDelegate;
+	private RenameDispatcherAction renameDelegate;
     
-    public GroovyRenameAction(JavaEditor editor) {
+    public GroovyRenameAction(final JavaEditor editor){
         super(editor);
-        renameDelegate = new RenameDispatcherAction();
+        renameDelegate = new RenameDispatcherAction(editor);
     }
-
     
     public void run(IStructuredSelection selection) {
         // do nothing...not applicable here

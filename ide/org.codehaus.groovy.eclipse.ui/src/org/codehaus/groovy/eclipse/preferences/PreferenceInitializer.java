@@ -123,6 +123,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
                 true);
 
+        store.setDefault(
+                PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
+                "proj_home");
     }
     
     public void reset() {
@@ -215,6 +218,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(
                 PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
                 true);
+
+        store.setDefault(
+                PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
+                "proj_home");
 
     }
 

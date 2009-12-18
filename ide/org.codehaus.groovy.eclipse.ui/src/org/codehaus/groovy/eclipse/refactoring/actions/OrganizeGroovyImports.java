@@ -197,7 +197,7 @@ public class OrganizeGroovyImports {
                             new SourceRange(node.getStart(), node.getEnd()-node.getStart()));
                 }
             } else {
-                // FIXADE RC1 We don't know exactly what the
+                // We don't know exactly what the
                 // text is.  We just know how it resolves
                 // This can be a problem if an inner class.
                 // We don't really know what is in the text 

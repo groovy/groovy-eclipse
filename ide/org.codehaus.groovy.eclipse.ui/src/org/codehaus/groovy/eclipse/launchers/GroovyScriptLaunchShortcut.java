@@ -22,13 +22,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfigurationType;
@@ -98,7 +99,10 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
                 IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
                 "--classpath " + getClasspath(javaProject) +
                 " --main groovy.ui.GroovyMain " +
-                className);
+                "\"${project_loc}/" + className + "\"");
+        launchConfigProperties.put(
+                IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY,
+                getWorkingDirectory(runType));
      
         return launchConfigProperties;
     }
@@ -118,18 +122,20 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
                 int kind = entry.getEntryKind();
                 if (kind == IClasspathEntry.CPE_SOURCE) {
                     IPath srcPath = entry.getPath();
+                    sbSrc.append("${project_loc}");
                     if (srcPath.segmentCount() > 1) {
-                        sbSrc.append(srcPath.removeFirstSegments(1).toOSString() + File.pathSeparator);
-                    } else {
-                        sbSrc.append("." + File.pathSeparator);
+                        sbSrc.append("/" + srcPath.removeFirstSegments(1).toOSString());
                     }
+                    sbSrc.append(File.pathSeparator);
+                    
+                    
                     IPath outPath = entry.getOutputLocation();
                     if (outPath != null) {
+                        sbBin.append("${project_loc}");
                         if (outPath.segmentCount() > 1) {
-                            sbBin.append(outPath.removeFirstSegments(1).toOSString() + File.pathSeparator);
-                        } else {
-                            sbBin.append("." + File.pathSeparator);
+                            sbBin.append(outPath.removeFirstSegments(1).toOSString());
                         }
+                        sbBin.append(File.pathSeparator);
                     }
                 }
             }
@@ -176,12 +182,27 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         try {
             return "\"" + 
-            FileLocator.getBundleFile(groovyBundle).toString() + "\""
-            ;
+            FileLocator.getBundleFile(groovyBundle).toString() + "\"";
         } catch (IOException e) {
             GroovyCore.logException("Error finding Groovy Home", e);
             // should throw an exception here
             return null;
+        }
+    }
+    
+    private String getWorkingDirectory(IType runType) {
+        String workingDirSetting = GroovyPlugin.getDefault().getPreferenceStore().getString(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY);
+        if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME)) {
+            return "${project_loc}";
+        } else if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME)) {
+            return "${eclipse_home}";
+        } else {
+            try {
+                return runType.getResource().getParent().getLocation().toOSString();
+            } catch (Exception e) {
+                GroovyCore.logException("Exception trying to find the location of " + runType.getElementName(), e);
+                return "${project_loc}";
+            }
         }
     }
 }

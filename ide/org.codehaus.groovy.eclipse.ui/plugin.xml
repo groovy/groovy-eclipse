@@ -156,7 +156,7 @@
          point="org.eclipse.ui.editors">
       <editor
             class="org.codehaus.groovy.eclipse.editor.GroovyEditor"
-            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            contributorClass="org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor"
             default="true"
             extensions="groovy"
             icon="icons/groovy_file.gif"
@@ -404,7 +404,7 @@
      <!-- Groovy Refactorings -->
      <viewerContribution
                id="org.codehaus.groovy.viewer.refactorings"
-               targetID="#GroovyCompilationUnitEditorContext">
+               targetID="#CompilationUnitEditorContext">
         <action
               class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
               definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
@@ -606,9 +606,10 @@
    <extension
          point="org.eclipse.ui.contexts">
       <context
-            id="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            description="Editing Groovy Source Context"
+            id="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             name="Editing Groovy Source"
-            parentId="org.eclipse.ui.textEditorScope"/>
+            parentId="org.eclipse.jdt.ui.javaEditorScope"/>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -723,16 +724,10 @@
        point="org.eclipse.ui.editorActions">
       <editorContribution
             targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor"
-            id="org.codehaus.groovy.BreakpointRulerActions">
-         <action
-               label="Toggle Breakpoint"
-               class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
-               actionID="RulerDoubleClick"
-               id="org.groovy.codehaus.eclipse.ui.actions.ManageBreakpointRulerAction">
-         </action>
+            id="org.codehaus.groovy.editor.actions">
          <menu
                id="org.codehaus.groovy.eclipse.refactoring.refactoringMenu"
-               label="Refac&amp;tor"
+               label="Groovy Refac&amp;tor"
                path="edit">
             <groupMarker
                   name="content">
@@ -768,6 +763,20 @@
                style="push"
                tooltip="Extract a groovy method from an expression">
          </action>
+
+				 <!-- Ruler actions -->
+         <action
+               label="Toggle Breakpoint"
+               class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
+               actionID="RulerDoubleClick"
+               id="org.groovy.codehaus.eclipse.ui.actions.ManageBreakpointRulerAction">
+         </action>
+         <action
+               label="Select Annotation ruler"
+               class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
+               actionID="RulerClick"
+               id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
+         </action>
       </editorContribution>
  </extension>
  <extension
@@ -777,6 +786,27 @@
           id="org.codehaus.groovy.eclipse.breakpointUpdater"
           markerType="org.eclipse.debug.core.breakpointMarker">
     </updater>
+ </extension>
+ <extension
+       point="org.eclipse.ui.actionSetPartAssociations">
+    <actionSetPartAssociation
+          targetID="org.eclipse.jdt.ui.CodingActionSet">
+       <part
+             id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+       </part>
+    </actionSetPartAssociation>
+    <actionSetPartAssociation
+          targetID="org.eclipse.jdt.ui.SearchActionSet">
+       <part
+             id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+       </part>
+    </actionSetPartAssociation>
+    <actionSetPartAssociation
+          targetID="org.eclipse.jdt.ui.JavaActionSet">
+       <part
+             id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+       </part>
+    </actionSetPartAssociation>
  </extension>
  <!--
  <extension

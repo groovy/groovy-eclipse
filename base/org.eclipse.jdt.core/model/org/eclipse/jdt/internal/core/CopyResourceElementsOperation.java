@@ -679,7 +679,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 			if (type.exists()) {
 				ISourceRange nameRange = type.getNameRange();
 				// main type can be implicitly defined, so check offsets
-				if (nameRange.getOffset() > 0 && nameRange.getLength() > 0) {
+				if (nameRange.getOffset() > 0 && nameRange.getLength() > 0 && oldTypeName.length() == nameRange.getLength()) {
 					multiEdit.addChild(new ReplaceEdit(nameRange.getOffset(), nameRange.getLength(), newTypeName));
 				}
 				IJavaElement[] children = type.getChildren();

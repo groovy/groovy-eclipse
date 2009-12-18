@@ -41,7 +41,8 @@ public class JavaLabelProvider extends LabelProvider {
 //		return img;
 //	}
 
-	public String getText(Object element) {
+	@Override
+    public String getText(Object element) {
 		try {
 			if (element instanceof IMethod) {
 				return getMethodSignature((IMethod)element);

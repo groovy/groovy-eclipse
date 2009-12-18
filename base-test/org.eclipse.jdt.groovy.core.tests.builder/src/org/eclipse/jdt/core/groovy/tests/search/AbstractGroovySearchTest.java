@@ -48,8 +48,8 @@ import org.eclipse.jdt.internal.core.JavaModelManager;
  */
 public abstract class AbstractGroovySearchTest extends BuilderTests {
     MockSearchRequestor searchRequestor;
-    IProject project;
-    TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
+    protected IProject project;
+    protected TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
 
     public AbstractGroovySearchTest(String name) {
         super(name);

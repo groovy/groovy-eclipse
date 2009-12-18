@@ -98,7 +98,6 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         return (method.getName() + "()").toCharArray();
     }
     
-    // FIXADE RC1 parameter names not in JDTClassNodes
     protected char[][] createParameterNames(ICompilationUnit unit) {
         
         char[][] paramNames = getParameterNames(unit, method);

@@ -292,7 +292,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		visitAnnotations(node);
 
 		TypeLookupResult result = null;
-		result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scopes.peek());
+		VariableScope scope = scopes.peek();
+		result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scope);
 		VisitStatus status = handleRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
@@ -305,7 +306,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		ClassNode supr = node.getSuperClass();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(supr, scopes.peek());
+			result = lookup.lookupType(supr, scope);
 			if (result != null) {
 				break;
 			}
@@ -323,7 +324,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		for (ClassNode intr : node.getInterfaces()) {
 			for (ITypeLookup lookup : lookups) {
-				result = lookup.lookupType(intr, scopes.peek());
+				result = lookup.lookupType(intr, scope);
 				if (result != null) {
 					break;
 				}
@@ -342,7 +343,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		// add all methods to the scope because when they are
 		// referenced without parens, they appear
 		// as VariableExpressions in the code
-		VariableScope currentScope = scopes.peek();
+		VariableScope currentScope = scope;
 		// don't use Java 5 style for loop here because Groovy 1.6.x does not
 		// have type parameters for its getMethods() method.
 		for (Iterator methodIter = node.getMethods().iterator(); methodIter.hasNext();) {
@@ -367,8 +368,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitField(FieldNode node) {
 		TypeLookupResult result = null;
+		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scopes.peek());
+			result = lookup.lookupType(node, scope);
 			if (result != null) {
 				break;
 			}
@@ -390,8 +392,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	private void visitClassReference(ClassNode node) {
 		TypeLookupResult result = null;
+		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scopes.peek());
+			result = lookup.lookupType(node, scope);
 			if (result != null) {
 				break;
 			}
@@ -423,8 +426,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
 		TypeLookupResult result = null;
+		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scopes.peek());
+			result = lookup.lookupType(node, scope);
 			if (result != null) {
 				break;
 			}
@@ -463,8 +467,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitImports(ModuleNode node) {
 		for (ImportNode imp : (Iterable<ImportNode>) node.getImports()) {
 			TypeLookupResult result = null;
+			VariableScope scope = scopes.peek();
 			for (ITypeLookup lookup : lookups) {
-				result = lookup.lookupType(imp, scopes.peek());
+				result = lookup.lookupType(imp, scope);
 				if (result != null) {
 					break;
 				}
@@ -506,8 +511,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			objectExprType = objectExpressionType.pop();
 		}
 
+		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scopes.peek(), objectExprType);
+			result = lookup.lookupType(node, scope, objectExprType);
 			if (result != null) {
 				break;
 			}
@@ -537,13 +543,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private boolean handleParameterList(Parameter[] params) {
 		if (params != null) {
+			VariableScope scope = scopes.peek();
 			for (Parameter node : params) {
 				TypeLookupResult result = null;
 				for (ITypeLookup lookup : lookups) {
 					// the first lookup is used to store the type of the
 					// parameter in the sope
-					lookup.lookupType(node, scopes.peek());
-					result = lookup.lookupType(node.getType(), scopes.peek());
+					lookup.lookupType(node, scope);
+					result = lookup.lookupType(node.getType(), scope);
 					if (result != null) {
 						break;
 					}
@@ -862,10 +869,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 		return null;
-	}
-
-	private void removeCategoryToBeDeclared() {
-		scopes.peek().setCategoryBeingDeclared(VariableScope.NO_CATEGORY);
 	}
 
 	@Override

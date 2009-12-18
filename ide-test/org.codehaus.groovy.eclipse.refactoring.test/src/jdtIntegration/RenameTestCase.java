@@ -116,7 +116,7 @@ public abstract class RenameTestCase extends BaseTestCase {
 			} else if (groovyCandidates.length > 0){
 				GroovyRefactoringDispatcher dispatcher = 
 					new GroovyRefactoringDispatcher(groovyCandidates[0],
-							selection, docProvider);
+							selection, docProvider, null);
 				GroovyRefactoring ref = dispatcher.dispatchGroovyRenameRefactoring();
 				
 				if (ref.getInfo() instanceof RenameInfo) {

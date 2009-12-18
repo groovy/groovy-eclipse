@@ -19,7 +19,7 @@ import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
 
 /**
- * An expression finder. Used to find expressions that are suitable for type evaluation and code completion.
+ * An expression finder. Used to find expressions that are suitable for content assist.
  * <p>
  * Examples are:
  * <ul>
@@ -110,7 +110,7 @@ public class ExpressionFinder {
 	 * @param expression
 	 *            The expression returned by the {@link #findForCompletions(ISourceBuffer, int)} method.
 	 * @return A string pair, the expression to complete, and the prefix to be completed.<br>
-	 *         Null if the string cannot be split for code completion.<br>
+	 *         { "", "" } if no completion expression could be found
 	 *         String[0] is an expression .<br>
 	 *         String[1] is the empty string if the last character is a '.'.<br>
 	 *         String[1] is 'ident' if the expression ends with '.ident'.<br>
@@ -145,7 +145,7 @@ public class ExpressionFinder {
 			} else if (token0.type == Token.IDENT) {
 				ret[0] = expression.trim();
 			} else {
-				ret = null;
+			    ret = new String[] { "", "" };
 			}
 		} catch (TokenStreamException e) {
 		}
@@ -154,7 +154,7 @@ public class ExpressionFinder {
 	}
 
 	/**
-	 * TODO: only skip line breaks if the previous character is a '.' otherwise
+	 * FIXADE RC1: only skip line breaks if the previous character is a '.' otherwise
 	 * line breaks should signify the end of the completion
 	 * For now, though we just ignore skipping all line breaks 
 	 * 

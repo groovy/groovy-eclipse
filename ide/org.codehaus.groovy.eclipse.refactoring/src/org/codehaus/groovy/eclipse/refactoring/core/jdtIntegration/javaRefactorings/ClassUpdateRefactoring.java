@@ -46,11 +46,13 @@ public class ClassUpdateRefactoring extends ASTModificationRefactoring {
 			return status;
 	}
 
-	protected SimpleNameCollector getCollector() {
+	@Override
+    protected SimpleNameCollector getCollector() {
 		return new ClassColletor(oldClass);
 	}
 	
-	protected String getNewName(SimpleName oldName) {
+	@Override
+    protected String getNewName(SimpleName oldName) {
 		return provider.getNewName();
 	}
 

@@ -24,6 +24,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -115,6 +116,16 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                 "Do not use parens around methods with arguments", getFieldEditorParent()));
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, 
                 "Use brackets for closure arguments", getFieldEditorParent()));
+        
+        // default launch location for scripts
+        
+        addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
+                    "\nDefault working directory for running Groovy scripts \n(will not change the working directory of existing scripts," +
+                    "\nonly new ones).", 1, 
+                    new String[][] {{ "Project home", PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME },
+                                    { "Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC }, 
+                                    { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME } }, 
+                    getFieldEditorParent()));
         
         // legacy projects
         ConvertLegacyProject convert = new ConvertLegacyProject();

@@ -152,7 +152,6 @@ public abstract class MultiFileRefactoringProvider extends RefactoringProvider {
 	public boolean hasCandidates() {
 		prepareCandidateLists();
 		int nrOfCandidates = 0;
-		// FIXME: Values or keys?
 		for(List<ASTNode> list : definitiveCandidates.values()) {
 			nrOfCandidates += list.size();
 		}

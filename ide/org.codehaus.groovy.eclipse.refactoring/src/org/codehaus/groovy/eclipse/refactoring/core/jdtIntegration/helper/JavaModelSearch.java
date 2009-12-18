@@ -67,7 +67,8 @@ public class JavaModelSearch {
 
 		SearchRequestor requestor = new SearchRequestor() {
 
-			@SuppressWarnings("unchecked")
+			@Override
+            @SuppressWarnings("unchecked")
 			public void acceptSearchMatch(SearchMatch match) throws CoreException {
 				Object element = match.getElement();
 				if (type.isInstance(element)) {

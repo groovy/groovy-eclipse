@@ -96,7 +96,8 @@ public class RenameClassProvider extends MultiFileRefactoringProvider implements
 		}
 	}
 
-	public boolean hasCandidates() {
+	@Override
+    public boolean hasCandidates() {
 		return !textEditProviders.isEmpty();
 	}
 
@@ -187,7 +188,8 @@ public class RenameClassProvider extends MultiFileRefactoringProvider implements
 		addStatusEntries(status, stateValidName);
 	}
 
-	public String getOldName() {
+	@Override
+    public String getOldName() {
 		if (alias.equals("")) {
 			return selectedNode.getNameWithoutPackage();
 		}

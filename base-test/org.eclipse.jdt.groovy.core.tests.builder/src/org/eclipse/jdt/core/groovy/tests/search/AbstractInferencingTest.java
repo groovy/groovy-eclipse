@@ -67,8 +67,8 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         private final int start;
         private final int end;
         
-        TypeLookupResult result;
-        ASTNode node;
+        public TypeLookupResult result;
+        public ASTNode node;
         
         public SearchRequestor(int start, int end) {
             super();
@@ -92,7 +92,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             return VisitStatus.CONTINUE;
         }
         
-        String getTypeName() {
+        public String getTypeName() {
             return result.type.getName();
         }
     }

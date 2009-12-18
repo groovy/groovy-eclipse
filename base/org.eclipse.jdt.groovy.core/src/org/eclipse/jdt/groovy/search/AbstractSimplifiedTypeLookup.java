@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
@@ -48,6 +49,12 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 		if (node instanceof ConstantExpression) {
 			ClassNode declaringType = objectExpressionType != null ? objectExpressionType : scope.getEnclosingTypeDeclaration();
 			TypeAndDeclaration tAndD = lookupTypeAndDeclaration(declaringType, ((ConstantExpression) node).getText(), scope);
+			if (tAndD != null) {
+				return new TypeLookupResult(tAndD.type, declaringType, tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope);
+			}
+		} else if (node instanceof VariableExpression) {
+			ClassNode declaringType = objectExpressionType != null ? objectExpressionType : scope.getEnclosingTypeDeclaration();
+			TypeAndDeclaration tAndD = lookupTypeAndDeclaration(declaringType, ((VariableExpression) node).getName(), scope);
 			if (tAndD != null) {
 				return new TypeLookupResult(tAndD.type, declaringType, tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope);
 			}

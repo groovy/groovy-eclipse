@@ -107,7 +107,9 @@ public class GroovyCompletionProposalComputer implements
         
         String fullCompletionText = findCompletionText(context.getDocument(), context.getInvocationOffset());
         String[] completionExpressions = findCompletionExpression(fullCompletionText);
-        
+        if (completionExpressions == null) {
+            completionExpressions = new String[] { "", "" };
+        }
         int supportingNodeEnd = completionExpressions[1] == null ? -1 : 
             context.getInvocationOffset() - fullCompletionText.length() + completionExpressions[0].length();
         CompletionNodeFinder finder = new CompletionNodeFinder(context.getInvocationOffset(), supportingNodeEnd, completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1], fullCompletionText);

@@ -28,7 +28,8 @@ public class FieldCollector extends SimpleNameCollector {
 		fieldName = fieldPattern.getNameOfProperty();
 	}
 	
-	public boolean visit(SimpleName name) {
+	@Override
+    public boolean visit(SimpleName name) {
 		IBinding binding = name.resolveBinding();
 		if (binding instanceof IVariableBinding) {
 			IVariableBinding fieldBinding = (IVariableBinding)binding;

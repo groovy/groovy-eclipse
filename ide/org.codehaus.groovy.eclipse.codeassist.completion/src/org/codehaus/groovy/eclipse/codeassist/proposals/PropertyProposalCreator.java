@@ -32,6 +32,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
  * 
  */
 public class PropertyProposalCreator extends AbstractProposalCreator implements IProposalCreator {
+    
 
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {

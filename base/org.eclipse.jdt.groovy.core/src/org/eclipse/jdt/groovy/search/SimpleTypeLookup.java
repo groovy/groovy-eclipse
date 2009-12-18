@@ -69,9 +69,14 @@ import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
  * @created Aug 29, 2009
  * 
  *          Looks at the type associated with the ASTNode for the type <br>
- *          FIXADE RC1 This class is getting really, really ugly. Clean this up!
  */
 public class SimpleTypeLookup implements ITypeLookup {
+
+	private GroovyCompilationUnit unit;
+
+	public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+		this.unit = unit;
+	}
 
 	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
 
@@ -134,25 +139,22 @@ public class SimpleTypeLookup implements ITypeLookup {
 		} else if (node instanceof VariableExpression) {
 			Variable var = ((VariableExpression) node).getAccessedVariable();
 			if (var instanceof DynamicVariable) {
-				// this dynamic variable might be a field
-				ClassNode type = findField((VariableExpression) node, scope.getEnclosingTypeDeclaration());
-				if (type == null) {
-					// or it might refer to a method call with no parens
-					type = findMethod((VariableExpression) node, scope.getEnclosingTypeDeclaration());
-				}
-				if (type == null) {
-					// might be a property
-					type = findProperty((VariableExpression) node, scope.getEnclosingTypeDeclaration());
-				}
+				// search type hierarchy for declaration
+				ASTNode declaration = findDeclaration(var.getName(), scope.getEnclosingTypeDeclaration());
+				ClassNode type = declaringTypeFromDeclaration(declaration);
+				type = type == null ? var.getType() : type;
 				confidence[0] = TypeConfidence.findLessPrecise(confidence[0], INFERRED);
-				return type == null ? node.getType() : type;
+				return type;
 			} else if (var instanceof FieldNode) {
 				return ((FieldNode) var).getDeclaringClass();
+			} else {
+				// local variable, no declaring type
+				// fall through
 			}
 
 		} else if (node instanceof DeclarationExpression) {
 			// the type declaration of the DeclarationExpression is considered to be the
-			// declaring type. This ensures that type declarations are considered
+			// declaring type. This ensures that type declarations are treated as
 			// to be type references.
 			return ((DeclarationExpression) node).getLeftExpression().getType();
 		}
@@ -166,123 +168,24 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 */
 	private TypeLookupResult findType(Expression node, ClassNode objectExpressionType, ClassNode declaringType,
 			VariableScope scope, TypeConfidence confidence) {
-		// check first to see if we have this type inferred
-		if (node instanceof Variable) {
-			ASTNode declaration = node;
-			Variable var = (Variable) node;
-			Variable accessedVar = null;
-			if (node instanceof VariableExpression) {
-				accessedVar = ((VariableExpression) node).getAccessedVariable();
-				if (accessedVar != null) {
-					if (accessedVar instanceof AnnotatedNode) {
-						declaration = (AnnotatedNode) accessedVar;
-					} else if (accessedVar instanceof VariableExpression) {
-						// only necessary for 1.6 stream since variable expressions in 1.6 are not annotated nodes
-						declaration = (VariableExpression) accessedVar;
-					}
-				}
-			}
 
-			VariableInfo info = scope.lookupName(var.getName());
-			if (info != null) {
-				if (accessedVar instanceof DynamicVariable) {
-					// this is actually a reference to a field or method in a type
-					// find this reference
-					ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), info.declaringType);
-					if (maybeDeclaration != null) {
-						declaration = maybeDeclaration;
-					}
-				}
-				confidence = TypeConfidence.findLessPrecise(confidence, INFERRED);
-				return new TypeLookupResult(info.type, declaringType, declaration, confidence, scope);
-			} else if (var instanceof VariableExpression) {
-				ClassNode type = var.getType();
-				if (accessedVar instanceof DynamicVariable) {
-					// first check to see if this is a field or method reference from a super class
-					ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), declaringType);
-					if (maybeDeclaration != null) {
-						declaration = maybeDeclaration;
-						if (maybeDeclaration instanceof FieldNode)
-							type = ((FieldNode) maybeDeclaration).getType();
-						else if (maybeDeclaration instanceof MethodNode)
-							type = ((MethodNode) maybeDeclaration).getReturnType();
-						else if (maybeDeclaration instanceof PropertyNode)
-							type = ((PropertyNode) maybeDeclaration).getType();
-						else
-							type = accessedVar.getType();
-					} else {
-						// nope...we don't know what this is.
-						confidence = UNKNOWN;
-						type = accessedVar.getType(); // probably object..
-					}
-				}
-				return new TypeLookupResult(type, declaringType, declaration, confidence, scope);
-			}
+		// check first to see if we have this type inferred
+		if (node instanceof VariableExpression) {
+			return findTypeForVariable((VariableExpression) node, scope, confidence, declaringType);
 		}
 
+		// if the object type is not null, then we base the
+		// type of this node on the object type
 		if (objectExpressionType != null) {
-			// lookup the type in the object's expression type
+			// lookup the type bsed on the object's expression type
+			// assume it is a method/property/field in the object expression type's hierarchy
+
 			if (node instanceof ConstantExpression) {
-				ConstantExpression constExpr = (ConstantExpression) node;
+				return findTypeForNameWithKnownObjectExpression(((ConstantExpression) node).getText(), node.getType(),
+						objectExpressionType, scope, confidence);
 
-				String name = constExpr.getText();
-				PropertyNode property = objectExpressionType.getProperty(name);
-				if (property != null) {
-					return new TypeLookupResult(property.getType(), property.getDeclaringClass(), property, confidence, scope);
-				}
-				// do not distinguish between method variants
-				List<MethodNode> methods = objectExpressionType.getMethods(name);
-				if (methods.size() > 0) {
-					MethodNode methodNode = methods.get(0);
-					return new TypeLookupResult(methodNode.getReturnType(), methodNode.getDeclaringClass(), methodNode, confidence,
-							scope);
-				}
-				if (objectExpressionType.isInterface()) {
-					// super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
-					MethodNode interfaceMethod = findMethodInInterface(objectExpressionType, name);
-					if (interfaceMethod != null) {
-						return new TypeLookupResult(interfaceMethod.getReturnType(), interfaceMethod.getDeclaringClass(),
-								interfaceMethod, confidence, scope);
-					}
-
-					// do the same for properties
-					PropertyNode interfaceProperty = findPropertyInInterface(objectExpressionType, name);
-					if (interfaceProperty != null) {
-						return new TypeLookupResult(interfaceProperty.getType(), interfaceProperty.getDeclaringClass(),
-								interfaceProperty, confidence, scope);
-					}
-				}
-
-				ASTNode maybeDecl = findDeclaration(name, objectExpressionType);
-				if (maybeDecl != null) {
-					ClassNode type;
-					ClassNode declaringClass;
-					if (maybeDecl instanceof FieldNode) {
-						type = ((FieldNode) maybeDecl).getType();
-						declaringClass = ((FieldNode) maybeDecl).getDeclaringClass();
-					} else if (maybeDecl instanceof PropertyNode) {
-						type = ((PropertyNode) maybeDecl).getType();
-						declaringClass = ((PropertyNode) maybeDecl).getDeclaringClass();
-					} else if (maybeDecl instanceof MethodNode) {
-						type = ((MethodNode) maybeDecl).getReturnType();
-						declaringClass = ((MethodNode) maybeDecl).getDeclaringClass();
-					} else {
-						// maybeDecl == null
-						type = VariableScope.OBJECT_CLASS_NODE;
-						declaringClass = objectExpressionType;
-					}
-					return new TypeLookupResult(type, declaringClass, maybeDecl, confidence, scope);
-				}
-				// might be somewhere in the variable scope
-				if (declaringType.equals(scope.getEnclosingTypeDeclaration())) {
-					VariableInfo varInfo = scope.lookupName(name);
-					if (varInfo != null) {
-						return new TypeLookupResult(varInfo.type, varInfo.declaringType, varInfo.declaringType, confidence, scope);
-					}
-				}
-				confidence = UNKNOWN;
-				return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
 			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {
+				// this is an assignment expression, return the object expression, which is the right hand side
 				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
 			} else if (node instanceof TernaryExpression) {
 				// return the object expression type
@@ -291,6 +194,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 		}
 
 		// no object expression, look at the kind of expression
+		// the following expression kinds have a type that is constant
+		// no matter what their contents are.
 		if (node instanceof ConstantExpression) {
 			// here, we know that since there is no object expression, this is not part
 			// of a dotted anything, so we can safely assume that it is a quoted string or
@@ -334,7 +239,13 @@ public class SimpleTypeLookup implements ITypeLookup {
 				return new TypeLookupResult(type, null, null, confidence, scope);
 			}
 		} else if (node instanceof ClassExpression) {
-			return new TypeLookupResult(node.getType(), declaringType, node.getType(), confidence, scope);
+			// check for special case...a bit crude...determine if the actual reference is to Foo.class or to Foo
+			if (nodeIsDotClassReference(node)) {
+				return new TypeLookupResult(VariableScope.CLASS_CLASS_NODE, VariableScope.CLASS_CLASS_NODE,
+						VariableScope.CLASS_CLASS_NODE, TypeConfidence.EXACT, scope);
+			} else {
+				return new TypeLookupResult(node.getType(), declaringType, node.getType(), confidence, scope);
+			}
 		} else if (node instanceof StaticMethodCallExpression) {
 			StaticMethodCallExpression expr = (StaticMethodCallExpression) node;
 			List<MethodNode> methods = expr.getOwnerType().getMethods(expr.getMethod());
@@ -344,6 +255,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			}
 		}
 
+		// if we get here, then we can't infer the type. Set to unknown if required.
 		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)
 				&& !(node instanceof MapEntryExpression) && !(node instanceof PropertyExpression)
 				&& !(node instanceof TupleExpression) && node.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
@@ -352,6 +264,174 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 		// don't know
 		return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
+	}
+
+	/**
+	 * a little crude because will not find if there are spaces between '.' and 'class'
+	 * 
+	 * @param node
+	 * @return
+	 */
+	private boolean nodeIsDotClassReference(Expression node) {
+		int end = node.getEnd();
+		int start = node.getStart();
+		char[] contents = unit.getContents();
+		if (contents.length >= end) {
+			char[] realText = new char[end - start];
+			System.arraycopy(contents, start, realText, 0, end - start);
+			String realTextStr = String.valueOf(realText).trim();
+			return realTextStr.endsWith(".class") || realTextStr.endsWith(".class."); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return false;
+	}
+
+	/**
+	 * look for a name within an object expression. It is either in the hierarchy, it is in the variable scope, or it is unknown.
+	 * 
+	 * @return
+	 */
+	private TypeLookupResult findTypeForNameWithKnownObjectExpression(String name, ClassNode type, ClassNode declaringType,
+			VariableScope scope, TypeConfidence confidence) {
+		ClassNode realDeclaringType = declaringType;
+		VariableInfo varInfo;
+		ASTNode declaration = findDeclaration(name, declaringType);
+		if (declaration != null) {
+			type = typeFromDeclaration(declaration);
+			realDeclaringType = declaringTypeFromDeclaration(declaration);
+		} else if (declaringType.equals(scope.getEnclosingTypeDeclaration()) && (varInfo = scope.lookupName(name)) != null) {
+			type = varInfo.type;
+			realDeclaringType = varInfo.declaringType;
+			declaration = varInfo.declaringType;
+		} else {
+			confidence = UNKNOWN;
+		}
+		return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
+	}
+
+	private TypeLookupResult findTypeForVariable(VariableExpression var, VariableScope scope, TypeConfidence confidence,
+			ClassNode declaringType) {
+		ASTNode declaration = var;
+		Variable accessedVar = var.getAccessedVariable();
+		if (accessedVar instanceof ASTNode) {
+			// not a DynamicVariable
+			declaration = (ASTNode) accessedVar;
+		}
+
+		VariableInfo info = scope.lookupName(var.getName());
+		TypeConfidence origConfidence = confidence;
+		if (accessedVar instanceof DynamicVariable) {
+			// this is likely a reference to a field or method in a type in the hierarchy
+			// find the declaration
+			ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), info != null ? info.declaringType : declaringType);
+			if (maybeDeclaration != null) {
+				declaration = maybeDeclaration;
+				// declaring type may have changed
+				declaringType = declaringTypeFromDeclaration(declaration);
+			} else {
+				confidence = UNKNOWN;
+			}
+		}
+
+		ClassNode type;
+		if (info != null) {
+			confidence = TypeConfidence.findLessPrecise(origConfidence, INFERRED);
+			type = info.type;
+			declaringType = info.declaringType;
+			if (scope.isThisOrSuper(var)) {
+				declaration = type;
+			}
+		} else {
+
+			// we have a variable expression, but it is not
+			// declared anywhere in the scope. It is probably a DynamicVariable
+			if (accessedVar instanceof DynamicVariable) {
+				type = typeFromDeclaration(declaration);
+			} else {
+				type = var.getType();
+			}
+		}
+		return new TypeLookupResult(type, declaringType, declaration, confidence, scope);
+	}
+
+	/**
+	 * @param declaration
+	 * @return
+	 */
+	private ClassNode declaringTypeFromDeclaration(ASTNode declaration) {
+		ClassNode type;
+		if (declaration instanceof FieldNode) {
+			type = ((FieldNode) declaration).getDeclaringClass();
+		} else if (declaration instanceof MethodNode) {
+			type = ((MethodNode) declaration).getDeclaringClass();
+		} else if (declaration instanceof PropertyNode) {
+			type = ((PropertyNode) declaration).getDeclaringClass();
+		} else if (declaration instanceof Expression) {
+			// probably object
+			type = ((Expression) declaration).getDeclaringClass();
+		} else {
+			type = VariableScope.OBJECT_CLASS_NODE;
+		}
+		return type;
+	}
+
+	/**
+	 * @param declaration
+	 * @return
+	 */
+	private ClassNode typeFromDeclaration(ASTNode declaration) {
+		ClassNode type;
+		if (declaration instanceof FieldNode) {
+			type = ((FieldNode) declaration).getType();
+		} else if (declaration instanceof MethodNode) {
+			type = ((MethodNode) declaration).getReturnType();
+		} else if (declaration instanceof PropertyNode) {
+			type = ((PropertyNode) declaration).getType();
+		} else if (declaration instanceof Expression) {
+			type = ((Expression) declaration).getType();
+		} else {
+			type = VariableScope.OBJECT_CLASS_NODE;
+		}
+		return type;
+	}
+
+	/**
+	 * 
+	 * FIXADE RC1 Will this find static fields on interfaces if the interface type is a super interface of declaringType?
+	 * 
+	 * @param name
+	 * @param declaringType
+	 * @return
+	 */
+	private ASTNode findDeclaration(String name, ClassNode declaringType) {
+		AnnotatedNode maybe = findPropertyInClass(declaringType, name);
+		if (maybe != null) {
+			return maybe;
+		}
+		maybe = declaringType.getField(name);
+		if (maybe != null) {
+			return maybe;
+		}
+		List<MethodNode> maybeMethods = declaringType.getMethods(name);
+		if (maybeMethods != null && maybeMethods.size() > 0) {
+			return maybeMethods.get(0);
+		}
+		if (declaringType.isInterface()) {
+			// super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
+			MethodNode interfaceMethod = findMethodInInterface(declaringType, name);
+			if (interfaceMethod != null) {
+				return interfaceMethod;
+			}
+
+			// do the same for properties
+			PropertyNode interfaceProperty = findPropertyInInterface(declaringType, name);
+			if (interfaceProperty != null) {
+				return interfaceProperty;
+			}
+
+			// maybe do the same for fields to find constants in super interfaces
+		}
+
+		return null;
 	}
 
 	/**
@@ -431,84 +511,4 @@ public class SimpleTypeLookup implements ITypeLookup {
 			}
 		}
 	}
-
-	/**
-	 * @param name
-	 * @param declaringType
-	 * @return
-	 */
-	private ASTNode findDeclaration(String name, ClassNode declaringType) {
-		AnnotatedNode maybe = findPropertyInClass(declaringType, name);
-		if (maybe != null) {
-			return maybe;
-		}
-		maybe = declaringType.getField(name);
-		if (maybe != null) {
-			return maybe;
-		}
-		List<MethodNode> maybeMethods = declaringType.getMethods(name);
-		if (maybeMethods != null && maybeMethods.size() > 0) {
-			return maybeMethods.get(0);
-		}
-		return null;
-	}
-
-	/**
-	 * @param node
-	 * @param enclosingTypeDeclaration
-	 * @return
-	 */
-	private ClassNode findProperty(VariableExpression var, ClassNode declaringClass) {
-		if (declaringClass == null) {
-			return var.getType();
-		}
-		String name = var.getName();
-		PropertyNode property = declaringClass.getProperty(name);
-		if (property != null) {
-			return property.getDeclaringClass();
-		} else {
-			return null;
-		}
-	}
-
-	/**
-	 * @param name
-	 * @param enclosingDeclarationNode
-	 * @return
-	 */
-	private ClassNode findField(VariableExpression var, ClassNode declaringClass) {
-		if (declaringClass == null) {
-			return var.getType();
-		}
-		String name = var.getName();
-		FieldNode field = declaringClass.getField(name);
-		if (field != null) {
-			return field.getDeclaringClass();
-		} else {
-			return null;
-		}
-	}
-
-	/**
-	 * @param name
-	 * @param enclosingDeclarationNode
-	 * @return
-	 */
-	private ClassNode findMethod(VariableExpression var, ClassNode declaringClass) {
-		if (declaringClass == null) {
-			return var.getType();
-		}
-		String name = var.getName();
-		List<MethodNode> methods = declaringClass.getMethods(name);
-		if (methods.size() > 0) {
-			return methods.get(0).getDeclaringClass();
-		} else {
-			return null;
-		}
-	}
-
-	public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
-		// do nothing
-	}
-
 }

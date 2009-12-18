@@ -55,13 +55,15 @@ public class MutatorUpdateRefactoring extends ASTModificationRefactoring {
 				SearchPattern.R_PATTERN_MATCH);
 	}
 	
-	protected SimpleNameCollector getCollector() {
+	@Override
+    protected SimpleNameCollector getCollector() {
 		String className = fieldPattern.getDeclaringClass().getName();
 		String fieldName = fieldPattern.getName();
 		return new MutatorCollector(className, fieldName);
 	}
 	
-	protected String getNewName(SimpleName oldName) {
+	@Override
+    protected String getNewName(SimpleName oldName) {
 		String prefix = oldName.getIdentifier().substring(0, 3);
 		return prefix + StringUtils.capitalize(provider.getNewName());
 	}

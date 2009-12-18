@@ -28,7 +28,8 @@ public class MutatorCollector extends SimpleNameCollector {
 		getter = "get" + StringUtils.capitalize(fieldName);
 	}
 	
-	public boolean visit(MethodInvocation invocation) {
+	@Override
+    public boolean visit(MethodInvocation invocation) {
 		IMethodBinding methodBinding = invocation.resolveMethodBinding();
 		String declaringClassName = methodBinding.getDeclaringClass().getQualifiedName();
 		if (declaringClassName.equals(className) &&

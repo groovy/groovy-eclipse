@@ -20,6 +20,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.rename.renameMethod;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -36,13 +37,15 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyChange;
 import org.codehaus.groovy.eclipse.refactoring.core.MultiFileRefactoringProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.hierarchy.HierarchyNode;
 import org.codehaus.groovy.eclipse.refactoring.core.hierarchy.HierarchyTreeBuilder;
+import org.codehaus.groovy.eclipse.refactoring.core.participation.GroovyParticipantManager;
+import org.codehaus.groovy.eclipse.refactoring.core.participation.GroovySharableParticipants;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.IRenameProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameTextEditProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.GroovyConventionsBuilder;
@@ -52,7 +55,17 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.corext.refactoring.participants.JavaProcessors;
+import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
+import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.participants.RefactoringParticipant;
+import org.eclipse.ltk.core.refactoring.participants.RenameArguments;
 import org.eclipse.text.edits.MultiTextEdit;
 
 /**
@@ -63,30 +76,36 @@ import org.eclipse.text.edits.MultiTextEdit;
 public class RenameMethodProvider extends MultiFileRefactoringProvider implements IRenameProvider {
 	
 	private static final String THIS = "this.";
-	
+	private static final List<RefactoringParticipant> EMPTY_PARTICIPANTS= Collections.EMPTY_LIST;
+
 	private final MethodPattern selectedMethodPattern;
 	private String newMethodName;
 	private int nrOfMethodDefinitions;
 	private MethodNode relevantMethodDefintion;
 	private IGroovyDocumentProvider documentOfMethodDefinition;
+	private List<RefactoringParticipant> fParticipants = EMPTY_PARTICIPANTS;
 
 	protected List<RenameTextEditProvider> textEditProviders = new ArrayList<RenameTextEditProvider>();
 
-	public RenameMethodProvider(IGroovyFileProvider docProvider, MethodPattern selectedNode) {
+	private final ICompilationUnit unit;
+	
+	public RenameMethodProvider(IGroovyFileProvider docProvider, MethodPattern selectedNode, ICompilationUnit unit) {
 		super(docProvider);
 		this.selectedMethodPattern = selectedNode;
+		this.unit = unit;
 		this.selectedASTNode = selectedMethodPattern.getNode();
 	}
 	
-	public RenameMethodProvider(IGroovyFileProvider docProvider, UserSelection selection, MethodPattern selectedNode) {
-		this(docProvider, selectedNode);
-		setSelection(selection);
-	}
+	// FIXADE RC1 can delete this?
+//	public RenameMethodProvider(IGroovyFileProvider docProvider, UserSelection selection, MethodPattern selectedNode) {
+//		this(docProvider, selectedNode, null);
+//		setSelection(selection);
+//	}
 	
 	@Override
     protected void prepareCandidateLists() {
 		
-		// FIXME: Why do candidates need to be collected several times?
+		// FIXADE RC1: Why do candidates need to be collected several times?
 		// This is a small workaround to fix it, but maybe dangerous
 		if (hasCandidateLists()) return;
 		
@@ -325,7 +344,55 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 		
 		RefactoringStatus refactoringStatus = new RefactoringStatus();
 		addDefaultParamWarning(refactoringStatus);
-		return checkForDuplicates(refactoringStatus);
+		checkForDuplicates(refactoringStatus);
+		IJavaElement element = codeResolve(unit);
+		
+		if (element != null) {    
+		    processRenameParticipants(refactoringStatus, element);
+		} else {
+		    if (unit != null && selection != null) {
+		        // only add error if there was a valid selection going in.
+		        refactoringStatus.addError("Cannot resolve selection to a Groovy program element");
+		    }
+		}
+				
+		return refactoringStatus;
+	}
+	
+    private IJavaElement codeResolve(ICompilationUnit input) throws JavaModelException {
+        if (input == null || selection == null) {
+            return null;
+        }
+        JavaModelUtil.reconcile((ICompilationUnit) input);
+        IJavaElement[] elements = input.codeSelect(
+                    selection.getOffset() + selection.getLength(), 0);
+        if (elements != null && elements.length > 0) {
+            return elements[0];
+        } else {
+            return null;
+        }
+    }
+	
+	private void processRenameParticipants(RefactoringStatus refactoringStatus, IJavaElement element) throws CoreException{
+		
+		GroovySharableParticipants sharableParticipants= new GroovySharableParticipants(); 
+		RenameArguments arguments = new RenameArguments(newMethodName, true);
+		
+		GroovyRenameMethodProcessor processor = new GroovyRenameMethodProcessor((IMethod)element);
+        
+		
+		RefactoringParticipant[] loadedParticipants= GroovyParticipantManager.loadRenameParticipants(refactoringStatus, processor, element, arguments,
+																					JavaProcessors.computeAffectedNatures(element), null, sharableParticipants);
+		if (loadedParticipants == null || loadedParticipants.length == 0) {
+			fParticipants= EMPTY_PARTICIPANTS;
+		} else {
+			fParticipants= new ArrayList<RefactoringParticipant>();
+			for (int i= 0; i < loadedParticipants.length; i++) {
+				fParticipants.add(loadedParticipants[i]);
+			}
+		}
+		
+		
 	}
 
 	private void addDefaultParamWarning(RefactoringStatus refactoringStatus) {
@@ -387,60 +454,17 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 			MultiTextEdit multi = removeDublicatedTextedits(textEditProvider);
 			change.addEdit(textEditProvider.getDocProvider(), multi);
 		}
+		
+		for (RefactoringParticipant participant : fParticipants) {
+			Change participantChange= participant.createChange(new SubProgressMonitor(pm, 1));
+			if (participantChange != null) {
+				GroovyCore.logTraceMessage("--adding participant change " + participantChange);
+				change.addChange(participantChange);
+			}
+		}
 
-		/*
-		 * Would also look for java method, that are affected. It's just a prototype.
-		 */
-//		change.addChange(getJavaMethodChange(pm));
 		return change;
 	}
-//	private Change getJavaMethodChange(IProgressMonitor pm) {
-//		StringBuilder stringPattern = new StringBuilder();
-//		stringPattern.append(selectedMethodPattern.getClassType().getName());
-//		stringPattern.append(".");
-//		stringPattern.append(selectedMethodPattern.getMethodName());
-//		stringPattern.append("()");
-//		stringPattern.append(" void");
-//		SearchPattern searchPattern = SearchPattern.createPattern(stringPattern.toString(), IJavaSearchConstants.METHOD, IJavaSearchConstants.DECLARATIONS, SearchPattern.R_EXACT_MATCH);
-//		SearchEngine searchEngine = new SearchEngine();
-//		IJavaSearchScope scope = SearchEngine.createWorkspaceScope();
-//		final List<IMethod> methodList = new ArrayList<IMethod>();
-//		SearchRequestor requestor= new SearchRequestor() {
-//			@Override
-//            public void acceptSearchMatch(SearchMatch match) throws CoreException {
-//				Object element = match.getElement();
-//				if (match.getElement() instanceof IMethod) {
-//					methodList.add((IMethod)element);
-//				}
-//			}
-//		};
-//		try {
-//			searchEngine.search(searchPattern, new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()}, scope, requestor, new NullProgressMonitor());
-//		} catch (CoreException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		for(IMethod method : methodList) {
-//			System.out.println(method.getElementName());
-//		}
-//		RefactoringContribution contribution = RefactoringCore.getRefactoringContribution(IJavaRefactorings.RENAME_METHOD);
-//		RenameJavaElementDescriptor descriptor = (RenameJavaElementDescriptor) contribution.createDescriptor();
-//		descriptor.setJavaElement(methodList.get(0)); //set the java element to refactor
-//		descriptor.setNewName(newMethodName);  //new method name from user input
-//		descriptor.setUpdateReferences(true);  //refactor also the references
-//		RefactoringStatus status = new RefactoringStatus();
-//		status = descriptor.validateDescriptor();
-//		try {
-//			Refactoring renameMethod = descriptor.createRefactoring(status);
-//			status.merge(renameMethod.checkInitialConditions(pm));
-//			status.merge(renameMethod.checkFinalConditions(pm));
-//			return renameMethod.createChange(pm);
-//		} catch (CoreException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//			return null;
-//		}
-//	}
 
 	public void checkUserInput(RefactoringStatus status, String text) {
 		IStatus stateValidName = new GroovyConventionsBuilder(text, "method")
@@ -448,7 +472,8 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 		addStatusEntries(status, stateValidName);
 	}
 
-	public String getOldName() {
+	@Override
+    public String getOldName() {
 		return selectedMethodPattern.getMethodName();
 	}
 	

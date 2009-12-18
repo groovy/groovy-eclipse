@@ -25,7 +25,8 @@ public class ClassColletor extends SimpleNameCollector {
 		this.node = node;
 	}
 	
-	public boolean visit(SimpleName name) {
+	@Override
+    public boolean visit(SimpleName name) {
 		IBinding binding = name.resolveBinding();
 		if (binding instanceof ITypeBinding) {
 			ITypeBinding typeBinding = (ITypeBinding)binding;

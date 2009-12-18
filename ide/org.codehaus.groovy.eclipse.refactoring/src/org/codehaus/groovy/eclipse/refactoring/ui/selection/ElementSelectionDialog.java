@@ -40,7 +40,8 @@ public class ElementSelectionDialog extends ElementTreeSelectionDialog implement
 		setMessage(CandidateSelection_Message);
 	}
 	
-	public void create() {
+	@Override
+    public void create() {
         BusyIndicator.showWhile(null, new Runnable() {
             public void run() {
             	superCreate();

@@ -67,7 +67,7 @@ public class ASTTools {
 			Statement lastStmt = (Statement) block.getStatements().get(
 					block.getStatements().size() - 1);
 
-			// FIXME: Hack to solve false line information in non explicit
+			// solve false line information in non explicit
 			// return statement
 			if (firstStmt instanceof ReturnStatement
 					&& firstStmt.getLineNumber() == -1) {

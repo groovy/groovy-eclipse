@@ -37,7 +37,8 @@ public class MethodCollector extends SimpleNameCollector {
 	/**
 	 * For all inherited methods from superclasses and interfaces
 	 */
-	public boolean visit(MethodDeclaration node) {
+	@Override
+    public boolean visit(MethodDeclaration node) {
 		methodBinding = node.resolveBinding();
 		declaringType = methodBinding.getDeclaringClass();
 		checkInheritedBySuperclass(node); 
@@ -64,7 +65,8 @@ public class MethodCollector extends SimpleNameCollector {
 	/**
 	 * For all method calls
 	 */
-	public boolean visit(MethodInvocation invocation) {
+	@Override
+    public boolean visit(MethodInvocation invocation) {
 		IMethodBinding methodBinding = invocation.resolveMethodBinding();
 		String declaringClassName = methodBinding.getDeclaringClass().getQualifiedName();
 		if (declaringClassName.equals(declaringClassNode.getName())) {
@@ -80,7 +82,8 @@ public class MethodCollector extends SimpleNameCollector {
 		}
 	}
 	
-	public boolean visit(MethodRef ref) {
+	@Override
+    public boolean visit(MethodRef ref) {
 		System.out.println(ref);
 		return true;
 	}

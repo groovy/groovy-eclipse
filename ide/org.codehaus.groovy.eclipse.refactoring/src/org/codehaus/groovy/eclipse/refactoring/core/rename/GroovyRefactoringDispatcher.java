@@ -17,10 +17,10 @@ import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.CompilationUnitFileProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.GroovyCompilationUnitDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceFileProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameClass.RenameClassProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameClass.RenameClassRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameField.RenameFieldInfo;
@@ -37,6 +37,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.FieldPattern;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.MethodPattern;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
+import org.eclipse.jdt.core.ICompilationUnit;
 
 /**
  * @author Stefan Reinhard
@@ -46,28 +47,30 @@ public class GroovyRefactoringDispatcher {
 	private ASTNode selectedNode;
 	private UserSelection selection;
 	protected IGroovyDocumentProvider docProvider;
+	private final ICompilationUnit unit;
 	
-	public GroovyRefactoringDispatcher(ASTNode selectedNode, UserSelection selection, IGroovyDocumentProvider docProv) {
+	public GroovyRefactoringDispatcher(ASTNode selectedNode, UserSelection selection, IGroovyDocumentProvider docProv, ICompilationUnit unit) {
 		this.selectedNode = selectedNode;
 		this.selection = selection;
 		docProvider = docProv;
+		this.unit = unit;
 	}
 	
 	public GroovyRefactoring dispatchGroovyRenameRefactoring() throws NoRefactoringForASTNodeException {
 		
 		GroovyRefactoring refactoring = null;
 		
-		if(selectedNode instanceof ClassNode){
-			return initRenameClassRefactoring((ClassNode)selectedNode);
-		} else if(selectedNode instanceof FieldNode){
-			FieldPattern fieldPattern = new FieldPattern((FieldNode)selectedNode);
+		if (selectedNode instanceof ClassNode){
+			return initRenameClassRefactoring((ClassNode) selectedNode);
+		} else if (selectedNode instanceof FieldNode) {
+			FieldPattern fieldPattern = new FieldPattern((FieldNode) selectedNode);
 			refactoring = initRenameFieldRefactoring(fieldPattern);
-		} else if(selectedNode instanceof MethodNode) {
-			MethodNode method = (MethodNode)selectedNode;
+		} else if (selectedNode instanceof MethodNode) {
+			MethodNode method = (MethodNode) selectedNode;
 			MethodPattern methodPattern = new MethodPattern(method, method.getDeclaringClass());
 			refactoring = initRenameMethodRefactoring(methodPattern);
-		} else if(selectedNode instanceof VariableProxy){
-			refactoring = initRenameLocalRefactoring((VariableProxy)selectedNode);
+		} else if (selectedNode instanceof VariableProxy){
+			refactoring = initRenameLocalRefactoring((VariableProxy) selectedNode);
 		} else if (refactoring == null) {
 			throw new NoRefactoringForASTNodeException(selectedNode);
 		}
@@ -99,14 +102,13 @@ public class GroovyRefactoringDispatcher {
 	}
 	
 	protected GroovyRefactoring initRenameMethodRefactoring(MethodPattern selectedPattern) {
-		RefactoringProvider provider = new RenameMethodProvider(getWSFileProvider(), selectedPattern);
+		RefactoringProvider provider = new RenameMethodProvider(getWSFileProvider(), selectedPattern, unit);
 		RenameMethodInfo info = new RenameMethodInfo(provider);
 		return new AmbiguousRenameRefactoring(info, GroovyRefactoringMessages.RenameMethodRefactoring);
 	}
 
 	protected IGroovyFileProvider getWSFileProvider() {
-        // FIXADE RC1 create a CompilationUnitFileProvider
-        return new WorkspaceFileProvider(new WorkspaceDocumentProvider(docProvider.getFile()));
+        return new CompilationUnitFileProvider(new GroovyCompilationUnitDocumentProvider(docProvider.getUnit()));
 	}
 	
 	private ASTNode getLocalMethodASTNode(

@@ -19,10 +19,10 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.CompilationUnitFileProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.GroovyCompilationUnitDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceFileProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.helper.Checks;
 import org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.helper.JavaModelSearch;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameClass.RenameClassProvider;
@@ -33,7 +33,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.rename.renameMethod.RenameMe
 import org.codehaus.groovy.eclipse.refactoring.core.utils.SourceCodePoint;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTNodeInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.NodeNotFoundException;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.RenameSelectionInfoPredicate;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.FieldPattern;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.MethodPattern;
@@ -303,8 +302,7 @@ public class CandidateCollector {
 	}
 	
 	protected IGroovyFileProvider getWSFileProvider() {
-	    // FIXADE RC1 create a CompilationUnitFileProvider
-		return new WorkspaceFileProvider(new WorkspaceDocumentProvider(docProvider.getFile()));
+		return new CompilationUnitFileProvider(new GroovyCompilationUnitDocumentProvider(docProvider.getUnit()));
 	}
 	
 }
