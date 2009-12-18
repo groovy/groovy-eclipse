@@ -108,8 +108,10 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         		" y = new First()} }"); // yes
     }
     
+    public void testSearchForTypesArray1() throws Exception {
+        doTestForTwoInScript("First[] f = { First[] h -> h }");
+    }
     
-    // also need to test interfaces
     private void doTestForTwoInScript(String secondContents) throws JavaModelException {
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, true, 3);
     }

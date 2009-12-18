@@ -163,7 +163,7 @@ public class VariableScope {
 	}
 
 	public void addVariable(String name, ClassNode type, ClassNode declaringType) {
-		nameVariableMap.put(name, new VariableInfo(type, declaringType));
+		nameVariableMap.put(name, new VariableInfo(type, declaringType != null ? declaringType : OBJECT_CLASS_NODE));
 	}
 
 	public void addVariable(Variable var) {

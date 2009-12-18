@@ -72,8 +72,17 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 				noArray = node;
 			}
 
-			if (result.type != null) {
-				String qualifiedName = removeArray(result.type).getName();
+			ClassNode type = result.type;
+			if (node instanceof ClassExpression && type == VariableScope.CLASS_CLASS_NODE) {
+				// special case...there is a Foo.class expression.
+				// the difference between Foo.class and Foo does not appear in the AST.
+				// The type of the expression is considered to be Class, but we still need to
+				// look for a reference for Foo
+				type = ((ClassExpression) node).getType();
+			}
+
+			if (type != null) {
+				String qualifiedName = removeArray(type).getName();
 				if (qualifiedNameMatches(qualifiedName) && noArray.getEnd() > 0) {
 					int start;
 					int end;
