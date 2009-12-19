@@ -514,7 +514,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(compilationResult, classNode);
 
 			typeDeclaration.annotations = transformAnnotations(classNode.getAnnotations());
-			typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
+			// FIXASC duplicates code further down, tidy this up
+			if (classNode instanceof InnerClassNode) {
+				InnerClassNode innerClassNode = (InnerClassNode) classNode;
+				ClassNode outerClass = innerClassNode.getOuterClass();
+				String outername = outerClass.getNameWithoutPackage();
+				String newInner = innerClassNode.getNameWithoutPackage().substring(outername.length() + 1);
+				typeDeclaration.name = newInner.toCharArray();
+			} else {
+				typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
+			}
 
 			// classNode.getInnerClasses();
 			// classNode.
@@ -570,6 +579,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				InnerClassNode innerClassNode = (InnerClassNode) classNode;
 				ClassNode outerClass = innerClassNode.getOuterClass();
 				TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(outerClass);
+				String outername = outerClass.getNameWithoutPackage();
+				String newInner = innerClassNode.getNameWithoutPackage().substring(outername.length() + 1);
+				typeDeclaration.name = newInner.toCharArray();
 				if (outerTypeDeclaration.memberTypes == null) {
 					outerTypeDeclaration.memberTypes = new TypeDeclaration[1];
 					outerTypeDeclaration.memberTypes[0] = typeDeclaration;
@@ -634,6 +646,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
 		List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
 
+		char[] ctorName = null;
+		if (classNode instanceof InnerClassNode) {
+			InnerClassNode innerClassNode = (InnerClassNode) classNode;
+			ClassNode outerClass = innerClassNode.getOuterClass();
+			String outername = outerClass.getNameWithoutPackage();
+			String newInner = innerClassNode.getNameWithoutPackage().substring(outername.length() + 1);
+			ctorName = newInner.toCharArray();
+		} else {
+			ctorName = classNode.getNameWithoutPackage().toCharArray();
+		}
+
 		// Do we need a default constructor?
 		boolean needsDefaultCtor = constructorNodes.size() == 0 && !classNode.isInterface();
 
@@ -645,7 +668,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			} else {
 				constructor.modifiers = ClassFileConstants.AccPublic;
 			}
-			constructor.selector = classNode.getNameWithoutPackage().toCharArray();
+			constructor.selector = ctorName;
 			accumulatedMethodDeclarations.add(constructor);
 		}
 
@@ -658,7 +681,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// FIXASC should we just use the constructor node modifiers or does groovy make all constructors public apart from
 			// those on enums?
 			constructorDeclaration.modifiers = isEnum ? ClassFileConstants.AccPrivate : ClassFileConstants.AccPublic;
-			constructorDeclaration.selector = classNode.getNameWithoutPackage().toCharArray();
+			constructorDeclaration.selector = ctorName;
 			constructorDeclaration.arguments = createArguments(constructorNode.getParameters(), false);
 			if (constructorNode.hasDefaultValue()) {
 				createConstructorVariants(constructorNode, constructorDeclaration, accumulatedMethodDeclarations,
@@ -1200,23 +1223,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				SourceTypeBinding foundBinding = null;
 				// FIXASC (optimize) poor way to discover the binding, improve this - we should already know the binding
 				if (types != null && types.length != 0) {
-					for (TypeDeclaration typeDecl : types) {
-						// Going to say that a null binding is because of some other error that prevented it being built
-						SourceTypeBinding sourceTypeBinding = typeDecl.binding;
-						if (sourceTypeBinding == null) {
-							Util.log(new RuntimeException(), "Broken binding (hope code had errors...) for declaration: '"
-									+ new String(typeDecl.name) + "'");
-						} else {
-							String bindingName = CharOperation.toString(sourceTypeBinding.compoundName);
-							// FIXASC it appears 'scripts' have a classname and no
-							// package (is that right?) - revisit the second part of
-							// this if clause. 'configtest' is an example script
-							// from grails that does this
-							if (bindingName.equals(relatedClassName) || bindingName.endsWith(relatedClassName)) {
-								foundBinding = typeDecl.binding;
-							}
-						}
-					}
+					foundBinding = findBinding(types, relatedClassName);
+
 				}
 				// null foundBinding here will manifest as NPE shortly and means
 				// we are looking for a class file unrelated to the current
@@ -1237,6 +1245,33 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, foundBinding, path));
 			}
 		}
+	}
+
+	private SourceTypeBinding findBinding(TypeDeclaration[] types, String relatedClassName) {
+		for (TypeDeclaration typeDecl : types) {
+			// Going to say that a null binding is because of some other error that prevented it being built
+			SourceTypeBinding sourceTypeBinding = typeDecl.binding;
+			if (sourceTypeBinding == null) {
+				Util.log(new RuntimeException(), "Broken binding (hope code had errors...) for declaration: '"
+						+ new String(typeDecl.name) + "'");
+			} else {
+				String bindingName = CharOperation.toString(sourceTypeBinding.compoundName);
+				// FIXASC it appears 'scripts' have a classname and no
+				// package (is that right?) - revisit the second part of
+				// this if clause. 'configtest' is an example script
+				// from grails that does this
+				if (bindingName.equals(relatedClassName) || bindingName.endsWith(relatedClassName)) {
+					return typeDecl.binding;
+				}
+			}
+			if (typeDecl.memberTypes != null) {
+				SourceTypeBinding b = findBinding(typeDecl.memberTypes, relatedClassName);
+				if (b != null) {
+					return b;
+				}
+			}
+		}
+		return null;
 	}
 
 	// ---

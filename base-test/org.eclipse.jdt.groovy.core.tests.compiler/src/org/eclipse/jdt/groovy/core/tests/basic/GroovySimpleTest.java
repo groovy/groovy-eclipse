@@ -458,8 +458,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			checkGCUDeclaration("X.groovy", 		
 					"package p;\n" + 
 					"public class X {\n" +
-					"  public class X$Inner {\n" +
-					"    public X$Inner() {\n"+
+					"  public class Inner {\n" +
+					"    public Inner() {\n"+
 					"    }\n"+
 					"  }\n"+
 					"  public X() {\n" + 
