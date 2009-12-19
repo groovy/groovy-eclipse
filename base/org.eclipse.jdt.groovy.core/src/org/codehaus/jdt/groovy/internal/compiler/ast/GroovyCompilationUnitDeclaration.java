@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
@@ -503,6 +504,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private void createTypeDeclarations(ModuleNode moduleNode) {
 		List<ClassNode> classNodes = moduleNode.getClasses();
 		List<TypeDeclaration> typeDeclarations = new ArrayList<TypeDeclaration>();
+		Map<ClassNode, TypeDeclaration> fromClassNodeToDecl = new HashMap<ClassNode, TypeDeclaration>();
+
 		for (ClassNode classNode : classNodes) {
 			if (!classNode.isPrimaryClassNode()) {
 				continue;
@@ -513,6 +516,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			typeDeclaration.annotations = transformAnnotations(classNode.getAnnotations());
 			typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
 
+			// classNode.getInnerClasses();
+			// classNode.
 			boolean isInterface = classNode.isInterface();
 			int mods = classNode.getModifiers();
 			if ((mods & Opcodes.ACC_ENUM) != 0) {
@@ -561,7 +566,22 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, compilationResult);
 			typeDeclaration.fields = createFieldDeclarations(classNode);
 			typeDeclaration.properties = classNode.getProperties();
-			typeDeclarations.add(typeDeclaration);
+			if (classNode instanceof InnerClassNode) {
+				InnerClassNode innerClassNode = (InnerClassNode) classNode;
+				ClassNode outerClass = innerClassNode.getOuterClass();
+				TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(outerClass);
+				if (outerTypeDeclaration.memberTypes == null) {
+					outerTypeDeclaration.memberTypes = new TypeDeclaration[1];
+					outerTypeDeclaration.memberTypes[0] = typeDeclaration;
+				} else {
+					TypeDeclaration[] newArray = new TypeDeclaration[outerTypeDeclaration.memberTypes.length];
+					System.arraycopy(outerTypeDeclaration.memberTypes, 0, newArray, 0, outerTypeDeclaration.memberTypes.length);
+					newArray[outerTypeDeclaration.memberTypes.length] = typeDeclaration;
+				}
+			} else {
+				typeDeclarations.add(typeDeclaration);
+			}
+			fromClassNodeToDecl.put(classNode, typeDeclaration);
 		}
 		types = typeDeclarations.toArray(new TypeDeclaration[typeDeclarations.size()]);
 	}

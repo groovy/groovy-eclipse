@@ -26,6 +26,7 @@ import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser.GrapeAwareGroovyClassLoader;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
@@ -548,6 +549,12 @@ public class JDTResolver extends ResolveVisitor {
 	 */
 	public void record(GroovyTypeDeclaration gtDeclaration) {
 		scopes.put(gtDeclaration.getClassNode(), gtDeclaration);
+		if (gtDeclaration.memberTypes != null) {
+			TypeDeclaration[] members = gtDeclaration.memberTypes;
+			for (int m = 0; m < members.length; m++) {
+				record((GroovyTypeDeclaration) members[m]);
+			}
+		}
 	}
 
 	private void log(String string, ClassNode type, boolean foundit) {

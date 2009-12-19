@@ -442,6 +442,33 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"}\n"
 		);
 	}
+	
+	public void testInnerTypes_1() {
+		this.runConformTest(new String[] {
+				"p/X.groovy",
+				"package p;\n" + 
+				"public class X {\n" + 
+				" class Inner {}\n"+
+				"  static main(args) {\n"+
+				"    print \"success\"\n" + 
+				"  }\n"+
+				"}\n",
+			},"success");	
+		
+			checkGCUDeclaration("X.groovy", 		
+					"package p;\n" + 
+					"public class X {\n" +
+					"  public class X$Inner {\n" +
+					"    public X$Inner() {\n"+
+					"    }\n"+
+					"  }\n"+
+					"  public X() {\n" + 
+					"  }\n" + 
+					"  public static void main(public java.lang.String... args) {\n" + 
+					"  }\n" + 
+					"}\n"
+			);
+	}
 
 	
 	public void testBrokenPackage() {
@@ -7322,12 +7349,14 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	static class DebugRequestor implements IGroovyDebugRequestor {
 
 		Map declarations;
+		Map types;
 		
 		public DebugRequestor() {
 			declarations = new HashMap();
 		}
 
 		public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
+			System.out.println(gcuDeclaration);
 			String filename = new String(gcuDeclaration.getFileName());
 			filename=filename.substring(filename.lastIndexOf(File.separator)+1); // Filename now being just X.groovy or Foo.java
 			declarations.put(filename,gcuDeclaration);
