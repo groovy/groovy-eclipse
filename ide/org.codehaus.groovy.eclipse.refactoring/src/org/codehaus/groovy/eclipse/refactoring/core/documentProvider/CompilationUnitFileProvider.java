@@ -35,18 +35,6 @@ public class CompilationUnitFileProvider implements
         this.documentList = new LinkedList<IGroovyDocumentProvider>();
     }
     
-    public CompilationUnitFileProvider(IJavaProject jProject,
-            GroovyCompilationUnitDocumentProvider selectionDocument) {
-        this.jProject = jProject;
-        this.documentList = new LinkedList<IGroovyDocumentProvider>();
-        this.selectionDocument = selectionDocument;
-    }
-
-    
-    public CompilationUnitFileProvider(IJavaProject jProject) {
-        this.jProject = jProject;
-    }
-    
     /* (non-Javadoc)
      * @see org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider#getAllSourceFiles()
      */

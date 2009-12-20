@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -117,7 +118,14 @@ public class GroovyProjectFacade {
      
      public IType groovyClassToJavaType(ClassNode node) {
          try {
-             String name = node.getName().replace('$','.');
+             String name;
+             // don't replace $ for groovy inner classes since
+             // the $ exists in the source name
+             if (node.redirect() instanceof InnerClassNode) {
+                 name = node.getName();
+             } else {
+                 name = node.getName().replace('$','.');
+             }
              return project.findType(name, new NullProgressMonitor());
         } catch (JavaModelException e) {
             GroovyCore.logException("Error converting from Groovy Element to Java Element: " + node.getName(), e);

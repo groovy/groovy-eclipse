@@ -161,5 +161,46 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
     
+    public void testInnerClass1() throws Exception {
+        String contents = "class Outer { class Inner { } \nInner x }\nnew Outer().x";
+        int start = contents.lastIndexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "Outer$Inner");
+    }
+    
+    public void testInnerClass2() throws Exception {
+        String contents = "class Outer { class Inner { class InnerInner{ } }\n Outer.Inner.InnerInner x }\nnew Outer().x";
+        int start = contents.lastIndexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "Outer$Inner$InnerInner");
+    }
+    
+    public void testInnerClass3() throws Exception {
+        String contents = "class Outer { class Inner { def z() { \nnew Outer().x \n } } \nInner x }";
+        int start = contents.indexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "Outer$Inner");
+    }
+
+    public void testInnerClass4() throws Exception {
+        String contents = "class Outer { class Inner { class InnerInner { def z() { \nnew Outer().x \n } } } \nInner x }";
+        int start = contents.indexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "Outer$Inner");
+    }
+    
+    public void testInnerClass5() throws Exception {
+        String contents = "class Outer { class Inner extends Outer { } }";
+        int start = contents.lastIndexOf("Outer");
+        int end = start + "Outer".length();
+        assertType(contents, start, end, "Outer");
+    }
+    
+    public void testInnerClass6() throws Exception {
+        String contents = "class Outer extends RuntimeException { class Inner { def foo() throws Outer { } } }";
+        int start = contents.lastIndexOf("Outer");
+        int end = start + "Outer".length();
+        assertType(contents, start, end, "Outer");
+    }
     
 }

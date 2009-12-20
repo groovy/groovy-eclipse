@@ -16,15 +16,10 @@
 
 package org.eclipse.jdt.groovy.search;
 
-import groovy.lang.GString;
-
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -43,14 +38,14 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
  */
 public class VariableScope {
 
+	public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
+	public static final ClassNode LIST_CLASS_NODE = ClassHelper.LIST_TYPE;
+	public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.PATTERN_TYPE;
+	public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
+	public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
+	public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
 	public static final ClassNode DGM_CLASS_NODE = ClassHelper.makeCached(DefaultGroovyMethods.class);
-	public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.makeCached(Object.class);
-	public static final ClassNode LIST_CLASS_NODE = ClassHelper.makeCached(List.class);
 	public static final ClassNode VOID_CLASS_NODE = ClassHelper.makeCached(void.class);
-	public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.makeCached(GString.class);
-	public static final ClassNode STRING_CLASS_NODE = ClassHelper.makeCached(String.class);
-	public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.makeCached(Pattern.class);
-	public static final ClassNode MAP_CLASS_NODE = ClassHelper.makeCached(Map.class);
 	public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.makeCached(Number.class);
 
 	// don't cache because we have to add properties
@@ -60,14 +55,14 @@ public class VariableScope {
 	}
 
 	// primitive wrapper classes
-	public static final ClassNode INTEGER_CLASS_NODE = ClassHelper.makeCached(Integer.class);
-	public static final ClassNode LONG_CLASS_NODE = ClassHelper.makeCached(Long.class);
-	public static final ClassNode SHORT_CLASS_NODE = ClassHelper.makeCached(Short.class);
-	public static final ClassNode FLOAT_CLASS_NODE = ClassHelper.makeCached(Float.class);
-	public static final ClassNode DOUBLE_CLASS_NODE = ClassHelper.makeCached(Double.class);
-	public static final ClassNode BYTE_CLASS_NODE = ClassHelper.makeCached(Byte.class);
-	public static final ClassNode BOOLEAN_CLASS_NODE = ClassHelper.makeCached(Boolean.class);
-	public static final ClassNode CHARACTER_CLASS_NODE = ClassHelper.makeCached(Character.class);
+	public static final ClassNode INTEGER_CLASS_NODE = ClassHelper.Integer_TYPE;
+	public static final ClassNode LONG_CLASS_NODE = ClassHelper.Long_TYPE;
+	public static final ClassNode SHORT_CLASS_NODE = ClassHelper.Short_TYPE;
+	public static final ClassNode FLOAT_CLASS_NODE = ClassHelper.Float_TYPE;
+	public static final ClassNode DOUBLE_CLASS_NODE = ClassHelper.Double_TYPE;
+	public static final ClassNode BYTE_CLASS_NODE = ClassHelper.Byte_TYPE;
+	public static final ClassNode BOOLEAN_CLASS_NODE = ClassHelper.Boolean_TYPE;
+	public static final ClassNode CHARACTER_CLASS_NODE = ClassHelper.Character_TYPE;
 
 	public static class VariableInfo {
 		public final ClassNode type;

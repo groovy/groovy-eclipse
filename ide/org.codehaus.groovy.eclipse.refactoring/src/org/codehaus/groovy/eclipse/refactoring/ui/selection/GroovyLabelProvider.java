@@ -22,11 +22,11 @@ public class GroovyLabelProvider extends LabelProvider {
 		if (element instanceof FieldNode) {
 			FieldNode field = (FieldNode)element;
 			ClassNode declaring = field.getDeclaringClass();
-			return declaring.getNameWithoutPackage() + "." + super.getText(element);
+			return declaring.getNameWithoutPackage() + "." + field.getName();
 		} else if (element instanceof MethodNode) {
 			MethodNode method = (MethodNode)element;
 			ClassNode declaring = method.getDeclaringClass();
-			return declaring.getNameWithoutPackage() + "." + super.getText(element);
+			return declaring.getNameWithoutPackage() + "." + method.getName() + "(..)";
 		} else if (element instanceof ClassNode) {
 			ClassNode node = (ClassNode)element;
 			return node.getName();

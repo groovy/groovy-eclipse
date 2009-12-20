@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,7 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jface.text.IRegion;
 
 public class ASTNodeFinder extends ClassCodeVisitorSupport {
@@ -90,27 +92,26 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     @Override
     protected void visitConstructorOrMethod(MethodNode node,
             boolean isConstructor) {
-        
-        ClassNode expression = node.getReturnType();
-        if (expression != null) {
-            check(expression);
-        }
-        if (node.getExceptions() != null) {
-            for (ClassNode e : node.getExceptions()) {
-                check(e);
+        // don't do this stuff for implicit methods
+        if (node.getEnd() > 0) {
+            ClassNode expression = node.getReturnType();
+            if (expression != null) {
+                check(expression);
             }
+            if (node.getExceptions() != null) {
+                for (ClassNode e : node.getExceptions()) {
+                    check(e);
+                }
+            }
+            checkParameters(node.getParameters());
         }
-        checkParameters(node.getParameters());
+        
         super.visitConstructorOrMethod(node, isConstructor);
         if (!isRunMethod(node)) {
             check(node);
         }
     }
 
-    /**
-     * @param node
-     * @return
-     */
     private boolean isRunMethod(MethodNode node) {
         if (node.getName().equals("run") && node.getParameters().length == 0) {
             ClassNode declaring = node.getDeclaringClass();
@@ -144,6 +145,10 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     
     @Override
     public void visitField(FieldNode node) {
+        if (node.getName().contains("$")) {
+            // synthetic field, probably 'this$0' for an inner class reference to the outer class
+            return;
+        }
         check(node.getType());
         super.visitField(node);
         check(node);
@@ -228,6 +233,24 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                 element.visit(this);
             }
         }
+        
+        // visit inner classes
+        // getInnerClasses() does not exist in the 1.6 stream, so must access reflectively
+        Iterator<ClassNode> innerClasses;
+        try {
+            innerClasses = (Iterator<ClassNode>) 
+                    ReflectionUtils.throwableExecutePrivateMethod(ClassNode.class, "getInnerClasses", new Class<?>[0], node, new Object[0]);
+        } catch (Exception e) {
+            // can ignore.
+            innerClasses = null;
+        }
+        if (innerClasses != null) {
+            while (innerClasses.hasNext()) {
+                ClassNode inner = innerClasses.next();
+                this.visitClass(inner);
+            }
+        }
+        
         
         // visit <clinit> body because this is where static field initializers are placed
         MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);

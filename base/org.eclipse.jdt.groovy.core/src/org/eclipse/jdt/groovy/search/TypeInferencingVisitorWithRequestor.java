@@ -194,7 +194,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		rethrowVisitComplete = true;
 		enclosingElement = type;
 		try {
-			ClassNode node = findClassWithName(type.getElementName());
+			ClassNode node = findClassWithName(createName(type));
 			scopes.push(new VariableScope(scopes.peek(), node));
 			enclosingDeclarationNode = node;
 			visitClassInternal(node);
@@ -209,6 +209,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 						case IJavaElement.FIELD:
 							visitJDT((IField) child, requestor);
+							break;
+
+						case IJavaElement.TYPE:
+							visitJDT((IType) child, requestor);
 							break;
 
 						default:
@@ -229,6 +233,20 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			rethrowVisitComplete = oldRethrow;
 			scopes.pop();
 		}
+	}
+
+	/**
+	 * Create type name taking into account inner types
+	 */
+	private String createName(IType type) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(type.getElementName());
+		while (type.getParent().getElementType() == IJavaElement.TYPE) {
+			sb.insert(0, '$');
+			type = (IType) type.getParent();
+			sb.insert(0, type.getElementName());
+		}
+		return sb.toString();
 	}
 
 	public void visitJDT(IField field, ITypeRequestor requestor) {
@@ -1093,7 +1111,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	private MethodNode findMethodNode(IMethod method) {
-		ClassNode clazz = findClassWithName(method.getDeclaringType().getElementName());
+		ClassNode clazz = findClassWithName(createName(method.getDeclaringType()));
 		try {
 			if (method.isConstructor()) {
 				List<ConstructorNode> constructors = clazz.getDeclaredConstructors();
@@ -1101,6 +1119,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					String[] jdtParamTypes = method.getParameterTypes() == null ? new String[0] : method.getParameterTypes();
 					Parameter[] groovyParams = constructorNode.getParameters() == null ? new Parameter[0] : constructorNode
 							.getParameters();
+					// ignore the implicit constructor parameter of constructors for inner types
+					if (groovyParams != null && groovyParams.length > 0 && groovyParams[0].getName().startsWith("$")) {
+						Parameter[] newGroovyParams = new Parameter[groovyParams.length - 1];
+						System.arraycopy(groovyParams, 1, newGroovyParams, 0, newGroovyParams.length);
+						groovyParams = newGroovyParams;
+					}
 					if (groovyParams.length != jdtParamTypes.length) {
 						continue;
 					}
@@ -1145,7 +1169,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	private FieldNode findFieldNode(IField field) {
-		ClassNode clazz = findClassWithName(field.getDeclaringType().getElementName());
+		ClassNode clazz = findClassWithName(createName(field.getDeclaringType()));
 		return clazz.getField(field.getElementName());
 	}
 

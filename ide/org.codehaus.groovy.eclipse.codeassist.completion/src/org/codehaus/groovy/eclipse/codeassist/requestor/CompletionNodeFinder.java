@@ -27,6 +27,7 @@ import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLoca
 import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.STATEMENT;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Stack;
 
@@ -181,6 +182,24 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             createContext(null, node, EXTENDS);
         }
         
+        // visit inner classes
+        // getInnerClasses() does not exist in the 1.6 stream, so must access reflectively
+        Iterator<ClassNode> innerClasses;
+        try {
+            innerClasses = (Iterator<ClassNode>) 
+                    ReflectionUtils.throwableExecutePrivateMethod(ClassNode.class, "getInnerClasses", new Class<?>[0], node, new Object[0]);
+        } catch (Exception e) {
+            // can ignore.
+            innerClasses = null;
+        }
+        if (innerClasses != null) {
+            while (innerClasses.hasNext()) {
+                ClassNode inner = innerClasses.next();
+                this.visitClass(inner);
+            }
+        }
+
+        
         
         if (node.getInterfaces() != null) {
             for (ClassNode interf : node.getInterfaces()) {
@@ -206,13 +225,40 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             element.visit(this);
         }
         
+        // do the run method last since it can wrap around other methods
+        if (node.isScript()) {
+            MethodNode run = node.getMethod("run", new Parameter[0]);
+            if (run != null) {
+                internalVisitConstructorOrMethod(run);
+            }
+        }
+        
         // if exception has not been thrown, we are inside this class body
         createContext(null, node, node.isScript() ? SCRIPT : CLASS_BODY);
     }
     
     @Override
     protected void visitConstructorOrMethod(MethodNode node,
-            boolean isConstructor) {
+            boolean isConstructor) {       
+        // run method must be visited last
+        if (!isRunMethod(node)) {
+            internalVisitConstructorOrMethod(node);
+        }
+    }
+    
+    private boolean isRunMethod(MethodNode node) {
+        if (node.getName().equals("run") && node.getParameters().length == 0) {
+            ClassNode declaring = node.getDeclaringClass();
+            return (node.getStart() == declaring.getStart() && node.getEnd() == declaring.getEnd());
+        }
+        return false;
+    }
+
+
+    /**
+     * @param node
+     */
+    private void internalVisitConstructorOrMethod(MethodNode node) {
         if (!doTest(node)) {
             return;
         }
@@ -240,9 +286,9 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             createContext(null, node, PARAMETER);
         }
         
-        // if we get here, then it is because the block statement
+        // if we get here, then it is probably because the block statement
         // has been swapped with a new one that has not had
-        // its locaitons set properly
+        // its locations set properly
         createContext(node.getCode(), node.getCode(), expressionScriptOrStatement(node));
     }
 
@@ -276,9 +322,10 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
     
     // only visit the statements that may contain what we are looking for
+    // or visit ones with unknown source locations.
     @Override
     protected void visitStatement(Statement statement) {
-        if (doTest(statement)) {
+        if (doTest(statement) || (statement.getStart() <= 0 && statement.getEnd() <= 0)) {
             super.visitStatement(statement);
         }
     }

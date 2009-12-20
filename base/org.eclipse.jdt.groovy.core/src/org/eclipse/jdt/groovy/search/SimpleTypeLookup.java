@@ -229,6 +229,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return new TypeLookupResult(VariableScope.MAP_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
+			// FIXADE RC1 hmmmm...because of operator overloading, we should be looking at the type
+			// of the inner expression, but Number will be safe for most of the time.
 			return new TypeLookupResult(VariableScope.NUMBER_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof BitwiseNegationExpression) {
