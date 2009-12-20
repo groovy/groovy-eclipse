@@ -44,9 +44,9 @@ public class VariableScope {
 	public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
 	public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
 	public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
-	public static final ClassNode DGM_CLASS_NODE = ClassHelper.makeCached(DefaultGroovyMethods.class);
-	public static final ClassNode VOID_CLASS_NODE = ClassHelper.makeCached(void.class);
-	public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.makeCached(Number.class);
+	public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
+	public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
+	public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.make(Number.class);
 
 	// don't cache because we have to add properties
 	public static final ClassNode CLASS_CLASS_NODE = ClassHelper.makeWithoutCaching(Class.class);

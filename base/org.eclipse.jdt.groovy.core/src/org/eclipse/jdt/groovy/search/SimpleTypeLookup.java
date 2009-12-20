@@ -367,9 +367,11 @@ public class SimpleTypeLookup implements ITypeLookup {
 			type = ((MethodNode) declaration).getDeclaringClass();
 		} else if (declaration instanceof PropertyNode) {
 			type = ((PropertyNode) declaration).getDeclaringClass();
-		} else if (declaration instanceof Expression) {
-			// probably object
-			type = ((Expression) declaration).getDeclaringClass();
+
+			// this code is broken under 1.6.x, and will likely return Object anyway, so ignore
+			// } else if (declaration instanceof Expression) {
+			// // probably object
+			// type = ((Expression) declaration).getDeclaringClass();
 		} else {
 			type = VariableScope.OBJECT_CLASS_NODE;
 		}
