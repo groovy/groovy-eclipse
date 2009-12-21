@@ -14,6 +14,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -184,33 +185,34 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
     protected ICompletionProposal[] createProposalsAtOffset(String contents, String javaContents, int completionOffset)
             throws Exception {
-                IPath projectPath = createGenericProject();
-                IPath pack = projectPath.append("src");
-                if (javaContents != null) {
-                    IPath pathToJavaClass = env.addClass(pack, "JavaClass", "public class JavaClass { }\n" + javaContents);
-                    ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-                    unit.becomeWorkingCopy(null);
-                }
-                
-                IPath pathToGroovyClass = env.addGroovyClass(pack, "TransformerTest2", contents);
-                fullBuild();
-                ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
-                unit.becomeWorkingCopy(null);
-                
-                // necessary???
-                // wait for indexes to be built
-                int timeout = 0;
-                int timeoutThreshold = 100000;
-                while (JavaModelManager.getIndexManager().awaitingJobsCount() > 0 && timeout < timeoutThreshold) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) { }
-                    timeout++;
-                }
-                if (timeout == timeoutThreshold) {
-                    fail("Failure to finish indexing project.  Timed out...");
-                }
-                return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
-                
-            }
+        IPath projectPath = createGenericProject();
+        IPath pack = projectPath.append("src");
+        if (javaContents != null) {
+            IPath pathToJavaClass = env.addClass(pack, "JavaClass", "public class JavaClass { }\n" + javaContents);
+            ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
+            unit.becomeWorkingCopy(null);
+        }
+        
+        IPath pathToGroovyClass = env.addGroovyClass(pack, "TransformerTest2", contents);
+        fullBuild();
+        ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
+        unit.becomeWorkingCopy(null);
+        
+        // necessary???
+        // wait for indexes to be built
+        int timeout = 0;
+        int timeoutThreshold = 100000;
+        while (JavaModelManager.getIndexManager().awaitingJobsCount() > 0 && timeout < timeoutThreshold) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) { }
+            timeout++;
+        }
+        if (timeout == timeoutThreshold) {
+            fail("Failure to finish indexing project.  Timed out...");
+        }
+        SynchronizationUtils.waitForIndexingToComplete();
+        return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
+        
+    }
 }
