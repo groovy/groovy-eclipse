@@ -52,13 +52,13 @@ public class InnerTypeCompletionTests extends CompletionTestCase {
         proposalExists(proposals, HTML_PROPOSAL, 1);
     }
     public void testCompletionOFInnerClass1() throws Exception {
-        String contents = "Inner \n class Outer { class Inner { } } ";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, INNER));
+        String contents = "class Outer { class Inner { Inner f } } ";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, INNER));
         proposalExists(proposals, INNER, 1);
     }
     public void testCompletionOFInnerClass2() throws Exception {
-        String contents = "class Outer { Inner \n class Inner { } } ";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, INNER));
+        String contents = "class Outer { class Inner { Inner f } } ";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, INNER));
         proposalExists(proposals, INNER, 1);
     }
     public void testCompletionOFInnerMember1() throws Exception {
