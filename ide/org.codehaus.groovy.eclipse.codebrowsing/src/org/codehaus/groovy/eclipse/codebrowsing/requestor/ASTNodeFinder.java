@@ -47,6 +47,7 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
+import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jface.text.IRegion;
 
@@ -247,10 +248,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (innerClasses != null) {
             while (innerClasses.hasNext()) {
                 ClassNode inner = innerClasses.next();
-                // FIXADE RC1 do not look into closure classes
-                // the real name of the closure class is OuterClassName$_run_closure#
-                // where '#' is a number.  Perhaps would be better to use a regex for this
-                if (!inner.getName().contains("$_run_closure")) {
+                // do not look into closure classes.  A closure class
+                // looks like ParentClass$_name_closure#, where 
+                // ParentClass is the name of the containing class.
+                // name is a name for the closure, and # is a number
+                if (!inner.isSynthetic() || inner instanceof GeneratedClosure) {
                     this.visitClass(inner);
                 }
             }

@@ -59,6 +59,7 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
+import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
@@ -195,7 +196,9 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         if (innerClasses != null) {
             while (innerClasses.hasNext()) {
                 ClassNode inner = innerClasses.next();
-                this.visitClass(inner);
+                if (!inner.isSynthetic() || inner instanceof GeneratedClosure) {
+                    this.visitClass(inner);
+                }
             }
         }
 

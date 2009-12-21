@@ -360,12 +360,12 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 	}
 	
     private IJavaElement codeResolve(ICompilationUnit input) throws JavaModelException {
-        if (input == null || selection == null) {
+        if (input == null || selectedASTNode == null) {
             return null;
         }
         JavaModelUtil.reconcile((ICompilationUnit) input);
         IJavaElement[] elements = input.codeSelect(
-                    selection.getOffset() + selection.getLength(), 0);
+                selectedASTNode.getStart(), 0);
         if (elements != null && elements.length > 0) {
             return elements[0];
         } else {
