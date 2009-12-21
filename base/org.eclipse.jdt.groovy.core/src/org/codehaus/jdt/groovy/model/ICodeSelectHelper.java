@@ -12,20 +12,15 @@
 package org.codehaus.jdt.groovy.model;
 
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jface.text.IRegion;
 
 /**
  * @author Andrew Eisenberg
  * @created May 26, 2009
  * 
  *          Performs code select in a Groovy-aware way.
- * 
- *          TODO Determine if this should be converted into an extension point
- *          Right now, it is very fragile. This interface is implemented in
- *          another plugin
  */
 public interface ICodeSelectHelper {
 
-    public IJavaElement[] select(GroovyCompilationUnit unit, IRegion r);
+	public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length);
 
 }

@@ -247,7 +247,12 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (innerClasses != null) {
             while (innerClasses.hasNext()) {
                 ClassNode inner = innerClasses.next();
-                this.visitClass(inner);
+                // FIXADE RC1 do not look into closure classes
+                // the real name of the closure class is OuterClassName$_run_closure#
+                // where '#' is a number.  Perhaps would be better to use a regex for this
+                if (!inner.getName().contains("$_run_closure")) {
+                    this.visitClass(inner);
+                }
             }
         }
         

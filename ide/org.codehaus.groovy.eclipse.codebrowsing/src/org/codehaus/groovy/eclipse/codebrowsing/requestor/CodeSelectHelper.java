@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Region;
 
 /**
  * @author Andrew Eisenberg
@@ -33,10 +34,10 @@ import org.eclipse.jface.text.IRegion;
  */
 public class CodeSelectHelper implements ICodeSelectHelper {
     
-    public IJavaElement[] select(GroovyCompilationUnit unit, IRegion r) {
+    public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
         ModuleNode module = unit.getModuleNode();
         if (module != null) {
-            ASTNode nodeToLookFor = findASTNodeAt(module, r);
+            ASTNode nodeToLookFor = findASTNodeAt(module, new Region(start, length));
             if (nodeToLookFor != null) {
                 // shortcut.  Check to see if we are looking for this type itself
                 if (isTypeDeclaration(module, nodeToLookFor)) {

@@ -70,7 +70,6 @@ import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.util.Util;
-import org.eclipse.jface.text.Region;
 
 /**
  * @author Andrew Eisenberg
@@ -523,7 +522,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			WorkingCopyOwner o) throws JavaModelException {
 
 		if (selectHelper != null && isOnBuildPath()) {
-			return selectHelper.select(this, new Region(offset, length));
+			return selectHelper.select(this, offset, length);
 		}
 		return new IJavaElement[0];
 	}

@@ -10,14 +10,6 @@
            id="groovySource"
            name="Groovy Source File (for Groovy projects)"
            priority="high"/>
-<!--
-	    <content-type
-           base-type="org.eclipse.core.runtime.text"
-           file-extensions="groovy"
-           id="groovyText"
-           name="Groovy Text File (for non-Groovy projects)"
-           priority="low"/>
-           -->
    </extension>
    
    <extension
