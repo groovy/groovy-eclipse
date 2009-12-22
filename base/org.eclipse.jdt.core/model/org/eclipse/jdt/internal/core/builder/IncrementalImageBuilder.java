@@ -592,7 +592,7 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 		    // if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName)) {
 		    // new
 			// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
-		    if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName)) ||
+		    if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName) && !LanguageSupportFactory.isInterestingSourceFile(resourceName)) ||
 		    		(isInterestingProject && LanguageSupportFactory.isSourceFile(resourceName, isInterestingProject))) {
 		    // GROOVY end				
 				IPath typePath = resource.getFullPath().removeFirstSegments(segmentCount).removeFileExtension();

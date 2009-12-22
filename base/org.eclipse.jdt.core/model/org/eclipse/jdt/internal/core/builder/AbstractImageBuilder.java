@@ -261,8 +261,9 @@ protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreExcepti
 						    // if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) {
 						    // new
 							// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
-						    if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) ||
-						    		(isInterestingProject && LanguageSupportFactory.isSourceFile(proxy.getName(), isInterestingProject))) {
+						    String resourceName = proxy.getName();
+							if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName) && !LanguageSupportFactory.isInterestingSourceFile(resourceName)) ||
+						    		(isInterestingProject && LanguageSupportFactory.isSourceFile(resourceName, isInterestingProject))) {
 	                        // GROOVY end
 								IResource resource = proxy.requestResource();
 								if (exclusionPatterns != null || inclusionPatterns != null)
