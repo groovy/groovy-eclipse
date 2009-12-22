@@ -365,7 +365,7 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
         }
         JavaModelUtil.reconcile((ICompilationUnit) input);
         IJavaElement[] elements = input.codeSelect(
-                selectedASTNode.getStart(), 0);
+                selectedASTNode.getStart(), selectedASTNode.getLength());
         if (elements != null && elements.length > 0) {
             return elements[0];
         } else {
