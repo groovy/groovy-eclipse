@@ -1103,16 +1103,32 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
         if (annotations.isEmpty()) return;
+        Map<String, AnnotationNode> tmpAnnotations = new HashMap<String, AnnotationNode>();
+        ClassNode annType;
         for (AnnotationNode an : annotations) {
             // skip built-in properties
             if (an.isBuiltIn()) continue;
-            resolveOrFail(an.getClassNode(), ",  unable to find class for annotation", an);
+            annType = an.getClassNode();
+            resolveOrFail(annType, ",  unable to find class for annotation", an);
             for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
                 Expression newValue = transform(member.getValue());
                 newValue = transformInlineConstants(newValue);
                 member.setValue(newValue);
                 checkAnnotationMemberValue(newValue);
             }
+            // FIXASC (cant do this - typeclass access not allowed )
+            /*
+            if(annType.isResolved()) {
+            	Class annTypeClass = annType.getTypeClass();
+            	Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
+            	if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME)) {
+            		AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
+            		if(anyPrevAnnNode != null) {
+            			addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
+            		}
+            	}
+            }
+*/
         }
     }
 

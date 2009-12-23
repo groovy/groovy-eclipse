@@ -25,7 +25,7 @@ import org.objectweb.asm.Opcodes;
  * Represents a method declaration
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 18459 $
+ * @version $Revision: 18462 $
  */
 public class MethodNode extends AnnotatedNode implements Opcodes {
 

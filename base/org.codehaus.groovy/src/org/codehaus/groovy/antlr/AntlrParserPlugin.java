@@ -449,11 +449,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
         AST node = packageDef.getFirstChild();
         if (isType(ANNOTATIONS, node)) {
-            if (node.getFirstChild() != null) {
-                AST child = node.getFirstChild();
-                if (isType(ANNOTATION, child))
-                    annotations.add(annotation(child));
-            }
+            processAnnotations(annotations, node);
             node = node.getNextSibling();
         }
         // FIXASC (groovychange) - cope with a parsed 'null' package (GRE439)
@@ -484,11 +480,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         AST node = importNode.getFirstChild();
         if (isType(ANNOTATIONS, node)) {
-            if (node.getFirstChild() != null) {
-                AST child = node.getFirstChild();
-                if (isType(ANNOTATION, child))
-                    annotations.add(annotation(child));
-            }
+            processAnnotations(annotations, node);
             node = node.getNextSibling();
         }
 
@@ -544,6 +536,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
+    private void processAnnotations(List<AnnotationNode> annotations, AST node) {
+        AST child = node.getFirstChild();
+        while (child != null) {
+            if (isType(ANNOTATION, child))
+                annotations.add(annotation(child));
+            child = child.getNextSibling();
+        }
+    }
+    
     protected void annotationDef(AST classDef) {
         List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
         AST node = classDef.getFirstChild();
@@ -1219,7 +1220,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         boolean access = false;
         int answer = 0;
-        Map<ClassNode, AnnotationNode> tmpAnnotations = new HashMap<ClassNode, AnnotationNode>();
 
         for (AST node = modifierNode.getFirstChild(); node != null; node = node.getNextSibling()) {
             int type = node.getType();
@@ -1230,13 +1230,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
                     // annotations
                 case ANNOTATION:
-                    AnnotationNode annNode = annotation(node);
-                    AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annNode.getClassNode(), annNode);
-                    if(anyPrevAnnNode != null) {
-                        throw new ASTRuntimeException(modifierNode, 
-                                "Cannot specify duplicate annotation on the same member : " + annNode.getClassNode().getName());
-                    }
-                    annotations.add(annNode);
+                	annotations.add(annotation(node));
                     break;
 
                     // core access scope modifiers
