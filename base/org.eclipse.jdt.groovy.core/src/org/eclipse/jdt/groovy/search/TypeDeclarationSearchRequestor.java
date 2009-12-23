@@ -84,7 +84,7 @@ public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexCon
 					if (matchFound) {
 						try {
 							requestor.acceptSearchMatch(new SearchMatch(enclosingElement, SearchMatch.A_ACCURATE, orig
-									.getNameStart(), orig.getNameEnd() - orig.getNameStart(), participant, enclosingElement
+									.getNameStart(), orig.getNameEnd() - orig.getNameStart() + 1, participant, enclosingElement
 									.getResource()));
 						} catch (CoreException e) {
 							Util.log(e, "Exception with groovy search requestor");

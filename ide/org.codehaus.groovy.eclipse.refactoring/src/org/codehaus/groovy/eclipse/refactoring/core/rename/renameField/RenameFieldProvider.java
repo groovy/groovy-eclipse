@@ -235,7 +235,7 @@ public class RenameFieldProvider extends MultiFileRefactoringProvider implements
     public GroovyChange createGroovyChange(IProgressMonitor pm) throws CoreException, OperationCanceledException {
 		GroovyChange change = new GroovyChange(GroovyRefactoringMessages.RenameFieldRefactoring);
 		for (RenameTextEditProvider textEditProvider : textEditProviders) {
-			MultiTextEdit multi = removeDublicatedTextedits(textEditProvider);
+			MultiTextEdit multi = removeDuplicatedTextedits(textEditProvider);
 			change.addEdit(textEditProvider.getDocProvider(), multi);
 		}
 		return change;

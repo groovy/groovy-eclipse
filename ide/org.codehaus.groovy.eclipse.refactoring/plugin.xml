@@ -104,7 +104,6 @@
             </with>
          </enablement>        
       </renameParticipant>
-      <!-- No need now that groovy locations are being found by Java
       <renameParticipant
             class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.ClassRenameParticipant"
             id="org.codehaus.groovy.eclipse.refactoring.ClassRenameParticipant"
@@ -118,7 +117,6 @@
             </with>
          </enablement>
       </renameParticipant>
-      -->
       <renameParticipant
             class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.MethodRenameParticipant"
             id="org.codehaus.groovy.eclipse.refactoring.MethodRenameParticipant"

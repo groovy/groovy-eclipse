@@ -30,8 +30,11 @@ public class GroovyCompilationUnitDocumentProvider implements
 
     private final GroovyCompilationUnit unit;
     
+    private IFile targetFile;
+    
     public GroovyCompilationUnitDocumentProvider(GroovyCompilationUnit unit) {
         this.unit = unit;
+        targetFile = (IFile) unit.getResource();
     }
     
     /* (non-Javadoc)
@@ -86,5 +89,19 @@ public class GroovyCompilationUnitDocumentProvider implements
     
     public GroovyCompilationUnit getUnit() {
         return unit;
+    }
+    
+    /* (non-Javadoc)
+     * @see org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider#getTargetFile()
+     */
+    public IFile getTargetFile() {
+        return targetFile;
+    }
+    
+    /**
+     * @param targetFile the targetFile to set
+     */
+    public void setTargetFile(IFile targetFile) {
+        this.targetFile = targetFile;
     }
 }

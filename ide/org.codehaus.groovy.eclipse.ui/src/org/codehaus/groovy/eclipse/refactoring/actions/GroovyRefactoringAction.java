@@ -25,14 +25,8 @@ import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.GroovyCompilationUnitDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceFileProvider;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringWizard;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
@@ -44,7 +38,6 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PlatformUI;
@@ -64,37 +57,35 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 		editor = (GroovyEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
 		ITextSelection ts = (ITextSelection) editor.getSelectionProvider().getSelection();
 		selection = new UserSelection(ts.getOffset(), ts.getLength());
-		IFile sourceFile = ((IFileEditorInput) editor.getEditorInput()).getFile();
 		docProvider = new GroovyCompilationUnitDocumentProvider(editor.getGroovyCompilationUnit());
 
-		// FIXADE RC1 is this too strict?  We should allow refactoring even if there is an error somewhere in the project...
-		WorkspaceFileProvider fileProv = new WorkspaceFileProvider(new WorkspaceDocumentProvider(sourceFile));
-		try {
-		    
-			for (IGroovyDocumentProvider dp : fileProv.getAllSourceFiles()) {
-				if (dp instanceof WorkspaceDocumentProvider) {
-					WorkspaceDocumentProvider currDocProv = (WorkspaceDocumentProvider) dp;
-					IMarker[] markers = currDocProv.getFile().findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_ONE);
-					if (markers.length > 0) {
-					    for (int i = 0; i < markers.length; i++) {
-                            if (markers[i].getAttribute(IMarker.SEVERITY, 0) >= IMarker.SEVERITY_ERROR) {
-                                displayErrorDialog(GroovyRefactoringMessages.bind(
-                                        GroovyRefactoringMessages.GroovyRefactoringAction_Syntax_Errors, 
-                                        markers[i].getResource().getFullPath().toPortableString()));
-                                return false;
-                            }
-                        }
-					}
-				}
-			}
+		// is this a problem?  Should we allow refactoring even if there is an error somewhere in the project...
+//		CompilationUnitFileProvider fileProv = new CompilationUnitFileProvider(new GroovyCompilationUnitDocumentProvider(editor.getGroovyCompilationUnit()));
+//		try {
+//			for (IGroovyDocumentProvider dp : fileProv.getAllSourceFiles()) {
+//				if (dp instanceof WorkspaceDocumentProvider) {
+//					WorkspaceDocumentProvider currDocProv = (WorkspaceDocumentProvider) dp;
+//					IMarker[] markers = currDocProv.getFile().findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_ONE);
+//					if (markers.length > 0) {
+//					    for (int i = 0; i < markers.length; i++) {
+//                            if (markers[i].getAttribute(IMarker.SEVERITY, 0) >= IMarker.SEVERITY_ERROR) {
+//                                displayErrorDialog(GroovyRefactoringMessages.bind(
+//                                        GroovyRefactoringMessages.GroovyRefactoringAction_Syntax_Errors, 
+//                                        markers[i].getResource().getFullPath().toPortableString()));
+//                                return false;
+//                            }
+//                        }
+//					}
+//				}
+//			}
 			if (docProvider.getRootNode() == null) {
 				displayErrorDialog(GroovyRefactoringMessages.GroovyRefactoringAction_No_Module_Node);
 				return false;
 			}
 
-		} catch (CoreException e) {
-			return false;
-		}
+//		} catch (CoreException e) {
+//			return false;
+//		}
 		return PlatformUI.getWorkbench().saveAllEditors(true);
 	}
 

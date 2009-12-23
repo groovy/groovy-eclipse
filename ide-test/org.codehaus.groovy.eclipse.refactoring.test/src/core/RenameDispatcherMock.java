@@ -21,16 +21,16 @@ import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameDispatcher;
  */
 public class RenameDispatcherMock extends RenameDispatcher {
 	
-	private final IGroovyFileProvider fileProvider;
+//	private final IGroovyFileProvider fileProvider;
 	
 	public RenameDispatcherMock(IGroovyDocumentProvider docProvider, UserSelection selection, IGroovyFileProvider fileProvider) {
 		super(docProvider, selection);
-		this.fileProvider = fileProvider;
+//		this.fileProvider = fileProvider;
 	}
 
-	@Override
-    protected IGroovyFileProvider getWSFileProvider() {
-		return fileProvider;
-	}
+//	@Override
+//    protected IGroovyFileProvider getWSFileProvider() {
+//		return fileProvider;
+//	}
 
 }

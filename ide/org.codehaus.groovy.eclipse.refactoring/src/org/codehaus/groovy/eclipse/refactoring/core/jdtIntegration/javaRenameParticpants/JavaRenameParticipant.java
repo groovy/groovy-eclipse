@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringProvider;
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -77,7 +78,7 @@ public abstract class JavaRenameParticipant extends RenameParticipant {
 	}
 
 	@Override
-	public Change createChange(IProgressMonitor pm) 
+	public Change createPreChange(IProgressMonitor pm) 
 	throws CoreException, OperationCanceledException {
 		
 		try {
@@ -89,7 +90,7 @@ public abstract class JavaRenameParticipant extends RenameParticipant {
 				if (javaEdit instanceof TextFileChange) {
 					TextFileChange tfc = (TextFileChange) javaEdit;
 					IFile remoteRile = tfc.getFile();
-					if (remoteRile.getFileExtension().equals("groovy")) {
+					if (LanguageSupportFactory.isInterestingSourceFile(remoteRile.getName())) {
 						tfc.setEnabled(false);
 						tfc.getEdit().removeChildren();
 					}
@@ -102,6 +103,15 @@ public abstract class JavaRenameParticipant extends RenameParticipant {
 		}
 
 		return provider.createGroovyChange(pm).createChange();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.eclipse.ltk.core.refactoring.participants.RefactoringParticipant#createChange(org.eclipse.core.runtime.IProgressMonitor)
+	 */
+	@Override
+	public Change createChange(IProgressMonitor pm) throws CoreException,
+	        OperationCanceledException {
+	    return null;
 	}
 	
 	protected void setProvider(RefactoringProvider provider) {

@@ -19,6 +19,7 @@ package org.eclipse.jdt.groovy.search;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.eclipse.core.runtime.CoreException;
@@ -63,16 +64,23 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
 		// don't do constructor calls. They are found through the class node inside of it
 		if (node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode
-				|| node instanceof AnnotationNode) {
+				|| node instanceof AnnotationNode || node instanceof ConstructorNode) {
 
 			ASTNode noArray;
 			if (node instanceof ClassNode) {
 				noArray = removeArray((ClassNode) node);
+			} else if (node instanceof ConstructorNode) {
+				noArray = ((ConstructorNode) node).getDeclaringClass();
 			} else {
 				noArray = node;
 			}
 
-			ClassNode type = result.type;
+			ClassNode type;
+			if (node instanceof ConstructorNode) {
+				type = ((ConstructorNode) node).getDeclaringClass();
+			} else {
+				type = result.type;
+			}
 			if (node instanceof ClassExpression && type == VariableScope.CLASS_CLASS_NODE) {
 				// special case...there is a Foo.class expression.
 				// the difference between Foo.class and Foo does not appear in the AST.
@@ -99,6 +107,9 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 						start = node.getStart();
 						// sometimes the end is off by one
 						end = start + ((ClassNode) node).getNameWithoutPackage().length();
+					} else if (node instanceof ConstructorNode) {
+						start = ((ConstructorNode) node).getNameStart();
+						end = ((ConstructorNode) node).getNameEnd() + 1;
 					} else {
 						start = node.getStart();
 						end = node.getEnd();

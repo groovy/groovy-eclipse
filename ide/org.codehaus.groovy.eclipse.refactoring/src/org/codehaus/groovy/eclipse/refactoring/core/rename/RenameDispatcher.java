@@ -44,38 +44,15 @@ public class RenameDispatcher {
 	
 	protected IGroovyDocumentProvider docProvider;
 	protected UserSelection selection;
-	private ClassNode parentClass;
-	private MethodNode renameLocalMethod;
+    // FIXADE RC1 OK to delete?
+//	private ClassNode parentClass;
+//	private MethodNode renameLocalMethod;
 
 	public RenameDispatcher(IGroovyDocumentProvider docProvider, UserSelection selection) {
 		this.docProvider = docProvider;
 		this.selection = selection;
 	}
 	
-	// FIXADE RC1 OK to delete?
-//	public GroovyRefactoring dispatchRenameRefactoring() throws NoRefactoringForASTNodeException {
-//		
-//		GroovyRefactoring refactoring;
-//		ASTNode selectedASTNode = getSelectedNode();
-//		
-//		ClassNode renameClassNode = RenameClassProvider.giveClassNodeToRename(selectedASTNode);
-//		FieldPattern renameFieldNode = RenameFieldProvider.giveFieldNodeToRename(selectedASTNode);
-//		MethodPattern renameMethodPattern = RenameMethodProvider.giveMethodNodeToRename(selectedASTNode,docProvider, parentClass);
-//		VariableProxy renameLocalNode = RenameLocalProvider.giveVariableExpressionToRename(selectedASTNode);
-//		
-//		if(renameClassNode != null){
-//			refactoring = initRenameClassRefactoring(renameClassNode);
-//		} else if(renameFieldNode != null){
-//			refactoring = initRenameFieldRefactoring(renameFieldNode);
-//		} else if(renameMethodPattern != null){
-//			refactoring = initRenameMethodRefactoring(renameMethodPattern);
-//		} else if(renameLocalNode != null){
-//			refactoring = initRenameLocalRefactoring(renameLocalNode);
-//		} else {
-//			throw new NoRefactoringForASTNodeException(selectedASTNode);
-//		}
-//		return refactoring;
-//	}
 
 	public ASTNode getSelectedNode() {
 		RenameSelectionInfoPredicate renameSelectionInfoPredicate = new RenameSelectionInfoPredicate(selection,docProvider.getDocument());
@@ -97,12 +74,6 @@ public class RenameDispatcher {
 				}
 			}
 		}
-		//Used for rename method, to find out, where the method is defined
-		findParentClass(infoBuilder, currentCandidate);
-		
-		//Used for rename local, to find out, in which method the variable is selected
-		findRenameLocalMethod(infoBuilder, currentCandidate);
-		
 		//Dispatch on a ConstantExpression is not possible -> the parent can be a PropertyExpression,
 		//AttributeExpression or MethodCallExpression
 		if(currentCandidate instanceof ConstantExpression){
@@ -124,62 +95,4 @@ public class RenameDispatcher {
 		}
 		return currentCandidate;
 	}
-
-	private void findParentClass(ASTScanner infoBuilder, ASTNode startNode) {
-	    ASTNode start = startNode;
-		try {
-			ASTNodeInfo infoTmp = infoBuilder.getInfo(start);
-			while(!(infoTmp.getParent() instanceof ClassNode)){
-				start = infoTmp.getParent();
-				infoTmp = infoBuilder.getInfo(start);
-			}
-			parentClass = (ClassNode) infoTmp.getParent();
-		} catch (NodeNotFoundException e) {
-			// dont do anything in this situation
-		}
-	}
-	
-	private void findRenameLocalMethod(ASTScanner infoBuilder, ASTNode startNode) {
-	    ASTNode start = startNode;
-		try {
-			ASTNodeInfo infoTmp = infoBuilder.getInfo(start);
-			while(!(infoTmp.getParent() instanceof MethodNode)){
-				start = infoTmp.getParent();
-				infoTmp = infoBuilder.getInfo(start);
-			}
-			renameLocalMethod = (MethodNode) infoTmp.getParent();
-		} catch (NodeNotFoundException e) {
-			// dont do anything in this situation
-		}
-	}
-	
-    // FIXADE RC1 OK to delete?
-//	protected GroovyRefactoring initRenameFieldRefactoring(FieldPattern renameFieldPattern) {
-//		RefactoringProvider provider = new RenameFieldProvider(getWSFileProvider(), selection, renameFieldPattern);
-//		RenameFieldInfo info = new RenameFieldInfo(provider);
-//		return new AmbiguousRenameRefactoring(info,GroovyRefactoringMessages.RenameFieldRefactoring);
-//	}
-
-//	protected GroovyRefactoring initRenameLocalRefactoring(VariableProxy selectedNode) {
-//		RefactoringProvider provider = new RenameLocalProvider(docProvider, selection, selectedNode, renameLocalMethod);
-//		RenameInfo info = new RenameInfo(provider);
-//		return new RenameRefactoring(info,GroovyRefactoringMessages.RenameLocalRefactoring);
-//	}
-
-//	protected GroovyRefactoring initRenameClassRefactoring(ClassNode selectedNode) {
-//		RefactoringProvider provider = new RenameClassProvider(getWSFileProvider(), selection, selectedNode);
-//		RenameInfo info = new RenameInfo(provider);
-//		return new RenameClassRefactoring(info);
-//	}
-//	
-//	protected GroovyRefactoring initRenameMethodRefactoring(MethodPattern selectedPattern) {
-//		RefactoringProvider provider = new RenameMethodProvider(getWSFileProvider(), selection, selectedPattern);
-//		RenameMethodInfo info = new RenameMethodInfo(provider);
-//		return new AmbiguousRenameRefactoring(info, GroovyRefactoringMessages.RenameMethodRefactoring);
-//	}
-
-	protected IGroovyFileProvider getWSFileProvider() {
-		return new WorkspaceFileProvider((WorkspaceDocumentProvider)docProvider);
-	}
-	
 }

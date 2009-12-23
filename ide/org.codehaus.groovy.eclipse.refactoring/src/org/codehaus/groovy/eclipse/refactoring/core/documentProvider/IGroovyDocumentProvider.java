@@ -34,6 +34,7 @@ public interface IGroovyDocumentProvider {
 	public abstract IDocument getDocument();
 	public abstract boolean fileExists();
 	public abstract IFile getFile();
+	public abstract IFile getTargetFile(); // return the target file if the refactoring moves the original file.  Probably don't need this.
 	public abstract String getName();
 	public abstract boolean isReadOnly();
 	public abstract GroovyCompilationUnit getUnit();

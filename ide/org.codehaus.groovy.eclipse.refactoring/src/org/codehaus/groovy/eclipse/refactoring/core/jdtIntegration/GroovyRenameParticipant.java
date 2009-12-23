@@ -19,6 +19,7 @@
 
 package org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal.RenameLocalProvider;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -40,8 +41,7 @@ public class GroovyRenameParticipant extends RenameParticipant {
 		try {
 			status = renameLocalProvider.checkInitialConditions(pm);
 		} catch (CoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		    GroovyCore.logException("Exception thrown when performing refactoring", e);
 		}
 		return status;
 	}
@@ -59,14 +59,6 @@ public class GroovyRenameParticipant extends RenameParticipant {
 
 	@Override
 	protected boolean initialize(Object element) {
-//		if (element instanceof IMethod) {
-//			UserSelection selection = new UserSelection(698,0);
-//			IFile renameFile = GroovyModel.getModel().getIFileForSrcFile("d.groovy");
-//			docProvider = new WorkspaceDocumentProvider(renameFile);
-//			renameLocalProvider = new RenameLocalProvider(docProvider,selection);
-//			renameLocalProvider.setNewName(getArguments().getNewName());
-//			return true;
-//		}
 		return false;
 	}
 }

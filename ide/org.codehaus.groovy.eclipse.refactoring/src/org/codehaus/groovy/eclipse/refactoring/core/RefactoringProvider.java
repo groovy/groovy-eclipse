@@ -97,7 +97,7 @@ abstract public class RefactoringProvider {
 			return new HashMap<Object, TextChange>();
 	}
 
-	protected MultiTextEdit removeDublicatedTextedits(RenameTextEditProvider textEditProvider) {
+	protected MultiTextEdit removeDuplicatedTextedits(RenameTextEditProvider textEditProvider) {
 		ArrayList<TextEdit> doubleEdits = new ArrayList<TextEdit>();
 		MultiTextEdit multi = textEditProvider.getMultiTextEdit();
 		IFile thisFile = textEditProvider.getDocProvider().getFile();

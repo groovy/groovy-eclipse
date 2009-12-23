@@ -40,6 +40,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameTextEditProvide
 import org.codehaus.groovy.eclipse.refactoring.core.utils.GroovyConventionsBuilder;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ImportResolver;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -175,8 +176,10 @@ public class RenameClassProvider extends MultiFileRefactoringProvider implements
 				GroovyRefactoringMessages.RenameClassRefactoring);
 
 		for (RenameTextEditProvider textEditProvider : textEditProviders) {
-			MultiTextEdit multi = removeDublicatedTextedits(textEditProvider);
-			change.addEdit(textEditProvider.getDocProvider(), multi);
+			MultiTextEdit multi = removeDuplicatedTextedits(textEditProvider);
+			IFile file = textEditProvider.getDocProvider().getFile();
+            IGroovyDocumentProvider docProvider = textEditProvider.getDocProvider();
+			change.addEdit(docProvider, multi);
 		}
 		return change;
 	}

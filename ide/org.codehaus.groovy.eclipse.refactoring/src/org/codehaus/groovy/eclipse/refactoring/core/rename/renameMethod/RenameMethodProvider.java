@@ -96,12 +96,6 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 		this.selectedASTNode = selectedMethodPattern.getNode();
 	}
 	
-	// FIXADE RC1 can delete this?
-//	public RenameMethodProvider(IGroovyFileProvider docProvider, UserSelection selection, MethodPattern selectedNode) {
-//		this(docProvider, selectedNode, null);
-//		setSelection(selection);
-//	}
-	
 	@Override
     protected void prepareCandidateLists() {
 		
@@ -451,7 +445,7 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 		//Iteration over all documents in the workspace to look, where the method to rename is used
 		GroovyChange change = new GroovyChange(GroovyRefactoringMessages.RenameMethodRefactoring);
 		for (RenameTextEditProvider textEditProvider : textEditProviders) {
-			MultiTextEdit multi = removeDublicatedTextedits(textEditProvider);
+			MultiTextEdit multi = removeDuplicatedTextedits(textEditProvider);
 			change.addEdit(textEditProvider.getDocProvider(), multi);
 		}
 		

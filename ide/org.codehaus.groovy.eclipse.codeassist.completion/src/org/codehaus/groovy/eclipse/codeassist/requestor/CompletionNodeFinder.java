@@ -265,7 +265,9 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         if (!doTest(node)) {
             return;
         }
-        currentDeclaration = node;
+        if (! (node.getName().equals("run") && (node.getParameters() == null || node.getParameters().length == 0))) {
+            currentDeclaration = node;
+        }
         internalVisitParameters(node.getParameters(), node);
     
         if (node.getExceptions() != null) {

@@ -195,6 +195,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		enclosingElement = type;
 		try {
 			ClassNode node = findClassWithName(createName(type));
+			if (node == null) {
+				// probably some sort of AST transformation is making this node invisible
+				return;
+			}
+
 			scopes.push(new VariableScope(scopes.peek(), node));
 			enclosingDeclarationNode = node;
 			visitClassInternal(node);
@@ -255,8 +260,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		enclosingElement = field;
 		this.requestor = requestor;
 		FieldNode fieldNode = findFieldNode(field);
-		// want to see npes if they happen because we shouldn't be getting that here.
-		// if (fieldNode != null) {
+		if (fieldNode == null) {
+			// probably some sort of AST transformation is making this node invisible
+			return;
+		}
+
 		enclosingDeclarationNode = fieldNode;
 		scopes.push(new VariableScope(scopes.peek(), fieldNode));
 		try {
@@ -270,7 +278,31 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			enclosingElement = oldEnclosing;
 			scopes.pop();
 		}
-		// }
+
+		if (isLazy(fieldNode)) {
+			// GRECLIPSE-578 the @Lazy annotation forces an AST transformation
+			// not sure if we get much here because I think the body of the generated method for
+			// @Lazy is filled with binary instructions.
+			List<MethodNode> lazyMethods = ((ClassNode) enclosingDeclarationNode).getDeclaredMethods("set$"
+					+ field.getElementName());
+			if (lazyMethods.size() > 0) {
+				MethodNode lazyMethod = lazyMethods.get(0);
+				enclosingDeclarationNode = lazyMethod;
+				this.requestor = requestor;
+				scopes.push(new VariableScope(scopes.peek(), lazyMethod));
+				try {
+					visitConstructorOrMethod(lazyMethod, lazyMethod instanceof ConstructorNode);
+				} catch (VisitCompleted vc) {
+					if (rethrowVisitComplete) {
+						throw vc;
+					}
+				} finally {
+					enclosingElement = oldEnclosing;
+					enclosingDeclarationNode = oldEnclosingNode;
+					scopes.pop();
+				}
+			}
+		}
 	}
 
 	public void visitJDT(IMethod method, ITypeRequestor requestor) {
@@ -278,9 +310,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		ASTNode oldEnclosingNode = enclosingDeclarationNode;
 		enclosingElement = method;
 		MethodNode methodNode = findMethodNode(method);
+		if (methodNode == null) {
+			// probably some sort of AST transformation is making this node invisible
+			return;
+		}
 
-		// want to see npes if they happen because we shouldn't be getting that here.
-		// if (method != null) {
 		enclosingDeclarationNode = methodNode;
 		this.requestor = requestor;
 		scopes.push(new VariableScope(scopes.peek(), methodNode));
@@ -298,7 +332,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			enclosingDeclarationNode = oldEnclosingNode;
 			scopes.pop();
 		}
-		// }
 	}
 
 	/**
@@ -1165,12 +1198,28 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			Util.log(e, "Exception finding method " + method.getElementName() + " in class " + clazz.getName());
 		}
 		// probably happened due to a syntax error in the code
-		throw new IllegalArgumentException("Could not find method " + method.getElementName() + " in class " + clazz.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		// or an AST transformation
+		return null;
 	}
 
 	private FieldNode findFieldNode(IField field) {
 		ClassNode clazz = findClassWithName(createName(field.getDeclaringType()));
-		return clazz.getField(field.getElementName());
+		FieldNode fieldNode = clazz.getField(field.getElementName());
+		if (fieldNode == null) {
+			// GRECLIPSE-578 might be @Lazy. Name is changed
+			fieldNode = clazz.getField("$" + field.getElementName());
+		}
+		return fieldNode;
+	}
+
+	private boolean isLazy(FieldNode field) {
+		List<AnnotationNode> annotations = field.getAnnotations();
+		for (AnnotationNode annotation : annotations) {
+			if (annotation.getClassNode().getName().equals("groovy.lang.Lazy")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

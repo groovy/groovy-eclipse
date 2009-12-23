@@ -34,7 +34,7 @@ import org.eclipse.jdt.core.JavaCore;
  * 
  * @author reto kleeb
  */
-public class WorkspaceFileProvider implements IGroovyFileProvider{
+public class WorkspaceFileProvider implements IGroovyFileProvider {
 	
 	private LinkedList<IGroovyDocumentProvider> documentList;
 	private IProject groovyProject;

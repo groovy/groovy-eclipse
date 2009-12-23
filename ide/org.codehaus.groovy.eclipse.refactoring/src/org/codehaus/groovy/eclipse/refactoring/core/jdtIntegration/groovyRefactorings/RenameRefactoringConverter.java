@@ -14,9 +14,10 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.CompilationUnitFileProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.GroovyCompilationUnitDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceFileProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.FieldDefinitionCollector;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameRefactoring;
@@ -25,9 +26,10 @@ import org.codehaus.groovy.eclipse.refactoring.core.rename.renameMethod.RenameMe
 import org.codehaus.groovy.eclipse.refactoring.core.utils.StringUtils;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.FieldPattern;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.MethodPattern;
-import org.eclipse.core.resources.IProject;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -79,7 +81,8 @@ public class RenameRefactoringConverter {
 		String capitalFieldName = method.getElementName().substring(3);
 		String normalFieldName = StringUtils.uncapitalize(capitalFieldName);
 		ClassNode declaring = provider.getMethodPattern().getClassType();
-		WorkspaceFileProvider fileProvider = new WorkspaceFileProvider(method.getResource().getProject());
+		CompilationUnitFileProvider fileProvider = new CompilationUnitFileProvider(
+		        new GroovyCompilationUnitDocumentProvider((GroovyCompilationUnit) method.getCompilationUnit()));
 		FieldPattern capitalFieldPattern = searchField(capitalFieldName, declaring, fileProvider);
 		FieldPattern normalFieldPattern = searchField(normalFieldName, declaring, fileProvider);
 		if (capitalFieldPattern != null) return new RenameFieldProvider(fileProvider, capitalFieldPattern);
@@ -87,7 +90,7 @@ public class RenameRefactoringConverter {
 		return provider;
 	}
 	
-	private static FieldPattern searchField(String fieldName, ClassNode declaring, WorkspaceFileProvider fileProvider) {
+	private static FieldPattern searchField(String fieldName, ClassNode declaring, CompilationUnitFileProvider fileProvider) {
 		FieldPattern fieldPattern = new FieldPattern(declaring,fieldName);
 		List<FieldNode> fieldList = searchFieldDefinitons(fileProvider, fieldPattern);
 		if (fieldList.size() == 1) {
@@ -107,9 +110,12 @@ public class RenameRefactoringConverter {
 		return fieldList;
 	}
 	
-	protected static IGroovyFileProvider getFileProvider(IJavaElement element) {
-		IProject sourceProject = element.getResource().getProject();
-		return new WorkspaceFileProvider(sourceProject);
+	protected static IGroovyFileProvider getFileProvider(IMember element) {
+	    if (element.getCompilationUnit() instanceof GroovyCompilationUnit) {
+	        return new CompilationUnitFileProvider(new GroovyCompilationUnitDocumentProvider((GroovyCompilationUnit) element.getCompilationUnit()));
+	    } else {
+	        throw new IllegalArgumentException("Should be a Groovy program element, but instead is " + element);
+	    }
 	}
 
 }

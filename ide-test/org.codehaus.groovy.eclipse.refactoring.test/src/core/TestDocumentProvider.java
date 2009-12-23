@@ -77,5 +77,8 @@ public class TestDocumentProvider implements IGroovyDocumentProvider {
     public GroovyCompilationUnit getUnit() {
         return null;
     }
+    public IFile getTargetFile() {
+        return null;
+    }
 
 }
