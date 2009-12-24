@@ -46,6 +46,7 @@ public class VariableScope {
 	public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
 	public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
 	public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
+	public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
 	public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.make(Number.class);
 
 	// don't cache because we have to add properties
@@ -230,6 +231,11 @@ public class VariableScope {
 				node.addProperty(createPropertyNodeForMethodNode(methodNode));
 			}
 		}
+	}
+
+	public boolean isVoid(ClassNode maybeVoid) {
+		return maybeVoid.getName().equals(VOID_CLASS_NODE.getName())
+				|| maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName());
 	}
 
 }

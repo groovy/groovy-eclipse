@@ -18,6 +18,8 @@ import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.Compilation
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.GroovyCompilationUnitDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceFileProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.FieldDefinitionCollector;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameRefactoring;
@@ -27,6 +29,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.StringUtils;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.FieldPattern;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.MethodPattern;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
@@ -113,6 +116,8 @@ public class RenameRefactoringConverter {
 	protected static IGroovyFileProvider getFileProvider(IMember element) {
 	    if (element.getCompilationUnit() instanceof GroovyCompilationUnit) {
 	        return new CompilationUnitFileProvider(new GroovyCompilationUnitDocumentProvider((GroovyCompilationUnit) element.getCompilationUnit()));
+	    } else if (element.getCompilationUnit() != null) {
+	        return new WorkspaceFileProvider(new WorkspaceDocumentProvider((IFile) element.getCompilationUnit().getResource()));
 	    } else {
 	        throw new IllegalArgumentException("Should be a Groovy program element, but instead is " + element);
 	    }

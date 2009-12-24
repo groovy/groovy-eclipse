@@ -74,14 +74,14 @@ public class InnerTypeCompletionTests extends CompletionTestCase {
         proposalExists(proposals, XXX, 1);
     }
     public void testCompletionOFInnerMember3() throws Exception {
-        // FIXADE RC1 properties not initialized, so failing
+        // FIXADE 2.0.1M1 properties not initialized, so failing
 //        String contents = "def y(Outer.Inner i) { i.xxx } \nclass Outer { class Inner { \n  def xxx } } ";
         String contents = "def y(Outer.Inner i) { i.xxx } \nclass Outer { class Inner { \n  def getXxx() {} } } ";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, XXX));
         proposalExists(proposals, XXX, 1);
     }
     public void testCompletionOFInnerMember4() throws Exception {
-        // FIXADE RC1 properties not initialized, so failing
+        // FIXADE 2.0.1M1 properties not initialized, so failing
 //        String contents = "Outer.Inner i\ni.xxx\nclass Outer { class Inner { \n  def xxx } } ";
         String contents = "Outer.Inner i\ni.xxx\nclass Outer { class Inner { \n  def getXxx() {} } } ";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, XXX));

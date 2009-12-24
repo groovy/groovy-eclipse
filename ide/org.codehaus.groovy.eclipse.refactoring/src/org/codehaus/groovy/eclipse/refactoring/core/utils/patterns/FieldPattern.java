@@ -95,9 +95,11 @@ public class FieldPattern {
 	}
 
 	public boolean equalsName(Object obj) {
-		if(obj instanceof FieldPattern){
+		if (obj instanceof FieldPattern) {
 			FieldPattern otherFieldPattern = (FieldPattern) obj;
 			return this.nameOfProperty.equals(otherFieldPattern.getNameOfProperty());
+		} else if (obj instanceof String) {
+		    return this.nameOfProperty.equals(obj);
 		}
 		return false;
 	}

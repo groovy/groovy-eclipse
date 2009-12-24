@@ -76,9 +76,24 @@ public class RenameFieldCandidateCollector extends RefactoringCodeVisitorSupport
 			if (patternOfField.equalsName(candidatePattern)) {
 				candidates.add(expression);
 			}
+		} else if (accessedVariable != null) {
+		    if (patternOfField.equalsName(accessedVariable.getName())) {
+		        candidates.add(expression);
+		    }
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.RefactoringCodeVisitorSupport#visitConstantExpression(org.codehaus.groovy.ast.expr.ConstantExpression)
+	 */
+	@Override
+	public void visitConstantExpression(ConstantExpression expression) {
+	    super.visitConstantExpression(expression);
+//        if (patternOfField.equalsName(expression.getText())) {
+//            candidates.add(expression);
+//        }
+	}
+	
 	@Override
     public void visitExpressionStatement(ExpressionStatement statement) {
 		super.visitExpressionStatement(statement);

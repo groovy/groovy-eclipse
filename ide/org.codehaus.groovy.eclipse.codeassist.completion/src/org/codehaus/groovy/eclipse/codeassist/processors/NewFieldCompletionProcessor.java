@@ -52,8 +52,9 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
                     createDisplayString(fieldName), relevance);
         }
         
+        // can we do better with the initializer?
         static String createReplacementString(String fieldName) {
-            return "static " + fieldName; // FIXADE RC1 would be nice to see an initializer for the fields
+            return "static " + fieldName + " = null"; 
         }
         
         static Image createImage() {

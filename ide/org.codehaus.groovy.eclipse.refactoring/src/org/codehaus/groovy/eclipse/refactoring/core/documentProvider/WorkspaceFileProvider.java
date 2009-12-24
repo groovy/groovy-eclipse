@@ -38,18 +38,12 @@ public class WorkspaceFileProvider implements IGroovyFileProvider {
 	
 	private LinkedList<IGroovyDocumentProvider> documentList;
 	private IProject groovyProject;
-	private WorkspaceDocumentProvider selectionDocument;
+	private final WorkspaceDocumentProvider selectionDocument;
 	
 	public WorkspaceFileProvider(WorkspaceDocumentProvider docProvider) {
 		this.selectionDocument = docProvider;
 		groovyProject = selectionDocument.getFile().getProject();
 		documentList = new LinkedList<IGroovyDocumentProvider>();
-	}
-	
-	public WorkspaceFileProvider(IProject project) {
-		groovyProject = project;
-		documentList = new LinkedList<IGroovyDocumentProvider>();
-		getAllSourceFiles();
 	}
 	
 	public WorkspaceFileProvider(IProject project,
@@ -65,9 +59,6 @@ public class WorkspaceFileProvider implements IGroovyFileProvider {
 			for(IFile source : groovySourceFiles){
 				documentList.add(new GroovyCompilationUnitDocumentProvider((GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(source)));
 //				documentList.add(new WorkspaceDocumentProvider(source));
-				if (selectionDocument == null) {
-//				    selectionDocument = new WorkspaceDocumentProvider(source);
-				}
 			}
 		}
 		return documentList;

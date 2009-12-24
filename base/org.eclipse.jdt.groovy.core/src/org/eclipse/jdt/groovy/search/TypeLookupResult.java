@@ -17,6 +17,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 
 /**
@@ -81,7 +82,7 @@ public class TypeLookupResult {
 	public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeConfidence confidence,
 			VariableScope scope) {
 		this.confidence = confidence;
-		this.type = type;
+		this.type = ClassHelper.getWrapper(type);
 		this.declaringType = declaringType;
 		this.declaration = declaration;
 		this.scope = scope;

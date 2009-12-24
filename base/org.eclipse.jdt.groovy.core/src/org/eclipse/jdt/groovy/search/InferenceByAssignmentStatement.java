@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -49,11 +48,11 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 
 				// we don't support multiple assignments yet
 				if (declExpr.isMultipleAssignmentDeclaration()) {
-					ArgumentListExpression args = (ArgumentListExpression) declExpr.getLeftExpression();
-					for (Expression argExpr : (Iterable<Expression>) args.getExpressions()) {
-						// probable won't get anything out of here
-						throw new RuntimeException("Not implemented...Please raise a bug for this.");
-					}
+					// ArgumentListExpression args = (ArgumentListExpression) declExpr.getLeftExpression();
+					// for (Expression argExpr : (Iterable<Expression>) args.getExpressions()) {
+					// probable won't get anything out of here
+					throw new RuntimeException("Not implemented...Please raise a bug for this.");
+					// }
 				}
 			}
 
@@ -63,7 +62,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 					VariableExpression var = (VariableExpression) assign.getLeftExpression();
 					ClassNode declaringType = var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var
 							.getAccessedVariable()).getDeclaringClass() : VariableScope.OBJECT_CLASS_NODE;
-					if (objectExpressionType != null && !objectExpressionType.equals(VariableScope.VOID_CLASS_NODE)) {
+					if (objectExpressionType != null && !scope.isVoid(objectExpressionType)) {
 						scope.addVariable(var.getName(), objectExpressionType, declaringType);
 						return new TypeLookupResult(objectExpressionType, declaringType, assign.getLeftExpression(),
 								TypeConfidence.INFERRED, scope);
@@ -76,7 +75,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 						}
 					}
 				} else {
-					// FIXADE RC1 this is a property node, eg- 'foo.bar = somevalue' just do Object type
+					// FIXADE 2.0.1M1 this is a property node, eg- 'foo.bar = somevalue' just do Object type
 				}
 			}
 

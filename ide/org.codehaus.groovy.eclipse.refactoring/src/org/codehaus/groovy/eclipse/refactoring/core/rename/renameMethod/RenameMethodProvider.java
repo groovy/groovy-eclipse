@@ -99,8 +99,6 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 	@Override
     protected void prepareCandidateLists() {
 		
-		// FIXADE RC1: Why do candidates need to be collected several times?
-		// This is a small workaround to fix it, but maybe dangerous
 		if (hasCandidateLists()) return;
 		
 		textEditProviders = new ArrayList<RenameTextEditProvider>();

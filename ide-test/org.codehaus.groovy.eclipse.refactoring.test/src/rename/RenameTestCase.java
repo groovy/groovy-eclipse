@@ -62,7 +62,7 @@ public class RenameTestCase extends MultiFileTestCase {
 	private RenameInfo renameInfo;
 
 	private IAmbiguousRenameInfo renMethInfo;
-	private RenameFieldInfo renFieldInfo;
+	private IAmbiguousRenameInfo renFieldInfo;
 
 	private Map<String, List<Integer>> manuallySelectedCandidates;
 
@@ -129,24 +129,24 @@ public class RenameTestCase extends MultiFileTestCase {
 	private void checkForRenameField(RefactoringInfo info) {
 		if (info instanceof RenameFieldInfo) {
 			renFieldInfo = (RenameFieldInfo) info;
-			selectSomeOfTheDoubtfulFieldCandidates();
+			selectSomeOfTheDoubtfulFieldCandidates(renFieldInfo);
 		}
 	}
 
-	private void selectSomeOfTheDoubtfulFieldCandidates() {
+	private void selectSomeOfTheDoubtfulFieldCandidates(IAmbiguousRenameInfo info) {
 		manuallySelectedCandidates = readAcceptedLineProperty();
 		List<Integer> acceptedLines = new ArrayList<Integer>();
 		for (Entry<String, List<Integer>> entry : manuallySelectedCandidates.entrySet()) {
 				acceptedLines.addAll(entry.getValue());
 		}
-		for (Entry<IGroovyDocumentProvider, List<ASTNode>> entry : renFieldInfo.getAmbiguousCandidates().entrySet()) {
+		for (Entry<IGroovyDocumentProvider, List<ASTNode>> entry : info.getAmbiguousCandidates().entrySet()) {
 			for (ASTNode node : entry.getValue()) {
 				int lineNumber = node.getLineNumber();
 				if(node instanceof PropertyExpression){
 					lineNumber = ((PropertyExpression)node).getProperty().getLineNumber();
 				}
 				if(acceptedLines.contains(lineNumber)){
-					renFieldInfo.addDefinitiveEntry(entry.getKey(), node);
+				    info.addDefinitiveEntry(entry.getKey(), node);
 				}
 			}
 		}
@@ -155,13 +155,13 @@ public class RenameTestCase extends MultiFileTestCase {
 	private void checkForRenameMethod(RefactoringInfo info) {
 		if (info instanceof RenameMethodInfo) {
 			renMethInfo = (IAmbiguousRenameInfo) info;
-			selectSomeOfTheDoubtfulMethodCandidates();
+			selectSomeOfTheDoubtfulMethodCandidates(renMethInfo);
 		}
 	}
 
-	private void selectSomeOfTheDoubtfulMethodCandidates() {
+	private void selectSomeOfTheDoubtfulMethodCandidates(IAmbiguousRenameInfo info) {
 		manuallySelectedCandidates = readAcceptedLineProperty();
-		for (Entry<IGroovyDocumentProvider, List<ASTNode>> entry : renMethInfo.getAmbiguousCandidates().entrySet()) {
+		for (Entry<IGroovyDocumentProvider, List<ASTNode>> entry : info.getAmbiguousCandidates().entrySet()) {
 			for (ASTNode node : entry.getValue()) {
 				if (node instanceof MethodNode) {
 					handleMethodCallNode(entry, node);

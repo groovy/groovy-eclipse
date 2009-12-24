@@ -50,7 +50,7 @@ public abstract class JavaRenameParticipant extends RenameParticipant {
 	
 	@Override
 	protected boolean initialize(Object element) {
-	    // FIXADE RC1 currently disabling groovy refactoring participation if target not
+	    // FIXADE 2.0.1M1 currently disabling groovy refactoring participation if target not
 	    // in groovy project, but this might be too strict.
 		if (getArguments().getUpdateReferences() && element instanceof IJavaElement
 		        && GroovyNature.hasGroovyNature(((IJavaElement) element).getJavaProject().getProject())) {	

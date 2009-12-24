@@ -61,6 +61,7 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
@@ -229,7 +230,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return new TypeLookupResult(VariableScope.MAP_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
-			// FIXADE RC1 hmmmm...because of operator overloading, we should be looking at the type
+			// FIXADE 2.0.1M1 hmmmm...because of operator overloading, we should be looking at the type
 			// of the inner expression, but Number will be safe for most of the time.
 			return new TypeLookupResult(VariableScope.NUMBER_CLASS_NODE, null, null, confidence, scope);
 
@@ -399,15 +400,17 @@ public class SimpleTypeLookup implements ITypeLookup {
 	}
 
 	/**
-	 * 
-	 * FIXADE RC1 Will this find static fields on interfaces if the interface type is a super interface of declaringType?
+	 * Looks for the named member in the declaring type. Also searches super types. The result can be a field, method, or property
 	 * 
 	 * @param name
 	 * @param declaringType
 	 * @return
 	 */
 	private ASTNode findDeclaration(String name, ClassNode declaringType) {
-		AnnotatedNode maybe = findPropertyInClass(declaringType, name);
+		Set<ClassNode> allClasses = new HashSet<ClassNode>();
+		findAllClasses(declaringType, allClasses);
+
+		AnnotatedNode maybe = findPropertyInClass(name, allClasses);
 		if (maybe != null) {
 			return maybe;
 		}
@@ -420,19 +423,26 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return maybeMethods.get(0);
 		}
 		if (declaringType.isInterface()) {
+			Set<ClassNode> allInterfaces = new HashSet<ClassNode>();
+			findAllInterfaces(declaringType, allInterfaces);
+
 			// super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
-			MethodNode interfaceMethod = findMethodInInterface(declaringType, name);
+			MethodNode interfaceMethod = findMethodInInterface(name, allInterfaces);
 			if (interfaceMethod != null) {
 				return interfaceMethod;
 			}
 
 			// do the same for properties
-			PropertyNode interfaceProperty = findPropertyInInterface(declaringType, name);
+			PropertyNode interfaceProperty = findPropertyInInterface(name, allInterfaces);
 			if (interfaceProperty != null) {
 				return interfaceProperty;
 			}
+		}
 
-			// maybe do the same for fields to find constants in super interfaces
+		// look for constants declared in super class
+		FieldNode constantFromSuper = findConstantInClass(name, allClasses);
+		if (constantFromSuper != null) {
+			return constantFromSuper;
 		}
 
 		return null;
@@ -443,9 +453,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @param name
 	 * @return
 	 */
-	private MethodNode findMethodInInterface(ClassNode objectExpressionType, String name) {
-		Set<ClassNode> allInterfaces = new HashSet<ClassNode>();
-		findAllInterfaces(objectExpressionType, allInterfaces);
+	private MethodNode findMethodInInterface(String name, Set<ClassNode> allInterfaces) {
 		for (ClassNode interf : allInterfaces) {
 			List<MethodNode> methods = interf.getDeclaredMethods(name);
 			if (methods != null && methods.size() > 0) {
@@ -455,16 +463,9 @@ public class SimpleTypeLookup implements ITypeLookup {
 		return null;
 	}
 
-	/**
-	 * @param objectExpressionType
-	 * @param name
-	 * @return
-	 */
-	private PropertyNode findPropertyInClass(ClassNode objectExpressionType, String name) {
-		Set<ClassNode> allClasses = new HashSet<ClassNode>();
-		findAllClasses(objectExpressionType, allClasses);
-		for (ClassNode interf : allClasses) {
-			PropertyNode prop = interf.getProperty(name);
+	private PropertyNode findPropertyInClass(String name, Set<ClassNode> allClasses) {
+		for (ClassNode clazz : allClasses) {
+			PropertyNode prop = clazz.getProperty(name);
 			if (prop != null) {
 				return prop;
 			}
@@ -472,14 +473,17 @@ public class SimpleTypeLookup implements ITypeLookup {
 		return null;
 	}
 
-	/**
-	 * @param objectExpressionType
-	 * @param name
-	 * @return
-	 */
-	private PropertyNode findPropertyInInterface(ClassNode objectExpressionType, String name) {
-		Set<ClassNode> allInterfaces = new HashSet<ClassNode>();
-		findAllInterfaces(objectExpressionType, allInterfaces);
+	private FieldNode findConstantInClass(String name, Set<ClassNode> allClasses) {
+		for (ClassNode clazz : allClasses) {
+			FieldNode field = clazz.getField(name);
+			if (field != null && Flags.isFinal(field.getModifiers()) && field.isStatic()) {
+				return field;
+			}
+		}
+		return null;
+	}
+
+	private PropertyNode findPropertyInInterface(String name, Set<ClassNode> allInterfaces) {
 		for (ClassNode interf : allInterfaces) {
 			PropertyNode prop = interf.getProperty(name);
 			if (prop != null) {
@@ -489,10 +493,6 @@ public class SimpleTypeLookup implements ITypeLookup {
 		return null;
 	}
 
-	/**
-	 * @param interf
-	 * @param allInterfaces
-	 */
 	private void findAllInterfaces(ClassNode interf, Set<ClassNode> allInterfaces) {
 		if (!allInterfaces.contains(interf) && interf.getInterfaces() != null) {
 			allInterfaces.add(interf);

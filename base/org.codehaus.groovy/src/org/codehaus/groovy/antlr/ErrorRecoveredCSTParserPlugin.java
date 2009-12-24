@@ -70,7 +70,7 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
 			sourceUnit.addError(se);
 		} catch (RecognitionException e) {
             configureLocationSupport(sourceBuffer);
-		    // FIXADE RC1 sometimes the line/column is after the end of the file
+		    // sometimes the line/column is after the end of the file
 		    // why is this?  Fix if possible
 		    int origLine = e.getLine();
 		    int origColumn = e.getColumn();
@@ -108,7 +108,7 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
 		    // report directly on the SourceUnit
 		    for (Map<String, Object> error : (List<Map<String, Object>>) errorList) {
 		        
-		        // FIXADE RC1 sometimes the line/column is after the end of the file
+		        // sometimes the line/column is after the end of the file
 		        // why is this?  Fix if possible
 	            int origLine = ((Integer) error.get("line")).intValue();
 	            int origColumn = ((Integer) error.get("column")).intValue();

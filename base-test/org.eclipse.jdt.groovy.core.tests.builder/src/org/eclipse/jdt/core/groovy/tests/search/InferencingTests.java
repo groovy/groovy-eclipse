@@ -203,4 +203,18 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Outer");
     }
     
+    public void testConstantFromSuper() throws Exception {
+        String contents = "public interface Constants {\n" +
+                          "int FIRST = 9;\n" +
+                          "}\n" +
+                          "class UsesConstants implements Constants {\n" +
+                          "def x() {\n" +
+                          "FIRST\n" +
+                          "}\n" +
+                          "}";
+        int start = contents.lastIndexOf("FIRST");
+        int end = start + "FIRST".length();
+        assertType(contents, start, end, "java.lang.Integer");
+
+    }
 }

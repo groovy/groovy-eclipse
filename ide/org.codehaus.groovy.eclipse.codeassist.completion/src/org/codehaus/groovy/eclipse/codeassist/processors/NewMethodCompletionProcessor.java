@@ -190,7 +190,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         List<MethodNode> thisClassMethods = declaring.getMethods();
         List<MethodNode> unimplementedMethods = new ArrayList<MethodNode>(allMethods.size()-thisClassMethods.size());
         
-        // FIXADE RC1 uggh n^2 loop.  Make more efficient
+        // uggh n^2 loop.  Can be made more efficient by doing declaring.getMethods(allMethodNode.getName())
         for (MethodNode allMethodNode : allMethods) {
             
             if (allMethodNode.getName().startsWith(getContext().completionExpression)) {

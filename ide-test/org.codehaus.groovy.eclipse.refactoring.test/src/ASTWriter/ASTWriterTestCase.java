@@ -40,7 +40,7 @@ public class ASTWriterTestCase extends BaseTestCase {
 	
 	private void doTest() {
 	    if (this.getName().equals("AST_Writer_Test_import_static_class_used_expl_Class.txt")) {
-	        // FIXADE RC1 this test is failing...need to look into it
+	        // this test is failing...need to look into it
 	        return;
 	    }
 		String modifier = properties.get("modifier");

@@ -124,9 +124,9 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
     /**
-     * FIXADE RC1 I am concerned that this takes a long time since we are doing a lookup for each method
+     * FIXADE 2.0.1M1 I am concerned that this takes a long time since we are doing a lookup for each method
      * any way to cache?
-     * FIXADE RC1 cannot find parameters names with type parameters.
+     * FIXADE 2.0.1M1 cannot find parameters names with type parameters.
      * @throws JavaModelException 
      */
     protected char[][] getParameterNames(ICompilationUnit unit, MethodNode method) {

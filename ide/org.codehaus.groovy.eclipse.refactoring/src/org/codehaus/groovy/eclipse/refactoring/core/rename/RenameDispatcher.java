@@ -44,9 +44,6 @@ public class RenameDispatcher {
 	
 	protected IGroovyDocumentProvider docProvider;
 	protected UserSelection selection;
-    // FIXADE RC1 OK to delete?
-//	private ClassNode parentClass;
-//	private MethodNode renameLocalMethod;
 
 	public RenameDispatcher(IGroovyDocumentProvider docProvider, UserSelection selection) {
 		this.docProvider = docProvider;
