@@ -67,7 +67,7 @@
          <attribute name="extender" type="string">
             <annotation>
                <documentation>
-                  
+                  Extender class.  Must implement &lt;tt&gt;org.codehaus.groovy.eclipse.editor.highlighting.IHighlightingExtender&lt;/tt&gt;
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.codehaus.groovy.eclipse.editor.highlighting.IHighlightingExtender"/>
@@ -82,12 +82,23 @@
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         2.0.0
+         2.0.0M1
       </documentation>
    </annotation>
 
 
 
 
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+&lt;br/&gt;
+Contributors:&lt;br/&gt;
+Andrew Eisenberg - Initial API and implementation
+      </documentation>
+   </annotation>
 
 </schema>

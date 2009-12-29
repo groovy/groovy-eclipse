@@ -48,6 +48,11 @@
    </element>
 
    <element name="proposalProvider">
+      <annotation>
+         <documentation>
+            List of proposal providers
+         </documentation>
+      </annotation>
       <complexType>
          <sequence minOccurs="1" maxOccurs="unbounded">
             <element ref="appliesTo"/>
@@ -55,7 +60,7 @@
          <attribute name="proposalProvider" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  Class that implements &lt;tt&gt;org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider&lt;/tt&gt;.  This class provides content assist proposals in a given content assist context.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider"/>
@@ -97,5 +102,17 @@
 
 
 
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+&lt;br/&gt;
+Contributors:&lt;br/&gt;
+Andrew Eisenberg - Initial API and implementation
+
+      </documentation>
+   </annotation>
 
 </schema>

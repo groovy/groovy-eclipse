@@ -74,5 +74,16 @@
 
 
 
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+&lt;br/&gt;
+Contributors:&lt;br/&gt;
+Andrew Eisenberg - Initial API and implementation
+      </documentation>
+   </annotation>
 
 </schema>

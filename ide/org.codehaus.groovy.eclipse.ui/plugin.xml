@@ -62,7 +62,7 @@
       <launchConfigurationTypeImage
             configTypeID="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration"
             icon="icons/run_groovy_class.gif"
-            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfigurationImage.groovyApp">
+            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyScript">
       </launchConfigurationTypeImage>
    </extension>
    <extension

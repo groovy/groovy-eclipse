@@ -48,6 +48,11 @@
    </element>
 
    <element name="lookup">
+      <annotation>
+         <documentation>
+            A type lookup.  Specifies a  type lookup class and all project natures that it applies to.
+         </documentation>
+      </annotation>
       <complexType>
          <sequence minOccurs="1" maxOccurs="unbounded">
             <element ref="appliesTo"/>
@@ -55,7 +60,7 @@
          <attribute name="lookup" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  A class that implements &lt;tt&gt;org.eclipse.jdt.groovy.search.ITypeLookup&lt;/tt&gt;.  In many situations, it may be sufficient to extend &lt;tt&gt;org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup&lt;/tt&gt;.
                </documentation>
                <appinfo>
                   <meta.attribute kind="java" basedOn=":org.eclipse.jdt.groovy.search.ITypeLookup"/>
@@ -108,7 +113,10 @@
          <meta.section type="apiinfo"/>
       </appinfo>
       <documentation>
-         [Enter API information here.]
+         Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+&lt;br/&gt;
+Contributors:&lt;br/&gt;
+Andrew Eisenberg - Initial API and implementation
       </documentation>
    </annotation>
 
@@ -121,5 +129,16 @@
       </documentation>
    </annotation>
 
+   <annotation>
+      <appinfo>
+         <meta.section type="copyright"/>
+      </appinfo>
+      <documentation>
+         Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+&lt;br/&gt;
+Contributors:&lt;br/&gt;
+Andrew Eisenberg - Initial API and implementation
+      </documentation>
+   </annotation>
 
 </schema>

@@ -80,7 +80,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     VariableExpression var = (VariableExpression) result.declaration;
                     requestedElement = 
                         new LocalVariable((JavaElement) enclosingElement, var.getName(), var.getStart(), var.getEnd()-1, var.getStart(), var.getEnd()-1, 
-                                Signature.createTypeSignature(var.getType().getName(), false), new Annotation[0]);
+                                Signature.createTypeSignature(result.type != null ? result.type.getName() : var.getType().getName(), false), new Annotation[0]);
                 } else if (result.declaration instanceof Parameter) {
                     // look in the local scope
                     Parameter var = (Parameter) result.declaration;
