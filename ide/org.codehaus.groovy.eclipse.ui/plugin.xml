@@ -22,16 +22,6 @@
          id="org.codehaus.groovy.eclipse.groovy.launcher"
          point="org.eclipse.debug.core.launchConfigurationTypes">
       <launchConfigurationType
-            delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
-            delegateDescription="Launches a Groovy application"
-            delegateName="Groovy Application Launcher"
-            id="org.codehaus.groovy.eclipse.groovyApplicationLaunchConfiguration"
-            modes="run,debug"
-            name="Groovy Application"
-            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
-            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
-      </launchConfigurationType>
-      <launchConfigurationType
             delegate="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchDelegate"
             delegateDescription="Launches a Groovy shell using the current project as its classpath"
             delegateName="Groovy Shell Launcher"
