@@ -586,9 +586,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					outerTypeDeclaration.memberTypes = new TypeDeclaration[1];
 					outerTypeDeclaration.memberTypes[0] = typeDeclaration;
 				} else {
-					TypeDeclaration[] newArray = new TypeDeclaration[outerTypeDeclaration.memberTypes.length];
+					TypeDeclaration[] newArray = new TypeDeclaration[outerTypeDeclaration.memberTypes.length + 1];
 					System.arraycopy(outerTypeDeclaration.memberTypes, 0, newArray, 0, outerTypeDeclaration.memberTypes.length);
 					newArray[outerTypeDeclaration.memberTypes.length] = typeDeclaration;
+					outerTypeDeclaration.memberTypes = newArray;
 				}
 			} else {
 				typeDeclarations.add(typeDeclaration);
