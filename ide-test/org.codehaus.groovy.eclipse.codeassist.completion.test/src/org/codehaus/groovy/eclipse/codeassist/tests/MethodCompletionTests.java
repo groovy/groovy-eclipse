@@ -148,7 +148,7 @@ public class MethodCompletionTests extends CompletionTestCase {
         ClassNode clazz = extract(unit);
         List<MethodNode> methods = clazz.getMethods("m");
         for (MethodNode method : methods) {
-            if (method.getParameters().length == 1) {
+            if (method.getParameters().length == 1) { 
                 MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
                 char[][] names = proposal.createParameterNames(unit);
                 checkNames(new char[][] {"x".toCharArray()}, names);
