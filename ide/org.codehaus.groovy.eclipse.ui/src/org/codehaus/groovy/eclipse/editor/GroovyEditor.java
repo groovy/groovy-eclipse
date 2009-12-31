@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
-import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
 
@@ -330,7 +329,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         super.createPartControl(parent);
         unsetJavaBreakpointUpdater();
         installSemanticHighlighting();
-        forceDisableAutoCloseStrings();
+//        forceDisableAutoCloseStrings();
     }
     
     // temporary storage for editor input
@@ -397,27 +396,29 @@ public class GroovyEditor extends CompilationUnitEditor {
     private final static String CLOSE_STRINGS= PreferenceConstants.EDITOR_CLOSE_STRINGS;
     @Override
     protected void handlePreferenceStoreChanged(PropertyChangeEvent event) {
-        if (CLOSE_STRINGS.equals(event.getProperty())) {
-            // GRECLISPE-493
-            forceDisableAutoCloseStrings();
-        } else {
+//        if (CLOSE_STRINGS.equals(event.getProperty())) {
+//            // GRECLISPE-493
+//            forceDisableAutoCloseStrings();
+//        } else {
             super.handlePreferenceStoreChanged(event);
-        }
+//        }
     }
  
     /**
      * GRECLIPSE-493: disable auto closing of strings because this is 
      * very, very annoying when trying to work with multi-line strings
+     * 
+     * DISABLED!!!
      */
     private void forceDisableAutoCloseStrings() {
-        Object fBracketInserter = ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fBracketInserter", this);
-        try {
-            Method method = fBracketInserter.getClass().getMethod("setCloseStringsEnabled", boolean.class);
-            method.setAccessible(true);
-            method.invoke(fBracketInserter, false);
-        } catch(Exception e) {
-            GroovyCore.logException("Exception disabling auto-closing of strings", e);
-        }
+//        Object fBracketInserter = ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fBracketInserter", this);
+//        try {
+//            Method method = fBracketInserter.getClass().getMethod("setCloseStringsEnabled", boolean.class);
+//            method.setAccessible(true);
+//            method.invoke(fBracketInserter, false);
+//        } catch(Exception e) {
+//            GroovyCore.logException("Exception disabling auto-closing of strings", e);
+//        }
         
     }
 }
