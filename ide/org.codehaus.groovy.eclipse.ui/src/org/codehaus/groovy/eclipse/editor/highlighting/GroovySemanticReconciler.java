@@ -288,14 +288,12 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
                 List<HighlightedPosition> newPositions = new LinkedList<HighlightedPosition>();
                 List<HighlightedPosition> removedPositions = new LinkedList<HighlightedPosition>();
-                // why is this null sometimes?  Is it a multithreading issue?
-                if (presenter.fPositions != null) {
-                    for (HighlightedPosition oldPosition : (Iterable<HighlightedPosition>) presenter.fPositions) {
-                        if (oldPosition != null) {
-                            removedPositions.add(oldPosition);
-                        }
+                
+                for (HighlightedPosition oldPosition : (Iterable<HighlightedPosition>) presenter.fPositions) {
+                    if (oldPosition != null) {
+                        removedPositions.add(oldPosition);
                     }
-                }                
+                }
                 progressMonitor.worked(20);
                 List<HighlightedPosition> unknownReferencesHighlighted = new ArrayList<HighlightedPosition>(unknownReferences.size()); 
                 for (Position pos : unknownReferences) {
@@ -315,6 +313,8 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 }
                 progressMonitor.worked(10);
             }
+        } catch (NullPointerException e) {
+            // do nothing...reconciler has been uninstalled
         } finally {
             synchronized (fReconcileLock) {
                 fIsReconciling= false;
