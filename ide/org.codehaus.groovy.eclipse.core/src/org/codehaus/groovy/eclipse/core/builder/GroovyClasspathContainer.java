@@ -25,9 +25,15 @@ import java.util.Collection;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -39,6 +45,12 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     public static String DESC = "Groovy Libraries";
 
     private IClasspathEntry[] entries;
+
+    private IProject project;
+    
+    public GroovyClasspathContainer(IProject project) {
+        this.project = project;
+    }
 
     public synchronized IClasspathEntry[] getClasspathEntries() {
     	if (entries == null) {
@@ -79,7 +91,9 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	                attrs, true);
 	        newEntries.add(entry);
 	        
-	        newEntries.addAll(getGroovyJarsInDotGroovyLib());
+	        if (useGroovyLibs()) {
+	            newEntries.addAll(getGroovyJarsInDotGroovyLib());
+	        }
 	        
 	        entries = newEntries.toArray(new IClasspathEntry[0]);
         } catch (Exception e) {
@@ -88,9 +102,12 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         }
     }
 
-
-    
-
+    private boolean useGroovyLibs() {
+        IScopeContext projectScope = new ProjectScope(project);
+        IEclipsePreferences projectNode = projectScope
+                .getNode(GroovyCoreActivator.PLUGIN_ID);
+        return projectNode.getBoolean(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, true);
+    }
     
     /**
      * Finds all the jars in the ~/.groovy/lib directory and adds them 

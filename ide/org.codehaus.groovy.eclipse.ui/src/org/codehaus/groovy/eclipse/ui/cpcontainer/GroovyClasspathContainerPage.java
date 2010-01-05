@@ -15,57 +15,56 @@
  */
 package org.codehaus.groovy.eclipse.ui.cpcontainer;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-
+import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
-import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPage;
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPageExtension;
 import org.eclipse.jdt.ui.wizards.NewElementWizardPage;
-import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.osgi.service.prefs.BackingStoreException;
 
 public class GroovyClasspathContainerPage extends NewElementWizardPage
         implements IClasspathContainerPage, IClasspathContainerPageExtension {
     private IJavaProject jProject;
-    private IPersistentPreferenceStore prefStore;
-
+    private IEclipsePreferences prefStore;
     private IClasspathEntry containerEntryResult;
+    private Button useGroovyLib;
 
-    private Combo versionCombo;
 
     public GroovyClasspathContainerPage() {
-        this("Groovy Classpath Container");
+        super("Groovy Classpath Container");
+        setTitle("Groovy Libraries");
+        setDescription("Configure the Groovy Library classpath container");
+        setImageDescriptor(JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY);
     }
 
-    public GroovyClasspathContainerPage(final String pageName) {
-        super(pageName);
-    }
-
-    private String getPreference() {
+    private boolean getPreference() {
         return prefStore != null ? 
-                prefStore.getString(PreferenceConstants.GROOVY_RUNTIME_SOURCE) : 
-                    null;
+                prefStore.getBoolean(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, true) : 
+                    true;
     }
 
     public boolean finish() {
@@ -74,73 +73,65 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
                 return true;
             }
             
-            final String preference = getPreference();
-            if (versionCombo.getSelectionIndex() == 0) {
-                if (preference == null || preference.trim().length() == 0) {
-                    return true;
-                }
-                prefStore.setToDefault(
-                        PreferenceConstants.GROOVY_RUNTIME_SOURCE);
-                prefStore.save();
-                return true;
+            boolean storedPreference = getPreference();
+            boolean currentPreference = useGroovyLib.getSelection();
+            if (storedPreference != currentPreference) {
+                prefStore.putBoolean(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB,
+                        currentPreference);
+                prefStore.flush();
             }
-            if (nullEquals(preference, "GROOVY_HOME"))
-                return true;
-            prefStore.setValue(PreferenceConstants.GROOVY_RUNTIME_SOURCE,
-                    "GROOVY_HOME");
-            prefStore.save();
-        } catch (final IOException ioe) {
-            throw new RuntimeException(ioe);
+            // always refresh on finish
+            refreshNow();
+        } catch (BackingStoreException e) {
+            GroovyCore.logException("Exception trying to store Groovy classpath container changes", e);
         } finally {
             GroovyRuntime.addGroovyClasspathContainer(jProject);
         }
         return true;
     }
 
+    /**
+     * will be a no-op if continaer not already in project
+     */
+    private void refreshNow() {
+        try {
+            if (jProject != null) {
+                GroovyClasspathContainerInitializer.updateGroovyClasspathContainer(jProject);
+            }
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Exception trying to store Groovy classpath container changes", e);
+        }
+    }
+
     public IClasspathEntry getSelection() {
-        return this.containerEntryResult != null ? this.containerEntryResult : JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID);
+        return this.containerEntryResult != null ? 
+                this.containerEntryResult : 
+                    JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID);
     }
 
     public void setSelection(final IClasspathEntry containerEntry) {
         this.containerEntryResult = containerEntry;
     }
 
-    protected void doSelectionChanged() {}
-
     public void createControl(final Composite parent) {
-        final PixelConverter converter = new PixelConverter(parent);
         final Composite composite = new Composite(parent, SWT.NONE);
-        composite.setFont(parent.getFont());
 
-        composite.setLayout(new GridLayout(2, false));
-
-        Label label = new Label(composite, SWT.NONE);
-        label.setFont(composite.getFont());
-        label.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false,
-                false, 1, 1));
-        label.setText("Select Groovy Runtime:");
-        versionCombo = new Combo(composite, SWT.READ_ONLY);
-        final List<String> options = ListUtil.newEmptyList();
-        URL groovyURL = CompilerUtils.getExportedGroovyAllJar();
-        IPath runtimeJarPath = new Path(groovyURL.getPath());
-        options.add("Plugin Embedded Lib: " + runtimeJarPath.lastSegment());
-        versionCombo.setItems(options.toArray(new String[0]));
-        versionCombo.setFont(composite.getFont());
-        String pref = getPreference();
-        if (pref != null && pref.trim().length() > 0)
-            versionCombo.select(1);
-        final GridData data = new GridData(GridData.BEGINNING, GridData.CENTER,
-                false, false, 1, 1);
-        data.widthHint = converter.convertWidthInCharsToPixels(45);
-        versionCombo.setLayoutData(data);
-        versionCombo.select(0);
-        versionCombo.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                doSelectionChanged();
-            }
-        });
-
-        doSelectionChanged();
+        composite.setLayout(new GridLayout(1, false));
+        
+        useGroovyLib = new Button(composite, SWT.CHECK);
+        useGroovyLib.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
+                false));
+        useGroovyLib.setText("Should jars in the ~/.groovy/lib directory be included on the classpath?");
+        useGroovyLib.setSelection(getPreference());
+        if (prefStore == null) {
+            // if container not associated with project, then can't change this
+            useGroovyLib.setEnabled(false);
+        }
+        Label l = new Label(composite, SWT.NONE);
+        l.setText("(Affects this project only)\n\n");
+        
+        l = new Label(composite, SWT.NONE);
+        l.setText("Groovy Libraries will automatically be refreshed for this project when 'Finish' is clicked.");
 
         setControl(composite);
     }
@@ -154,20 +145,9 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
         prefStore = preferenceStore(jProject.getProject());
     }
 
-    private IPersistentPreferenceStore preferenceStore(IProject p) {
-        return new ScopedPreferenceStore( 
-                new ProjectScope(p), 
-                "org.codehaus.groovy.eclipse.preferences" );
+    private IEclipsePreferences preferenceStore(IProject p) {
+        IScopeContext projectScope = new ProjectScope(p);
+        return projectScope
+                .getNode(GroovyCoreActivator.PLUGIN_ID);
     }
-
-    public boolean nullEquals(Object object1, Object object2) {
-        if (object1 == object2) {
-            return true;
-        }
-        if ((object1 == null) || (object2 == null)) {
-            return false;
-        }
-        return object1.equals(object2);
-    }
-
 }

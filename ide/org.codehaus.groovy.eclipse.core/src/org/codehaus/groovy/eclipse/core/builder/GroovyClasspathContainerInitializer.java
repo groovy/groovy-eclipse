@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ClasspathContainerInitializer;
 import org.eclipse.jdt.core.IClasspathContainer;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -19,7 +18,7 @@ public class GroovyClasspathContainerInitializer extends
 
     public void initialize(IPath containerPath, IJavaProject project)
             throws CoreException {
-        IClasspathContainer container = new GroovyClasspathContainer();
+        IClasspathContainer container = new GroovyClasspathContainer(project.getProject());
         JavaCore.setClasspathContainer(containerPath, 
         		new IJavaProject[] {project}, 
         		new IClasspathContainer[] {container}, null);
@@ -54,23 +53,34 @@ public class GroovyClasspathContainerInitializer extends
      * @throws JavaModelException
      */
     public static void updateAllGroovyClasspathContainers() throws JavaModelException {
-        IJavaElement[] projects = JavaModelManager.getJavaModelManager().getJavaModel().getChildren();
-        
+        IJavaProject[] projects = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects();
+        updateSomeGroovyClasspathContainers(projects);
+    }
+    
+    public static void updateGroovyClasspathContainer(IJavaProject project) throws JavaModelException {
+        updateSomeGroovyClasspathContainers(new IJavaProject[] { project });
+    }
+    
+    
+
+    /**
+     * @param projects
+     * @throws JavaModelException
+     */
+    private static void updateSomeGroovyClasspathContainers(
+    		IJavaProject[] projects) throws JavaModelException {
         List<IJavaProject> affectedProjects = new ArrayList<IJavaProject>(projects.length);
         List<IClasspathContainer> affectedContainers = new ArrayList<IClasspathContainer>(projects.length);
-        for (IJavaElement elt : projects) {
-            if (elt instanceof IJavaProject) {
-                IJavaProject project = (IJavaProject) elt;
-                IClasspathContainer gcc = JavaCore.getClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, project);
-                if (gcc instanceof GroovyClasspathContainer) {
-                    ((GroovyClasspathContainer) gcc).reset();
-                    affectedProjects.add(project);
-                    affectedContainers.add(null);
-                }
-                JavaCore.setClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, affectedProjects.toArray(new IJavaProject[0]), 
-                        affectedContainers.toArray(new IClasspathContainer[0]), new NullProgressMonitor());
+        for (IJavaProject elt : projects) {
+            IJavaProject project = (IJavaProject) elt;
+            IClasspathContainer gcc = JavaCore.getClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, project);
+            if (gcc instanceof GroovyClasspathContainer) {
+                ((GroovyClasspathContainer) gcc).reset();
+                affectedProjects.add(project);
+                affectedContainers.add(null);
             }
         }
+        JavaCore.setClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, affectedProjects.toArray(new IJavaProject[0]), 
+                affectedContainers.toArray(new IClasspathContainer[0]), new NullProgressMonitor());
     }
-
 }

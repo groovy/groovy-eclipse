@@ -64,8 +64,8 @@ public class PreferenceConstants {
 
 	public static final String GROOVY_EDITOR_FOLDING_ENABLED = "groovy.editor.folding.enabled"; //$NON-NLS-1$
 	
-	public static final String GROOVY_RUNTIME_SOURCE = "groovy.runtime.lib.source";
-
+	public static final String GROOVY_CLASSPATH_USE_GROOVY_LIB = "groovy.classpath.use.groovy,lib";
+	
 	public static final String GROOVY_JUNIT_MONOSPACE_FONT = "groovy.junit.monospace.font";
 	
 	public static final String GROOVY_COMPILER_VERSION_IS_16 = "groovy.compiler.version.is.16";
