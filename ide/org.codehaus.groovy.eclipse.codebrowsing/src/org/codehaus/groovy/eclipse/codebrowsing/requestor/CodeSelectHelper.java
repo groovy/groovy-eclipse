@@ -24,8 +24,6 @@ import org.codehaus.jdt.groovy.model.ICodeSelectHelper;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.eclipse.jface.text.IRegion;
-import org.eclipse.jface.text.Region;
 
 /**
  * @author Andrew Eisenberg
@@ -83,7 +81,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
      * @param r
      * @return
      */
-    private ASTNode findASTNodeAt(ModuleNode module, IRegion r) {
+    private ASTNode findASTNodeAt(ModuleNode module, Region r) {
         ASTNodeFinder finder = new ASTNodeFinder(r);
         return finder.doVisit(module);
     }

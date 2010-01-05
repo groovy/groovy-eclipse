@@ -49,14 +49,13 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jface.text.IRegion;
 
 public class ASTNodeFinder extends ClassCodeVisitorSupport {
     
     protected ASTNode nodeFound;
-    private IRegion r;
+    private Region r;
     
-    public ASTNodeFinder(IRegion r) {
+    public ASTNodeFinder(Region r) {
         this.r = r;
     }
 
