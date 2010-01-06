@@ -64,13 +64,11 @@ public class GroovyClassScope extends ClassScope {
 	 */
 	@Override
 	protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
-
 		// Don't add these methods to annotations
 		if (this.referenceContext.binding != null
 				&& (this.referenceContext.binding.isAnnotationType() || this.referenceContext.binding.isInterface())) {
 			return methodBindings;
 		}
-
 		boolean implementsGroovyLangObject = false;
 
 		ReferenceBinding[] superInterfaces = this.referenceContext.binding.superInterfaces;
@@ -108,21 +106,21 @@ public class GroovyClassScope extends ClassScope {
 
 			// Visibility is public and possibly static/abstract depending on the containing type
 			createMethod("invokeMethod", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, bindingJLO, groovyMethods,
-					methodBindings);
-			createMethod("getProperty", false, "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings);
+					methodBindings, null);
+			createMethod("getProperty", false, "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings,
+					null);
 			createMethod("setProperty", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, TypeBinding.VOID, groovyMethods,
-					methodBindings);
-			createMethod("getMetaClass", false, "", null, bindingGLM, groovyMethods, methodBindings);
+					methodBindings, null);
+			createMethod("getMetaClass", false, "", null, bindingGLM, groovyMethods, methodBindings, null);
 			createMethod("setMetaClass", false, "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods,
-					methodBindings);
+					methodBindings, null);
 		}
 		// FIXASC decide what difference this makes - should we not be adding anything at all?
-		// will not be an instance of GroovyTypeDeclaration if created through
-		// SourceTypeConverter
+		// will not be an instance of GroovyTypeDeclaration if created through SourceTypeConverter
 		if (this.referenceContext instanceof GroovyTypeDeclaration) {
 			GroovyTypeDeclaration typeDeclaration = (GroovyTypeDeclaration) this.referenceContext;
 
-			// FIXASC (M3) the methods created here need to be a subtype of
+			// FIXASC the methods created here need to be a subtype of
 			// MethodBinding because they need their source position to be the
 			// property
 			List<PropertyNode> properties = typeDeclaration.properties;
@@ -133,15 +131,15 @@ public class GroovyClassScope extends ClassScope {
 				if (fBinding != null && !(fBinding.type instanceof MissingTypeBinding)) {
 					String getterName = "get" + MetaClassHelper.capitalize(name);
 					createMethod(getterName, property.isStatic(), "", /* TypeBinding.NO_TYPES */null, fBinding.type, groovyMethods,
-							methodBindings);
+							methodBindings, typeDeclaration);
 					if (!fBinding.isFinal()) {
 						String setterName = "set" + MetaClassHelper.capitalize(name);
 						createMethod(setterName, property.isStatic(), "", new TypeBinding[] { fBinding.type }, TypeBinding.VOID,
-								groovyMethods, methodBindings);
+								groovyMethods, methodBindings, typeDeclaration);
 					}
 					if (fBinding.type == TypeBinding.BOOLEAN) {
 						createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", /* TypeBinding.NO_TYPES, */
-						null, fBinding.type, groovyMethods, methodBindings);
+						null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
 					}
 				}
 			}
@@ -153,7 +151,8 @@ public class GroovyClassScope extends ClassScope {
 	}
 
 	private void createMethod(String name, boolean isStatic, String signature, TypeBinding[] parameterTypes,
-			TypeBinding returnType, List<MethodBinding> groovyMethods, MethodBinding[] existingMethods) {
+			TypeBinding returnType, List<MethodBinding> groovyMethods, MethodBinding[] existingMethods,
+			GroovyTypeDeclaration typeDeclaration) {
 		boolean found = false;
 		for (MethodBinding existingMethod : existingMethods) {
 			if (new String(existingMethod.selector).equals(name)) {
@@ -191,7 +190,14 @@ public class GroovyClassScope extends ClassScope {
 			if (this.referenceContext.binding.isInterface()) {
 				modifiers |= ClassFileConstants.AccAbstract;
 			}
-			MethodBinding mb = new MethodBinding(modifiers, name.toCharArray(), returnType, parameterTypes, null,
+			char[] methodName = name.toCharArray();
+	/*		if (typeDeclaration != null) {
+				// check we are not attempting to override a final method
+				MethodBinding[] existingBindings = typeDeclaration.binding.getMethods(name.toCharArray());
+				int stop = 1;
+			}
+    */
+			MethodBinding mb = new MethodBinding(modifiers, methodName, returnType, parameterTypes, null,
 					this.referenceContext.binding);
 			// FIXASC parameter names - what value would it have to set them correctly?
 			groovyMethods.add(mb);
@@ -235,5 +241,10 @@ public class GroovyClassScope extends ClassScope {
 		}
 		// unitScope.environment.getResolvedType(JAVA_LANG_STRING, this);
 		return newMethods;
+	}
+
+	@Override
+	protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
+		return new GroovyClassScope(parent, typeDecl);
 	}
 }

@@ -261,7 +261,13 @@ public class ClassScope extends Scope {
 					}
 				}
 
-				ClassScope memberScope = new ClassScope(this, memberContext);
+				// GROOVY start: use the factory in order to get the right type of scope
+				// old code:
+				// ClassScope memberScope = new ClassScope(this, memberContext);
+				// new code:
+				ClassScope memberScope = buildClassScope(this, memberContext);
+				// GROOVY end
+				
 				memberTypeBindings[count++] = memberScope.buildType(sourceType, sourceType.fPackage, accessRestriction);
 			}
 			if (count != length)
@@ -269,6 +275,12 @@ public class ClassScope extends Scope {
 		}
 		sourceType.memberTypes = memberTypeBindings;
 	}
+
+	// GROOVY start: overridable method so the scope can build the right kind of new scope
+	protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
+		return new ClassScope(parent, typeDecl);
+	}
+	// GROOVY end
 
 	void buildMethods() {
 		SourceTypeBinding sourceType = this.referenceContext.binding;

@@ -188,6 +188,77 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n");
     }
     
+ /*   public void testOverridingFinalMethod_() {
+    	this.runConformTest(new String[]{
+    			"Base.groovy",
+    			"class Base {\n"+
+    			"  final getFinalProperty() { 1 }\n"+
+    			" }\n"+
+    			"class Child extends Base {\n"+
+    			"  def finalProperty = 32 \n"+
+    			"  public static void main(String []argv) {\n"+
+    			"    print new Child().getFinalProperty();\n"+
+    			" }\n"+
+    			"}\n"},"");
+    }*/
+    
+    public void testMixedModeInnerProperties_GRE597() {
+    	this.runConformTest(new String[]{
+    			"groovy/JoinGroovy.groovy",
+    			"package groovy\n"+
+    			"\n"+
+    			"class JointGroovy {\n"+
+    			"StaticInner property\n"+
+    			"\n"+
+    			" static class StaticInner {\n"+
+    			"  NonStaticInner property2\n"+
+    			"\n"+
+    			"  class NonStaticInner {\n"+
+    			"    Closure property3 = {}\n"+
+    			"  }\n"+
+    			" }\n"+
+                "}",
+                "groovy/JointJava.java",
+                "package groovy;\n"+
+                "\n"+
+    			"import groovy.lang.Closure;\n"+
+    			"\n"+
+    			"public class JointJava {\n"+
+    			"    public void method() {\n"+
+    			"        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
+    			"    }\n"+
+    			"}\n"},"");
+    }
+    
+    public void testMixedModeInnerProperties2_GRE597() {
+    	this.runConformTest(new String[]{
+    			"groovy/JoinGroovy.groovy",
+    			"package groovy\n"+
+    			"\n"+
+    			"class JointGroovy {\n"+
+    			"StaticInner property\n"+
+    			"\n"+
+    			" }\n"+
+    			// now the inner is not an inner (like the previous test) but the property3 still is
+    			" class StaticInner {\n"+
+    			"  NonStaticInner property2\n"+
+    			"\n"+
+    			"  class NonStaticInner {\n"+
+    			"    Closure property3 = {}\n"+
+    			"  }\n"+
+                "}",
+                "groovy/JointJava.java",
+                "package groovy;\n"+
+                "\n"+
+    			"import groovy.lang.Closure;\n"+
+    			"\n"+
+    			"public class JointJava {\n"+
+    			"    public void method() {\n"+
+    			"        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
+    			"    }\n"+
+    			"}\n"},"");
+    }
+    
     public void testNewRuleInLatestGroovy() {
 //    	if (isGroovy16()) { // FIXASC should also break in 17b2
 	    	this.runNegativeTest(new String[]{
