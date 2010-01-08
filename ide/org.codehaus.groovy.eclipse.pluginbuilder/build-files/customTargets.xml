@@ -183,13 +183,16 @@
 	    <param name="target" value="updateSiteExport"/>
 	  </antcall>
 
-  	<!-- Remove test and SDK plugins and feature -->
+  	
+  	<!-- Remove only the SDK feature -->
+  	<!-- Tests are needed for the STS build -->
   	<delete>
 			<fileset dir="${updateSiteDir}/features">
-			    <include name="*alltests*"/>
+			    <!--<include name="*alltests*"/>-->
 			    <include name="*sdk*"/>
 			</fileset>
 		</delete>
+  	<!--
   	<delete>
 			<fileset dir="${updateSiteDir}/plugins">
 			    <include name="*tests_*"/>
@@ -199,7 +202,7 @@
 			    <include name="*performance_*"/>
 			</fileset>
 		</delete>
-
+		-->
   	
   	<!-- need the site.xml file before we can generate -->
 		<copy todir="${updateSiteDir}">
