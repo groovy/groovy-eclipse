@@ -50,6 +50,7 @@ public class GroovyParser {
 	public ProblemReporter problemReporter;
 	CompilationUnit groovyCompilationUnit;
 	private JDTResolver resolver;
+	private String projectName;
 	private String gclClasspath;
 	public static IGroovyDebugRequestor debugRequestor;
 	private CompilerOptions compilerOptions;
@@ -98,17 +99,9 @@ public class GroovyParser {
 		this(requestor, options, problemReporter, true);
 	}
 
-	// FIXASC review callers who pass null for options
-	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms) {
-		String path = (options == null ? null : options.groovyClassLoaderPath);
-		this.requestor = requestor;
-		// FIXASC set parent of the loader to system or context class loader?
-
-		// record any paths we use for a project so that when the project is cleared,
-		// the paths (which point to cached classloaders) can be cleared
+	private GroovyClassLoader getLoaderFor(String path) {
 		GroovyClassLoader gcl = null;
 		if (path != null) {
-			String projectName = options.groovyProjectName;
 			if (projectName == null) {
 				// throw new IllegalStateException("Cannot build without knowing project name");
 			} else {
@@ -128,8 +121,22 @@ public class GroovyParser {
 				gcl = pathAndLoader.groovyClassLoader;
 			}
 		}
+		return gcl;
+	}
+
+	// FIXASC review callers who pass null for options
+	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms) {
+		String path = (options == null ? null : options.groovyClassLoaderPath);
+		this.requestor = requestor;
+		// FIXASC set parent of the loader to system or context class loader?
+
+		// record any paths we use for a project so that when the project is cleared,
+		// the paths (which point to cached classloaders) can be cleared
+
 		this.gclClasspath = path;
 		this.compilerOptions = options;
+		this.projectName = options.groovyProjectName;
+		GroovyClassLoader gcl = getLoaderFor(path);
 		// Grab needs them on, even for reconciling to behave *sigh*, so might as well turn them on for everything
 		allowTransforms = true;
 
@@ -313,10 +320,13 @@ public class GroovyParser {
 	}
 
 	public void reset() {
-		// FIXASC not sure the reset is resetting it to be the same as originally constructed
-		GroovyClassLoader gcl = new GroovyClassLoader();
-		configureClasspath(gcl, gclClasspath);
-		this.groovyCompilationUnit = new CompilationUnit(gcl);
+		GroovyClassLoader gcl = getLoaderFor(gclClasspath);
+		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
+		this.groovyCompilationUnit = new CompilationUnit(null, null, grabbyLoader, gcl);
+		grabbyLoader.setCompilationUnit(this.groovyCompilationUnit);
+		if (gcl == null) {
+			this.groovyCompilationUnit.ensureASTTransformVisitorAdded();
+		}
 		this.resolver = new JDTResolver(groovyCompilationUnit);
 		this.groovyCompilationUnit.setResolveVisitor(resolver);
 	}
