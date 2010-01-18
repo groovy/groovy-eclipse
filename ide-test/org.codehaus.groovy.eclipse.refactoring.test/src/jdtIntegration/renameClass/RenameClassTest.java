@@ -30,7 +30,7 @@ public class RenameClassTest extends ProgrammaticalRenameTest {
 	
 	public void testRenameClass() {	
 		ClassNode n = ClassHelper.make("tests.TestCodeFiles.jdtIntegration.FieldClass");		
-		RenameClassProvider provider = new RenameClassProvider(fileProvider, n);
+		RenameClassProvider provider = new RenameClassProvider(fileProvider, n, null);
 		provider.setNewName("Test");
 		checkRefactoring(provider);		
 	}

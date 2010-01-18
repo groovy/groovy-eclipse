@@ -95,9 +95,12 @@ public class RenameClassTextEdit extends RenameTextEdit {
 			for (TextEdit existing : edits.getChildren()) {
 				if (existing.covers(edit)) {
 					edit = null;
+					break;
 				}
 			}
-			if (edit != null) edits.addChild(edit);
+			if (edit != null) {
+			    edits.addChild(edit);
+			}
 		}
 	}
 

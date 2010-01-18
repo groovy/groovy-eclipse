@@ -15,19 +15,25 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.jdt.core.IBuffer;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages;
-import org.eclipse.swt.widgets.Composite;
+import org.eclipse.text.edits.ReplaceEdit;
+import org.eclipse.text.edits.TextEdit;
 
 /**
  * @author MelamedZ
@@ -97,6 +103,36 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
             }
         }
         return status;
+	}
+	
+	@Override
+	public void createType(IProgressMonitor monitor) throws CoreException,
+	        InterruptedException {
+	    super.createType(monitor);
+	    monitor = new SubProgressMonitor(monitor, 1);
+	    IPackageFragment pack= getPackageFragment();
+	    GroovyCompilationUnit unit = (GroovyCompilationUnit) pack.getCompilationUnit(getCompilationUnitName(getTypeName()));
+	    try {
+    	    monitor.beginTask("Remove semi-colons", 1);
+    	    // remove ';' on package declaration
+    	    IPackageDeclaration[] packs = unit.getPackageDeclarations();
+    	    if (packs.length > 0) {
+    	        ISourceRange range = packs[0].getSourceRange();
+    	        int position = range.getOffset() + range.getLength();
+                if (unit.getContents()[position] == ';') {
+                    unit.becomeWorkingCopy(new SubProgressMonitor(monitor, 1));
+                    TextEdit edit = new ReplaceEdit(position, 1, "");
+                    unit.applyTextEdit(edit, new SubProgressMonitor(monitor, 1));
+    	            unit.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1));
+    	        }
+    	    }
+    	    monitor.worked(1);
+        } finally {
+            if (unit != null) {
+                unit.discardWorkingCopy();
+            }
+            monitor.done();
+        }
 	}
 	
 	

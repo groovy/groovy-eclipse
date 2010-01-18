@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
@@ -22,36 +22,30 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.builder.GroovyNameLookup;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.IField;
-import org.eclipse.jdt.core.IInitializer;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.core.IJavaElementRequestor;
-import org.eclipse.jdt.internal.core.JavaProject;
-import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.SourceRange;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
+import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
@@ -64,6 +58,33 @@ import org.eclipse.text.edits.TextEditVisitor;
  * Organize import operation for groovy files
  */
 public class OrganizeGroovyImports {
+    
+    /**
+     * From {@link OrganizeImportsOperation.TypeReferenceProcessor.UnresolvedTypeData}
+     * 
+     */
+    static class UnresolvedTypeData {
+        final String ref;
+        final boolean isAnnotation;
+        final List<TypeNameMatch> foundInfos;
+        final ISourceRange range;
+
+        public UnresolvedTypeData(String ref, boolean annotation, ISourceRange range) {
+            this.ref = ref;
+            this.isAnnotation = annotation;
+            this.foundInfos = new LinkedList<TypeNameMatch>();
+            this.range = range;
+        }
+        public void addInfo(TypeNameMatch info) {
+            for (int i= this.foundInfos.size() - 1; i >= 0; i--) {
+                TypeNameMatch curr= (TypeNameMatch) this.foundInfos.get(i);
+                if (curr.getTypeContainerName().equals(info.getTypeContainerName())) {
+                    return; // not added. already contains type with same name
+                }
+            }
+            foundInfos.add(info);
+        }
+    }
     
     private class FindUnresolvedReferencesVisitor extends ClassCodeVisitorSupport {
 
@@ -96,6 +117,9 @@ public class OrganizeGroovyImports {
         @Override
         public void visitVariableExpression(VariableExpression expression) {
             handleType(expression.getType(), false);
+            if (expression.getAccessedVariable() instanceof DynamicVariable) {
+                handleVariableExpression(expression);
+            }
         }
         
         @Override
@@ -158,19 +182,20 @@ public class OrganizeGroovyImports {
         }
         
         
-        @Override
-        public void visitListExpression(ListExpression node) {
-            super.visitListExpression(node);
-        }
         
-        @Override
-        public void visitMapEntryExpression(MapEntryExpression expression) {
-            super.visitMapEntryExpression(expression);
-        }
-        
-        @Override
-        public void visitMapExpression(MapExpression expression) {
-            super.visitMapExpression(expression);
+        /**
+         * Assume dynamic variables are a candidate for Organize imports,
+         * but only if name begins with a capital.  This will hopefully 
+         * filter out most false positives.
+         * @param expr
+         */
+        private void handleVariableExpression(VariableExpression expr) {
+            if (Character.isUpperCase(expr.getName().charAt(0)) &&
+                    !missingTypes.containsKey(expr.getName())) {
+                missingTypes.put(expr.getName(), 
+                        new UnresolvedTypeData(expr.getName(), false, 
+                                new SourceRange(expr.getStart(), expr.getEnd()-expr.getStart())));
+            }
         }
         
         /**
@@ -189,12 +214,10 @@ public class OrganizeGroovyImports {
                     semiQualifiedName = node.getName();
                 }
                 String simpleName = semiQualifiedName.split("\\.")[0];
-                if (isAnnotation) {
-                    missingAnnotationTypeNames.put(simpleName, 
-                            new SourceRange(node.getStart(), node.getEnd()-node.getStart()));
-                } else {
-                    missingTypeNames.put(simpleName, 
-                            new SourceRange(node.getStart(), node.getEnd()-node.getStart()));
+                if (!missingTypes.containsKey(simpleName)) {
+                    missingTypes.put(simpleName, 
+                            new UnresolvedTypeData(simpleName, isAnnotation, 
+                                    new SourceRange(node.getStart(), node.getEnd()-node.getStart())));
                 }
             } else {
                 // We don't know exactly what the
@@ -230,7 +253,7 @@ public class OrganizeGroovyImports {
                             handleType(upper, false);
                         }
                     }
-                    if (gen.getType() != null) {
+                    if (gen.getType() != null && gen.getType().getName().charAt(0) != '?') {
                         handleType(gen.getType(), false);
                     }
                 }
@@ -243,8 +266,7 @@ public class OrganizeGroovyImports {
     }
 
     private final GroovyCompilationUnit unit;
-    private HashMap<String, ISourceRange> missingTypeNames;
-    private HashMap<String, ISourceRange> missingAnnotationTypeNames;
+    private HashMap<String, UnresolvedTypeData> missingTypes;
     private HashMap<String, ImportNode> importsSlatedForRemoval;
     
     private IChooseImportQuery query;
@@ -261,8 +283,7 @@ public class OrganizeGroovyImports {
             return new MultiTextEdit();
         }
         
-        missingTypeNames = new HashMap<String,ISourceRange>();
-        missingAnnotationTypeNames = new HashMap<String,ISourceRange>();
+        missingTypes = new HashMap<String,UnresolvedTypeData>();
         importsSlatedForRemoval = new HashMap<String, ImportNode>();
         FindUnresolvedReferencesVisitor visitor = new FindUnresolvedReferencesVisitor();
         
@@ -371,35 +392,20 @@ public class OrganizeGroovyImports {
     
 
     private IType[] resolveMissingTypes() throws JavaModelException {
-        IJavaProject project = unit.getJavaProject();
-        NameLookup lookup = createNameLookup(project);
-
+        
+        // fill in all the potential matches
+        searchForTypes();
         List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<TypeNameMatch>();
         List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<TypeNameMatch[]>();
         List<ISourceRange> ranges = new ArrayList<ISourceRange>();
-        
-        // find regular types
-        for (Entry<String, ISourceRange> missingType : missingTypeNames.entrySet()) {
-            TypeNameMatch[] resolved = resolveType(missingType.getKey(), lookup, false);
-            if (resolved == null || resolved.length == 0) {
-                continue;
-            } else if (resolved.length == 1) {
-                missingTypesNoChoiceRequired.add(resolved[0]);
-            } else {
-                missingTypesChoiceRequired.add(resolved);
-                ranges.add(missingType.getValue());
-            }
-        }
-        // find annotation types
-        for (Entry<String, ISourceRange> missingType : missingAnnotationTypeNames.entrySet()) {
-            TypeNameMatch[] resolved = resolveType(missingType.getKey(), lookup, true);
-            if (resolved == null || resolved.length == 0) {
-                continue;
-            } else if (resolved.length == 1) {
-                missingTypesNoChoiceRequired.add(resolved[0]);
-            } else {
-                missingTypesChoiceRequired.add(resolved);
-                ranges.add(missingType.getValue());
+
+        // go through all the resovled matches and look for ambiguous matches
+        for (UnresolvedTypeData data : missingTypes.values()) {
+            if (data.foundInfos.size() > 1) {
+                missingTypesChoiceRequired.add(data.foundInfos.toArray(new TypeNameMatch[0]));
+                ranges.add(data.range);
+            } else if (data.foundInfos.size() == 1) {
+                missingTypesNoChoiceRequired.add(data.foundInfos.get(0));
             }
         }
         
@@ -429,56 +435,43 @@ public class OrganizeGroovyImports {
         }
     }
 
+    
     /**
-     * create a name lookup that can see into secondary types
+     * Use a SearchEngine to look for the types
+     * This will not find inner types, however
+     * @see OrganizeImportsOperation.TypeReferenceProcessor#process(org.eclipse.core.runtime.IProgressMonitor)
+     * @param missingType
+     * @throws JavaModelException 
      */
-    private NameLookup createNameLookup(IJavaProject project)
-            throws JavaModelException {
-        return new GroovyNameLookup(((JavaProject) project).newNameLookup(unit.owner));
+    private void searchForTypes() throws JavaModelException {
+        char[][] allTypes = new char[missingTypes.size()][];
+        int i = 0;
+        for (String simpleName : missingTypes.keySet()) {
+            allTypes[i++] = simpleName.toCharArray();
+        }
+        final List<TypeNameMatch> typesFound= new ArrayList<TypeNameMatch>();
+        TypeNameMatchCollector collector= new TypeNameMatchCollector(typesFound);
+        IJavaSearchScope scope= SearchEngine.createJavaSearchScope(new IJavaElement[] { unit.getJavaProject() });
+        new SearchEngine().searchAllTypeNames(null, allTypes, scope, collector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
+        
+        for (TypeNameMatch match : typesFound) {
+            UnresolvedTypeData data = missingTypes.get(match.getSimpleTypeName());
+            if (isOfKind(match, data.isAnnotation)) {
+                data.addInfo(match);
+            }
+        }
     }
 
     /**
-     * Use a NameLookup to look for the types
-     * This will not find inner types, however
-     * Should use a SearchEngine
-     * @see OrganizeImportsOperation.TypeReferenceProcessor#process(org.eclipse.core.runtime.IProgressMonitor)
-     * @param missingType
+     * If looking for an annotation, then filter out non-annoations,
+     * otherwise everything is acceptable.
+     * @param match
+     * @param isAnnotation
+     * @return
      */
-    private TypeNameMatch[] resolveType(String missingType, NameLookup lookup, boolean lookForAnnotation) {
-        final List<TypeNameMatch> resolved = new LinkedList<TypeNameMatch>();
-        IJavaElementRequestor requestor = new IJavaElementRequestor() {
-            boolean canceled = false;
-            public boolean isCanceled() {
-                return canceled;
-            }
-            
-            public void acceptType(IType type) {
-                if (resolved != null) {
-                    // look for duplicates
-                    // this can happen if type exists as working copy as well
-                    // or included from multiple locations
-                    for (TypeNameMatch typeNameMatch : resolved) {
-                        IType existing = typeNameMatch.getType();
-                        if (existing.getFullyQualifiedName().equals(type.getFullyQualifiedName())) {
-                            // already accepted
-                            return;
-                        }
-                    }
-                    resolved.add(new JavaSearchTypeNameMatch(type, 0));
-                }
-            }
-            
-            public void acceptPackageFragment(IPackageFragment packageFragment) { }
-            public void acceptMethod(IMethod method) { }
-            public void acceptMemberType(IType type) { }
-            public void acceptInitializer(IInitializer initializer) { }
-            public void acceptField(IField field) { }
-        };
-       
-        int searchFor = lookForAnnotation ? NameLookup.ACCEPT_ANNOTATIONS : NameLookup.ACCEPT_ALL;
-        lookup.seekTypes(missingType, null, false, searchFor, requestor);
-        return resolved.toArray(new TypeNameMatch[0]);
+    private boolean isOfKind(TypeNameMatch match, boolean isAnnotation) {
+        return isAnnotation ? Flags.isAnnotation(match.getModifiers()) : true;
     }
-    
+
 
 }

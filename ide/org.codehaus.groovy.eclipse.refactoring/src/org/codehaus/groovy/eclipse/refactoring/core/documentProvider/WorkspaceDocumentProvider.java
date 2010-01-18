@@ -23,6 +23,8 @@ import java.io.InputStream;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -75,6 +77,8 @@ public class WorkspaceDocumentProvider implements IGroovyDocumentProvider {
 		    ICompilationUnit unit = getUnit();
 		    if (unit instanceof GroovyCompilationUnit) {
 		        rootNode = ((GroovyCompilationUnit) unit) .getModuleNode();
+		    } else {
+		        rootNode = new GroovySnippetParser().parse("");
 		    }
 		}
 		return rootNode;
@@ -83,8 +87,8 @@ public class WorkspaceDocumentProvider implements IGroovyDocumentProvider {
     /**
      * @return
      */
-    public GroovyCompilationUnit getUnit() {
-        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+    public ICompilationUnit getUnit() {
+        return JavaCore.createCompilationUnitFrom(file);
     }
 
 	public IDocument getDocument() {

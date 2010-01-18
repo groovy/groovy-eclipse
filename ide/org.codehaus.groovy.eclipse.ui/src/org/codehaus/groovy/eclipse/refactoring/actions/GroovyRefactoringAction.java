@@ -59,33 +59,10 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 		selection = new UserSelection(ts.getOffset(), ts.getLength());
 		docProvider = new GroovyCompilationUnitDocumentProvider(editor.getGroovyCompilationUnit());
 
-		// is this a problem?  Should we allow refactoring even if there is an error somewhere in the project...
-//		CompilationUnitFileProvider fileProv = new CompilationUnitFileProvider(new GroovyCompilationUnitDocumentProvider(editor.getGroovyCompilationUnit()));
-//		try {
-//			for (IGroovyDocumentProvider dp : fileProv.getAllSourceFiles()) {
-//				if (dp instanceof WorkspaceDocumentProvider) {
-//					WorkspaceDocumentProvider currDocProv = (WorkspaceDocumentProvider) dp;
-//					IMarker[] markers = currDocProv.getFile().findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_ONE);
-//					if (markers.length > 0) {
-//					    for (int i = 0; i < markers.length; i++) {
-//                            if (markers[i].getAttribute(IMarker.SEVERITY, 0) >= IMarker.SEVERITY_ERROR) {
-//                                displayErrorDialog(GroovyRefactoringMessages.bind(
-//                                        GroovyRefactoringMessages.GroovyRefactoringAction_Syntax_Errors, 
-//                                        markers[i].getResource().getFullPath().toPortableString()));
-//                                return false;
-//                            }
-//                        }
-//					}
-//				}
-//			}
-			if (docProvider.getRootNode() == null) {
-				displayErrorDialog(GroovyRefactoringMessages.GroovyRefactoringAction_No_Module_Node);
-				return false;
-			}
-
-//		} catch (CoreException e) {
-//			return false;
-//		}
+		if (docProvider.getRootNode() == null) {
+			displayErrorDialog(GroovyRefactoringMessages.GroovyRefactoringAction_No_Module_Node);
+			return false;
+		}
 		return PlatformUI.getWorkbench().saveAllEditors(true);
 	}
 

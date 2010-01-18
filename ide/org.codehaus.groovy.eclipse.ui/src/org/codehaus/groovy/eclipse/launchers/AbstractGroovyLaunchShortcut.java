@@ -146,7 +146,8 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             ILaunchConfigurationWorkingCopy workingConfig = findOrCreateLaunchConfig(launchConfigProperties, 
                     runType.getElementName());
             workingConfig.setAttribute(
-                    IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, Arrays.asList( JavaRuntime.computeDefaultRuntimeClassPath(javaProject)) );
+                    IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, Arrays.asList(
+                            JavaRuntime.computeDefaultRuntimeClassPath(javaProject)));
             ILaunchConfiguration config = workingConfig.doSave();
             DebugUITools.launch(config, mode);  
         } catch (CoreException e) {
@@ -227,7 +228,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             	ILaunchConfigurationWorkingCopy returnConfig = 
             		getGroovyLaunchConfigType().newInstance(null, launchName);
             
-            	for (Iterator< String > it = configProperties.keySet().iterator(); it.hasNext();) {
+            	for (Iterator<String> it = configProperties.keySet().iterator(); it.hasNext();) {
             		String key = it.next();
             		String value = configProperties.get(key);
             		returnConfig.setAttribute(key, value);

@@ -106,7 +106,15 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         IScopeContext projectScope = new ProjectScope(project);
         IEclipsePreferences projectNode = projectScope
                 .getNode(GroovyCoreActivator.PLUGIN_ID);
-        return projectNode.getBoolean(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, true);
+        String val = projectNode.get(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, "default");
+        if (val.equals(Boolean.TRUE.toString())) {
+            return true;
+        } else if (val.equals(Boolean.FALSE.toString())) {
+            return false;
+        } else {
+            return GroovyCoreActivator.getDefault().getPreference(
+                    PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
+        }
     }
     
     /**

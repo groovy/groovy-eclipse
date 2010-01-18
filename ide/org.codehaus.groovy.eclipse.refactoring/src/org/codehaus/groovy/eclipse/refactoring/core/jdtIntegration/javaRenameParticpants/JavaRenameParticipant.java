@@ -11,13 +11,16 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.refactoring.core.EmptyRefactoringProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringProvider;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
@@ -50,15 +53,20 @@ public abstract class JavaRenameParticipant extends RenameParticipant {
 	
 	@Override
 	protected boolean initialize(Object element) {
-	    // FIXADE 2.0.1M1 currently disabling groovy refactoring participation if target not
-	    // in groovy project, but this might be too strict.
-		if (getArguments().getUpdateReferences() && element instanceof IJavaElement
-		        && GroovyNature.hasGroovyNature(((IJavaElement) element).getJavaProject().getProject())) {	
-			IJavaElement javaElement = (IJavaElement) element;
-			return initialize(javaElement);
-		} else {
-			return false;
-		}
+	    try {
+	        // FIXADE 2.0.1M1 currently disabling groovy refactoring participation if target not
+	        // in groovy project, but this might be too strict.
+    		if (getArguments().getUpdateReferences() && element instanceof IJavaElement
+    		        && GroovyNature.hasGroovyNature(((IJavaElement) element).getJavaProject().getProject())) {	
+    			IJavaElement javaElement = (IJavaElement) element;
+    			if (javaElement.getAncestor(IJavaElement.COMPILATION_UNIT) instanceof ICompilationUnit) {
+    			    return initialize(javaElement);
+    			}
+    		}
+	    } catch (Exception e) {
+	        GroovyCore.logException("Exception initializing Java rename participant for groovy", e);
+	    }
+	    return false;
 	}
 	
 	@Override

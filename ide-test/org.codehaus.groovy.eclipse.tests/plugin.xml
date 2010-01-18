@@ -44,5 +44,13 @@
        </appliesTo>
     </lookup>
  </extension>
+   <extension
+         point="org.eclipse.debug.ui.consoleLineTrackers">
+      <consoleLineTracker
+            class="org.codehaus.groovy.eclipse.test.debug.ConsoleLineTracker"
+            processType="java"
+            id="org.eclipse.jdt.debug.tests.ConsoleLineTracker">
+      </consoleLineTracker>
+   </extension>
 
 </plugin>

@@ -19,57 +19,48 @@ import tests.BaseTestSuite;
  */
 public class RenameClass_EclipseTestSuite extends BaseTestSuite {
 
-	public static TestSuite suite() {
-		
-		TestSuite ts = new TestSuite("Rename Class Suite");
-		
-		List<File> files;
+    public static TestSuite suite() {
 
-		files = getFileList("/jdtIntegration/startedFromGroovy/renameClass","RenameJavaClass_Test_");
-		
-		for (File file : files) {
-//	          if (file.getName().endsWith("RenameGroovyClass_Test_ReturnType.txt"))
-//	              ts.addTest(new RenameClass_EclipseTestCase("started from Groovy: "+file.getName(), file));
-//	          if (file.getName().endsWith("RenameGroovyClass_Test_SameClassNameDiffPackage.txt"))
-//	              ts.addTest(new RenameClass_EclipseTestCase("started from Groovy: "+file.getName(), file));
-	          if (file.getName().endsWith("RenameGroovyClass_Test_SameClassnameDiffPackage.txt"))
-	              ts.addTest(new RenameClass_EclipseTestCase("started from Groovy: "+file.getName(), file));
-		}
+        TestSuite ts = new TestSuite(RenameClass_EclipseTestSuite.class.getCanonicalName());
 
-		files = getFileList("/jdtIntegration/startedFromGroovy/renameClass","RenameGroovyClass_Test_");
-		
-		for (File file : files) {
-//            if (file.getName().endsWith("RenameGroovyClass_Test_ReturnType.txt"))
-//                ts.addTest(new RenameClass_EclipseTestCase("started from Groovy: "+file.getName(), file));
-//            if (file.getName().endsWith("RenameGroovyClass_Test_SameClassNameDiffPackage.txt"))
-//                ts.addTest(new RenameClass_EclipseTestCase("started from Groovy: "+file.getName(), file));
-            if (file.getName().endsWith("RenameGroovyClass_Test_SameClassnameDiffPackage.txt"))
-                ts.addTest(new RenameClass_EclipseTestCase("started from Groovy: "+file.getName(), file));
-		} 
+        List<File> files;
 
-		files = getFileList("/jdtIntegration/startedFromJava/renameClass","RenameJavaClass_Test_");
-		
-		for (File file : files) {
-//            if (file.getName().endsWith("RenameGroovyClass_Test_ReturnType.txt"))
+        files = getFileList("/jdtIntegration/startedFromJava/renameClass","RenameJavaClass_Test_");
+
+        for (File file : files) {
+//            if (file.getName().contains("ExtendsClass"))
 //                ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
-//            if (file.getName().endsWith("RenameGroovyClass_Test_SameClassNameDiffPackage.txt"))
-//                ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
-            if (file.getName().endsWith("RenameGroovyClass_Test_SameClassnameDiffPackage.txt"))
+//            if (file.getName().contains("Test_Expression"))
                 ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
-		}
-			
-		files = getFileList("/jdtIntegration/startedFromJava/renameClass","RenameGroovyClass_Test_");
-		
-		for (File file : files) {
-//		    if (file.getName().endsWith("RenameGroovyClass_Test_ReturnType.txt"))
-//		        ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
-//		    if (file.getName().endsWith("RenameGroovyClass_Test_SameClassNameDiffPackage.txt"))
-//		        ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
-		    if (file.getName().endsWith("RenameGroovyClass_Test_SameClassnameDiffPackage.txt"))
-		        ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
-		}
+        }
 
+        files = getFileList("/jdtIntegration/startedFromJava/renameClass","RenameGroovyClass_Test_");
 
-		return ts;
-	}
+        for (File file : files) {
+//            if (file.getName().contains("ExtendsClass"))
+//                ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
+//            if (file.getName().contains("Test_Expression"))
+                ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
+        }
+
+        files = getFileList("/jdtIntegration/startedFromGroovy/renameClass","RenameJavaClass_Test_");
+
+        for (File file : files) {
+//            if (file.getName().contains("ExtendsClass"))
+//                ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
+//            if (file.getName().contains("Test_Expression"))
+                ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
+        }
+
+        files = getFileList("/jdtIntegration/startedFromGroovy/renameClass","RenameGroovyClass_Test_");
+
+        for (File file : files) {
+//            if (file.getName().contains("ExtendsClass"))
+//                ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
+//            if (file.getName().contains("Test_Expression"))
+                ts.addTest(new RenameClass_EclipseTestCase("started from Java: "+file.getName(), file));
+        } 
+
+        return ts;
+    }
 }

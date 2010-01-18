@@ -339,8 +339,8 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 		checkForDuplicates(refactoringStatus);
 		IJavaElement element = codeResolve(unit);
 		
-		if (element != null) {    
-		    processRenameParticipants(refactoringStatus, element);
+		if (element instanceof IMethod) {    
+		    processRenameParticipants(refactoringStatus, (IMethod) element);
 		} else {
 		    if (unit != null && selection != null) {
 		        // only add error if there was a valid selection going in.
@@ -365,12 +365,12 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
         }
     }
 	
-	private void processRenameParticipants(RefactoringStatus refactoringStatus, IJavaElement element) throws CoreException{
+	private void processRenameParticipants(RefactoringStatus refactoringStatus, IMethod element) throws CoreException{
 		
 		GroovySharableParticipants sharableParticipants= new GroovySharableParticipants(); 
 		RenameArguments arguments = new RenameArguments(newMethodName, true);
 		
-		GroovyRenameMethodProcessor processor = new GroovyRenameMethodProcessor((IMethod)element);
+		GroovyRenameMethodProcessor processor = new GroovyRenameMethodProcessor(element);
         
 		
 		RefactoringParticipant[] loadedParticipants= GroovyParticipantManager.loadRenameParticipants(refactoringStatus, processor, element, arguments,

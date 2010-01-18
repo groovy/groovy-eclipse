@@ -13,18 +13,14 @@ package org.codehaus.groovy.eclipse.core.compiler;
 
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
 
 import org.codehaus.groovy.antlr.AntlrParserPlugin;
-import org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory;
 import org.codehaus.groovy.antlr.GroovySourceAST;
-import org.codehaus.groovy.antlr.ICSTReporter;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.ParserPlugin;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.syntax.CSTNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.jdt.core.JavaCore;

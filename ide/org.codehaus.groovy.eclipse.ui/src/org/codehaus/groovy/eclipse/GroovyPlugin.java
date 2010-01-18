@@ -37,6 +37,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry;
 import org.eclipse.ui.editors.text.templates.ContributionTemplateStore;
 import org.eclipse.ui.internal.Workbench;
+import org.eclipse.ui.internal.util.PrefUtil;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -212,6 +213,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
         }
         
         getPreferenceStore().addPropertyChangeListener(ensure);
+        PrefUtil.getInternalPreferenceStore().addPropertyChangeListener(ensure);
         
         maybeAskToConvertLegacyProjects();
     }
@@ -228,6 +230,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
             // workbench is shutting down.  can ignore this
         }
         getPreferenceStore().removePropertyChangeListener(ensure);
+        PrefUtil.getInternalPreferenceStore().removePropertyChangeListener(ensure);
     }
 	
 	/**

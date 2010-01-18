@@ -54,6 +54,61 @@ public class FieldCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, ". "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "someProperty", 1);
     }
+    
+    
+    // test some variations on properties
+    // GRECLIPSE-616
+    public void testProperties1() throws Exception {
+        String contents = "class Other { def x } \n new Other().x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getX", 1);
+        proposalExists(proposals, "setX", 1);
+        proposalExists(proposals, "x", 1);
+    }
+    
+    public void testProperties2() throws Exception {
+        String contents = "class Other { public def x } \n new Other().x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getX", 0);
+        proposalExists(proposals, "setX", 0);
+        proposalExists(proposals, "x", 1);
+    }
+    
+    public void testProperties3() throws Exception {
+        String contents = "class Other { private def x } \n new Other().x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getX", 0);
+        proposalExists(proposals, "setX", 0);
+        proposalExists(proposals, "x", 1);
+    }
+    
+    public void testProperties4() throws Exception {
+        String contents = "class Other { public static final int x = 9 } \n new Other().x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getX", 0);
+        proposalExists(proposals, "setX", 0);
+        proposalExists(proposals, "x", 1);
+    }
+    
+    public void testProperties5() throws Exception {
+        String contents = "new Other().x";
+        ICompilationUnit unit = create(contents);
+        env.addClass(env.getProject("Project").getFolder("src").getFullPath(), "Other", "class Other { int x = 9; }");
+        fullBuild();
+        
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getX", 0);
+        proposalExists(proposals, "setX", 0);
+        proposalExists(proposals, "x", 1);
+    }
+    
+    
+    
+    
 
     private ICompilationUnit create(String contents) throws Exception {
         IPath projectPath = createGenericProject();

@@ -20,6 +20,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.rename.renameClass;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -35,21 +36,31 @@ import org.codehaus.groovy.eclipse.refactoring.core.MultiFileRefactoringProvider
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider;
+import org.codehaus.groovy.eclipse.refactoring.core.participation.GroovyParticipantManager;
+import org.codehaus.groovy.eclipse.refactoring.core.participation.GroovySharableParticipants;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.IRenameProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameTextEditProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.GroovyConventionsBuilder;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ImportResolver;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.corext.refactoring.participants.JavaProcessors;
+import org.eclipse.jdt.internal.corext.refactoring.rename.RenameTypeProcessor;
+import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
+import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.participants.RefactoringParticipant;
+import org.eclipse.ltk.core.refactoring.participants.RenameArguments;
 import org.eclipse.text.edits.MultiTextEdit;
 
 /**
@@ -60,14 +71,22 @@ import org.eclipse.text.edits.MultiTextEdit;
 public class RenameClassProvider extends MultiFileRefactoringProvider implements
 		IRenameProvider {
 
+    private static final List<RefactoringParticipant> EMPTY_PARTICIPANTS= Collections.EMPTY_LIST;
+
 	private final ClassNode selectedNode;
 	private String alias;
 	protected List<RenameTextEditProvider> textEditProviders = new ArrayList<RenameTextEditProvider>();
+	private final ICompilationUnit compilationUnit;
+	private String newclassName;
+	
+	private List<RefactoringParticipant> fParticipants = EMPTY_PARTICIPANTS;
 
 	public RenameClassProvider(IGroovyFileProvider docProvider,
-			ClassNode selectedNode) {
+			ClassNode selectedNode, ICompilationUnit unit) {
 		super(docProvider);
 		this.selectedNode = selectedNode;
+		this.selectedASTNode = selectedNode;
+		this.compilationUnit = unit;
 		try {
 		    createProvidersConsideringAlias();
 		} catch (NullPointerException e) {
@@ -76,8 +95,8 @@ public class RenameClassProvider extends MultiFileRefactoringProvider implements
 	}
 
 	public RenameClassProvider(IGroovyFileProvider docProvider,
-			UserSelection selection, ClassNode selectedNode) {
-		this(docProvider, selectedNode);
+			UserSelection selection, ClassNode selectedNode, ICompilationUnit unit) {
+		this(docProvider, selectedNode, unit);
 		setSelection(selection);
 	}
 
@@ -122,8 +141,54 @@ public class RenameClassProvider extends MultiFileRefactoringProvider implements
 										newName));
 			}
 		}
-
+		
+		IJavaElement element = codeResolve(compilationUnit);
+		
+		if (element != null && element.getElementType() == IJavaElement.TYPE) {    
+		    processRenameParticipants(state, (IType) element);
+		} else {
+		    if (compilationUnit != null && selection != null) {
+		        // only add error if there was a valid selection going in.
+		    	state.addError("Cannot resolve selection to a Groovy program element");
+		    }
+		}
+				
 		return state;
+	}
+	
+	private IJavaElement codeResolve(ICompilationUnit input) throws JavaModelException {
+	    if (input == null || selectedASTNode == null) {
+	        return null;
+	    }
+	    JavaModelUtil.reconcile((ICompilationUnit) input);
+	    IJavaElement[] elements = input.getChildren();
+	    if (elements != null && elements.length > 0) {
+	        return elements[0];
+	    } else {
+	        return null;
+	    }
+	}
+	
+	private void processRenameParticipants(RefactoringStatus refactoringStatus, IJavaElement element) throws CoreException{
+		
+		GroovySharableParticipants sharableParticipants= new GroovySharableParticipants(); 
+		RenameArguments arguments = new RenameArguments(newclassName, true);
+		
+		RenameTypeProcessor processor = new RenameTypeProcessor((IType)element);
+        
+		
+		RefactoringParticipant[] loadedParticipants= GroovyParticipantManager.loadRenameParticipants(refactoringStatus, processor, element, arguments,
+																					JavaProcessors.computeAffectedNatures(element), null, sharableParticipants);
+		if (loadedParticipants == null || loadedParticipants.length == 0) {
+			fParticipants= EMPTY_PARTICIPANTS;
+		} else {
+			fParticipants= new ArrayList<RefactoringParticipant>();
+			for (int i= 0; i < loadedParticipants.length; i++) {
+				fParticipants.add(loadedParticipants[i]);
+			}
+		}
+		
+		
 	}
 
 	@Override
@@ -177,10 +242,18 @@ public class RenameClassProvider extends MultiFileRefactoringProvider implements
 
 		for (RenameTextEditProvider textEditProvider : textEditProviders) {
 			MultiTextEdit multi = removeDuplicatedTextedits(textEditProvider);
-			IFile file = textEditProvider.getDocProvider().getFile();
             IGroovyDocumentProvider docProvider = textEditProvider.getDocProvider();
 			change.addEdit(docProvider, multi);
 		}
+		
+		for (RefactoringParticipant participant : fParticipants) {
+			Change participantChange= participant.createChange(new SubProgressMonitor(pm, 1));
+			if (participantChange != null) {
+				GroovyCore.logTraceMessage("--adding participant change " + participantChange);
+				change.addChange(participantChange);
+			}
+		}
+		
 		return change;
 	}
 
@@ -200,6 +273,7 @@ public class RenameClassProvider extends MultiFileRefactoringProvider implements
 	}
 
 	public void setNewName(String newName) {
+		this.newclassName = newName;
 		for (RenameTextEditProvider provider : textEditProviders) {
 			provider.setNewName(newName);
 		}

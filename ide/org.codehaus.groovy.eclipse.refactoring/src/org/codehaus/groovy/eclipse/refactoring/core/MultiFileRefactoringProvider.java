@@ -60,7 +60,6 @@ public abstract class MultiFileRefactoringProvider extends RefactoringProvider {
 		return selectionDocument.getRootNode();
 	}
 	
-	@Override
     public IGroovyDocumentProvider getDocumentProvider() {
 		return selectionDocument;
 	}

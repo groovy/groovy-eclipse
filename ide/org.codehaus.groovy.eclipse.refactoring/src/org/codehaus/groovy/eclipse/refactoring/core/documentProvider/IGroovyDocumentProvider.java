@@ -19,8 +19,8 @@
 package org.codehaus.groovy.eclipse.refactoring.core.documentProvider;
 
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.IDocument;
 
 /**
@@ -29,14 +29,14 @@ import org.eclipse.jface.text.IDocument;
  */
 public interface IGroovyDocumentProvider {
 		
-	public abstract ModuleNode getRootNode();
-	public abstract String getDocumentContent();
-	public abstract IDocument getDocument();
-	public abstract boolean fileExists();
-	public abstract IFile getFile();
-	public abstract IFile getTargetFile(); // return the target file if the refactoring moves the original file.  Probably don't need this.
-	public abstract String getName();
-	public abstract boolean isReadOnly();
-	public abstract GroovyCompilationUnit getUnit();
+	public ModuleNode getRootNode();
+	public String getDocumentContent();
+	public IDocument getDocument();
+	public boolean fileExists();
+	public IFile getFile();
+	public IFile getTargetFile(); // return the target file if the refactoring moves the original file.  Probably don't need this.
+	public String getName();
+	public boolean isReadOnly();
+	public ICompilationUnit getUnit();
 
 }

@@ -64,14 +64,14 @@ public class PreferenceConstants {
 
 	public static final String GROOVY_EDITOR_FOLDING_ENABLED = "groovy.editor.folding.enabled"; //$NON-NLS-1$
 	
+	// toggles whether an individual project should add the groovy lib folder to the classpath 
+    public static final String GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL = "groovy.classpath.use.groovy.lib.global";
+
+    // toggles whether the global default is to add the groovy lib folder to the classpath 
 	public static final String GROOVY_CLASSPATH_USE_GROOVY_LIB = "groovy.classpath.use.groovy,lib";
 	
 	public static final String GROOVY_JUNIT_MONOSPACE_FONT = "groovy.junit.monospace.font";
 	
-	public static final String GROOVY_COMPILER_VERSION_IS_16 = "groovy.compiler.version.is.16";
-	
-	// Store the last version number so that we can check to see if the number has been upgraded since last startup
-	public static final String GROOVY_PLUGIN_LAST_VERSION_NUMBER = "groovy.plugin.version";
 	
 	public static final String GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS = "groovy.plugin.ask.to.convert";
 	

@@ -96,7 +96,7 @@ public class GroovyRefactoringDispatcher {
 	}
 
 	protected GroovyRefactoring initRenameClassRefactoring(ClassNode selectedNode) {
-		RefactoringProvider provider = new RenameClassProvider(getWSFileProvider(), selectedNode);
+		RefactoringProvider provider = new RenameClassProvider(getWSFileProvider(), selectedNode, unit);
 		RenameInfo info = new RenameInfo(provider);
 		return new RenameClassRefactoring(info);
 	}

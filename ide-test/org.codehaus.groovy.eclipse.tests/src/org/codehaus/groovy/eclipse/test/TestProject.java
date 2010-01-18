@@ -34,6 +34,7 @@ import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
@@ -47,6 +48,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -68,9 +70,9 @@ public class TestProject {
 
     private IPackageFragmentRoot sourceFolder;
 
-    public TestProject() throws CoreException {
+    public TestProject(String name) throws CoreException {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-        project = root.getProject(TEST_PROJECT_NAME);
+        project = root.getProject(name);
         project.create(null);
         project.open(null);
         javaProject = JavaCore.create(project);
@@ -83,6 +85,10 @@ public class TestProject {
         createOutputFolder(binFolder);
         createSourceFolder();
         addSystemLibraries();
+    }
+    
+    public TestProject() throws CoreException {
+        this(TEST_PROJECT_NAME);
     }
 
     public IProject getProject() {
@@ -122,7 +128,9 @@ public class TestProject {
     public IType createJavaType(IPackageFragment pack, String cuName,
             String source) throws JavaModelException {
         StringBuffer buf = new StringBuffer();
-        buf.append("package " + pack.getElementName() + ";" + System.getProperty("line.separator"));
+        if (!pack.isDefaultPackage()) {
+            buf.append("package " + pack.getElementName() + ";" + System.getProperty("line.separator"));
+        }
         buf.append(System.getProperty("line.separator"));
         buf.append(source);
         ICompilationUnit cu = pack.createCompilationUnit(cuName,
@@ -231,6 +239,21 @@ public class TestProject {
     }
 
     public void dispose() throws CoreException {
+        deleteWorkingCopies();
+        project.delete(true, true, null);
+    }
+    
+    public void deleteContents() throws CoreException {
+        deleteWorkingCopies();
+        IPackageFragment[] frags = javaProject.getPackageFragments();
+        for (IPackageFragment frag : frags) {
+            if (!frag.isReadOnly()) {
+                frag.delete(true, null);
+            }
+        }
+    }
+
+    private void deleteWorkingCopies() throws JavaModelException {
         waitForIndexer();
         // delete all working copies
         ICompilationUnit[] workingCopies = JavaModelManager
@@ -244,9 +267,8 @@ public class TestProject {
             }
         }
         System.gc();
-        project.delete(true, true, null);
     }
-
+    
     private IFolder createBinFolder() throws CoreException {
         final IFolder binFolder = project.getFolder("bin");
         if (!binFolder.exists())
@@ -287,13 +309,16 @@ public class TestProject {
         return root;
     }
     public IPackageFragmentRoot createOtherSourceFolder() throws CoreException {
+        return createOtherSourceFolder(null);
+    }
+    public IPackageFragmentRoot createOtherSourceFolder(String outFolder) throws CoreException {
         IFolder folder = project.getFolder("other");
         if (!folder.exists())
             folder.create(false, true, null);
         final IClasspathEntry[] entries = javaProject
-        .getResolvedClasspath(false);
+            .getResolvedClasspath(false);
         final IPackageFragmentRoot root = javaProject
-        .getPackageFragmentRoot(folder);
+            .getPackageFragmentRoot(folder);
         for (int i = 0; i < entries.length; i++) {
             final IClasspathEntry entry = entries[i];
             if (entry.getPath().equals(folder.getFullPath()))
@@ -302,11 +327,23 @@ public class TestProject {
         IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
         IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
         System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
-        newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath());
+        if (outFolder == null) {
+            newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath());
+        } else {
+            newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath(), null, getProject().getFullPath().append(outFolder).makeAbsolute());
+        }
         javaProject.setRawClasspath(newEntries, null);
         return root;
     }
 
+    public void addProjectReference(IJavaProject referent) throws JavaModelException {
+        IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
+        IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
+        System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
+        newEntries[oldEntries.length] = JavaCore.newProjectEntry(referent.getPath());
+        javaProject.setRawClasspath(newEntries, null);
+    }
+    
     private void addSystemLibraries() throws JavaModelException {
         IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
         IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
@@ -316,16 +353,6 @@ public class TestProject {
         javaProject.setRawClasspath(newEntries, null);
     }
 
-    // private Path findFileInPlugin(String plugin, String file) throws
-    // MalformedURLException, IOException {
-    // IPluginRegistry registry = Platform.getPluginRegistry();
-    // IPluginDescriptor descriptor = registry.getPluginDescriptor(plugin);
-    // URL pluginURL = descriptor.getInstallURL();
-    // URL jarURL = new URL(pluginURL, file);
-    // URL localJarURL = Platform.asLocalURL(jarURL);
-    // return new Path(localJarURL.getPath());
-    // }
-    //
     @SuppressWarnings("deprecation")
     private void waitForIndexer() throws JavaModelException {
         final TypeNameRequestor requestor = new TypeNameRequestor() {};
@@ -335,5 +362,28 @@ public class TestProject {
                 WAIT_UNTIL_READY_TO_SEARCH, null);
     }
 
-
+    
+    protected void fullBuild() throws CoreException {
+        this.getProject().build(org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD, null);
+    }
+    
+    public String getProblems() throws CoreException {
+        IMarker[] markers = getProject().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE);
+        StringBuilder sb = new StringBuilder();
+        if (markers == null || markers.length == 0) {
+            return null;
+        }
+        boolean errorFound = false;
+        sb.append("Problems:\n");
+        for (int i = 0; i < markers.length; i++) {
+            if (((Integer) markers[i].getAttribute(IMarker.SEVERITY)).intValue() == IMarker.SEVERITY_ERROR) {
+                sb.append("  ");
+                sb.append(markers[i].getResource().getName()).append(" : ");
+                sb.append(markers[i].getAttribute(IMarker.LOCATION)).append(" : ");
+                sb.append(markers[i].getAttribute(IMarker.MESSAGE)).append("\n");
+                errorFound = true;
+            }
+        }
+        return errorFound ? sb.toString() : null;
+    }
 }

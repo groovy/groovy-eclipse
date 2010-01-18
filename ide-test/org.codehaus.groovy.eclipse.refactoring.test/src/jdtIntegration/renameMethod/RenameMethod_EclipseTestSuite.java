@@ -21,14 +21,15 @@ public class RenameMethod_EclipseTestSuite extends BaseTestSuite {
 
 	public static TestSuite suite() {
 		
-		TestSuite ts = new TestSuite("Rename Method Suite");
+		TestSuite ts = new TestSuite(RenameMethod_EclipseTestSuite.class.getCanonicalName());
 		
 		List<File> files;
 
 		files = getFileList("/jdtIntegration/startedFromGroovy/renameMethod","RenameJavaMethod_Test_");
 		
 		for (File file : files) {
-			ts.addTest(new RenameMethod_EclipseTestCase("started from Groovy: "+file.getName(), file));
+//		    if (file.getName().contains("Untyped_OverloadMethArg"))
+		        ts.addTest(new RenameMethod_EclipseTestCase("started from Groovy: "+file.getName(), file));
 		}
 		
 		files = getFileList("/jdtIntegration/startedFromGroovy/renameMethod","RenameGroovyMethod_Test_");

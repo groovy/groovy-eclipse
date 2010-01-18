@@ -20,8 +20,8 @@ package core;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.IDocument;
 
 /**
@@ -74,7 +74,7 @@ public class TestDocumentProvider implements IGroovyDocumentProvider {
 		return null;
 	}
 
-    public GroovyCompilationUnit getUnit() {
+    public ICompilationUnit getUnit() {
         return null;
     }
     public IFile getTargetFile() {

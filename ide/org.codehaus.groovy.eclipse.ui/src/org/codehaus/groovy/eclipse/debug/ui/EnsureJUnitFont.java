@@ -135,7 +135,9 @@ public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener 
     public void partInputChanged(IWorkbenchPartReference partRef) { }
 
     public void propertyChange(PropertyChangeEvent event) {
-        if (event.getProperty().equals(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT)) {
+        if (event.getProperty().equals(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT) ||
+                event.getProperty().equals(JFaceResources.TEXT_FONT) ||
+                event.getProperty().equals(JFaceResources.DEFAULT_FONT)) {
             maybeForceMonospaceFont();
         }
     }

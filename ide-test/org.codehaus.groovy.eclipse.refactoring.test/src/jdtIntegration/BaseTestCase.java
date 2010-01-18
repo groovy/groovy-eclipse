@@ -18,14 +18,21 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import junit.framework.TestCase;
+
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.WorkspaceDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.AmbiguousSelectionAction;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
-import org.codehaus.groovy.eclipse.test.EclipseTestCase;
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
+import org.codehaus.groovy.eclipse.test.TestProject;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -35,8 +42,12 @@ import org.eclipse.jdt.core.JavaModelException;
  * @author Stefan Sidler
  *
  */
-public abstract class BaseTestCase extends EclipseTestCase{
-	protected ArrayList<TestFile> testFiles = new ArrayList<TestFile>();
+public abstract class BaseTestCase extends TestCase {
+
+    // Test project is created once 
+    protected TestProject testProject;
+
+    protected ArrayList<TestFile> testFiles = new ArrayList<TestFile>();
 	protected HashMap<String, String> properties= new HashMap<String, String>();
 	protected Map<String, List<Integer[]>> simulateUserAction = new HashMap<String, List<Integer[]>>();
 	protected UserSelection selection;
@@ -65,8 +76,17 @@ public abstract class BaseTestCase extends EclipseTestCase{
 	
 	public void setUp() throws Exception {
 		super.setUp();
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+        testProject = JointRenameRefactoringTestSuite.getTestProject();
 		readFile();
 		mockUIs();
+	}
+	
+	@Override
+	protected void tearDown() throws Exception {
+	    super.tearDown();
+	    JointRenameRefactoringTestSuite.cleanTestProject();
 	}
 	
 	protected void addFilesToProject() throws CoreException, JavaModelException {
@@ -106,8 +126,8 @@ public abstract class BaseTestCase extends EclipseTestCase{
 	}
 	
 	protected void compareWithExpected() {		
-		checkUIMocks();
-		checkSources();
+	    checkUIMocks();
+	    checkSources();
 		
 	}
 
@@ -258,6 +278,26 @@ public abstract class BaseTestCase extends EclipseTestCase{
 		return count;
 	}
 	
+    /**
+     * Does a full build on files in the test project.
+     * 
+     * @throws Exception
+     */
+    protected void fullProjectBuild() throws Exception {
+        ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, null);
+    }
+
+    
+    protected void waitForIndexes() {
+        SynchronizationUtils.waitForIndexingToComplete();
+    }
+    
+    protected IMarker[] getFailureMarkers() throws CoreException {
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+        return root.findMarkers("org.codehaus.groovy.eclipse.groovyFailure",
+                false, IResource.DEPTH_INFINITE);
+    }
+
 	public abstract void testRefactoring() throws Exception;
 
 }

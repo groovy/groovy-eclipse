@@ -18,12 +18,10 @@ package org.codehaus.groovy.eclipse.preferences;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.builder.ConvertLegacyProject;
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
@@ -32,7 +30,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -119,9 +116,9 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                 "Do not use parens around methods with arguments", getFieldEditorParent()));
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, 
                 "Use brackets for closure arguments", getFieldEditorParent()));
+
         
         // default launch location for scripts
-        
         addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
                     "\nDefault working directory for running Groovy scripts \n(will not change the working directory of existing scripts," +
                     "\nonly new ones).", 1, 
@@ -129,23 +126,6 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                                     { "Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC }, 
                                     { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME } }, 
                     getFieldEditorParent()));
-        
-        
-        Label classpathLabel = new Label(getFieldEditorParent(), SWT.WRAP);
-        classpathLabel.setText("\n\nReset the Groovy Classpath Containers.");
-        Button updateGCC = new Button(getFieldEditorParent(), SWT.PUSH);
-        updateGCC.setText("Update all Groovy Classpath Containers");
-        updateGCC.addSelectionListener(new SelectionListener() {
-            public void widgetSelected(SelectionEvent e) {
-                updateClasspathContainers();
-            }
-            public void widgetDefaultSelected(SelectionEvent e) {
-                updateClasspathContainers();
-            }
-        });
-        Label classpathLabel2 = new Label(getFieldEditorParent(), SWT.WRAP);
-        classpathLabel2.setText("Perform this action if there are changes to ~/.groovy/lib\n" +
-        "that should be reflected in your projects' classpaths.");
         
         // legacy projects
         ConvertLegacyProject convert = new ConvertLegacyProject();
@@ -214,20 +194,4 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         super.performDefaults();
         new PreferenceInitializer().reset();
     }
-
-
-
-    /**
-     * @throws JavaModelException
-     */
-    private void updateClasspathContainers() {
-        
-        try {
-            GroovyClasspathContainerInitializer.updateAllGroovyClasspathContainers();
-        } catch (JavaModelException e) {
-            GroovyCore.logException("Problem updating Groovy classpath contianers", e);        
-        }
-        
-    }
-
 }

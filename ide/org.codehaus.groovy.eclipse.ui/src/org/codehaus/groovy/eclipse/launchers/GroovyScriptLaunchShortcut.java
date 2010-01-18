@@ -35,6 +35,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.ui.ILaunchShortcut;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -98,8 +99,8 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
                 "--classpath " + getClasspath(javaProject) +
-                " --main groovy.ui.GroovyMain " +
-                "\"${project_loc}/" + className + "\"");
+                " --main groovy.ui.GroovyMain \"" +
+                getProjectLocation(runType) + "/" + className + "\"");
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY,
                 getWorkingDirectory(runType));
@@ -107,6 +108,10 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         return launchConfigProperties;
     }
 
+
+    private String getProjectLocation(IJavaElement elt) {
+        return "${workspace_loc:/" + elt.getJavaProject().getProject().getName() + "}";
+    }
 
     /**
      * @return the classpath as a string.  need to include only the source and output folders.
@@ -116,35 +121,41 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         StringBuilder sbSrc = new StringBuilder();
         StringBuilder sbBin = new StringBuilder();
         sbSrc.append("\"");
+        List<IJavaProject> dependingProjects = new ArrayList<IJavaProject>();
         try {
             IClasspathEntry[] entries = javaProject.getRawClasspath();
             for (IClasspathEntry entry : entries) {
                 int kind = entry.getEntryKind();
-                if (kind == IClasspathEntry.CPE_SOURCE) {
-                    IPath srcPath = entry.getPath();
-                    sbSrc.append("${project_loc}");
-                    if (srcPath.segmentCount() > 1) {
-                        sbSrc.append("/" + srcPath.removeFirstSegments(1).toOSString());
-                    }
-                    sbSrc.append(File.pathSeparator);
-                    
-                    
-                    IPath outPath = entry.getOutputLocation();
-                    if (outPath != null) {
-                        sbBin.append("${project_loc}");
-                        if (outPath.segmentCount() > 1) {
-                            sbBin.append(outPath.removeFirstSegments(1).toOSString());
+                switch(kind) {
+                    case IClasspathEntry.CPE_SOURCE:
+                        IPath srcPath = entry.getPath();
+                        sbSrc.append(getProjectLocation(javaProject));
+                        if (srcPath.segmentCount() > 1) {
+                            sbSrc.append(File.separator + srcPath.removeFirstSegments(1).toOSString());
                         }
-                        sbBin.append(File.pathSeparator);
-                    }
+                        sbSrc.append(File.pathSeparator);
+                        
+                        
+                        IPath outPath = entry.getOutputLocation();
+                        if (outPath != null) {
+                            sbBin.append(getProjectLocation(javaProject));
+                            if (outPath.segmentCount() > 1) {
+                                sbBin.append(outPath.removeFirstSegments(1).toOSString());
+                            }
+                            sbBin.append(File.pathSeparator);
+                        }
+                        break;
+                        
+                    case IClasspathEntry.CPE_PROJECT:
+                        dependingProjects.add(javaProject.getJavaModel().getJavaProject(entry.getPath().lastSegment()));
+                        break;
                 }
             }
             IPath defaultOutPath = javaProject.getOutputLocation();
             if (defaultOutPath != null) {
+                sbBin.append(getProjectLocation(javaProject));
                 if (defaultOutPath.segmentCount() > 1) {
-                    sbBin.append(defaultOutPath.removeFirstSegments(1).toOSString());
-                } else {
-                    sbBin.append(".");
+                    sbBin.append(File.separator + defaultOutPath.removeFirstSegments(1).toOSString());
                 }
             }
             if (sbBin.length() > 0) {
@@ -153,8 +164,18 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
                 // remove trailing file separator
                 sbSrc.replace(sbBin.length()-1, sbBin.length(), "");
             }
+            
         } catch (JavaModelException e) {
             GroovyCore.logException("Exception launching groovy script", e);
+        }
+        // recur through dependent projects
+        for (IJavaProject dependingProject : dependingProjects) {
+            if (dependingProject.getProject().isAccessible()) {
+                String dependingProjectStr = getClasspath(dependingProject);
+                // remove opening and trailing close "
+                dependingProjectStr = dependingProjectStr.substring(1, dependingProjectStr.length()-1);
+                sbSrc.append(":").append(dependingProjectStr);
+            }
         }
         sbSrc.append("\"");
         return sbSrc.toString();
@@ -193,7 +214,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
     private String getWorkingDirectory(IType runType) {
         String workingDirSetting = GroovyPlugin.getDefault().getPreferenceStore().getString(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY);
         if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME)) {
-            return "${project_loc}";
+            return getProjectLocation(runType);
         } else if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME)) {
             return "${eclipse_home}";
         } else {
@@ -201,7 +222,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
                 return runType.getResource().getParent().getLocation().toOSString();
             } catch (Exception e) {
                 GroovyCore.logException("Exception trying to find the location of " + runType.getElementName(), e);
-                return "${project_loc}";
+                return getProjectLocation(runType);
             }
         }
     }

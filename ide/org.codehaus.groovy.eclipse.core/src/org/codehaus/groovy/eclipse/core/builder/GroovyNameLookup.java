@@ -58,7 +58,7 @@ public class GroovyNameLookup extends NameLookup {
     
     /**
      * Copied from parent class
-     * Changes marked with // Groovy change begin and // Groovy change end
+     * Changes marked with // GROOVY begin and // GROOVY end
      */
     @Override
     protected void seekTypesInSourcePackage(
@@ -80,15 +80,15 @@ public class GroovyNameLookup extends NameLookup {
                     for (int i = 0, length = compilationUnits.length; i < length; i++) {
                         if (requestor.isCanceled())
                             return;
-                        // Groovy change begin
-                        // removed statements that continue if type is not top level
+                        // GROOVY begin
+                        // removed statements that continue if type is not the same name as the compilation unit
                         ICompilationUnit cu = (ICompilationUnit) compilationUnits[i];
-
+                        IType[] allTypes = cu.getAllTypes();
                         IType type = cu.getType(name);
                         if (
-                                // Groovy change begin
+                                // GROOVY begin
                                 type.exists() && 
-                                // Groovy change end
+                                // GROOVY end
                                 acceptType(type, acceptFlags, true/*a source type*/)) { // accept type checks for existence
                             requestor.acceptType(type);
                             break;  // since an exact match was requested, no other matching type can exist
@@ -103,15 +103,15 @@ public class GroovyNameLookup extends NameLookup {
                         if (type.exists()) {    
                             type = getMemberType(type, name, firstDot);
                             if (
-                                    // Groovy change begin
+                                    // GROOVY begin
                                     type.exists() && 
-                                    // Groovy change end
+                                    // GROOVY end
                                     acceptType(type, acceptFlags, true/*a source type*/)) { // accept type checks for existence
                                 requestor.acceptType(type);
                                 break;  // since an exact match was requested, no other matching type can exist
                             }
                         }
-                        // Groovy change end
+                        // GROOVY end
                     }
                 } catch (JavaModelException e) {
                     // package doesn't exist -> ignore
@@ -153,7 +153,7 @@ public class GroovyNameLookup extends NameLookup {
     
     /**
      * Copied from parent class
-     * Changes marked with // Groovy change begin and // Groovy change end
+     * Changes marked with // GROOVY begin and // GROOVY end
      */
     @Override
     protected void seekTypesInBinaryPackage(String name, IPackageFragment pkg, boolean partialMatch, int acceptFlags, IJavaElementRequestor requestor) {
@@ -161,12 +161,12 @@ public class GroovyNameLookup extends NameLookup {
         if (VERBOSE)
             start = System.currentTimeMillis();
         try {
-            // Groovy change begin
+            // GROOVY begin
             // ensure ends with .class
             if (!name.endsWith(".class")) {
                 name += ".class";
             }
-            // Groovy change end
+            // GROOVY end
             if (!partialMatch) {
                 // exact match
                 if (requestor.isCanceled()) return;
@@ -178,7 +178,7 @@ public class GroovyNameLookup extends NameLookup {
                     }
                 }
                 
-                // Groovy change begin
+                // GROOVY begin
                 // class file may still exist as an inner type
                 IJavaElement[] classFiles= null;
                 try {
@@ -195,7 +195,7 @@ public class GroovyNameLookup extends NameLookup {
                         }
                     }
                 }
-                // Groovy change end
+                // GROOVY end
                 
             } else {
                 IJavaElement[] classFiles= null;

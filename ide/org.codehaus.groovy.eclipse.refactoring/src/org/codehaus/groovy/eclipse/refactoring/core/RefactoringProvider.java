@@ -84,8 +84,6 @@ abstract public class RefactoringProvider {
 	public abstract GroovyChange createGroovyChange(IProgressMonitor pm)
 			throws CoreException, OperationCanceledException;
 	
-	public abstract IGroovyDocumentProvider getDocumentProvider();
-
 	public void setJavaChanges(Map<Object, TextChange> changes) {
 		javaChanges = changes;
 	}

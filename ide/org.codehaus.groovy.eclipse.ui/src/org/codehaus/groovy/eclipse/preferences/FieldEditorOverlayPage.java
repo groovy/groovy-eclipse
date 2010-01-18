@@ -43,13 +43,6 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage
         implements IWorkbenchPropertyPage {
-    /**
-     * * Name of resource property for the selection of workbench or project
-     * settings **
-     */
-    //public static final String USEPROJECTSETTINGS = "useProjectSettings"; //$NON-NLS-1$
-    //private static final String FALSE = "false"; //$NON-NLS-1$
-    //private static final String TRUE = "true"; //$NON-NLS-1$
     // Stores all created field editors
     private final List<FieldEditor> editors = new ArrayList<FieldEditor>();
 
@@ -147,9 +140,6 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage
             // Set overlay store as current preference store
         }
         super.createControl(parent);
-        // Update state of all subclass controls
-        if (isPropertyPage())
-            updateFieldEditors();
     }
 
     private IPreferenceStore createPreferenceStore() {
@@ -192,52 +182,8 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage
         final Composite radioGroup = new Composite(comp, SWT.NONE);
         radioGroup.setLayout(new GridLayout());
         radioGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        //useWorkspaceSettingsButton = createRadioButton( radioGroup, Messages.getString( "OverlayPage.Use_Workspace_Settings" ) ); //$NON-NLS-1$
-        //useProjectSettingsButton = createRadioButton( radioGroup, Messages.getString( "OverlayPage.Use_Project_Settings" ) ); //$NON-NLS-1$
-        // configureButton = new Button( comp, SWT.PUSH );
-        //configureButton.setText( Messages.getString( "OverlayPage.Configure_Workspace_Settings" ) ); //$NON-NLS-1$
-        // configureButton.addSelectionListener( new SelectionAdapter()
-        // {
-        // public void widgetSelected( final SelectionEvent e )
-        // {
-        // configureWorkspaceSettings();
-        // }
-        // } );
-        // Set workspace/project radio buttons
-        // try
-        // {
-        // final String use = ( ( IResource )getElement()
-        // ).getProject().getPersistentProperty( new QualifiedName( pageID,
-        // USEPROJECTSETTINGS ) );
-        // if( TRUE.equals( use ) )
-        // {
-        // useProjectSettingsButton.setSelection( true );
-        // configureButton.setEnabled( false );
-        // }
-        // else
-        // useWorkspaceSettingsButton.setSelection( true );
-        // }
-        // catch( final CoreException e )
-        // {
-        // useWorkspaceSettingsButton.setSelection( true );
-        // }
     }
 
-    // private Button createRadioButton( final Composite parent,
-    // final String label )
-    // {
-    // final Button button = new Button( parent, SWT.RADIO );
-    // button.setText( label );
-    // button.addSelectionListener( new SelectionAdapter()
-    // {
-    // public void widgetSelected( final SelectionEvent e )
-    // {
-    // //configureButton.setEnabled( button == useWorkspaceSettingsButton );
-    // updateFieldEditors();
-    // }
-    // } );
-    // return button;
-    // }
     /**
      * Returns in case of property pages the overlay store, in case of
      * preference pages the standard preference store
@@ -251,75 +197,6 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage
         return super.getPreferenceStore();
     }
 
-    /*
-     * Enables or disables the field editors and buttons of this page
-     */
-    private void updateFieldEditors() {
-        // We iterate through all field editors
-        // final boolean enabled = useProjectSettingsButton.getSelection();
-        updateFieldEditors(true);
-    }
-
-    /**
-     * Enables or disables the field editors and buttons of this page Subclasses
-     * may override.
-     * 
-     * @param enabled
-     *            - true if enabled
-     */
-    protected void updateFieldEditors(final boolean enabled) {
-        final Composite parent = getFieldEditorParent();
-        final Iterator<FieldEditor> it = editors.iterator();
-        while (it.hasNext()) {
-            final FieldEditor editor = it.next();
-            editor.setEnabled(enabled, parent);
-        }
-    }
-
-    /**
-     * We override the performOk method. In case of property pages we copy the
-     * values in the overlay store into the property values of the selected
-     * project. We also save the state of the radio buttons.
-     * 
-     * @see org.eclipse.jface.preference.IPreferencePage#performOk()
-     */
-    @Override
-    public boolean performOk() {
-        final boolean result = super.performOk();
-        // if( result && isPropertyPage() )
-        // {
-        // // Save state of radiobuttons in project properties
-        // final IResource resource = (( IResource )getElement()).getProject();
-        // try
-        // {
-        // final String value = useProjectSettingsButton.getSelection() ? TRUE :
-        // FALSE;
-        // resource.setPersistentProperty( new QualifiedName( pageID,
-        // USEPROJECTSETTINGS ), value );
-        // }
-        // catch( final CoreException e )
-        // {
-        // }
-        // }
-        return result;
-    }
-
-    /**
-     * We override the performDefaults method. In case of property pages we
-     * switch back to the workspace settings and disable the field editors.
-     * 
-     * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-     */
-    @Override
-    protected void performDefaults() {
-        if (isPropertyPage()) {
-            // useWorkspaceSettingsButton.setSelection( true );
-            // useProjectSettingsButton.setSelection( false );
-            // configureButton.setEnabled( true );
-            updateFieldEditors();
-        }
-        super.performDefaults();
-    }
 
     /**
      * Creates a new preferences page and opens it
@@ -349,7 +226,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage
      * @param page
      *            - the preference page
      */
-    protected void showPreferencePage(final String id,
+    private void showPreferencePage(final String id,
             final IPreferencePage page) {
         final IPreferenceNode targetNode = new PreferenceNode(id, page);
         final PreferenceManager manager = new PreferenceManager();

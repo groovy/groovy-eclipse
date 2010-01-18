@@ -17,18 +17,20 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -52,9 +54,10 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
     
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
-        Collection<FieldNode> allFields = getAllConstants(type);
+        Collection<FieldNode> allFields = getAllFields(type);
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         for (FieldNode field : allFields) {
+            // in static context, only allow static fields
             if ((!isStatic || field.isStatic()) &&
                     ProposalUtils.looselyMatches(prefix, field.getName())) {
                 groovyProposals.add(new GroovyFieldProposal(field));
@@ -68,21 +71,66 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         return groovyProposals;
     }
     
-    private Collection<FieldNode> getAllConstants(ClassNode thisType) {
+    /**
+     * returns all fields, even those that are converted into properties
+     * @param thisType
+     * @return
+     * @see http://docs.codehaus.org/display/GROOVY/Groovy+Beans
+     */
+    private Collection<FieldNode> getAllFields(ClassNode thisType) {
         Set<ClassNode> types = new HashSet<ClassNode>();
         getAllSupers(thisType, types);
-        List<FieldNode> allFields = new LinkedList<FieldNode>();
+        Map<String, FieldNode> nameFieldMap = new HashMap<String, FieldNode>();
         for (ClassNode type : types) {
-            type = type.redirect();
-            if (type instanceof JDTClassNode) {
-                for (FieldNode field : type.getFields()) {
-                    if (checkName(field.getName()) && checkModifiers(field)) {
-                        allFields.add(field);
+            for (FieldNode field : type.getFields()) {
+                if (checkName(field.getName()) /* && checkModifiers(field) */) {
+                    // only add new field if the new field is more accessible than the existing one
+                    FieldNode existing = nameFieldMap.get(field.getName());
+                    if (existing == null || leftIsMoreAccessible(field, existing)) {
+                        nameFieldMap.put(field.getName(), field);
                     }
                 }
             }
         }
-        return allFields;
+        return nameFieldMap.values();
+    }
+
+    /**
+     * find the most accessible element
+     */
+    private boolean leftIsMoreAccessible(FieldNode field, FieldNode existing) {
+        int leftAcc;
+        switch (field.getModifiers() & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) {
+            case Opcodes.ACC_PUBLIC:
+                leftAcc = 0;
+                break;
+            case Opcodes.ACC_PROTECTED:
+                leftAcc = 1;
+                break;
+            case Opcodes.ACC_PRIVATE:
+                leftAcc = 3;
+                break;
+            default: // package default
+                leftAcc = 2;
+                break;
+        }
+        
+        int rightAcc;
+        switch (existing.getModifiers() & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) {
+            case Opcodes.ACC_PUBLIC:
+                rightAcc = 0;
+                break;
+            case Opcodes.ACC_PROTECTED:
+                rightAcc = 1;
+                break;
+            case Opcodes.ACC_PRIVATE:
+                rightAcc = 3;
+                break;
+            default: // package default
+                rightAcc = 2;
+                break;
+        }
+        return leftAcc < rightAcc;
     }
 
     /**
@@ -90,7 +138,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
      * @return
      */
     private boolean checkModifiers(FieldNode field) {
-        return (field.getModifiers() & (Opcodes.ACC_STATIC | Opcodes.ACC_FINAL)) != 0;
+        return (field.getModifiers() | (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) != 0;
     }
 
 }

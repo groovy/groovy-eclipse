@@ -16,11 +16,14 @@
 package org.codehaus.groovy.eclipse.preferences;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 /**
  * Class used to initialize default preference values.
@@ -219,10 +222,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
                 true);
 
-        store.setDefault(
+        store.setValue(
                 PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
                 "proj_home");
 
+        GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
     }
-
 }

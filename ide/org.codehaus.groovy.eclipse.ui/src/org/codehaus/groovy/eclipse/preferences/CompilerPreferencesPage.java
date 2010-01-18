@@ -5,11 +5,17 @@ import java.net.URL;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
+import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -37,6 +43,7 @@ import org.eclipse.ui.internal.browser.WebBrowserPreference;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.actions.OpenWorkspaceAction;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class CompilerPreferencesPage extends PreferencePage implements
         IWorkbenchPreferencePage {
@@ -58,12 +65,15 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
     protected final boolean isGroovy17Disabled;
     
+    private Button groovyLibButt;
+    
     public CompilerPreferencesPage() {
         super("Compiler");
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
         isGroovy17Disabled = CompilerUtils.isGroovy17DisabledOrMissing();
     }
 
+    
     @Override
     protected Control createContents(Composite parent) {
         final Composite page = new Composite(parent, SWT.NULL);
@@ -74,6 +84,31 @@ public class CompilerPreferencesPage extends PreferencePage implements
         page.setLayout(layout);
         page.setFont(parent.getFont());
         
+    
+        groovyLibButt = new Button(page, SWT.CHECK);
+        groovyLibButt.setText("Include all jars in ~/.groovy/lib on the classpath.");
+        groovyLibButt.setSelection(GroovyCoreActivator.getDefault().getPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true));
+        
+        Label groovyLibLabel = new Label(page, SWT.WRAP);
+        groovyLibLabel.setText("This is the defualt setting and individual projects can be configured\n" +
+                "by clicking on the properties page of the Groovy Support classpath container.");
+        
+        Label classpathLabel = new Label(page, SWT.WRAP);
+        classpathLabel.setText("\n\nReset the Groovy Classpath Containers.");
+        Button updateGCC = new Button(page, SWT.PUSH);
+        updateGCC.setText("Update all Groovy Classpath Containers");
+        updateGCC.addSelectionListener(new SelectionListener() {
+            public void widgetSelected(SelectionEvent e) {
+                updateClasspathContainers();
+            }
+            public void widgetDefaultSelected(SelectionEvent e) {
+                updateClasspathContainers();
+            }
+        });
+        Label classpathLabel2 = new Label(page, SWT.WRAP);
+        classpathLabel2.setText("Perform this action if there are changes to ~/.groovy/lib\n" +
+        "that should be reflected in your projects' classpaths.\n\n");
+
         
         Label compilerVersion = new Label(page, SWT.LEFT | SWT.WRAP);
         compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + 
@@ -120,9 +155,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
             public void handleEvent(Event event) {
                 openUrl(event.text);
             }
-        });        
-
-        
+        });
         return page;
     }
 
@@ -241,4 +274,36 @@ public class CompilerPreferencesPage extends PreferencePage implements
                     location);
         }
     }
+    
+    private void updateClasspathContainers() {
+        try {
+            GroovyClasspathContainerInitializer.updateAllGroovyClasspathContainers();
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Problem updating Groovy classpath contianers", e);        
+        }
+        
+    }
+    
+    @Override
+    public boolean performOk() {
+        applyPreferences();
+        return super.performOk();
+    }
+    @Override
+    public void performApply() {
+        applyPreferences();
+        super.performApply();
+    }
+
+    @Override
+    protected void performDefaults() {
+        super.performDefaults();
+        GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
+    }
+    
+    private void applyPreferences() {
+        GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, groovyLibButt.getSelection());        
+    }
+    
+    
 }

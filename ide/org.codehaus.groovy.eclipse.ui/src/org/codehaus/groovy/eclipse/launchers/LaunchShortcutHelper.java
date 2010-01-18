@@ -48,7 +48,7 @@ public class LaunchShortcutHelper {
 	 * @throws OperationCanceledException If the user selects cancel.
 	 */
 	public static IType chooseClassNode(List<IType> types) {
-		return (IType) chooseFromList(types, new JavaUILabelProvider(), SELECT_CLASS_DIALOG_TITLE, SELECT_CLASS_DIALOG_TEXT);
+		return chooseFromList(types, new JavaUILabelProvider(), SELECT_CLASS_DIALOG_TITLE, SELECT_CLASS_DIALOG_TEXT);
 	}
 	
 	/**
@@ -61,7 +61,8 @@ public class LaunchShortcutHelper {
 	 * @return Returns the object the user selected.
 	 * @throws OperationCanceledException If the user selects cancel
 	 */
-	public static Object chooseFromList(List<?> options, ILabelProvider labelProvider, String title, String message) {
+	@SuppressWarnings("unchecked")
+    public static <T> T chooseFromList(List<T> options, ILabelProvider labelProvider, String title, String message) {
 		ElementListSelectionDialog dialog= new ElementListSelectionDialog(GroovyPlugin.getActiveWorkbenchShell(), labelProvider);
 		dialog.setElements(options.toArray());
 		dialog.setTitle(title);
@@ -70,9 +71,9 @@ public class LaunchShortcutHelper {
 		int result = dialog.open();
 		labelProvider.dispose() ;		
 		if (result == Window.OK) {
-			return dialog.getFirstResult();
+			return (T) dialog.getFirstResult();
 		}
 		/*If the user hits cancel this will stop the whole thing silently*/
-		throw new OperationCanceledException() ;
+		throw new OperationCanceledException();
 	}
 }

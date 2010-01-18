@@ -21,7 +21,7 @@ public class RenameField_EclipseTestSuite extends BaseTestSuite {
 
 	public static TestSuite suite() {
 		
-		TestSuite ts = new TestSuite("Rename Field Suite");
+		TestSuite ts = new TestSuite(RenameField_EclipseTestSuite.class.getCanonicalName());
 		
 		List<File> files;
 

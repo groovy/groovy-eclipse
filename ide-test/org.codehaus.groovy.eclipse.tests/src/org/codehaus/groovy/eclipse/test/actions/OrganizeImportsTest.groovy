@@ -287,9 +287,34 @@ public class OrganizeImportsTest extends EclipseTestCase {
             def expectedImports = [ 'java.text.DateFormat']
                                     doAddImportTest(contents, expectedImports)
     }
-    
+	
+	
+	void testDynamicVariable1() {
+		String contents = 
+		    """
+		    HTML.NULL_ATTRIBUTE_VALUE
+            """
+		def expectedImports = [ 'javax.swing.text.html.HTML']
+		doAddImportTest(contents, expectedImports)
+	}
+	void testDynamicVariable2() {
+	    String contents = 
+	        """
+	        nothing.HTML.NULL_ATTRIBUTE_VALUE
+	        """
+	     def expectedImports = [ ]
+         doAddImportTest(contents, expectedImports)
+	}
 
-
+	void testDynamicVariable3() {
+		String contents = 
+		    """ 
+		    new String(DateFormat.getDateInstance())
+		    """
+		def expectedImports = [ 'java.text.DateFormat' ] 
+		doAddImportTest(contents, expectedImports)
+	}
+	
     void doAddImportTest(contents, expectedImports) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         def unit = JavaCore.createCompilationUnitFrom(file)

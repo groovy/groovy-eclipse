@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.ui.cpcontainer;
 
+import javax.swing.plaf.basic.BasicBorders.RadioButtonBorder;
+
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
@@ -51,7 +53,37 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
     private IJavaProject jProject;
     private IEclipsePreferences prefStore;
     private IClasspathEntry containerEntryResult;
-    private Button useGroovyLib;
+    private Button[] useGroovyLib;
+    
+    private enum UseGroovyLib { TRUE("true", "Yes"), FALSE("false", "No"), DEFAULT("default", "Use workspace default");
+        private final String val;
+        private final String label;
+        private UseGroovyLib(String val, String label) {
+            this.val = val;
+            this.label = label;
+        }
+        String val() {
+            return val;
+        }
+        
+        String label() {
+            return label;
+        }
+        
+        
+        /**
+         * @param string
+         * @return
+         */
+        static UseGroovyLib fromString(String val) {
+            if (val.equals(TRUE.val)) {
+                return TRUE;
+            } else if (val.equals(FALSE.val)) {
+                return FALSE;
+            }
+            return DEFAULT;
+        }
+    }
 
 
     public GroovyClasspathContainerPage() {
@@ -61,10 +93,10 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
         setImageDescriptor(JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY);
     }
 
-    private boolean getPreference() {
+    private UseGroovyLib getPreference() {
         return prefStore != null ? 
-                prefStore.getBoolean(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, true) : 
-                    true;
+                UseGroovyLib.fromString(prefStore.get(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, "default")) : 
+                UseGroovyLib.DEFAULT;
     }
 
     public boolean finish() {
@@ -73,11 +105,11 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
                 return true;
             }
             
-            boolean storedPreference = getPreference();
-            boolean currentPreference = useGroovyLib.getSelection();
+            UseGroovyLib storedPreference = getPreference();
+            UseGroovyLib currentPreference = getPreferenceSelection();
             if (storedPreference != currentPreference) {
-                prefStore.putBoolean(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB,
-                        currentPreference);
+                prefStore.put(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB,
+                        currentPreference.val());
                 prefStore.flush();
             }
             // always refresh on finish
@@ -88,6 +120,17 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
             GroovyRuntime.addGroovyClasspathContainer(jProject);
         }
         return true;
+    }
+
+    private UseGroovyLib getPreferenceSelection() {
+        if (useGroovyLib[0].getSelection()) {
+            return (UseGroovyLib) useGroovyLib[0].getData();
+        } else if (useGroovyLib[1].getSelection()) {
+            return (UseGroovyLib) useGroovyLib[1].getData();
+        } else if (useGroovyLib[2].getSelection()) {
+            return (UseGroovyLib) useGroovyLib[2].getData();
+        }
+        return UseGroovyLib.DEFAULT;
     }
 
     /**
@@ -118,15 +161,24 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
 
         composite.setLayout(new GridLayout(1, false));
         
-        useGroovyLib = new Button(composite, SWT.CHECK);
-        useGroovyLib.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-                false));
-        useGroovyLib.setText("Should jars in the ~/.groovy/lib directory be included on the classpath?");
-        useGroovyLib.setSelection(getPreference());
-        if (prefStore == null) {
-            // if container not associated with project, then can't change this
-            useGroovyLib.setEnabled(false);
+        Label should = new Label(composite, SWT.WRAP);
+        should.setText("Should jars in the ~/.groovy/lib directory be included on the classpath?");
+        
+        useGroovyLib = new Button[3];
+        for (int i = 0; i < useGroovyLib.length; i++) {
+            useGroovyLib[i] = new Button(composite, SWT.RADIO);
+            useGroovyLib[i].setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
+                    false));
+            useGroovyLib[i].setSelection(getPreference() == UseGroovyLib.values()[i]);
+            useGroovyLib[i].setData(UseGroovyLib.values()[i]);
+            useGroovyLib[i].setText(UseGroovyLib.values()[i].label());
+            
+            if (prefStore == null) {
+                // if container not associated with project, then can't change this
+                useGroovyLib[i].setEnabled(false);
+            }
         }
+        
         Label l = new Label(composite, SWT.NONE);
         l.setText("(Affects this project only)\n\n");
         

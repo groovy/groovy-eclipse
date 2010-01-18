@@ -17,8 +17,11 @@ package org.codehaus.groovy.eclipse.core;
 
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.PlatformAdmin;
 import org.osgi.framework.Bundle;
@@ -41,6 +44,8 @@ public class GroovyCoreActivator extends Plugin {
     private ServiceTracker tracker = null;
 
     private static BundleContext context = null;
+
+    private IEclipsePreferences instanceScope;
 
     /**
      * The constructor
@@ -160,5 +165,20 @@ public class GroovyCoreActivator extends Plugin {
     public static BundleDescription bundleDescription() {
         return getBundleDescription();
     }
+    
+    public IEclipsePreferences getPreferences() {
+        if (instanceScope == null) {
+            instanceScope = ((IScopeContext) new InstanceScope()).getNode(GroovyCoreActivator.PLUGIN_ID);
+        }
+        return instanceScope;
+    }
 
+    public boolean getPreference(String key, boolean def) {
+        return getPreferences().getBoolean(key, def);
+    }
+    
+    public void setPreference(String key, boolean val) {
+        getPreferences().putBoolean(key, val);
+    }
+    
 }

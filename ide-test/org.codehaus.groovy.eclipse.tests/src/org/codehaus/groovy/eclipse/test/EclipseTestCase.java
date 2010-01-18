@@ -57,6 +57,13 @@ public abstract class EclipseTestCase extends TestCase {
         testProject.dispose();
     }
 
+    public EclipseTestCase() {
+        super();
+    }
+    
+    public EclipseTestCase(String name) {
+        super(name);
+    }
     /**
      * Will test to see if the TestProject instance has Groovy nature.
      * 

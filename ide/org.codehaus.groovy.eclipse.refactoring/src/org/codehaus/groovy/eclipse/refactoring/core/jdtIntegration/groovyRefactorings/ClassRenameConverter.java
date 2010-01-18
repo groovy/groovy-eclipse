@@ -26,7 +26,7 @@ public class ClassRenameConverter {
 		IGroovyFileProvider fileProvider = RenameRefactoringConverter.getFileProvider(renamed);
 		String fullName = renamed.getFullyQualifiedName();
 		ClassNode node = ClassHelper.makeWithoutCaching(fullName);
-		RenameClassProvider provider = new RenameClassProvider(fileProvider, node);
+		RenameClassProvider provider = new RenameClassProvider(fileProvider, node, renamed.getCompilationUnit());
 		return provider;
 	}
 

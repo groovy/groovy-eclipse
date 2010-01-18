@@ -43,7 +43,6 @@ abstract public class SingleFileRefactoringProvider extends RefactoringProvider 
 		return documentProvider.getDocument();
 	}
 
-	@Override
     public IGroovyDocumentProvider getDocumentProvider() {
 		return documentProvider;
 	}

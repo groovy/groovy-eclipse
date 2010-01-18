@@ -16,8 +16,11 @@
 package org.codehaus.groovy.eclipse.refactoring.core.documentProvider;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
@@ -28,11 +31,11 @@ import org.eclipse.jface.text.IDocument;
 public class GroovyCompilationUnitDocumentProvider implements
         IGroovyDocumentProvider {
 
-    private final GroovyCompilationUnit unit;
+    private final ICompilationUnit unit;
     
     private IFile targetFile;
     
-    public GroovyCompilationUnitDocumentProvider(GroovyCompilationUnit unit) {
+    public GroovyCompilationUnitDocumentProvider(ICompilationUnit unit) {
         this.unit = unit;
         targetFile = (IFile) unit.getResource();
     }
@@ -55,7 +58,7 @@ public class GroovyCompilationUnitDocumentProvider implements
      * @see org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider#getDocumentContent()
      */
     public String getDocumentContent() {
-        return new String(unit.getContents());
+        return new String(((CompilationUnit) unit).getContents());
     }
 
     /* (non-Javadoc)
@@ -76,7 +79,11 @@ public class GroovyCompilationUnitDocumentProvider implements
      * @see org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider#getRootNode()
      */
     public ModuleNode getRootNode() {
-        return unit.getModuleNode();
+        if (unit instanceof GroovyCompilationUnit) {
+            return ((GroovyCompilationUnit) unit).getModuleNode();
+        } else {
+            return new GroovySnippetParser().parse("");
+        }
     }
 
     /* (non-Javadoc)
@@ -87,7 +94,7 @@ public class GroovyCompilationUnitDocumentProvider implements
     }
 
     
-    public GroovyCompilationUnit getUnit() {
+    public ICompilationUnit getUnit() {
         return unit;
     }
     

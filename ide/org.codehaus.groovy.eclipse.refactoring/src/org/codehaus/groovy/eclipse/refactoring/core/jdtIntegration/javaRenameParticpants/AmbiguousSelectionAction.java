@@ -9,9 +9,11 @@ package org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenamePa
 
 import java.lang.reflect.Constructor;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.IAmbiguousRenameInfo;
+import org.codehaus.groovy.eclipse.refactoring.core.rename.IRenameProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.ProgrammaticalRenameRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameField.RenameFieldInfo;
@@ -43,8 +45,11 @@ public class AmbiguousSelectionAction implements Runnable {
 			info = new RenameFieldInfo(provider);
 		} else if (provider instanceof RenameMethodProvider) {
 			info = new RenameMethodInfo(provider);
-		} else {
+		} else if (provider instanceof IRenameProvider){
 			info = new RenameInfo(provider);
+		} else {
+			throw new IllegalArgumentException("Refactoring provider should be an IRenameProvider, " +
+					"but was of type " + provider.getClass().getCanonicalName());
 		}
 		initRefactoringWizard();
 	}
@@ -88,7 +93,7 @@ public class AmbiguousSelectionAction implements Runnable {
 			refactoring = ctor.newInstance(info, GroovyRefactoringMessages.RenameFieldRefactoring);
 			wizard = new GroovyDummyRefactoringWizard(refactoring, getUIFlags());
 		} catch (Exception e) {
-			e.printStackTrace();
+			GroovyCore.logException("Exception initializing refactoring wizard", e);
 		}
 	}
 

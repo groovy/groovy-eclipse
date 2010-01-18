@@ -18,7 +18,7 @@
  */
 package core;
 
-import jdtIntegration.UnitTestSuite;
+import jdtIntegration.JointRenameRefactoringTestSuite;
 import formatter.FormatterTestSuite;
 import inlineMethod.InlineMethodTestSuite;
 import junit.framework.Test;

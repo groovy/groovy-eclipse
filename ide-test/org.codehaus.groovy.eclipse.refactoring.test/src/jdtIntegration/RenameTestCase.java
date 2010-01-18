@@ -19,7 +19,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.rename.CandidateCollector;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.GroovyRefactoringDispatcher;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.RenameInfo;
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -28,12 +27,8 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.ui.actions.SelectionConverter;
-import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
-import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.text.TextSelection;
 import org.eclipse.ltk.core.refactoring.CheckConditionsOperation;
 import org.eclipse.ltk.core.refactoring.PerformRefactoringOperation;
 import org.eclipse.swt.widgets.Shell;
@@ -52,7 +47,6 @@ public abstract class RenameTestCase extends BaseTestCase {
 	}
 
 	public void setUp() throws Exception {
-		System.out.println("Test started: '" + testName + "'");
 		super.setUp();
 		GroovyRuntime.addGroovyRuntime(testProject.getProject());
 		
@@ -101,14 +95,21 @@ public abstract class RenameTestCase extends BaseTestCase {
 
 		CandidateCollector collector = new CandidateCollector(fileProvider.getSelectionDocument(), selection);
 		
+		waitForIndexes();
 		try {
 			IJavaElement[] javaCandidates = collector.getJavaCandidates();
 			ASTNode[] groovyCandidates = collector.getGroovyCandidates();
 			
 			if (javaCandidates.length > 1 ||  groovyCandidates.length > 1) {		
 				System.err.println("Select first from more than one candidate!");
-			} 
+			} else if (javaCandidates.length == 0 ||  groovyCandidates.length == 0) {
+			    // something's weird...maybe indexes aren't complete???
+			    waitForIndexes();
+	            javaCandidates = collector.getJavaCandidates();
+	            groovyCandidates = collector.getGroovyCandidates();
+			}
 			
+
 			// don't try to do java refactoring on a groovy unit
 			if (javaCandidates.length > 0 && !javaCandidates[0].isReadOnly() && javaCandidates[0] instanceof IMember
 			    && ((IMember) javaCandidates[0]).getCompilationUnit().getElementName().endsWith(".java")) {
@@ -153,8 +154,10 @@ public abstract class RenameTestCase extends BaseTestCase {
 
 
 	public void testRefactoring() throws Exception {
-//		build();
-//		waitForIndexes();
+	    if (getName().endsWith("RenameGroovyClass_Test_Expression.txt")) {
+	        System.out.println("Test is failing...ignore");
+	    }
+	    
 		IMember element = searchVarDeclaration();
 		if (element != null) {
 			// Local Java Refactoring
