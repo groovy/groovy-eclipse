@@ -86,12 +86,19 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             }  
         	if (transformAnnotation!=null) {
         		// will work so long as signature for the member 'value' is String[]
-        		ListExpression expression = (ListExpression)transformAnnotation.getMember("value");
-        		List<Expression> expressions = expression.getExpressions();
-        		String[] values = new String[expressions.size()];
-        		int e=0;
-        		for (Expression expr: expressions) {
-        			values[e++] = ((ConstantExpression)expr).getText();
+        		Expression expr2 = transformAnnotation.getMember("value");
+        		String[] values = null;
+        		if (expr2 instanceof ListExpression) {
+        			ListExpression expression = (ListExpression)expr2;
+        			List<Expression> expressions = expression.getExpressions();
+        			values = new String[expressions.size()];
+        			int e=0;
+        			for (Expression expr: expressions) {
+        				values[e++] = ((ConstantExpression)expr).getText();
+        			}
+        		} else {
+        			values = new String[1];
+        			values[0] = ((ConstantExpression)expr2).getText();
         		}
         		return values;
         	}
