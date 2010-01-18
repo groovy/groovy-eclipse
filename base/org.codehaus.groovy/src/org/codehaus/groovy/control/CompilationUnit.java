@@ -27,7 +27,6 @@ import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -873,7 +872,8 @@ public class CompilationUnit extends ProcessingUnit {
 
 
             byte[] bytes = ((ClassWriter) visitor).toByteArray();
-            generatedClasses.add(new GroovyClass(classNode.getName(), bytes));
+            // GROOVYCHANGE - added classNode, sourceUnit
+            generatedClasses.add(new GroovyClass(classNode.getName(), bytes, classNode, source));
 
             //
             // Handle any callback that's been set
