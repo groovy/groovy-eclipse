@@ -838,7 +838,8 @@ public class CompilationUnit extends ProcessingUnit {
 
 
             byte[] bytes = ((ClassWriter) visitor).toByteArray();
-            generatedClasses.add(new GroovyClass(classNode.getName(), bytes));
+            // GROOVYCHANGE - added classNode, sourceUnit
+            generatedClasses.add(new GroovyClass(classNode.getName(), bytes, classNode, source));
 
             //
             // Handle any callback that's been set
