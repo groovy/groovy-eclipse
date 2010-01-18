@@ -251,7 +251,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     
     
     protected void launchScriptAndAssertExitValue(IType launchType) throws InterruptedException, CoreException {
-        launchScriptAndAssertExitValue(launchType, 10);
+        launchScriptAndAssertExitValue(launchType, 20);
     }
     protected void launchScriptAndAssertExitValue(IType launchType, int timeoutSeconds) throws InterruptedException, CoreException {
         String problems = testProject.getProblems();

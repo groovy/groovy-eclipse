@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -28,7 +29,10 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 /**
  * @author Andrew Eisenberg
  * @created Nov 12, 2009
- *
+ * Generates all of the method proposals for a given location
+ * Also will add the non-getter form of getter methods if appropriate
+ * 
+ * One problem is that methods overridden from super class will appear multiple times.
  */
 public class MethodProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
@@ -38,13 +42,48 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         for (MethodNode method : allMethods) {
             if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) &&
-                    checkName(method.getName()) &&
-                    ProposalUtils.looselyMatches(prefix, method.getName())) {
-                groovyProposals.add(new GroovyMethodProposal(method));
+                    checkName(method.getName())) {
+                if (ProposalUtils.looselyMatches(prefix, method.getName())) {
+                    groovyProposals.add(new GroovyMethodProposal(method));
+                } else if (looselyMatchesGetterName(prefix, method.getName())) {
+                    groovyProposals.add(new GroovyFieldProposal(createMockField(method)));
+                }
             }
         }
-        
         return groovyProposals;
     }
 
+    /**
+     * @param method
+     * @return
+     */
+    private FieldNode createMockField(MethodNode method) {
+        FieldNode field = new FieldNode(createMockFieldName(method.getName()), method.getModifiers(), method.getReturnType(), method.getDeclaringClass(), null);
+        field.setDeclaringClass(method.getDeclaringClass());
+        field.setSourcePosition(method);
+        return field;
+    }
+
+    /**
+     * @param prefix
+     * @return
+     */
+    private boolean looselyMatchesGetterName(String prefix, String methodName) {
+        if (methodName.length() < 4) {
+            return false;
+        } else if (!methodName.startsWith("get") || Character.isLowerCase(methodName.charAt(3))) {
+            return false;
+        }
+        
+        String newName = createMockFieldName(methodName);
+        return ProposalUtils.looselyMatches(prefix, newName);
+    }
+
+    /**
+     * @param methodName
+     * @return
+     */
+    private String createMockFieldName(String methodName) {
+        return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+    }
 }

@@ -40,6 +40,7 @@ import ExtractMethod.ExtractMethodTestSuite;
 public class RefactoringTests extends TestCase {
 
 	public static Test suite() throws Exception {
+	    
 		TestSuite suite = new TestSuite("Run of all Refactoring Test");
 		TestProject testProject = null;
         try {
@@ -64,7 +65,7 @@ public class RefactoringTests extends TestCase {
 	         suite.addTestSuite(HierarchyTreeTestCase.class);
 	         //Commented out on purpose
 	         // the jdt-groovy refactoring tests are hanging on the build server
-//	         suite.addTest(UnitTestSuite.suite());
+	         suite.addTest(JointRenameRefactoringTestSuite.suite());
 	         //
 	         //suite.addTestSuite(ArchivedFailingTestSuite.class);
 		

@@ -27,10 +27,7 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
-import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.objectweb.asm.Opcodes;
 
 /**

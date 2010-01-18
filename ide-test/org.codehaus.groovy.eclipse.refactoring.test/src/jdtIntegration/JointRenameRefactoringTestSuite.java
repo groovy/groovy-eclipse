@@ -36,6 +36,9 @@ public class JointRenameRefactoringTestSuite {
 	}
 
 
+    // Create a TestProject that is shared across all test cases.
+    // Don't clean up between tests. 
+	// This drastically speeds up test runs
     public static TestProject getTestProject() throws CoreException {
         if (testProject == null) {
             testProject = new TestProject();
