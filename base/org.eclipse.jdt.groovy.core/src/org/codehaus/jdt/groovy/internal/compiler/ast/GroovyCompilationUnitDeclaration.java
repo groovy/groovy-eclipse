@@ -1177,6 +1177,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		}
 	}
 
+	private final static boolean DEBUG = false;
+
 	// FIXASC this is useless - use proper positions
 	private long[] getPositionsFor(char[][] compoundName) {
 		long[] ls = new long[compoundName.length];
@@ -1193,82 +1195,93 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	public void generateCode() {
 		boolean successful = processToPhase(Phases.ALL);
 		if (successful) {
-			// FIXASC (optimize) should make the CompilationUnit smarter to preserve
-			// the information we are about to dig for
 
-			// this returns all the classes and we only want those caused by
-			// this sourceUnit
-			List<GroovyClass> unitGeneratedClasses = groovyCompilationUnit.getClasses();
-			List<String> classnamesFromThisSourceUnit = new ArrayList<String>();
-			List<ClassNode> classnodesFromSourceUnit = groovySourceUnit.getAST().getClasses();
-			for (ClassNode classnode : classnodesFromSourceUnit) {
-				classnamesFromThisSourceUnit.add(classnode.getName());
+			// At the end of this method we want to make this call for each of the classes generated during processing
+			//
+			// compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, foundBinding, path));
+			//
+			// For each generated class (in groovyCompilationUnit.getClasses()) we know:
+			// String classname = groovyClass.getName(); = this is the name of the generated type (doesn't matter where the
+			// declaration was)
+			// byte[] classbytes = groovyClass.getBytes(); = duh
+			// String path = groovyClass.getName().replace('.', '/'); = where to put it on disk
+
+			// The only tricky piece of information is discovering the binding that gave rise to the type. This is complicated
+			// in groovy because it is not policing that the package name matches the directory structure.
+			// Effectively the connection between the TypeDeclaration (which points to the binding) and the
+			// groovy created component is lost - if that were maintained we would not have to go hunting for it.
+			// On finishing processing we have access to the generated classes but GroovyClassFile objects have no idea what
+			// their originating ClassNode was.
+
+			// Under eclipse I've extended GroovyClassFile objects to remember their sourceUnit and ClassNode - this means
+			// we have to do very little hunting for the binding and don't have to mess around with strings (chopping off
+			// packages, etc).
+
+			// This returns all of them, for all source files
+			List<GroovyClass> classes = groovyCompilationUnit.getClasses();
+
+			if (DEBUG) {
+				log("Processing sourceUnit " + groovySourceUnit.getName());
 			}
-			for (GroovyClass groovyClass : unitGeneratedClasses) {
-				String classname = groovyClass.getName();
-				String relatedClassName = null;
-				if (classnamesFromThisSourceUnit != null) {
-					boolean looksRight = false;
-					for (String cn : classnamesFromThisSourceUnit) {
-						if (classname.equals(cn) || classname.startsWith(cn + "$")) {
-							looksRight = true;
-							relatedClassName = cn;
+
+			for (GroovyClass clazz : classes) {
+				ClassNode classnode = clazz.getClassNode();
+				if (DEBUG) {
+					log("Looking at class " + clazz.getName());
+					log("ClassNode where it came from " + classnode);
+				}
+				// Only care about those coming about because of this groovySourceUnit
+				if (clazz.getSourceUnit() == groovySourceUnit) {
+					if (DEBUG) {
+						log("It is from this source unit");
+					}
+					// Worth continuing
+					String classname = clazz.getName();
+					SourceTypeBinding binding = null;
+					if (types != null && types.length != 0) {
+						binding = findBinding(types, clazz.getClassNode());
+					}
+					if (DEBUG) {
+						log("Binding located?" + (binding != null));
+					}
+					if (binding == null) {
+						// closures will be represented as InnerClassNodes
+						ClassNode current = classnode;
+						while (current instanceof InnerClassNode && binding == null) {
+							current = ((InnerClassNode) classnode).getOuterClass();
+							binding = findBinding(types, current);
+							if (DEBUG) {
+								log("Had another look because it is in an InnerClassNode, found binding? " + (binding != null));
+							}
 						}
 					}
-					if (!looksRight) {
-						continue;
+					if (binding == null) {
+						RuntimeException rEx = new RuntimeException("Missing binding");
+						rEx.printStackTrace();
+						Util.log(rEx, "Couldn't find binding for '" + classname + "'");
 					}
+					byte[] classbytes = clazz.getBytes();
+					String path = clazz.getName().replace('.', '/');
+					compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, binding, path));
 				}
-				byte[] classbytes = groovyClass.getBytes();
-				String path = groovyClass.getName().replace('.', '/');// File.separatorChar);
-				SourceTypeBinding foundBinding = null;
-				// FIXASC (optimize) poor way to discover the binding, improve this - we should already know the binding
-				if (types != null && types.length != 0) {
-					foundBinding = findBinding(types, relatedClassName);
-
-				}
-				// null foundBinding here will manifest as NPE shortly and means
-				// we are looking for a class file unrelated to the current
-				// sourceUnit...
-				if (foundBinding == null) {
-					// FIXASC surface as an error? example of this problem, see DeclarationTests.groovy in groovyc
-					// may be too late to register with the CompilationUnit error collector
-					// something like this :
-					// this.groovyCompilationUnit.getErrorCollector().addError(
-					// new SyntaxErrorMessage(new SyntaxException(
-					// "Missing binding: does the package name match the directory?", 0, 0), groovySourceUnit));
-					Util.log(new RuntimeException("Missing binding"),
-							"Couldn't find binding (Does the package name match the directory for this type?) '" + relatedClassName
-									+ "'");
-					return;
-				}
-
-				compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, foundBinding, path));
 			}
 		}
 	}
 
-	private SourceTypeBinding findBinding(TypeDeclaration[] types, String relatedClassName) {
-		for (TypeDeclaration typeDecl : types) {
-			// Going to say that a null binding is because of some other error that prevented it being built
-			SourceTypeBinding sourceTypeBinding = typeDecl.binding;
-			if (sourceTypeBinding == null) {
-				Util.log(new RuntimeException(), "Broken binding (hope code had errors...) for declaration: '"
-						+ new String(typeDecl.name) + "'");
-			} else {
-				String bindingName = CharOperation.toString(sourceTypeBinding.compoundName);
-				// FIXASC it appears 'scripts' have a classname and no
-				// package (is that right?) - revisit the second part of
-				// this if clause. 'configtest' is an example script
-				// from grails that does this
-				if (bindingName.equals(relatedClassName) || bindingName.endsWith(relatedClassName)) {
-					return typeDecl.binding;
-				}
+	private void log(String message) {
+		System.out.println(message);
+	}
+
+	private SourceTypeBinding findBinding(TypeDeclaration[] typedeclarations, ClassNode cnode) {
+		for (TypeDeclaration typedeclaration : typedeclarations) {
+			GroovyTypeDeclaration groovyTypeDeclaration = (GroovyTypeDeclaration) typedeclaration;
+			if (groovyTypeDeclaration.getClassNode().equals(cnode)) {
+				return groovyTypeDeclaration.binding;
 			}
-			if (typeDecl.memberTypes != null) {
-				SourceTypeBinding b = findBinding(typeDecl.memberTypes, relatedClassName);
-				if (b != null) {
-					return b;
+			if (typedeclaration.memberTypes != null) {
+				SourceTypeBinding binding = findBinding(typedeclaration.memberTypes, cnode);
+				if (binding != null) {
+					return binding;
 				}
 			}
 		}
