@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import java.io.File;
 import java.util.Hashtable;
 
 import junit.framework.Test;
@@ -223,6 +224,146 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingNoProblems();
 		expectingCompiledClassesV("MyTest");
 		executeClass(projectPath, "MyTest", "success", null);
+	}
+	
+	/**
+	 * Testing that the transform occurs on an incremental change.  The key thing being looked
+	 * at here is that the incremental change is not directly to a transformed file but to
+	 * a file referenced from a transformed file.
+	 */
+	public void testSpock_GRE605_1() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addJar(projectPath,"lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
+	    env.addJar(projectPath,"lib/junit4_4.5.0.jar"); //$NON-NLS-1$
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "FoobarSpec",
+				"import spock.lang.Specification\n"+
+				"\n"+
+				"class FoobarSpec extends Specification {\n"+
+				"	\n"+
+				"	Foobar barbar\n"+
+				"   \n"+
+				"    def example() {\n"+
+				"    	when: \n"+
+				"        def foobar = new Foobar()\n"+
+				"        \n"+
+				"        then:\n"+
+				"        foobar.baz == 42\n"+
+				"   }\n"+
+				"    \n"+
+				"}" 
+				);
+		
+		env.addGroovyClass(root, "", "Foobar",
+				"class Foobar {\n"+
+				"\n"+
+				"def baz = 42\n"+
+				"//def quux = 36\n"+
+				"\n"+
+				"}\n" 
+				);
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Foobar","FoobarSpec");
+		
+		
+		IPath workspacePath = env.getWorkspaceRootPath();
+		File f = new File(workspacePath.append(env.getOutputLocation(projectPath)).toOSString(),"FoobarSpec.class");
+		long filesize = f.length(); // this is 9131 for groovy 1.7.0
+		
+		env.addGroovyClass(root, "", "Foobar",
+				"class Foobar {\n"+
+				"\n"+
+				"def baz = 42\n"+
+				"def quux = 36\n"+
+				"\n"+
+				"}\n" 
+				);
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Foobar","FoobarSpec");
+
+		long filesizeNow = f.length(); // drops to 7002 if transform did not run
+		assertEquals(filesize,filesizeNow);
+	}
+	
+	/**
+	 * Also found through this issue, FoobarSpec not getting a rebuild when Foobar changes.  This test is currently
+	 * having a reference from foobarspec>foobar by having a field of type Foobar.  If that is removed, even though
+	 * there is still a reference to ctor for foobar from foobarspec, there is no incremental build of foobarspec
+	 * when foobar is changed.  I am not 100% sure if one is needed or not - possibly it is... hmmm
+	 */
+	public void testSpock_GRE605_2() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addJar(projectPath,"lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
+	    env.addJar(projectPath,"lib/junit4_4.5.0.jar"); //$NON-NLS-1$
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "FoobarSpec",
+				"import spock.lang.Specification\n"+
+				"\n"+
+				"class FoobarSpec extends Specification {\n"+
+				"	\n"+
+				"  Foobar foob\n"+
+				"    def example() {\n"+
+				"    	when: \n"+
+				"        def foobar = new Foobar()\n"+
+				"        \n"+
+				"        then:\n"+
+				"        foobar.baz == 42\n"+
+				"   }\n"+
+				"    \n"+
+				"}" 
+				);
+		
+		env.addGroovyClass(root, "", "Foobar",
+				"class Foobar {\n"+
+				"\n"+
+				"def baz = 42\n"+
+				"//def quux = 36\n"+
+				"\n"+
+				"}\n" 
+				);
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Foobar","FoobarSpec");
+		
+		
+//		IPath workspacePath = env.getWorkspaceRootPath();
+//		File f = new File(workspacePath.append(env.getOutputLocation(projectPath)).toOSString(),"FoobarSpec.class");
+//		long filesize = f.length(); // this is 9131 for groovy 1.7.0
+		
+		env.addGroovyClass(root, "", "Foobar",
+				"class Foobar {\n"+
+				"\n"+
+				"def baz = 42\n"+
+				"def quux = 36\n"+
+				"\n"+
+				"}\n" 
+				);
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Foobar","FoobarSpec");
+
+//		long filesizeNow = f.length(); // drops to 7002 if transform did not run
+//		assertEquals(filesize,filesizeNow);
 	}
 	
 			
