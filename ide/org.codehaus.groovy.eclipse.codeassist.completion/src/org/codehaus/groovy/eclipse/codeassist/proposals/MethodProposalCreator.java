@@ -41,16 +41,26 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         List<MethodNode> allMethods = type.getAllDeclaredMethods();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         for (MethodNode method : allMethods) {
+            String methodName = method.getName();
             if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) &&
-                    checkName(method.getName())) {
-                if (ProposalUtils.looselyMatches(prefix, method.getName())) {
+                    checkName(methodName)) {
+                if (ProposalUtils.looselyMatches(prefix, methodName)) {
                     groovyProposals.add(new GroovyMethodProposal(method));
-                } else if (looselyMatchesGetterName(prefix, method.getName())) {
+                    
+                } else if (looselyMatchesGetterName(prefix, methodName) && hasNoField(method)) {
                     groovyProposals.add(new GroovyFieldProposal(createMockField(method)));
                 }
             }
         }
         return groovyProposals;
+    }
+
+    /**
+     * Check to ensure that there is no field with that name before creating 
+     * the mock field
+     */
+    private boolean hasNoField(MethodNode method) {
+        return method.getDeclaringClass().getField(createMockFieldName(method.getName())) == null;
     }
 
     /**
