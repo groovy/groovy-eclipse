@@ -65,7 +65,7 @@ public class RefactoringTests extends TestCase {
 	         suite.addTestSuite(HierarchyTreeTestCase.class);
 	         //Commented out on purpose
 	         // the jdt-groovy refactoring tests are hanging on the build server
-	         suite.addTest(JointRenameRefactoringTestSuite.suite());
+//	         suite.addTest(JointRenameRefactoringTestSuite.suite());
 	         //
 	         //suite.addTestSuite(ArchivedFailingTestSuite.class);
 		
