@@ -272,7 +272,7 @@ public class TestProject {
     private IFolder createBinFolder() throws CoreException {
         final IFolder binFolder = project.getFolder("bin");
         if (!binFolder.exists())
-            binFolder.create(false, true, null);
+            ensureExists(binFolder);
         return binFolder;
     }
 
@@ -291,7 +291,7 @@ public class TestProject {
     private IPackageFragmentRoot createSourceFolder() throws CoreException {
         IFolder folder = project.getFolder("src");
         if (!folder.exists())
-            folder.create(false, true, null);
+            ensureExists(folder);
         final IClasspathEntry[] entries = javaProject
                 .getResolvedClasspath(false);
         final IPackageFragmentRoot root = javaProject
@@ -311,29 +311,48 @@ public class TestProject {
     public IPackageFragmentRoot createOtherSourceFolder() throws CoreException {
         return createOtherSourceFolder(null);
     }
-    public IPackageFragmentRoot createOtherSourceFolder(String outFolder) throws CoreException {
-        IFolder folder = project.getFolder("other");
-        if (!folder.exists())
-            folder.create(false, true, null);
+    public IPackageFragmentRoot createOtherSourceFolder(String outPath) throws CoreException {
+        return createSourceFolder("other", outPath);
+    }
+    
+    public IPackageFragmentRoot createSourceFolder(String path, String outPath) throws CoreException {
+        IFolder folder = project.getFolder(path);
+        if (!folder.exists()) {
+            ensureExists(folder);
+        }
+        
         final IClasspathEntry[] entries = javaProject
             .getResolvedClasspath(false);
         final IPackageFragmentRoot root = javaProject
             .getPackageFragmentRoot(folder);
         for (int i = 0; i < entries.length; i++) {
             final IClasspathEntry entry = entries[i];
-            if (entry.getPath().equals(folder.getFullPath()))
+            if (entry.getPath().equals(folder.getFullPath())) {
                 return root;
+            }
         }
         IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
         IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
         System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
-        if (outFolder == null) {
+        if (outPath == null) {
             newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath());
         } else {
-            newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath(), null, getProject().getFullPath().append(outFolder).makeAbsolute());
+            newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath(), null, getProject().getFullPath().append(outPath).makeAbsolute());
         }
         javaProject.setRawClasspath(newEntries, null);
         return root;
+
+    }
+
+    /**
+     * @param folder
+     * @throws CoreException
+     */
+    private void ensureExists(IFolder folder) throws CoreException {
+        if (folder.getParent().getType() == IResource.FOLDER && !folder.getParent().exists()) {
+            ensureExists((IFolder) folder.getParent());
+        }
+        folder.create(false, true, null);
     }
 
     public void addProjectReference(IJavaProject referent) throws JavaModelException {
@@ -385,5 +404,25 @@ public class TestProject {
             }
         }
         return errorFound ? sb.toString() : null;
+    }
+
+    /**
+     * Create file at project root.
+     * @param name
+     * @param contents
+     * @return
+     * @throws Exception
+     */
+    public IFile createFile(String name, String contents) throws Exception {
+        String encoding = null;
+        try {
+            encoding = project.getDefaultCharset(); // get project encoding as file is not accessible
+        } catch (CoreException ce) {
+            // use no encoding
+        }
+        InputStream stream = new ByteArrayInputStream(encoding == null ? contents.getBytes() : contents.getBytes(encoding));
+        IFile file= project.getFile(new Path(name));
+        file.create(stream, true, null);
+        return file;
     }
 }

@@ -25,6 +25,9 @@ import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSave
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.internal.debug.ui.IJDIPreferencesConstants;
+import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.templates.ContextTypeRegistry;
 import org.eclipse.jface.text.templates.persistence.TemplateStore;
 import org.eclipse.swt.SWTError;
@@ -85,6 +88,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
     private EnsureJUnitFont ensure;
 
     private IPageListener junitListener;
+    
+    private boolean oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT;
 	
 	static {
 		String value = Platform
@@ -169,37 +174,23 @@ public class GroovyPlugin extends AbstractUIPlugin {
         getLog().log( status );
 	}
 
-	/**
-	 * @return Returns the dialogProvider.
-	 */
-//	public GroovyDialogProvider getDialogProvider() {
-//		return dialogProvider;
-//	}
-//
-//	/**
-//	 * @param dialogProvider
-//	 *            The dialogProvider to set.
-//	 */
-//	public void setDialogProvider(GroovyDialogProvider dialogProvider) {
-//		this.dialogProvider = dialogProvider;
-//	}
-
 	public static void trace(String message) {
 		if (trace) {
 			getDefault().logTraceMessage("trace: " + message);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
-	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		textTools = new GroovyTextTools();
 		addMonospaceFontListener();
 		DelegatingCleanUpPostSaveListener.installCleanUp();
+
+		// ensure that the user doesn't see any useless warning dialogs when breakpoints are added
+		// to a closure
+		IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
+		oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT = preferenceStore.getBoolean(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
+        preferenceStore.setValue(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT, false);
 	}
 
     private void addMonospaceFontListener() {
@@ -250,7 +241,12 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	    textTools = null;
         DelegatingCleanUpPostSaveListener.uninstallCleanUp();
         removeMonospaceFontListener();
-	}
+
+        // undo the preference store damage
+        IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
+        preferenceStore.setValue(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT, oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
+
+    }
 
 	
     public GroovyTextTools getTextTools() {

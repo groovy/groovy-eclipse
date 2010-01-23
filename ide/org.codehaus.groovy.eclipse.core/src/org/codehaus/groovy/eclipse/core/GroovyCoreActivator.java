@@ -15,16 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.core;
 
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.osgi.service.resolver.BundleDescription;
-import org.eclipse.osgi.service.resolver.PlatformAdmin;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -43,50 +37,21 @@ public class GroovyCoreActivator extends Plugin {
 
     private ServiceTracker tracker = null;
 
-    private static BundleContext context = null;
 
     private IEclipsePreferences instanceScope;
 
-    /**
-     * The constructor
-     */
     public GroovyCoreActivator() {
         plugin = this;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext
-     * )
-     */
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
-        GroovyCoreActivator.context = context;
-        tracker = new ServiceTracker(context, PlatformAdmin.class.getName(),
-                null);
-        tracker.open();
-        
-        // I don't like this, but we need to ensure that the code browsing bundle is
-        // started before we can get code browsing to work
-//        Platform.getBundle("org.codehaus.groovy.eclipse.codebrowsing").start();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext
-     * )
-     */
     @Override
     public void stop(BundleContext context) throws Exception {
         plugin = null;
-        super.stop(context);
-        if (tracker != null)
-            tracker.close();
     }
 
     /**
@@ -98,74 +63,7 @@ public class GroovyCoreActivator extends Plugin {
         return plugin;
     }
 
-    /**
-     * Facade to get to the workspace
-     * 
-     * @return Returns the workspace instance.
-     */
-    public static IWorkspace getWorkspace() {
-        return ResourcesPlugin.getWorkspace();
-    }
 
-    public static BundleContext context() {
-        return context;
-    }
-
-    public static Bundle bundle() {
-        return getDefault().getBundle();
-    }
-
-    public static Bundle getBundle(final long id) {
-        return context.getBundle(id);
-    }
-
-    public static Bundle bundle(final long id) {
-        return getBundle(id);
-    }
-
-    public static Bundle getBundle(final String symbolicName) {
-        final BundleDescription desc = bundleDescription(symbolicName);
-        if (desc == null)
-            return null;
-        return bundle(desc.getBundleId());
-    }
-
-    public static Bundle bundle(final String symbolicName) {
-        return getBundle(symbolicName);
-    }
-
-    public static PlatformAdmin getPlatformAdmin() {
-        return (PlatformAdmin) getDefault().tracker.getService();
-    }
-
-    public static PlatformAdmin platformAdmin() {
-        return getPlatformAdmin();
-    }
-
-    public static BundleDescription getBundleDescription(final long id) {
-        return platformAdmin().getState().getBundle(id);
-    }
-
-    public static BundleDescription bundleDescription(final long id) {
-        return getBundleDescription(id);
-    }
-
-    public static BundleDescription getBundleDescription(final String name) {
-        return platformAdmin().getState().getBundle(name, null);
-    }
-
-    public static BundleDescription bundleDescription(final String name) {
-        return getBundleDescription(name);
-    }
-
-    public static BundleDescription getBundleDescription() {
-        return getBundleDescription(bundle().getBundleId());
-    }
-
-    public static BundleDescription bundleDescription() {
-        return getBundleDescription();
-    }
-    
     public IEclipsePreferences getPreferences() {
         if (instanceScope == null) {
             instanceScope = ((IScopeContext) new InstanceScope()).getNode(GroovyCoreActivator.PLUGIN_ID);

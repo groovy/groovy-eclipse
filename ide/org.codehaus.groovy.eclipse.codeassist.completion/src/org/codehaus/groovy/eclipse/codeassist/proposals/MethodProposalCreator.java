@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +33,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * Generates all of the method proposals for a given location
  * Also will add the non-getter form of getter methods if appropriate
  * 
- * One problem is that methods overridden from super class will appear multiple times.
  */
 public class MethodProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
@@ -40,15 +40,24 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
             Set<ClassNode> categories, String prefix, boolean isStatic) {
         List<MethodNode> allMethods = type.getAllDeclaredMethods();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
+        Set<String> alreadySeenFields = new HashSet<String>();
+        
         for (MethodNode method : allMethods) {
             String methodName = method.getName();
+            String mockFieldName = createMockFieldName(methodName);
             if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) &&
                     checkName(methodName)) {
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
                     groovyProposals.add(new GroovyMethodProposal(method));
                     
-                } else if (looselyMatchesGetterName(prefix, methodName) && hasNoField(method)) {
-                    groovyProposals.add(new GroovyFieldProposal(createMockField(method)));
+                } else if (ProposalUtils.looselyMatches(prefix, mockFieldName) && 
+                        !alreadySeenFields.contains(mockFieldName)) {
+                    
+                    // be careful not to add fields twice
+                    alreadySeenFields.add(mockFieldName);
+                    if (hasNoField(method)) {
+                        groovyProposals.add(new GroovyFieldProposal(createMockField(method)));
+                    }
                 }
             }
         }
@@ -94,6 +103,6 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
      * @return
      */
     private String createMockFieldName(String methodName) {
-        return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+        return methodName.length() > 3 ? Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4) : "$$$$$";
     }
 }

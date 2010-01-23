@@ -180,13 +180,11 @@ public class TypeCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "Icons", 0, true);
     }
     
-    // Disabled---duplicate class proposals appearing.
-    // GRECLIPSE-625
-//    public void testCompleteClass1() throws Exception {
-//        String contents = "class Foo { }\n def x \n Foo.clas";
-//        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".clas"));
-//        proposalExists(proposals, "class", 1, true);
-//    }
+    public void testCompleteClass1() throws Exception {
+        String contents = "class Foo { }\n def x \n Foo.clas";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".clas"));
+        proposalExists(proposals, "class", 1, true);
+    }
     
     public void testCompleteClass2() throws Exception {
         String contents = "class Foo { }\n Foo.class.canonicalName";
