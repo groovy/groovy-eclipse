@@ -99,6 +99,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 			return false;
 		}
 		Set<String> allSupers = new HashSet<String>();
+		allSupers.add("java.lang.Object");
 		findAllSupers(from, allSupers);
 		for (String supr : allSupers) {
 			if (to.getName().equals(supr)) {

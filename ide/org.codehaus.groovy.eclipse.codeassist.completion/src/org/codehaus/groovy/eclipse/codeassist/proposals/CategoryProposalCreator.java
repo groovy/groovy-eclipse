@@ -39,6 +39,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         ClassNode candidate = VariableScope.maybeConvertFromPrimitive(type);
         Set<String> set = new HashSet<String>();
         getAllSupersAsStrings(candidate, set);
+        set.add("java.lang.Object");
         List<IGroovyProposal> groovyProposals = 
             findAllProposals(set, categories, prefix);
         return groovyProposals;
