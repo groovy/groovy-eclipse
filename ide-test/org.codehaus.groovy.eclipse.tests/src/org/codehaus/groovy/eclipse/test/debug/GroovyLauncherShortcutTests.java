@@ -17,6 +17,8 @@ package org.codehaus.groovy.eclipse.test.debug;
 
 import java.util.Map;
 
+import junit.framework.AssertionFailedError;
+
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
@@ -253,27 +255,54 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     protected void launchScriptAndAssertExitValue(IType launchType) throws InterruptedException, CoreException {
         launchScriptAndAssertExitValue(launchType, 20);
     }
-    protected void launchScriptAndAssertExitValue(IType launchType, int timeoutSeconds) throws InterruptedException, CoreException {
+    protected void launchScriptAndAssertExitValue(final IType launchType, final int timeoutSeconds) throws InterruptedException, CoreException {
+        
         String problems = testProject.getProblems();
         if (problems != null) {
             fail("Compile problems:\n" + problems);
         }
-        MockGroovyScriptLaunchShortcut shortcut = new MockGroovyScriptLaunchShortcut();
-        ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType), launchType.getFullyQualifiedName());
-        ConsoleListener listener = new ConsoleListener();
-        ConsoleLineTracker.setDelegate(listener);
-        assertTrue(launchType.exists());
-        DebugUIPlugin.launchInForeground(config, "run");
-        synchronized (listener) {
-            int i = 0;
-            while (!listener.isTerminated() && i < timeoutSeconds) {
-                i++;
-                System.out.println("Waiting for launch to complete " + i + " sec...");
-                listener.wait(1000);
+
+        Runnable runner = new Runnable() {
+            public void run() {
+                try {
+                    MockGroovyScriptLaunchShortcut shortcut = new MockGroovyScriptLaunchShortcut();
+                    ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType), launchType.getFullyQualifiedName());
+                    ConsoleListener listener = new ConsoleListener();
+                    ConsoleLineTracker.setDelegate(listener);
+                    assertTrue(launchType.exists());
+                    DebugUIPlugin.launchInForeground(config, "run");
+                    synchronized (listener) {
+                        int i = 0;
+                        while (!listener.isTerminated() && i < timeoutSeconds) {
+                            i++;
+                            System.out.println("Waiting for launch to complete " + i + " sec...");
+                            listener.wait(1000);
+                        }
+                    }
+                    
+                    assertTrue("Process not terminated after timeout has been reached", listener.isTerminated());
+                    assertEquals("Expecting normal exit, but found invalid exit value", 0, listener.getExitValue());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
-        }
+        };
         
-        assertTrue("Process not terminated after timeout has been reached", listener.isTerminated());
-        assertEquals("Expecting normal exit, but found invalid exit value", 0, listener.getExitValue());
+        AssertionFailedError currentException = null;
+        for (int attempt = 0; attempt < 4; attempt++) {
+            try {
+                runner.run();
+                
+                // success
+                return;
+            } catch (AssertionFailedError e) {
+                currentException = e;
+                System.out.println("Launch failed on attempt " + attempt + " retrying."); 
+            }
+            
+        }
+        if (currentException != null) {
+            throw currentException;
+        }
     }
 }
