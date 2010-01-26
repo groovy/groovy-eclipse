@@ -28,7 +28,7 @@ import org.eclipse.jface.text.rules.IRule;
  * @created Oct 23, 2009
  *
  */
-public class HighlightingExtenderTests extends EclipseTestCase{
+public class HighlightingExtenderTests extends EclipseTestCase {
     private HighlightingExtenderRegistry registry;
     @Override
     protected void setUp() throws Exception {

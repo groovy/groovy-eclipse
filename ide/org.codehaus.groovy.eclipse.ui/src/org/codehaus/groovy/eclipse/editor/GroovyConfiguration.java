@@ -7,18 +7,13 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput;
-import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider;
 import org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory;
 import org.eclipse.jdt.internal.ui.text.java.ContentAssistProcessor;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProcessor;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
@@ -34,7 +29,6 @@ import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
-import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 public class GroovyConfiguration extends JavaSourceViewerConfiguration {
@@ -80,48 +74,6 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         return null;
     }
 
-    @Override
-    public IAutoEditStrategy[] getAutoEditStrategies(
-            ISourceViewer sourceViewer, String contentType) {
-        IAutoEditStrategy indentStrategy = new GroovyAutoIndentStrategy(getConfiguredDocumentPartitioning(sourceViewer), getJavaProject());
-        IAutoEditStrategy pairStrategy = new AutoEnclosingPairStrategy();
-        IAutoEditStrategy[] defaultStrategies = super.getAutoEditStrategies(sourceViewer, contentType);
-        if (defaultStrategies == null || defaultStrategies.length == 0) {
-            return new IAutoEditStrategy[] { indentStrategy, pairStrategy };
-        }
-        IAutoEditStrategy[] newStrategies = new IAutoEditStrategy[defaultStrategies.length+2];
-        System.arraycopy(defaultStrategies, 0, newStrategies, 0, defaultStrategies.length);
-        newStrategies[defaultStrategies.length+1] = indentStrategy;
-        newStrategies[defaultStrategies.length] = pairStrategy;
-        return newStrategies;
-    }
-    
-    private IJavaProject getJavaProject() {
-        ITextEditor editor= getEditor();
-        if (editor == null)
-            return null;
-
-        IJavaElement element= null;
-        IEditorInput input= editor.getEditorInput();
-        if (input == null && editor instanceof GroovyEditor) {
-            input = ((GroovyEditor) editor).internalInput;
-        }
-        
-        IDocumentProvider provider= editor.getDocumentProvider();
-        if (provider instanceof ICompilationUnitDocumentProvider) {
-            ICompilationUnitDocumentProvider cudp= (ICompilationUnitDocumentProvider) provider;
-            element= cudp.getWorkingCopy(input);
-        } else if (input instanceof IClassFileEditorInput) {
-            IClassFileEditorInput cfei= (IClassFileEditorInput) input;
-            element= cfei.getClassFile();
-        }
-
-        if (element == null)
-            return null;
-
-        return element.getJavaProject();
-    }
-    
     @Override
     protected RuleBasedScanner getStringScanner() {
         return stringScanner;

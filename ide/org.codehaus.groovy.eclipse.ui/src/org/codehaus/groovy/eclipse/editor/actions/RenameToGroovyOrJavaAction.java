@@ -69,7 +69,7 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
             Set<IProject> affectedProjects = new HashSet<IProject>();
             final Set<IResource> filesAlreadyOpened = new HashSet<IResource>();
             StructuredSelection sel = (StructuredSelection) selection;
-            for (Iterator iter = sel.iterator(); iter.hasNext();) {
+            for (Iterator<?> iter = sel.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
 

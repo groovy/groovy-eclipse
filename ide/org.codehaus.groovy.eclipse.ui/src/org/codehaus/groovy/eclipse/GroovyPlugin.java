@@ -252,29 +252,4 @@ public class GroovyPlugin extends AbstractUIPlugin {
     public GroovyTextTools getTextTools() {
         return textTools;
     }
-	
-
-	public ContextTypeRegistry getContextTypeRegistry() {
-		if (fContextTypeRegistry == null) {
-			fContextTypeRegistry = new ContributionContextTypeRegistry();
-			fContextTypeRegistry
-				.addContextType(GROOVY_TEMPLATE_CTX);
-		}
-		return fContextTypeRegistry;
-	}
-	    
-	public TemplateStore getTemplateStore() {
-		if (fTemplateStore == null) {
-			fTemplateStore = new ContributionTemplateStore(
-					getContextTypeRegistry(),
-					getDefault().getPreferenceStore(), "templates");
-			try {
-				fTemplateStore.load();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		return fTemplateStore;
-	}
 }

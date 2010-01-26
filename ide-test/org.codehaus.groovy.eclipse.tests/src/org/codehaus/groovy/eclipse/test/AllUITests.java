@@ -30,6 +30,7 @@ import org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests;
 import org.codehaus.groovy.eclipse.test.debug.ConsoleLineTrackerTests;
 import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
 import org.codehaus.groovy.eclipse.test.debug.GroovyLauncherShortcutTests;
+import org.codehaus.groovy.eclipse.test.ui.BracketInserterTests;
 import org.codehaus.groovy.eclipse.test.ui.ErrorLogTest;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
 import org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests;
@@ -46,7 +47,6 @@ public class AllUITests {
 		suite.addTestSuite(GroovyFileAdapterFactoryTestCase.class);
 		suite.addTestSuite(GroovyIFileEditorInputAdapterFactoryTestCase.class);
 		suite.addTestSuite(IsMainTesterTests.class);
-		suite.addTest(org.codehaus.groovy.eclipse.test.core.util.AllTests.suite());
 		suite.addTestSuite(ExpressionFinderTestCase.class);
 		suite.addTestSuite(GroovyTagScannerTests.class);
 		suite.addTestSuite(DebugBreakpointsTests.class);
@@ -56,7 +56,7 @@ public class AllUITests {
 		suite.addTestSuite(ConvertToJavaOrGroovyActionTest.class);
 		suite.addTestSuite(ConsoleLineTrackerTests.class);
 		suite.addTestSuite(HighlightingExtenderTests.class);
-		
+		suite.addTestSuite(BracketInserterTests.class);
 		return suite;
 	}
 }

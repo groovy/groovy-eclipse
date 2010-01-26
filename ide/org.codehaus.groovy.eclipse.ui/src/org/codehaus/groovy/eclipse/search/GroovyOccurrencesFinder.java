@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder;
 
 /**
+ * NOT USED YET...STILL A SKELETON
  * 
  * @author Andrew Eisenberg
  * @created Dec 31, 2009
