@@ -18,7 +18,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -229,14 +228,16 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
     					analyzeType(genericType.getLowerBound());
     					clear(genericType.getLowerBound());
     				}
-    				ClassNode[] upperBounds = genericType.getUpperBounds().clone();
-    				// prevent recursion by nulling out duplicates
-    				for (int j = 0; j < upperBounds.length; j++) {
-                        if (upperBounds[i].getName().equals(node.getName())) {
-                            upperBounds[i] = null;
+    				if (genericType.getUpperBounds() != null) { 
+        				ClassNode[] upperBounds = genericType.getUpperBounds().clone();
+        				// prevent recursion by nulling out duplicates
+        				for (int j = 0; j < upperBounds.length; j++) {
+                            if (upperBounds[i].getName().equals(node.getName())) {
+                                upperBounds[i] = null;
+                            }
                         }
-                    }
-                    analyzeTypes(upperBounds);
+                        analyzeTypes(upperBounds);
+    				}
 				}
 			}
 		}
