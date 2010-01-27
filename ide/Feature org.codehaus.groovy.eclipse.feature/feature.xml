@@ -36,13 +36,16 @@
          id="org.codehaus.groovy.jdt.patch"
          version="0.0.0"/>
 
+	 <!-- either org.codehaus.groovy16.feature or org.codehaus.groovy17.feature is required -->
    <includes
          id="org.codehaus.groovy16.feature"
-         version="0.0.0"/>
+         version="0.0.0"
+         optional="true"/>
 
    <includes
          id="org.codehaus.groovy17.feature"
-         version="0.0.0"/>
+         version="0.0.0"
+         optional="true"/>
 
    <requires>
       <import plugin="org.eclipse.jface"/>
