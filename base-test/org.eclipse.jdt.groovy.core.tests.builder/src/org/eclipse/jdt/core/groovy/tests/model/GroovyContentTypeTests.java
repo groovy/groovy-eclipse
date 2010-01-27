@@ -11,6 +11,7 @@
 
 package org.eclipse.jdt.core.groovy.tests.model;
 
+import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 
 import org.eclipse.core.resources.IFile;
@@ -41,79 +42,120 @@ public class GroovyContentTypeTests extends BuilderTests {
 	}
 	
 	public void testContentTypes() throws Exception {
-        char[][] groovyLikeExtensions = ContentTypeUtils.getGroovyLikeExtensions();
-        char[][] javaLikeExtensions = Util.getJavaLikeExtensions();
-        char[][] javaButNotGroovyExtensions = ContentTypeUtils.getJavaButNotGroovyLikeExtensions();
-        
-        assertEquals("Invalid number of extensions found:\njavaLike: " + 
-                charCharToString(javaLikeExtensions) + "\ngroovyLike: " + 
-                charCharToString(groovyLikeExtensions) + "\njavaNotGroovyLike: " + 
-                charCharToString(javaButNotGroovyExtensions), javaLikeExtensions.length, 
-                groovyLikeExtensions.length + javaButNotGroovyExtensions.length);
-        
-        charCharContains(groovyLikeExtensions, "groovy");
-        charCharContains(groovyLikeExtensions, "groovytest");
+	    Runnable runner = new Runnable() {
+            
+            public void run() {
+                char[][] groovyLikeExtensions = ContentTypeUtils.getGroovyLikeExtensions();
+                char[][] javaLikeExtensions = Util.getJavaLikeExtensions();
+                char[][] javaButNotGroovyExtensions = ContentTypeUtils.getJavaButNotGroovyLikeExtensions();
+                
+                assertEquals("Invalid number of extensions found:\njavaLike: " + 
+                        charCharToString(javaLikeExtensions) + "\ngroovyLike: " + 
+                        charCharToString(groovyLikeExtensions) + "\njavaNotGroovyLike: " + 
+                        charCharToString(javaButNotGroovyExtensions), javaLikeExtensions.length, 
+                        groovyLikeExtensions.length + javaButNotGroovyExtensions.length);
+                
+                charCharContains(groovyLikeExtensions, "groovy");
+                charCharContains(groovyLikeExtensions, "groovytest");
 
-        charCharContains(javaButNotGroovyExtensions, "java");
-        charCharContains(javaButNotGroovyExtensions, "javatest");
-        
-        charCharContains(javaLikeExtensions, "groovy");
-        charCharContains(javaLikeExtensions, "groovytest");
-        charCharContains(javaLikeExtensions, "java");
-        charCharContains(javaLikeExtensions, "javatest");
-        
-        charCharNoContains(groovyLikeExtensions, "java");
-        charCharNoContains(groovyLikeExtensions, "javatest");
+                charCharContains(javaButNotGroovyExtensions, "java");
+                charCharContains(javaButNotGroovyExtensions, "javatest");
+                
+                charCharContains(javaLikeExtensions, "groovy");
+                charCharContains(javaLikeExtensions, "groovytest");
+                charCharContains(javaLikeExtensions, "java");
+                charCharContains(javaLikeExtensions, "javatest");
+                
+                charCharNoContains(groovyLikeExtensions, "java");
+                charCharNoContains(groovyLikeExtensions, "javatest");
 
-        charCharNoContains(javaButNotGroovyExtensions, "groovy");
-        charCharNoContains(javaButNotGroovyExtensions, "groovytest");
+                charCharNoContains(javaButNotGroovyExtensions, "groovy");
+                charCharNoContains(javaButNotGroovyExtensions, "groovytest");
+            }
+        };
+        runMultipleTimes(runner);
     }
 	
 	public void testJavaOnlyProject() throws Exception {
-	    IProject proj = createProject();
-	    env.removeGroovyNature("Project");
-	    env.fullBuild();
-	    
-	    checkJavaProject(proj);
+	    final IProject proj = createProject();
+        Runnable runner = new Runnable() {
+            public void run() {
+                try {
+                    env.removeGroovyNature("Project");
+                    env.fullBuild();
+                    
+                    checkJavaProject(proj);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        runMultipleTimes(runner);
 	}
 
 	public void testGroovyProject() throws Exception {
-        IProject proj = createProject();
-        env.addGroovyJars(proj.getFullPath());
-        env.fullBuild();
-        
-        checkGroovyProject(proj);
+	    final IProject proj = createProject();
+        Runnable runner = new Runnable() {
+            public void run() {
+                try {
+                    env.addGroovyJars(proj.getFullPath());
+                    env.fullBuild();
+                    
+                    checkGroovyProject(proj);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        runMultipleTimes(runner);
     }
 
 	
     // Tests that a groovy project that is converted back to a plain java 
     // project will not have its groovy files compiled
     public void testGroovyThenJavaProject() throws Exception {
-        IProject proj = createProject();
+        final IProject proj = createProject();
         env.addGroovyJars(proj.getFullPath());
         env.fullBuild();
-        
-        checkGroovyProject(proj);
-        env.removeGroovyNature(proj.getName());
-        fullBuild();
-        checkJavaProject(proj);
+        Runnable runner = new Runnable() {
+            public void run() {
+                try {
+                    checkGroovyProject(proj);
+                    env.removeGroovyNature(proj.getName());
+                    fullBuild();
+                    checkJavaProject(proj);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        runMultipleTimes(runner);
     }
     
     // Tests that a groovy project that is converted back to a plain java 
     // project will not have its groovy files compiled
     public void testJavaThenGroovyProject() throws Exception {
-        IProject proj = createProject();
+        final IProject proj = createProject();
         env.removeGroovyNature(proj.getName());
         env.fullBuild();
-        checkJavaProject(proj);
-        
-        env.addGroovyNature(proj.getName());
-        env.addGroovyJars(proj.getFullPath());
-        fullBuild();
-        checkGroovyProject(proj);
+        Runnable runner = new Runnable() {
+            public void run() {
+                try {
+                    checkJavaProject(proj);
+                    
+                    env.addGroovyNature(proj.getName());
+                    env.addGroovyJars(proj.getFullPath());
+                    fullBuild();
+                    checkGroovyProject(proj);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        runMultipleTimes(runner);
     }
     
-    private void checkGroovyProject(IProject proj) throws CoreException {
+    void checkGroovyProject(IProject proj) throws CoreException {
         expectingNoProblems();
     
         // check that all source files exist
@@ -141,7 +183,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         assertTrue(groovyClass + " should exist", groovyClass.exists());
         assertTrue(groovyTestClass + " should exist", groovyTestClass.exists());
     }
-    private void checkJavaProject(IProject proj) throws CoreException {
+    void checkJavaProject(IProject proj) throws CoreException {
         expectingNoProblems();
         
         // force waiting for build to complete
@@ -174,7 +216,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         assertFalse(groovyClass + " should not exist", groovyClass.exists());
         assertFalse(groovyTestClass + " should not exist", groovyTestClass.exists());
     }
-    private IProject createProject() throws Exception {
+    IProject createProject() throws Exception {
         IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
         env.addExternalJars(projectPath, org.eclipse.jdt.core.tests.util.Util.getJavaClassLibs());
         env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -227,7 +269,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         return env.getProject(projectPath);
     }
 
-    private void charCharContains(char[][] charChar, String containsStr) {
+    void charCharContains(char[][] charChar, String containsStr) {
         char[] contains = containsStr.toCharArray();
         for (char[] chars : charChar) {
             if (chars.length == contains.length) {
@@ -242,7 +284,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         }
         fail("Should have found '" + new String(contains) + "' in '" + charCharToString(charChar) + "'");
     }
-    private void charCharNoContains(char[][] charChar, String containsStr) {
+    void charCharNoContains(char[][] charChar, String containsStr) {
         char[] contains = containsStr.toCharArray();
         for (char[] chars : charChar) {
             if (chars.length == contains.length) {
@@ -257,7 +299,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         }
     }
 	
-	private String charCharToString(char[][] charChar) {
+	String charCharToString(char[][] charChar) {
 	    StringBuffer sb = new StringBuffer();
 	    for (char[] chars : charChar) {
             for (char c : chars) {
@@ -268,8 +310,28 @@ public class GroovyContentTypeTests extends BuilderTests {
 	    return sb.toString();
 	}
 	
-    private IFile getFile(IPath path) {
+    IFile getFile(IPath path) {
         return ResourcesPlugin.getWorkspace().getRoot().getFile(path);
+    }
+    
+    private void runMultipleTimes(Runnable runner) {
+        AssertionFailedError currentException = null;
+        for (int attempt = 0; attempt < 4; attempt++) {
+            try {
+                runner.run();
+                
+                // success
+                return;
+            } catch (AssertionFailedError e) {
+                currentException = e;
+                System.out.println("Launch failed on attempt " + attempt + " retrying."); 
+            }
+            
+        }
+        if (currentException != null) {
+            throw currentException;
+        }
+
     }
 
 }
