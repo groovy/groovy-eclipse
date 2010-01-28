@@ -127,6 +127,17 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(
                 PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
                 "proj_home");
+        
+
+        // Debug
+        store.setDefault(
+                PreferenceConstants.GROOVY_DEBUG_FILTER_STACK, 
+                true);
+        store.setDefault(
+                PreferenceConstants.GROOVY_DEBUG_FILTER_LIST, 
+                "org.codehaus.groovy,groovy.lang,java.lang.reflect,sun.reflect");
+        
+        
     }
     
     public void reset() {

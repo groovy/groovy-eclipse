@@ -264,7 +264,7 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 	}
 
 	protected String getPageId() {
-		return this.getClass().getPackage().getName();
+		return "org.codehaus.groovy.eclipse.preferences.editor";
 	}
 
 	@Override

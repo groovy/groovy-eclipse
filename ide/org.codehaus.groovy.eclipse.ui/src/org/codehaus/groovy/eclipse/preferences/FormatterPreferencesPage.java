@@ -58,10 +58,6 @@ implements IWorkbenchPreferencePage
 				new String[][] {{"On the same line: ","same"},{"On the next line: ","next"}},
 				getFieldEditorParent()));
 
-//		IntegerFieldEditor maxLineLength = new IntegerFieldEditor(PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH,"Maximum line width: ",getFieldEditorParent(),2);
-//		maxLineLength.setValidRange(10, 400);
-//		addField(maxLineLength);
-		
 		IntegerFieldEditor multiInd = new IntegerFieldEditor(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION,"Default indentation for wrapped lines: ",getFieldEditorParent(),2);
 		multiInd.setValidRange(0, 10);
 		addField(multiInd);
@@ -70,7 +66,7 @@ implements IWorkbenchPreferencePage
 
 	@Override
 	protected String getPageId() {
-		return "GroovyFormatter";
+		return "org.codehaus.groovy.eclipse.preferences.formatter";
 	}
 
 	public void init(IWorkbench workbench) {

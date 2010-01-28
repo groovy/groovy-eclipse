@@ -83,6 +83,11 @@ public class PreferenceConstants {
 	// if true use brackets for closure args
 	public static final String GROOVY_CONTENT_ASSIST_BRACKETS = "groovy.contentassist.brackets";
 	
+	// if true, then groovy internal stack frames are de-emphasized
+	public static final String GROOVY_DEBUG_FILTER_STACK = "groovy.debug.filter.stack";
+	// comman separated list of packages to filter
+	public static final String GROOVY_DEBUG_FILTER_LIST = "groovy.debug.filter.list";
+	
 	// default location for running scripts
 	// can be: proj_home, script_loc, eclipse_home 
 	public static final String GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY = "groovy.scripts.workingdir";

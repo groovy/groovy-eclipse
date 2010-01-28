@@ -92,7 +92,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
     public void init(IWorkbench workbench) {}
 
     protected String getPageId() {
-        return this.getClass().getPackage().getName();
+        return "org.codehaus.groovy.eclipse.preferences";
     }
 
 

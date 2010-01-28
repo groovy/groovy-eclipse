@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse;
-import java.io.IOException;
-
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
+import org.codehaus.groovy.eclipse.debug.ui.GroovyJavaDebugElementAdapterFactory;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.preferences.AskToConvertLegacyProjects;
 import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener;
@@ -28,8 +27,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.internal.debug.ui.IJDIPreferencesConstants;
 import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.text.templates.ContextTypeRegistry;
-import org.eclipse.jface.text.templates.persistence.TemplateStore;
 import org.eclipse.swt.SWTError;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IPageListener;
@@ -191,6 +188,10 @@ public class GroovyPlugin extends AbstractUIPlugin {
 		IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
 		oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT = preferenceStore.getBoolean(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
         preferenceStore.setValue(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT, false);
+        
+        // register our own stack frame label provider so that groovy stack frames are 
+        // shown differently
+        GroovyJavaDebugElementAdapterFactory.connect();
 	}
 
     private void addMonospaceFontListener() {

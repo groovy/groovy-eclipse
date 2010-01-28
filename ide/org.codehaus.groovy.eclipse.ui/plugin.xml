@@ -562,6 +562,12 @@
              id="org.codehaus.groovy.eclipse.preferences.compiler"
              name="Compiler">
        </page>
+       <page
+             category="org.codehaus.groovy.eclipse.preferences"
+             class="org.codehaus.groovy.eclipse.preferences.DebuggerPreferencesPage"
+             id="org.codehaus.groovy.eclipse.preferences.debugger"
+             name="Debugger">
+       </page>
    </extension>
    
    <extension
