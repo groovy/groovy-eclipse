@@ -506,6 +506,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		List<TypeDeclaration> typeDeclarations = new ArrayList<TypeDeclaration>();
 		Map<ClassNode, TypeDeclaration> fromClassNodeToDecl = new HashMap<ClassNode, TypeDeclaration>();
 
+		char[] mainName = toMainName(compilationResult.getFileName());
+
 		for (ClassNode classNode : classNodes) {
 			if (!classNode.isPrimaryClassNode()) {
 				continue;
@@ -533,7 +535,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// remove final
 				mods = mods & ~Opcodes.ACC_FINAL;
 			}
-			// FIXASC hould this modifier be set?
+			// FIXASC should this modifier be set?
 			// mods |= Opcodes.ACC_PUBLIC;
 			// FIXASC inner class support when it is in groovy 1.7
 			// FIXASC should not do this for inner classes, just for top level types
@@ -541,8 +543,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			mods = mods & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
 			typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
 
-			// FIXASC only type declarations not named after the compilation unit should be secondary
-			typeDeclaration.bits |= ASTNode.IsSecondaryType;
+			if (!(classNode instanceof InnerClassNode)) {
+				if (!CharOperation.equals(typeDeclaration.name, mainName)) {
+					typeDeclaration.bits |= ASTNode.IsSecondaryType;
+				}
+			}
 
 			fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
 
@@ -597,6 +602,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			fromClassNodeToDecl.put(classNode, typeDeclaration);
 		}
 		types = typeDeclarations.toArray(new TypeDeclaration[typeDeclarations.size()]);
+	}
+
+	public char[] toMainName(char[] fileName) {
+		if (fileName == null) {
+			return new char[0];
+		}
+		int start = CharOperation.lastIndexOf('/', fileName) + 1;
+		if (start == 0 || start < CharOperation.lastIndexOf('\\', fileName))
+			start = CharOperation.lastIndexOf('\\', fileName) + 1;
+
+		int end = CharOperation.lastIndexOf('.', fileName);
+		if (end == -1)
+			end = fileName.length;
+
+		return CharOperation.subarray(fileName, start, end);
 	}
 
 	/**

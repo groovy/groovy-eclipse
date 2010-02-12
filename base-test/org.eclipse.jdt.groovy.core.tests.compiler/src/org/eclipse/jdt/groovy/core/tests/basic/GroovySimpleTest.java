@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -36,6 +37,7 @@ import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -7307,6 +7309,37 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"\n"+
 			" print sine(PI / 6) + cosine(PI / 3)"
 		},"1.0");		
+	}
+	
+
+	public void testSecondaryTypeTagging() {
+		this.runConformTest(new String[] {
+			"Run.groovy",
+			"class Run { public static void main(String[]argv) {print '1.0';} }\n"+
+			"class B {}\n"+
+			"class C {}\n"+
+			"class D {}\n"
+		},"1.0");		
+		GroovyCompilationUnitDeclaration gcud = getDecl("Run.groovy");
+		TypeDeclaration[] tds = gcud.types;
+		assertFalse((tds[0].bits&ASTNode.IsSecondaryType)!=0);
+		assertTrue((tds[1].bits&ASTNode.IsSecondaryType)!=0);
+		assertTrue((tds[2].bits&ASTNode.IsSecondaryType)!=0);
+		assertTrue((tds[3].bits&ASTNode.IsSecondaryType)!=0);
+		
+		this.runConformTest(new String[] {
+				"Run2.groovy",
+				"class B {}\n"+
+				"class Run2 { public static void main(String[]argv) {print '1.0';} }\n"+
+				"class C {}\n"+
+				"class D {}\n"
+			},"1.0");		
+			gcud = getDecl("Run2.groovy");
+			tds = gcud.types;
+			assertTrue((tds[0].bits&ASTNode.IsSecondaryType)!=0);
+			assertFalse((tds[1].bits&ASTNode.IsSecondaryType)!=0);
+			assertTrue((tds[2].bits&ASTNode.IsSecondaryType)!=0);
+			assertTrue((tds[3].bits&ASTNode.IsSecondaryType)!=0);
 	}
 	
 	// Parser should correctly parse this code, but 
