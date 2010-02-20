@@ -190,6 +190,26 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n");
     }
     
+    public void testConstAnnotationValue_GRE629() {
+	    	this.runConformTest(new String[]{
+	    			"Const.java",
+	    			"public class Const {\n"+
+	    			"private final static String instance= \"abc\";\n"+
+	    			"  public static void main(String[]argv) {\n"+
+	    			"    System.out.println(XXX.class.getAnnotation(Anno.class));\n"+
+	    			"  }\n"+
+	    			"}",
+	    			"B.groovy",
+	    			"import java.lang.annotation.*\n"+
+	    			"@Anno(Const.instance)\n"+
+	    			"class XXX {}\n"+
+	    			"@Retention(RetentionPolicy.RUNTIME)\n"+
+	    			"@interface Anno { String value(); }\n"},
+	    		"@Anno(value=abc)");
+    }
+	    
+
+    
  /*   public void testOverridingFinalMethod_() {
     	this.runConformTest(new String[]{
     			"Base.groovy",

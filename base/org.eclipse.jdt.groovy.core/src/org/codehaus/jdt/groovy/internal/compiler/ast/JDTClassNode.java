@@ -22,11 +22,22 @@ import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
+import org.eclipse.jdt.internal.compiler.impl.ByteConstant;
+import org.eclipse.jdt.internal.compiler.impl.CharConstant;
+import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.DoubleConstant;
+import org.eclipse.jdt.internal.compiler.impl.FloatConstant;
+import org.eclipse.jdt.internal.compiler.impl.IntConstant;
+import org.eclipse.jdt.internal.compiler.impl.LongConstant;
+import org.eclipse.jdt.internal.compiler.impl.ShortConstant;
+import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
@@ -349,7 +360,31 @@ public class JDTClassNode extends ClassNode {
 		String name = new String(fieldBinding.name);
 		int modifiers = fieldBinding.modifiers;
 		ClassNode fieldType = resolver.convertToClassNode(fieldBinding.type);
-		FieldNode fNode = new FieldNode(name, modifiers, fieldType, this, null);
+		Constant c = fieldBinding.constant();
+		Expression initializerExpression = null;
+		// FIXASC for performance reasons could fetch the initializer lazily if a JDTFieldNode were created
+		if (c != Constant.NotAConstant) {
+			if (c instanceof StringConstant) {
+				initializerExpression = new ConstantExpression(((StringConstant) c).stringValue());
+			} else if (c instanceof BooleanConstant) {
+				initializerExpression = new ConstantExpression(((BooleanConstant) c).booleanValue());
+			} else if (c instanceof IntConstant) {
+				initializerExpression = new ConstantExpression(((IntConstant) c).intValue());
+			} else if (c instanceof LongConstant) {
+				initializerExpression = new ConstantExpression(((LongConstant) c).longValue());
+			} else if (c instanceof DoubleConstant) {
+				initializerExpression = new ConstantExpression(((DoubleConstant) c).doubleValue());
+			} else if (c instanceof FloatConstant) {
+				initializerExpression = new ConstantExpression(((FloatConstant) c).floatValue());
+			} else if (c instanceof ByteConstant) {
+				initializerExpression = new ConstantExpression(((ByteConstant) c).byteValue());
+			} else if (c instanceof CharConstant) {
+				initializerExpression = new ConstantExpression(((CharConstant) c).charValue());
+			} else if (c instanceof ShortConstant) {
+				initializerExpression = new ConstantExpression(((ShortConstant) c).shortValue());
+			}
+		}
+		FieldNode fNode = new FieldNode(name, modifiers, fieldType, this, initializerExpression);
 		return fNode;
 	}
 
