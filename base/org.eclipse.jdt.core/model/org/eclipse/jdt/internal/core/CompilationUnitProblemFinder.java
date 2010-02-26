@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -166,24 +166,22 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CancelableProblemFactory problemFactory = null;
 		CompilationUnitProblemFinder problemFinder = null;
 		try {
-			// GROOVY start
-			// options fetched prior to building problem finder then configured based on project
-			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0));
-			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
-			// GROOVY end
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
+			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0));
+			boolean ignoreMethodBodies = (reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
+			compilerOptions.ignoreMethodBodies = ignoreMethodBodies;
+			// GROOVY start
+			// options fetched prior to building problem finder then configured based on project
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
+			// GROOVY end
 			problemFinder = new CompilationUnitProblemFinder(
 				environment,
 				getHandlingPolicy(),
-				// GROOVY start
-				// oldcode
-				// getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0)),
-				// newcode
 				compilerOptions,
-				// GROOVY end
 				getRequestor(),
 				problemFactory);
+			boolean analyzeAndGenerateCode = !ignoreMethodBodies;
 			CompilationUnitDeclaration unit = null;
 			if (parser != null) {
 				problemFinder.parser = parser;
@@ -193,8 +191,8 @@ public class CompilationUnitProblemFinder extends Compiler {
 						unit,
 						unitElement,
 						true, // verify methods
-						true, // analyze code
-						true); // generate code
+						analyzeAndGenerateCode, // analyze code
+						analyzeAndGenerateCode); // generate code
 				} catch (AbortCompilation e) {
 					problemFinder.handleInternalException(e, unit);
 				}
@@ -203,8 +201,8 @@ public class CompilationUnitProblemFinder extends Compiler {
 					problemFinder.resolve(
 						unitElement,
 						true, // verify methods
-						true, // analyze code
-						true); // generate code
+						analyzeAndGenerateCode, // analyze code
+						analyzeAndGenerateCode); // generate code
 			}
 			CompilationResult unitResult = unit.compilationResult;
 			CategorizedProblem[] unitProblems = unitResult.getProblems();

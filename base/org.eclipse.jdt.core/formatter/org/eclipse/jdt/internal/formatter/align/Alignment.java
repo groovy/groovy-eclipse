@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -379,18 +379,26 @@ public class Alignment {
 
 	public String toString() {
 		StringBuffer buffer = new StringBuffer(10);
-		String className = getClass().getName();
-		className = className.substring(className.lastIndexOf('.')+1);
-		buffer
-			.append(className)
-			.append(":<name: ")	//$NON-NLS-1$
-			.append(this.name)
-			.append(">");	//$NON-NLS-1$
-		int indentLength = className.length()+1;
-		buffer.append('\n');
-		for (int i=0; i<indentLength; i++) {
-			buffer.append(' ');
+		return toString(buffer, -1);
+	}
+
+	public String toString(StringBuffer buffer, int level) {
+
+		// Compute the indentation at the given level
+		StringBuffer indentation = new StringBuffer();
+		for (int i=0; i<level; i++) {
+			indentation.append('\t');
 		}
+
+		// First line is for class and name
+		buffer.append(indentation);
+		buffer
+			.append("<name: ")	//$NON-NLS-1$
+			.append(this.name)
+			.append(">\n");	//$NON-NLS-1$
+
+		// Line for depth and break indentation
+		buffer.append(indentation);
 		buffer
 			.append("<depth=")	//$NON-NLS-1$
 			.append(depth())
@@ -398,18 +406,23 @@ public class Alignment {
 			.append(this.breakIndentationLevel)
 			.append("><shiftBreakIndent=")	//$NON-NLS-1$
 			.append(this.shiftBreakIndentationLevel)
-			.append('>');
-		if (this.enclosing != null) {
-			buffer
-				.append("<enclosingName: ")	//$NON-NLS-1$
-				.append(this.enclosing.name)
-				.append('>');
-		}
-		buffer.append('\n');
+			.append(">\n"); //$NON-NLS-1$
 
+		// Line to display the location
+		buffer.append(indentation);
+		buffer
+			.append("<location=")	//$NON-NLS-1$
+			.append(this.location.toString())
+			.append(">\n");	//$NON-NLS-1$
+
+		// Lines for fragments
+		buffer
+			.append(indentation)
+			.append("<fragments:\n");	//$NON-NLS-1$
 		for (int i = 0; i < this.fragmentCount; i++){
 			buffer
-				.append(" - fragment ")	//$NON-NLS-1$
+				.append(indentation)
+				.append(" - ")	//$NON-NLS-1$
 				.append(i)
 				.append(": ")	//$NON-NLS-1$
 				.append("<break: ")	//$NON-NLS-1$
@@ -419,7 +432,22 @@ public class Alignment {
 				.append(this.fragmentIndentations[i])
 				.append(">\n");	//$NON-NLS-1$
 		}
-		buffer.append('\n');
+		buffer
+			.append(indentation)
+			.append(">\n"); //$NON-NLS-1$
+
+		// Display enclosing
+		if (this.enclosing != null && level >= 0) {
+			buffer
+				.append(indentation)
+				.append("<enclosing assignement:\n");	//$NON-NLS-1$
+			this.enclosing.toString(buffer, level+1);
+			buffer
+				.append(indentation)
+				.append(">\n"); //$NON-NLS-1$
+		}
+
+		// Return the result
 		return buffer.toString();
 	}
 

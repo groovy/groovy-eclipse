@@ -341,6 +341,8 @@ public class CompilerOptions {
 	public boolean storeAnnotations;
 	/** Indicate if annotation processing generates classfiles */
 	public boolean generateClassFiles;
+	/** Indicate if method bodies should be ignored */
+	public boolean ignoreMethodBodies;
 	// GROOVY start
 	public int buildGroovyFiles = 0; // 0=dontknow 1=no 2=yes
 	public int groovyFlags = 0; // 0x01 == IsGrails
@@ -1057,6 +1059,8 @@ public class CompilerOptions {
 		// dead code detection
 		this.reportDeadCodeInTrivialIfStatement = false;
 
+		// ignore method bodies
+		this.ignoreMethodBodies = false;
 	}
 
 	public void set(Map optionsMap) {

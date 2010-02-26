@@ -84,6 +84,42 @@ import org.xml.sax.SAXException;
 public class JavaModelManager implements ISaveParticipant, IContentTypeChangeListener {
 
 	/**
+	 * Define a zip cache object.
+	 */
+	static class ZipCache {
+		private Map map;
+		Object owner;
+
+		ZipCache(Object owner) {
+			this.map = new HashMap();
+			this.owner = owner;
+		}
+
+		public void flush() {
+			Thread currentThread = Thread.currentThread();
+			Iterator iterator = this.map.values().iterator();
+			while (iterator.hasNext()) {
+				try {
+					ZipFile zipFile = (ZipFile)iterator.next();
+					if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
+						System.out.println("(" + currentThread + ") [JavaModelManager.flushZipFiles()] Closing ZipFile on " +zipFile.getName()); //$NON-NLS-1$//$NON-NLS-2$
+					}
+					zipFile.close();
+				} catch (IOException e) {
+					// problem occured closing zip file: cannot do much more
+				}
+			}
+		}
+
+		public ZipFile getCache(IPath path) {
+			return (ZipFile) this.map.get(path);
+		}
+
+		public void setCache(IPath path, ZipFile zipFile) {
+			this.map.put(path, zipFile);
+		}
+	}
+	/**
 	 * Unique handle onto the JavaModel
 	 */
 	final JavaModel javaModel = new JavaModel();
@@ -1497,9 +1533,13 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * Starts caching ZipFiles.
 	 * Ignores if there are already clients.
 	 */
-	public void cacheZipFiles() {
-		if (this.zipFiles.get() != null) return;
-		this.zipFiles.set(new HashMap());
+	public void cacheZipFiles(Object owner) {
+		ZipCache zipCache = (ZipCache) this.zipFiles.get();
+		if (zipCache != null) {
+			return;
+		}
+		// the owner will be responsible for flushing the cache
+		this.zipFiles.set(new ZipCache(owner));
 	}
 	public void closeZipFile(ZipFile zipFile) {
 		if (zipFile == null) return;
@@ -1710,22 +1750,16 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/**
 	 * Flushes ZipFiles cache if there are no more clients.
 	 */
-	public void flushZipFiles() {
-		Thread currentThread = Thread.currentThread();
-		HashMap map = (HashMap)this.zipFiles.get();
-		if (map == null) return;
-		this.zipFiles.set(null);
-		Iterator iterator = map.values().iterator();
-		while (iterator.hasNext()) {
-			try {
-				ZipFile zipFile = (ZipFile)iterator.next();
-				if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-					System.out.println("(" + currentThread + ") [JavaModelManager.flushZipFiles()] Closing ZipFile on " +zipFile.getName()); //$NON-NLS-1$//$NON-NLS-2$
-				}
-				zipFile.close();
-			} catch (IOException e) {
-				// problem occured closing zip file: cannot do much more
+	public void flushZipFiles(Object owner) {
+		ZipCache zipCache = (ZipCache)this.zipFiles.get();
+		if (zipCache == null) {
+			return;
 			}
+		// the owner will be responsible for flushing the cache
+		// we want to check object identity to make sure this is the owner that created the cache
+		if (zipCache.owner == owner) {
+			this.zipFiles.set(null);
+			zipCache.flush();
 		}
 	}
 
@@ -2395,11 +2429,10 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 */
 	public ZipFile getZipFile(IPath path) throws CoreException {
 
-		HashMap map;
+		ZipCache zipCache;
 		ZipFile zipFile;
-		if ((map = (HashMap)this.zipFiles.get()) != null
-				&& (zipFile = (ZipFile)map.get(path)) != null) {
-
+		if ((zipCache = (ZipCache)this.zipFiles.get()) != null
+				&& (zipFile = zipCache.getCache(path)) != null) {
 			return zipFile;
 		}
 		File localFile = null;
@@ -2424,8 +2457,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				System.out.println("(" + Thread.currentThread() + ") [JavaModelManager.getZipFile(IPath)] Creating ZipFile on " + localFile ); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			zipFile = new ZipFile(localFile);
-			if (map != null) {
-				map.put(path, zipFile);
+			if (zipCache != null) {
+				zipCache.setCache(path, zipFile);
 			}
 			return zipFile;
 		} catch (IOException e) {

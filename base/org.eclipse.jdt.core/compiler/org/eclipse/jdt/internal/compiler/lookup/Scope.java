@@ -835,8 +835,7 @@ public abstract class Scope {
 				MethodBinding compatibleMethod = computeCompatibleMethod(methodBinding, argumentTypes, invocationSite);
 				if (compatibleMethod != null) {
 					if (compatibleMethod.isValidBinding()) {
-						if (concreteMatch != null && concreteMatch.declaringClass.findSuperTypeOriginatingFrom(compatibleMethod.declaringClass) != null)
-							if (environment().methodVerifier().isParameterSubsignature(concreteMatch.original(), compatibleMethod.original()))
+						if (concreteMatch != null && environment().methodVerifier().areMethodsCompatible(concreteMatch, compatibleMethod))
 								continue; // can skip this method since concreteMatch overrides it
 						if (candidatesCount == 0) {
 							candidates = new MethodBinding[foundSize - startFoundSize + 1];
@@ -1239,7 +1238,9 @@ public abstract class Scope {
 						// BUT we can also ignore any overridden method since we already know the better match (fixes 80028)
 						for (int j = 0, max = found.size; j < max; j++) {
 							MethodBinding matchingMethod = (MethodBinding) found.elementAt(j);
-							if (verifier.isParameterSubsignature(matchingMethod.original(), currentMethod.original())) {
+							MethodBinding matchingOriginal = matchingMethod.original();
+							MethodBinding currentOriginal = matchingOriginal.findOriginalInheritedMethod(currentMethod);
+							if (currentOriginal != null && verifier.isParameterSubsignature(matchingOriginal, currentOriginal)) {
 								if (isCompliant15) {
 									if (matchingMethod.isBridge() && !currentMethod.isBridge())
 										continue nextMethod; // keep inherited methods to find concrete method over a bridge method
@@ -3626,12 +3627,21 @@ public abstract class Scope {
 	}
 
 	// caveat: this is not a direct implementation of JLS
-	protected final MethodBinding mostSpecificMethodBinding(MethodBinding[] visible, int visibleSize, TypeBinding[] argumentTypes, InvocationSite invocationSite, ReferenceBinding receiverType) {
+	protected final MethodBinding mostSpecificMethodBinding(MethodBinding[] visible, int visibleSize, TypeBinding[] argumentTypes, final InvocationSite invocationSite, ReferenceBinding receiverType) {
 		int[] compatibilityLevels = new int[visibleSize];
 		for (int i = 0; i < visibleSize; i++)
 			compatibilityLevels[i] = parameterCompatibilityLevel(visible[i], argumentTypes);
 
-		boolean useTiebreakMethod = invocationSite.genericTypeArguments() == null;
+		InvocationSite tieBreakInvocationSite = new InvocationSite() {
+			public TypeBinding[] genericTypeArguments() { return null; } // ignore genericTypeArgs
+			public boolean isSuperAccess() { return invocationSite.isSuperAccess(); }
+			public boolean isTypeAccess() { return invocationSite.isTypeAccess(); }
+			public void setActualReceiverType(ReferenceBinding actualReceiverType) { /* ignore */}
+			public void setDepth(int depth) { /* ignore */}
+			public void setFieldIndex(int depth) { /* ignore */}
+			public int sourceStart() { return invocationSite.sourceStart(); }
+			public int sourceEnd() { return invocationSite.sourceStart(); }
+		};
 		MethodBinding[] moreSpecific = new MethodBinding[visibleSize];
 		int count = 0;
 		for (int level = 0, max = VARARGS_COMPATIBLE; level <= max; level++) {
@@ -3640,7 +3650,7 @@ public abstract class Scope {
 				max = level; // do not examine further categories, will either return mostSpecific or report ambiguous case
 				MethodBinding current = visible[i];
 				MethodBinding original = current.original();
-				MethodBinding tiebreakMethod = useTiebreakMethod ? current.tiebreakMethod() : current;
+				MethodBinding tiebreakMethod = current.tiebreakMethod();
 				for (int j = 0; j < visibleSize; j++) {
 					if (i == j || compatibilityLevels[j] != level) continue;
 					MethodBinding next = visible[j];
@@ -3659,7 +3669,7 @@ public abstract class Scope {
 							methodToTest = pNext.originalMethod;
 						}
 					}
-					MethodBinding acceptable = computeCompatibleMethod(methodToTest, tiebreakMethod.parameters, invocationSite);
+					MethodBinding acceptable = computeCompatibleMethod(methodToTest, tiebreakMethod.parameters, tieBreakInvocationSite);
 					/* There are 4 choices to consider with current & next :
 					 foo(B) & foo(A) where B extends A
 					 1. the 2 methods are equal (both accept each others parameters) -> want to continue
@@ -3712,20 +3722,11 @@ public abstract class Scope {
 					if (!original.isAbstract()) {
 						if (original2.isAbstract())
 							continue; // only compare current against other concrete methods
-						TypeBinding superType = original.declaringClass.findSuperTypeOriginatingFrom(original2.declaringClass.erasure());
-						if (superType == null)
+
+						original2 = original.findOriginalInheritedMethod(original2);
+						if (original2 == null)
 							continue nextSpecific; // current's declaringClass is not a subtype of next's declaringClass
 						if (current.hasSubstitutedParameters() || original.typeVariables != Binding.NO_TYPE_VARIABLES) {
-							if (original2.declaringClass != superType) {
-								// must find inherited method with the same substituted variables
-								MethodBinding[] superMethods = ((ReferenceBinding) superType).getMethods(original2.selector, argumentTypes.length);
-								for (int m = 0, l = superMethods.length; m < l; m++) {
-									if (superMethods[m].original() == original2) {
-										original2 = superMethods[m];
-										break;
-									}
-								}
-							}
 							if (!environment().methodVerifier().isParameterSubsignature(original, original2))
 								continue nextSpecific; // current does not override next
 						}
@@ -3761,7 +3762,7 @@ public abstract class Scope {
 						if (original2 == null || !original.areParameterErasuresEqual(original2))
 							continue nextSpecific; // current does not override next
 						if (original.returnType != original2.returnType) {
-							if (current instanceof ParameterizedGenericMethodBinding) {
+							if (next.original().typeVariables != Binding.NO_TYPE_VARIABLES) {
 								if (original.returnType.erasure().findSuperTypeOriginatingFrom(original2.returnType.erasure()) == null)
 									continue nextSpecific;
 							} else if (!current.returnType.isCompatibleWith(next.returnType)) { 

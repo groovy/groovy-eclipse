@@ -15,7 +15,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Annotation;
@@ -127,11 +126,6 @@ import org.eclipse.text.edits.TextEdit;
 	public ASTRewriteFormatter(NodeInfoStore placeholders, RewriteEventStore eventStore, Map options, String lineDelimiter) {
 		this.placeholders= placeholders;
 		this.eventStore= eventStore;
-
-		if (options == null) {
-			options= JavaCore.getOptions();
-		}
-		//options.put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT, String.valueOf(9999));
 
 		this.options= options;
 		this.lineDelimiter= lineDelimiter;

@@ -2545,6 +2545,7 @@ protected void consumeConstructorDeclaration() {
 	Statement[] statements = null;
 	if ((length = this.astLengthStack[this.astLengthPtr--]) != 0) {
 		this.astPtr -= length;
+		if (!this.options.ignoreMethodBodies) {
 		if (this.astStack[this.astPtr + 1] instanceof ExplicitConstructorCall) {
 			//avoid a isSomeThing that would only be used here BUT what is faster between two alternatives ?
 			System.arraycopy(
@@ -2562,6 +2563,7 @@ protected void consumeConstructorDeclaration() {
 				0,
 				length);
 			constructorCall = SuperReference.implicitSuperConstructorCall();
+		}
 		}
 	} else {
 		boolean insideFieldInitializer = false;
@@ -4316,6 +4318,9 @@ protected void consumeMethodDeclaration(boolean isNotAbstract) {
 		//statements
 		explicitDeclarations = this.realBlockStack[this.realBlockPtr--];
 		if ((length = this.astLengthStack[this.astLengthPtr--]) != 0) {
+			if (this.options.ignoreMethodBodies) {
+				this.astPtr -= length;
+			} else {
 			System.arraycopy(
 				this.astStack,
 				(this.astPtr -= length) + 1,
@@ -4323,6 +4328,7 @@ protected void consumeMethodDeclaration(boolean isNotAbstract) {
 				0,
 				length);
 		}
+	}
 	}
 
 	// now we know that we have a method declaration at the top of the ast stack
@@ -9450,6 +9456,7 @@ public void parse(ConstructorDeclaration cd, CompilationUnitDeclaration unit, bo
 	int length;
 	if (this.astLengthPtr > -1 && (length = this.astLengthStack[this.astLengthPtr--]) != 0) {
 		this.astPtr -= length;
+		if (!this.options.ignoreMethodBodies) {
 		if (this.astStack[this.astPtr + 1] instanceof ExplicitConstructorCall)
 			//avoid a isSomeThing that would only be used here BUT what is faster between two alternatives ?
 			{
@@ -9469,16 +9476,20 @@ public void parse(ConstructorDeclaration cd, CompilationUnitDeclaration unit, bo
 				length);
 			cd.constructorCall = SuperReference.implicitSuperConstructorCall();
 		}
+		}
 	} else {
+		if (!this.options.ignoreMethodBodies) {
 		cd.constructorCall = SuperReference.implicitSuperConstructorCall();
+		}
 		if (!containsComment(cd.bodyStart, cd.bodyEnd)) {
 			cd.bits |= ASTNode.UndocumentedEmptyBlock;
 		}
 	}
 
-	if (cd.constructorCall.sourceEnd == 0) {
-		cd.constructorCall.sourceEnd = cd.sourceEnd;
-		cd.constructorCall.sourceStart = cd.sourceStart;
+	ExplicitConstructorCall explicitConstructorCall = cd.constructorCall;
+	if (explicitConstructorCall != null && explicitConstructorCall.sourceEnd == 0) {
+		explicitConstructorCall.sourceEnd = cd.sourceEnd;
+		explicitConstructorCall.sourceStart = cd.sourceStart;
 	}
 }
 // A P I
@@ -9691,12 +9702,17 @@ public void parse(MethodDeclaration md, CompilationUnitDeclaration unit) {
 	md.explicitDeclarations = this.realBlockStack[this.realBlockPtr--];
 	int length;
 	if (this.astLengthPtr > -1 && (length = this.astLengthStack[this.astLengthPtr--]) != 0) {
+		if (this.options.ignoreMethodBodies) {
+			// ignore statements
+			this.astPtr -= length;
+		} else {
 		System.arraycopy(
 			this.astStack,
 			(this.astPtr -= length) + 1,
 			md.statements = new Statement[length],
 			0,
 			length);
+		}
 	} else {
 		if (!containsComment(md.bodyStart, md.bodyEnd)) {
 			md.bits |= ASTNode.UndocumentedEmptyBlock;

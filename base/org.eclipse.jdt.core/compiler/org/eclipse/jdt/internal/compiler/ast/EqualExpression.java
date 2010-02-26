@@ -811,7 +811,8 @@ public class EqualExpression extends BinaryExpression {
 
 			// check whether comparing identical expressions
 			Binding leftDirect = Expression.getDirectBinding(this.left);
-			if (leftDirect != null && leftDirect == Expression.getDirectBinding(this.right)) {
+			if (leftDirect != null && leftDirect == Expression.getDirectBinding(this.right)
+					&& !(this.right instanceof Assignment)) {
 				scope.problemReporter().comparingIdenticalExpressions(this);
 			}
 			return this.resolvedType = TypeBinding.BOOLEAN;
@@ -848,7 +849,9 @@ public class EqualExpression extends BinaryExpression {
 			// check whether comparing identical expressions
 			Binding leftDirect = Expression.getDirectBinding(this.left);
 			if (leftDirect != null && leftDirect == Expression.getDirectBinding(this.right)) {
-				scope.problemReporter().comparingIdenticalExpressions(this);
+				if (!(this.right instanceof Assignment)) {
+					scope.problemReporter().comparingIdenticalExpressions(this);
+				}
 			}
 			return this.resolvedType = TypeBinding.BOOLEAN;
 		}

@@ -82,7 +82,8 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 			ReferenceBinding[] thrownExceptions;
 			if ((thrownExceptions = this.binding.thrownExceptions) != Binding.NO_EXCEPTIONS) {
 				if ((this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null) {
-					thrownExceptions = currentScope.environment().convertToRawTypes(this.binding.original().thrownExceptions, true, true);
+					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=277643, align with javac on JLS 15.12.2.6
+					thrownExceptions = currentScope.environment().convertToRawTypes(this.binding.thrownExceptions, true, true);
 				}				
 				// check exceptions
 				flowContext.checkExceptionHandlers(

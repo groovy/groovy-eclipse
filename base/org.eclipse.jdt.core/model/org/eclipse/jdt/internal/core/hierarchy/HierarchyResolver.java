@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -673,11 +673,6 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 				CompilationUnitDeclaration parsedUnit = null;
 				if (cu.isOpen()) {
 					// create parsed unit from source element infos
-					// As part of fix for https://bugs.eclipse.org/bugs/show_bug.cgi?id=254738
-					// Since we have the handle to the ICompilationUnit, instead of the name pass the ICompilationUnit, which is required if we were 
-					// to get through Parser.getMethodBodies(), which is invoked later in this method. Note that as part of this fix,
-					// ASTNode.HasAllMethodBodies flag - which was being set earlier - has been removed. As a design feature, only the Parser 
-					// is supposed to handle this particular bit.
 					CompilationResult result = new CompilationResult((ICompilationUnit)cu, i, openablesLength, this.options.maxProblemsPerUnit);
 					SourceTypeElementInfo[] typeInfos = null;
 					try {
@@ -701,6 +696,11 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 							flags,
 							this.lookupEnvironment.problemReporter,
 							result);
+					
+					// We would have got all the necessary local types by now and hence there is no further need 
+					// to parse the method bodies. Parser.getMethodBodies, which is called latter in this function, 
+					// will not parse the method statements if ASTNode.HasAllMethodBodies is set. 
+					if (containsLocalType) 	parsedUnit.bits |= ASTNode.HasAllMethodBodies;
 				} else {
 					// create parsed unit from file
 					IFile file = (IFile) cu.getResource();

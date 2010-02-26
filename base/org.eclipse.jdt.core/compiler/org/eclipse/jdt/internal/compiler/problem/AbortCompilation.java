@@ -28,7 +28,7 @@ public class AbortCompilation extends RuntimeException {
 	public Throwable exception;
 	public CategorizedProblem problem;
 
-	/* special fields used to abort silently (e.g. when cancelling build process) */
+	/* special fields used to abort silently (e.g. when canceling build process) */
 	public boolean isSilent;
 	public RuntimeException silentException;
 
@@ -55,7 +55,20 @@ public class AbortCompilation extends RuntimeException {
 		this.isSilent = isSilent;
 		this.silentException = silentException;
 	}
-
+	public String getMessage() {
+		String message = super.getMessage();
+		StringBuffer buffer = new StringBuffer(message == null ? Util.EMPTY_STRING : message);
+		if (this.problem != null) {
+			buffer.append(this.problem);
+		} else if (this.exception != null) {
+			message = this.exception.getMessage();
+			buffer.append(message == null ? Util.EMPTY_STRING : message);
+		} else if (this.silentException != null) {
+			message = this.silentException.getMessage();
+			buffer.append(message == null ? Util.EMPTY_STRING : message);
+		}
+		return String.valueOf(buffer);
+	}
 	public void updateContext(InvocationSite invocationSite, CompilationResult unitResult) {
 		if (this.problem == null) return;
 		if (this.problem.getSourceStart() != 0 || this.problem.getSourceEnd() != 0) return;
@@ -74,5 +87,13 @@ public class AbortCompilation extends RuntimeException {
 		int[] lineEnds = unitResult.getLineSeparatorPositions();
 		this.problem.setSourceLineNumber(Util.getLineNumber(astNode.sourceStart(), lineEnds, 0, lineEnds.length-1));
 		this.compilationResult = unitResult;
+	}
+
+	public String getKey() {
+		StringBuffer buffer = new StringBuffer();
+		if (this.problem != null) {
+			buffer.append(this.problem);
+		}
+		return String.valueOf(buffer);
 	}
 }

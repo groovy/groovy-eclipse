@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -343,6 +343,7 @@ public final class Messages extends NLS {
 	public static String disassembler_frame_full_frame;
 	public static String disassembler_frame_same_frame;
 	public static String disassembler_frame_same_locals_1_stack_item;
+	public static String code_assist_internal_error;
 
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

@@ -146,10 +146,12 @@ protected boolean buildStructure(OpenableElementInfo info, final IProgressMonito
 		// disable task tags checking to speed up parsing
 		options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
 	}
+	CompilerOptions compilerOptions = new CompilerOptions(options);
+	compilerOptions.ignoreMethodBodies = (reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
 	SourceElementParser parser = new SourceElementParser(
 		requestor,
 		problemFactory,
-		new CompilerOptions(options),
+		compilerOptions,
 		true/*report local declarations*/,
 		!createAST /*optimize string literals only if not creating a DOM AST*/);
 	parser.reportOnlyOneSyntaxError = !computeProblems;
@@ -1260,10 +1262,10 @@ public org.eclipse.jdt.core.dom.CompilationUnit reconcile(
 	ReconcileWorkingCopyOperation op = new ReconcileWorkingCopyOperation(this, astLevel, reconcileFlags, workingCopyOwner);
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 	try {
-		manager.cacheZipFiles(); // cache zip files for performance (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
+		manager.cacheZipFiles(this); // cache zip files for performance (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
 		op.runOperation(monitor);
 	} finally {
-		manager.flushZipFiles();
+		manager.flushZipFiles(this);
 	}
 	if(ReconcileWorkingCopyOperation.PERF) {
 		stats.endRun();

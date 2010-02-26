@@ -2396,7 +2396,7 @@ public void generateSyntheticBodyForConstructorAccess(SyntheticMethodBinding acc
 				default :
 					resolvedPosition++;
 					break;
-			}			
+			}
 		}
 	}
 	invoke(Opcodes.OPC_invokespecial, constructorBinding, null /* default declaringClass */);
@@ -2409,7 +2409,7 @@ public void generateSyntheticBodyForConstructorAccess(SyntheticMethodBinding acc
 public void generateSyntheticBodyForEnumValueOf(SyntheticMethodBinding methodBinding) {
 	initializeMaxLocals(methodBinding);
 	final ReferenceBinding declaringClass = methodBinding.declaringClass;
-	this.ldc(declaringClass);
+	generateClassLiteralAccessForType(declaringClass, null);
 	aload_0();
 	invokeJavaLangEnumvalueOf(declaringClass);
 	this.checkcast(declaringClass);

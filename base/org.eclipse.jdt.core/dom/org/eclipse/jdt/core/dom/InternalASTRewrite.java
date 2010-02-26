@@ -19,6 +19,7 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextUtilities;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.SimplePropertyDescriptor;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.rewrite.TargetSourceRangeComputer;
@@ -60,9 +61,12 @@ class InternalASTRewrite extends NodeEventHandler {
 
 	/**
 	 * Performs the rewrite: The rewrite events are translated to the corresponding in text changes.
+	 * The given options can be null in which case the global options {@link JavaCore#getOptions() JavaCore.getOptions()}
+	 * will be used.
+	 *
 	 * @param document Document which describes the code of the AST that is passed in in the
 	 * constructor. This document is accessed read-only.
-	 * @param options options
+	 * @param options the given options
 	 * @throws IllegalArgumentException if the rewrite fails
 	 * @return Returns the edit describing the text changes.
 	 */
@@ -90,7 +94,8 @@ class InternalASTRewrite extends NodeEventHandler {
 			String lineDelim= TextUtilities.getDefaultLineDelimiter(document);
 			List comments= rootNode.getCommentList();
 
-			ASTRewriteAnalyzer visitor = new ASTRewriteAnalyzer(content, lineInfo, lineDelim, result, this.eventStore, this.nodeStore, comments, options, xsrComputer, (RecoveryScannerData)rootNode.getStatementsRecoveryData());
+			Map currentOptions = options == null ? JavaCore.getOptions() : options;
+			ASTRewriteAnalyzer visitor = new ASTRewriteAnalyzer(content, lineInfo, lineDelim, result, this.eventStore, this.nodeStore, comments, currentOptions, xsrComputer, (RecoveryScannerData)rootNode.getStatementsRecoveryData());
 			rootNode.accept(visitor);
 		}
 		return result;

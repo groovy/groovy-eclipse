@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -348,24 +348,34 @@ public class InternalExtendedCompletionContext {
 		int size = this.visibleLocalVariables.size();
 		if (size > 0) {
 			next : for (int i = 0; i < size; i++) {
-				LocalVariableBinding binding = (LocalVariableBinding) this.visibleLocalVariables.elementAt(i);
-				if (assignableTypeBinding != null && !binding.type.isCompatibleWith(assignableTypeBinding)) continue next;
-				JavaElement localVariable = getJavaElement(binding);
-				if (localVariable != null) result[elementCount++] = localVariable;
+				try {
+					LocalVariableBinding binding = (LocalVariableBinding) this.visibleLocalVariables.elementAt(i);
+					if (assignableTypeBinding != null && !binding.type.isCompatibleWith(assignableTypeBinding)) continue next;
+					JavaElement localVariable = getJavaElement(binding);
+					if (localVariable != null) result[elementCount++] = localVariable;
+				} catch(AbortCompilation e) {
+					// log the exception and proceed
+					Util.logRepeatedMessage(e.getKey(), e);
+				}
 			}
 
 		}
 		size = this.visibleFields.size();
 		if (size > 0) {
 			next : for (int i = 0; i < size; i++) {
-				FieldBinding binding = (FieldBinding) this.visibleFields.elementAt(i);
-				if (assignableTypeBinding != null && !binding.type.isCompatibleWith(assignableTypeBinding)) continue next;
-				if (this.assistScope.isDefinedInSameUnit(binding.declaringClass)) {
-					JavaElement field = getJavaElementOfCompilationUnit(binding);
-					if (field != null) result[elementCount++] = field;
-				} else {
-					JavaElement field = Util.getUnresolvedJavaElement(binding, this.owner, EmptyNodeMap);
-					if (field != null) result[elementCount++] = field.resolved(binding);
+				try {
+					FieldBinding binding = (FieldBinding) this.visibleFields.elementAt(i);
+					if (assignableTypeBinding != null && !binding.type.isCompatibleWith(assignableTypeBinding)) continue next;
+					if (this.assistScope.isDefinedInSameUnit(binding.declaringClass)) {
+						JavaElement field = getJavaElementOfCompilationUnit(binding);
+						if (field != null) result[elementCount++] = field;
+					} else {
+						JavaElement field = Util.getUnresolvedJavaElement(binding, this.owner, EmptyNodeMap);
+						if (field != null) result[elementCount++] = field.resolved(binding);
+					}
+				} catch(AbortCompilation e) {
+					// log the exception and proceed
+					Util.logRepeatedMessage(e.getKey(), e);
 				}
 			}
 
@@ -373,16 +383,20 @@ public class InternalExtendedCompletionContext {
 		size = this.visibleMethods.size();
 		if (size > 0) {
 			next : for (int i = 0; i < size; i++) {
-				MethodBinding binding = (MethodBinding) this.visibleMethods.elementAt(i);
-				if (assignableTypeBinding != null && !binding.returnType.isCompatibleWith(assignableTypeBinding)) continue next;
-				if (this.assistScope.isDefinedInSameUnit(binding.declaringClass)) {
-					JavaElement method = getJavaElementOfCompilationUnit(binding);
-					if (method != null) result[elementCount++] = method;
-				} else {
-					JavaElement method = Util.getUnresolvedJavaElement(binding, this.owner, EmptyNodeMap);
-					if (method != null) result[elementCount++] = method.resolved(binding);
+				try {
+					MethodBinding binding = (MethodBinding) this.visibleMethods.elementAt(i);
+					if (assignableTypeBinding != null && !binding.returnType.isCompatibleWith(assignableTypeBinding)) continue next;
+					if (this.assistScope.isDefinedInSameUnit(binding.declaringClass)) {
+						JavaElement method = getJavaElementOfCompilationUnit(binding);
+						if (method != null) result[elementCount++] = method;
+					} else {
+						JavaElement method = Util.getUnresolvedJavaElement(binding, this.owner, EmptyNodeMap);
+						if (method != null) result[elementCount++] = method.resolved(binding);
+					}
+				} catch(AbortCompilation e) {
+					// log the exception and proceed
+					Util.logRepeatedMessage(e.getKey(), e);
 				}
-
 			}
 		}
 

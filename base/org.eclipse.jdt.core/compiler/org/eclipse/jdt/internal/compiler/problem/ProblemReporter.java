@@ -6752,12 +6752,12 @@ public void unnecessaryTypeArgumentsForMethodInvocation(MethodBinding method, Ty
 				methodName,
 		        typesAsString(method.isVarargs(), method.parameters, false),
 		        new String(method.declaringClass.readableName()),
-		        typesAsString(method.isVarargs(), genericTypeArguments, false) },
+		        typesAsString(false, genericTypeArguments, false) },
 		new String[] {
 				methodName,
 		        typesAsString(method.isVarargs(), method.parameters, true),
 		        new String(method.declaringClass.shortReadableName()),
-		        typesAsString(method.isVarargs(), genericTypeArguments, true) },
+		        typesAsString(false, genericTypeArguments, true) },
 		typeArguments[0].sourceStart,
 		typeArguments[typeArguments.length-1].sourceEnd);
 }
@@ -6894,7 +6894,7 @@ public void unsafeRawGenericMethodInvocation(ASTNode location, MethodBinding raw
 				new String(rawMethod.declaringClass.sourceName()),
 				typesAsString(rawMethod.original().isVarargs(), rawMethod.original().parameters, false),
 				new String(rawMethod.declaringClass.readableName()),
-				typesAsString(rawMethod.original().isVarargs(), argumentTypes, false),
+				typesAsString(false, argumentTypes, false),
 			 },
 			new String[] {
 				new String(rawMethod.declaringClass.sourceName()),

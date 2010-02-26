@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ package org.eclipse.jdt.internal.formatter;
 public class Location {
 
 	public int inputOffset;
+	public int inputColumn;
 	public int outputLine;
 	public int outputColumn;
 	public int outputIndentationLevel;
@@ -42,6 +43,7 @@ public class Location {
 		this.outputColumn = scribe.column;
 		this.outputLine = scribe.line;
 		this.inputOffset = sourceRestart;
+		this.inputColumn = scribe.getCurrentIndentation(sourceRestart);
 		this.outputIndentationLevel = scribe.indentationLevel;
 		this.lastNumberOfNewLines = scribe.lastNumberOfNewLines;
 		this.needSpace = scribe.needSpace;

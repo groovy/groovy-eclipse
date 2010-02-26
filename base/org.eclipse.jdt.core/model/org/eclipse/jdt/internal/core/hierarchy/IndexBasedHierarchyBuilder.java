@@ -102,7 +102,7 @@ public void build(boolean computeSubtypes) {
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 	try {
 		// optimize access to zip files while building hierarchy
-		manager.cacheZipFiles();
+		manager.cacheZipFiles(this);
 
 		if (computeSubtypes) {
 			// Note by construction there always is a focus type here
@@ -135,7 +135,7 @@ public void build(boolean computeSubtypes) {
 			buildSupertypes();
 		}
 	} finally {
-		manager.flushZipFiles();
+		manager.flushZipFiles(this);
 	}
 }
 private void buildForProject(JavaProject project, ArrayList potentialSubtypes, org.eclipse.jdt.core.ICompilationUnit[] workingCopies, HashSet localTypes, IProgressMonitor monitor) throws JavaModelException {

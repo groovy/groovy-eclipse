@@ -555,6 +555,9 @@ class DocCommentParser extends AbstractCommentParser {
 			case TerminalTokens.TokenNamevoid:
 			case TerminalTokens.TokenNamevolatile:
 			case TerminalTokens.TokenNamewhile:
+			case TerminalTokens.TokenNameenum :
+			case TerminalTokens.TokenNameconst :
+			case TerminalTokens.TokenNamegoto :
 				this.tagValue = TAG_OTHERS_VALUE;
 				createTag();
 				break;

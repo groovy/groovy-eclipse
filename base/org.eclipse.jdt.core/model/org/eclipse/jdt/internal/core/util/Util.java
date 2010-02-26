@@ -112,6 +112,8 @@ public class Util {
 	private static final char[] VOID = "void".toCharArray(); //$NON-NLS-1$
 	private static final char[] INIT = "<init>".toCharArray(); //$NON-NLS-1$
 
+	private static List fgRepeatedMessages= new ArrayList(5);
+
 	private Util() {
 		// cannot be instantiated
 	}
@@ -1307,10 +1309,12 @@ public class Util {
 	 * Return the java element corresponding to the given compiler binding.
 	 */
 	public static JavaElement getUnresolvedJavaElement(FieldBinding binding, WorkingCopyOwner workingCopyOwner, BindingsToNodesMap bindingsToNodes) {
-		if (binding.declaringClass == null) return null; // arraylength
-		IType declaringType = (IType) getUnresolvedJavaElement(binding.declaringClass, workingCopyOwner, bindingsToNodes);
-		if (declaringType == null) return null;
-		return (JavaElement) declaringType.getField(String.valueOf(binding.name));
+		if (binding.declaringClass == null) return null; // array length
+		JavaElement unresolvedJavaElement = getUnresolvedJavaElement(binding.declaringClass, workingCopyOwner, bindingsToNodes);
+		if (unresolvedJavaElement == null || unresolvedJavaElement.getElementType() != IJavaElement.TYPE) {
+			return null;
+		}
+		return (JavaElement) ((IType) unresolvedJavaElement).getField(String.valueOf(binding.name));
 	}
 
 	/**
@@ -1342,9 +1346,11 @@ public class Util {
 	 * Return the java element corresponding to the given compiler binding.
 	 */
 	public static JavaElement getUnresolvedJavaElement(MethodBinding methodBinding, WorkingCopyOwner workingCopyOwner, BindingsToNodesMap bindingsToNodes) {
-		IType declaringType = (IType) getUnresolvedJavaElement(methodBinding.declaringClass, workingCopyOwner, bindingsToNodes);
-
-		if (declaringType == null) return null;
+		JavaElement unresolvedJavaElement = getUnresolvedJavaElement(methodBinding.declaringClass, workingCopyOwner, bindingsToNodes);
+		if (unresolvedJavaElement == null || unresolvedJavaElement.getElementType() != IJavaElement.TYPE) {
+			return null;
+		}
+		IType declaringType = (IType) unresolvedJavaElement;
 
 		org.eclipse.jdt.internal.compiler.ast.ASTNode node = bindingsToNodes == null ? null : bindingsToNodes.get(methodBinding);
 		if (node != null && !declaringType.isBinary()) {
@@ -1770,24 +1776,54 @@ public class Util {
 				&& (nestedException = ((JavaModelException)e).getException()) != null) {
 			e = nestedException;
 		}
-		IStatus status= new Status(
-			IStatus.ERROR,
-			JavaCore.PLUGIN_ID,
-			IStatus.ERROR,
-			message,
-			e);
-		JavaCore.getPlugin().getLog().log(status);
+		log(new Status(
+				IStatus.ERROR,
+				JavaCore.PLUGIN_ID,
+				IStatus.ERROR,
+				message,
+				e));
+	}
+
+	/**
+	 * Log a message that is potentially repeated in the same session.
+	 * The first time this method is called with a given exception, the
+	 * exception stack trace is written to the log.
+	 * <p>Only intended for use in debug statements.</p>
+	 *
+	 * @param key the given key
+	 * @param e the given exception
+	 * @throws IllegalArgumentException if the given key is null
+	 */
+	public static void logRepeatedMessage(String key, Exception e) {
+		if (key == null) {
+			throw new IllegalArgumentException("key cannot be null"); //$NON-NLS-1$
+		}
+		if (fgRepeatedMessages.contains(key)) {
+			return;
+		}
+		fgRepeatedMessages.add(key);
+		log(e);
 	}
 
 	/*
 	 * Add a log entry
 	 */
 	public static void log(int statusErrorID, String message) {
-		IStatus status= new Status(
-			statusErrorID,
-			JavaCore.PLUGIN_ID,
-			message);
+		log(new Status(
+				statusErrorID,
+				JavaCore.PLUGIN_ID,
+				message));
+	}
+
+	/*
+	 * Add a log entry
+	 */
+	public static void log(IStatus status) {
 		JavaCore.getPlugin().getLog().log(status);
+	}
+
+	public static void log(Throwable e) {
+		log(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, Messages.code_assist_internal_error, e));
 	}
 
 	public static ClassFileReader newClassFileReader(IResource resource) throws CoreException, ClassFormatException, IOException {

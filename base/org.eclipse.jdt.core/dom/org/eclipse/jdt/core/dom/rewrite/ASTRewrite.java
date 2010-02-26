@@ -198,7 +198,8 @@ public class ASTRewrite {
 
 		ASTNode astRoot= rootNode.getRoot();
 		List commentNodes= astRoot instanceof CompilationUnit ? ((CompilationUnit) astRoot).getCommentList() : null;
-		return internalRewriteAST(content, lineInfo, lineDelim, commentNodes, options, rootNode, (RecoveryScannerData)((CompilationUnit) astRoot).getStatementsRecoveryData());
+		Map currentOptions = options == null ? JavaCore.getOptions() : options;
+		return internalRewriteAST(content, lineInfo, lineDelim, commentNodes, currentOptions, rootNode, (RecoveryScannerData)((CompilationUnit) astRoot).getStatementsRecoveryData());
 	}
 
 	/**

@@ -32,6 +32,15 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 public class CodeSnippetParsingUtil {
 
 	public RecordedParsingInformation recordedParsingInformation;
+	public boolean ignoreMethodBodies;
+	
+	public CodeSnippetParsingUtil(boolean ignoreMethodBodies) {
+		this.ignoreMethodBodies = ignoreMethodBodies;
+	}
+
+	public CodeSnippetParsingUtil() {
+		this(false);
+	}
 
 	private RecordedParsingInformation getRecordedParsingInformation(CompilationResult compilationResult, int[][] commentPositions) {
 		int problemsCount = compilationResult.problemCount;
@@ -62,6 +71,7 @@ public class CodeSnippetParsingUtil {
 			throw new IllegalArgumentException();
 		}
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
+		compilerOptions.ignoreMethodBodies = this.ignoreMethodBodies;
 		final ProblemReporter problemReporter = new ProblemReporter(
 					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 					compilerOptions,
@@ -92,6 +102,7 @@ public class CodeSnippetParsingUtil {
 			throw new IllegalArgumentException();
 		}
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
+		compilerOptions.ignoreMethodBodies = this.ignoreMethodBodies;
 		CommentRecorderParser parser =
 			new CommentRecorderParser(
 				new ProblemReporter(
@@ -144,6 +155,7 @@ public class CodeSnippetParsingUtil {
 			throw new IllegalArgumentException();
 		}
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
+		// in this case we don't want to ignore method bodies since we are parsing only an expression
 		final ProblemReporter problemReporter = new ProblemReporter(
 					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 					compilerOptions,
@@ -182,6 +194,7 @@ public class CodeSnippetParsingUtil {
 			throw new IllegalArgumentException();
 		}
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
+		// in this case we don't want to ignore method bodies since we are parsing only statements
 		final ProblemReporter problemReporter = new ProblemReporter(
 					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 					compilerOptions,

@@ -127,6 +127,13 @@ public interface TypeConstants {
 	char[][] JAVA_IO_IOEXCEPTION = new char[][] { JAVA, IO, "IOException".toCharArray()};//$NON-NLS-1$
 	char[][] JAVA_IO_OBJECTOUTPUTSTREAM = new char[][] { JAVA, IO, "ObjectOutputStream".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_IO_OBJECTINPUTSTREAM = new char[][] { JAVA, IO, "ObjectInputStream".toCharArray()}; //$NON-NLS-1$
+	// javax.rmi.CORBA.Stub
+	char[][] JAVAX_RMI_CORBA_STUB = new char[][] {
+			"javax".toCharArray(), //$NON-NLS-1$
+			"rmi".toCharArray(), //$NON-NLS-1$
+			"CORBA".toCharArray(), //$NON-NLS-1$
+			"Stub".toCharArray(), //$NON-NLS-1$
+	};
 
 	// Constraints for generic type argument inference
     int CONSTRAINT_EQUAL = 0;		// Actual = Formal

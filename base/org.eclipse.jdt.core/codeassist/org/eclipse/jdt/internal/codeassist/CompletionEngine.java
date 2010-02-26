@@ -11581,7 +11581,7 @@ public final class CompletionEngine
 	
 	private INameEnvironment getNoCacheNameEnvironment() {
 		if (this.noCacheNameEnvironment == null) {
-			JavaModelManager.getJavaModelManager().cacheZipFiles();
+			JavaModelManager.getJavaModelManager().cacheZipFiles(this);
 			this.noCacheNameEnvironment = new JavaSearchNameEnvironment(this.javaProject, this.owner == null ? null : JavaModelManager.getJavaModelManager().getWorkingCopies(this.owner, true/*add primary WCs*/));
 		}
 		return this.noCacheNameEnvironment;
@@ -12356,7 +12356,7 @@ public final class CompletionEngine
 		if (this.noCacheNameEnvironment != null) {
 			this.noCacheNameEnvironment.cleanup();
 			this.noCacheNameEnvironment = null;
-			JavaModelManager.getJavaModelManager().flushZipFiles();
+			JavaModelManager.getJavaModelManager().flushZipFiles(this);
 		}
 	}
 

@@ -149,6 +149,10 @@ public class ASTParser {
 	private boolean statementsRecovery;
 
 	/**
+	 * Request to ignore parsing the method bodies. Defaults to <code>false</code>.
+     */
+	private boolean ignoreMethodBodies;
+	/**
      * Request for a bindings recovery. Defaults to <code>false</code>.
      */
     private boolean bindingsRecovery;
@@ -226,6 +230,7 @@ public class ASTParser {
 		this.rawSource = null;
 		this.typeRoot = null;
 		this.resolveBindings = false;
+		this.ignoreMethodBodies = false;
 		this.sourceLength = -1;
 		this.sourceOffset = 0;
 		this.workingCopyOwner = DefaultWorkingCopyOwner.PRIMARY;
@@ -566,6 +571,21 @@ public class ASTParser {
 	}
 
     /**
+	 * Requests an abstract syntax tree without method bodies. 
+	 * 
+	 * <p>When ignore method bodies is enabled, all method bodies are discarded.
+	 * This has no impact on the binding resolution.</p>
+	 *
+	 * <p>This setting is not used if the kind used in {@link #setKind(int)} is either 
+	 * {@link #K_EXPRESSION} or {@link #K_STATEMENTS}.</p>
+	 *
+	 * @since 3.5.2
+	 */
+	public void setIgnoreMethodBodies(boolean enabled) {
+		this.ignoreMethodBodies = true;
+	}
+
+    /**
      * Sets the working copy owner using when resolving bindings, where
      * <code>null</code> means the primary owner. Defaults to the primary owner.
      *
@@ -730,6 +750,7 @@ public class ASTParser {
 		try {
 			int flags = 0;
 			if (this.statementsRecovery) flags |= ICompilationUnit.ENABLE_STATEMENTS_RECOVERY;
+			if (this.ignoreMethodBodies) flags |= ICompilationUnit.IGNORE_METHOD_BODIES;
 			if (this.resolveBindings) {
 				if (this.project == null)
 					throw new IllegalStateException("project not specified"); //$NON-NLS-1$
@@ -790,6 +811,7 @@ public class ASTParser {
 			int flags = 0;
 			if (this.statementsRecovery) flags |= ICompilationUnit.ENABLE_STATEMENTS_RECOVERY;
 			if (this.bindingsRecovery)  flags |= ICompilationUnit.ENABLE_BINDINGS_RECOVERY;
+			if (this.ignoreMethodBodies) flags |= ICompilationUnit.IGNORE_METHOD_BODIES;
 			return CompilationUnitResolver.resolve(elements, this.apiLevel, this.compilerOptions, this.project, this.workingCopyOwner, flags, monitor);
 		} finally {
 			// re-init defaults to allow reuse (and avoid leaking)
@@ -900,6 +922,7 @@ public class ASTParser {
 					}
 					int flags = 0;
 					if (this.statementsRecovery) flags |= ICompilationUnit.ENABLE_STATEMENTS_RECOVERY;
+					if (searcher == null && this.ignoreMethodBodies) flags |= ICompilationUnit.IGNORE_METHOD_BODIES;
 					if (needToResolveBindings) {
 						if (this.bindingsRecovery) flags |= ICompilationUnit.ENABLE_BINDINGS_RECOVERY;
 						try {
@@ -1034,7 +1057,7 @@ public class ASTParser {
 			ast.setFlag(ICompilationUnit.ENABLE_STATEMENTS_RECOVERY);
 		}
 		converter.setAST(ast);
-		CodeSnippetParsingUtil codeSnippetParsingUtil = new CodeSnippetParsingUtil();
+		CodeSnippetParsingUtil codeSnippetParsingUtil = new CodeSnippetParsingUtil(this.ignoreMethodBodies);
 		CompilationUnit compilationUnit = ast.newCompilationUnit();
 		if (this.sourceLength == -1) {
 			this.sourceLength = this.rawSource.length;

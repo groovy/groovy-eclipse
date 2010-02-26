@@ -383,8 +383,6 @@ public class ForeachStatement extends Statement {
 		if (elementType != null && collectionType != null) {
 			if (collectionType.isArrayType()) { // for(E e : E[])
 				this.kind = ARRAY;
-				expectedCollectionType = upperScope.createArrayType(elementType, 1);
-				this.collection.computeConversion(this.scope, expectedCollectionType, collectionType);
 				this.collectionElementType = ((ArrayBinding) collectionType).elementsType();
 				if (!this.collectionElementType.isCompatibleWith(elementType)
 						&& !this.scope.isBoxingCompatibleWith(this.collectionElementType, elementType)) {
@@ -393,7 +391,7 @@ public class ForeachStatement extends Statement {
 				// in case we need to do a conversion
 				int compileTimeTypeID = this.collectionElementType.id;
 				if (elementType.isBaseType()) {
-					expectedCollectionType = null;
+					this.collection.computeConversion(this.scope, collectionType, collectionType);
 					if (!this.collectionElementType.isBaseType()) {
 						compileTimeTypeID = this.scope.environment().computeBoxingType(this.collectionElementType).id;
 						this.elementVariableImplicitWidening = UNBOXING;
@@ -405,19 +403,33 @@ public class ForeachStatement extends Statement {
 						this.elementVariableImplicitWidening = (elementType.id << 4) + compileTimeTypeID;
 					}
 				} else if (this.collectionElementType.isBaseType()) {
-					expectedCollectionType = null;
+					this.collection.computeConversion(this.scope, collectionType, collectionType);
 					int boxedID = this.scope.environment().computeBoxingType(this.collectionElementType).id;
 					this.elementVariableImplicitWidening = BOXING | (compileTimeTypeID << 4) | compileTimeTypeID; // use primitive type in implicit conversion
 					compileTimeTypeID = boxedID;
 					this.scope.problemReporter().autoboxing(this.collection, this.collectionElementType, elementType);
+				} else {
+					expectedCollectionType = upperScope.createArrayType(elementType, 1);
+					this.collection.computeConversion(this.scope, expectedCollectionType, collectionType);
 				}
 			} else if (collectionType instanceof ReferenceBinding) {
 				ReferenceBinding iterableType = ((ReferenceBinding)collectionType).findSuperTypeOriginatingFrom(T_JavaLangIterable, false /*Iterable is not a class*/);
+				boolean isTargetJsr14 = upperScope.compilerOptions().targetJDK == ClassFileConstants.JDK1_4;
+				if (iterableType == null && isTargetJsr14) {
+					iterableType = ((ReferenceBinding)collectionType).findSuperTypeOriginatingFrom(T_JavaUtilCollection, false /*Iterable is not a class*/);
+				}
 				checkIterable: {
 					if (iterableType == null) break checkIterable;
 
 					this.iteratorReceiverType = collectionType.erasure();
-					if (((ReferenceBinding)this.iteratorReceiverType).findSuperTypeOriginatingFrom(T_JavaLangIterable, false) == null) {
+					if (isTargetJsr14) {
+						if (((ReferenceBinding)this.iteratorReceiverType).findSuperTypeOriginatingFrom(T_JavaUtilCollection, false) == null) {
+							this.iteratorReceiverType = iterableType; // handle indirect inheritance thru variable secondary bound
+							this.collection.computeConversion(this.scope, iterableType, collectionType);
+						} else {
+							this.collection.computeConversion(this.scope, collectionType, collectionType);
+						}
+					} else if (((ReferenceBinding)this.iteratorReceiverType).findSuperTypeOriginatingFrom(T_JavaLangIterable, false) == null) {
 						this.iteratorReceiverType = iterableType; // handle indirect inheritance thru variable secondary bound
 						this.collection.computeConversion(this.scope, iterableType, collectionType);
 					} else {

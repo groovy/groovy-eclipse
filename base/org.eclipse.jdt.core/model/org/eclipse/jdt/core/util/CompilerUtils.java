@@ -176,7 +176,12 @@ public class CompilerUtils {
 			if (prefix.equals(project.getName())) {
 				if (path.segmentCount()==1) {		
 					// the path is actually to the project root
+					IPath rawPath = project.getRawLocation();
+					if (rawPath==null) {
+						System.err.println("Failed on call to getRawLocation() against the project: "+project);
+					} else {
 					realLocation =  project.getRawLocation().toOSString();
+					}
 				} else {
 					realLocation =  project.getFile(path.removeFirstSegments(1)).getRawLocation().toOSString();
 				}

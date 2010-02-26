@@ -70,7 +70,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	ReferenceBinding[] thrownExceptions;
 	if ((thrownExceptions = this.binding.thrownExceptions) != Binding.NO_EXCEPTIONS) {
 		if ((this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null) {
-			thrownExceptions = currentScope.environment().convertToRawTypes(this.binding.original().thrownExceptions, true, true);
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=277643, align with javac on JLS 15.12.2.6
+			thrownExceptions = currentScope.environment().convertToRawTypes(this.binding.thrownExceptions, true, true);
 		}
 		// must verify that exceptions potentially thrown by this expression are caught in the method
 		flowContext.checkExceptionHandlers(thrownExceptions, this, flowInfo.copy(), currentScope);
@@ -487,7 +488,8 @@ public TypeBinding resolveType(BlockScope scope) {
 	} else {
 		TypeBinding returnType;
 		if ((this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null) {
-			returnType = this.binding.original().returnType;
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=277643, align with javac on JLS 15.12.2.6
+			returnType = this.binding.returnType;
 			if (returnType != null) {
 				returnType = scope.environment().convertToRawType(returnType.erasure(), true);
 			}

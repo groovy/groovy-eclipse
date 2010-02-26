@@ -89,13 +89,15 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 
 	/**
 	 * Constructor for ASTRewriteAnalyzer.
+	 * <p>The given options cannot be null.</p>
+	 * 
 	 * @param content the content of the compilation unit to rewrite.
 	 * @param lineInfo line information for the content of the compilation unit to rewrite.
 	 * @param rootEdit the edit to add all generated edits to
 	 * @param eventStore the event store containing the description of changes
 	 * @param nodeInfos annotations to nodes, such as if a node is a string placeholder or a copy target
 	 * @param comments list of comments of the compilation unit to rewrite (elements of type <code>Comment</code>) or <code>null</code>.
-	 * @param options the current jdt.core options (formatting/compliance) or <code>null</code>.
+	 * @param options the current jdt.core options (formatting/compliance)
 	 * @param extendedSourceRangeComputer the source range computer to use
 	 * @param recoveryScannerData internal data used by {@link RecoveryScanner}
 	 */

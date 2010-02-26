@@ -5,7 +5,7 @@ Bundle-SymbolicName: org.eclipse.jdt.groovy.core;singleton:=true
 Bundle-Version: 2.0.1.qualifier
 Bundle-Activator: org.eclipse.jdt.groovy.core.Activator
 Require-Bundle: org.eclipse.ui,
- org.eclipse.jdt.core;bundle-version="3.5.0",
+ org.eclipse.jdt.core;bundle-version="3.5.2",
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.codehaus.groovy;bundle-version="[1.6.4,1.7.1]"

@@ -63,6 +63,14 @@ public static final int ENABLE_STATEMENTS_RECOVERY = 0x02;
 public static final int ENABLE_BINDINGS_RECOVERY = 0x04;
 
 /**
+ * Constant indicating that a reconcile operation could ignore to parse the method bodies.
+ * @see ASTParser#setIgnoreMethodBodies(boolean)
+ * @since 3.5.2
+ */
+public static final int IGNORE_METHOD_BODIES = 0x08;
+
+
+/**
  * Applies a text edit to the compilation unit's buffer.
  * <p>
  * Note that the edit is simply applied to the compilation unit's buffer.

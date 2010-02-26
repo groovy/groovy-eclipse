@@ -43,7 +43,7 @@ public void build(boolean computeSubtypes) {
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 	try {
 		// optimize access to zip files while building hierarchy
-		manager.cacheZipFiles();
+		manager.cacheZipFiles(this);
 
 		if (this.hierarchy.focusType == null || computeSubtypes) {
 			IProgressMonitor typeInRegionMonitor =
@@ -63,7 +63,7 @@ public void build(boolean computeSubtypes) {
 			buildSupertypes();
 		}
 	} finally {
-		manager.flushZipFiles();
+		manager.flushZipFiles(this);
 	}
 }
 /**
