@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -84,6 +85,10 @@ public class StatementAndExpressionCompletionProcessor extends
          * @return
          */
         private boolean doTest(ASTNode node) {
+            if (node instanceof ArgumentListExpression) {
+                // we never complete on a list of arguments, but rather one of the arguments itself
+                return false;
+            }
             return isNotExpressionAndStatement(completionNode, node) && completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd();
         }
         

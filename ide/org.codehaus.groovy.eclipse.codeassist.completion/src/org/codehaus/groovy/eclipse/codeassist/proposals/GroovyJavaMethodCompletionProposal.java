@@ -1,6 +1,5 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -46,11 +45,18 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     private int[] fArgumentLengths;
     private IRegion fSelectedRegion; // initialized by apply()
     private final ProposalOptions groovyFormatterPrefs;
+    private String contributor;
 
     public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
             JavaContentAssistInvocationContext context, ProposalOptions groovyFormatterPrefs) {
         super(proposal, context);
         this.groovyFormatterPrefs = groovyFormatterPrefs;
+        this.contributor = "Groovy";
+    }
+    public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
+            JavaContentAssistInvocationContext context, ProposalOptions groovyFormatterPrefs, String contributor) {
+        this(proposal, context, groovyFormatterPrefs);
+        this.contributor = contributor;
     }
     
     
@@ -73,7 +79,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     
     private StyledString getStyledGroovy() {
-        return new StyledString(" (Groovy)", StyledString.DECORATIONS_STYLER);
+        return new StyledString(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
     }
     
     /*

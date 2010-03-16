@@ -46,6 +46,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     
     protected final MethodNode method;
     private final ProposalOptions groovyFormatterPrefs;
+    private String contributor;
     
     public GroovyMethodProposal(MethodNode method) {
         super();
@@ -57,7 +58,13 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                             PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS), 
                     prefs.getBoolean(
                             PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS));
+        contributor = "Groovy";
     }
+    public GroovyMethodProposal(MethodNode method, String contributor) {
+        this(method);
+        this.contributor = contributor;
+    }
+
 
     public IJavaCompletionProposal createJavaProposal(
             ContentAssistContext context,
@@ -81,7 +88,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         // maybe some point in the distant future, we can look at 
         // FilledArgumentNamesMethodProposal, but this will be difficult
         return new GroovyJavaMethodCompletionProposal(proposal,
-                    javaContext, groovyFormatterPrefs);
+                    javaContext, groovyFormatterPrefs, contributor);
 
     }
     

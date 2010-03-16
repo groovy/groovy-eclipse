@@ -110,8 +110,7 @@ public class GroovyCompletionProposalComputer implements
         if (completionExpressions == null) {
             completionExpressions = new String[] { "", "" };
         }
-        int supportingNodeEnd = completionExpressions[1] == null ? -1 : 
-            context.getInvocationOffset() - fullCompletionText.length() + completionExpressions[0].length();
+        int supportingNodeEnd = findSupportingNodeEnd(context.getInvocationOffset(), fullCompletionText);
         CompletionNodeFinder finder = new CompletionNodeFinder(context.getInvocationOffset(), supportingNodeEnd, completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1], fullCompletionText);
         ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
@@ -129,6 +128,20 @@ public class GroovyCompletionProposalComputer implements
             // filter or sort proposals???
         }
         return proposals;
+    }
+
+    /**
+     * @param context
+     * @param fullCompletionText
+     * @param completionExpressions
+     * @return
+     */
+    private int findSupportingNodeEnd(int invocationOffset,
+            String fullCompletionText) {
+        String[] completionExpressions = new ExpressionFinder().splitForCompletionNoTrim(fullCompletionText);
+        // if second part of completion expression is null, then there is no supporting node (ie- no '.')
+        return completionExpressions[1] == null ? -1 : 
+            invocationOffset - fullCompletionText.length() + completionExpressions[0].length();
     }
 
     

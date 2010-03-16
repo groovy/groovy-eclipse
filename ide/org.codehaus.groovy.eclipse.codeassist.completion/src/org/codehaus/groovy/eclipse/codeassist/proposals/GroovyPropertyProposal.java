@@ -33,11 +33,18 @@ import org.eclipse.jface.viewers.StyledString;
 public class GroovyPropertyProposal extends AbstractGroovyProposal {
 
     private final PropertyNode property;
+    private final String contributor;
     
     public GroovyPropertyProposal(PropertyNode property) {
         this.property = property;
+        this.contributor = "Groovy";
     }
 
+    public GroovyPropertyProposal(PropertyNode property, String contributor) {
+        this.property = property;
+        this.contributor = contributor;
+    }
+    
     public IJavaCompletionProposal createJavaProposal(
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
@@ -56,7 +63,7 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
           .append(ProposalUtils.createSimpleTypeName(property.getType()))
           .append(" - ")
           .append(ProposalUtils.createSimpleTypeName(property.getDeclaringClass()), StyledString.QUALIFIER_STYLER)
-          .append(" (Groovy)", StyledString.DECORATIONS_STYLER);
+          .append(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
         return ss;
     }
 

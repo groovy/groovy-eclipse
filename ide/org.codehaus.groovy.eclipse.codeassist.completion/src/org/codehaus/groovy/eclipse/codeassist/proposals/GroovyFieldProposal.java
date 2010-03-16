@@ -35,13 +35,21 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
     
     private final FieldNode field;
     private final int relevance;
+    private final String contributor;
     public GroovyFieldProposal(FieldNode field) {
         this.field = field;
         this.relevance = -1;
+        this.contributor = "Groovy";
     }
     public GroovyFieldProposal(FieldNode field, int relevance) {
         this.field = field;
         this.relevance = relevance;
+        this.contributor = "Groovy";
+    }
+    public GroovyFieldProposal(FieldNode field, int relevance, String contributor) {
+        this.field = field;
+        this.relevance = relevance;
+        this.contributor = contributor;
     }
 
     public IJavaCompletionProposal createJavaProposal(
@@ -64,7 +72,7 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
           .append(ProposalUtils.createSimpleTypeName(field.getType()))
           .append(" - ")
           .append(ProposalUtils.createSimpleTypeName(field.getDeclaringClass()), StyledString.QUALIFIER_STYLER)
-          .append(" (Groovy)", StyledString.DECORATIONS_STYLER);
+          .append(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
         return ss;
     }
 
