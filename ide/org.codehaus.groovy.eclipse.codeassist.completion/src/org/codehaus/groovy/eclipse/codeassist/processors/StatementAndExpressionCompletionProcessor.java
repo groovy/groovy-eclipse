@@ -148,8 +148,19 @@ public class StatementAndExpressionCompletionProcessor extends
         } else {
             // we are at the statement location of a script
             // return the category proposals only
-            groovyProposals.addAll(new CategoryProposalCreator().findAllProposals((ClassNode) context.containingDeclaration, 
-                    Collections.singleton(VariableScope.DGM_CLASS_NODE), context.completionExpression, false));
+            AnnotatedNode node = context.containingDeclaration;
+            ClassNode containingClass;
+            if (node instanceof MethodNode) {
+                containingClass = (ClassNode) node;
+            } else if (node instanceof MethodNode) {
+                containingClass = ((MethodNode) node).getDeclaringClass();
+            } else {
+                containingClass = null;
+            }
+            if (containingClass != null) {
+                groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass, 
+                        Collections.singleton(VariableScope.DGM_CLASS_NODE), context.completionExpression, false));
+            }
             completionType = null;
             isStatic = false;
         }

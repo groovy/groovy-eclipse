@@ -103,10 +103,17 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 						start = node.getStart();
 						end = start + ((ClassExpression) node).getType().getNameWithoutPackage().length();
 					} else if (node instanceof ClassNode) {
-						node = maybeGetComponentType((ClassNode) node);
-						start = node.getStart();
-						// sometimes the end is off by one
-						end = start + ((ClassNode) node).getNameWithoutPackage().length();
+						ClassNode classNode = (ClassNode) node;
+						if (classNode.getNameEnd() > 0) {
+							// we are actually dealing with a declaration
+							start = classNode.getNameStart();
+							end = classNode.getNameEnd() + 1;
+						} else {
+							classNode = maybeGetComponentType(classNode);
+							start = classNode.getStart();
+							// sometimes the end is off by one
+							end = start + classNode.getNameWithoutPackage().length();
+						}
 					} else if (node instanceof ConstructorNode) {
 						start = ((ConstructorNode) node).getNameStart();
 						end = ((ConstructorNode) node).getNameEnd() + 1;

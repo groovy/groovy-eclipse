@@ -16,6 +16,8 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import java.util.List;
+
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -225,4 +227,27 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         assertLocation(searchRequestor.getMatch(1), secondContents.lastIndexOf(matchText), matchText.length());
     }
     
+    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents) throws JavaModelException {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
+        IType firstType = first.getType(firstClassName);
+        SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
+        
+        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+
+        // search the first
+        MockPossibleMatch match1 = new MockPossibleMatch(first);
+        ITypeRequestor typeRequestor1 = new TypeRequestorFactory().createRequestor(match1, pattern, searchRequestor);
+        TypeInferencingVisitorWithRequestor visitor1 = factory.createVisitor(match1);
+        visitor1.visitCompilationUnit(typeRequestor1);
+        
+        // search the second
+        MockPossibleMatch match2 = new MockPossibleMatch(second);
+        ITypeRequestor typeRequestor2 = new TypeRequestorFactory().createRequestor(match2, pattern, searchRequestor);
+        TypeInferencingVisitorWithRequestor visitor2 = factory.createVisitor(match2);
+        visitor2.visitCompilationUnit(typeRequestor2);
+        
+        return searchRequestor.getMatches();
+    }
 }

@@ -62,6 +62,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
     }
 
     
+    
     public class SearchRequestor implements ITypeRequestor {
 
         private final int start;
