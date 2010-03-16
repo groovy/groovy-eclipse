@@ -39,6 +39,7 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
@@ -54,6 +55,8 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     
     protected ASTNode nodeFound;
     private Region r;
+    
+    private boolean inGString = false;
     
     public ASTNodeFinder(Region r) {
         this.r = r;
@@ -287,6 +290,13 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             }
         }
     }
+    
+    @Override
+    public void visitGStringExpression(GStringExpression expression) {
+        inGString = true;
+        super.visitGStringExpression(expression);
+        inGString = false;
+    }
 
 
     /**
@@ -295,6 +305,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     protected void check(ASTNode node) {
         if (doTest(node)) {
             nodeFound = node;
+            inGString = false;
             throw new VisitCompleteException();
         }
     }
@@ -304,7 +315,13 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      * @return
      */
     protected boolean doTest(ASTNode node) {
-        return node.getStart() <= r.getOffset() && node.getEnd() >= r.getOffset()+r.getLength();
+        if (inGString && node instanceof VariableExpression) {
+            // variable expression start locations include the '$' in the groovy code,
+            // but not in the java model, so subtract 1 from the starting node
+            return (node.getStart()-1) <= r.getOffset() && node.getEnd() >= r.getOffset()+r.getLength();
+        } else {
+            return node.getStart() <= r.getOffset() && node.getEnd() >= r.getOffset()+r.getLength();
+        }
     }
 
     /**
