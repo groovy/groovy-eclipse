@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.maven.ide.eclipse.projectConfigurators">
+      <configurator
+            class="org.codehaus.groovy.m2eclipse.GroovyProjectConfigurator"
+            generic="true"
+            id="org.codehaus.groovy.m2eclipse.configurator1"
+            name="Groovy-Eclipse"
+            priority="101">
+      </configurator>
+   </extension>
+
+</plugin>

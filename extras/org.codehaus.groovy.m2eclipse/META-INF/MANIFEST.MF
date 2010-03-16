@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Groovy-Eclipse m2eclipse integration
+Bundle-SymbolicName: org.codehaus.groovy.m2eclipse;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.codehaus.groovy.m2eclipse.Activator
+Bundle-Vendor: Codehaus.org
+Require-Bundle: org.eclipse.core.runtime,
+ org.maven.ide.eclipse,
+ org.maven.ide.eclipse.jdt,
+ org.eclipse.core.resources;bundle-version="3.5.1",
+ org.eclipse.jdt.groovy.core;bundle-version="2.0.1",
+ org.codehaus.groovy.eclipse.core;bundle-version="2.0.1",
+ org.eclipse.jdt.core;bundle-version="3.5.1"
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ActivationPolicy: lazy
+Import-Package: org.maven.ide.eclipse.jdt, 
+ org.apache.maven.model,
+ org.apache.maven.project
