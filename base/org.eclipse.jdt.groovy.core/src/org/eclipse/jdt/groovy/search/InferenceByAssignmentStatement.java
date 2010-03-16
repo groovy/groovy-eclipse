@@ -48,11 +48,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 
 				// we don't support multiple assignments yet
 				if (declExpr.isMultipleAssignmentDeclaration()) {
-					// ArgumentListExpression args = (ArgumentListExpression) declExpr.getLeftExpression();
-					// for (Expression argExpr : (Iterable<Expression>) args.getExpressions()) {
-					// probable won't get anything out of here
-					throw new RuntimeException("Not implemented...Please raise a bug for this."); //$NON-NLS-1$
-					// }
+					return null;
 				}
 			}
 

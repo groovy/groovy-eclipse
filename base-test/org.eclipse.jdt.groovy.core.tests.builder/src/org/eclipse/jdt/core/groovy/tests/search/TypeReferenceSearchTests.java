@@ -141,6 +141,17 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Invalid location", "First", secondContents.substring(start, end));
     }
     
+    /**
+     * GRECLIPSE-628
+     * @throws Exception
+     */
+    public void testShouldntFindClassDeclarationInScript() throws Exception {
+        String firstContents = "print 'me'";
+        String secondContents = "print 'me'";
+        List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
+        assertEquals("Should find no matches", 0, matches.size());
+    }
+    
     
     private void doTestForTwoInScript(String secondContents) throws JavaModelException {
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, true, 3);

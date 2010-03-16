@@ -108,6 +108,9 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 							// we are actually dealing with a declaration
 							start = classNode.getNameStart();
 							end = classNode.getNameEnd() + 1;
+						} else if (classNode.redirect() == classNode) {
+							// this is a script declaration... ignore
+							start = end = -1;
 						} else {
 							classNode = maybeGetComponentType(classNode);
 							start = classNode.getStart();
@@ -117,17 +120,23 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 					} else if (node instanceof ConstructorNode) {
 						start = ((ConstructorNode) node).getNameStart();
 						end = ((ConstructorNode) node).getNameEnd() + 1;
+						if (start == 0 && end == 1) {
+							// synthetic constructor from script
+							start = end = -1;
+						}
 					} else {
 						start = node.getStart();
 						end = node.getEnd();
 					}
 
-					SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence), start, end - start,
-							participant, enclosingElement.getResource());
-					try {
-						requestor.acceptSearchMatch(match);
-					} catch (CoreException e) {
-						Util.log(e, "Error accepting search match for " + enclosingElement); //$NON-NLS-1$
+					if (start >= 0 && end >= 0) {
+						SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence), start, end - start,
+								participant, enclosingElement.getResource());
+						try {
+							requestor.acceptSearchMatch(match);
+						} catch (CoreException e) {
+							Util.log(e, "Error accepting search match for " + enclosingElement); //$NON-NLS-1$
+						}
 					}
 				}
 			}

@@ -50,10 +50,6 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
 		this.editor = editor;
 	}
 	
-	public RenameDispatcherAction() {
-	    editor = null;
-    }
-
 	public void run(IAction action) {
 		if (initRefactoring()) {
 			CandidateCollector dispatcher = new CandidateCollector(docProvider, selection);

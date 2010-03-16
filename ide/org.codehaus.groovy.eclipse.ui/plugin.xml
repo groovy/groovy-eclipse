@@ -815,7 +815,7 @@
           description="Groovy Reference Objects, used within Groovy closures"
           subtypes="true"
           type="groovy.lang.Reference"
-          value="return get()">
+          value="return get();">
     </javaLogicalStructure>
  </extension>
  <!--

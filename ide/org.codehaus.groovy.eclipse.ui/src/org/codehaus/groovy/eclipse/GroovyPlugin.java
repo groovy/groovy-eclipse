@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
+import org.codehaus.groovy.eclipse.debug.ui.ForceDetailFormatter;
 import org.codehaus.groovy.eclipse.debug.ui.GroovyJavaDebugElementAdapterFactory;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.preferences.AskToConvertLegacyProjects;
@@ -192,6 +193,9 @@ public class GroovyPlugin extends AbstractUIPlugin {
         // register our own stack frame label provider so that groovy stack frames are 
         // shown differently
         GroovyJavaDebugElementAdapterFactory.connect();
+        
+        // ensure that Reference objects in closures are formatted nicely in the variables view
+        new ForceDetailFormatter().forceReferenceFormatter();
 	}
 
     private void addMonospaceFontListener() {
