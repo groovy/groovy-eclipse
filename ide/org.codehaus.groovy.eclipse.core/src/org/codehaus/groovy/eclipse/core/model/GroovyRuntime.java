@@ -215,7 +215,7 @@ public class GroovyRuntime {
                 null, null, true));
     }
 
-    private static void addGroovyNature(final IProject project)
+    public static void addGroovyNature(final IProject project)
             throws CoreException {
         GroovyCore.trace("GroovyRuntime.addGroovyNature()");
         final IProjectDescription description = project.getDescription();
