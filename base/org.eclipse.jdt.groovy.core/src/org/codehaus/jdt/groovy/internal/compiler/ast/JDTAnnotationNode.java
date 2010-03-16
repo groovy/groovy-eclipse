@@ -132,7 +132,14 @@ public class JDTAnnotationNode extends AnnotationNode {
 		for (ElementValuePair evpair : evpairs) {
 			char[] name = evpair.getName();
 			MethodBinding mb = evpair.binding;
-			Expression valueExpression = createExpressionFor(mb.returnType, evpair.value);
+			Expression valueExpression = null;
+			// FIXASC needs more cases considering
+			if (mb == null && (evpair.value instanceof StringConstant)) {
+				String v = ((StringConstant) evpair.value).stringValue();
+				valueExpression = new ConstantExpression(v);
+			} else {
+				valueExpression = createExpressionFor(mb.returnType, evpair.value);
+			}
 			super.addMember(new String(name), valueExpression);
 		}
 	}
