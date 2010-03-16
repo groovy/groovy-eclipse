@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * @author Andrew Eisenberg
@@ -56,10 +57,14 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	void doVisit(ModuleNode node, ImportReference pkg) {
 
-		this.visitImports(node);
+		try {
+			this.visitImports(node);
 
-		for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
-			this.visitClass(clazz);
+			for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
+				this.visitClass(clazz);
+			}
+		} catch (RuntimeException e) {
+			Util.log(e);
 		}
 	}
 
@@ -90,7 +95,11 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 	@Override
 	public void visitMethodCallExpression(MethodCallExpression call) {
 		super.visitMethodCallExpression(call);
-		char[] methodName = call.getMethodAsString().toCharArray();
+		String methodStr = call.getMethodAsString();
+		if (methodStr == null)
+			return;
+
+		char[] methodName = methodStr.toCharArray();
 		int start = call.getStart();
 		// also could be a field reference
 		requestor.acceptFieldReference(methodName, start);
