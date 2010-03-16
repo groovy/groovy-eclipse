@@ -250,7 +250,10 @@ public class OrganizeGroovyImports {
                     } 
                     if (gen.getUpperBounds() != null) {
                         for (ClassNode upper : gen.getUpperBounds()) {
-                            handleType(upper, false);
+                            // handle enums where the upper bound is the same as the type
+                            if (! upper.getName().equals(node.getName())) {
+                                handleType(upper, false);
+                            }
                         }
                     }
                     if (gen.getType() != null && gen.getType().getName().charAt(0) != '?') {
