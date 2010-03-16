@@ -574,19 +574,24 @@
          point="org.eclipse.ui.commands">
       <command
             categoryId="org.eclipse.debug.ui.category.run"
-            description="Open a GroovyConsole for the current project"
-            id="org.codehaus.groovy.eclipse.command.RunGroovyConsole"
-            name="Groovy Console"/>
+            description="Run Groovy Shell"
+            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.run"
+            name="Run Groovy Shell"/>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
-            description="Run Groovy File"
-            id="org.codehaus.groovy.eclipse.debug.ui.groovyShortcut.run"
-            name="Run Groovy"/>
+            description="Debug Groovy Shell"
+            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.debug"
+            name="Debug Groovy Shell"/>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
-            description="Debug Groovy File"
-            id="org.codehaus.groovy.eclipse.debug.ui.groovyShortcut.debug"
-            name="Debug Groovy"/>
+            description="Run Groovy Script"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.run"
+            name="Run Groovy Script"/>
+      <command
+            categoryId="org.eclipse.debug.ui.category.run"
+            description="Debug Groovy Script"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.debug"
+            name="Debug Groovy Script"/>
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
             description="Converts a file with a groovy extension to a file with a java extension"
@@ -610,11 +615,11 @@
    <extension
          point="org.eclipse.ui.bindings">
       <key
-            commandId="org.codehaus.groovy.eclipse.debug.ui.groovyShortcut.run"
+            commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.run"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+X G"/>
       <key
-            commandId="org.codehaus.groovy.eclipse.debug.ui.groovyShortcut.debug"
+            commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.debug"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+D G"/>
       <key
@@ -803,6 +808,15 @@
              id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
        </part>
     </actionSetPartAssociation>
+ </extension>
+ <extension
+       point="org.eclipse.jdt.debug.javaLogicalStructures">
+    <javaLogicalStructure
+          description="Groovy Reference Objects, used within Groovy closures"
+          subtypes="true"
+          type="groovy.lang.Reference"
+          value="return get()">
+    </javaLogicalStructure>
  </extension>
  <!--
  <extension
