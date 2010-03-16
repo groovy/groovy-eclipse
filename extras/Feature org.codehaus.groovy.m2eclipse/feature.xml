@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="org.codehaus.groovy.m2eclipse"
+      label="%featureName"
+      version="1.0.0.qualifier"
+      provider-name="%providerName">
+
+   <description url="%descriptionURL">
+      %description
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license url="%licenseURL">
+      %license
+   </license>
+
+   <requires>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.codehaus.groovy" version="1.6.7" match="greaterOrEqual"/>
+      <import plugin="org.maven.ide.eclipse"/>
+      <import plugin="org.maven.ide.eclipse.jdt"/>
+      <import plugin="org.eclipse.core.resources" version="3.5.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.groovy.core" version="2.0.1" match="greaterOrEqual"/>
+      <import plugin="org.codehaus.groovy.eclipse.core" version="2.0.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.core" version="3.5.1" match="greaterOrEqual"/>
+   </requires>
+
+   <plugin
+         id="org.codehaus.groovy.m2eclipse"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

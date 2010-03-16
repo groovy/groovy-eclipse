@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description>
+      Maven Integration for Groo
+   </description>
+   <feature url="features/org.codehaus.groovy.m2eclipse_1.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse" version="1.0.0.qualifier">
+      <category name="org.codehaus.groovy.m2eclipse"/>
+   </feature>
+   <feature url="features/org.codehaus.groovy.m2eclipse.source_1.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="1.0.0.qualifier">
+      <category name="org.codehaus.groovy.m2eclipse"/>
+   </feature>
+   <category-def name="org.codehaus.groovy.m2eclipse" label="Maven integration (optional)">
+      <description>
+         Optional Maven (M2Eclipse) integration for Groovy-Eclipse.  (Beta)
+      </description>
+   </category-def>
+</site>
