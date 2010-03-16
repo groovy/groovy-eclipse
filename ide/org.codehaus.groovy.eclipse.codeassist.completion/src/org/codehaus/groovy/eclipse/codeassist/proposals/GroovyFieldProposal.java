@@ -61,7 +61,13 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
 
     @Override
     protected int getRelevance(char[] name) {
-        return relevance >= 0 ? relevance : super.getRelevance(name);
+        if (relevance >= 0) return relevance;
+        
+        int rel = super.getRelevance(name);
+        if (field.isStatic()) {
+            rel *=5;
+        }
+        return rel;
     }
     
     protected StyledString createDisplayString(FieldNode field) {

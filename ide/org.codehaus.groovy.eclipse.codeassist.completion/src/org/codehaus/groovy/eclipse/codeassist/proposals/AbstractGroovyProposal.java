@@ -78,9 +78,9 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
             case '$':
                 return 1;
             case '_':
-                return 20;
+                return 50;
             default:
-                return 100;
+                return 1000;
         }
     }
 
