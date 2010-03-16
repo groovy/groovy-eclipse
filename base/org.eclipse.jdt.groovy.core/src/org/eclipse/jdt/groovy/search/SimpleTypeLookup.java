@@ -210,6 +210,15 @@ public class SimpleTypeLookup implements ITypeLookup {
 			} else if (constExpr.isEmptyStringExpression()) {
 				return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
 			} else {
+				// there is a possibility that this is a constant expression inside a GString.
+				// check for a '$' as a start.
+				if (node.getText().startsWith("$")) { //$NON-NLS-1$
+					String realName = node.getText().substring(1);
+					VariableInfo var = scope.lookupName(realName);
+					if (var != null) {
+						return new TypeLookupResult(var.type, var.declaringType, null, confidence, scope);
+					}
+				}
 				return new TypeLookupResult(node.getType(), null, null, confidence, scope);
 			}
 
