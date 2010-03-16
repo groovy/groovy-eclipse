@@ -1,37 +1,35 @@
-// $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyRecognizer.java"$
+// $ANTLR 2.7.7 (20060906): "n:/workspaces/groovy35/org.codehaus.groovy/src/org/codehaus/groovy/internal/antlr/parser/groovy.g" -> "GroovyRecognizer.java"$
 
 package org.codehaus.groovy.internal.antlr.parser;
+import org.codehaus.groovy.antlr.*;
+import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-
-import org.codehaus.groovy.antlr.GroovySourceAST;
-import org.codehaus.groovy.antlr.SourceBuffer;
-import org.codehaus.groovy.antlr.SourceInfo;
-import org.codehaus.groovy.ast.Comment;
-
-import antlr.ASTFactory;
-import antlr.ASTPair;
-import antlr.CommonToken;
 import antlr.InputBuffer;
 import antlr.LexerSharedInputState;
-import antlr.MismatchedTokenException;
-import antlr.NoViableAltException;
-import antlr.ParserSharedInputState;
-import antlr.RecognitionException;
-import antlr.SemanticException;
-import antlr.Token;
-import antlr.TokenBuffer;
-import antlr.TokenStream;
-import antlr.TokenStreamException;
+import antlr.CommonToken;
+import org.codehaus.groovy.GroovyBugError;
 import antlr.TokenStreamRecognitionException;
-import antlr.collections.AST;
-import antlr.collections.impl.ASTArray;
+import org.codehaus.groovy.ast.Comment;
+
+import antlr.TokenBuffer;
+import antlr.TokenStreamException;
+import antlr.TokenStreamIOException;
+import antlr.ANTLRException;
+import antlr.LLkParser;
+import antlr.Token;
+import antlr.TokenStream;
+import antlr.RecognitionException;
+import antlr.NoViableAltException;
+import antlr.MismatchedTokenException;
+import antlr.SemanticException;
+import antlr.ParserSharedInputState;
 import antlr.collections.impl.BitSet;
+import antlr.collections.AST;
+import java.util.Hashtable;
+import antlr.ASTFactory;
+import antlr.ASTPair;
+import antlr.collections.impl.ASTArray;
 
 /** JSR-241 Groovy Recognizer
  *
@@ -272,6 +270,22 @@ public class GroovyRecognizer extends antlr.LLkParser       implements GroovyTok
             t.initialize(type,txt);
         }
         return t;
+    }
+
+    // GRE292
+    public AST create2(int type, String txt, Token first, Token last) {
+        return setEndLocationBasedOnThisNode(create(type, txt, astFactory.create(first)), last);
+    }
+    
+    // GRE292
+    private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
+    	if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
+            SourceInfo lastInfo = (SourceInfo) node;
+            GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
+            groovySourceAst.setColumnLast(lastInfo.getColumnLast());
+            groovySourceAst.setLineLast(lastInfo.getLineLast());
+      }
+      return ast;
     }
     
     private AST attachLast(AST t, Object last) {
@@ -5519,12 +5533,13 @@ inputState.guessing--;
 		}
 		catch (RecognitionException e) {
 			if (inputState.guessing==0) {
-				reportError(e);
+				
+					reportError(e);
 				classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));  	
-				currentAST.root = classBlock_AST;
-				currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
-				currentAST.advanceChildToEnd();	
-	
+					currentAST.root = classBlock_AST;
+							currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+							currentAST.advanceChildToEnd();	
+				
 			} else {
 				throw e;
 			}
@@ -9422,7 +9437,7 @@ inputState.guessing--;
 			}
 			if ( inputState.guessing==0 ) {
 				branchStatement_AST = (AST)currentAST.root;
-				branchStatement_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(LITERAL_return,"return",first,LT(1))).add(returnE_AST));
+				branchStatement_AST = (AST)astFactory.make( (new ASTArray(2)).add(create2(LITERAL_return,"return",first,LT(0))).add(returnE_AST));
 				currentAST.root = branchStatement_AST;
 				currentAST.child = branchStatement_AST!=null &&branchStatement_AST.getFirstChild()!=null ?
 					branchStatement_AST.getFirstChild() : branchStatement_AST;

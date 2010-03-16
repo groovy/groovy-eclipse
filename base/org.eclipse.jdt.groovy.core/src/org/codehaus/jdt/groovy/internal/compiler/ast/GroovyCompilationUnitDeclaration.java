@@ -1389,7 +1389,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						continue;
 					}
 					soffset = rpe.getNode().getStart();
-					eoffset = rpe.getNode().getEnd();
+					eoffset = rpe.getNode().getEnd() - 1;
 					// need to work out the line again as it may be wrong
 					line = 0;
 					while (compilationResult.lineSeparatorPositions[line] < soffset
@@ -1412,8 +1412,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				;
 				line++; // from an array index to a real 'line number'
 			} else {
-				soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
-				eoffset = getOffset(compilationResult.lineSeparatorPositions, line, ecol);
+				if (soffset == -1) {
+					soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
+				}
+				if (eoffset == -1) {
+					eoffset = getOffset(compilationResult.lineSeparatorPositions, line, ecol);
+				}
 			}
 			if (soffset > eoffset) {
 				eoffset = soffset;

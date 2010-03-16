@@ -1522,6 +1522,75 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"class GroovyFoo extends FooBase {}",
 		},"");
 	}
+	
+	public void testIncorrectReturnType_GRE292() {
+		this.runNegativeTest(new String[] {
+				"Voidy.groovy",
+				"public class VoidReturnTestCase {\n"+
+				"\n"+
+				"  void returnSomething() { \n"+
+				"    return true && false   \n" +
+				"  }\n"+
+				"\n"+
+				"}\n"},
+				"----------\n" + 
+				"1. ERROR in Voidy.groovy (at line 4)\n" + 
+				"	return true && false   \n" + 
+				"	^^^^^^^^^^^^^^^^^^^^\n" + 
+				"Groovy:Cannot use return statement with an expression on a method that returns void\n" + 
+				"----------\n");
+	}
+	
+	public void testIncorrectReturnType_GRE292_3() {
+		this.runNegativeTest(new String[] {
+				"Voidy.groovy",
+				"public class VoidReturnTestCase {\n"+
+				"\n"+
+				"  void returnSomething() { \n"+
+				"    return true\n" +
+				"  }\n"+
+				"\n"+
+				"}\n"},
+				"----------\n" + 
+				"1. ERROR in Voidy.groovy (at line 4)\n" + 
+				"	return true\n" + 
+				"	^^^^^^^^^^^\n" + 
+				"Groovy:Cannot use return statement with an expression on a method that returns void\n" + 
+				"----------\n");
+	}
+
+
+	public void testIncorrectReturnType_GRE292_2() {
+		this.runNegativeTest(new String[] {
+				"Voidy.groovy",
+				"public class VoidReturnTestCase {\n"+
+				"\n"+
+				"  void returnSomething() { return true }\n"+
+				"\n"+
+				"}\n"},
+				"----------\n"+
+				"1. ERROR in Voidy.groovy (at line 3)\n" + 
+				"	void returnSomething() { return true }\n" + 
+				"	                         ^^^^^^^^^^^\n" + 
+				"Groovy:Cannot use return statement with an expression on a method that returns void\n" + 
+				"----------\n");
+	}
+	
+	public void testIncorrectReturnType_GRE292_4() {
+		this.runNegativeTest(new String[] {
+				"Voidy.groovy",
+				"public class VoidReturnTestCase {\n"+
+				"\n"+
+				" void returnSomething() { return 375+26 }\n"+
+				"\n"+
+				"}\n"},
+				"----------\n" + 
+				"1. ERROR in Voidy.groovy (at line 3)\n" + 
+				"	void returnSomething() { return 375+26 }\n" + 
+				"	                         ^^^^^^^^^^^^^\n" + 
+				"Groovy:Cannot use return statement with an expression on a method that returns void\n" + 
+				"----------\n");
+	}
 
 	public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273() {
 		this.runNegativeTest(new String[] {
@@ -2831,10 +2900,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",},
 			"----------\n" + 
 			"1. ERROR in TrivialBug.groovy (at line 4)\n" + 
-			"	void func() {\n" + 
-			"		return 5\n" + 
-			"	             ^\n" + 
-			"Groovy:Cannot use return statement with an expression on a method that returns void\n"+
+			"	return 5\n" + 
+			"	^^^^^^^^\n" + 
+			"Groovy:Cannot use return statement with an expression on a method that returns void\n" + 
 			"----------\n"
 		);
 	}
@@ -2857,10 +2925,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",},
 			"----------\n" + 
 			"1. ERROR in TrivialBug.groovy (at line 4)\n" + 
-			"	void func() {\n" + 
-			"		return 5\n" + 
-			"	             ^\n" + 
-			"Groovy:Cannot use return statement with an expression on a method that returns void\n"+
+			"	return 5\n" + 
+			"	^^^^^^^^\n" + 
+			"Groovy:Cannot use return statement with an expression on a method that returns void\n" + 
 			"----------\n"
 		);
 	}

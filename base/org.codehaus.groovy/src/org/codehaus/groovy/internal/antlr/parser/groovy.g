@@ -291,6 +291,22 @@ tokens {
         }
         return t;
     }
+
+    // GRE292
+    public AST create2(int type, String txt, Token first, Token last) {
+        return setEndLocationBasedOnThisNode(create(type, txt, astFactory.create(first)), last);
+    }
+    
+    // GRE292
+    private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
+    	if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
+            SourceInfo lastInfo = (SourceInfo) node;
+            GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
+            groovySourceAst.setColumnLast(lastInfo.getColumnLast());
+            groovySourceAst.setLineLast(lastInfo.getLineLast());
+      }
+      return ast;
+    }
     
     private AST attachLast(AST t, Object last) {
     	if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
@@ -2075,7 +2091,8 @@ branchStatement {Token first = LT(1);}
     // Return an expression
         "return"!
         ( returnE:expression[0]! )?
-        {#branchStatement = #(create(LITERAL_return,"return",first,LT(1)),returnE);}
+        // GRE292
+        {#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
         
 
     // break:  get out of a loop, or switch, or method call
