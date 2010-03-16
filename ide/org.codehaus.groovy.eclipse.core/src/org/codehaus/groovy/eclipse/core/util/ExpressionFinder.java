@@ -115,43 +115,64 @@ public class ExpressionFinder {
 	 *         String[1] is the empty string if the last character is a '.'.<br>
 	 *         String[1] is 'ident' if the expression ends with '.ident'.<br>
 	 *         String[1] is null if the expression itself is to be used for completion.
+	 *         Also, remove starting '$'.  These only occur when inside GStrings, and should not be completed against. 
 	 */
 	public String[] splitForCompletion(String expression) {
-		String[] ret = new String[2];
-
-		if (expression.trim().length() < 1 ){
-			ret[0] = "";
-			ret[1] = null;
-			return ret;
-		}
-		
-		StringSourceBuffer sb = new StringSourceBuffer(expression);
-		TokenStream stream = new TokenStream(sb, expression.length() - 1);
-		Token token0, token1, token2;
-		try {
-			skipLineBreaksAndComments(stream);
-			token0 = stream.next();
-			skipLineBreaksAndComments(stream);
-			token1 = stream.next();
-			skipLineBreaksAndComments(stream);
-			token2 = stream.next();
-
-			if ((token0.type == Token.DOT || token0.type == Token.SAFE_DEREF || token0.type == Token.SPREAD) && isValidBeforeDot(token1.type)) {
-				ret[0] = expression.substring(0, token1.endOffset).trim();
-				ret[1] = "";
-			} else if (token0.type == Token.IDENT && token1.type == Token.DOT && isValidBeforeDot(token2.type)) {
-				ret[0] = expression.substring(0, token2.endOffset).trim();
-				ret[1] = expression.substring(token0.startOffset, expression.length()).trim();
-			} else if (token0.type == Token.IDENT) {
-				ret[0] = expression.trim();
-			} else {
-			    ret = new String[] { "", "" };
-			}
-		} catch (TokenStreamException e) {
-		}
-
-		return ret;
+	    String[] split = splitForCompletionNoTrim(expression);
+	    if (split[0] != null) {
+	        split[0] = split[0].trim();
+	        if (split[0].startsWith("$")) {
+	            split[0] = split[0].substring(1);
+	        }
+	    }
+	    if (split[1] != null) {
+	        split[1] = split[1].trim();
+            if (split[1].startsWith("$")) {
+                split[1] = split[1].substring(1);
+            }
+	    }
+	    return split;
 	}
+	
+	
+	public String[] splitForCompletionNoTrim(String expression) {
+       String[] ret = new String[2];
+
+        if (expression.trim().length() < 1 ){
+            ret[0] = "";
+            ret[1] = null;
+            return ret;
+        }
+        
+        StringSourceBuffer sb = new StringSourceBuffer(expression);
+        TokenStream stream = new TokenStream(sb, expression.length() - 1);
+        Token token0, token1, token2;
+        try {
+            skipLineBreaksAndComments(stream);
+            token0 = stream.next();
+            skipLineBreaksAndComments(stream);
+            token1 = stream.next();
+            skipLineBreaksAndComments(stream);
+            token2 = stream.next();
+
+            if ((token0.type == Token.DOT || token0.type == Token.SAFE_DEREF || token0.type == Token.SPREAD) && isValidBeforeDot(token1.type)) {
+                ret[0] = expression.substring(0, token1.endOffset);
+                ret[1] = "";
+            } else if (token0.type == Token.IDENT && token1.type == Token.DOT && isValidBeforeDot(token2.type)) {
+                ret[0] = expression.substring(0, token2.endOffset);
+                ret[1] = expression.substring(token0.startOffset, expression.length());
+            } else if (token0.type == Token.IDENT) {
+                ret[0] = expression;
+            } else {
+                ret = new String[] { "", "" };
+            }
+        } catch (TokenStreamException e) {
+        }
+
+        return ret;
+	}
+	
+	
 
 	/**
 	 * FIXADE RC1: only skip line breaks if the previous character is a '.' otherwise
