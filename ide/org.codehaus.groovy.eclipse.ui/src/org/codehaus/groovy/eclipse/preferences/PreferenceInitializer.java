@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.preferences;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.codehaus.groovy.eclipse.refactoring.Activator;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
@@ -137,6 +138,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 PreferenceConstants.GROOVY_DEBUG_FILTER_LIST, 
                 "org.codehaus.groovy,groovy.lang,java.lang.reflect,sun.reflect");
         
+        store = Activator.getDefault().getPreferenceStore();
+        // Refactoring enable/disable.  Temporary...I hope
+        store.setDefault(
+                PreferenceConstants.GROOVY_REFACTORING_ENABLED, 
+                true);
         
     }
     
@@ -234,6 +240,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(
                 PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
                 "proj_home");
+
+        
+        store = Activator.getDefault().getPreferenceStore();
+        // Refactoring
+        store.setValue(
+                PreferenceConstants.GROOVY_REFACTORING_ENABLED, 
+                true);
 
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
     }

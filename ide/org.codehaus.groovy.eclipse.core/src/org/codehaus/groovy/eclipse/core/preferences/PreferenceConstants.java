@@ -94,4 +94,7 @@ public class PreferenceConstants {
 	public static final String GROOVY_SCRIPT_PROJECT_HOME = "proj_home";
 	public static final String GROOVY_SCRIPT_SCRIPT_LOC = "script_loc";
 	public static final String GROOVY_SCRIPT_ECLIPSE_HOME = "eclipse_home";
+	
+	// temporary measure to disable groovy refactoring support
+	public static final String GROOVY_REFACTORING_ENABLED = "groovy.refactoring.enabled";
 }

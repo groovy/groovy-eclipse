@@ -150,7 +150,6 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                 }
             });
         }
-        
     }
 
 

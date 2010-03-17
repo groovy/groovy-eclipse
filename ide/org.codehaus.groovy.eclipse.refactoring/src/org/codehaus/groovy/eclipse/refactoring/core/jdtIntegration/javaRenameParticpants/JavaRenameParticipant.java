@@ -11,10 +11,10 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.refactoring.core.EmptyRefactoringProvider;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.codehaus.groovy.eclipse.refactoring.Activator;
 import org.codehaus.groovy.eclipse.refactoring.core.RefactoringProvider;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextChange;
@@ -56,7 +57,8 @@ public abstract class JavaRenameParticipant extends RenameParticipant {
 	    try {
 	        // FIXADE 2.0.1M1 currently disabling groovy refactoring participation if target not
 	        // in groovy project, but this might be too strict.
-    		if (getArguments().getUpdateReferences() && element instanceof IJavaElement
+    		if (isEnabled() && 
+    		        getArguments().getUpdateReferences() && element instanceof IJavaElement
     		        && GroovyNature.hasGroovyNature(((IJavaElement) element).getJavaProject().getProject())) {	
     			IJavaElement javaElement = (IJavaElement) element;
     			if (javaElement.getAncestor(IJavaElement.COMPILATION_UNIT) instanceof ICompilationUnit) {
@@ -67,6 +69,11 @@ public abstract class JavaRenameParticipant extends RenameParticipant {
 	        GroovyCore.logException("Exception initializing Java rename participant for groovy", e);
 	    }
 	    return false;
+	}
+	
+	private boolean isEnabled() {
+	    IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+	    return store.getBoolean(PreferenceConstants.GROOVY_REFACTORING_ENABLED);
 	}
 	
 	@Override
