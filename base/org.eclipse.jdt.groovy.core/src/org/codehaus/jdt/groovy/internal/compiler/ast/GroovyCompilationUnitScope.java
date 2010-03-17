@@ -278,6 +278,18 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	}
 
 	@Override
+	protected void reportImportProblem(ImportReference importReference, Binding importBinding) {
+		// GRE-680
+		if (importBinding instanceof ProblemReferenceBinding) {
+			ProblemReferenceBinding problemRefBinding = (ProblemReferenceBinding) importBinding;
+			if (problemRefBinding.problemId() == ProblemReasons.NotFound) {
+				return;
+			}
+		}
+		problemReporter().importProblem(importReference, importBinding);
+	}
+
+	@Override
 	public boolean canSeeEverything() {
 		return true;
 	}

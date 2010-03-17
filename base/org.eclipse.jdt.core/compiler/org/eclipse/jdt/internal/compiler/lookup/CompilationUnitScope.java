@@ -443,7 +443,12 @@ void faultInImports() {
 
 			Binding importBinding = findImport(compoundName, compoundName.length);
 			if (!importBinding.isValidBinding()) {
+				/* GROOVY start:
+	                   * old code
 				problemReporter().importProblem(importReference, importBinding);
+				 * new code */
+				reportImportProblem(importReference,importBinding);
+				// GROOVY end
 				continue nextImport;
 			}
 			if (importReference.isStatic() && importBinding instanceof PackageBinding) {
@@ -967,6 +972,9 @@ public boolean scannerAvailable() {
 }
 public boolean reportInvalidType(TypeReference typeReference, TypeBinding resolvedType) {
 	return true;
+}
+protected void reportImportProblem(ImportReference importReference, Binding importBinding) {
+	problemReporter().importProblem(importReference, importBinding);
 }
 public boolean canSeeEverything() {
 	return false;

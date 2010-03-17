@@ -252,6 +252,18 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"}\n"},"");
     }
     
+    public void testGrabScriptAndImports_GRE680() {
+	    this.runConformTest(new String[]{"Script.groovy",
+			    "import org.mortbay.jetty.Server\n"+
+			    "import org.mortbay.jetty.servlet.*\n"+  
+			    "import groovy.servlet.*\n"+
+			    "\n"+
+			    "@Grab(group = 'org.mortbay.jetty', module = 'jetty-embedded', version = '6.1.0')\n"+
+			    "def runServer(duration) {  }\n"+
+			    "runServer(10000)\n"},""
+	    );
+    }
+    
     public void testMixedModeInnerProperties2_GRE597() {
     	this.runConformTest(new String[]{
     			"groovy/JoinGroovy.groovy",
