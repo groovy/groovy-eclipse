@@ -664,7 +664,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 			} else {
 				// move from default package
 				// we don't keep track of comments, so we don't know where they start.  Just add the package declaration at location 0
-				multiEdit.addChild(new InsertEdit(0, "package " + Util.concatWith(destPackageName, '.') + "\n\n"));  //$NON-NLS-1$//$NON-NLS-2$
+				multiEdit.addChild(new InsertEdit(0, "package " + Util.concatWith(destPackageName, '.') + "\n"));  //$NON-NLS-1$//$NON-NLS-2$
 			}
 		}		
 
