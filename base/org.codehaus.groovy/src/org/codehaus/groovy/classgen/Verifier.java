@@ -17,23 +17,54 @@ package org.codehaus.groovy.classgen;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyObject;
-import groovy.lang.MetaClass;
 import groovy.lang.GroovyObjectSupport;
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
-import org.codehaus.groovy.ast.stmt.*;
+import groovy.lang.MetaClass;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CodeVisitorSupport;
+import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.VariableScope;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.reflection.ClassInfo;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
-import org.codehaus.groovy.reflection.ClassInfo;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.*;
 
 /**
  * Verifies the AST node and adds any defaulted AST code before
@@ -375,27 +406,28 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
 	protected void addTimeStamp(ClassNode node) {
         if(node.getDeclaredField(Verifier.__TIMESTAMP) == null) { // in case if verifier visited the call already
-        FieldNode timeTagField = new FieldNode(
-                Verifier.__TIMESTAMP,
-                ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC,
-                ClassHelper.Long_TYPE,
-                //"",
-                node,
-                new ConstantExpression(System.currentTimeMillis()));
-        // alternatively , FieldNode timeTagField = SourceUnit.createFieldNode("public static final long __timeStamp = " + System.currentTimeMillis() + "L");
-        timeTagField.setSynthetic(true);
-        node.addField(timeTagField);
-
-        timeTagField = new FieldNode(
-                Verifier.__TIMESTAMP__ + String.valueOf(System.currentTimeMillis()),
-                ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC,
-                ClassHelper.Long_TYPE,
-                //"",
-                node,
-                new ConstantExpression((long) 0));
-        // alternatively , FieldNode timeTagField = SourceUnit.createFieldNode("public static final long __timeStamp = " + System.currentTimeMillis() + "L");
-        timeTagField.setSynthetic(true);
-        node.addField(timeTagField);
+        // GROOVY change, skip timestamp creation
+//        FieldNode timeTagField = new FieldNode(
+//                Verifier.__TIMESTAMP,
+//                ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC,
+//                ClassHelper.Long_TYPE,
+//                //"",
+//                node,
+//                new ConstantExpression(System.currentTimeMillis()));
+//        // alternatively , FieldNode timeTagField = SourceUnit.createFieldNode("public static final long __timeStamp = " + System.currentTimeMillis() + "L");
+//        timeTagField.setSynthetic(true);
+//        node.addField(timeTagField);
+//
+//        timeTagField = new FieldNode(
+//                Verifier.__TIMESTAMP__ + String.valueOf(System.currentTimeMillis()),
+//                ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC,
+//                ClassHelper.Long_TYPE,
+//                //"",
+//                node,
+//                new ConstantExpression((long) 0));
+//        // alternatively , FieldNode timeTagField = SourceUnit.createFieldNode("public static final long __timeStamp = " + System.currentTimeMillis() + "L");
+//        timeTagField.setSynthetic(true);
+//        node.addField(timeTagField);
     }
     }
 

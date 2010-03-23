@@ -692,5 +692,11 @@ public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
 	public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
 		return new CompilationUnitScope(this,lookupEnvironment);
 	}
+	
+	// If a special dom CompilationUnit is needed return it, otherwise return null (and a default one will be created)
+	public org.eclipse.jdt.core.dom.CompilationUnit getSpecialDomCompilationUnit(org.eclipse.jdt.core.dom.AST ast) {
+		return null;
+	}
 	// GROOVY end
+
 }

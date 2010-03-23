@@ -1291,7 +1291,15 @@ class ASTConverter {
 		this.compilationUnitSource = source;
 		this.compilationUnitSourceLength = source.length;
 		this.scanner.setSource(source, unit.compilationResult);
+		// GROOVY start
+		/* old code:
 		CompilationUnit compilationUnit = new CompilationUnit(this.ast);
+		 * new code: */
+		CompilationUnit compilationUnit = unit.getSpecialDomCompilationUnit(this.ast);
+		if (compilationUnit==null ) {
+			compilationUnit = new CompilationUnit(this.ast);
+		}
+		// GROOVY end
 		compilationUnit.setStatementsRecoveryData(unit.compilationResult.recoveryScannerData);
 
 		// Parse comments
