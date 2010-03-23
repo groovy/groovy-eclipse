@@ -28,6 +28,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 
 /**
  * @author Andrew Eisenberg
@@ -45,6 +46,7 @@ public class VariableScope {
 	public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
 	public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
 	public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
+	public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
 	public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
 	public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
 	public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.make(Number.class);
@@ -115,7 +117,8 @@ public class VariableScope {
 			return categories;
 		} else {
 			Set<ClassNode> categories = new HashSet<ClassNode>();
-			categories.add(DGM_CLASS_NODE);
+			categories.add(DGM_CLASS_NODE); // default category
+			categories.add(DGSM_CLASS_NODE); // default category
 			return categories;
 		}
 	}
