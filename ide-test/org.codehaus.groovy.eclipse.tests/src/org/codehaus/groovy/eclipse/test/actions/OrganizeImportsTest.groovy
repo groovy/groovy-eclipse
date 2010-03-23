@@ -288,6 +288,18 @@ public class OrganizeImportsTest extends EclipseTestCase {
                                     doAddImportTest(contents, expectedImports)
     }
 	
+    // should not have a stack overflow
+    void testGRECLISPE643() {
+        String contents = 
+            """ 
+            num MyEnum {
+                ONE_VALUE, ANOTHER_VALUE
+            }
+            """
+            def expectedImports = [ ]
+                                    doAddImportTest(contents, expectedImports)
+    }
+    
 	
 	void testDynamicVariable1() {
 		String contents = 
