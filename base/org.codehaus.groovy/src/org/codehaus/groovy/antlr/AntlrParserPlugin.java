@@ -792,7 +792,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             modifiers = modifiers(node, annotations, modifiers);
             node = node.getNextSibling();
         }
-        
+
+        // FIXASC (groovychange)
+        GroovySourceAST groovySourceAST = (GroovySourceAST) node;
+        int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
+        int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast())-1;
+        // end
+
         String name = identifier(node);
         node = node.getNextSibling();
        
@@ -805,8 +811,16 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode = enumClass;
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
-        classNode = oldNode;
         
+        // FIXASC (groovychange)
+        classNode.setNameStart(nameStart);
+        classNode.setNameEnd(nameEnd);
+        configureAST(classNode, enumNode);
+        // end
+
+        classNode = oldNode;
+
+
         output.addClass(enumClass);
     }
     
