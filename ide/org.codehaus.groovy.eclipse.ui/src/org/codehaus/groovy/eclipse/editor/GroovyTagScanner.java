@@ -66,6 +66,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 		"default",
 		"do",
 		"else",
+		"enum",
 		"extends",
 		"final",
 		"finally",
