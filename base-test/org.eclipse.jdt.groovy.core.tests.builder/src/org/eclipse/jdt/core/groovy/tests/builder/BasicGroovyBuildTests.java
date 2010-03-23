@@ -15,6 +15,7 @@ import java.util.Hashtable;
 
 import junit.framework.Test;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -1234,7 +1235,118 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		JavaCore.setOptions(options);
 	}
 	
-	
+	public void testCopyGroovyResourceNonGroovyProject_GRECLIPSE653() throws Exception {
+        IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+        env.removeGroovyNature("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+        IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+        IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+            "package p; \n"+ //$NON-NLS-1$
+            "class C { }"); //$NON-NLS-1$
+        
+        fullBuild(projectPath);
+        
+        // groovy file should be copied as-is
+        IPath pathToABin = output.append(pathToA.removeFirstSegments(pathToA.segmentCount()-2));
+        assertTrue("File should exist " + pathToABin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToABin).exists());
+        
+        
+        // now check that works for incremental
+        IPath pathToB = env.addGroovyClass(root, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
+                "package p; \n"+ //$NON-NLS-1$
+                "class D { }"); //$NON-NLS-1$
+        incrementalBuild(projectPath);
+
+        // groovy file should be copied as-is
+        IPath pathToBBin = output.append(pathToB.removeFirstSegments(pathToB.segmentCount()-2));
+        assertTrue("File should exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
+        
+        
+        // now check that bin file is deleted when deleted in source
+        IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
+        bFile.delete(true, null);
+        incrementalBuild(projectPath);
+        assertFalse("File should not exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
+    }
+	public void testCopyResourceNonGroovyProject_GRECLIPSE653() throws Exception {
+        IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+        env.removeGroovyNature("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+        IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+        IPath pathToA = env.addFile(root, "A.txt", "A"); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        fullBuild(projectPath);
+        
+        // file should be copied as-is
+        IPath pathToABin = output.append(pathToA.removeFirstSegments(pathToA.segmentCount()-1));
+        assertTrue("File should exist " + pathToABin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToABin).exists());
+        
+        
+        // now check that works for incremental
+        IPath pathToB = env.addFile(root, "B.txt", "B"); //$NON-NLS-1$ //$NON-NLS-2$
+        incrementalBuild(projectPath);
+
+        // groovy file should be copied as-is
+        IPath pathToBBin = output.append(pathToB.removeFirstSegments(pathToB.segmentCount()-1));
+        assertTrue("File should exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
+        
+        
+        // now check that bin file is deleted when deleted in source
+        IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
+        bFile.delete(true, null);
+        incrementalBuild(projectPath);
+        assertFalse("File should not exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
+	}
+	public void testCopyResourceGroovyProject_GRECLIPSE653() throws Exception {
+        IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        env.addGroovyNature("Project");
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+        IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+        IPath pathToA = env.addFile(root, "A.txt", "A"); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        fullBuild(projectPath);
+        
+        // groovy file should be copied as-is
+        IPath pathToABin = output.append(pathToA.removeFirstSegments(pathToA.segmentCount()-1));
+        assertTrue("File should exist " + pathToABin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToABin).exists());
+        
+        
+        // now check that works for incremental
+        IPath pathToB = env.addFile(root, "B.txt", "B"); //$NON-NLS-1$ //$NON-NLS-2$
+        incrementalBuild(projectPath);
+
+        // groovy file should be copied as-is
+        IPath pathToBBin = output.append(pathToB.removeFirstSegments(pathToB.segmentCount()-1));
+        assertTrue("File should exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
+        
+        
+        // now check that bin file is deleted when deleted in source
+        IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
+        bFile.delete(true, null);
+        incrementalBuild(projectPath);
+        assertFalse("File should not exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
+	}
 	
 	
 	
