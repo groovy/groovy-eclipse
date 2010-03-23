@@ -763,8 +763,17 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
     
+    /**
+     * @return the {@link GroovyCompilationUnit} associated with this editor,
+     * or returns null if the input is not a {@link GroovyCompilationUnit}.
+     */
     public GroovyCompilationUnit getGroovyCompilationUnit() {
-        return (GroovyCompilationUnit) getInputJavaElement();
+        ITypeRoot root = getInputJavaElement();
+        if (root instanceof GroovyCompilationUnit) {
+            return (GroovyCompilationUnit) root;
+        } else {
+            return null;
+        }
     }
     
     public ModuleNode getModuleNode() {
@@ -783,7 +792,7 @@ public class GroovyEditor extends CompilationUnitEditor {
             return this.getFile();
         }
         if (GroovyCompilationUnit.class == required || ICompilationUnit.class == required || CompilationUnit.class == required) {
-            return this.getGroovyCompilationUnit();
+            return this.getInputJavaElement();
         }
         
         if (ModuleNode.class == required) {
