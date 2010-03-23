@@ -26,7 +26,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
 
     private static final String CONTENTS = "class Class { public Class() {\n }\n void doNothing(int x) { this.toString(); new Object().toString(); } }";
-    private static final String SCRIPTCONTENTS = "def x = 9\nx++\nnew Object().toString()";
+    private static final String SCRIPTCONTENTS = "def x = 9\nx++\nnew Object().toString()\nnew Thread().startD";
     private static final String CLOSURECONTENTS = "def x = { t -> print t }";
 
     public DefaultGroovyMethodCompletionTests(String name) {
@@ -104,6 +104,13 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         ICompilationUnit unit = createGroovyForClosure();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CLOSURECONTENTS, " t -> "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "identity", 1);
+    }
+    
+    // tests DefaultGroovyStaticMethods
+    public void testDGSM() throws Exception {
+        ICompilationUnit unit = createGroovyForScript();
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Thread().startD"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "startDaemon", 2);
     }
 
     
