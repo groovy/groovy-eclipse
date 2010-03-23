@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy CST Viewer
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.cstviewer;singleton:=true
-Bundle-Version: 2.0.1.qualifier
+Bundle-Version: 2.0.2.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.cstviewer.Activator
 Bundle-Vendor: The Codehaus
 Require-Bundle: org.eclipse.ui,
@@ -13,7 +13,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.workbench.texteditor,
  org.eclipse.ui.editors,
  org.eclipse.jface.text,
- org.eclipse.jdt.core;bundle-version="3.4.4",
+ org.eclipse.jdt.core;bundle-version="3.5.0",
  org.codehaus.groovy;bundle-version="1.6.6",
  org.eclipse.jdt.groovy.core;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy

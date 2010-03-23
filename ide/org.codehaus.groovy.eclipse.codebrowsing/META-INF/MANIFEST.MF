@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Code Browsing
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codebrowsing; singleton:=true
-Bundle-Version: 2.0.1.qualifier
+Bundle-Version: 2.0.2.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.codebrowsing.GroovyBrowsingPlugin
 Require-Bundle: org.eclipse.core.runtime.compatibility,
- org.codehaus.groovy.eclipse.core;bundle-version="1.5.1",
+ org.codehaus.groovy.eclipse.core;bundle-version="2.0.2",
  org.eclipse.jdt.core,
  org.eclipse.jdt.groovy.core;bundle-version="1.0.0",
  org.codehaus.groovy;bundle-version="1.6.7"

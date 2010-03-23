@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Refactoring Plug-in
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.refactoring; singleton:=true
-Bundle-Version: 2.0.1.qualifier
+Bundle-Version: 2.0.2.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.refactoring.Activator
 Require-Bundle: org.eclipse.core.runtime,
  org.codehaus.groovy,
