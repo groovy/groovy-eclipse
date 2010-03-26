@@ -138,7 +138,7 @@ public class ExpressionFinder {
 	public String[] splitForCompletionNoTrim(String expression) {
        String[] ret = new String[2];
 
-        if (expression.trim().length() < 1 ){
+        if (expression == null || expression.trim().length() < 1 ){
             ret[0] = "";
             ret[1] = null;
             return ret;
@@ -167,6 +167,9 @@ public class ExpressionFinder {
                 ret = new String[] { "", "" };
             }
         } catch (TokenStreamException e) {
+            ret = new String[] { "", "" };
+        } catch (IllegalStateException e) {
+            ret = new String[] { "", "" };
         }
 
         return ret;
