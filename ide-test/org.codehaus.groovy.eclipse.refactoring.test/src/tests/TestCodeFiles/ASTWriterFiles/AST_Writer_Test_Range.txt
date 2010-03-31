@@ -1,9 +1,0 @@
-###src
-myColl[3..4]
-myColl[1..<4]
-myColl[zahl1..zahl2]
-###exp
-myColl[3..4]
-myColl[1..<4]
-myColl[zahl1..zahl2]
-###end

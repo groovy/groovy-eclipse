@@ -963,6 +963,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     protected Expression transformVariableExpression(VariableExpression ve) {
+        // FIXADE force annotations on variables to be included in the transform 
+        // FIXASC (groovychange)
+        visitAnnotations(ve);
+        // end (groovychange)
         Variable v = ve.getAccessedVariable();
         if (v instanceof DynamicVariable){
             String name = ve.getName();

@@ -1,5 +1,0 @@
-###src
-package core
-###exp
-package core
-###end

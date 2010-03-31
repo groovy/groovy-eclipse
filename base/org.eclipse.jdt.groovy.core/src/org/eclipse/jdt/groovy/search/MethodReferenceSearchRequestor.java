@@ -21,10 +21,13 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.search.MethodDeclarationMatch;
+import org.eclipse.jdt.core.search.MethodReferenceMatch;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchRequestor;
@@ -70,6 +73,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
 		boolean doCheck = false;
 		boolean isDeclaration = false;
+		boolean isConstructorCall = false; // FIXADE hmmm...not capturing constructor calls here.
 		int start = 0;
 		int end = 0;
 
@@ -102,18 +106,33 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 				start = vnode.getStart();
 				end = start + vnode.getName().length();
 			}
+		} else if (node instanceof StaticMethodCallExpression) {
+			StaticMethodCallExpression smnode = (StaticMethodCallExpression) node;
+			if (CharOperation.equals(name, smnode.getMethod().toCharArray())) {
+				doCheck = true;
+				start = smnode.getStart();
+				end = start + name.length;
+			}
 		}
 
 		if (doCheck) {
 			boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
-			if (isCompleteMatch && ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {
-				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
-						- start, participant, enclosingElement.getResource());
-				try {
-					requestor.acceptSearchMatch(match);
-				} catch (CoreException e) {
-					Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
-							+ enclosingElement.getResource());
+			if (isCompleteMatch) {
+				SearchMatch match = null;
+				if (isDeclaration && findDeclarations) {
+					match = new MethodDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
+							end - start, participant, enclosingElement.getResource());
+				} else if (!isDeclaration && findReferences) {
+					match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
+							- start, isConstructorCall, false, false, false, participant, enclosingElement.getResource());
+				}
+				if (match != null) {
+					try {
+						requestor.acceptSearchMatch(match);
+					} catch (CoreException e) {
+						Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
+								+ enclosingElement.getResource());
+					}
 				}
 			}
 		}
@@ -136,6 +155,9 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	}
 
 	private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {
+		if (shouldAlwaysBeAccurate()) {
+			return SearchMatch.A_ACCURATE;
+		}
 		if (!isCompleteMatch) {
 			return SearchMatch.A_INACCURATE;
 		}
@@ -145,6 +167,16 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 			default:
 				return SearchMatch.A_INACCURATE;
 		}
+	}
+
+	/**
+	 * check to see if this requestor has something to do with refactoring, if so, we always want an accurate match otherwise we get
+	 * complaints in the refactoring wizard of "possible matches"
+	 * 
+	 * @return
+	 */
+	private boolean shouldAlwaysBeAccurate() {
+		return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
 	}
 
 	/**

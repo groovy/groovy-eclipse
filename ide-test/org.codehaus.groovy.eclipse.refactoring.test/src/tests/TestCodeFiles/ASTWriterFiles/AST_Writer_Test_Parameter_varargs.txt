@@ -1,5 +1,0 @@
-###src
-def sum(int... someInts) {}
-###exp
-def sum(int[] someInts) {}
-###end

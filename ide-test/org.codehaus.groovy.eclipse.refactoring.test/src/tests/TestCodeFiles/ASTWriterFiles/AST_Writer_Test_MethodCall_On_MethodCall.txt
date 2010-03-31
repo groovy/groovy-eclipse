@@ -1,5 +1,0 @@
-###src
-line = line.replaceAll(/\|\|/, ";").replaceAll(/\'/, "")
-###exp
-line = line.replaceAll(/\|\|/, ";").replaceAll(/\'/, "")
-###end

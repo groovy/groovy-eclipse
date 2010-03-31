@@ -1,5 +1,0 @@
-###src
-this.println("anything")
-###exp
-this.println("anything")
-###end

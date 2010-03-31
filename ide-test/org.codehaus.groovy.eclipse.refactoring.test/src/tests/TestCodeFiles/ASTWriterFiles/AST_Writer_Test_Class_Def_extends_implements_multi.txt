@@ -1,7 +1,0 @@
-###src
-class Test extends List implements Comparable, Serializable {
-}
-###exp
-class Test extends List implements Comparable, Serializable {
-}
-###end

@@ -33,11 +33,11 @@ public class InlineMethodAction extends GroovyRefactoringAction {
 
 	public void run(IAction action) {
 		if (initRefactoring()) {
-			InlineMethodProvider provider = new InlineMethodProvider(docProvider, selection);
-			InlineMethodInfo info = new InlineMethodInfo(provider);
+//			InlineMethodProvider provider = new InlineMethodProvider(docProvider, selection);
+//			InlineMethodInfo info = new InlineMethodInfo(provider);
 
-			GroovyRefactoring groovyRefactoring = new InlineMethodRefactoring(info);
-			openRefactoringWizard(groovyRefactoring);
+//			GroovyRefactoring groovyRefactoring = new InlineMethodRefactoring(info);
+//			openRefactoringWizard(groovyRefactoring);
 		}
 	}
 

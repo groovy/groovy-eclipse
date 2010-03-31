@@ -16,6 +16,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -224,6 +225,27 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 			requestor.acceptTypeReference(splitName(componentType != null ? componentType : node, useQualifiedName), node
 					.getStart(), node.getEnd());
 		}
+		if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
+			for (GenericsType gen : node.getGenericsTypes()) {
+				ClassNode lowerBound = gen.getLowerBound();
+				if (lowerBound != null) {
+					handleType(lowerBound, lowerBound.isAnnotationDefinition(), true);
+				}
+				if (gen.getUpperBounds() != null) {
+					for (ClassNode upper : gen.getUpperBounds()) {
+						// handle enums where the upper bound is the same as the type
+						if (!upper.getName().equals(node.getName())) {
+							handleType(upper, upper.isAnnotationDefinition(), true);
+						}
+					}
+				}
+				ClassNode genType = gen.getType();
+				if (genType != null && gen.getName().charAt(0) != '?') {
+					handleType(genType, genType.isAnnotationDefinition(), true);
+				}
+			}
+		}
+
 	}
 
 	private char[][] splitName(ClassNode node, boolean useQualifiedName) {

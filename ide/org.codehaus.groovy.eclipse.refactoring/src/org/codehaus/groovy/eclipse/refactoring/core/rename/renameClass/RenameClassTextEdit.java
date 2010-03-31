@@ -90,7 +90,8 @@ public class RenameClassTextEdit extends RenameTextEdit {
     		node = node.getComponentType();
     	}
 		SourceCodePoint typeStart = new SourceCodePoint(node,SourceCodePoint.BEGIN);
-		if (isNodeToRename(node) && !typeStart.equals(startOfDeclarationClassNode) ) {
+		if (startOfDeclarationClassNode.isValid() && 
+		        isNodeToRename(node) && !typeStart.equals(startOfDeclarationClassNode) ) {
 			ReplaceEdit edit = EditHelper.getDefaultReplaceEdit(node, renameAll, document, oldName, newName);
 			for (TextEdit existing : edits.getChildren()) {
 				if (existing.covers(edit)) {

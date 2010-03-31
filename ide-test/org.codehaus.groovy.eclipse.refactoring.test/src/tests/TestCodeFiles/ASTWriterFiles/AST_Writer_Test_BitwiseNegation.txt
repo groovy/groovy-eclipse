@@ -1,7 +1,0 @@
-###src
-Integer negateTest = 3
-~negateTest
-###exp
-Integer negateTest = 3
-~negateTest
-###end

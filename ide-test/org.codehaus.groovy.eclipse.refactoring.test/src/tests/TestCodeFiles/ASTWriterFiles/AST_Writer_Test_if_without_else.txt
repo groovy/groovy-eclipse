@@ -1,9 +1,0 @@
-###src
-if (attribute == 1) {
-
-}
-###exp
-if (attribute == 1) {
-
-}
-###end

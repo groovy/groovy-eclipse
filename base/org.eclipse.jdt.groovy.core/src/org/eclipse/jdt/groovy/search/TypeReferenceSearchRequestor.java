@@ -17,6 +17,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -24,11 +25,14 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.core.search.TypeReferenceMatch;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
+import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.search.matching.JavaSearchPattern;
 import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -66,18 +70,12 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 		if (node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode
 				|| node instanceof AnnotationNode || node instanceof ConstructorNode) {
 
-			ASTNode noArray;
-			if (node instanceof ClassNode) {
-				noArray = removeArray((ClassNode) node);
-			} else if (node instanceof ConstructorNode) {
-				noArray = ((ConstructorNode) node).getDeclaringClass();
-			} else {
-				noArray = node;
-			}
-
+			// the type variable may not have correct source location
 			ClassNode type;
 			if (node instanceof ConstructorNode) {
 				type = ((ConstructorNode) node).getDeclaringClass();
+			} else if (node instanceof AnnotationNode) {
+				type = ((AnnotationNode) node).getClassNode();
 			} else {
 				type = result.type;
 			}
@@ -90,32 +88,35 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 			}
 
 			if (type != null) {
-				String qualifiedName = removeArray(type).getName();
-				if (qualifiedNameMatches(qualifiedName) && noArray.getEnd() > 0) {
-					int start;
-					int end;
+				type = removeArray(type);
+				String qualifiedName = type.getName();
+				if (qualifiedNameMatches(qualifiedName) && hasValidSourceLocation(node)) {
+					int start = -1;
+					int end = -1;
 
+					boolean startEndFound = false;
 					if (node instanceof ImportNode) {
-						node = ((ImportNode) node).getType();
-						start = node.getStart();
 						end = node.getEnd();
-					} else if (node instanceof ClassExpression) {
 						start = node.getStart();
-						end = start + ((ClassExpression) node).getType().getNameWithoutPackage().length();
+					} else if (node instanceof ClassExpression) {
+						end = node.getEnd();
+						start = node.getStart();
 					} else if (node instanceof ClassNode) {
 						ClassNode classNode = (ClassNode) node;
 						if (classNode.getNameEnd() > 0) {
 							// we are actually dealing with a declaration
 							start = classNode.getNameStart();
 							end = classNode.getNameEnd() + 1;
+							startEndFound = true;
 						} else if (classNode.redirect() == classNode) {
 							// this is a script declaration... ignore
 							start = end = -1;
+							startEndFound = true;
 						} else {
+							// ensure classNode has proper source location
 							classNode = maybeGetComponentType(classNode);
+							end = classNode.getEnd();
 							start = classNode.getStart();
-							// sometimes the end is off by one
-							end = start + classNode.getNameWithoutPackage().length();
 						}
 					} else if (node instanceof ConstructorNode) {
 						start = ((ConstructorNode) node).getNameStart();
@@ -123,15 +124,30 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 						if (start == 0 && end == 1) {
 							// synthetic constructor from script
 							start = end = -1;
+							startEndFound = true;
 						}
-					} else {
-						start = node.getStart();
+					} else if (node instanceof AnnotatedNode) {
+						type = ((AnnotationNode) node).getClassNode();
 						end = node.getEnd();
+						start = node.getStart();
+					}
+
+					if (!startEndFound) {
+						// we have a little more work to do before finding the real
+						// offset in the text
+						StartEnd startEnd = getMatchLocation(type, enclosingElement, start, end);
+						if (startEnd != null) {
+							start = startEnd.start;
+							end = startEnd.end;
+						} else {
+							// match really wasn't found
+							start = end = -1;
+						}
 					}
 
 					if (start >= 0 && end >= 0) {
-						SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence), start, end - start,
-								participant, enclosingElement.getResource());
+						SearchMatch match = new TypeReferenceMatch(enclosingElement, getAccuracy(result.confidence), start, end
+								- start, false, participant, enclosingElement.getResource());
 						try {
 							requestor.acceptSearchMatch(match);
 						} catch (CoreException e) {
@@ -142,6 +158,22 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 			}
 		}
 		return VisitStatus.CONTINUE;
+	}
+
+	/**
+	 * @param node
+	 * @return
+	 */
+	private boolean hasValidSourceLocation(ASTNode node) {
+		// find the correct ast node that has source locations on it
+		// sometimes array nodes do not have source locations, so get around that here.
+		ASTNode astNodeWithSourceLocation;
+		if (node instanceof ClassNode) {
+			astNodeWithSourceLocation = maybeGetComponentType((ClassNode) node);
+		} else {
+			astNodeWithSourceLocation = node;
+		}
+		return astNodeWithSourceLocation.getEnd() > 0;
 	}
 
 	/**
@@ -180,7 +212,72 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 		return false;
 	}
 
+	private class StartEnd {
+
+		StartEnd(int start, int end) {
+			this.start = start;
+			this.end = end;
+		}
+
+		final int start;
+		final int end;
+	}
+
+	/**
+	 * THe problem that this method gets around is that we can't tell exactly what the text is and exactly where or if there is a
+	 * match in the source location. For example, in the text, they type can be fully qualified, or array, or coming from an alias,
+	 * or a bound type parameter. On top of that, some source locations are off by one. All these will have location relative to the
+	 * offset provided in the start and end fields of the {@link ClassNode}.
+	 * 
+	 * @param node the class node to find in the source
+	 * @param elt the element used to find the text
+	 * @return the start and end offsets of the actual match, or null if no match exists.
+	 */
+	private StartEnd getMatchLocation(ClassNode node, IJavaElement elt, int maybeStart, int maybeEnd) {
+		CompilationUnit unit = (CompilationUnit) elt.getAncestor(IJavaElement.COMPILATION_UNIT);
+		if (unit != null) {
+			char[] contents = unit.getContents();
+			int nameLength = maybeEnd - maybeStart;
+			int start = -1;
+			int end = -1;
+			String name = node.getName();
+			if (name.length() <= nameLength) {
+				// might be a qualified name
+				start = CharOperation.indexOf(name.toCharArray(), contents, true, maybeStart, maybeEnd + 1);
+				end = start + name.length();
+			}
+			if (start == -1) {
+				// check for simple name
+				String nameWithoutPackage = node.getNameWithoutPackage();
+				start = CharOperation.indexOf(nameWithoutPackage.toCharArray(), contents, true, maybeStart, maybeEnd + 1);
+				end = start + nameWithoutPackage.length();
+			}
+			if (start == -1) {
+				// can be an aliased type name
+				return null;
+			} else {
+				return new StartEnd(start, end);
+			}
+		}
+		// shuoldn't happen, but may be a binary match
+		return new StartEnd(node.getStart(), node.getEnd());
+	}
+
+	/**
+	 * check to see if this requestor has something to do with refactoring, if so, we always want an accurate match otherwise we get
+	 * complaints in the refactoring wizard of "possible matches"
+	 * 
+	 * @return
+	 */
+	private boolean shouldAlwaysBeAccurate() {
+		return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
+	}
+
 	private int getAccuracy(TypeConfidence confidence) {
+		if (shouldAlwaysBeAccurate()) {
+			return SearchMatch.A_ACCURATE;
+		}
+
 		switch (confidence) {
 			case EXACT:
 				return SearchMatch.A_ACCURATE;

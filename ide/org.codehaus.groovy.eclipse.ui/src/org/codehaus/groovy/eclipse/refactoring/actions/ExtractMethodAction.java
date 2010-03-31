@@ -32,10 +32,10 @@ public class ExtractMethodAction extends GroovyRefactoringAction {
 
 		if (initRefactoring()) {
 		    IPreferenceStore preferences = GroovyPlugin.getDefault().getPreferenceStore();
-			ExtractMethodProvider extractMethodProvider = new ExtractMethodProvider(docProvider, selection, preferences);
-			ExtractMethodInfo info = new ExtractMethodInfo(extractMethodProvider);
-			GroovyRefactoring groovyRefactoring = new ExtractMethodRefactoring(info);
-			openRefactoringWizard(groovyRefactoring);
+//			ExtractMethodProvider extractMethodProvider = new ExtractMethodProvider(docProvider, selection, preferences);
+//			ExtractMethodInfo info = new ExtractMethodInfo(extractMethodProvider);
+//			GroovyRefactoring groovyRefactoring = new ExtractMethodRefactoring(info);
+//			openRefactoringWizard(groovyRefactoring);
 		}
 	}
 

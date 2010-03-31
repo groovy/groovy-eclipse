@@ -1,9 +1,0 @@
-###src
-for (def i = 0; i < 10; i++) {
-    attribute = i
-}
-###exp
-for (def i = 0; i < 10; i++) {
-    attribute = i
-}
-###end

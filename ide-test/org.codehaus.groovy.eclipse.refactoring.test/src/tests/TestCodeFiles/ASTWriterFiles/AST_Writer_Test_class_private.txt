@@ -1,7 +1,0 @@
-###src
-private class HalloWelt {
-}
-###exp
-private class HalloWelt {
-}
-###end

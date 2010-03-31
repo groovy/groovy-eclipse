@@ -154,6 +154,13 @@ public class ModuleNode extends ASTNode implements Opcodes {
 
     public void addImport(String alias, ClassNode type, List<AnnotationNode> annotations) {
         ImportNode importNode = new ImportNode(type, alias);
+        // FIXASC (groovychange) configure sloc...approximate from the type's sloc
+        if (type != null) {
+            importNode.setSourcePosition(type);
+            importNode.setColumnNumber(1);  // assume beginning of line
+            importNode.setStart(type.getStart()-type.getColumnNumber()+1);
+        }
+        // end
         imports.put(alias, importNode);
         importNode.addAnnotations(annotations);
     }

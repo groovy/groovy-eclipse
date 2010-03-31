@@ -33,7 +33,7 @@ public class GroovyRenameAction extends RenameAction {
     
     public GroovyRenameAction(final JavaEditor editor){
         super(editor);
-        renameDelegate = new RenameDispatcherAction(editor);
+        renameDelegate = new RenameDispatcherAction();
     }
     
     public void run(IStructuredSelection selection) {

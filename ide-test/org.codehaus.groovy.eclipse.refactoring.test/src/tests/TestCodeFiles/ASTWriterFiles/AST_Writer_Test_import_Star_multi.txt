@@ -1,7 +1,0 @@
-###src
-import groovy.lang.*
-import java.util.*
-###exp
-import groovy.lang.*
-import java.util.*
-###end

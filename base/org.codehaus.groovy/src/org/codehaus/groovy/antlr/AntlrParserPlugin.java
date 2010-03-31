@@ -530,7 +530,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             } else {
                 // import is like "import foo.Bar"
                 ClassNode type = ClassHelper.make(packageName+"."+name);
-                configureAST(type, importNode);
+                // FIXASC (groovy change)  sloc for importNode configured by the ModuleNode
+                // was
+//                configureAST(type, importNode);
+                // new
+                configureAST(type, nameNode);
+                // end
                 addImport(type, name, alias, annotations);
             }
         }
@@ -557,6 +562,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         modifiers |= Opcodes.ACC_ABSTRACT | Opcodes.ACC_INTERFACE | Opcodes.ACC_ANNOTATION;
 
         String name = identifier(node);
+        
+        // FIXASC (groovychange)
+        GroovySourceAST groovySourceAST = (GroovySourceAST) node;
+        int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
+        int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast())-1;
+        // end
+        
         node = node.getNextSibling();
         ClassNode superClass = ClassHelper.OBJECT_TYPE;
 
@@ -576,8 +588,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.addAnnotations(annotations);
         classNode.setGenericsTypes(genericsType);
         classNode.addInterface(ClassHelper.Annotation_TYPE);
+        // FIXASC (groovychange)
+        classNode.setNameStart(nameStart);
+        classNode.setNameEnd(nameEnd);
+        // end
         configureAST(classNode, classDef);
 
+        
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
         output.addClass(classNode);
@@ -3190,7 +3207,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     // FIXASC (groovychange) new method for correctly configuring the position of the annotation - based on configureAST
     protected void configureAnnotationAST(ASTNode node, AST ast) {
-        if (ast == null) {
+         if (ast == null) {
         	throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure "+node.getClass().getName()+" with null Node");
         }
         if (ast instanceof GroovySourceAST) {
@@ -3200,6 +3217,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             GroovySourceAST correctAst = (GroovySourceAST) ast;
             correctAst = (GroovySourceAST)correctAst.getFirstChild();
             setPositions(node,correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
+            // also configure the sloc of the actual annotation type reference
+            if (node instanceof AnnotationNode) {
+                setPositions(((AnnotationNode) node).getClassNode(),correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
+            }
         } else {
             int startcol = ast.getColumn();
             int startline = ast.getLine();
@@ -3241,7 +3262,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.setLastColumnNumber(ecol);
         node.setLastLineNumber(eline);
         // FIXASC think about this -1 - is it right for what groovy likes to see or just for eclipse?
-        node.setEnd(locations.findOffset(eline,ecol)-1);	
+//        node.setEnd(locations.findOffset(eline,ecol)-1);	
+        // FIXADE This -1 is not correct.  removing it.  ASC, remove the above lines when you are comfortable with this change
+        node.setEnd(locations.findOffset(eline,ecol));	
     }
     // end
     

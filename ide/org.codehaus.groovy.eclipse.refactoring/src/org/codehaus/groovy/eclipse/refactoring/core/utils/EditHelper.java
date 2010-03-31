@@ -19,6 +19,7 @@
 package org.codehaus.groovy.eclipse.refactoring.core.utils;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal.RenameLocalHelper;
@@ -62,6 +63,13 @@ public class EditHelper {
 		UserSelection sel = new UserSelection(node, document);
 		int offset = sel.getOffset();
 		if (execute) {
+		    // try the nameStart and nameEnd fields first
+		    if (node instanceof AnnotatedNode && ((AnnotatedNode) node).getNameEnd() > 0) {
+		        AnnotatedNode aNode = (AnnotatedNode) node;
+		        return new ReplaceEdit(aNode.getNameStart(), aNode.getNameEnd()-aNode.getNameStart()+1, newName);
+		    }
+		    
+		    
 			// There is no node that starts exactly at the class's name position
 			// (modifiers/annotation
 			// are included) find the startposition by looking in the document

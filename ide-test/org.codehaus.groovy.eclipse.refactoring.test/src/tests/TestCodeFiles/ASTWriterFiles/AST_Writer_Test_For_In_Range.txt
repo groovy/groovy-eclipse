@@ -1,5 +1,0 @@
-###src
-for (i in (history.size() - 1)..0) {}
-###exp
-for (i in (history.size() - 1)..0) {}
-###end

@@ -1,7 +1,0 @@
-###src
-class Test extends ArrayList {
-}
-###exp
-class Test extends ArrayList {
-}
-###end

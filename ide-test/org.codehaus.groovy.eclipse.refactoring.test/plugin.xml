@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+     <extension point="org.eclipse.ltk.core.refactoring.renameParticipants">
+      <renameParticipant
+            class="org.codehaus.groovy.eclipse.refactoring.test.TestRenameParticipantShared"
+            name="org.codehaus.groovy.eclipse.refactoring.test.TestRenameParticipantShared"
+            id="org.codehaus.groovy.eclipse.refactoring.test.TestRenameParticipantShared">
+         <enablement>
+           <with variable="affectedNatures">
+             <iterate operator="or">
+               <equals value="org.eclipse.jdt.core.javanature"/>
+             </iterate>
+           </with>
+           <with variable="element">
+             <or>
+               <instanceof value="org.eclipse.core.resources.IResource"/>
+               <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+             </or>
+           </with>
+         </enablement>
+      </renameParticipant>
+      <renameParticipant
+            class="org.codehaus.groovy.eclipse.refactoring.test.TestRenameParticipantSingle"
+            name="org.codehaus.groovy.eclipse.refactoring.test.TestRenameParticipantSingle"
+            id="org.codehaus.groovy.eclipse.refactoring.test.TestRenameParticipantSingle">
+         <enablement>
+           <with variable="affectedNatures">
+             <iterate operator="or">
+               <equals value="org.eclipse.jdt.core.javanature"/>
+             </iterate>
+           </with>
+           <with variable="element">
+             <or>
+               <instanceof value="org.eclipse.core.resources.IResource"/>
+               <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+             </or>
+           </with>
+         </enablement>
+      </renameParticipant>
+   </extension>
+
+</plugin>

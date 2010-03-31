@@ -42,8 +42,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.GroovyChange;
 import org.codehaus.groovy.eclipse.refactoring.core.MultiFileRefactoringProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyFileProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.hierarchy.HierarchyNode;
-import org.codehaus.groovy.eclipse.refactoring.core.hierarchy.HierarchyTreeBuilder;
 import org.codehaus.groovy.eclipse.refactoring.core.participation.GroovyParticipantManager;
 import org.codehaus.groovy.eclipse.refactoring.core.participation.GroovySharableParticipants;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.IRenameProvider;
@@ -144,18 +142,18 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 	}
 	
 	private void handleMethodsOfRelatedClasses() {
-		if(selectedASTNode instanceof MethodNode){
-			MethodNode methodNode = (MethodNode) selectedASTNode;
-			ClassNode declaringClass = methodNode.getDeclaringClass();
-			HierarchyTreeBuilder treebuilder = new HierarchyTreeBuilder(fileProvider);
-			Map<String, HierarchyNode> interconnectedClasses = treebuilder.getInterconnectedClasses(declaringClass);
-			Set<ClassNode> relatedClassNodes = new HashSet<ClassNode>();
-			for(HierarchyNode nodeInHiearachy : interconnectedClasses.values()){
-				relatedClassNodes.add(nodeInHiearachy.getOriginClass());
-			}
-			//iterate over ambiguous candidates and put them to the definitive list
-			addRelatedMethodsToDefinitveCandidates(relatedClassNodes);
-		}
+//		if(selectedASTNode instanceof MethodNode){
+//			MethodNode methodNode = (MethodNode) selectedASTNode;
+//			ClassNode declaringClass = methodNode.getDeclaringClass();
+//			HierarchyTreeBuilder treebuilder = new HierarchyTreeBuilder(fileProvider);
+//			Map<String, HierarchyNode> interconnectedClasses = treebuilder.getInterconnectedClasses(declaringClass);
+//			Set<ClassNode> relatedClassNodes = new HashSet<ClassNode>();
+//			for(HierarchyNode nodeInHiearachy : interconnectedClasses.values()){
+//				relatedClassNodes.add(nodeInHiearachy.getOriginClass());
+//			}
+//			//iterate over ambiguous candidates and put them to the definitive list
+//			addRelatedMethodsToDefinitveCandidates(relatedClassNodes);
+//		}
 	}
 
 	private void addRelatedMethodsToDefinitveCandidates(Set<ClassNode> relatedClassNodes) {
@@ -250,20 +248,20 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 	}
 
 	private boolean classIsRelatedToSelectedClass(ClassNode candidate) {
-		if(selectedASTNode instanceof MethodNode){
-			MethodNode methodNodeSelectedByUser = (MethodNode)selectedASTNode;
-			HierarchyTreeBuilder treebuilder = new HierarchyTreeBuilder(fileProvider);
-			Map<String, HierarchyNode> interconnectedClasses = treebuilder.getInterconnectedClasses(methodNodeSelectedByUser.getDeclaringClass());
-			Set<ClassNode> relatedClassNodes = new HashSet<ClassNode>();
-			for(HierarchyNode nodeInHiearachy : interconnectedClasses.values()){
-				relatedClassNodes.add(nodeInHiearachy.getOriginClass());
-			}
-			for(ClassNode node : relatedClassNodes){
-				if(node.getName().equals(candidate.getName())){
-					return true;
-				} 
-			}
-		}
+//		if(selectedASTNode instanceof MethodNode){
+//			MethodNode methodNodeSelectedByUser = (MethodNode)selectedASTNode;
+//			HierarchyTreeBuilder treebuilder = new HierarchyTreeBuilder(fileProvider);
+//			Map<String, HierarchyNode> interconnectedClasses = treebuilder.getInterconnectedClasses(methodNodeSelectedByUser.getDeclaringClass());
+//			Set<ClassNode> relatedClassNodes = new HashSet<ClassNode>();
+//			for(HierarchyNode nodeInHiearachy : interconnectedClasses.values()){
+//				relatedClassNodes.add(nodeInHiearachy.getOriginClass());
+//			}
+//			for(ClassNode node : relatedClassNodes){
+//				if(node.getName().equals(candidate.getName())){
+//					return true;
+//				} 
+//			}
+//		}
 		return false;
 	}
 
@@ -409,25 +407,25 @@ public class RenameMethodProvider extends MultiFileRefactoringProvider implement
 	}
 
 	private RefactoringStatus checkForDuplicates(RefactoringStatus refactoringStatus) {
-		List<MethodPattern> listOfAllUsedMethods = new LinkedList<MethodPattern>();
-		HierarchyTreeBuilder classTreeBuilder = new HierarchyTreeBuilder(fileProvider);
-		
-		for(HierarchyNode node : classTreeBuilder.getCompleteClassStructure().values()){
-			for(Object methodnode : node.getOriginClass().getMethods()){
-				MethodNode mnode = (MethodNode) methodnode;
-				listOfAllUsedMethods.add(new MethodPattern(mnode));
-			}
-		}
-		
-		for(MethodPattern pattern : listOfAllUsedMethods){
-			boolean sameNrOfArgumens = pattern.getArgSize() == selectedMethodPattern.getArgSize();
-			if(pattern.getMethodName().equals(newMethodName) && sameNrOfArgumens){
-				refactoringStatus.addWarning(MessageFormat.format(
-						GroovyRefactoringMessages.RenameMethod_VariableAlreadyExists,newMethodName));
-				break;
-			}
-		}
-		
+//		List<MethodPattern> listOfAllUsedMethods = new LinkedList<MethodPattern>();
+//		HierarchyTreeBuilder classTreeBuilder = new HierarchyTreeBuilder(fileProvider);
+//		
+//		for(HierarchyNode node : classTreeBuilder.getCompleteClassStructure().values()){
+//			for(Object methodnode : node.getOriginClass().getMethods()){
+//				MethodNode mnode = (MethodNode) methodnode;
+//				listOfAllUsedMethods.add(new MethodPattern(mnode));
+//			}
+//		}
+//		
+//		for(MethodPattern pattern : listOfAllUsedMethods){
+//			boolean sameNrOfArgumens = pattern.getArgSize() == selectedMethodPattern.getArgSize();
+//			if(pattern.getMethodName().equals(newMethodName) && sameNrOfArgumens){
+//				refactoringStatus.addWarning(MessageFormat.format(
+//						GroovyRefactoringMessages.RenameMethod_VariableAlreadyExists,newMethodName));
+//				break;
+//			}
+//		}
+//		
 		return refactoringStatus;
 	}
 	

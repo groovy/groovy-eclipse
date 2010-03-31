@@ -34,6 +34,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
@@ -204,9 +205,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			enclosingDeclarationNode = node;
 			visitClassInternal(node);
 
-			// visitJDT so that we have the proper enclosing element
 			try {
+				// visitJDT so that we have the proper enclosing element
+				boolean isEnum = type.isEnum();
 				for (IJavaElement child : type.getChildren()) {
+					// filter out synthetic members for enums
+					if (isEnum && shouldFilterEnumMember(child)) {
+						continue;
+					}
 					switch (child.getElementType()) {
 						case IJavaElement.METHOD:
 							visitJDT((IMethod) child, requestor);
@@ -238,6 +244,27 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			rethrowVisitComplete = oldRethrow;
 			scopes.pop();
 		}
+	}
+
+	/**
+	 * @param child
+	 * @return
+	 */
+	private boolean shouldFilterEnumMember(IJavaElement child) {
+		int type = child.getElementType();
+		String name = child.getElementName();
+		if (name.indexOf('$') >= 0) {
+			return true;
+		} else if (type == IJavaElement.METHOD) {
+			if ((name.equals("next") || name.equals("previous")) && ((IMethod) child).getNumberOfParameters() == 0) {
+				return true;
+			}
+		} else if (type == IJavaElement.METHOD) {
+			if (name.equals("MIN_VALUE") || name.equals("MAX_VALUE")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -355,40 +382,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				throw new VisitCompleted();
 		}
 
-		ClassNode supr = node.getSuperClass();
-		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(supr, scope);
-			if (result != null) {
-				break;
-			}
-		}
-		// use unresolved super to maintain source locations
-		status = handleRequestor(node.getUnresolvedSuperClass(false), requestor, result);
-		switch (status) {
-			case CONTINUE:
-				break;
-			case CANCEL_BRANCH:
-				return;
-			case STOP_VISIT:
-				throw new VisitCompleted();
+		if (!node.isEnum()) {
+			visitGenerics(node);
+			visitClassReference(node.getUnresolvedSuperClass());
 		}
 
 		for (ClassNode intr : node.getInterfaces()) {
-			for (ITypeLookup lookup : lookups) {
-				result = lookup.lookupType(intr, scope);
-				if (result != null) {
-					break;
-				}
-			}
-			status = handleRequestor(intr, requestor, result);
-			switch (status) {
-				case CONTINUE:
-					break;
-				case CANCEL_BRANCH:
-					return;
-				case STOP_VISIT:
-					throw new VisitCompleted();
-			}
+			visitClassReference(intr);
 		}
 
 		// add all methods to the scope because when they are
@@ -413,6 +413,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
 			element.visit(this);
 		}
+
+		// visit synthetic no-arg constructors because that's where the non-static initializers are
+		for (ConstructorNode constructor : (Iterable<ConstructorNode>) node.getDeclaredConstructors()) {
+			if (constructor.isSynthetic() && (constructor.getParameters() == null || constructor.getParameters().length == 0)) {
+				visitConstructor(constructor);
+			}
+		}
 		// don't visit contents, the visitJDT methods are used instead
 	}
 
@@ -429,7 +436,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		VisitStatus status = handleRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
-				visitClassReference(node.getType());
+				ClassNode fieldType = node.getType();
+				// if two values are == then that means the type
+				// is synthetic and doesn't exist in code
+				// probably an enum field.
+				if (fieldType != node.getDeclaringClass()) {
+					visitClassReference(fieldType);
+				}
 				super.visitField(node);
 			case CANCEL_BRANCH:
 				return;
@@ -442,6 +455,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * Visit a return type
 	 */
 	private void visitClassReference(ClassNode node) {
+		// if this is a placeholder, then the type
+		// doesn't really exist in the code, so can ignore
+		if (node.isGenericsPlaceHolder()) {
+			return;
+		}
+
 		TypeLookupResult result = null;
 		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
@@ -454,23 +473,44 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		VisitStatus status = handleRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
-				if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
-					for (GenericsType typeParameter : node.getGenericsTypes()) {
-						if (typeParameter.getLowerBound() != null) {
-							visitClassReference(typeParameter.getLowerBound());
-						}
-						if (typeParameter.getUpperBounds() != null) {
-							for (ClassNode upperBound : typeParameter.getUpperBounds()) {
-								visitClassReference(upperBound);
-							}
-						}
-					}
+				if (!node.isEnum()) {
+					visitGenerics(node);
 				}
 				// fall through
 			case CANCEL_BRANCH:
 				return;
 			case STOP_VISIT:
 				throw new VisitCompleted();
+		}
+	}
+
+	interface A {
+	}
+
+	enum B implements A {
+	}
+
+	/**
+	 * @param node
+	 */
+	private void visitGenerics(ClassNode node) {
+		if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
+			for (GenericsType gen : node.getGenericsTypes()) {
+				if (gen.getLowerBound() != null) {
+					visitClassReference(gen.getLowerBound());
+				}
+				if (gen.getUpperBounds() != null) {
+					for (ClassNode upper : gen.getUpperBounds()) {
+						// handle enums where the upper bound is the same as the type
+						if (!upper.getName().equals(node.getName())) {
+							visitClassReference(upper);
+						}
+					}
+				}
+				if (gen.getType() != null && gen.getName().charAt(0) != '?') {
+					visitClassReference(gen.getType());
+				}
+			}
 		}
 	}
 
@@ -488,6 +528,23 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		switch (status) {
 			case CONTINUE:
+				GenericsType[] gens = node.getGenericsTypes();
+				if (gens != null) {
+					for (GenericsType gen : gens) {
+						if (gen.getLowerBound() != null) {
+							visitClassReference(gen.getLowerBound());
+						}
+						if (gen.getUpperBounds() != null) {
+							for (ClassNode upper : gen.getUpperBounds()) {
+								visitClassReference(upper);
+							}
+						}
+						if (gen.getType() != null && gen.getType().getName().charAt(0) != '?') {
+							visitClassReference(gen.getType());
+						}
+					}
+				}
+
 				visitClassReference(node.getReturnType());
 				if (node.getExceptions() != null) {
 					for (ClassNode e : node.getExceptions()) {
@@ -518,6 +575,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitImports(ModuleNode node) {
 		for (ImportNode imp : (Iterable<ImportNode>) node.getImports()) {
 			TypeLookupResult result = null;
+			IJavaElement oldEnclosingElement = enclosingElement;
+			// FIXADE this will not work for static or * imports
+			if (imp.getClassName() != null) {
+				enclosingElement = unit.getImport(imp.getClassName());
+				if (!enclosingElement.exists()) {
+					enclosingElement = oldEnclosingElement;
+				}
+			}
+
 			VariableScope scope = scopes.peek();
 			for (ITypeLookup lookup : lookups) {
 				result = lookup.lookupType(imp, scope);
@@ -526,6 +592,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 			VisitStatus status = handleRequestor(imp, requestor, result);
+			enclosingElement = oldEnclosingElement;
 			switch (status) {
 				case CONTINUE:
 					continue;
@@ -618,15 +685,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 
 				// visit the parameter type
-				status = handleRequestor(node.getType(), requestor, result);
-				switch (status) {
-					case CONTINUE:
-						break;
-					case CANCEL_BRANCH:
-						return false;
-					case STOP_VISIT:
-						throw new VisitCompleted();
-				}
+				visitClassReference(node.getType());
+
 				visitAnnotations(node);
 				Expression init = node.getInitialExpression();
 				if (init != null) {
@@ -639,8 +699,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitVariableExpression(VariableExpression node) {
+		visitAnnotations(node);
+
 		if (node.getAccessedVariable() == node) {
-			internalVisitTypeReference(node.getType());
+			visitClassReference(node.getType());
 		}
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
@@ -676,6 +738,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBinaryExpression(BinaryExpression node) {
+		visitAnnotations(node);
+
 		propertyExpression.push(node);
 		node.getRightExpression().visit(this);
 		boolean shouldContinue = handleExpression(node);
@@ -727,7 +791,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitCastExpression(CastExpression node) {
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
-			internalVisitTypeReference(node.getType());
+			visitClassReference(node.getType());
 			super.visitCastExpression(node);
 		}
 	}
@@ -771,6 +835,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitReturnStatement(ReturnStatement ret) {
 		boolean shouldContinue = handleStatement(ret);
 		if (shouldContinue) {
+			// special case: AnnotationConstantExpressions do not visit their type.
+			// this means that annotations in default expressions are not visited.
+			// check that here
+			if (ret.getExpression() instanceof AnnotationConstantExpression) {
+				visitClassReference(((AnnotationConstantExpression) ret.getExpression()).getType());
+			}
 			super.visitReturnStatement(ret);
 		}
 	}
@@ -806,7 +876,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitConstructorCallExpression(ConstructorCallExpression node) {
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
-			internalVisitTypeReference(node.getType());
+			visitClassReference(node.getType());
 			super.visitConstructorCallExpression(node);
 		}
 	}
@@ -1035,8 +1105,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitStaticMethodCallExpression(StaticMethodCallExpression node) {
 		boolean shouldContinue = handleExpression(node);
-		if (shouldContinue) {
-			internalVisitTypeReference(node.getOwnerType());
+		if (shouldContinue && node.getEnd() > 0) {
+			visitClassReference(node.getOwnerType());
 			super.visitStaticMethodCallExpression(node);
 		}
 	}
@@ -1091,27 +1161,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
-	// visit the type reference of variable declarations and cast expressions
-	// and maybe some other places (perhaps generics???)
-	private void internalVisitTypeReference(ClassNode node) {
-		TypeLookupResult result = null;
-		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scopes.peek());
-			if (result != null) {
-				break;
-			}
-		}
-		VisitStatus status = handleRequestor(node, requestor, result);
-
-		switch (status) {
-			case CONTINUE:
-			case CANCEL_BRANCH:
-				return;
-			case STOP_VISIT:
-				throw new VisitCompleted();
-		}
-	}
-
 	private void visitAnnotation(AnnotationNode node) {
 		TypeLookupResult result = null;
 		for (ITypeLookup lookup : lookups) {
@@ -1124,9 +1173,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		switch (status) {
 			case CONTINUE:
+				visitClassReference(node.getClassNode());
 				if (node.getMembers() != null) {
 					Collection<Expression> exprs = (Collection<Expression>) node.getMembers().values();
 					for (Expression expr : exprs) {
+						if (expr instanceof AnnotationConstantExpression) {
+							visitClassReference(((AnnotationConstantExpression) expr).getType());
+						}
 						expr.visit(this);
 					}
 				}

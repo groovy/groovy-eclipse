@@ -1,7 +1,0 @@
-###src
-def methodA() throws FileNotFoundException, IOException, ArrayIndexOutOfBoundsException {
-}
-###exp
-def methodA() throws FileNotFoundException, IOException, ArrayIndexOutOfBoundsException {
-}
-###end

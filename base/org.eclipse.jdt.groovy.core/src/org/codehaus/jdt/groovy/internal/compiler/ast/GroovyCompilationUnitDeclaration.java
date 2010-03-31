@@ -234,17 +234,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				char[][] splits = CharOperation.splitOn('.', importNode.getClassName().toCharArray());
 				// FIXASC (M3) the importNode itself does not have correct start and end positions but the type inside of it does.
 				// this should be changed so that the importNode itself has the locations
+				// FIXADE (2.0.2) --- Fixed! importNode now has correct sloc, or at least it does if its type is not null
 				ImportReference ref = null;
 
 				if (importNode.getAlias() != null && importNode.getAlias().length() > 0) {
 					// FIXASC will need extra positional info for the 'as' and the alias
 					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positionsFor(splits,
-							startOffset(importNode.getType()), endOffset(importNode.getType())), false,
-							ClassFileConstants.AccDefault);
+							startOffset(importNode), endOffset(importNode)), false, ClassFileConstants.AccDefault);
 				} else {
-					ref = new ImportReference(splits, positionsFor(splits, startOffset(importNode.getType()), endOffset(importNode
-							.getType())), false, ClassFileConstants.AccDefault);
+					ref = new ImportReference(splits, positionsFor(splits, startOffset(importNode), endOffset(importNode)), false,
+							ClassFileConstants.AccDefault);
 				}
+				ref.sourceEnd = Math.max(importNode.getEnd(), ref.sourceStart);
 				ref.declarationSourceStart = ref.sourceStart;
 				ref.declarationSourceEnd = ref.sourceEnd;
 				ref.declarationEnd = ref.sourceEnd;

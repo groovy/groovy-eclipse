@@ -26,10 +26,12 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -45,6 +47,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
@@ -67,9 +70,21 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         return null;
     }
     
-    
+    @Override
+    public void visitReturnStatement(ReturnStatement ret) {
+        // special case: AnnotationConstantExpressions do not visit their type.
+        // this means that annotations in default expressions are not visited.
+        // check that here
+        if (ret.getExpression() instanceof AnnotationConstantExpression) {
+            check(((AnnotationConstantExpression) ret.getExpression()).getType());
+        }
+       
+        super.visitReturnStatement(ret);
+    }
+
     @Override
     public void visitVariableExpression(VariableExpression expression) {
+        visitAnnotations(expression);
         check(expression);
         super.visitVariableExpression(expression);
     }
@@ -171,6 +186,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     
     @Override
     public void visitDeclarationExpression(DeclarationExpression expression) {
+        visitAnnotations(expression);
         check(expression.getLeftExpression().getType());
         super.visitDeclarationExpression(expression);
     }
@@ -195,7 +211,13 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     }
 
     public void visitArrayExpression(ArrayExpression expression) {
-        check(expression.getElementType());
+        ClassNode arrayClass = expression.getElementType();
+        if (arrayClass != arrayClass.redirect()) {
+            check(arrayClass);
+        } else {
+            // this is a synthetic ArrayExpression used for when 
+            // referencing enum fields
+        }
         super.visitArrayExpression(expression);
     }
 
@@ -286,7 +308,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             check(an.getClassNode());
             
             for (Map.Entry<String, Expression> member : (Iterable<Map.Entry<String, Expression>>)an.getMembers().entrySet()) {
-                member.getValue().visit(this);
+                Expression value = member.getValue();
+                if (value instanceof AnnotationConstantExpression) {
+                    check(((AnnotationConstantExpression) value).getType());
+                }
+                value.visit(this);
             }
         }
     }
@@ -307,6 +333,34 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             nodeFound = node;
             inGString = false;
             throw new VisitCompleteException();
+        }
+        if (node instanceof ClassNode) {
+            checkGenerics((ClassNode) node);
+        }
+    }
+
+    /**
+     * forces the checking of generics for class nodes 
+     * @param node
+     */
+    private void checkGenerics(ClassNode node) {
+        if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
+            for (GenericsType gen : node.getGenericsTypes()) {
+                if (gen.getLowerBound() != null) {
+                    check(gen.getLowerBound());
+                } 
+                if (gen.getUpperBounds() != null) {
+                    for (ClassNode upper : gen.getUpperBounds()) {
+                        // handle enums where the upper bound is the same as the type
+                        if (! upper.getName().equals(node.getName())) {
+                            check(upper);
+                        }
+                    }
+                }
+                if (gen.getType() != null && gen.getType().getName().charAt(0) != '?') {
+                    check(gen.getType());
+                }
+            }
         }
     }
 
@@ -333,7 +387,6 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             for (ImportNode importNode : (Iterable<ImportNode>) module.getImports()) {
                 check(importNode.getType());
             }
-            
             for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
                 this.visitClass(clazz);
             }

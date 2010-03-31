@@ -1,5 +1,0 @@
-###src
-String groovy = "script"
-###exp
-String groovy = "script"
-###end

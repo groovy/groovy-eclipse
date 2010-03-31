@@ -99,13 +99,6 @@ public class WorkspaceDocumentProvider implements IGroovyDocumentProvider {
 		return file;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider#getTargetFile()
-	 */
-	public IFile getTargetFile() {
-	    return file;
-	}
-
 	public boolean fileExists() {
 		return file.exists();
 	}

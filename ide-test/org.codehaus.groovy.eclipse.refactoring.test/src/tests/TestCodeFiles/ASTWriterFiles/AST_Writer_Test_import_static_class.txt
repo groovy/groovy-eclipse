@@ -1,5 +1,0 @@
-###src
-import static java.lang.Math.*
-###exp
-import static java.lang.Math.*
-###end

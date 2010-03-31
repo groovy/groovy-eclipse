@@ -1,5 +1,0 @@
-###src
-def declaration = "string"
-###exp
-def declaration = "string"
-###end

@@ -43,7 +43,6 @@ Export-Package: org.codehaus.groovy.eclipse.refactoring;uses:="org.eclipse.jface
    org.eclipse.ltk.core.refactoring,
    org.codehaus.groovy.ast,
    org.codehaus.groovy.ast.expr",
- org.codehaus.groovy.eclipse.refactoring.core.hierarchy;uses:="org.codehaus.groovy.eclipse.refactoring.core.documentProvider,org.codehaus.groovy.ast",
  org.codehaus.groovy.eclipse.refactoring.core.inlineMethod;
   uses:="org.eclipse.jface.text,
    org.codehaus.groovy.eclipse.refactoring.core.documentProvider,

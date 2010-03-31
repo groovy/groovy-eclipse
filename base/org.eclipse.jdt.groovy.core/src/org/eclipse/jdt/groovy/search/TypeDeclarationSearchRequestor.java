@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.core.search.TypeDeclarationMatch;
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -83,7 +84,7 @@ public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexCon
 					}
 					if (matchFound) {
 						try {
-							requestor.acceptSearchMatch(new SearchMatch(enclosingElement, SearchMatch.A_ACCURATE, orig
+							requestor.acceptSearchMatch(new TypeDeclarationMatch(enclosingElement, SearchMatch.A_ACCURATE, orig
 									.getNameStart(), orig.getNameEnd() - orig.getNameStart() + 1, participant, enclosingElement
 									.getResource()));
 						} catch (CoreException e) {

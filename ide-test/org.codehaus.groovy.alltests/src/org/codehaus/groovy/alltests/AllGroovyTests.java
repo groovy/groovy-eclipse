@@ -11,15 +11,15 @@
 
 package org.codehaus.groovy.alltests;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
 import org.codehaus.groovy.eclipse.codeassist.tests.AllCompletionTests;
 import org.codehaus.groovy.eclipse.codebrowsing.tests.AllBrowsingTests;
 import org.codehaus.groovy.eclipse.core.AllCoreTests;
 import org.codehaus.groovy.eclipse.junit.test.AllJUnitTests;
+import org.codehaus.groovy.eclipse.refactoring.test.AllRefactoringTests;
 import org.codehaus.groovy.eclipse.test.AllUITests;
-
-import core.RefactoringTests;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * @author Andrew Eisenberg
@@ -35,7 +35,7 @@ public class AllGroovyTests {
         suite.addTest(AllJUnitTests.suite());
         suite.addTest(AllCompletionTests.suite());
         suite.addTest(AllBrowsingTests.suite());
-        suite.addTest(RefactoringTests.suite());
+        suite.addTest(AllRefactoringTests.suite());
         return suite;
     }
 }

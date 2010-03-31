@@ -512,7 +512,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             } else {
                 // import is like "import foo.Bar"
                 ClassNode type = ClassHelper.make(packageName+"."+name);
-                configureAST(type, importNode);
+                // FIXASC (groovy change)  sloc for importNode configured by the ModuleNode
+                // was
+//                configureAST(type, importNode);
+                // new
+                configureAST(type, nameNode);
+                // end
                 importClass(type, name, alias);
             }
         }
@@ -3060,6 +3065,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             GroovySourceAST correctAst = (GroovySourceAST) ast;
             correctAst = (GroovySourceAST)correctAst.getFirstChild();
             setPositions(node,correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
+            // also configure the sloc of the actual annotation type reference
+            if (node instanceof AnnotationNode) {
+                setPositions(((AnnotationNode) node).getClassNode(),correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
+            }
         } else {
             int startcol = ast.getColumn();
             int startline = ast.getLine();
@@ -3100,8 +3109,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.setStart(locations.findOffset(sline,scol));
         node.setLastColumnNumber(ecol);
         node.setLastLineNumber(eline);
-        // FIXASC  think about this -1 - is it right for what groovy likes to see or just for eclipse?
-        node.setEnd(locations.findOffset(eline,ecol)-1);	
+        // FIXASC think about this -1 - is it right for what groovy likes to see or just for eclipse?
+//      node.setEnd(locations.findOffset(eline,ecol)-1);  
+      // FIXADE This -1 is not correct.  removing it.  ASC, remove the above lines when you are comfortable with this change
+      node.setEnd(locations.findOffset(eline,ecol));  
     }
     // end
     

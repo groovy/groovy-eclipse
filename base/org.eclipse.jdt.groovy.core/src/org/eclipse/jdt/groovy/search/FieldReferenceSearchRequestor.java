@@ -25,6 +25,8 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.search.FieldDeclarationMatch;
+import org.eclipse.jdt.core.search.FieldReferenceMatch;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchRequestor;
@@ -110,17 +112,25 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		}
 
 		if (doCheck) {
-			// GRECLIPSE-540 still unresolved is that all field and variable references are considered reads.  We don't know about writes
+			// GRECLIPSE-540 still unresolved is that all field and variable references are considered reads. We don't know about
+			// writes
 			boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
-			if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess))
-					&& ((isDeclaration && findDeclarations) || (!isDeclaration && findReferences))) {
-				SearchMatch match = new SearchMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
-						- start, participant, enclosingElement.getResource());
-				try {
-					requestor.acceptSearchMatch(match);
-				} catch (CoreException e) {
-					Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
-							+ enclosingElement.getResource());
+			if (isCompleteMatch && (isAssignment && writeAccess) || (!isAssignment && readAccess)) {
+				SearchMatch match = null;
+				if (isDeclaration && findDeclarations) {
+					match = new FieldDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
+							- start, participant, enclosingElement.getResource());
+				} else if (!isDeclaration && findReferences) {
+					match = new FieldReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
+							- start, !isAssignment, isAssignment, false, participant, enclosingElement.getResource());
+				}
+				if (match != null) {
+					try {
+						requestor.acceptSearchMatch(match);
+					} catch (CoreException e) {
+						Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
+								+ enclosingElement.getResource());
+					}
 				}
 			}
 		}
@@ -143,6 +153,9 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 	}
 
 	private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {
+		if (shouldAlwaysBeAccurate()) {
+			return SearchMatch.A_ACCURATE;
+		}
 		if (!isCompleteMatch) {
 			return SearchMatch.A_INACCURATE;
 		}
@@ -152,6 +165,16 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 			default:
 				return SearchMatch.A_INACCURATE;
 		}
+	}
+
+	/**
+	 * check to see if this requestor has something to do with refactoring, if so, we always want an accurate match otherwise we get
+	 * complaints in the refactoring wizard of "possible matches"
+	 * 
+	 * @return
+	 */
+	private boolean shouldAlwaysBeAccurate() {
+		return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
 	}
 
 	/**

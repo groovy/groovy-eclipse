@@ -1,7 +1,0 @@
-###src
-Object stringDef = "abcdefg"
-String stringObj = (String)stringDef
-###exp
-Object stringDef = "abcdefg"
-String stringObj = (String)stringDef
-###end

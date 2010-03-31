@@ -1,5 +1,0 @@
-###src
-def x = (test) ? "worked" : "failed"
-###exp
-def x = (test) ? "worked" : "failed"
-###end

@@ -1,5 +1,0 @@
-###src
-void printCollection(Collection<? extends String> c) {}
-###exp
-void printCollection(Collection<? extends String> c) {}
-###end

@@ -614,10 +614,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     @Override
     protected void setSelection(ISourceReference reference, boolean moveCursor) {
     	super.setSelection(reference, moveCursor);
-
     	// must override functionality because JavaEditor expects that there is a ';' at end of declaration
-    	// also, offsets are wrong for import declarations, they start 7 characters too early and
-    	// end 7 characters too early.
     	try {
 			if (reference instanceof IImportDeclaration && moveCursor) {
 				int offset;
@@ -635,7 +632,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 					} while (end >= 0 && (content.charAt(end) == ' ' || content.charAt(end) == ';'));
 					
 					offset= range.getOffset() + start;
-					length= end - start + 8;
+					length= end - start + 1;  // Note, original JDT code has 8 here
 					
 					// just in case...
 					int docLength = ((IImportDeclaration) reference).getOpenable().getBuffer().getLength();
@@ -644,8 +641,8 @@ public class GroovyEditor extends CompilationUnitEditor {
 					}
 				} else {
 					// fallback
-					offset= range.getOffset();
-					length= range.getLength();
+					offset= range.getOffset()+1;
+					length= range.getLength()-2;
 				}
 				
 				if (offset > -1 && length > 0) {

@@ -55,7 +55,7 @@ class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
 
     Object getAdapter(Object adaptableObject, Class adapterType) {
 		if (IElementLabelProvider.class.equals(adapterType)) {
-			if (adaptableObject instanceof IJavaStackFrame) {
+			if (adaptableObject instanceof IJavaStackFrame) { 
 				return fgLPFrame;
 			}
 		}

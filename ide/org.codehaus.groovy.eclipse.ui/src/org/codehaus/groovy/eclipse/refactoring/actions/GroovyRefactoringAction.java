@@ -22,11 +22,9 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
-import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.GroovyCompilationUnitDocumentProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
 import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringWizard;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
@@ -48,22 +46,22 @@ import org.eclipse.ui.PlatformUI;
  */
 public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionDelegate, IEditorActionDelegate {
 
-	protected GroovyEditor editor;
-	protected UserSelection selection;
-	protected IGroovyDocumentProvider docProvider;
+	private GroovyEditor editor;
+    private ITextSelection selection;
+    private GroovyCompilationUnit gcu;
 
 	protected boolean initRefactoring() {
-
 		editor = (GroovyEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-		ITextSelection ts = (ITextSelection) editor.getSelectionProvider().getSelection();
-		selection = new UserSelection(ts.getOffset(), ts.getLength());
-		docProvider = new GroovyCompilationUnitDocumentProvider(editor.getGroovyCompilationUnit());
-
-		if (docProvider.getRootNode() == null) {
-			displayErrorDialog(GroovyRefactoringMessages.GroovyRefactoringAction_No_Module_Node);
-			return false;
+		selection = (ITextSelection) editor.getSelectionProvider().getSelection();
+		gcu = editor.getGroovyCompilationUnit();
+		if (gcu != null) {
+    		if (gcu.getModuleNode() == null) {
+    			displayErrorDialog(GroovyRefactoringMessages.GroovyRefactoringAction_No_Module_Node);
+    			return false;
+    		}
+    		return PlatformUI.getWorkbench().saveAllEditors(true);
 		}
-		return PlatformUI.getWorkbench().saveAllEditors(true);
+		return false;
 	}
 
 	protected void displayErrorDialog(String message) {
@@ -88,10 +86,23 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 
 	public void dispose() {
 	    editor = null;
+	    gcu = null;
 	    selection = null;
-	    docProvider = null;
 	}
 
+	protected GroovyEditor getEditor() {
+        return editor;
+    }
+	
+	protected ITextSelection getSelection() {
+        return selection;
+    }
+	
+	protected GroovyCompilationUnit getUnit() {
+        return gcu;
+    }
+	
+	
 	public void init(IWorkbenchWindow window) {
 	}
 

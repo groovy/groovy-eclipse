@@ -1,7 +1,0 @@
-###src
-import static java.lang.Math.*
-cos(42)
-###exp
-import static java.lang.Math.*
-cos(42)
-###end

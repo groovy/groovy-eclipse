@@ -1,9 +1,0 @@
-###src
-import groovy.lang.Closure as MyClosure
-
-MyClosure closure
-###exp
-import groovy.lang.Closure as MyClosure
-
-MyClosure closure
-###end

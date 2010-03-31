@@ -55,7 +55,7 @@ public class GroovyChange {
 		for (IGroovyDocumentProvider docProvider : edits.keySet()) {
 			MultiTextEdit multiEdit = edits.get(docProvider);
 			if (multiEdit.hasChildren()) {
-				TextFileChange textFileChange = new TextFileChange(docProvider.getName(), docProvider.getTargetFile());
+				TextFileChange textFileChange = new TextFileChange(docProvider.getName(), docProvider.getFile());
 				textFileChange.setEdit(multiEdit);
 				change.add(textFileChange);
 			}

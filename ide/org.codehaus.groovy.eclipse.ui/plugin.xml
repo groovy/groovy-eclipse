@@ -818,14 +818,4 @@
           value="return get();">
     </javaLogicalStructure>
  </extension>
- <!--
- <extension
-       point="org.eclipse.ui.editors.documentProviders">
-    <provider
-          class="org.codehaus.groovy.eclipse.editor.GroovyDocumentProvider"
-          extensions="groovy"
-          id="org.codehaus.groovy.eclipse.ui.provider">
-    </provider>
- </extension>
- -->
 </plugin>
