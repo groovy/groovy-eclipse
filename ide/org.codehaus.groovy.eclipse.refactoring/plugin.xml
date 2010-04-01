@@ -91,6 +91,21 @@
    </extension>
       <extension
          point="org.eclipse.ltk.core.refactoring.renameParticipants">
+         <renameParticipant
+               class="org.codehaus.groovy.eclipse.refactoring.core.rename.ForcePreviewParticpant"
+               id="org.codehaus.groovy.eclipse.refactoring.forcepreview"
+               name="Force Preview Particpant">
+            <enablement>
+              <with variable="affectedNatures">
+                <iterate operator="or">
+                  <equals value="org.eclipse.jdt.groovy.core.groovyNature"/>
+                </iterate>
+              </with>
+              <with variable="element">
+	             <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+              </with>
+            </enablement>
+         </renameParticipant>
 		</extension>
       <extension
             point="org.eclipse.ui.preferencePages">
