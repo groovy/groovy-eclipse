@@ -1,0 +1,9 @@
+###src
+import static java.lang.Math.*
+
+def math = PI
+###exp
+import static java.lang.Math.*
+
+def math = PI
+###end

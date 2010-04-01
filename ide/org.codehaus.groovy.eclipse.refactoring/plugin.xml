@@ -91,60 +91,6 @@
    </extension>
       <extension
          point="org.eclipse.ltk.core.refactoring.renameParticipants">
-         <!--
-      <renameParticipant
-            class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.FieldRenameParticipant"
-            id="org.codehaus.groovy.eclipse.refactoring.FieldRenameParticipant"
-            name="DISABLED FieldRename">
-         <enablement>
-            <with
-                  variable="element">
-               <instanceof
-                     value="org.eclipse.jdt.core.IField">
-               </instanceof>
-            </with>
-         </enablement>        
-      </renameParticipant>
-      <renameParticipant
-            class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.ClassRenameParticipant"
-            id="org.codehaus.groovy.eclipse.refactoring.ClassRenameParticipant"
-            name="DISABLED ClassRename">
-         <enablement>
-            <with
-                  variable="element">
-               <instanceof
-                     value="org.eclipse.jdt.core.IType">
-               </instanceof>
-            </with>
-         </enablement>
-      </renameParticipant>
-      <renameParticipant
-            class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.MethodRenameParticipant"
-            id="org.codehaus.groovy.eclipse.refactoring.MethodRenameParticipant"
-            name="DISABLED MethodRename">
-         <enablement>
-            <with
-                  variable="element">
-               <instanceof
-                     value="org.eclipse.jdt.core.IMethod">
-               </instanceof>
-            </with>
-         </enablement>
-      </renameParticipant>
-      <renameParticipant
-            class="org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.javaRenameParticpants.ReferencesInCurrentFileParticipant"
-            id="org.codehaus.groovy.eclipse.refactoring.findGroovyInCurrentFileRenameParticipant"
-            name="Find Groovy References in Current file">
-         <enablement>
-            <with
-                  variable="element">
-               <instanceof
-                     value="org.eclipse.jdt.core.IJavaElement">
-               </instanceof>
-            </with>
-         </enablement>
-      </renameParticipant>
-         -->
 		</extension>
       <extension
             point="org.eclipse.ui.preferencePages">

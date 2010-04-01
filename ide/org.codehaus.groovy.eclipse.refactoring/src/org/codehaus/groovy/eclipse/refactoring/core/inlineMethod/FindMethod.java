@@ -29,22 +29,22 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.extractMethod.StatementFinder;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTVisitorDecorator;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.patterns.MethodPattern;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.TextSelection;
 
 public class FindMethod {
 
-	private final UserSelection selection;
+	private final TextSelection selection;
 	private final IDocument document;
 	private final ModuleNode rootNode;
 	protected ClassNode currentClass;
 	protected MethodPattern selectedMethodPattern;
 	protected List<MethodPattern> methodCalls, methodDefinitions;
 
-	public FindMethod(UserSelection selection, IDocument document,
+	public FindMethod(TextSelection selection, IDocument document,
 			ModuleNode rootNode) {
 		this.selection = selection;
 		this.document = document;

@@ -1,0 +1,13 @@
+###src
+class Test {
+
+    def method(String param1) {
+    }
+}
+###exp
+class Test {
+
+    def method(String param1) {
+    }
+}
+###end

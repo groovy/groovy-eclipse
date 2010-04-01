@@ -22,12 +22,10 @@ import java.io.Reader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.GroovyBugError;
@@ -3207,7 +3205,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     // FIXASC (groovychange) new method for correctly configuring the position of the annotation - based on configureAST
     protected void configureAnnotationAST(ASTNode node, AST ast) {
-         if (ast == null) {
+        if (ast == null) {
         	throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure "+node.getClass().getName()+" with null Node");
         }
         if (ast instanceof GroovySourceAST) {
@@ -3219,7 +3217,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             setPositions(node,correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
             // also configure the sloc of the actual annotation type reference
             if (node instanceof AnnotationNode) {
-                setPositions(((AnnotationNode) node).getClassNode(),correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
+                setPositions(((AnnotationNode) node).getClassNode(),correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast()+1,correctAst.getLineLast());
             }
         } else {
             int startcol = ast.getColumn();
@@ -3262,9 +3260,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.setLastColumnNumber(ecol);
         node.setLastLineNumber(eline);
         // FIXASC think about this -1 - is it right for what groovy likes to see or just for eclipse?
-//        node.setEnd(locations.findOffset(eline,ecol)-1);	
-        // FIXADE This -1 is not correct.  removing it.  ASC, remove the above lines when you are comfortable with this change
-        node.setEnd(locations.findOffset(eline,ecol));	
+        node.setEnd(locations.findOffset(eline,ecol)-1);	
     }
     // end
     

@@ -701,6 +701,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitVariableExpression(VariableExpression node) {
 		visitAnnotations(node);
 
+		// this is a declaration
 		if (node.getAccessedVariable() == node) {
 			visitClassReference(node.getType());
 		}

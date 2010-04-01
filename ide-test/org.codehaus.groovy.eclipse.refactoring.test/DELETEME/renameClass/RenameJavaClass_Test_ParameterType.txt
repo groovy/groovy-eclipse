@@ -1,0 +1,36 @@
+###prop
+selectionInFile=Coll.groovy
+startLine=2
+startColumn=15
+endLine=2
+endColumn=16
+newClassName=MyNewField
+###src
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	def method (Field field) {
+	}
+}
+#NEXT
+Package=code
+Filename=Field.java
+:::
+public class Field {
+}
+###exp
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	def method (MyNewField field) {
+	}
+}
+#NEXT
+Package=code
+Filename=MyNewField.java
+:::
+public class MyNewField {
+}
+###end

@@ -1,0 +1,21 @@
+###src
+package core
+
+class Test {
+    static String prop = "property"
+
+    private testMethod() {
+        Test.prop = "newProp"
+    }
+}
+###exp
+package core
+
+class Test {
+    static String prop = "property"
+
+    private testMethod() {
+        Test.prop = "newProp"
+    }
+}
+###end

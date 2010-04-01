@@ -1,0 +1,5 @@
+###src
+def foo = !true
+###exp
+def foo = !true
+###end

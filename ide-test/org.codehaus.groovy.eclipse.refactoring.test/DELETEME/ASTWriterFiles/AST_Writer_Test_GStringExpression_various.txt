@@ -1,0 +1,11 @@
+###src
+def string1 = "Attribute: ${attribute}"
+def string2 = """Attribute: ${attribute}"""
+def string3 = 'Attribute: ${attribute}'
+def string4 = '''Attribute: ${attribute}'''
+###exp
+def string1 = "Attribute: ${attribute}"
+def string2 = """Attribute: ${attribute}"""
+def string3 = 'Attribute: ${attribute}'
+def string4 = '''Attribute: ${attribute}'''
+###end

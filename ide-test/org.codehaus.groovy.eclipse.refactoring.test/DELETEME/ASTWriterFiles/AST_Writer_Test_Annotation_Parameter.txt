@@ -1,0 +1,17 @@
+###src
+import java.lang.Deprecated
+
+class HalloWelt {
+
+    private halloWelt(@Deprecated param) {
+    }
+}
+###exp
+import java.lang.Deprecated
+
+class HalloWelt {
+
+    private halloWelt(@Deprecated param) {
+    }
+}
+###end

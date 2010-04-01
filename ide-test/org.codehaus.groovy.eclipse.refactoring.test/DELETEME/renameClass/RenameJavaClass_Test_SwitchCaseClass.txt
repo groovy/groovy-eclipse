@@ -1,0 +1,54 @@
+###prop
+selectionInFile=Coll.groovy
+startLine=2
+startColumn=11
+endLine=2
+endColumn=12
+newClassName=MyNewField
+###src
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	private Field var
+	def method(){
+		switch (var) {
+		case Field:
+			println("Yes")
+			break;
+		default:
+			println("I don't know")
+			break;
+		}
+	}
+}
+#NEXT
+Package=code
+Filename=Field.java
+:::
+public class Field {
+}
+###exp
+Package=code
+Filename=Coll.groovy
+:::
+public class Coll{
+	private MyNewField var
+	def method(){
+		switch (var) {
+		case MyNewField:
+			println("Yes")
+			break;
+		default:
+			println("I don't know")
+			break;
+		}
+	}
+}
+#NEXT
+Package=code
+Filename=MyNewField.java
+:::
+public class MyNewField {
+}
+###end

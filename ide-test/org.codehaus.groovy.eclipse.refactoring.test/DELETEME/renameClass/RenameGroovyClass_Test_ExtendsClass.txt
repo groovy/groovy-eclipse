@@ -1,0 +1,48 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=1
+startColumn=35
+endLine=1
+endColumn=38
+newClassName=MyNewBaseClass
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass extends BaseClass { 
+}
+#NEXT
+Package=code
+Filename=BaseClass.groovy
+:::
+public class BaseClass {
+	public String msg = "Hello World"
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class GroovyClass extends BaseClass {
+	
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass extends MyNewBaseClass { 
+}
+#NEXT
+Package=code
+Filename=BaseClass.groovy
+:::
+public class MyNewBaseClass {
+	public String msg = "Hello World"
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class GroovyClass extends MyNewBaseClass {
+	
+}
+###end

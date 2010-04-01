@@ -1,0 +1,38 @@
+###prop
+selectionInFile=ChildClass.groovy
+startLine=1
+startColumn=35
+endLine=1
+endColumn=38
+newClassName=MyNewBaseClass
+###src
+Package=code
+Filename=ChildClass.groovy
+:::
+public class ChildClass extends BaseClass{
+
+	def void doSomething() {}	
+} 
+#NEXT
+Package=code
+Filename=BaseClass.java
+:::
+public abstract class BaseClass {
+	public abstract void doSomething();
+}
+###exp
+Package=code
+Filename=ChildClass.groovy
+:::
+public class ChildClass extends MyNewBaseClass{
+
+	def void doSomething() {}	
+} 
+#NEXT
+Package=code
+Filename=MyNewBaseClass.java
+:::
+public abstract class MyNewBaseClass {
+	public abstract void doSomething();
+}
+###end

@@ -1,0 +1,29 @@
+###prop
+###src
+"hello".each {
+print it
+}
+5.times {
+param -> print param
+print param }
+6.times { print it
+print it }
+7.times { param ->
+	print param
+	print param
+}
+###exp
+"hello".each { print it }
+5.times { param ->
+	print param
+	print param
+}
+6.times {
+	print it
+	print it
+}
+7.times { param ->
+	print param
+	print param
+}
+###end

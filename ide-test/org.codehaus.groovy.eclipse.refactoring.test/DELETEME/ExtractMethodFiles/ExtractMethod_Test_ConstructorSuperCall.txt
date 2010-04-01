@@ -1,0 +1,41 @@
+###prop
+selectionType=points
+startLine=8
+startColumn=1
+endLine=9
+endColumn=1
+newMethodName=methodCall
+shouldFail=true
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class SuperClass {
+    private SuperClass(def var) {
+        println(var)
+    }
+}
+class BaseClass extends SuperClass {
+    public BaseClass() {
+        super("var")
+    }
+    static void main(args) {
+        BaseClass c = new BaseClass()
+    }
+}
+###exp
+class SuperClass {
+    private SuperClass(def var) {
+        println(var)
+    }
+}
+class BaseClass extends SuperClass {
+    public BaseClass() {
+        super("var")
+    }
+    static void main(args) {
+        BaseClass c = new BaseClass()
+    }
+}
+###end

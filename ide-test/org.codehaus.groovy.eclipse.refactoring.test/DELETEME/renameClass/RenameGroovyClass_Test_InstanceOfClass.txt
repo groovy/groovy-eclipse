@@ -1,0 +1,50 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=6
+startColumn=3
+endLine=6
+endColumn=5
+newClassName=NewName
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public void method(Element e) {	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Element {
+}
+
+public class GroovyClass {
+	def method() {
+		Element e
+		JavaClass j
+		j.method(e)
+	}
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public void method(NewName e) {	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class NewName {
+}
+
+public class GroovyClass {
+	def method() {
+		NewName e
+		JavaClass j
+		j.method(e)
+	}
+}
+###end

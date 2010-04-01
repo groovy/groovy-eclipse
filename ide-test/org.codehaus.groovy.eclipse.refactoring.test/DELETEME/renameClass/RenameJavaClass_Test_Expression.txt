@@ -1,0 +1,42 @@
+###prop
+selectionInFile=MyClass.groovy
+startLine=3
+startColumn=4
+endLine=3
+endColumn=5
+newClassName=MyNewField
+###src
+Package=code
+Filename=MyClass.groovy
+:::
+public class MyClass {
+	def method() {
+		Field f = new Field()
+		println f.loeli
+	}
+}
+#NEXT
+Package=code
+Filename=Field.java
+:::
+public class Field {
+	public String loeli = "[L]";
+}
+###exp
+Package=code
+Filename=MyClass.groovy
+:::
+public class MyClass {
+	def method() {
+		MyNewField f = new MyNewField()
+		println f.loeli
+	}
+}
+#NEXT
+Package=code
+Filename=MyNewField.java
+:::
+public class MyNewField {
+	public String loeli = "[L]";
+}
+###end

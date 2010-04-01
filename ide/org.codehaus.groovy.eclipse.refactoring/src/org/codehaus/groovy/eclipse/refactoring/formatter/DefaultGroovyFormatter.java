@@ -39,7 +39,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTNodeInfo
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.IncludesClosurePredicate;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.SourceCodePredicate;
-import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -108,7 +107,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 		rootNode = ASTTools.getASTNodeFromSource(formattedDocument.get());
 		if(rootNode == null) {
 		    // caused by unparseable file  
-			throw new Exception(GroovyRefactoringMessages.FormattingAction_RootNode_Errors);
+			throw new Exception("Problem parsing Compilation unit.  Fix all syntax errors and try.");
 		}
 
 			InputStream input = new ByteArrayInputStream(formattedDocument.get().getBytes());

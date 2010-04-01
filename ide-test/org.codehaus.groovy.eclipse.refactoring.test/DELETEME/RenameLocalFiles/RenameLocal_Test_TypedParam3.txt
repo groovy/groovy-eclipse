@@ -1,0 +1,16 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=14
+endLine=1
+endColumn=15
+newVarName=cX
+###src
+def meth(int c){
+    println c
+}
+###exp
+def meth(int cX){
+    println cX
+}
+###end

@@ -22,7 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.Stack;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.IASTNodePredicate;
 import org.eclipse.jface.text.IDocument;
@@ -68,9 +67,8 @@ public class ASTScanner extends ASTScannerPredicate {
 		if(!nodeStack.isEmpty() && nodeStack.peek() != node)
 			info.setParent(nodeStack.peek());
 		if(ASTTools.hasValidPosition(node)) {
-			UserSelection sel = new UserSelection(node,document);
-			info.setOffset(sel.getOffset());
-			info.setLength(sel.getLength());
+			info.setOffset(node.getStart());
+			info.setLength(node.getEnd() - node.getStart());
 		}
 		
 		astMap.put(node, info);

@@ -1,0 +1,42 @@
+###prop
+selectionInFile=JavaClass.java
+startLine=2
+startColumn=42
+endLine=2
+endColumn=44
+newClassName=MyNewE
+###src
+Package=code
+Filename=JavaClass.java
+:::
+import java.util.Map;
+public class JavaClass<Y,T extends Map<Element,Map<Y,Element>>> {
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Element {
+}
+
+public class GroovyClass {
+	Element e;
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+import java.util.Map;
+public class JavaClass<Y,T extends Map<MyNewE,Map<Y,MyNewE>>> {
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class MyNewE {
+}
+
+public class GroovyClass {
+	MyNewE e;
+}
+###end

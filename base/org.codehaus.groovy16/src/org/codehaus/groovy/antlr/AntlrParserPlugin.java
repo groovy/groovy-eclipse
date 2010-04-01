@@ -3067,7 +3067,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             setPositions(node,correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
             // also configure the sloc of the actual annotation type reference
             if (node instanceof AnnotationNode) {
-                setPositions(((AnnotationNode) node).getClassNode(),correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
+                setPositions(((AnnotationNode) node).getClassNode(),correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast()+1,correctAst.getLineLast());
             }
         } else {
             int startcol = ast.getColumn();
@@ -3110,9 +3110,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.setLastColumnNumber(ecol);
         node.setLastLineNumber(eline);
         // FIXASC think about this -1 - is it right for what groovy likes to see or just for eclipse?
-//      node.setEnd(locations.findOffset(eline,ecol)-1);  
-      // FIXADE This -1 is not correct.  removing it.  ASC, remove the above lines when you are comfortable with this change
-      node.setEnd(locations.findOffset(eline,ecol));  
+        node.setEnd(locations.findOffset(eline,ecol)-1);  
     }
     // end
     

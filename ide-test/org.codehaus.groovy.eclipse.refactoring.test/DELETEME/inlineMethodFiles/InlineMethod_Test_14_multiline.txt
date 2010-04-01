@@ -1,0 +1,38 @@
+###prop
+selectionType=points
+startLine=8
+startColumn=20
+endLine=8
+endColumn=20
+deleteMethod=true
+allInvocations=true
+onlySelectedInvocation=false
+###src
+/*
+ * Test14
+ * Inline multiple lines
+ */
+class InlineSamples14 {
+    static void main(args) {
+        def a
+        a = extract(a)
+    }
+    static def extract(def a) {
+        println("a: " + a)
+        return 1
+    }
+}
+###exp
+/*
+ * Test14
+ * Inline multiple lines
+ */
+class InlineSamples14 {
+    static void main(args) {
+        def a
+        println("a: " + a)
+        a = (1)
+    }
+
+}
+###end

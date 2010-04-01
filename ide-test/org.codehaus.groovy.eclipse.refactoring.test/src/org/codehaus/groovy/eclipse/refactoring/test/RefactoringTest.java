@@ -118,27 +118,33 @@ public abstract class RefactoringTest extends TestCase {
 	 * @throws Exception in case of errors
 	 */
 	protected void tearDown() throws Exception {
-		refreshFromLocal();
-		performDummySearch();
-
-		if (getPackageP().exists()){
-			tryDeletingAllJavaChildren(getPackageP());
-			tryDeletingAllNonJavaChildResources(getPackageP());
-		}
-
-		if (getRoot().exists()){
-			IJavaElement[] packages= getRoot().getChildren();
-			for (int i= 0; i < packages.length; i++){
-				IPackageFragment pack= (IPackageFragment)packages[i];
-				if (!pack.equals(getPackageP()) && pack.exists() && !pack.isReadOnly())
-					if (pack.isDefaultPackage())
-						pack.delete(true, null);
-					else
-						JavaProjectHelper.delete(pack.getResource()); // also delete packages with subpackages
-			}
-		}
-
-		restoreTestProject();
+	    try {
+    		refreshFromLocal();
+    		performDummySearch();
+    
+    		if (getPackageP().exists()){
+    			tryDeletingAllJavaChildren(getPackageP());
+    			tryDeletingAllNonJavaChildResources(getPackageP());
+    		}
+    
+    		if (getRoot().exists()){
+    			IJavaElement[] packages= getRoot().getChildren();
+    			for (int i= 0; i < packages.length; i++){
+    				IPackageFragment pack= (IPackageFragment)packages[i];
+    				if (!pack.equals(getPackageP()) && pack.exists() && !pack.isReadOnly())
+    					if (pack.isDefaultPackage())
+    						pack.delete(true, null);
+    					else
+    						JavaProjectHelper.delete(pack.getResource()); // also delete packages with subpackages
+    			}
+    		}
+    		
+    
+    		restoreTestProject();
+	    } finally {
+    		TestRenameParticipantShared.reset();
+    		TestRenameParticipantSingle.reset();
+	    }
 	}
 
 	private void restoreTestProject() throws Exception {
@@ -234,11 +240,11 @@ public abstract class RefactoringTest extends TestCase {
 	    return refactoring;
     }
 
-	protected final RefactoringStatus performRefactoring(Refactoring ref) throws Exception {
-		return performRefactoring(ref, true);
+	protected final RefactoringStatus performRefactoring(Refactoring ref, boolean performOnFail) throws Exception {
+		return performRefactoring(ref, true, performOnFail);
 	}
 
-	protected final RefactoringStatus performRefactoring(Refactoring ref, boolean providesUndo) throws Exception {
+	protected final RefactoringStatus performRefactoring(Refactoring ref, boolean providesUndo, boolean performOnFail) throws Exception {
 		performDummySearch();
 		IUndoManager undoManager= getUndoManager();
 		if (DESCRIPTOR_TEST){
@@ -257,7 +263,7 @@ public abstract class RefactoringTest extends TestCase {
 				if (refactoringDescriptor instanceof JavaRefactoringDescriptor) {
 					JavaRefactoringDescriptor jrd= (JavaRefactoringDescriptor) refactoringDescriptor;
 					RefactoringStatus validation= jrd.validateDescriptor();
-					if (!validation.isOK())
+					if (!validation.isOK() && !performOnFail)
 						return validation;
 					RefactoringStatus refactoringStatus= new RefactoringStatus();
 					Class expected= jrd.getClass();
@@ -265,7 +271,7 @@ public abstract class RefactoringTest extends TestCase {
 					jrd= (JavaRefactoringDescriptor) contribution.createDescriptor(jrd.getID(), jrd.getProject(), jrd.getDescription(), jrd.getComment(), contribution.retrieveArgumentMap(jrd), jrd.getFlags());
 					assertEquals(expected, jrd.getClass());
 					ref= jrd.createRefactoring(refactoringStatus);
-					if (!refactoringStatus.isOK())
+					if (!refactoringStatus.isOK() && !performOnFail)
 						return refactoringStatus;
 					TestRenameParticipantSingle.reset();
 			        // GROOVY not required
@@ -302,7 +308,7 @@ public abstract class RefactoringTest extends TestCase {
 			executePerformOperation(perform, workspace);
 //		}
 		RefactoringStatus status= create.getConditionCheckingStatus();
-		if (!status.isOK())
+		if (!status.isOK() && !performOnFail)
 			return status;
 		assertTrue("Change wasn't executed", perform.changeExecuted());
 		Change undo= perform.getUndoChange();
@@ -319,8 +325,8 @@ public abstract class RefactoringTest extends TestCase {
 		workspace.run(perform, new NullProgressMonitor());
 	}
 
-	public RefactoringStatus performRefactoringWithStatus(Refactoring ref) throws Exception, CoreException {
-		RefactoringStatus status= performRefactoring(ref);
+	public RefactoringStatus performRefactoringWithStatus(Refactoring ref, boolean performOnFail) throws Exception, CoreException {
+		RefactoringStatus status= performRefactoring(ref, performOnFail);
 		if (status == null)
 			return new RefactoringStatus();
 		return status;

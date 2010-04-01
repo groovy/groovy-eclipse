@@ -1,0 +1,48 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=3
+startColumn=7
+endLine=3
+endColumn=9
+newMethodName=newNAME
+###src
+Package=code_groovy
+Filename=GroovyClass.groovy
+:::
+import code_java.*
+public class GroovyClass{
+	void method() {
+	}
+}
+#NEXT
+Package=code_java
+Filename=JavaClass.java
+:::
+import code_groovy.GroovyClass;
+public class JavaClass {
+	public void m() {
+		GroovyClass g = new GroovyClass();
+		g.method();
+	}      
+}
+###exp
+Package=code_groovy
+Filename=GroovyClass.groovy
+:::
+import code_java.*
+public class GroovyClass{
+	void newNAME() {
+	}
+}
+#NEXT
+Package=code_java
+Filename=JavaClass.java
+:::
+import code_groovy.GroovyClass;
+public class JavaClass {
+	public void m() {
+		GroovyClass g = new GroovyClass();
+		g.newNAME();
+	}      
+}
+###end

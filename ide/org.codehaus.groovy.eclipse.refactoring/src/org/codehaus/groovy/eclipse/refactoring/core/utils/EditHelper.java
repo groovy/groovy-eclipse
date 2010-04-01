@@ -21,14 +21,11 @@ package org.codehaus.groovy.eclipse.refactoring.core.utils;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
-import org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal.RenameLocalHelper;
-import org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal.VariableProxy;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.RefactoringImportNode;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.FindReplaceDocumentAdapter;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.text.edits.ReplaceEdit;
 
 /**
@@ -43,7 +40,7 @@ public class EditHelper {
 	public static ReplaceEdit getDefaultReplaceEdit(ASTNode node, boolean execute, IDocument document,
 			String oldClassName, String newClassName) {
 
-		UserSelection sel = new UserSelection(node, document);
+		TextSelection sel = new TextSelection(document, node.getStart(), node.getEnd() - node.getStart());
 		int offset = sel.getOffset();
 		if (execute) {
 			return new ReplaceEdit(offset, oldClassName.length(), newClassName);
@@ -51,16 +48,9 @@ public class EditHelper {
 		return new ReplaceEdit(offset, oldClassName.length(), oldClassName);
 	}
 
-	public static ReplaceEdit getExactReplaceEdit(RefactoringImportNode importNode, IDocument document) {
-		UserSelection sel = new UserSelection(importNode, document);
-		int offset = sel.getOffset();
-		int length = sel.getLength();
-		return new ReplaceEdit(offset, length, importNode.getText());
-	}
-
 	public static ReplaceEdit getLookupReplaceEdit(ASTNode node, boolean execute, IDocument document,
 			String oldName, String newName) {
-		UserSelection sel = new UserSelection(node, document);
+		TextSelection sel = new TextSelection(document, node.getStart(), node.getEnd() - node.getStart());
 		int offset = sel.getOffset();
 		if (execute) {
 		    // try the nameStart and nameEnd fields first
@@ -94,17 +84,12 @@ public class EditHelper {
 		return new ReplaceEdit(offset, oldName.length(), oldName);
 	}
 
-	public static ReplaceEdit getRenameMethodCallEdit(MethodCallExpression methodCall, IDocument document,
+	public static ReplaceEdit getRenameMethodCallEdit(MethodCallExpression node, IDocument document,
 			String newName) {
-		UserSelection sel = new UserSelection(methodCall, document);
+		TextSelection sel = new TextSelection(document, node.getStart(), node.getEnd() - node.getStart());
 		int offset = sel.getOffset();
-		offset += methodCall.getMethod().getColumnNumber() - methodCall.getColumnNumber();
-		return new ReplaceEdit(offset, methodCall.getMethod().getText().length(), newName);
+		offset += node.getMethod().getColumnNumber() - node.getColumnNumber();
+		return new ReplaceEdit(offset, node.getMethod().getText().length(), newName);
 	}
 
-	public static ReplaceEdit getVariableProxyReplaceEdit(VariableProxy variable, IDocument document, String newName) {
-		int offset = RenameLocalHelper.getVariableProxySpecificOffset(variable, document);
-		return new ReplaceEdit(offset, variable.getName().length(), newName);
-	}
-	
 }

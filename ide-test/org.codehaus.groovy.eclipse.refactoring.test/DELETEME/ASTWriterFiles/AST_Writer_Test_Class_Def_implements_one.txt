@@ -1,0 +1,7 @@
+###src
+class Test implements Comparable {
+}
+###exp
+class Test implements Comparable {
+}
+###end

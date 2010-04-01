@@ -1,0 +1,18 @@
+###prop
+selectionType=points
+startLine=3
+startColumn=12
+endLine=3
+endColumn=13
+newMethodName=m1
+###src
+class C1{
+    def m1(a){}
+    def oldName(){}
+}
+###exp
+class C1{
+    def m1(a){}
+    def m1(){}
+}
+###end

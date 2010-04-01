@@ -1,0 +1,17 @@
+###src
+class Test {
+
+    private testMethod() {
+        String stringObj = "abcdefg"
+        stringObj.length()
+    }
+}
+###exp
+class Test {
+
+    private testMethod() {
+        String stringObj = "abcdefg"
+        stringObj.length()
+    }
+}
+###end

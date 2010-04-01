@@ -7,32 +7,11 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rename;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map.Entry;
-
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.helper.Checks;
-import org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.helper.JavaModelSearch;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.SourceCodePoint;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTNodeInfo;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.RenameSelectionInfoPredicate;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jface.text.ITextSelection;
 
 /**

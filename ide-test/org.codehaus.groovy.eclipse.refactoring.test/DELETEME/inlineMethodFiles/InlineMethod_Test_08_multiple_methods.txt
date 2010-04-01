@@ -1,0 +1,44 @@
+###prop
+selectionType=points
+startLine=7
+startColumn=16
+endLine=7
+endColumn=16
+deleteMethod=true
+allInvocations=true
+onlySelectedInvocation=false
+###src
+/*
+ * Test08
+ * Inline only the coresponding methods in the same class
+ */
+class InlineSamples08 {
+    static void main(args) {
+        extract()
+    }
+    static def extract() {
+        println("test")
+    }
+}
+class doubleTest {
+    def extract() {
+        println("test_false")
+    }
+}
+###exp
+/*
+ * Test08
+ * Inline only the coresponding methods in the same class
+ */
+class InlineSamples08 {
+    static void main(args) {
+        println("test")
+    }
+
+}
+class doubleTest {
+    def extract() {
+        println("test_false")
+    }
+}
+###end

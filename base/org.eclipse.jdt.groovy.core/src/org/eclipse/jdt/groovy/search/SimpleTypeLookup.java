@@ -334,7 +334,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 		if (accessedVar instanceof DynamicVariable) {
 			// this is likely a reference to a field or method in a type in the hierarchy
 			// find the declaration
-			ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), info != null ? info.declaringType : declaringType);
+			ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, info));
 			if (maybeDeclaration != null) {
 				declaration = maybeDeclaration;
 				// declaring type may have changed
@@ -348,7 +348,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 		if (info != null) {
 			confidence = TypeConfidence.findLessPrecise(origConfidence, INFERRED);
 			type = info.type;
-			declaringType = info.declaringType;
+			declaringType = getMorePreciseType(declaringType, info);
 			if (scope.isThisOrSuper(var)) {
 				declaration = type;
 			}
@@ -363,6 +363,20 @@ public class SimpleTypeLookup implements ITypeLookup {
 			}
 		}
 		return new TypeLookupResult(type, declaringType, declaration, confidence, scope);
+	}
+
+	/**
+	 * @param declaringType
+	 * @param info
+	 * @return
+	 */
+	private ClassNode getMorePreciseType(ClassNode declaringType, VariableInfo info) {
+		ClassNode maybeDeclaringType = info != null ? info.declaringType : VariableScope.OBJECT_CLASS_NODE;
+		if (maybeDeclaringType.equals(VariableScope.OBJECT_CLASS_NODE) && !VariableScope.OBJECT_CLASS_NODE.equals(declaringType)) {
+			return declaringType;
+		} else {
+			return maybeDeclaringType;
+		}
 	}
 
 	/**

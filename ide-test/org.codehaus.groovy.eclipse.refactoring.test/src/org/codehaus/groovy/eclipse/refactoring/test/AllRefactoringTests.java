@@ -15,11 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test;
 
-import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests;
-import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
+import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameFieldTests;
+import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests;
+import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests;
 
 /**
  * 
@@ -32,6 +33,7 @@ public class AllRefactoringTests {
                 + AllRefactoringTests.class.getPackage().getName());
         suite.addTestSuite(RenameTypeTests.class);
         suite.addTestSuite(RenameMethodTests.class);
+        suite.addTestSuite(RenameFieldTests.class);
         return suite;
     }
 

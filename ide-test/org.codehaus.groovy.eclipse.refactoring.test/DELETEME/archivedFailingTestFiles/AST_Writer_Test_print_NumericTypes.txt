@@ -1,0 +1,15 @@
+###src
+def scientificFloat = 2e-4f        //type java.lang.Float   as 2.0E-4
+def scientific = 2e-4            //type.java.lang.BigDecimal as 0.0002
+def scientificDouble = 2e-4d    //type java.lang.Double as 2.0E-4
+def bigInteger = 2g             //type java.lang.BigInteger as 2
+def longNumber = 2l                //type java.lang.Long as 2
+def bigDecimal = 3.5            //type java.lang.BigDecimal as 3.5
+###exp
+def scientificFloat = 2e-4f
+def scientific = 2e-4
+def scientificDouble = 2e-4d
+def bigInteger = 2g
+def longNumber = 2l
+def bigDecimal = 3.5
+###end

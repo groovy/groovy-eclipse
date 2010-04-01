@@ -1,0 +1,36 @@
+###prop
+selectionType=points
+startLine=5
+startColumn=1
+endLine=7
+endColumn=1
+newMethodName=myExtract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class ReturnOnyUsedAfter {
+    public start() {
+        int b = 3
+        int a = 5
+        a = b++
+        int c = 8
+        b++
+    }
+}
+###exp
+class ReturnOnyUsedAfter {
+    public start() {
+        int b = 3
+        int a = 5
+        b = myExtract(a, b)
+        b++
+    }
+    private int myExtract(int a, int b) {
+        a = b++
+        int c = 8
+        return b
+    }
+}
+###end

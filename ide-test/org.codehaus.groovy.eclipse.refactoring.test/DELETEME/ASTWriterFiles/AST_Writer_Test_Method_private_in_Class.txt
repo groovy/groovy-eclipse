@@ -1,0 +1,13 @@
+###src
+class HalloWelt {
+
+    private halloWelt() {
+    }
+}
+###exp
+class HalloWelt {
+
+    private halloWelt() {
+    }
+}
+###end

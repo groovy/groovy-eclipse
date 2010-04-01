@@ -90,8 +90,9 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		} else if (node instanceof FieldExpression) {
 			if (CharOperation.equals(name, ((FieldExpression) node).getFieldName().toCharArray())) {
 				doCheck = true;
-				start = node.getStart();
+				// fully qualified field expressions in static contexts will have an sloc of the entire qualified name
 				end = node.getEnd();
+				start = end - name.length;
 			}
 		} else if (node instanceof FieldNode) {
 			FieldNode fnode = (FieldNode) node;
@@ -111,11 +112,11 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 			}
 		}
 
-		if (doCheck) {
+		if (doCheck && end > 0) {
 			// GRECLIPSE-540 still unresolved is that all field and variable references are considered reads. We don't know about
 			// writes
 			boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
-			if (isCompleteMatch && (isAssignment && writeAccess) || (!isAssignment && readAccess)) {
+			if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess))) {
 				SearchMatch match = null;
 				if (isDeclaration && findDeclarations) {
 					match = new FieldDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
@@ -148,7 +149,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		} else if (declaringType.getName().equals(declaringQualifiedName)) {
 			return true;
 		} else {
-			return qualifiedNameMatches(declaringType.getSuperClass());
+			return false;
 		}
 	}
 

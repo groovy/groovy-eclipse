@@ -1,0 +1,16 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=17
+endLine=1
+endColumn=18
+newVarName=NEWNAME
+###src
+def meth(String b) {
+    int a;
+}
+###exp
+def meth(String NEWNAME) {
+    int a;
+}
+###end

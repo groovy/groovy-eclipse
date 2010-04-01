@@ -1,0 +1,20 @@
+###prop
+selectionType=points
+startLine=3
+startColumn=11
+endLine=3
+endColumn=11
+newMethodName=m1
+shouldFail=true
+failMessage=The method with the name 'm1' already exists in this context, using this name might lead to unexpected behavior
+###src
+class C1{
+    def m1(){}
+    def oldName(){}
+}
+###exp
+class C1{
+    def m1(){}
+    def m1(){}
+}
+###end

@@ -1,0 +1,26 @@
+###prop
+selectionType=points
+startLine=7
+startColumn=4
+endLine=7
+endColumn=5
+newMethodName=NEWMETHODNAME
+shouldFail=true
+failMessage=No Refactoring for this node implemented
+###src
+class C1{
+    static m1(a=5){
+    }
+}
+
+C1.m1(3)
+C1.m1()
+###exp
+class C1{
+    static m1(a=5){
+    }
+}
+
+C1.m1(3)
+C1.NEWMETHODNAME()
+###end

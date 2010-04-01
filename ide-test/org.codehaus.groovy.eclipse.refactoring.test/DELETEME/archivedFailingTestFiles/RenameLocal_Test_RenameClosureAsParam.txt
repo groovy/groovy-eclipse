@@ -1,0 +1,32 @@
+###prop
+selectionType=points
+startLine=3
+startColumn=24
+endLine=3
+endColumn=25
+newVarName=NEWNAME
+###src
+public class example{
+
+    static def meth(a, b){
+        b(a)
+        println "in meth" + b
+    }
+
+    public static void main(def args){
+        meth(5){println "closure output " + it}
+    }
+}
+###exp
+public class example{
+
+    static def meth(a, NEWNAME){
+        NEWNAME(a)
+        println "in meth" + NEWNAME
+    }
+
+    public static void main(def args){
+        meth(5){println "closure output " + it}
+    }
+}
+###end

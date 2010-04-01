@@ -31,7 +31,7 @@ public class InlineMethodRefactoring extends GroovyRefactoring {
 
 	public InlineMethodRefactoring(InlineMethodInfo info) {
 		super(info);
-		setName(GroovyRefactoringMessages.InlineMethodRefactoring);
-		pages.add(new InlineMethodPage(GroovyRefactoringMessages.InlineMethodRefactoring,info));
+		setName("Inline method");
+		pages.add(new InlineMethodPage("Inline method",info));
 	}
 }

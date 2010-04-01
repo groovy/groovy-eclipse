@@ -1,0 +1,15 @@
+###src
+class HalloWelt {
+
+    private method() {
+        throw new Exception("test")
+    }
+}
+###exp
+class HalloWelt {
+
+    private method() {
+        throw new Exception("test")
+    }
+}
+###end

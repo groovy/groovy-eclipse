@@ -1,0 +1,38 @@
+###prop
+selectionType=points
+startLine=8
+startColumn=29
+endLine=8
+endColumn=29
+deleteMethod=true
+allInvocations=true
+onlySelectedInvocation=false
+###src
+/*
+ * Test10
+ * Call in a complex chain
+ */
+class InlineSamples10{
+    static void main(args) {
+        InlineSamples10 sp = new InlineSamples10()
+        def res = sp.extract().substring(6)
+        println(res)
+    }
+    String extract() {
+        return "InlineSamples10"
+    }
+}
+###exp
+/*
+ * Test10
+ * Call in a complex chain
+ */
+class InlineSamples10{
+    static void main(args) {
+        InlineSamples10 sp = new InlineSamples10()
+        def res = ("InlineSamples10").substring(6)
+        println(res)
+    }
+
+}
+###end

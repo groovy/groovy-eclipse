@@ -1,0 +1,15 @@
+###src
+class HalloWelt {
+
+    def String halloWelt() {
+        return "not dynamic"
+    }
+}
+###exp
+class HalloWelt {
+
+    def String halloWelt() {
+        return "not dynamic"
+    }
+}
+###end

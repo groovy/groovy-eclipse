@@ -1,0 +1,5 @@
+###src
+x = y * (z + k)
+###exp
+x = y * (z + k)
+###end

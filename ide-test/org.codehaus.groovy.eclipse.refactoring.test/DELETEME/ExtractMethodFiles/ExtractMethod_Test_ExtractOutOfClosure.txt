@@ -1,0 +1,38 @@
+###prop
+selectionType=points
+startLine=6
+startColumn=1
+endLine=8
+endColumn=1
+newMethodName=myExtract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class ExtractOutOfClosure {
+    public start() {
+        def list = []
+        int i = 0;
+        list.each { pos ->
+            println(pos)
+            i++
+        }
+    }
+}
+###exp
+class ExtractOutOfClosure {
+    public start() {
+        def list = []
+        int i = 0;
+        list.each { pos ->
+            i = myExtract(pos, i)
+        }
+    }
+    private int myExtract(pos, int i) {
+        println(pos)
+        i++
+        return i
+    }
+}
+###end

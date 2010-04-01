@@ -1,0 +1,7 @@
+###prop
+startOffset=2
+###src
+assert attribute == 1
+###exp
+        assert attribute == 1
+###end

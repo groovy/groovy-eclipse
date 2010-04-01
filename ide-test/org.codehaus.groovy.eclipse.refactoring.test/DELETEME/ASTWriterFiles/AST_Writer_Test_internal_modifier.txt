@@ -1,0 +1,15 @@
+###prop
+modifier=public
+###src
+class HalloWelt {
+
+    public halloWelt() {
+    }
+}
+###exp
+class HalloWelt {
+
+    public halloWelt() {
+    }
+}
+###end

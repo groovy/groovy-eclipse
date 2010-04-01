@@ -1,0 +1,50 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=5
+startColumn=9
+endLine=5
+endColumn=14
+newClassName=MyNewField
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public Element method() {
+		return new Element();
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Element{
+}
+
+public class GroovyClass {
+	public Element method() {
+		new Element()
+	}
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public MyNewField method() {
+		return new MyNewField();
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class MyNewField{
+}
+
+public class GroovyClass {
+	public MyNewField method() {
+		new MyNewField()
+	}
+}
+###end

@@ -1,0 +1,5 @@
+###src
+public static final foo() {}
+###exp
+def static final foo() {}
+###end

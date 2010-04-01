@@ -21,9 +21,6 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.groovy.eclipse.refactoring.core.GroovyRefactoring;
-import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
-import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringWizard;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -32,8 +29,6 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
-import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -56,7 +51,7 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 		gcu = editor.getGroovyCompilationUnit();
 		if (gcu != null) {
     		if (gcu.getModuleNode() == null) {
-    			displayErrorDialog(GroovyRefactoringMessages.GroovyRefactoringAction_No_Module_Node);
+    			displayErrorDialog("Cannot find Module Node for " + gcu.getElementName());
     			return false;
     		}
     		return PlatformUI.getWorkbench().saveAllEditors(true);
@@ -70,18 +65,6 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 	            new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message), 
 	            IStatus.ERROR | IStatus.WARNING);
 		error.open();
-	}
-
-	public static void openRefactoringWizard(GroovyRefactoring refactoring) {
-		GroovyRefactoringWizard wizard = new GroovyRefactoringWizard(refactoring, getUIFlags());
-		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
-		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-		String titleForFailedChecks = "Groovy Refactoring"; //$NON-NLS-1$
-
-		try {
-			op.run(shell, titleForFailedChecks);
-		} catch (InterruptedException e) {
-		}
 	}
 
 	public void dispose() {

@@ -1,0 +1,15 @@
+###src
+class HalloWelt {
+
+    @SuppressWarnings(value = "unchecked")
+    private halloWelt() {
+    }
+}
+###exp
+class HalloWelt {
+
+    @SuppressWarnings(value = "unchecked")
+    private halloWelt() {
+    }
+}
+###end

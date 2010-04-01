@@ -1,0 +1,14 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=5
+endLine=1
+endColumn=7
+newVarName=bb
+###src
+def aa = "myString"
+aa
+###exp
+def bb = "myString"
+bb
+###end

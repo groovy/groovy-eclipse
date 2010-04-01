@@ -20,6 +20,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.extractMethod;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -35,10 +36,10 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
-import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.SourceCodePoint;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.TextSelection;
 
 /**
  * Class to scan a document and extract all statements which are covered by a
@@ -55,7 +56,7 @@ public class StatementFinder extends CodeVisitorSupport {
 	private boolean isInClosure;
 	private AnnotatedNode methodNode,actualMethod;
 	private ClassNode classNode,actualClass;
-	private final UserSelection selection;
+	private final TextSelection selection;
 	private final IDocument document;
 	private final ModuleNode rootNode;
 	boolean preCode = true;
@@ -67,7 +68,7 @@ public class StatementFinder extends CodeVisitorSupport {
 	 * @param document
 	 * @param rootNode
 	 */
-	public StatementFinder(UserSelection selection, IDocument document,
+	public StatementFinder(TextSelection selection, IDocument document,
 			ModuleNode rootNode) {
 		this.selection = selection;
 		this.document = document;
@@ -338,7 +339,7 @@ public class StatementFinder extends CodeVisitorSupport {
 	 *            if true the node must be in the seletion
 	 * @return
 	 */
-	public static boolean testSelection(UserSelection sel, ASTNode astNode,
+	public static boolean testSelection(TextSelection sel, ASTNode astNode,
 			IDocument doc, boolean inSelection) {
 	    ASTNode node = astNode;
 		if(!ASTTools.hasValidPosition(node) && node instanceof ReturnStatement) {

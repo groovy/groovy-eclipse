@@ -1,0 +1,24 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=17
+endLine=2
+endColumn=18
+newMethodName=NEWMETHNAME
+###src
+class myClass{
+    static def m1(){	
+	}
+	def caller(){
+		m1()
+	}
+}
+###exp
+class myClass{
+    static def NEWMETHNAME(){	
+	}
+	def caller(){
+		NEWMETHNAME()
+	}
+}
+###end

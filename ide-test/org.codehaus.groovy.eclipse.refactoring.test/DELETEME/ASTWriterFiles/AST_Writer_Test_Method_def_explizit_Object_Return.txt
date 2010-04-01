@@ -1,0 +1,15 @@
+###src
+class Test {
+
+    def Object method() {
+        return "dynamic"
+    }
+}
+###exp
+class Test {
+
+    def Object method() {
+        return "dynamic"
+    }
+}
+###end

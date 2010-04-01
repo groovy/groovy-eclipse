@@ -1,0 +1,52 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=7
+startColumn=14
+endLine=7
+endColumn=18
+newClassName=MyNewException
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public void doSomething() throws MyException {
+		throw new MyException();
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+import java.lang.Exception
+public class MyException extends Exception{
+}
+
+public class GroovyClass{
+	def method() {
+		throw new MyException()
+	}
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	public void doSomething() throws MyNewException {
+		throw new MyNewException();
+	}
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+import java.lang.Exception
+public class MyNewException extends Exception{
+}
+
+public class GroovyClass{
+	def method() {
+		throw new MyNewException()
+	}
+}
+###end

@@ -1,0 +1,15 @@
+###src
+while (j < 5) {
+    if (j == 3) {
+        break spring
+    }
+}
+spring: println("done")
+###exp
+while (j < 5) {
+    if (j == 3) {
+        break spring
+    }
+}
+spring: println("done")
+###end

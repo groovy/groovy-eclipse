@@ -237,17 +237,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// FIXADE (2.0.2) --- Fixed! importNode now has correct sloc, or at least it does if its type is not null
 				ImportReference ref = null;
 
+				ClassNode type = importNode.getType();
+				int typeStartOffset = startOffset(type);
+				int typeEndOffset = endOffset(type);
 				if (importNode.getAlias() != null && importNode.getAlias().length() > 0) {
 					// FIXASC will need extra positional info for the 'as' and the alias
 					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positionsFor(splits,
-							startOffset(importNode), endOffset(importNode)), false, ClassFileConstants.AccDefault);
+							typeStartOffset, typeEndOffset), false, ClassFileConstants.AccDefault);
 				} else {
-					ref = new ImportReference(splits, positionsFor(splits, startOffset(importNode), endOffset(importNode)), false,
+					ref = new ImportReference(splits, positionsFor(splits, typeStartOffset, typeEndOffset), false,
 							ClassFileConstants.AccDefault);
 				}
-				ref.sourceEnd = Math.max(importNode.getEnd(), ref.sourceStart);
-				ref.declarationSourceStart = ref.sourceStart;
-				ref.declarationSourceEnd = ref.sourceEnd;
+				ref.sourceEnd = Math.max(typeEndOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
+				ref.declarationSourceStart = importNode.getStart();
+				ref.declarationSourceEnd = importNode.getEnd();
 				ref.declarationEnd = ref.sourceEnd;
 				imports[importNum++] = ref;
 			}

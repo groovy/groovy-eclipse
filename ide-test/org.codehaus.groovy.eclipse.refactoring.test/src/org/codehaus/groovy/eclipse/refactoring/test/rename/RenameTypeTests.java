@@ -103,7 +103,7 @@ public class RenameTypeTests extends RefactoringTest {
         descriptor.setUpdateReferences(updateReferences);
         descriptor.setUpdateTextualOccurrences(updateTextualMatches);
         Refactoring refactoring= createRefactoring(descriptor);
-        assertEquals("was supposed to pass", null, performRefactoring(refactoring));
+        assertEquals("was supposed to pass", null, performRefactoring(refactoring, false));
         ICompilationUnit newcu= pack.getCompilationUnit(newCUName + ".groovy");
         assertTrue("cu " + newcu.getElementName()+ " does not exist", newcu.exists());
         assertEqualLines("invalid renaming", getFileContents(getOutputTestFileName(newCUName)), newcu.getSource());
@@ -147,7 +147,7 @@ public class RenameTypeTests extends RefactoringTest {
     private void helper3(String oldName, String newName, boolean updateRef, boolean updateTextual, boolean updateSimilar, String nonJavaFiles) throws JavaModelException, CoreException, IOException, Exception {
         RefactoringDescriptor descriptor= initWithAllOptions(oldName, oldName, newName, updateRef, updateTextual, updateSimilar, nonJavaFiles, RenamingNameSuggestor.STRATEGY_EMBEDDED);
         Refactoring ref= createRefactoring(descriptor);
-        RefactoringStatus status= performRefactoring(ref);
+        RefactoringStatus status= performRefactoring(ref, false);
         assertNull("was supposed to pass", status);
         checkResultInClass(newName);
         checkMappedSimilarElementsExist(ref);
@@ -156,7 +156,7 @@ public class RenameTypeTests extends RefactoringTest {
     private void helper3_inner(String oldName, String oldInnerName, String newName, String innerNewName, boolean updateRef, boolean updateTextual, boolean updateSimilar, String nonJavaFiles) throws JavaModelException, CoreException, IOException, Exception {
         RefactoringDescriptor descriptor= initWithAllOptions(oldName, oldInnerName, innerNewName, updateRef, updateTextual, updateSimilar, nonJavaFiles, RenamingNameSuggestor.STRATEGY_EMBEDDED);
         Refactoring ref= createRefactoring(descriptor);
-        assertNull("was supposed to pass", performRefactoring(ref));
+        assertNull("was supposed to pass", performRefactoring(ref, false));
         checkResultInClass(newName);
         checkMappedSimilarElementsExist(ref);
     }

@@ -1,0 +1,16 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=30
+endLine=1
+endColumn=31
+newVarName=optionalsXX
+###src
+def multiParams(Object[] optionals){
+        println optionals
+}
+###exp
+def multiParams(Object[] optionalsXX){
+        println optionalsXX
+}
+###end

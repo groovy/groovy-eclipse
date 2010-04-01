@@ -30,11 +30,11 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
-import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 
@@ -56,10 +56,10 @@ public class ASTTools {
 	 * @param doc
 	 * @return
 	 */
-	public static UserSelection getPositionOfBlockStatements(
+	public static TextSelection getPositionOfBlockStatements(
 			BlockStatement block, IDocument doc) {
-		SourceCodePoint startPosition, endPosition;
-		UserSelection methodStatements = new UserSelection(0, 0);
+		int startPosition, endPosition;
+		TextSelection methodStatements = new TextSelection(0, 0);
 
 		if (block.getStatements().size() > 0) {
 			// Set relative position of the new statement block
@@ -72,23 +72,18 @@ public class ASTTools {
 			if (firstStmt instanceof ReturnStatement
 					&& firstStmt.getLineNumber() == -1) {
 				Expression exp = ((ReturnStatement) firstStmt).getExpression();
-				startPosition = new SourceCodePoint(exp.getLineNumber(), exp
-						.getColumnNumber());
+				startPosition = exp.getStart();
 			} else {
-				startPosition = new SourceCodePoint(firstStmt.getLineNumber(),
-						firstStmt.getColumnNumber());
+				startPosition = firstStmt.getStart();
 			}
 			if (lastStmt instanceof ReturnStatement
 					&& lastStmt.getLineNumber() == -1) {
 				Expression exp = ((ReturnStatement) lastStmt).getExpression();
-				endPosition = new SourceCodePoint(exp.getLastLineNumber(), exp
-						.getLastColumnNumber());
+				endPosition = exp.getEnd();
 			} else {
-				endPosition = new SourceCodePoint(lastStmt.getLastLineNumber(),
-						lastStmt.getLastColumnNumber());
+				endPosition = lastStmt.getEnd();
 			}
-			methodStatements = new UserSelection(startPosition, endPosition,
-					doc);
+			methodStatements = new TextSelection(doc, startPosition, endPosition-startPosition);
 
 		}
 		return methodStatements;
@@ -102,7 +97,7 @@ public class ASTTools {
 	 * @param doc
 	 * @return
 	 */
-	public static UserSelection includeLeedingGap(ASTNode node, IDocument doc) {
+	public static TextSelection includeLeedingGap(ASTNode node, IDocument doc) {
 		if (ASTTools.hasValidPosition(node)) {
 			try {
 				String firstLine = doc.get(	doc.getLineOffset(node.getLineNumber() - 1), 
@@ -111,16 +106,14 @@ public class ASTTools {
 				String prefix = firstLine.substring(0, node.getColumnNumber() - 1);
 
 				if (trimLeadingGap(prefix).length() == 0) {
-					return new UserSelection(	new SourceCodePoint(node.getLineNumber(), 1), 
-												new SourceCodePoint(node, SourceCodePoint.END), doc);
+				    IRegion r = doc.getLineInformation(node.getLineNumber()-1);
+					return new TextSelection(doc, r.getOffset(), r.getLength());
 				}
 			} catch (BadLocationException e) {
 				throw new RuntimeException(e);
 			}
 		}
-		return new UserSelection(new SourceCodePoint(node,
-				SourceCodePoint.BEGIN), new SourceCodePoint(node,
-				SourceCodePoint.END), doc);
+		return new TextSelection(doc, 0, doc.getLength());
 	}
 
 	/**
@@ -280,7 +273,7 @@ public class ASTTools {
 	}
 
 	public static String getTextofNode(ASTNode node, IDocument document) {
-		UserSelection sel = new UserSelection(node,document);
+		TextSelection sel = new TextSelection(document, node.getStart(), node.getEnd()-node.getStart());
 		try {
 			return document.get(sel.getOffset(), sel.getLength());
 		} catch (BadLocationException e) {

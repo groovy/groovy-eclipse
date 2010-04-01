@@ -1,0 +1,22 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=11
+endLine=2
+endColumn=11
+newVarName=s1
+shouldFail=true
+failMessage=The variable 's1' already exists in this context, using this name will lead to unexpected behavior
+###src
+def meth(){
+    def oldName
+    def s1
+    m2(oldName)
+}
+###exp
+def meth(){
+    def s1
+    def s1
+    m2(s1)
+}
+###end

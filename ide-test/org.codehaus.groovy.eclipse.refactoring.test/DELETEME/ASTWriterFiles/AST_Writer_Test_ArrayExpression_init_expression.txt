@@ -1,0 +1,7 @@
+###src
+Integer arraySize = 3
+intArray = new Integer[arraySize]
+###exp
+Integer arraySize = 3
+intArray = new Integer[arraySize]
+###end

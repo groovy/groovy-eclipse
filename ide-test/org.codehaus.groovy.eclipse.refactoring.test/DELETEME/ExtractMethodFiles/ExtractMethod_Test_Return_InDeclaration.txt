@@ -1,0 +1,42 @@
+###prop
+selectionType=points
+startLine=5
+startColumn=1
+endLine=10
+endColumn=1
+newMethodName=myParameter
+modifier=static
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class HalloWelt {
+    static void main() {
+        int a,b,c
+        String abc,xyz
+        for (def i = 0; i < 10; i++) {
+            println(a, c, abc, xyz)
+        }
+        c--
+        int ret = 5
+        println(ret)
+    }
+}
+###exp
+class HalloWelt {
+    static void main() {
+        int a,b,c
+        String abc,xyz
+        int ret = myParameter(a, c, abc, xyz)
+        println(ret)
+    }
+    static int myParameter(int a, int c, String abc, String xyz) {
+        for (def i = 0; i < 10; i++) {
+            println(a, c, abc, xyz)
+        }
+        c--
+        int ret = 5
+        return ret
+    }
+}
+###end

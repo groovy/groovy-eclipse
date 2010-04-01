@@ -1,0 +1,7 @@
+###src
+def escape = "do escape \n \r \t"
+println escape
+###exp
+def escape = "do escape \n \r \t"
+println(escape)
+###end

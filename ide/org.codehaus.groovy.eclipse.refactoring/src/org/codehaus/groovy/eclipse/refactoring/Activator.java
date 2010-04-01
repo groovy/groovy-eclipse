@@ -18,10 +18,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring;
 
-import org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.groovyRenameParticipants.ClassRenameParticipant;
-import org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.groovyRenameParticipants.FieldRenameParticipant;
-import org.codehaus.groovy.eclipse.refactoring.core.jdtIntegration.groovyRenameParticipants.MethodRenameParticipant;
-import org.codehaus.groovy.eclipse.refactoring.core.participation.ParticipantManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -46,7 +42,6 @@ public class Activator extends AbstractUIPlugin {
 	@Override
     public void start(BundleContext context) throws Exception {
 		super.start(context);
-		registerRenameParticipants();
 		plugin = this;
 	}
 
@@ -76,10 +71,4 @@ public class Activator extends AbstractUIPlugin {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
 	
-	private void registerRenameParticipants() {
-		ParticipantManager pm = ParticipantManager.getDefaultManager();
-		pm.add(ClassRenameParticipant.class, ParticipantManager.RENAME_CLASS);
-		pm.add(FieldRenameParticipant.class, ParticipantManager.RENAME_FIELD);
-		pm.add(MethodRenameParticipant.class, ParticipantManager.RENAME_METHOD);
-	}
 }

@@ -1,0 +1,15 @@
+###src
+class Test {
+
+    private testMethod() {
+        return new String("returnStatement")
+    }
+}
+###exp
+class Test {
+
+    private testMethod() {
+        return new String("returnStatement")
+    }
+}
+###end

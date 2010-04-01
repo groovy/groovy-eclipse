@@ -1,0 +1,20 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=7
+endLine=2
+endColumn=7
+newFieldName=e2
+shouldFail=false
+failMessage=Testing GRECLIPSE-382 should not have stack overflow when refactoring file with enums
+###src
+class C1 {
+    E e
+}
+enum E { H }
+###exp
+class C1 {
+    E e2
+}
+enum E { H }
+###end

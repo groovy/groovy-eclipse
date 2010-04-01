@@ -1,0 +1,18 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+public class Formatter {
+/* My Comment
+* over many Lines
+     * more Lines
+   */
+}
+###exp
+public class Formatter {
+	/* My Comment
+	 * over many Lines
+	 * more Lines
+	 */
+}
+###end

@@ -1,0 +1,5 @@
+###src
+Map myMap = [:]
+###exp
+Map myMap = [:]
+###end

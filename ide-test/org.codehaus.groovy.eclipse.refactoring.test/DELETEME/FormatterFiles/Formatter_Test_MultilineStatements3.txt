@@ -1,0 +1,16 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+println(
+"hello".
+toString().
+toString()
+)
+###exp
+println(
+		"hello".
+		toString().
+		toString()
+		)
+###end

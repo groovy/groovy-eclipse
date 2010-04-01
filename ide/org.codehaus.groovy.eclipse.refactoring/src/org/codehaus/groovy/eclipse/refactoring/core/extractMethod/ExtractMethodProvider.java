@@ -37,7 +37,6 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.eclipse.refactoring.core.GroovyChange;
 import org.codehaus.groovy.eclipse.refactoring.core.SingleFileRefactoringProvider;
-import org.codehaus.groovy.eclipse.refactoring.core.UserSelection;
 import org.codehaus.groovy.eclipse.refactoring.core.documentProvider.IGroovyDocumentProvider;
 import org.codehaus.groovy.eclipse.refactoring.core.rewriter.ASTWriter;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
@@ -54,6 +53,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MultiTextEdit;
@@ -70,7 +70,7 @@ public class ExtractMethodProvider extends SingleFileRefactoringProvider {
 	private MethodNode newMethod;
 	private BlockStatement block;
 	private int newMethodModifier = 0x0;
-	private UserSelection replaceScope;
+	private TextSelection replaceScope;
 	private final StatementFinder methodCode;
 	private boolean returnMustBeDeclared = false;
 	
@@ -93,7 +93,7 @@ public class ExtractMethodProvider extends SingleFileRefactoringProvider {
 	 * @param docProvider
 	 * @param selection
 	 */
-	public ExtractMethodProvider(IGroovyDocumentProvider docProvider, UserSelection selection, IPreferenceStore preferences) {
+	public ExtractMethodProvider(IGroovyDocumentProvider docProvider, TextSelection selection, IPreferenceStore preferences) {
 		super(docProvider, selection);
 		pref = preferences;
 		methodCode = new StatementFinder(getSelection(), getDocument(), getRootNode());
@@ -376,7 +376,7 @@ public class ExtractMethodProvider extends SingleFileRefactoringProvider {
 		try {
 			block.setSourcePosition(replaceScope.getASTNode(getDocument()));
 			
-			UserSelection blockWithLeadingGap = ASTTools.includeLeedingGap(block, getDocument());
+			TextSelection blockWithLeadingGap = ASTTools.includeLeedingGap(block, getDocument());
 			
 			StringBuilder methodString = new StringBuilder(lineDelimiter);
 			

@@ -1,0 +1,14 @@
+###prop
+setPreferences=true
+bracesStart=same
+###src
+while(true) // bla
+{
+def a = 5
+}
+###exp
+while(true) // bla
+{
+	def a = 5
+}
+###end

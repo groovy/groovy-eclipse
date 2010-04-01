@@ -1,0 +1,41 @@
+###prop
+selectionType=points
+startLine=9
+startColumn=12
+endLine=9
+endColumn=12
+deleteMethod=true
+allInvocations=true
+onlySelectedInvocation=false
+###src
+/*
+ * Test09
+ * Variable with the same name in the extracted method
+ * like in the main method and not returning the value
+ */
+class InlineSamples09 {
+     static void main(args) {
+        int a = 5
+        extract(a);
+        println(a);
+    }
+    static def extract(int a) {
+        a++;
+    }
+}
+###exp
+/*
+ * Test09
+ * Variable with the same name in the extracted method
+ * like in the main method and not returning the value
+ */
+class InlineSamples09 {
+     static void main(args) {
+        int a = 5
+        int a1 = a;
+        a1++;
+        println(a);
+    }
+
+}
+###end

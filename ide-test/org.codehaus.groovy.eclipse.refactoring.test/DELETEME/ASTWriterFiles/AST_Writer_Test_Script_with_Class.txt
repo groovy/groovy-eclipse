@@ -1,0 +1,13 @@
+###src
+String groovy = "script"
+
+class Test {
+
+}
+###exp
+String groovy = "script"
+
+class Test {
+
+}
+###end

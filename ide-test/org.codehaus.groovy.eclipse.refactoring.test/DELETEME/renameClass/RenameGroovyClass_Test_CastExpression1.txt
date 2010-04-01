@@ -1,0 +1,46 @@
+###prop
+selectionInFile=GroovyClass.groovy
+startLine=6
+startColumn=10
+endLine=6
+endColumn=12
+newClassName=NewClassName
+###src
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	private Object o = new Object();
+	public Noed n = (Noed)o;
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class Noed{
+	def a = "HELLO";	
+}
+
+public class GroovyClass{
+	private Noed var = (Noed)var2
+}
+###exp
+Package=code
+Filename=JavaClass.java
+:::
+public class JavaClass {
+	private Object o = new Object();
+	public NewClassName n = (NewClassName)o;
+}
+#NEXT
+Package=code
+Filename=GroovyClass.groovy
+:::
+public class NewClassName{
+	def a = "HELLO";	
+}
+
+public class GroovyClass{
+	private NewClassName var = (NewClassName)var2
+}
+###end

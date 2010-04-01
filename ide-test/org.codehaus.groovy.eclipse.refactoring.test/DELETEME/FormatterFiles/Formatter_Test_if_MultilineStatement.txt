@@ -1,0 +1,14 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+if(true)
+def
+a =
+4
+###exp
+if(true)
+	def
+			a =
+			4
+###end

@@ -31,7 +31,7 @@ public class ExtractMethodRefactoring extends GroovyRefactoring {
 
 	public ExtractMethodRefactoring(ExtractMethodInfo info) {
 		super(info);
-		setName(GroovyRefactoringMessages.ExtractMethodRefactoring);
-		pages.add(new ExtractMethodPage(GroovyRefactoringMessages.ExtractMethodRefactoring,info));
+		setName("Extract method");
+		pages.add(new ExtractMethodPage("Extract method",info));
 	}
 }

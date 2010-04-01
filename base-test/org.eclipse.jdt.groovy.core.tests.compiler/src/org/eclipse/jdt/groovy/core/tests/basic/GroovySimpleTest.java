@@ -1156,7 +1156,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"----------\n" + 
 				"1. ERROR in Foo.groovy (at line 1)\n" + 
 				"	import java.util.regex.Pattern\n" + 
-				"	^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+				"	                       ^^^^^^^\n" + 
 				"The import java.util.regex.Pattern conflicts with a type defined in the same file\n" + 
 				"----------\n");
 	}
@@ -1650,27 +1650,27 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" + 
 			"1. ERROR in X.groovy (at line 2)\n" + 
 			"	import org.andrill.coretools.data.edit.Command\n" + 
-			"	^\n" + 
+			"	                                       ^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command\n" + 
 			"----------\n" + 
 			"2. ERROR in X.groovy (at line 3)\n" + 
 			"	import org.andrill.coretools.data.edit.EditableProperty\n" + 
-			"	^\n" + 
+			"	                                       ^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.edit.EditableProperty\n" + 
 			"----------\n" + 
 			"3. ERROR in X.groovy (at line 4)\n" + 
 			"	import org.andrill.coretools.data.Model\n" + 
-			"	^\n" + 
+			"	                                  ^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.Model\n" + 
 			"----------\n" + 
 			"4. ERROR in X.groovy (at line 5)\n" + 
 			"	import org.andrill.coretools.data.ModelCollection\n" + 
-			"	^\n" + 
+			"	                                  ^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.ModelCollection\n" + 
 			"----------\n" + 
 			"5. ERROR in X.groovy (at line 6)\n" + 
 			"	import org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
-			"	^\n" + 
+			"	                                                ^\n" + 
 			"Groovy:unable to resolve class org.andrill.coretools.data.edit.commands.CompositeCommand\n" + 
 			"----------\n" + 
 			"6. ERROR in X.groovy (at line 8)\n" + 
@@ -3113,7 +3113,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in p\\X.groovy (at line 2)\n" + 
 		"	import a.b.c.D;\n" + 
-		"	^\n" + 
+		"	             ^\n" + 
 		"Groovy:unable to resolve class a.b.c.D\n" + 
 		"----------\n");
 	}
@@ -3608,7 +3608,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"success"
 			);
 	}
-
 	// All groovy but annotation can only be put on METHOD - that is violated by class X
 	public void testAnnotationsTargetType02() {
 		this.runNegativeTest(new String[] {

@@ -28,7 +28,6 @@ import java.util.Vector;
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
 import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.eclipse.refactoring.Activator;
-import org.codehaus.groovy.eclipse.refactoring.ui.GroovyRefactoringMessages;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
@@ -71,7 +70,7 @@ public final class GroovyConventionsBuilder {
 		for (String name : names) {
 			if (name.length() > 0 && Character.isLowerCase(name.charAt(0))) {
 				state.add(new Status(status, Activator.PLUGIN_ID,
-						MessageFormat.format(GroovyRefactoringMessages.GroovyConventions_NameUpperChar,element)));
+						MessageFormat.format("This name is discouraged. According to convention, names of ''{0}'' should start with an uppercase letter.",element)));
 			}
 		}
 		return this;
@@ -82,7 +81,7 @@ public final class GroovyConventionsBuilder {
 		for (String name : names) {
 			if (name.length() > 0 && Character.isUpperCase(name.charAt(0))) {
 				state.add(new Status(status, Activator.PLUGIN_ID,
-						MessageFormat.format(GroovyRefactoringMessages.GroovyConventions_NameLowChar,element)));
+						MessageFormat.format("This name is discouraged. According to convention, names of ''{0}'' should start with a lowercase letter.",element)));
 			}
 		}
 		return this;
@@ -94,7 +93,7 @@ public final class GroovyConventionsBuilder {
 			List<Token> tokenList = tokenizeString(name);
 			if (!(tokenList.size() == 1 && tokenList.get(0).getType() == GroovyTokenTypes.IDENT)) {
 				state.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-						MessageFormat.format(GroovyRefactoringMessages.GroovyConventions_IllegalName, name)));
+						MessageFormat.format("''{0}'' is not a valid Groovy identifier", name)));
 			}
 		}
 		return this;
@@ -108,7 +107,7 @@ public final class GroovyConventionsBuilder {
 		for (String name : names) {
 			if(name.length() == 0) {
 				state.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-						MessageFormat.format(GroovyRefactoringMessages.GroovyConventions_ProvideName, element)));
+						MessageFormat.format("Provide a ''{0}'' name", element)));
 			}
 		}
 	}

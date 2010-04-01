@@ -1,0 +1,15 @@
+###src
+class HalloWelt {
+
+    @Override
+    private halloWelt() {
+    }
+}
+###exp
+class HalloWelt {
+
+    @Override
+    private halloWelt() {
+    }
+}
+###end

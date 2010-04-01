@@ -1,0 +1,5 @@
+###src
+void printCollection(Collection<? super String> c) {}
+###exp
+void printCollection(Collection<? super String> c) {}
+###end

@@ -1,0 +1,44 @@
+###prop
+selectionType=points
+startLine=7
+startColumn=10
+endLine=7
+endColumn=10
+deleteMethod=true
+allInvocations=true
+onlySelectedInvocation=false
+###src
+/*
+ * Test02
+ * Replace multiple calls of the method
+ */
+class InlineSamples02 {
+    static void main(args) {
+        extract()
+        extract()
+        run()
+    }
+    static def run() {
+        extract()
+    }
+    static def extract() {
+        println("test")
+    }
+}
+###exp
+/*
+ * Test02
+ * Replace multiple calls of the method
+ */
+class InlineSamples02 {
+    static void main(args) {
+        println("test")
+        println("test")
+        run()
+    }
+    static def run() {
+        println("test")
+    }
+
+}
+###end

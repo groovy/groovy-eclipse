@@ -1,0 +1,20 @@
+###prop
+###src
+if(true) {
+def i = 5
+println "i: $i var"
+println "${5}"
+println """
+${6}
+"""
+}
+###exp
+if(true) {
+	def i = 5
+	println "i: $i var"
+	println "${5}"
+	println """
+${6}
+"""
+}
+###end
