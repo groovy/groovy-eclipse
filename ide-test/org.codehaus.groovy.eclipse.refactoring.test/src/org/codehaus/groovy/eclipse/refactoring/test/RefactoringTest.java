@@ -253,7 +253,7 @@ public abstract class RefactoringTest extends TestCase {
 					RefactoringStatus.FATAL);
 			create.run(new NullProgressMonitor());
 			RefactoringStatus checkingStatus= create.getConditionCheckingStatus();
-			if (!checkingStatus.isOK())
+			if (checkingStatus.hasError())
 				return checkingStatus;
 			Change change= create.getChange();
 			ChangeDescriptor descriptor= change.getDescriptor();
@@ -263,7 +263,7 @@ public abstract class RefactoringTest extends TestCase {
 				if (refactoringDescriptor instanceof JavaRefactoringDescriptor) {
 					JavaRefactoringDescriptor jrd= (JavaRefactoringDescriptor) refactoringDescriptor;
 					RefactoringStatus validation= jrd.validateDescriptor();
-					if (!validation.isOK() && !performOnFail)
+					if (validation.hasError() && !performOnFail)
 						return validation;
 					RefactoringStatus refactoringStatus= new RefactoringStatus();
 					Class expected= jrd.getClass();
@@ -271,7 +271,7 @@ public abstract class RefactoringTest extends TestCase {
 					jrd= (JavaRefactoringDescriptor) contribution.createDescriptor(jrd.getID(), jrd.getProject(), jrd.getDescription(), jrd.getComment(), contribution.retrieveArgumentMap(jrd), jrd.getFlags());
 					assertEquals(expected, jrd.getClass());
 					ref= jrd.createRefactoring(refactoringStatus);
-					if (!refactoringStatus.isOK() && !performOnFail)
+					if (refactoringStatus.hasError() && !performOnFail)
 						return refactoringStatus;
 					TestRenameParticipantSingle.reset();
 			        // GROOVY not required
@@ -308,7 +308,7 @@ public abstract class RefactoringTest extends TestCase {
 			executePerformOperation(perform, workspace);
 //		}
 		RefactoringStatus status= create.getConditionCheckingStatus();
-		if (!status.isOK() && !performOnFail)
+		if (!status.hasError() && !performOnFail)
 			return status;
 		assertTrue("Change wasn't executed", perform.changeExecuted());
 		Change undo= perform.getUndoChange();
