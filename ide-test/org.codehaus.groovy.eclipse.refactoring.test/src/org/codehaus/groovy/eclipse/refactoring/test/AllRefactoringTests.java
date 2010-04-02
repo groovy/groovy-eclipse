@@ -31,9 +31,9 @@ public class AllRefactoringTests {
     public static Test suite() {
         final TestSuite suite = new TestSuite("Test for "
                 + AllRefactoringTests.class.getPackage().getName());
-        suite.addTestSuite(RenameTypeTests.class);
-        suite.addTestSuite(RenameMethodTests.class);
-        suite.addTestSuite(RenameFieldTests.class);
+        suite.addTest(RenameTypeTests.suite());
+        suite.addTest(RenameMethodTests.suite());
+        suite.addTest(RenameFieldTests.suite());
         return suite;
     }
 

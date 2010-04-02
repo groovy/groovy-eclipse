@@ -484,12 +484,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
-	interface A {
-	}
-
-	enum B implements A {
-	}
-
 	/**
 	 * @param node
 	 */

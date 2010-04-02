@@ -72,7 +72,7 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
     }
 
     public void testFieldReferencesInClass2() throws Exception {
-        doTestForTwoFieldReferencesInClass("class Second extends First { \ndef method() { xxx }\ndef xxx() { }\n def method2(xxx) { xxx = super.xxx }}");
+        doTestForTwoFieldReferencesInClass("class Second extends First { \ndef method() { xxx }\ndef xxxDONT_SHADOW_SUPER_FIELD() { }\n def method2(xxx) { xxx = super.xxx }}");
     }
 
     public void testFieldReferencesInClass3() throws Exception {
