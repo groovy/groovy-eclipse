@@ -23,6 +23,7 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.codehaus.groovy.eclipse.refactoring.core.rename.ForcePreviewParticpant;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
 
 import org.eclipse.core.runtime.CoreException;
@@ -105,6 +106,7 @@ public abstract class RefactoringTest extends TestCase {
 		System.out.println("\n---------------------------------------------");
 		System.out.println("\nTest:" + getClass() + "." + getName());
 		RefactoringCore.getUndoManager().flush();
+		ForcePreviewParticpant.mute();
 	}
 
 	protected void performDummySearch() throws Exception {
@@ -144,6 +146,8 @@ public abstract class RefactoringTest extends TestCase {
 	    } finally {
     		TestRenameParticipantShared.reset();
     		TestRenameParticipantSingle.reset();
+    		ForcePreviewParticpant.unmute();
+
 	    }
 	}
 

@@ -15,6 +15,9 @@ import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 
 public class ForcePreviewParticpant extends RenameParticipant {
+    
+    // give tests ability to disable this participant
+    private static boolean muted = false;
 
     private static final String FIRST_MSG = "This is a rename refactoring involving Groovy.\n" +
             		"Due to Groovy's dynamicism, it is recommended that\n" +
@@ -50,6 +53,9 @@ public class ForcePreviewParticpant extends RenameParticipant {
 
     @Override
     protected boolean initialize(Object element) {
+        if (muted) {
+            return false;
+        }
         if (element instanceof IMember || element instanceof ILocalVariable) {
             IJavaElement member = (IJavaElement) element;
             try {
@@ -69,6 +75,13 @@ public class ForcePreviewParticpant extends RenameParticipant {
             return type.getCompilationUnit().findPrimaryType().equals(type);
         }
         return false;
+    }
+    
+    public static void mute() {
+        muted = true;
+    }
+    public static void unmute() {
+        muted = false;
     }
 
 }
