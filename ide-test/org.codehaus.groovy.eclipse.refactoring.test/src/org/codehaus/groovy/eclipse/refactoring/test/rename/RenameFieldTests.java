@@ -103,7 +103,7 @@ public class RenameFieldTests extends RefactoringTest {
                     .toArray());
 
             RefactoringStatus result = performRefactoring(refactoring, performOnError);
-            assertEquals("was supposed to pass", null, result);
+            assertTrue("was supposed to pass", result==null || result.isOK());
             assertEqualLines("invalid renaming",
                     getFileContents(getOutputTestFileName("A")), cu.getSource());
 

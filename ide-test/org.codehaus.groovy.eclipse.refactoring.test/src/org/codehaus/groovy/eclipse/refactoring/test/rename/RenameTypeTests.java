@@ -103,7 +103,8 @@ public class RenameTypeTests extends RefactoringTest {
         descriptor.setUpdateReferences(updateReferences);
         descriptor.setUpdateTextualOccurrences(updateTextualMatches);
         Refactoring refactoring= createRefactoring(descriptor);
-        assertEquals("was supposed to pass", null, performRefactoring(refactoring, false));
+        RefactoringStatus result = performRefactoring(refactoring, false);
+        assertTrue("was supposed to pass", result == null || result.isOK());
         ICompilationUnit newcu= pack.getCompilationUnit(newCUName + ".groovy");
         assertTrue("cu " + newcu.getElementName()+ " does not exist", newcu.exists());
         assertEqualLines("invalid renaming", getFileContents(getOutputTestFileName(newCUName)), newcu.getSource());
