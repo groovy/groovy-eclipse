@@ -158,6 +158,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
            if (p.getInitialExpression() != null) {
                p.getInitialExpression().visit(this);
            }
+           check(p);
         }
     }
     

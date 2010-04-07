@@ -16,52 +16,6 @@
  -->
 
 <plugin>
-
-   <!--
-   <extension
-         point="org.eclipse.ui.editorActions">
-      <editorContribution
-            id="org.codehaus.groovy.eclipse.codebrowsing.editorContribution"
-            targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor">
-         <action
-               class="org.codehaus.groovy.eclipse.codebrowsing.actions.OpenDeclarationAction"
-               definitionId="org.codehaus.groovy.eclipse.codebrowsing.OpenDeclaration"
-               id="org.codehaus.groovy.eclipse.codebrowsing.OpenDeclaration"
-               label="Open Declaration"
-               menubarPath="navigate/open.ext"
-               style="push"/>
-         <action
-               class="org.codehaus.groovy.eclipse.codebrowsing.actions.ShowOutlineAction"
-               definitionId="org.codehaus.groovy.eclipse.codebrowsing.ShowOutline"
-               id="org.codehaus.groovy.eclipse.codebrowsing.ShowOutline"
-               label="Show Outline"
-               menubarPath="navigate/open.ext"
-               style="push">
-         </action>
-      </editorContribution>
-   </extension>
-   <extension
-		 point="org.eclipse.ui.popupMenus">
-      <viewerContribution
-			targetID="#GroovyEditorContext"
-			id="org.codehaus.groovy.eclipse.codebrowsing.popupBrowseActions">
-		 <action
-			   label="Show Outline"
-			   class="org.codehaus.groovy.eclipse.codebrowsing.actions.ShowOutlineAction"
-			   menubarPath="additions"
-			   definitionId="org.codehaus.groovy.eclipse.codebrowsing.ShowOutline"
-			   id="org.codehaus.groovy.eclipse.codebrowsing.popup.ShowOutline">
-		 </action>
-   <action
-         class="org.codehaus.groovy.eclipse.codebrowsing.actions.OpenDeclarationAction"
-         definitionId="org.codehaus.groovy.eclipse.codebrowsing.OpenDeclaration"
-         id="org.codehaus.groovy.eclipse.codebrowsing.popup.OpenDeclaration"
-         label="Open Declaration"
-         menubarPath="additions">
-   </action>
-	  </viewerContribution> 
-   </extension>
-   --> 
    <extension
          point="org.eclipse.core.runtime.adapters">
       <factory

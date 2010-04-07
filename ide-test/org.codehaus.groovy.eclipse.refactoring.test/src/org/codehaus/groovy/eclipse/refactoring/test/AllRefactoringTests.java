@@ -19,6 +19,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameFieldTests;
+import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameLocalTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests;
 
@@ -34,6 +35,7 @@ public class AllRefactoringTests {
         suite.addTest(RenameTypeTests.suite());
         suite.addTest(RenameMethodTests.suite());
         suite.addTest(RenameFieldTests.suite());
+        suite.addTest(RenameLocalTests.suite());
         return suite;
     }
 

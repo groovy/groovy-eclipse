@@ -80,14 +80,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     VariableExpression var = (VariableExpression) result.declaration;
                     requestedElement = 
                         new LocalVariable((JavaElement) enclosingElement, var.getName(), var.getStart(), var.getEnd()-1, var.getStart(), var.getEnd()-1, 
-                                Signature.createTypeSignature(result.type != null ? result.type.getName() : var.getType().getName(), false), new Annotation[0]);
+                                createTypeSignature(result.type != null ? result.type : var.getType()), new Annotation[0]);
                 } else if (result.declaration instanceof Parameter) {
                     // look in the local scope
                     Parameter var = (Parameter) result.declaration;
                     try {
                         requestedElement = 
                             new LocalVariable((JavaElement) unit.getElementAt(var.getStart()-1), var.getName(), var.getStart(), var.getEnd()-1, var.getStart(), var.getEnd()-1, 
-                                    Signature.createTypeSignature(var.getType().getName(), false), new Annotation[0]);
+                                    createTypeSignature(var.getType()), new Annotation[0]);
                     } catch (JavaModelException e) {
                         Util.log(e, "Problem getting element at " + (var.getStart()-1) + " for file " + unit.getElementName());
                     }
@@ -142,6 +142,17 @@ public class CodeSelectRequestor implements ITypeRequestor {
             return VisitStatus.STOP_VISIT;
         }
         return VisitStatus.CONTINUE;
+    }
+
+
+    
+    private String createTypeSignature(ClassNode node) {
+        String name = node.getName();
+        if (name.startsWith("[")) {
+            return name;
+        } else {
+            return Signature.createTypeSignature(name, false);
+        }
     }
 
 

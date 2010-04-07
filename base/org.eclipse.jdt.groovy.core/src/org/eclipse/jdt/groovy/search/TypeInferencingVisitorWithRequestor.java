@@ -668,7 +668,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					}
 				}
 				// visit the parameter itself
-				VisitStatus status = handleRequestor(node, requestor, result);
+				TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, node,
+						TypeConfidence.EXACT, scope);
+				VisitStatus status = handleRequestor(node, requestor, parameterResult);
 				switch (status) {
 					case CONTINUE:
 						break;

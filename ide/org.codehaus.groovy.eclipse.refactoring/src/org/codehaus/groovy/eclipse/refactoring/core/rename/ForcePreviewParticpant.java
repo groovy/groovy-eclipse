@@ -72,7 +72,7 @@ public class ForcePreviewParticpant extends RenameParticipant {
     
     boolean shouldWarnAboutFileRename() {
         if (type != null) {
-            return type.getCompilationUnit().findPrimaryType().equals(type);
+            return type.equals(type.getCompilationUnit().findPrimaryType());
         }
         return false;
     }

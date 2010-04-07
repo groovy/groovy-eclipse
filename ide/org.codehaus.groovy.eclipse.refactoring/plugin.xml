@@ -116,4 +116,11 @@
                name="Refactoring">
          </page>
       </extension>
+      <extension
+            point="org.eclipse.ltk.core.refactoring.refactoringContributions">
+         <contribution
+               class="org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal.RenameLocalGroovyVariableContribution"
+               id="org.codehaus.groovy.eclipse.refactoring.renameLocal">
+         </contribution>
+      </extension>
 </plugin>

@@ -43,10 +43,8 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
 			CandidateCollector dispatcher = new CandidateCollector(getUnit(), getSelection());
 			try {
 			    ISourceReference target = dispatcher.getRefactoringTarget();
-			    if (target instanceof IMember) {
-			        openJavaRefactoringWizard((IMember) target);
-			    } else if (target instanceof ILocalVariable) {
-			        // do something custom for groovy local variables
+			    if (target instanceof IMember || target instanceof ILocalVariable) {
+			        openJavaRefactoringWizard((IJavaElement) target);
 			    } else {
 			        displayErrorDialog("Cannot refactor on current selection.  No refactoring candidates found");
 			    }
