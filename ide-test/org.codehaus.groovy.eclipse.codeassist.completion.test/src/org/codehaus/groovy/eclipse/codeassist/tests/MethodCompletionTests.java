@@ -146,7 +146,7 @@ public class MethodCompletionTests extends CompletionTestCase {
         expectingNoProblems();
         List<MethodNode> methods = null;
         for (int i = 0; i < 5; i++) {
-            methods = delegateTestParameterNames3(unit);
+            methods = delegateTestParameterNames(unit);
             if (methods.size() == 2) {
                 // expected
                 return;
@@ -155,11 +155,30 @@ public class MethodCompletionTests extends CompletionTestCase {
         fail("expecting to find 2 'm' methods, but instead found " + methods.size() + ":\n" + methods);
     }
 
+    public void testParameterNames4() throws Exception {
+        // failing inermitewntly on build server, so run in a loop
+        env.setAutoBuilding(false);
+        ICompilationUnit unit = create("new MyJavaClass()", "Other");
+        String contents = "public class MyJavaClass { void m(int x) { }\nvoid m(String x, int y) { }}";
+        createJava(contents, "MyJavaClass");
+        env.fullBuild();
+        List<MethodNode> methods = null;
+        for (int i = 0; i < 5; i++) {
+            methods = delegateTestParameterNames((GroovyCompilationUnit) unit);
+            if (methods.size() == 2) {
+                // expected
+                return;
+            }
+        }
+        fail("expecting to find 2 'm' methods, but instead found " + methods.size() + ":\n" + methods);
+
+    }
+
     /**
      * @return
      * @throws Exception
      */
-    private List<MethodNode> delegateTestParameterNames3(GroovyCompilationUnit unit) throws Exception {
+    private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) throws Exception {
         // for some reason, need to wait for indices to be built before this can work
         SynchronizationUtils.waitForIndexingToComplete();
         ClassNode clazz = extract(unit);
@@ -179,32 +198,6 @@ public class MethodCompletionTests extends CompletionTestCase {
         return methods;
     }
 
-    public void testParameterNames4() throws Exception {
-        env.setAutoBuilding(false);
-        ICompilationUnit unit = create("new MyJavaClass()", "Other");
-        String contents = "public class MyJavaClass { void m(int x) { }\nvoid m(String x, int y) { }}";
-        createJava(contents, "MyJavaClass");
-        env.fullBuild();
-        SynchronizationUtils.waitForIndexingToComplete();
-        ClassNode clazz = extract((GroovyCompilationUnit) unit);
-        List<MethodNode> methods = clazz.getMethods("m");
-        for (MethodNode method : methods) {
-            if (method.getParameters().length == 1) {
-                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
-                char[][] names = proposal.createParameterNames(unit);
-                checkNames(new char[][] {"x".toCharArray()}, names);
-            }
-            if (method.getParameters().length == 2) {
-                MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
-                char[][] names = proposal.createParameterNames(unit);
-                checkNames(new char[][] {"x".toCharArray(), "y".toCharArray()}, names);
-            }
-        }
-        if (methods.size() != 2) {
-            fail("expecting to find 2 m methods, but instead found " + methods.size() + ":\n" + methods);
-        }
-    }
-    
     private void checkNames(char[][] expected, char[][] names) {
         if (!CharOperation.equals(expected, names)) {
             fail("Wrong number of parameter names.  Expecting:\n" + 
