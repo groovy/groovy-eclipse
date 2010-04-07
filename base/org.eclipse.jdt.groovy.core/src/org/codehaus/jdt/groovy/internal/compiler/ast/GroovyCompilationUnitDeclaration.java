@@ -506,12 +506,28 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * Build JDT TypeDeclarations for the groovy type declarations that were parsed from the source file.
 	 */
 	private void createTypeDeclarations(ModuleNode moduleNode) {
-		List<ClassNode> classNodes = moduleNode.getClasses();
+		List<ClassNode> moduleClassNodes = moduleNode.getClasses();
 		List<TypeDeclaration> typeDeclarations = new ArrayList<TypeDeclaration>();
 		Map<ClassNode, TypeDeclaration> fromClassNodeToDecl = new HashMap<ClassNode, TypeDeclaration>();
 
 		char[] mainName = toMainName(compilationResult.getFileName());
 
+		// FIXASC the compiler ought to add them in the right order rather than requiring a sort here...
+		List<ClassNode> classNodes = null;
+		if (moduleClassNodes.size() == 1) {
+			classNodes = moduleClassNodes;
+		} else {
+			classNodes = new ArrayList<ClassNode>();
+			// will NPE later if outerclasses aren't first
+			int i = 0;
+			for (ClassNode cn : moduleClassNodes) {
+				if (cn instanceof InnerClassNode) {
+					classNodes.add(cn);
+				} else {
+					classNodes.add(i++, cn);
+				}
+			}
+		}
 		for (ClassNode classNode : classNodes) {
 			if (!classNode.isPrimaryClassNode()) {
 				continue;
@@ -1283,10 +1299,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						RuntimeException rEx = new RuntimeException("Missing binding");
 						rEx.printStackTrace();
 						Util.log(rEx, "Couldn't find binding for '" + classname + "'");
+					} else {
+						byte[] classbytes = clazz.getBytes();
+						String path = clazz.getName().replace('.', '/');
+						compilationResult
+								.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, binding, path));
 					}
-					byte[] classbytes = clazz.getBytes();
-					String path = clazz.getName().replace('.', '/');
-					compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, binding, path));
 				}
 			}
 		}
