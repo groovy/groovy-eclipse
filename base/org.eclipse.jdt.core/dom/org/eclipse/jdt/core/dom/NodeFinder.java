@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,6 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
 
 /**
  * For a given range, finds the covered node and the covering node.
- * This API is still under discussion, see https://bugs.eclipse.org/53024 .
  *
  * @since 3.5
  */

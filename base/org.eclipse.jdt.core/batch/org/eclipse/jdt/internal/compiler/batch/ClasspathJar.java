@@ -182,7 +182,8 @@ public String toString() {
 }
 public char[] normalizedPath() {
 	if (this.normalizedPath == null) {
-		char[] rawName = this.getPath().toCharArray();
+		String path2 = this.getPath();
+		char[] rawName = path2.toCharArray();
 		if (File.separatorChar == '\\') {
 			CharOperation.replace(rawName, '\\', '/');
 		}

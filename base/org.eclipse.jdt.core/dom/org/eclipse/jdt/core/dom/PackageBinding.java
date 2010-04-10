@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,10 +13,14 @@ package org.eclipse.jdt.core.dom;
 
 import java.util.Iterator;
 import java.util.List;
+
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -191,10 +195,20 @@ class PackageBinding implements IPackageBinding {
 	public IJavaElement getJavaElement() {
 		INameEnvironment nameEnvironment = this.binding.environment.nameEnvironment; // a package binding always has a LooupEnvironment set
 		if (!(nameEnvironment instanceof SearchableEnvironment)) return null;
+		// this is not true in standalone DOM/AST
 		NameLookup nameLookup = ((SearchableEnvironment) nameEnvironment).nameLookup;
 		if (nameLookup == null) return null;
 		IJavaElement[] pkgs = nameLookup.findPackageFragments(getName(), false/*exact match*/);
 		if (pkgs == null) return null;
+		if (pkgs.length == 0) {
+			// add additional tracing as this should not happen
+			org.eclipse.jdt.internal.core.util.Util.log(
+				new Status(
+						IStatus.WARNING,
+						JavaCore.PLUGIN_ID,
+						"Searching for package " + getName() + " returns an empty array")); //$NON-NLS-1$ //$NON-NLS-2$
+			return null;
+		}
 		return pkgs[0];
 	}
 

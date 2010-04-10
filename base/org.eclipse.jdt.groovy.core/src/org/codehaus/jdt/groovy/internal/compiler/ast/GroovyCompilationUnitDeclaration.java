@@ -1650,7 +1650,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			return;
 		}
 		char[][] taskTags = this.compilerOptions.taskTags;
-		char[][] taskPriorities = this.compilerOptions.taskPriorites;
+		char[][] taskPriorities = this.compilerOptions.taskPriorities;
 		boolean caseSensitiveTags = this.compilerOptions.isTaskCaseSensitive;
 		try {
 			if (taskTags != null) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -161,7 +161,9 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 		}
 
 		// reuse the initial reach mode for diagnosing missing blank finals
-		flowInfo.setReachMode(initialReachMode);
+		// no, we should use the updated reach mode for diagnosing uninitialized blank finals.
+		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=235781
+		// flowInfo.setReachMode(initialReachMode);
 
 		// check missing blank final field initializations
 		if ((this.constructorCall != null)
@@ -355,7 +357,11 @@ private void internalGenerateCode(ClassScope classScope, ClassFile classFile) {
 		// local variable attributes
 		codeStream.exitUserScope(this.scope);
 		codeStream.recordPositionsFrom(0, this.bodyEnd);
-		classFile.completeCodeAttribute(codeAttributeOffset);
+		try {
+			classFile.completeCodeAttribute(codeAttributeOffset);
+		} catch(NegativeArraySizeException e) {
+			throw new AbortMethod(this.scope.referenceCompilationUnit().compilationResult, null);
+		}
 		attributeNumber++;
 		if ((codeStream instanceof StackMapFrameCodeStream)
 				&& needFieldInitializations

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2009 IBM Corporation and others.
+ * Copyright (c) 2005, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -118,7 +118,20 @@ public int getASTLevel() {
 public boolean isResolvingBindings() {
 	return this.operation.resolveBindings;
 }
-
+/**
+ * Returns the reconcile flag of this context. This flag is a bitwise value of the constant defined
+ * in {@link ICompilationUnit}.
+ *
+ * @return the reconcile flag of this context
+ * @since 3.6
+ *
+ * @see ICompilationUnit#ENABLE_BINDINGS_RECOVERY
+ * @see ICompilationUnit#ENABLE_STATEMENTS_RECOVERY
+ * @see ICompilationUnit#IGNORE_METHOD_BODIES
+ */
+public int getReconcileFlags() {
+	return this.operation.reconcileFlags;
+}
 /**
  * Returns the delta describing the change to the working copy being reconciled.
  * Returns <code>null</code> if there is no change.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,10 +56,6 @@ public CodeSnippetClassFile(
 	this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 0);
 
 	long targetVersion = this.targetJDK = this.referenceBinding.scope.compilerOptions().targetJDK;
-
-	if (targetVersion == ClassFileConstants.JDK1_7) {
-		targetVersion = ClassFileConstants.JDK1_6;
-	}
 	this.header[this.headerOffset++] = (byte) (targetVersion >> 8); // minor high
 	this.header[this.headerOffset++] = (byte) (targetVersion >> 0); // minor low
 	this.header[this.headerOffset++] = (byte) (targetVersion >> 24); // major high
@@ -144,6 +140,15 @@ public static void createProblemType(TypeDeclaration typeDeclaration, Compilatio
 	ClassFile classFile = new CodeSnippetClassFile(typeBinding, null, true);
 
 	// inner attributes
+	if (typeBinding.hasMemberTypes()) {
+		// see bug 180109
+		ReferenceBinding[] members = typeBinding.memberTypes;
+		for (int i = 0, l = members.length; i < l; i++)
+			classFile.recordInnerClasses(members[i]);
+	}
+	// TODO (olivier) handle cases where a field cannot be generated (name too long)
+	// TODO (olivier) handle too many methods
+	// inner attributes
 	if (typeBinding.isNestedType()) {
 		classFile.recordInnerClasses(typeBinding);
 	}
@@ -184,6 +189,7 @@ public static void createProblemType(TypeDeclaration typeDeclaration, Compilatio
 				AbstractMethodDeclaration methodDecl = methodDecls[i];
 				MethodBinding method = methodDecl.binding;
 				if (method == null || method.isConstructor()) continue;
+				method.modifiers = ClassFileConstants.AccPublic | ClassFileConstants.AccAbstract;
 				classFile.addAbstractMethod(methodDecl, method);
 			}
 		} else {
@@ -193,6 +199,8 @@ public static void createProblemType(TypeDeclaration typeDeclaration, Compilatio
 				if (method == null) continue;
 				if (method.isConstructor()) {
 					classFile.addProblemConstructor(methodDecl, method, problemsCopy);
+				} else if (method.isAbstract()) {
+					classFile.addAbstractMethod(methodDecl, method);
 				} else {
 					classFile.addProblemMethod(methodDecl, method, problemsCopy);
 				}

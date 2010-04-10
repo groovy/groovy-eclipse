@@ -330,8 +330,8 @@ public void recordPackageName(char[][] packName) {
 public void record(CategorizedProblem newProblem, ReferenceContext referenceContext) {
 	//new Exception("VERBOSE PROBLEM REPORTING").printStackTrace();
 	if(newProblem.getID() == IProblem.Task) {
-			recordTask(newProblem);
-			return;
+		recordTask(newProblem);
+		return;
 	}
 	if (this.problemCount == 0) {
 		this.problems = new CategorizedProblem[5];

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -70,7 +70,7 @@ abstract public FlowInfo addPotentialInitializationsFrom(FlowInfo otherInits);
  * unknown or else as being both potentially null and potentially non null,
  * then it won't ever be promoted as definitely null or definitely non null. (It
  * could still get promoted to definite unknown).
- * @param local the variable to ckeck
+ * @param local the variable to check
  * @return true iff this flow info prevents local from being promoted to
  *         definite non null or definite null against an enclosing flow info
  */
@@ -295,6 +295,77 @@ public static UnconditionalFlowInfo mergedOptimizedBranches(
 }
 
 /**
+ * Merge if-else branches using optimized boolean conditions
+ */
+public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
+		FlowInfo initsWhenTrue, boolean isOptimizedTrue,
+		FlowInfo initsWhenFalse, boolean isOptimizedFalse,
+		boolean allowFakeDeadBranch, FlowInfo flowInfo) {
+	UnconditionalFlowInfo mergedInfo;
+	if (isOptimizedTrue){
+		if (initsWhenTrue == FlowInfo.DEAD_END && allowFakeDeadBranch) {
+			mergedInfo = initsWhenFalse.setReachMode(FlowInfo.UNREACHABLE).
+				unconditionalInits();
+		}
+		else {
+			mergedInfo =
+				initsWhenTrue.addPotentialInitializationsFrom(initsWhenFalse.
+					nullInfoLessUnconditionalCopy()).
+				unconditionalInits();
+		}
+	}
+	else if (isOptimizedFalse) {
+		if (initsWhenFalse == FlowInfo.DEAD_END && allowFakeDeadBranch) {
+			mergedInfo = initsWhenTrue.setReachMode(FlowInfo.UNREACHABLE).
+				unconditionalInits();
+		}
+		else {
+			mergedInfo =
+				initsWhenFalse.addPotentialInitializationsFrom(initsWhenTrue.
+					nullInfoLessUnconditionalCopy()).
+				unconditionalInits();
+		}
+	}
+	else if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0 &&
+				(initsWhenFalse.tagBits & FlowInfo.UNREACHABLE) != 0 &&
+				initsWhenTrue != FlowInfo.DEAD_END &&
+				initsWhenFalse != FlowInfo.DEAD_END) {
+		// Done when the then branch will always be executed but the condition does not have a boolean
+		// true or false (i.e if(true), etc) for sure
+		// We don't do this if both if and else branches themselves are in an unreachable code
+		// or if any of them is a DEAD_END (e.g. contains 'return' or 'throws')
+		mergedInfo =
+			initsWhenTrue.addPotentialInitializationsFrom(initsWhenFalse.
+				nullInfoLessUnconditionalCopy()).
+			unconditionalInits();
+		// if a variable is only initialized in one branch and not initialized in the other,
+		// then we need to cast a doubt on its initialization in the merged info
+		mergedInfo.definiteInits &= initsWhenFalse.unconditionalCopy().definiteInits;
+		
+	}
+	else if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0 &&
+			(initsWhenTrue.tagBits & FlowInfo.UNREACHABLE) != 0 && initsWhenTrue != FlowInfo.DEAD_END
+			&& initsWhenFalse != FlowInfo.DEAD_END) {
+		// Done when the else branch will always be executed but the condition does not have a boolean
+		// true or false (i.e if(true), etc) for sure
+		// We don't do this if both if and else branches themselves are in an unreachable code
+		// or if any of them is a DEAD_END (e.g. contains 'return' or 'throws')
+		mergedInfo = 
+			initsWhenFalse.addPotentialInitializationsFrom(initsWhenTrue.
+				nullInfoLessUnconditionalCopy()).
+			unconditionalInits();
+		// if a variable is only initialized in one branch and not initialized in the other,
+		// then we need to cast a doubt on its initialization in the merged info
+		mergedInfo.definiteInits &= initsWhenTrue.unconditionalCopy().definiteInits;
+	}
+	else {
+		mergedInfo = initsWhenTrue.
+			mergedWith(initsWhenFalse.unconditionalInits());
+	}
+	return mergedInfo;
+}
+
+/**
  * Return REACHABLE if this flow info is reachable, UNREACHABLE
  * else.
  * @return REACHABLE if this flow info is reachable, UNREACHABLE
@@ -386,4 +457,20 @@ abstract public UnconditionalFlowInfo unconditionalInits();
  * @return a flow info carrying this unconditional flow info
  */
 abstract public UnconditionalFlowInfo unconditionalInitsWithoutSideEffect();
+
+/**
+ * Tell the flowInfo that a local variable got marked as non null or null
+ * due to comparison with null inside an assert expression.
+ * This is to prevent over-aggressive code generation for subsequent if statements
+ * where this variable is being checked against null
+ */
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=303448
+abstract public void markedAsNullOrNonNullInAssertExpression(LocalVariableBinding local);
+
+/** 
+ * Returns true if the local variable being checked for was marked as null or not null
+ * inside an assert expression due to comparison against null.
+ */
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=303448
+abstract public boolean isMarkedAsNullOrNonNullInAssertExpression(LocalVariableBinding local);
 }

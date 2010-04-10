@@ -151,23 +151,23 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 		}
 
 		//GROOVY start: make this decision only for java types, so extract it to a new method so it can be overridden
-		// old code:
-//		if ((typeDecl.modifiers & ClassFileConstants.AccPublic) != 0) {
-//			char[] mainTypeName;
-//			if ((mainTypeName = referenceContext.getMainTypeName()) != null // mainTypeName == null means that implementor of ICompilationUnit decided to return null
-//					&& !CharOperation.equals(mainTypeName, typeDecl.name)) {
-//				problemReporter().publicClassMustMatchFileName(referenceContext, typeDecl);
-//				// tolerate faulty main type name (91091), allow to proceed into type construction
-//			}
-//		}
-		// new code:
+		/* original
+		if ((typeDecl.modifiers & ClassFileConstants.AccPublic) != 0) {
+			char[] mainTypeName;
+			if ((mainTypeName = this.referenceContext.getMainTypeName()) != null // mainTypeName == null means that implementor of ICompilationUnit decided to return null
+					&& !CharOperation.equals(mainTypeName, typeDecl.name)) {
+				problemReporter().publicClassMustMatchFileName(this.referenceContext, typeDecl);
+				// tolerate faulty main type name (91091), allow to proceed into type construction
+			}
+		}
+		// new */
 		checkPublicTypeNameMatchesFilename(typeDecl);
 		// GROOVY end
 		
 		// GROOVY start: make the ClassScope creation overridable
-		// old code:
-		// ClassScope child = new ClassScope(this, typeDecl);
-		// new code:
+		/* original
+		ClassScope child = new ClassScope(this, typeDecl);
+		// new */
 		ClassScope child = buildClassScope(this, typeDecl);
 		// GROOVY end
 		SourceTypeBinding type = child.buildType(null, this.fPackage, accessRestriction);
@@ -213,11 +213,11 @@ void checkAndSetImports() {
 		}
 	}
 	// GROOVY start
-	// old code:
-//	ImportBinding[] resolvedImports = new ImportBinding[numberOfImports];
-//	resolvedImports[0] = getDefaultImports()[0];
-//	int index = 1;
-	// new code:
+	/* original
+	ImportBinding[] resolvedImports = new ImportBinding[numberOfImports];
+	resolvedImports[0] = getDefaultImports()[0];
+	int index = 1;
+	// new code */
 	ImportBinding[] resolvedImports = null;
 	int index = -1;
 	ImportBinding[] defaultImportBindings = getDefaultImports();
@@ -397,11 +397,11 @@ void faultInImports() {
 	}
 	// FIXASC revisit this code and the other piece that does the same job - there must be a neater way
 	// GROOVY start
-	// old code:
-//	ImportBinding[] resolvedImports = new ImportBinding[numberOfImports];
-//	resolvedImports[0] = getDefaultImports()[0];
-//	int index = 1;
-	// new code:
+	/* original
+	ImportBinding[] resolvedImports = new ImportBinding[numberOfImports];
+	resolvedImports[0] = getDefaultImports()[0];
+	int index = 1;
+	// new code */
 	ImportBinding[] resolvedImports = null;
 	int index = -1;
 	ImportBinding[] defaultImportBindings = getDefaultImports();
@@ -443,10 +443,10 @@ void faultInImports() {
 
 			Binding importBinding = findImport(compoundName, compoundName.length);
 			if (!importBinding.isValidBinding()) {
-				/* GROOVY start:
-	                   * old code
+				/* GROOVY start: 
+                // original
 				problemReporter().importProblem(importReference, importBinding);
-				 * new code */
+				// new */
 				reportImportProblem(importReference,importBinding);
 				// GROOVY end
 				continue nextImport;
@@ -462,10 +462,10 @@ void faultInImports() {
 				if (importBinding.problemId() == ProblemReasons.Ambiguous) {
 					// keep it unless a duplicate can be found below
 				} else {
-					// GROOVY start: delegate to overridable helper
-					// old code:
-					// problemReporter().importProblem(importReference, importBinding);
-					// new code:
+					/* GROOVY start: delegate to overridable helper
+					// original
+					problemReporter().importProblem(importReference, importBinding);
+					// new code */
 					recordImportProblem(importReference, importBinding);
 					// GROOVY end
 					continue nextImport;
@@ -490,10 +490,10 @@ void faultInImports() {
 				if (importReference.isTypeUseDeprecated(typeToCheck, this))
 					problemReporter().deprecatedType(typeToCheck, importReference);
 
-				// GROOVY start: use any aliased name for lookup
-				// old code:
-				// ReferenceBinding existingType = typesBySimpleNames.get(compoundName[compoundName.length - 1]);
-				// new code:
+				/* GROOVY start: use any aliased name for lookup
+				// original
+				ReferenceBinding existingType = typesBySimpleNames.get(compoundName[compoundName.length - 1]);
+				// new */
 				ReferenceBinding existingType = typesBySimpleNames.get(importReference.getSimpleName());
 				// GROOVY end
 				
@@ -511,10 +511,10 @@ void faultInImports() {
 					problemReporter().duplicateImport(importReference);
 					continue nextImport;
 				}
-				// GROOVY start: delegate to a method to ask for the shortname to use
-				// old code:
-				// typesBySimpleNames.put(compoundName[compoundName.length - 1], referenceBinding);
-				// new code:
+				/* GROOVY start: delegate to a method to ask for the shortname to use
+				// original
+				typesBySimpleNames.put(compoundName[compoundName.length - 1], referenceBinding);
+				// new */
 				typesBySimpleNames.put(importReference.getSimpleName(),referenceBinding);
 				// GROOVY end
 			} else if (importBinding instanceof FieldBinding) {
@@ -545,10 +545,10 @@ void faultInImports() {
 	for (int i = 0; i < length; i++) {
 		ImportBinding binding = this.imports[i];
 		if (!binding.onDemand && binding.resolvedImport instanceof ReferenceBinding || binding instanceof ImportConflictBinding)
-			// GROOVY start
-			// oldcode
-			// this.typeOrPackageCache.put(binding.compoundName[binding.compoundName.length - 1], binding);
-			// new code
+			/* GROOVY start
+			// original
+			this.typeOrPackageCache.put(binding.compoundName[binding.compoundName.length - 1], binding);
+			// new */
 			this.typeOrPackageCache.put(getSimpleName(binding), binding);
 			// GROOVY end
 	}
@@ -617,10 +617,10 @@ private Binding findImport(char[][] compoundName, int length) {
 		if (type == null)
 			return new ProblemReferenceBinding(CharOperation.subarray(compoundName, 0, i), null, ProblemReasons.NotFound);
 	}
-	// GROOVY start:
-	// old code:
-    //	if (!type.canBeSeenBy(fPackage))
-	// new code:
+	/* GROOVY start:
+	// original
+    if (!type.canBeSeenBy(this.fPackage))
+	// new */
 	if (!canBeSeenBy(type,fPackage))
 	// GROOVY end
 		return new ProblemReferenceBinding(compoundName, type, ProblemReasons.NotVisible);

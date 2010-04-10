@@ -386,7 +386,10 @@ public class WildcardBinding extends ReferenceBinding {
     	if (this.otherBounds == null) {
 	    	if (this.boundKind == Wildcard.EXTENDS)
 		        return this.bound.erasure();
-	    	return typeVariable().erasure();
+			TypeVariableBinding var = typeVariable();
+			if (var != null)
+				return var.erasure();
+		    return this.genericType; // if typeVariable() == null, then its inconsistent & return this.genericType to avoid NPE case
     	}
     	// intersection type
     	return this.bound.id == TypeIds.T_JavaLangObject

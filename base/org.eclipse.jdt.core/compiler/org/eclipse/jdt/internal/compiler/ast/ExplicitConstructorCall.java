@@ -216,7 +216,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 			if (this.binding.isPrivate() && this.accessMode != ExplicitConstructorCall.This) {
 				ReferenceBinding declaringClass = codegenBinding.declaringClass;
 				// from 1.4 on, local type constructor can lose their private flag to ease emulation
-				if ((declaringClass.tagBits & TagBits.IsLocalType) != 0 	&& currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
+				if ((declaringClass.tagBits & TagBits.IsLocalType) != 0 && currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
 					// constructor will not be dumped as private, no emulation required thus
 					codegenBinding.tagBits |= TagBits.ClearPrivateModifier;
 				} else {

@@ -48,6 +48,7 @@ import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
@@ -701,23 +702,27 @@ public class SourceMapper
 			IType currentType = this.types[this.typeDepth];
 			int currenTypeModifiers = this.typeModifiers[this.typeDepth];
 			char[][] parameterTypes = methodInfo.parameterTypes;
-			if (parameterTypes != null && methodInfo.isConstructor && currentType.getDeclaringType() != null && !Flags.isStatic(currenTypeModifiers)) {
+			if (methodInfo.isConstructor && currentType.getDeclaringType() != null && !Flags.isStatic(currenTypeModifiers)) {
 				IType declaringType = currentType.getDeclaringType();
 				String declaringTypeName = declaringType.getElementName();
 				if (declaringTypeName.length() == 0) {
 					IClassFile classFile = declaringType.getClassFile();
-					int length = parameterTypes.length;
+					int length = parameterTypes != null ? parameterTypes.length : 0;
 					char[][] newParameterTypes = new char[length+1][];
 					declaringTypeName = classFile.getElementName();
 					declaringTypeName = declaringTypeName.substring(0, declaringTypeName.indexOf('.'));
 					newParameterTypes[0] = declaringTypeName.toCharArray();
-					System.arraycopy(parameterTypes, 0, newParameterTypes, 1, length);
+					if (length != 0) {
+						System.arraycopy(parameterTypes, 0, newParameterTypes, 1, length);
+					}
 					this.methodParameterTypes[this.typeDepth] = newParameterTypes;
 				} else {
-					int length = parameterTypes.length;
+					int length = parameterTypes != null ? parameterTypes.length : 0;
 					char[][] newParameterTypes = new char[length+1][];
 					newParameterTypes[0] = declaringTypeName.toCharArray();
-					System.arraycopy(parameterTypes, 0, newParameterTypes, 1, length);
+					if (length != 0) {
+						System.arraycopy(parameterTypes, 0, newParameterTypes, 1, length);
+					}
 					this.methodParameterTypes[this.typeDepth] = newParameterTypes;
 				}
 			} else {
@@ -865,26 +870,26 @@ public class SourceMapper
 		try {
 			javaModelManager.cacheZipFiles(this); // Cache any zip files we open during this operation
 
-		if (this.rootPath != null) {
-			source = getSourceForRootPath(this.rootPath, name);
-		}
-
-		if (source == null) {
-			computeAllRootPaths(type);
-			if (this.rootPaths != null) {
-				loop: for (Iterator iterator = this.rootPaths.iterator(); iterator.hasNext(); ) {
-					String currentRootPath = (String) iterator.next();
-					if (!currentRootPath.equals(this.rootPath)) {
-						source = getSourceForRootPath(currentRootPath, name);
-						if (source != null) {
-							// remember right root path
-							this.rootPath = currentRootPath;
-							break loop;
+			if (this.rootPath != null) {
+				source = getSourceForRootPath(this.rootPath, name);
+			}
+	
+			if (source == null) {
+				computeAllRootPaths(type);
+				if (this.rootPaths != null) {
+					loop: for (Iterator iterator = this.rootPaths.iterator(); iterator.hasNext(); ) {
+						String currentRootPath = (String) iterator.next();
+						if (!currentRootPath.equals(this.rootPath)) {
+							source = getSourceForRootPath(currentRootPath, name);
+							if (source != null) {
+								// remember right root path
+								this.rootPath = currentRootPath;
+								break loop;
+							}
 						}
 					}
 				}
 			}
-		}
 		} finally {
 			javaModelManager.flushZipFiles(this); // clean up cached zip files.
 		}
@@ -1215,7 +1220,10 @@ public class SourceMapper
 		this.methodParameterNames = new char[1][][];
 		this.anonymousCounter = 0;
 
-		HashMap oldSourceRanges = (HashMap) this.sourceRanges.clone();
+		HashMap oldSourceRanges = null;
+		if (elementToFind != null) {
+			oldSourceRanges = (HashMap) this.sourceRanges.clone();
+		}
 		try {
 			IProblemFactory factory = new DefaultProblemFactory();
 			SourceElementParser parser = null;

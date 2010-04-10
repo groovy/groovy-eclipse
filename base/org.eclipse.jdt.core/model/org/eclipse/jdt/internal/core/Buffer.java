@@ -76,7 +76,7 @@ public void append(char[] text) {
 		}
 		int length = getLength();
 		synchronized(this.lock) {
-		    if (this.contents == null) return;
+			if (this.contents == null) return;
 			moveAndResizeGap(length, text.length);
 			System.arraycopy(text, 0, this.contents, length, text.length);
 			this.gapStart += text.length;
@@ -290,7 +290,7 @@ public void replace(int position, int length, char[] text) {
 	if (!isReadOnly()) {
 		int textLength = text == null ? 0 : text.length;
 		synchronized (this.lock) {
-		    if (this.contents == null) return;
+			if (this.contents == null) return;
 
 			// move gap
 			moveAndResizeGap(position + length, textLength - length);
@@ -416,7 +416,7 @@ public void setContents(char[] newContents) {
 			string = new String(newContents);
 		}
 		synchronized (this.lock) {
-		    if (this.contents == null) return; // ignore if buffer is closed (as per spec)
+			if (this.contents == null) return; // ignore if buffer is closed (as per spec)
 			this.contents = newContents;
 			this.flags |= F_HAS_UNSAVED_CHANGES;
 			this.gapStart = -1;

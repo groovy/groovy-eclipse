@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -152,37 +152,34 @@ public class UserLibraryManager {
 	}
 
 	public void removeUserLibrary(String libName)  {
-		synchronized (this.userLibraries) {
-			IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
-			String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX+libName;
-			instancePreferences.remove(propertyName);
-			try {
-				instancePreferences.flush();
-			} catch (BackingStoreException e) {
-				Util.log(e, "Exception while removing user library " + libName); //$NON-NLS-1$
-			}
+		IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
+		String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX+libName;
+		instancePreferences.remove(propertyName);
+		try {
+			instancePreferences.flush();
+		} catch (BackingStoreException e) {
+			Util.log(e, "Exception while removing user library " + libName); //$NON-NLS-1$
 		}
-		// this.userLibraries was updated during the PreferenceChangeEvent (see preferenceChange(...))
+		// No need to lock this.userLibraries since SetContainerOperation uses ISchedulingRule now.
 	}
 
-	public void setUserLibrary(String libName, IClasspathEntry[] entries, boolean isSystemLibrary)  {
-		synchronized (this.userLibraries) {
-			IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
-			String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX+libName;
-			try {
-				String propertyValue = UserLibrary.serialize(entries, isSystemLibrary);
-				instancePreferences.put(propertyName, propertyValue); // sends out a PreferenceChangeEvent (see preferenceChange(...))
-			} catch (IOException e) {
-				Util.log(e, "Exception while serializing user library " + libName); //$NON-NLS-1$
-				return;
-			}
-			try {
-				instancePreferences.flush();
-			} catch (BackingStoreException e) {
-				Util.log(e, "Exception while saving user library " + libName); //$NON-NLS-1$
-			}
+	public void setUserLibrary(String libName, IClasspathEntry[] entries, boolean isSystemLibrary) {
+		IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
+		String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX + libName;
+		try {
+			String propertyValue = UserLibrary.serialize(entries, isSystemLibrary);
+			instancePreferences.put(propertyName, propertyValue); // sends out a PreferenceChangeEvent (see
+																	// preferenceChange(...))
+		} catch (IOException e) {
+			Util.log(e, "Exception while serializing user library " + libName); //$NON-NLS-1$
+			return;
 		}
-		// this.userLibraries was updated during the PreferenceChangeEvent (see preferenceChange(...))
+		try {
+			instancePreferences.flush();
+		} catch (BackingStoreException e) {
+			Util.log(e, "Exception while saving user library " + libName); //$NON-NLS-1$
+		}
+		// No need to lock this.userLibraries since SetContainerOperation uses ISchedulingRule now.
 	}
 
 }

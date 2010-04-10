@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -61,13 +61,15 @@ String getSource() throws JavaModelException;
  * associated with the class file (if there is one).
  * </p>
  * <p>
- * If this element has no associated source code <code>null</code> is either returned,
- * or a source range with a -1 offset and a 0 length.
+ * If this element has no associated source code, either <code>null</code> is returned,
+ * or a source range with a -1 offset and a 0 length. {@link SourceRange#isAvailable(ISourceRange)}
+ * can be used to detect that case.
  * </p>
  *
  * @return the source range, or either <code>null</code> or [-1, 0] if this element has no
  *   associated source code
  * @exception JavaModelException if an exception occurs while accessing its corresponding resource
+ * @see SourceRange#isAvailable(ISourceRange)
  */
 ISourceRange getSourceRange() throws JavaModelException;
 }

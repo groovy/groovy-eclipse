@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -139,7 +139,7 @@ private IMemberValuePair[] getTargetElementTypes(long tagBits) {
 	final Object value;
 	if (values.size() == 0) {
 		if ((tagBits & TagBits.AnnotationTarget) != 0)
-			value = new String[0];
+			value = CharOperation.NO_STRINGS;
 		else
 			return Annotation.NO_MEMBER_VALUE_PAIRS;
 	} else if (values.size() == 1) {
@@ -296,16 +296,17 @@ private void generateTypeParameterInfos(BinaryMember parent, char[] signature, H
 	for (int i = 0, typeParameterCount = typeParameterSignatures.length; i < typeParameterCount; i++) {
 		char[] typeParameterSignature = typeParameterSignatures[i];
 		char[] typeParameterName = Signature.getTypeVariable(typeParameterSignature);
+		CharOperation.replace(typeParameterSignature, '/', '.');
 		char[][] typeParameterBoundSignatures = Signature.getTypeParameterBounds(typeParameterSignature);
 		int boundLength = typeParameterBoundSignatures.length;
 		char[][] typeParameterBounds = new char[boundLength][];
 		for (int j = 0; j < boundLength; j++) {
 			typeParameterBounds[j] = Signature.toCharArray(typeParameterBoundSignatures[j]);
-			CharOperation.replace(typeParameterBounds[j], '/', '.');
 		}
 		TypeParameter typeParameter = new TypeParameter(parent, new String(typeParameterName));
 		TypeParameterElementInfo info = new TypeParameterElementInfo();
 		info.bounds = typeParameterBounds;
+		info.boundsSignatures = typeParameterBoundSignatures;
 		typeParameterHandles.add(typeParameter);
 
 		// ensure that 2 binary methods with the same signature but with different return types have different occurence counts.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
@@ -33,6 +34,7 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
+import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 import org.eclipse.text.edits.DeleteEdit;
@@ -53,6 +55,7 @@ public final class ImportRewriteAnalyzer {
 	private final int staticImportOnDemandThreshold;
 
 	private boolean filterImplicitImports;
+	private boolean useContextToFilterImplicitImports;
 	private boolean findAmbiguousImports;
 
 	private int flags= 0;
@@ -62,10 +65,18 @@ public final class ImportRewriteAnalyzer {
 
 	private static final String JAVA_LANG= "java.lang"; //$NON-NLS-1$
 
-	public ImportRewriteAnalyzer(ICompilationUnit cu, CompilationUnit root, String[] importOrder, int threshold, int staticThreshold, boolean restoreExistingImports) {
+	public ImportRewriteAnalyzer(
+			ICompilationUnit cu,
+			CompilationUnit root,
+			String[] importOrder,
+			int threshold,
+			int staticThreshold,
+			boolean restoreExistingImports,
+			boolean useContextToFilterImplicitImports) {
 		this.compilationUnit= cu;
 		this.importOnDemandThreshold= threshold;
 		this.staticImportOnDemandThreshold= staticThreshold;
+		this.useContextToFilterImplicitImports = useContextToFilterImplicitImports;
 
 		this.filterImplicitImports= true;
 		this.findAmbiguousImports= true; //!restoreExistingImports;
@@ -168,9 +179,55 @@ public final class ImportRewriteAnalyzer {
 		}
 	}
 
-	private static String getQualifier(ImportDeclaration decl) {
-		String name= decl.getName().getFullyQualifiedName();
-		return decl.isOnDemand() ? name : Signature.getQualifier(name);
+	private String getQualifier(ImportDeclaration decl) {
+		String name = decl.getName().getFullyQualifiedName();
+		/*
+		 * If it's on demand import, return the fully qualified name. (e.g. pack1.Foo.* => pack.Foo, pack1.* => pack1)
+		 * This is because we need to have pack1.Foo.* and pack1.Bar under different qualifier groups.
+		 */
+		if (decl.isOnDemand()) {
+			return name;
+		}
+		return getQualifier(name, decl.isStatic());
+	}
+
+	private String getQualifier(String name, boolean isStatic) {
+		// For static imports, return the Type name as well as part of the qualifier
+		if (isStatic || !this.useContextToFilterImplicitImports) {
+			return Signature.getQualifier(name);
+		}
+
+		char[] searchedName = name.toCharArray();
+		int index = name.length();
+		/* Stop at the last fragment */
+		JavaProject project = (JavaProject) this.compilationUnit.getJavaProject();
+		do {
+			String testedName = new String(searchedName, 0, index);
+			IJavaElement fragment = null;
+			try {
+				fragment = project.findPackageFragment(testedName);
+			} catch (JavaModelException e) {
+				return name;
+			}
+			if (fragment != null) {
+				return testedName;
+			}
+			try {
+				fragment = project.findType(testedName);
+			} catch (JavaModelException e) {
+				return name;
+			}
+			if (fragment != null) {
+				index = CharOperation.lastIndexOf(Signature.C_DOT, searchedName, 0, index - 1);
+			} else {
+				// we use the heuristic that a name starting with a lowercase is a package name
+				index = CharOperation.lastIndexOf(Signature.C_DOT, searchedName, 0, index - 1);
+				if (Character.isLowerCase(searchedName[index + 1])) {
+					return testedName;
+				}
+			}
+		} while (index >= 0); 
+		return name;
 	}
 
 	private static String getFullName(ImportDeclaration decl) {
@@ -209,7 +266,7 @@ public final class ImportRewriteAnalyzer {
 				currEndLine++;
 				nextOffset= root.getPosition(currEndLine, 0);
 			}
-			currPackage.add(new ImportDeclEntry(name, isStatic, new Region(currOffset, nextOffset - currOffset)));
+			currPackage.add(new ImportDeclEntry(packName.length(), name, isStatic, new Region(currOffset, nextOffset - currOffset)));
 			currOffset= nextOffset;
 			curr= next;
 
@@ -219,7 +276,7 @@ public final class ImportRewriteAnalyzer {
 
 				currPackage= new PackageEntry(); // create a comment package entry for this
 				this.packageEntries.add(currPackage);
-				currPackage.add(new ImportDeclEntry(null, false, new Region(currOffset, nextOffset - currOffset)));
+				currPackage.add(new ImportDeclEntry(packName.length(), null, false, new Region(currOffset, nextOffset - currOffset)));
 
 				currOffset= nextOffset;
 			}
@@ -234,21 +291,29 @@ public final class ImportRewriteAnalyzer {
 			this.packageEntries.add(currPackage);
 		}
 		int length= this.replaceRange.getOffset() + this.replaceRange.getLength() - curr.getStartPosition();
-		currPackage.add(new ImportDeclEntry(name, isStatic, new Region(curr.getStartPosition(), length)));
+		currPackage.add(new ImportDeclEntry(packName.length(), name, isStatic, new Region(curr.getStartPosition(), length)));
 	}
 
 	/**
-	 * Sets that implicit imports (types in default package, CU- package and
-	 * 'java.lang') should not be created. Note that this is a heuristic filter and can
-	 * lead to missing imports, e.g. in cases where a type is forced to be specified
-	 * due to a name conflict.
-	 * By default, the filter is enabled.
-	 * @param filterImplicitImports The filterImplicitImports to set
+	 * Specifies that implicit imports (for types in <code>java.lang</code>, types in the same package as the rewrite
+	 * compilation unit and types in the compilation unit's main type) should not be created, except if necessary to
+	 * resolve an on-demand import conflict.
+	 * <p>
+	 * The filter is enabled by default.
+	 * </p>
+	 * <p>
+	 * Note: {@link #ImportRewriteAnalyzer(ICompilationUnit, CompilationUnit, String[], int, int, boolean, boolean)} with true as the last
+	 * parameter can be used to filter implicit imports when a context is used.
+	 * </p>
+	 * 
+	 * @param filterImplicitImports
+	 *            if <code>true</code>, implicit imports will be filtered
+	 * 
+	 * @see #ImportRewriteAnalyzer(ICompilationUnit, CompilationUnit, String[], int, int, boolean, boolean)
 	 */
 	public void setFilterImplicitImports(boolean filterImplicitImports) {
 		this.filterImplicitImports= filterImplicitImports;
 	}
-
 	/**
 	 * When set searches for imports that can not be folded into on-demand
 	 * imports but must be specified explicitly
@@ -385,10 +450,11 @@ public final class ImportRewriteAnalyzer {
 		return bestMatch;
 	}
 
-	private static boolean isImplicitImport(String qualifier, ICompilationUnit cu) {
+	private boolean isImplicitImport(String qualifier) {
 		if (JAVA_LANG.equals(qualifier)) {
 			return true;
 		}
+		ICompilationUnit cu= this.compilationUnit;
 		String packageName= cu.getParent().getElementName();
 		if (qualifier.equals(packageName)) {
 			return true;
@@ -401,13 +467,13 @@ public final class ImportRewriteAnalyzer {
 	}
 
 	public void addImport(String fullTypeName, boolean isStatic) {
-		String typeContainerName= Signature.getQualifier(fullTypeName);
-		ImportDeclEntry decl= new ImportDeclEntry(fullTypeName, isStatic, null);
+		String typeContainerName= getQualifier(fullTypeName, isStatic);
+		ImportDeclEntry decl= new ImportDeclEntry(typeContainerName.length(), fullTypeName, isStatic, null);
 		sortIn(typeContainerName, decl, isStatic);
 	}
 
 	public boolean removeImport(String qualifiedName, boolean isStatic) {
-		String containerName= Signature.getQualifier(qualifiedName);
+		String containerName= getQualifier(qualifiedName, isStatic);
 
 		int nPackages= this.packageEntries.size();
 		for (int i= 0; i < nPackages; i++) {
@@ -453,9 +519,11 @@ public final class ImportRewriteAnalyzer {
 				PackageEntry packEntry= new PackageEntry(typeContainerName, group, isStatic);
 				packEntry.add(decl);
 				int index= this.packageEntries.indexOf(bestMatch);
-				if (cmp < 0) { 	// insert ahead of best match
+				if (cmp < 0) {
+					// insert ahead of best match
 					this.packageEntries.add(index, packEntry);
-				} else {		// insert after best match
+				} else {
+					// insert after best match
 					this.packageEntries.add(index + 1, packEntry);
 				}
 			}
@@ -522,16 +590,13 @@ public final class ImportRewriteAnalyzer {
 			int nPackageEntries= this.packageEntries.size();
 			for (int i= 0; i < nPackageEntries; i++) {
 				PackageEntry pack= (PackageEntry) this.packageEntries.get(i);
-				int nImports= pack.getNumberOfImports();
-
-				if (this.filterImplicitImports && !pack.isStatic() && isImplicitImport(pack.getName(), this.compilationUnit)) {
-					pack.removeAllNew(onDemandConflicts);
-					nImports= pack.getNumberOfImports();
+				if (this.filterImplicitImports && !pack.isStatic() && isImplicitImport(pack.getName())) {
+					pack.filterImplicitImports(this.useContextToFilterImplicitImports);
 				}
+				int nImports= pack.getNumberOfImports();
 				if (nImports == 0) {
 					continue;
 				}
-
 
 				if (spacesBetweenGroups > 0) {
 					// add a space between two different groups by looking at the two adjacent imports
@@ -552,9 +617,10 @@ public final class ImportRewriteAnalyzer {
 
 				boolean doStarImport= pack.hasStarImport(threshold, onDemandConflicts);
 				if (doStarImport && (pack.find("*") == null)) { //$NON-NLS-1$
-					String starImportString= pack.getName() + ".*"; //$NON-NLS-1$
-					String str= getNewImportString(starImportString, isStatic, lineDelim);
-					stringsToInsert.add(str);
+					String[] imports = getNewImportStrings(pack, isStatic, lineDelim);
+					for (int j = 0, max = imports.length; j < max; j++) {
+						stringsToInsert.add(imports[j]);
+					}
 				}
 
 				for (int k= 0; k < nImports; k++) {
@@ -724,6 +790,25 @@ public final class ImportRewriteAnalyzer {
 		}
 		return buf.toString();
 	}
+	
+	private String[] getNewImportStrings(PackageEntry packageEntry, boolean isStatic, String lineDelim) {
+		boolean isStarImportAdded = false;
+		List allImports = new ArrayList();
+		int nImports = packageEntry.getNumberOfImports();
+		for (int i= 0; i < nImports; i++) {
+			ImportDeclEntry curr= packageEntry.getImportAt(i);
+			String simpleName = curr.getTypeQualifiedName();
+			if (simpleName.indexOf('.') != -1) {
+				// member type imports - we preserve it
+				allImports.add(getNewImportString(curr.getElementName(), isStatic, lineDelim));
+			} else if (!isStarImportAdded) {
+				String starImportString= packageEntry.getName() + ".*"; //$NON-NLS-1$
+				allImports.add(getNewImportString(starImportString, isStatic, lineDelim));
+				isStarImportAdded = true;
+			}
+		}
+		return (String[]) allImports.toArray(new String[allImports.size()]);
+	}
 
 	private static int getFirstTypeBeginPos(CompilationUnit root) {
 		List types= root.types();
@@ -748,13 +833,11 @@ public final class ImportRewriteAnalyzer {
 			}
 			int firstTypePos= getFirstTypeBeginPos(root);
 			if (firstTypePos != -1 && firstTypePos <= afterPackageStatementPos) {
-				if (firstTypePos <= afterPackageStatementPos) {
-					this.flags|= F_NEEDS_TRAILING_DELIM;
-					if (firstTypePos == afterPackageStatementPos) {
-						this.flags|= F_NEEDS_LEADING_DELIM;
-					}
-					return firstTypePos;
+				this.flags|= F_NEEDS_TRAILING_DELIM;
+				if (firstTypePos == afterPackageStatementPos) {
+					this.flags|= F_NEEDS_LEADING_DELIM;
 				}
+				return firstTypePos;
 			}
 			this.flags|= F_NEEDS_LEADING_DELIM;
 			return afterPackageStatementPos; // insert a line after after package statement
@@ -781,11 +864,13 @@ public final class ImportRewriteAnalyzer {
 		private String elementName;
 		private IRegion sourceRange;
 		private final boolean isStatic;
+		private int containerNameLength;
 
-		public ImportDeclEntry(String elementName, boolean isStatic, IRegion sourceRange) {
+		public ImportDeclEntry(int containerNameLength, String elementName, boolean isStatic, IRegion sourceRange) {
 			this.elementName= elementName;
 			this.sourceRange= sourceRange;
 			this.isStatic= isStatic;
+			this.containerNameLength = containerNameLength;
 		}
 
 		public String getElementName() {
@@ -807,6 +892,10 @@ public final class ImportRewriteAnalyzer {
 			return Signature.getSimpleName(this.elementName);
 		}
 
+		public String getTypeQualifiedName() {
+			return this.elementName.substring(this.containerNameLength + 1);
+		}
+		
 		public boolean isOnDemand() {
 			return this.elementName != null && this.elementName.endsWith(".*"); //$NON-NLS-1$
 		}
@@ -930,12 +1019,21 @@ public final class ImportRewriteAnalyzer {
 			return false;
 		}
 
-		public void removeAllNew(Set onDemandConflicts) {
+		public void filterImplicitImports(boolean useContextToFilterImplicitImports) {
 			int nInports= this.importEntries.size();
 			for (int i= nInports - 1; i >= 0; i--) {
 				ImportDeclEntry curr= getImportAt(i);
-				if (curr.isNew() /*&& (onDemandConflicts == null || onDemandConflicts.contains(curr.getSimpleName()))*/) {
-					this.importEntries.remove(i);
+				if (curr.isNew()) {
+					if (!useContextToFilterImplicitImports) {
+						this.importEntries.remove(i);
+					} else {
+						String elementName = curr.getElementName();
+						int lastIndexOf = elementName.lastIndexOf('.');
+						boolean internalClassImport = lastIndexOf > getName().length();
+						if (!internalClassImport) {
+							this.importEntries.remove(i);
+						}
+					}
 				}
 			}
 		}
@@ -1006,11 +1104,11 @@ public final class ImportRewriteAnalyzer {
 				int nImports= getNumberOfImports();
 				for (int i= 0; i < nImports; i++) {
 					ImportDeclEntry curr= getImportAt(i);
-					buf.append("  "); //$NON-NLS-1$
+					buf.append(" "); //$NON-NLS-1$
 					if (curr.isStatic()) {
 						buf.append("static "); //$NON-NLS-1$
 					}
-					buf.append(curr.getSimpleName());
+					buf.append(curr.getTypeQualifiedName());
 					if (curr.isNew()) {
 						buf.append(" (new)"); //$NON-NLS-1$
 					}

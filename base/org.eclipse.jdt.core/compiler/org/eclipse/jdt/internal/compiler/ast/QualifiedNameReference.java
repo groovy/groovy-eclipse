@@ -928,7 +928,7 @@ public TypeBinding resolveType(BlockScope scope) {
 					ReferenceBinding declaringClass = fieldBinding.original().declaringClass;
 					SourceTypeBinding sourceType = methodScope.enclosingSourceType();
 					// check for forward references
-					if ((this.indexOfFirstFieldBinding == 1 || (fieldBinding.modifiers & ClassFileConstants.AccEnum) != 0) // enum constants are checked even when qualified
+					if ((this.indexOfFirstFieldBinding == 1 || (fieldBinding.modifiers & ClassFileConstants.AccEnum) != 0 || (!fieldBinding.isFinal() && declaringClass.isEnum())) // enum constants are checked even when qualified
 							&& sourceType == declaringClass
 							&& methodScope.lastVisibleFieldID >= 0
 							&& fieldBinding.id >= methodScope.lastVisibleFieldID

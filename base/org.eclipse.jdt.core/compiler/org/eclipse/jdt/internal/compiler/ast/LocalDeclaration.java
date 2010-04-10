@@ -223,7 +223,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 					? this.initialization.constant.castTo((variableType.id << 4) + this.initialization.constant.typeID())
 					: Constant.NotAConstant);
 		}
-		// only resolve annotation at the end, for constant to be positionned before (96991)
+		// only resolve annotation at the end, for constant to be positioned before (96991)
 		resolveAnnotations(scope, this.annotations, this.binding);
 	}
 

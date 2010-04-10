@@ -152,14 +152,18 @@ public class InternalNamingConventions {
 				case IS_UNDERSCORE:
 					switch (previousCharKind) {
 						case IS_UNDERSCORE:
-							if (i > 0) {
-								char pc = sourceName[i - 1];
-								previousCharKind =
-									ScannerHelper.isLowerCase(pc) ? IS_LOWER_CASE :
-										ScannerHelper.isUpperCase(pc) ? IS_UPPER_CASE :
-											pc == '_' ? IS_UNDERSCORE : IS_OTHER;
+							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=283539
+							// Process consecutive underscores only for constant types 
+							if (isConstantField) {
+								if (i > 0) {
+									char pc = sourceName[i - 1];
+									previousCharKind =
+										ScannerHelper.isLowerCase(pc) ? IS_LOWER_CASE :
+											ScannerHelper.isUpperCase(pc) ? IS_UPPER_CASE :
+												pc == '_' ? IS_UNDERSCORE : IS_OTHER;
+								}
+								endIndex = i;
 							}
-							endIndex = i;
 							break;
 						case IS_LOWER_CASE:
 						case IS_UPPER_CASE:
@@ -171,7 +175,8 @@ public class InternalNamingConventions {
 										ScannerHelper.isUpperCase(pc) ? IS_UPPER_CASE :
 											pc == '_' ? IS_UNDERSCORE : IS_OTHER;
 							}
-							endIndex = i;
+							// Include the '_' also. E.g. My_word -> "My_" and "word".
+							endIndex = i+1;
 							break;
 						default:
 							previousCharKind = IS_UNDERSCORE;
@@ -230,8 +235,6 @@ public class InternalNamingConventions {
 		}
 		
 		char[] namePart = nameParts[0];
-		int namePartLength = namePart.length;
-		
 		
 		char[] name = CharOperation.toLowerCase(namePart);
 		
@@ -243,17 +246,16 @@ public class InternalNamingConventions {
 		
 		for (int i = 1; i <= namePartsPtr; i++) {
 			namePart = nameParts[i];
-			namePartLength = namePart.length;
 			
 			name = CharOperation.concat(CharOperation.toLowerCase(namePart), nameSuffix);
-			name[namePartLength] = ScannerHelper.toUpperCase(name[namePartLength]);
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=283539
+			// Only the first word is converted to lower case and the rest of them are not changed for non-constants
 			
 			if (!onlyLongest) {
 				names[namePartsPtr - i] = name;
 			}
 			
 			nameSuffix = CharOperation.concat(namePart, nameSuffix);
-			nameSuffix[namePartLength] = ScannerHelper.toUpperCase(nameSuffix[namePartLength]);
 		}
 		if (onlyLongest) {
 			names[0] = name;

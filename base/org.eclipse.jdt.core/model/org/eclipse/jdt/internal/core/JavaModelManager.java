@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -782,7 +782,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					Iterator containerIterator = projectContainers.keySet().iterator();
 					while (containerIterator.hasNext()){
 						IPath containerPath = (IPath)containerIterator.next();
-						if (containerPath.segment(0).equals(containerID)) { // registered container
+						if (containerID.equals(containerPath.segment(0))) { // registered container
 							projectContainers.put(containerPath, null); // reset container value, but leave entry in Map
 						}
 					}
@@ -1096,6 +1096,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		public Object savedState;
 		public boolean triedRead;
 		public IClasspathEntry[] rawClasspath;
+		public IClasspathEntry[] referencedEntries;
 		public IJavaModelStatus rawClasspathStatus;
 		public int rawTimeStamp = 0;
 		public boolean writtingRawClasspath = false;
@@ -1170,9 +1171,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			return setResolvedClasspath(null, null, null, null, this.rawTimeStamp, true/*add classpath change*/);
 		}
 
-		private ClasspathChange setClasspath(IClasspathEntry[] newRawClasspath, IPath newOutputLocation, IJavaModelStatus newRawClasspathStatus, IClasspathEntry[] newResolvedClasspath, Map newRootPathToRawEntries, Map newRootPathToResolvedEntries, IJavaModelStatus newUnresolvedEntryStatus, boolean addClasspathChange) {
+		private ClasspathChange setClasspath(IClasspathEntry[] newRawClasspath, IClasspathEntry[] referencedEntries, IPath newOutputLocation, IJavaModelStatus newRawClasspathStatus, IClasspathEntry[] newResolvedClasspath, Map newRootPathToRawEntries, Map newRootPathToResolvedEntries, IJavaModelStatus newUnresolvedEntryStatus, boolean addClasspathChange) {
 			ClasspathChange classpathChange = addClasspathChange ? addClasspathChange() : null;
 
+			if (referencedEntries != null)	this.referencedEntries = referencedEntries;
+			if (this.referencedEntries == null) this.referencedEntries = ClasspathEntry.NO_ENTRIES;
 			this.rawClasspath = newRawClasspath;
 			this.outputLocation = newOutputLocation;
 			this.rawClasspathStatus = newRawClasspathStatus;
@@ -1192,32 +1195,46 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			return classpathChange;
 		}
 
-		public synchronized ClasspathChange setRawClasspath(IClasspathEntry[] newRawClasspath, IPath newOutputLocation, IJavaModelStatus newRawClasspathStatus) {
-			this.rawTimeStamp++;
-			return setClasspath(newRawClasspath, newOutputLocation, newRawClasspathStatus, null/*resolved classpath*/, null/*root to raw map*/, null/*root to resolved map*/, null/*unresolved status*/, true/*add classpath change*/);
+		public ClasspathChange setRawClasspath(IClasspathEntry[] newRawClasspath, IPath newOutputLocation, IJavaModelStatus newRawClasspathStatus) {
+			return setRawClasspath(newRawClasspath, null, newOutputLocation, newRawClasspathStatus);
 		}
 
-		public synchronized ClasspathChange setResolvedClasspath(IClasspathEntry[] newResolvedClasspath, Map newRootPathToRawEntries, Map newRootPathToResolvedEntries, IJavaModelStatus newUnresolvedEntryStatus, int timeStamp, boolean addClasspathChange) {
+		public synchronized ClasspathChange setRawClasspath(IClasspathEntry[] newRawClasspath, IClasspathEntry[] referencedEntries, IPath newOutputLocation, IJavaModelStatus newRawClasspathStatus) {
+			this.rawTimeStamp++;
+			return setClasspath(newRawClasspath, referencedEntries, newOutputLocation, newRawClasspathStatus, null/*resolved classpath*/, null/*root to raw map*/, null/*root to resolved map*/, null/*unresolved status*/, true/*add classpath change*/);
+		}
+
+		public ClasspathChange setResolvedClasspath(IClasspathEntry[] newResolvedClasspath, Map newRootPathToRawEntries, Map newRootPathToResolvedEntries, IJavaModelStatus newUnresolvedEntryStatus, int timeStamp, boolean addClasspathChange) {
+			return setResolvedClasspath(newResolvedClasspath, null, newRootPathToRawEntries, newRootPathToResolvedEntries, newUnresolvedEntryStatus, timeStamp, addClasspathChange);
+		}
+		
+		public synchronized ClasspathChange setResolvedClasspath(IClasspathEntry[] newResolvedClasspath, IClasspathEntry[] referencedEntries, Map newRootPathToRawEntries, Map newRootPathToResolvedEntries, IJavaModelStatus newUnresolvedEntryStatus, int timeStamp, boolean addClasspathChange) {
 			if (this.rawTimeStamp != timeStamp)
 				return null;
-			return setClasspath(this.rawClasspath, this.outputLocation, this.rawClasspathStatus, newResolvedClasspath, newRootPathToRawEntries, newRootPathToResolvedEntries, newUnresolvedEntryStatus, addClasspathChange);
+			return setClasspath(this.rawClasspath, referencedEntries, this.outputLocation, this.rawClasspathStatus, newResolvedClasspath, newRootPathToRawEntries, newRootPathToResolvedEntries, newUnresolvedEntryStatus, addClasspathChange);
 		}
 
-		public synchronized IClasspathEntry[] readAndCacheClasspath(JavaProject javaProject) {
+		/**
+		 * Reads the classpath and caches the entries. Returns a two-dimensional array, where the number of elements in the row is fixed to 2.
+		 * The first element is an array of raw classpath entries and the second element is an array of referenced entries that may have been stored
+		 * by the client earlier. See {@link IJavaProject#getReferencedClasspathEntries()} for more details. 
+		 * 
+		 */		
+		public synchronized IClasspathEntry[][] readAndCacheClasspath(JavaProject javaProject) {
 			// read file entries and update status
-			IClasspathEntry[] classpath;
+			IClasspathEntry[][] classpath;
 			IJavaModelStatus status;
 			try {
 				classpath = javaProject.readFileEntriesWithException(null/*not interested in unknown elements*/);
 				status = JavaModelStatus.VERIFIED_OK;
 			} catch (CoreException e) {
-				classpath = JavaProject.INVALID_CLASSPATH;
+				classpath = new IClasspathEntry[][]{JavaProject.INVALID_CLASSPATH, ClasspathEntry.NO_ENTRIES};
 				status =
 					new JavaModelStatus(
 						IJavaModelStatusConstants.INVALID_CLASSPATH_FILE_FORMAT,
 						Messages.bind(Messages.classpath_cannotReadClasspathFile, javaProject.getElementName()));
 			} catch (IOException e) {
-				classpath = JavaProject.INVALID_CLASSPATH;
+				classpath = new IClasspathEntry[][]{JavaProject.INVALID_CLASSPATH, ClasspathEntry.NO_ENTRIES};
 				if (Messages.file_badFormat.equals(e.getMessage()))
 					status =
 						new JavaModelStatus(
@@ -1229,7 +1246,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 							IJavaModelStatusConstants.INVALID_CLASSPATH_FILE_FORMAT,
 							Messages.bind(Messages.classpath_cannotReadClasspathFile, javaProject.getElementName()));
 			} catch (ClasspathEntry.AssertionFailedException e) {
-				classpath = JavaProject.INVALID_CLASSPATH;
+				classpath = new IClasspathEntry[][]{JavaProject.INVALID_CLASSPATH, ClasspathEntry.NO_ENTRIES};
 				status =
 					new JavaModelStatus(
 						IJavaModelStatusConstants.INVALID_CLASSPATH_FILE_FORMAT,
@@ -1237,19 +1254,20 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			}
 
 			// extract out the output location
+			int rawClasspathLength = classpath[0].length;
 			IPath output = null;
-			if (classpath.length > 0) {
-				IClasspathEntry entry = classpath[classpath.length - 1];
+			if (rawClasspathLength > 0) {
+				IClasspathEntry entry = classpath[0][rawClasspathLength - 1];
 				if (entry.getContentKind() == ClasspathEntry.K_OUTPUT) {
 					output = entry.getPath();
-					IClasspathEntry[] copy = new IClasspathEntry[classpath.length - 1];
-					System.arraycopy(classpath, 0, copy, 0, copy.length);
-					classpath = copy;
+					IClasspathEntry[] copy = new IClasspathEntry[rawClasspathLength - 1];
+					System.arraycopy(classpath[0], 0, copy, 0, copy.length);
+					classpath[0] = copy;
 				}
 			}
 
 			// store new raw classpath, new output and new status, and null out resolved info
-			setRawClasspath(classpath, output, status);
+			setRawClasspath(classpath[0], classpath[1], output, status);
 
 			return classpath;
 		}
@@ -1293,20 +1311,31 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			return buffer.toString();
 		}
 
-		public boolean writeAndCacheClasspath(JavaProject javaProject, final IClasspathEntry[] newRawClasspath, final IPath newOutputLocation) throws JavaModelException {
+		public boolean writeAndCacheClasspath(
+				JavaProject javaProject, 
+				final IClasspathEntry[] newRawClasspath, 
+				IClasspathEntry[] newReferencedEntries,
+				final IPath newOutputLocation) throws JavaModelException {
 			try {
 				this.writtingRawClasspath = true;
+				if (newReferencedEntries == null) newReferencedEntries = this.referencedEntries;
+				
 				// write .classpath
-				if (!javaProject.writeFileEntries(newRawClasspath, newOutputLocation)) {
+				if (!javaProject.writeFileEntries(newRawClasspath, newReferencedEntries,  newOutputLocation)) {
 					return false;
 				}
 				// store new raw classpath, new output and new status, and null out resolved info
-				setRawClasspath(newRawClasspath, newOutputLocation, JavaModelStatus.VERIFIED_OK);
+				setRawClasspath(newRawClasspath, newReferencedEntries, newOutputLocation, JavaModelStatus.VERIFIED_OK);
 			} finally {
 				this.writtingRawClasspath = false;
 			}
 			return true;
 		}
+		
+		public boolean writeAndCacheClasspath(JavaProject javaProject, final IClasspathEntry[] newRawClasspath, final IPath newOutputLocation) throws JavaModelException {
+			return writeAndCacheClasspath(javaProject, newRawClasspath, null, newOutputLocation);
+		}
+
 	}
 
 	public static class PerWorkingCopyInfo implements IProblemRequestor {
@@ -1379,7 +1408,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/*
 	 * List of IPath of jars that are known to not contain a chaining (through MANIFEST.MF) to another library
 	 */
-	private HashSet nonChainingJars;
+	private Set nonChainingJars;
 
 	/**
 	 * Update the classpath variable cache
@@ -1541,6 +1570,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		// the owner will be responsible for flushing the cache
 		this.zipFiles.set(new ZipCache(owner));
 	}
+
 	public void closeZipFile(ZipFile zipFile) {
 		if (zipFile == null) return;
 		if (this.zipFiles.get() != null) {
@@ -1754,7 +1784,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		ZipCache zipCache = (ZipCache)this.zipFiles.get();
 		if (zipCache == null) {
 			return;
-			}
+		}
 		// the owner will be responsible for flushing the cache
 		// we want to check object identity to make sure this is the owner that created the cache
 		if (zipCache.owner == owner) {
@@ -1802,7 +1832,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		if (container == null) {
 			if (batchContainerInitializations()) {
-				// avoid deep recursion while initializaing container on workspace restart
+				// avoid deep recursion while initializing container on workspace restart
 				// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=60437)
 				try {
 					container = initializeAllContainers(project, containerPath);
@@ -1819,6 +1849,30 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		return container;
 	}
 
+	public IClasspathEntry[] getReferencedClasspathEntries(IClasspathEntry libraryEntry, IJavaProject project) {
+		
+		IClasspathEntry[] referencedEntries = ((ClasspathEntry)libraryEntry).resolvedChainedLibraries();
+		PerProjectInfo perProjectInfo = getPerProjectInfo(project.getProject(), false);
+		
+		if(perProjectInfo == null) 
+			return referencedEntries;
+		
+		List pathToReferencedEntries = new ArrayList(referencedEntries.length);
+		for (int index = 0; index < referencedEntries.length; index++) {
+
+			if (pathToReferencedEntries.contains(referencedEntries[index].getPath()))
+				continue;
+
+			IClasspathEntry persistedEntry = null;
+			if ((persistedEntry = (IClasspathEntry)perProjectInfo.rootPathToResolvedEntries.get(referencedEntries[index].getPath())) != null) {
+				// TODO: reconsider this - may want to copy the values instead of reference assignment?
+				referencedEntries[index] = persistedEntry;
+			}
+			pathToReferencedEntries.add(referencedEntries[index].getPath());
+		}
+		return referencedEntries;
+	}
+	
 	public DeltaProcessor getDeltaProcessor() {
 		return this.deltaState.getDeltaProcessor();
 	}
@@ -1996,11 +2050,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		// set options using preferences service lookup
 		Iterator iterator = this.optionNames.iterator();
 		while (iterator.hasNext()) {
-		    String propertyName = (String) iterator.next();
-		    String propertyValue = service.get(propertyName, null, this.preferencesLookup);
-		    if (propertyValue != null) {
-			    options.put(propertyName, propertyValue);
-		    }
+			String propertyName = (String) iterator.next();
+			String propertyValue = service.get(propertyName, null, this.preferencesLookup);
+			if (propertyValue != null) {
+				options.put(propertyName, propertyValue);
+			}
 		}
 
 		// get encoding through resource plugin
@@ -2874,8 +2928,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	    }
 	}
 	
-	private HashSet loadNonChainingJarsCache() {
-		HashSet nonChainingJarsCache = new HashSet();
+	private Set loadNonChainingJarsCache() {
+		Set nonChainingJarsCache = Collections.synchronizedSet(new HashSet());
 		File nonChainingJarsFile = getNonChainingJarsFile();
 		DataInputStream in = null;
 		try {
@@ -2904,10 +2958,10 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		return JavaCore.getPlugin().getStateLocation().append("nonChainingJarsCache").toFile(); //$NON-NLS-1$
 	}
 	
-	private HashSet getNonChainingJarsCache() throws CoreException {
+	private Set getNonChainingJarsCache() throws CoreException {
 		if (this.nonChainingJars != null)
 			return this.nonChainingJars;
-		HashSet result = new HashSet();
+		Set result = Collections.synchronizedSet(new HashSet());
 		IJavaProject[] projects = getJavaModel().getJavaProjects();
 		for (int i = 0, length = projects.length; i < length; i++) {
 			IJavaProject javaProject = projects[i];
@@ -3494,7 +3548,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		} else {
 			IClasspathEntry[] entries;
 			try {
-				entries = ((JavaProject) project).decodeClasspath(containerString, null/*not interested in unknown elements*/);
+				entries = ((JavaProject) project).decodeClasspath(containerString, null/*not interested in unknown elements*/)[0];
 			} catch (IOException e) {
 				Util.log(e, "Could not recreate persisted container: \n" + containerString); //$NON-NLS-1$
 				entries = JavaProject.INVALID_CLASSPATH;
@@ -3722,12 +3776,14 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		DataOutputStream out = null;
 		try {
 			out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-			HashSet nonChainingJarsCache = getNonChainingJarsCache();
-			out.writeInt(nonChainingJarsCache.size());
-			Iterator entries = nonChainingJarsCache.iterator();
-			while (entries.hasNext()) {
-				IPath path = (IPath) entries.next();
-				out.writeUTF(path.toPortableString());
+			Set nonChainingJarsCache = getNonChainingJarsCache();
+			synchronized (nonChainingJarsCache) {
+				out.writeInt(nonChainingJarsCache.size());
+				Iterator entries = nonChainingJarsCache.iterator();
+				while (entries.hasNext()) {
+					IPath path = (IPath) entries.next();
+					out.writeUTF(path.toPortableString());
+				}
 			}
 		} catch (IOException e) {
 			IStatus status = new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, IStatus.ERROR, "Problems while saving non-chaining jar cache", e); //$NON-NLS-1$
@@ -4329,6 +4385,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					ICompilationUnit unit = JavaModelManager.createCompilationUnitFrom(file, null);
 					IType type = unit.getType(typeName);
 					types.put(typeName, type); // replace stored path with type itself
+				} else {
+					types.remove(typeName);
 				}
 			}
 		}
@@ -4556,6 +4614,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	public void setOptions(Hashtable newOptions) {
 
 		try {
+			Hashtable cachedValue = newOptions == null ? null : new Hashtable(newOptions);
 			IEclipsePreferences defaultPreferences = getDefaultPreferences();
 			IEclipsePreferences instancePreferences = getInstancePreferences();
 
@@ -4566,7 +4625,12 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				while (keys.hasMoreElements()){
 					String key = (String)keys.nextElement();
 					if (!this.optionNames.contains(key)) continue; // unrecognized option
-					if (key.equals(JavaCore.CORE_ENCODING)) continue; // skipped, contributed by resource prefs
+					if (key.equals(JavaCore.CORE_ENCODING)) {
+						if (cachedValue != null) {
+							cachedValue.put(key, JavaCore.getEncoding());
+						}
+						continue; // skipped, contributed by resource prefs
+					}
 					String value = (String)newOptions.get(key);
 					String defaultValue = defaultPreferences.get(key, null);
 					if (defaultValue != null && defaultValue.equals(value)) {
@@ -4581,7 +4645,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			instancePreferences.flush();
 
 			// update cache
-			this.optionsCache = newOptions==null ? null : new Hashtable(newOptions);
+			this.optionsCache = cachedValue;
 		} catch (BackingStoreException e) {
 			// ignore
 		}
@@ -4655,7 +4719,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 						workspace.run(
 							new IWorkspaceRunnable() {
 								public void run(IProgressMonitor progress) throws CoreException {
-									ISavedState savedState = workspace.addSaveParticipant(JavaCore.getJavaCore(), JavaModelManager.this);
+									ISavedState savedState = workspace.addSaveParticipant(JavaCore.PLUGIN_ID, JavaModelManager.this);
 									if (savedState != null) {
 										// the event type coming from the saved state is always POST_AUTO_BUILD
 										// force it to be POST_CHANGE so that the delta processor can handle it
@@ -4697,7 +4761,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		workspace.removeResourceChangeListener(this.deltaState);
-		workspace.removeSaveParticipant(JavaCore.getJavaCore());
+		workspace.removeSaveParticipant(JavaCore.PLUGIN_ID);
 
 		// Stop listening to content-type changes
 		Platform.getContentTypeManager().removeContentTypeChangeListener(this);
@@ -4828,6 +4892,20 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	public void contentTypeChanged(ContentTypeChangeEvent event) {
 		Util.resetJavaLikeExtensions();
 
+		// Walk through projects to reset their secondary types cache
+		IJavaProject[] projects;
+		try {
+			projects = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects();
+		} catch (JavaModelException e) {
+			return;
+		}
+		for (int i = 0, length = projects.length; i < length; i++) {
+			IJavaProject project = projects[i];
+			final PerProjectInfo projectInfo = getPerProjectInfo(project.getProject(), false /* don't create info */);
+			if (projectInfo != null) {
+				projectInfo.secondaryTypes = null;
+			}
+		}
 	}
 
 	public synchronized String cacheToString(String prefix) {

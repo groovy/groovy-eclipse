@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2008 IBM Corporation and others.
+ * Copyright (c) 2004, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,9 +11,6 @@
 package org.eclipse.jdt.internal.core;
 
 import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.core.IMember;
-import org.eclipse.jdt.core.ITypeParameter;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 public class TypeParameter extends SourceRefElement implements ITypeParameter {
@@ -36,7 +33,35 @@ public class TypeParameter extends SourceRefElement implements ITypeParameter {
 		TypeParameterElementInfo info = (TypeParameterElementInfo) getElementInfo();
 		return CharOperation.toStrings(info.bounds);
 	}
-
+	
+	public String[] getBoundsSignatures() throws JavaModelException {
+		
+		String[] boundSignatures = null;
+		TypeParameterElementInfo info = (TypeParameterElementInfo) this.getElementInfo();
+		
+		// For a binary type or method, the signature is already available from the .class file.
+		// No need to construct again
+		if (this.parent instanceof BinaryMember) {
+			char[][] boundsSignatures = info.boundsSignatures;
+			if (boundsSignatures == null || boundsSignatures.length == 0) {
+				return CharOperation.NO_STRINGS;	
+			}
+			return CharOperation.toStrings(info.boundsSignatures);
+		}
+		
+		char[][] bounds = info.bounds;
+		if (bounds == null || bounds.length == 0) {
+			return CharOperation.NO_STRINGS;
+		}
+	
+		int boundsLength = bounds.length;
+		boundSignatures = new String[boundsLength];
+		for (int i = 0; i < boundsLength; i++) {
+			boundSignatures[i] = new String(Signature.createCharArrayTypeSignature(bounds[i], false));
+		}
+		return boundSignatures;
+	}
+	
 	public IMember getDeclaringMember() {
 			return (IMember) getParent();
 	}

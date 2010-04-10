@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,17 +33,21 @@ public interface TagBits {
 	// for method
 	long HasUncheckedTypeArgumentForBoundCheck = ASTNode.Bit9;
 	
+	// set when method has argument(s) that couldn't be resolved
+	long HasUnresolvedArguments = ASTNode.Bit10;
+	
 	// for the type cycle hierarchy check used by ClassScope
 	long BeginHierarchyCheck = ASTNode.Bit9;  // type
 	long EndHierarchyCheck = ASTNode.Bit10; // type
-	long HasParameterAnnotations = ASTNode.Bit11; // method
+	long PauseHierarchyCheck = ASTNode.Bit20; // type
+	long HasParameterAnnotations = ASTNode.Bit11; // method/constructor
 
 
 	// test bit to see if default abstract methods were computed
 	long KnowsDefaultAbstractMethods = ASTNode.Bit11; // type
 
 	long IsArgument = ASTNode.Bit11; // local
-	long ClearPrivateModifier = ASTNode.Bit11; // constructor binding
+	long ClearPrivateModifier = ASTNode.Bit10; // constructor binding
 
 	// test bits to see if parts of binary types are faulted
 	long AreFieldsSorted = ASTNode.Bit13;

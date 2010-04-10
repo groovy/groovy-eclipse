@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann  - Contribution for bug 295551
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -15,7 +16,6 @@ import java.util.Comparator;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -214,20 +214,23 @@ public void finalizeProblems() {
 	int problemCount = this.compilationResult.problemCount;
 	IrritantSet[] foundIrritants = new IrritantSet[this.suppressWarningsCount];
 	CompilerOptions options = this.scope.compilerOptions();
-	boolean hasErrors = false;
+	boolean hasMandatoryErrors = false;
 	nextProblem: for (int iProblem = 0, length = problemCount; iProblem < length; iProblem++) {
 		CategorizedProblem problem = problems[iProblem];
 		int problemID = problem.getID();
+		int irritant = ProblemReporter.getIrritant(problemID);
 		if (problem.isError()) {
-			if (problemID != IProblem.UnusedWarningToken) {
-			// tolerate unused warning tokens which were promoted as errors
-				hasErrors = true;
+			if (irritant == 0) {
+				// tolerate unused warning tokens when mandatory errors
+				hasMandatoryErrors = true;
+				continue;
 			}
-			continue;
+			if (!options.suppressOptionalErrors) {
+				continue;
+			}
 		}
 		int start = problem.getSourceStart();
 		int end = problem.getSourceEnd();
-		int irritant = ProblemReporter.getIrritant(problemID);
 		nextSuppress: for (int iSuppress = 0, suppressCount = this.suppressWarningsCount; iSuppress < suppressCount; iSuppress++) {
 			long position = this.suppressWarningScopePositions[iSuppress];
 			int startSuppress = (int) (position >>> 32);
@@ -264,7 +267,7 @@ public void finalizeProblems() {
 		this.compilationResult.problemCount -= removed;
 	}
 	// flag SuppressWarnings which had no effect (only if no (mandatory) error got detected within unit
-	if (!hasErrors) {
+	if (!hasMandatoryErrors) {
 		int severity = options.getSeverity(CompilerOptions.UnusedWarningToken);
 		if (severity != ProblemSeverities.Ignore) {
 			boolean unusedWarningTokenIsWarning = (severity & ProblemSeverities.Error) == 0;

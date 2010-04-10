@@ -409,10 +409,13 @@ IImportDeclaration[] getImports() throws JavaModelException;
  */
 ICompilationUnit getPrimary();
 /**
- * Returns the working copy owner of this working copy.
- * Returns null if it is not a working copy or if it has no owner.
- *
- * @return WorkingCopyOwner the owner of this working copy or <code>null</code>
+ * Returns <tt>null</tt> if this <code>ICompilationUnit</code> is the primary
+ * working copy, or this <code>ICompilationUnit</code> is not a working copy,
+ * otherwise the <code>WorkingCopyOwner</code>
+ * 
+ * @return <tt>null</tt> if this <code>ICompilationUnit</code> is the primary
+ * working copy, or this <code>ICompilationUnit</code> is not a working copy,
+ * otherwise the <code>WorkingCopyOwner</code>
  * @since 3.0
  */
 WorkingCopyOwner getOwner();
@@ -576,10 +579,10 @@ boolean isWorkingCopy();
  * </p>
  * <p>
  * If requested, a DOM AST representing the compilation unit is returned.
- * Its bindings are computed only if the problem requestor is active, or if the
- * problem detection is forced. This method returns <code>null</code> if the
- * creation of the DOM AST was not requested, or if the requested level of AST
- * API is not supported, or if the working copy was already consistent.
+ * Its bindings are computed only if the problem requestor is active.
+ * This method returns <code>null</code> if the creation of the DOM AST was not requested,
+ * or if the requested level of AST API is not supported, or if the working copy was
+ * already consistent.
  * </p>
  *
  * <p>
@@ -639,10 +642,10 @@ CompilationUnit reconcile(int astLevel, boolean forceProblemDetection, WorkingCo
  * </p>
  * <p>
  * If requested, a DOM AST representing the compilation unit is returned.
- * Its bindings are computed only if the problem requestor is active, or if the
- * problem detection is forced. This method returns <code>null</code> if the
- * creation of the DOM AST was not requested, or if the requested level of AST
- * API is not supported, or if the working copy was already consistent.
+ * Its bindings are computed only if the problem requestor is active.
+ * This method returns <code>null</code> if the creation of the DOM AST was not requested,
+ * or if the requested level of AST API is not supported, or if the working copy was
+ * already consistent.
  * </p>
  *
  * <p>
@@ -707,10 +710,10 @@ CompilationUnit reconcile(int astLevel, boolean forceProblemDetection, boolean e
  * </p>
  * <p>
  * If requested, a DOM AST representing the compilation unit is returned.
- * Its bindings are computed only if the problem requestor is active, or if the
- * problem detection is forced. This method returns <code>null</code> if the
- * creation of the DOM AST was not requested, or if the requested level of AST
- * API is not supported, or if the working copy was already consistent.
+ * Its bindings are computed only if the problem requestor is active.
+ * This method returns <code>null</code> if the creation of the DOM AST was not requested,
+ * or if the requested level of AST API is not supported, or if the working copy was
+ * already consistent.
  * </p>
  *
  * <p>

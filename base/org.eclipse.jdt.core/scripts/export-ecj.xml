@@ -78,18 +78,28 @@
 		<mkdir dir="${dest}" />
 		<echo message="UPDATE ecj-${buildLabel}.jar" />
 		<delete file="${dest}/ecj-${buildLabel}.jar" failonerror="false"/>
+		<copy todir="${ecj-temp-folder}">
+			<fileset dir="scripts/binary" />
+		</copy>
+		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${buildLabel}"/>
 		<zip zipfile="${dest}/ecj-${buildLabel}.jar">
 			<fileset dir="${ecj-temp-folder}">
 				<include name="**/*"/>
 			</fileset>
 			<fileset dir="scripts">
-				<include name="META-INF/**" />
 				<include name="about.html" />
 			</fileset>
 		</zip>
+
+
 		<echo message="UPDATE ecjsrc-${buildLabel}.zip" />
 		<delete file="${dest}/ecjsrc-${buildLabel}.zip" failonerror="false"/>
+		<copy todir="${ecj-temp-src-folder}">
+			<fileset dir="scripts/source" />
+		</copy>
+		<replace file="${ecj-temp-src-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${buildLabel}"/>
 		<zip zipfile="${dest}/ecjsrc-${buildLabel}.zip">
+			<zipfileset dir="ecj-temp-src-folder" />
 			<zipfileset dir="batch" />
 			<zipfileset dir="compiler" />
 			<zipfileset dir="antadapter">
@@ -97,7 +107,6 @@
 			</zipfileset>
 			<zipfileset dir="scripts">
 				<include name="about.html" />
-				<include name="META-INF/**" />
 				<include name="build.xml" />
 			</zipfileset>
 		</zip>
@@ -105,11 +114,16 @@
 	</target>
 
 	<target name="export_src_bin">
+		<property name="buildLabel" value="head" />
 		<property name="dest" value="../../ecj-export" />
 		<mkdir dir="${dest}" />
 		<echo message="UPDATE ecj_all.jar" />
 		<delete file="${dest}/ecj_all.jar" failonerror="false"/>
 		<mkdir dir="${ecj-temp-src-folder}/src" />
+		<copy todir="${ecj-temp-folder}">
+			<fileset dir="scripts/binary" />
+		</copy>
+		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${buildLabel}"/>
 
 		<copy todir="${ecj-temp-src-folder}/src">
 			<fileset dir="batch" />
@@ -124,9 +138,10 @@
 				<include name="**/*"/>
 				<include name="about.html"/>
 			</fileset>
-			<fileset dir="${ecj-temp-src-folder}"/>
+			<fileset dir="${ecj-temp-src-folder}">
+				<exclude name="META-INF/**"/>
+			</fileset>
 			<fileset dir="scripts">
-				<include name="META-INF/**" />
 				<include name="about.html" />
 			</fileset>
 		</zip>

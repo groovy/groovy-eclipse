@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,21 +30,33 @@ import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
 public class SetClasspathOperation extends ChangeClasspathOperation {
 
 	IClasspathEntry[] newRawClasspath;
+	IClasspathEntry[] referencedEntries;
 	IPath newOutputLocation;
 	JavaProject project;
 
-	/**
-	 * When executed, this operation sets the raw classpath and output location of the given project.
-	 */
 	public SetClasspathOperation(
 		JavaProject project,
 		IClasspathEntry[] newRawClasspath,
 		IPath newOutputLocation,
 		boolean canChangeResource) {
 
+		this(project, newRawClasspath, null, newOutputLocation, canChangeResource);
+	}
+	
+	/**
+	 * When executed, this operation sets the raw classpath and output location of the given project.
+	 */
+	public SetClasspathOperation(
+		JavaProject project,
+		IClasspathEntry[] newRawClasspath,
+		IClasspathEntry[] referencedEntries,
+		IPath newOutputLocation,
+		boolean canChangeResource) {
+
 		super(new IJavaElement[] { project }, canChangeResource);
 		this.project = project;
 		this.newRawClasspath = newRawClasspath;
+		this.referencedEntries = referencedEntries;
 		this.newOutputLocation = newOutputLocation;
 	}
 
@@ -56,7 +68,7 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 		try {
 			// set raw classpath and null out resolved info
 			PerProjectInfo perProjectInfo = this.project.getPerProjectInfo();
-			ClasspathChange classpathChange = perProjectInfo.setRawClasspath(this.newRawClasspath, this.newOutputLocation, JavaModelStatus.VERIFIED_OK/*format is ok*/);
+			ClasspathChange classpathChange = perProjectInfo.setRawClasspath(this.newRawClasspath, this.referencedEntries, this.newOutputLocation, JavaModelStatus.VERIFIED_OK/*format is ok*/);
 
 			// if needed, generate delta, update project ref, create markers, ...
 			classpathChanged(classpathChange);

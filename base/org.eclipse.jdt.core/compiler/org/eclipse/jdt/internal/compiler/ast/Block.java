@@ -119,8 +119,8 @@ public void traverse(ASTVisitor visitor, BlockScope blockScope) {
  * Dispatch the call on its last statement.
  */
 public void branchChainTo(BranchLabel label) {
-	 if (this.statements != null) {
-	 	this.statements[this.statements.length - 1].branchChainTo(label);
-	 }
+	if (this.statements != null) {
+		this.statements[this.statements.length - 1].branchChainTo(label);
+	}
 }
 }

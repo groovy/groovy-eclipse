@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -603,10 +603,10 @@ public IPackageFragmentRoot packageFragmentRoot(String resourcePathString, int j
 				return project.getPackageFragmentRoot(jarPath);
 			}
 			Object target = JavaModel.getWorkspaceTarget(new Path(this.containerPaths[index]+'/'+this.relativePaths[index]));
-			if (target instanceof IProject) {
-				return project.getPackageFragmentRoot((IProject) target);
-			}
-			if (target instanceof IResource) {
+			if (target != null) {
+				if (target instanceof IProject) {
+					return project.getPackageFragmentRoot((IProject) target);
+				}
 				IJavaElement element = JavaModelManager.create((IResource) target, project);
 				return (IPackageFragmentRoot) element.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 			}

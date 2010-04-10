@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -81,7 +81,10 @@
  *                                 COMPILER_PB_UNUSED_DECLARED_THROWN_EXCEPTION_EXEMPT_EXCEPTION_AND_THROWABLE
  *     IBM Corporation - added getOptionForConfigurableSeverity(int)
  *     Benjamin Muskalla - added COMPILER_PB_MISSING_SYNCHRONIZED_ON_INHERITED_METHOD
+ *     Stephan Herrmann  - added COMPILER_PB_UNUSED_OBJECT_ALLOCATION
+ *     Stephan Herrmann  - added COMPILER_PB_SUPPRESS_OPTIONAL_ERRORS
  *******************************************************************************/
+
 package org.eclipse.jdt.core;
 
 import java.util.ArrayList;
@@ -976,6 +979,21 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String COMPILER_PB_MISSING_OVERRIDE_ANNOTATION = PLUGIN_ID + ".compiler.problem.missingOverrideAnnotation"; //$NON-NLS-1$
 	/**
+	 * Compiler option ID: Reporting Missing <code>@Override</code> Annotation for interface method implementation.
+	 * <p>When enabled, the compiler will issue an error or a warning whenever encountering a method
+	 *    declaration which overrides or implements a superinterface method but has no <code>@Override</code> annotation.</p>
+	 * <p>This option only has an effect if the compiler compliance is 1.6 or greater.</p>
+	 * <p>The severity of the problem is controlled with option {@link #COMPILER_PB_MISSING_OVERRIDE_ANNOTATION}.</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.missingOverrideAnnotationForInterfaceMethodImplementation"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "enabled", "disabled" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"enabled"</code></dd>
+	 * </dl>
+	 * @since 3.6
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_MISSING_OVERRIDE_ANNOTATION_FOR_INTERFACE_METHOD_IMPLEMENTATION = PLUGIN_ID + ".compiler.problem.missingOverrideAnnotationForInterfaceMethodImplementation"; //$NON-NLS-1$
+	/**
 	 * Compiler option ID: Reporting Missing <code>@Deprecated</code> Annotation.
 	 * <p>When enabled, the compiler will issue an error or a warning whenever encountering a declaration
 	 *    carrying a <code>@deprecated</code> doc tag but having no corresponding <code>@Deprecated</code> annotation.
@@ -1022,7 +1040,7 @@ public final class JavaCore extends Plugin {
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.deadCodeInTrivialIfStatement"</code></dd>
 	 * <dt>Possible values:</dt><dd><code>{ "enabled", "disabled" }</code></dd>
-	 * <dt>Default:</dt><dd><code>"disabled"</code></dd>	
+	 * <dt>Default:</dt><dd><code>"disabled"</code></dd>
 	 * </dl>
 	 * @since 3.5
 	 * @category CompilerOptionID
@@ -1254,13 +1272,14 @@ public final class JavaCore extends Plugin {
 	/**
 	 * Compiler option ID: Treating Optional Error as Fatal.
 	 * <p>When enabled, optional errors (i.e. optional problems which severity is set to <code>"error"</code>) will be treated as standard
-	 *    compiler errors, yielding problem methods/types preventing from running offending code until the issue got resolved.
+	 *    compiler errors, yielding problem methods/types preventing from running offending code until the issue got resolved.</p>
 	 * <p>When disabled, optional errors are only considered as warnings, still carrying an error indication to make them more
-	 *    severe. Note that by default, errors are fatal, whether they are optional or not.
+	 *    severe. Note that by default, optional errors are not fatal. Non-optional errors are
+	 *    always fatal.</p>
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.fatalOptionalError"</code></dd>
 	 * <dt>Possible values:</dt><dd><code>{ "enabled", "disabled" }</code></dd>
-	 * <dt>Default:</dt><dd><code>"enabled"</code></dd>
+	 * <dt>Default:</dt><dd><code>"disabled"</code></dd>
 	 * </dl>
 	 * @since 3.2
 	 * @category CompilerOptionID
@@ -1402,6 +1421,21 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String COMPILER_PB_SUPPRESS_WARNINGS = PLUGIN_ID + ".compiler.problem.suppressWarnings"; //$NON-NLS-1$
 	/**
+	 * Compiler option ID: Further Determining the Effect of <code>@SuppressWarnings</code> if also
+	 * {@link #COMPILER_PB_SUPPRESS_WARNINGS} is enabled.
+	 * <p>When enabled, the <code>@SuppressWarnings</code> annotation can additionally be used to suppress 
+	 * optional compiler diagnostics that have been configured as {@link #ERROR}.
+	 * <p>When disabled, all <code>@SuppressWarnings</code> annotations only affects warnings.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.suppressOptionalErrors"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "enabled", "disabled" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"disabled"</code></dd>
+	 * </dl>
+	 * @since 3.6
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_SUPPRESS_OPTIONAL_ERRORS = PLUGIN_ID + ".compiler.problem.suppressOptionalErrors"; //$NON-NLS-1$
+	/**
 	 * Compiler option ID: Reporting Unhandled Warning Token for <code>@SuppressWarnings</code>.
 	 * <p>When enabled, the compiler will issue an error or a warning when encountering a token
 	 *    it cannot handle inside a <code>@SuppressWarnings</code> annotation.
@@ -1525,6 +1559,19 @@ public final class JavaCore extends Plugin {
 	 * @category CompilerOptionID
 	 */
 	public static final String COMPILER_PB_MISSING_SYNCHRONIZED_ON_INHERITED_METHOD = PLUGIN_ID + ".compiler.problem.missingSynchronizedOnInheritedMethod"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Allocation of an Unused Object.
+	 * <p>When enabled, the compiler will issue an error or a warning if an object is allocated but never used,
+	 * neither by holding a reference nor by invoking one of the object's methods.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.unusedObjectAllocation"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"ignore"</code></dd>
+	 * </dl>
+	 * @since 3.6
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_UNUSED_OBJECT_ALLOCATION = PLUGIN_ID + ".compiler.problem.unusedObjectAllocation";  //$NON-NLS-1$
 	/**
 	 * Core option ID: Computing Project Build Order.
 	 * <p>Indicate whether JavaCore should enforce the project build order to be based on
@@ -2969,8 +3016,8 @@ public final class JavaCore extends Plugin {
 	 *
 	 * @return a table of all known configurable options with their default values
 	 */
- 	public static Hashtable getDefaultOptions(){
- 		return JavaModelManager.getJavaModelManager().getDefaultOptions();
+	public static Hashtable getDefaultOptions(){
+		return JavaModelManager.getJavaModelManager().getDefaultOptions();
 	}
 
 	/**
@@ -4540,6 +4587,33 @@ public final class JavaCore extends Plugin {
 			false, // no access rules to combine
 			extraAttributes);
 	}
+	
+	/**
+	 * Returns an array of classpath entries that are referenced directly or indirectly 
+	 * by a given classpath entry. For the entry kind {@link IClasspathEntry#CPE_LIBRARY}, 
+	 * the method returns the libraries that are included in the Class-Path section of 
+	 * the MANIFEST.MF file. If a referenced JAR file has further references to other library 
+	 * entries, they are processed recursively and added to the list. For entry kinds other 
+	 * than {@link IClasspathEntry#CPE_LIBRARY}, this method returns an empty array.
+	 * <p> 
+	 * If a referenced entry has already been stored 
+	 * in the given project's .classpath, the stored attributes are populated in the corresponding
+	 * referenced entry. For more details on storing referenced entries see
+	 * see {@link IJavaProject#setRawClasspath(IClasspathEntry[], IClasspathEntry[], IPath, 
+	 * IProgressMonitor)}. 
+	 * </p>
+	 * 
+	 * @param libraryEntry the library entry whose referenced entries are sought 
+	 * @param project project where the persisted referenced entries to be retrieved from
+	 * @return an array of classpath entries that are referenced directly or indirectly by the given entry. 
+	 * 			If not applicable, returns an empty array.
+	 * @since 3.6
+	 */
+	public static IClasspathEntry[] getReferencedClasspathEntries(IClasspathEntry libraryEntry, IJavaProject project) {
+		JavaModelManager manager = JavaModelManager.getJavaModelManager();
+		return manager.getReferencedClasspathEntries(libraryEntry, project);
+	}
+	
 	/**
 	 * Removed the given classpath variable. Does nothing if no value was
 	 * set for this classpath variable.

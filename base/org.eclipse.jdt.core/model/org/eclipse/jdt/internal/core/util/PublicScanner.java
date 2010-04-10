@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -365,10 +365,9 @@ public void checkTaskTag(int commentStart, int commentEnd) throws InvalidInputEx
 			continue;
 		}
 		// trim the message
+		// we don't trim the beginning of the message to be able to show it after the task tag
 		while (CharOperation.isWhitespace(src[end]) && msgStart <= end)
 			end--;
-		while (CharOperation.isWhitespace(src[msgStart]) && msgStart <= end)
-			msgStart++;
 		// update the end position of the task
 		this.foundTaskPositions[i][1] = end;
 		// get the message source
@@ -1376,6 +1375,9 @@ public int getNextToken() throws InvalidInputException {
 						}
 
 						while (this.currentCharacter != '"') {
+							if (this.currentPosition >= this.eofPosition) {
+								throw new InvalidInputException(UNTERMINATED_STRING);
+							}
 							/**** \r and \n are not valid in string literals ****/
 							if ((this.currentCharacter == '\n') || (this.currentCharacter == '\r')) {
 								// relocate if finding another quote fairly close: thus unicode '/u000D' will be fully consumed
@@ -1483,6 +1485,12 @@ public int getNextToken() throws InvalidInputException {
 								} //jump over the \\
 								boolean isUnicode = false;
 								while (this.currentCharacter != '\r' && this.currentCharacter != '\n') {
+									if (this.currentPosition >= this.eofPosition) {
+										this.lastCommentLinePosition = this.currentPosition;
+										this.currentPosition ++;
+										// this avoids duplicating the code in the catch(IndexOutOfBoundsException e)
+										throw new IndexOutOfBoundsException();
+									}
 									this.lastCommentLinePosition = this.currentPosition;
 									//get the next char
 									isUnicode = false;
@@ -1501,16 +1509,16 @@ public int getNextToken() throws InvalidInputException {
 								 * We need to completely consume the line break
 								 */
 								if (this.currentCharacter == '\r'
-								   && this.eofPosition > this.currentPosition) {
-								   	if (this.source[this.currentPosition] == '\n') {
+										&& this.eofPosition > this.currentPosition) {
+									if (this.source[this.currentPosition] == '\n') {
 										this.currentPosition++;
 										this.currentCharacter = '\n';
-								   	} else if ((this.source[this.currentPosition] == '\\')
+									} else if ((this.source[this.currentPosition] == '\\')
 										&& (this.source[this.currentPosition + 1] == 'u')) {
 										getNextUnicodeChar();
 										isUnicode = true;
 									}
-							   	}
+								}
 								recordComment(TokenNameCOMMENT_LINE);
 								if (this.taskTags != null) checkTaskTag(this.startPosition, this.currentPosition);
 								if ((this.currentCharacter == '\r') || (this.currentCharacter == '\n')) {
@@ -1598,6 +1606,9 @@ public int getNextToken() throws InvalidInputException {
 								//loop until end of comment */
 								int firstTag = 0;
 								while ((this.currentCharacter != '/') || (!star)) {
+									if (this.currentPosition >= this.eofPosition) {
+										throw new InvalidInputException(UNTERMINATED_COMMENT);
+									}
 									if ((this.currentCharacter == '\r') || (this.currentCharacter == '\n')) {
 										if (this.recordLineSeparator) {
 											if (isUnicode) {
@@ -1862,13 +1873,16 @@ public final void jumpOverMethodBody() {
 								getNextUnicodeChar();
 							} else {
 								if (this.withoutUnicodePtr != 0) {
-								    unicodeStore();
+									unicodeStore();
 								}
 							}
 						} catch (InvalidInputException ex) {
 								// ignore
 						}
 						while (this.currentCharacter != '"') {
+							if (this.currentPosition >= this.eofPosition) {
+								return;
+							}
 							if (this.currentCharacter == '\r'){
 								if (this.source[this.currentPosition] == '\n') this.currentPosition++;
 								break NextToken; // the string cannot go further that the line
@@ -1932,6 +1946,12 @@ public final void jumpOverMethodBody() {
 								} //jump over the \\
 								boolean isUnicode = false;
 								while (this.currentCharacter != '\r' && this.currentCharacter != '\n') {
+									if (this.currentPosition >= this.eofPosition) {
+										this.lastCommentLinePosition = this.currentPosition;
+										this.currentPosition ++;
+										// this avoids duplicating the code inside the catch(IndexOutOfBoundsException e) below
+										throw new IndexOutOfBoundsException();
+									}
 									this.lastCommentLinePosition = this.currentPosition;
 									//get the next char
 									isUnicode = false;
@@ -1950,16 +1970,16 @@ public final void jumpOverMethodBody() {
 								 * We need to completely consume the line break
 								 */
 								if (this.currentCharacter == '\r'
-								   && this.eofPosition > this.currentPosition) {
-								   	if (this.source[this.currentPosition] == '\n') {
+										&& this.eofPosition > this.currentPosition) {
+									if (this.source[this.currentPosition] == '\n') {
 										this.currentPosition++;
 										this.currentCharacter = '\n';
-								   	} else if ((this.source[this.currentPosition] == '\\')
+									} else if ((this.source[this.currentPosition] == '\\')
 											&& (this.source[this.currentPosition + 1] == 'u')) {
 										isUnicode = true;
 										getNextUnicodeChar();
 									}
-							   	}
+								}
 								recordComment(TokenNameCOMMENT_LINE);
 								if (this.recordLineSeparator
 									&& ((this.currentCharacter == '\r') || (this.currentCharacter == '\n'))) {
@@ -2004,7 +2024,7 @@ public final void jumpOverMethodBody() {
 								} else {
 									isUnicode = false;
 									if (this.withoutUnicodePtr != 0) {
-    								    unicodeStore();
+										unicodeStore();
 									}
 								}
 
@@ -2042,6 +2062,9 @@ public final void jumpOverMethodBody() {
 								//loop until end of comment */
 								int firstTag = 0;
 								while ((this.currentCharacter != '/') || (!star)) {
+									if (this.currentPosition >= this.eofPosition) {
+										return;
+									}
 									if ((this.currentCharacter == '\r') || (this.currentCharacter == '\n')) {
 										if (this.recordLineSeparator) {
 											if (isUnicode) {
@@ -3637,36 +3660,26 @@ public String toString() {
 	if (this.currentPosition <= 0)
 		return "NOT started!\n\n"+ new String(this.source); //$NON-NLS-1$
 
-	char front[] = new char[this.startPosition];
-	System.arraycopy(this.source, 0, front, 0, this.startPosition);
-
-	int middleLength = (this.currentPosition - 1) - this.startPosition + 1;
-	char middle[];
-	if (middleLength > -1) {
-		middle = new char[middleLength];
-		System.arraycopy(
-			this.source,
-			this.startPosition,
-			middle,
-			0,
-			middleLength);
+	StringBuffer buffer = new StringBuffer();
+	if (this.startPosition < 1000) {
+		buffer.append(this.source, 0, this.startPosition);
 	} else {
-		middle = CharOperation.NO_CHAR;
+		buffer.append("<source beginning>\n...\n"); //$NON-NLS-1$
+		int line = Util.getLineNumber(this.startPosition-1000, this.lineEnds, 0, this.linePtr);
+		int lineStart = getLineStart(line);
+		buffer.append(this.source, lineStart, this.startPosition-lineStart);
 	}
 
-	char end[] = new char[this.eofPosition - (this.currentPosition - 1)];
-	System.arraycopy(
-		this.source,
-		(this.currentPosition - 1) + 1,
-		end,
-		0,
-		this.eofPosition - (this.currentPosition - 1) - 1);
+	buffer.append("\n===============================\nStarts here -->"); //$NON-NLS-1$
+	int middleLength = (this.currentPosition - 1) - this.startPosition + 1;
+	if (middleLength > -1) {
+		buffer.append(this.source, this.startPosition, middleLength);
+	}
+	buffer.append("<-- Ends here\n===============================\n"); //$NON-NLS-1$
 
-	return new String(front)
-		+ "\n===============================\nStarts here -->" //$NON-NLS-1$
-		+ new String(middle)
-		+ "<-- Ends here\n===============================\n" //$NON-NLS-1$
-		+ new String(end);
+	buffer.append(this.source, (this.currentPosition - 1) + 1, this.eofPosition - (this.currentPosition - 1) - 1);
+
+	return buffer.toString();
 }
 public String toStringAction(int act) {
 	switch (act) {

@@ -1,0 +1,2266 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="IBM">
+   <title>JDT/Core Release Notes 3.5</title>
+   <link rel="stylesheet" href="jdt_core_style.css" charset="iso-8859-1" type="text/css">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<table border=0 cellspacing=5 cellpadding=2 width="100%" >
+  <tr>
+    <td align="left" width="72%" class="title1">
+      <font size="+3"><b>jdt core - build notes 3.5 stream</b></font>
+    </td>
+  </tr>
+  <tr><td align="left" width="72%" class="title2"><font size="-2">Java development tools core</font></td></tr>
+  <tr><td>&nbsp;</td></tr>
+  <tr>
+  	<td class="title3">
+	  <font size="-1">
+	  Here are the build notes for the Eclipse JDT/Core plug-in project
+	  <a href="http://www.eclipse.org/jdt/core/index.php"><b>org.eclipse.jdt.core</b></a>,
+	  describing <a href="http://bugs.eclipse.org/bugs" target=new>bug</a> resolution and substantial changes in the <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core"><b>HEAD</b></a> branch.
+	  For more information on 3.5 planning, please refer to <a href="http://www.eclipse.org/jdt/core/r3.5/index.php#release-plan">JDT/Core release plan</a>,
+	  the next <a href="http://www.eclipse.org/jdt/core/r3.5/index.php#milestone-plan">milestone plan</a>,
+	  the overall <a href="http://www.eclipse.org/eclipse/development/eclipse_project_plan_3_5.html">official plan</a>,
+	  or the <a href="http://www.eclipse.org/eclipse/platform-releng/buildSchedule.html">build schedule</a>.
+	  This present document covers all changes since Release 3.4 (also see a summary of <a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/org.eclipse.jdt.core/notes/API_changes.html">API changes</a>).
+	  <br>Maintenance of previous releases of JDT/Core is performed in parallel branches:
+		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_4_maintenance">R3.4.x</a>,
+		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_3_maintenance">R3.3.x</a>,
+		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_2_maintenance">R3.2.x</a>,
+		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_1_maintenance">R3.1.x</a>,
+		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_0_maintenance">R3.0.x</a>,
+		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R2_1_maintenance">R2.1.x</a>,
+		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R2_0_1">R2.0.x</a>,
+		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=ECLIPSE_1_0">R1.0.x</a>.
+	  </font>
+	</td>
+  </tr>
+</table>
+<a name="v_963"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5RC3 - May 27, 2009 - 3.5 RC3
+<br>Project org.eclipse.jdt.core v_963
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_963">cvs</a>).
+<h2>What's new in this drop</h2>
+Reverting change for bug <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=236818">236818</a>.
+
+<h3>Problem Reports Fixed</h3>
+
+<a name="v_962"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5RC3 - May 26, 2009
+<br>Project org.eclipse.jdt.core v_962
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_962">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=234194">234194</a>
+Run copyright tool
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=277669">277669</a>
+IBinding.getJavaElement() returns 'null' where it should not
+
+<a name="v_961"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5RC2 - May 21, 2009 - 3.5 RC2
+<br>Project org.eclipse.jdt.core v_961
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_961">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=277372">277372</a>
+[1.5][compiler] Signature attribute should not be generated with target jsr14
+
+<a name="v_960"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5RC2 - May 20, 2009
+<br>Project org.eclipse.jdt.core v_960
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_960">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=273991">273991</a>
+[assist] Wrong relevance for some proposals which are not compatible with the expected type
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=276890">276890</a>
+[content assist] proposes nothing for generic type with non-trivial constructor
+
+<a name="v_959"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5RC1 - May 14, 2009 - 3.5 RC1
+<br>Project org.eclipse.jdt.core v_959
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_959">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=275471">275471</a>
+Eclipse Compiler needs a compile dependency to a plug-in, but javac does not need that dependency
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=170197">170197</a>
+[model] JavaCore.newLibraryEntry(.., IClasspathAttribute[], ..) should check for null
+
+<a name="v_958"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5RC1 - May 12, 2009
+<br>Project org.eclipse.jdt.core v_958
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_958">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=275381">275381</a>
+[1.5][compiler] Missing innerClass attribute for inner types used as type arguments
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=255752">255752</a>
+[javadoc][assist] Inappropriate completion proposals for javadoc at compilation unit level
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=275467">275467</a>
+Batch compiler writes log using default encoding instead of UTF-8
+
+<a name="v_957"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5RC1 - May 7, 2009
+<br>Project org.eclipse.jdt.core v_957
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_957">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=273157">273157</a>
+[performance] ManifestAnalyzer is causing a 2x performance drop in the updating of classpath of JavaProjects in comparison with 3.4
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=268879">268879</a>
+External folders project not cleaned up
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=275215">275215</a>
+org.eclipse.jdt.internal.core.util.KeyToSignature#consumeType() uses a method not available in J2SE-1.4 EE
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=275244">275244</a>
+org.eclipse.jdt.internal.compiler.util.Util.getZipEntryByteContent(ZipEntry, ZipFile) should use BufferedInputStream
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=132679">132679</a>
+[assist] Completion fails within non-static anonymous inner class
+
+<a name="v_956"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5RC1 - May 6, 2009
+<br>Project org.eclipse.jdt.core v_956
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_956">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=274114">274114</a>
+org.eclipse.jdt.internal.compiler.tool.Options must be updated with latest compiler options
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=185422">185422</a>
+[1.5][compiler] Incorrectly allows generic use of private inner classes
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=274917">274917</a>
+Incorrect &quot;empty block&quot; warning underlining on annotations
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=274557">274557</a>
+CompletionContext problem with annotation value element
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=274332">274332</a>
+jdt.core.model tests take 2 hours to finish on the mac
+
+<a name="v_955"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - April 29, 2009 - 3.5 MILESTONE 7
+<br>Project org.eclipse.jdt.core v_955
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_955">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=274397">274397</a>
+tag projects changed since I20090421-0930 build
+
+<a name="v_954"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - April 28, 2009
+<br>Project org.eclipse.jdt.core v_954
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_954">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=269934">269934</a>
+[apt] APT-generated classes that contain annotations causes NPE
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=259950">259950</a>
+Update copyright for 2009
+
+<a name="v_953"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - April 27, 2009
+<br>Project org.eclipse.jdt.core v_953
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_953">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=272204">272204</a>
+null should never be part of a type hierarchy
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=260031">260031</a>
+Wrong type for class constants in stackmap frames
+ 
+<a name="v_952"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - April 27, 2009
+<br>Project org.eclipse.jdt.core v_952
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_952">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=273862">273862</a>
+[1.7][compiler] Return type should be used to decide method duplicates
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=84720">84720</a>
+[1.5][assist] proposal ranking by return value should consider auto(un)boxing
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=272711">272711</a>
+Exceptions in ASTRewrite
+
+<a name="v_951"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - April 24, 2009
+<br>Project org.eclipse.jdt.core v_951
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_951">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=273308">273308</a>
+[perfs] Save very slow because DeltaProcessor#resourceChanged(..) resolves classpath
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=154823">154823</a>
+[getter setter] Getters Setters generation doesn't follow naming convention
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=263786">263786</a>
+NamingConventions#suggestVariableNames(..) should not modify all caps parts
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=263769">263769</a>
+Javadoc glitches in JavaCore#setComplianceOptions(String, Map)
+
+<a name="v_950"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - April 21, 2009
+<br>Project org.eclipse.jdt.core v_950
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_950">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=266771">266771</a>
+NameLookup.findPackageFragment returns very incorrect package fragments
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=271102">271102</a>
+Java model corrupt after switching target platform
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270784">270784</a>
+[perfs] Big regression on FullSourceWorkspaceModelTests#testCloseProjects() test
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=272450">272450</a>
+DBCS3.5: Classpath resolution fails to honor the 'Class-Path' header of JAR manifest file in DBCS
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=272706">272706</a>
+[Model] Generics lost on IField when coming from .class files
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=246832">246832</a>
+[1.5][assist] Camel case completion not working with statically imported methods
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=267833">267833</a>
+[javadoc] Custom tags should not be allowed for inline tags
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=271680">271680</a>
+[compiler] Stack overflow pasting in Java editor
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251827">251827</a>
+[search] Search for type reference with wildcards finds references in package
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=271284">271284</a>
+[search] AIOOBE in StringOperation.getCamelCaseMatchingRegions
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=272148">272148</a>
+[assist] Constructors with an array as parameter type are not proposed
+
+<a name="v_949"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - April 14, 2009
+<br>Project org.eclipse.jdt.core v_949
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_949">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=271561">271561</a>
+JavaModelException when accessing an array of nested annotations
+
+<a name="v_948"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - April 7, 2009
+<br>Project org.eclipse.jdt.core v_948
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_948">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=271303">271303</a>
+[1.5][compiler] Override and package visibility issue
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270367">270367</a>
+[DOM] NullPointerException in ParenthesizedExpression.resolveTypeBinding()
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=253008">253008</a>
+[assist] Boolean expressions should be proposed with higher relevence in if(), while() etc
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270983">270983</a>
+[formatter] Enum with field declarations but no constants confuses formatter
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=159851">159851</a>
+[1.5] [compiler] Eclipse compiler fails to report type parameter bounds errors when generic instance is a type argument
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270446">270446</a>
+&quot;Compute launch button tooltip&quot; error
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270148">270148</a>
+ASTParser cannot parse K_CLASS_BODY_DECLARATIONS with syntax errors
+
+<a name="v_947"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - March 31, 2009
+<br>Project org.eclipse.jdt.core v_947
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_947">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270409">270409</a>
+[perfs] No JDT/Core tests results in last baseline run
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=267670">267670</a>
+Private enum constant incorrectly marked as never read locally
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=269493">269493</a>
+[assist] Keywords are not proposed in a for statement without block
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270194">270194</a>
+[1.5][compiler] Java error in 3.5M6 that was not present in 3.4
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270257">270257</a>
+[perfs] Small regression on 'JDT/Core plugin initialization' test
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=270113">270113</a>
+[code assist] Missing ANONYMOUS_CLASS_CONSTRUCTOR_INVOCATION proposal
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=269985">269985</a>
+Full Build triggered when using class folder on classpath and custom builder
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=207935">207935</a>
+[1.5][compiler] inconsistency with javac 1.5&amp;1.6 involving parameterized invocation of non-generic method
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=269964">269964</a>
+[perfs] Regression on 'Search all type names' test
+
+<a name="v_946"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - March 24, 2009
+<br>Project org.eclipse.jdt.core v_946
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_946">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247037">247037</a>
+[javadoc] compiler should issue warning for {@inheritDoc} at illegal location
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=244406">244406</a>
+[buildpath] Internal jars refered with OS path are shown as non-Java resources
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=269476">269476</a>
+testInitJDTPlugin() seems to leak several DeltaProcessor and JavaModelManager
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=269336">269336</a>
+[prefs] JavaProject preferences listeners are not removed
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=203060">203060</a>
+[codeassist] assert keyword should not be proposed when compliance level is set to 1.3
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251539">251539</a>
+[1.6][compiler] java.lang.IllegalArgumentException: info cannot be null (StackMapFrame.java)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=268837">268837</a>
+[1.6][compiler] Incorrectly report ambiguity of methods with generics
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=265104">265104</a>
+Reconciler cannot handle annotation with reference to missing type
+
+<a name="v_945"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M7 - March 17, 2009
+<br>Project org.eclipse.jdt.core v_945
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_945">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=267789">267789</a>
+eclipse-Automated-Tests-3.4.zip produces compile errors (build path?) with IBM JDK
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=268802">268802</a>
+Useless call to getSource() in SourceTypeConverter
+
+<a name="v_944"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M6 - March 10, 2009 - 3.5 MILESTONE 6
+<br>Project org.eclipse.jdt.core v_944
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_944">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=267941">267941</a>
+[perfs] Possible regression on 'Code assist in expression' test
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=267773">267773</a>
+[open type] Use of ? results in error
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=267658">267658</a>
+[formatter] Javadoc comments may be still formatted as block comments
+
+<a name="v_943"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M6 - March 9, 2009
+<br>Project org.eclipse.jdt.core v_943
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_943">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=124646">124646</a>
+Connecting type parameter fails for local types
+
+<a name="v_942"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M6 - March 7, 2009
+<br>Project org.eclipse.jdt.core v_942
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_942">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added the following APIs to allow clients to provide the source of a compilation unit or a package that is neither on the 
+       classpath nor in a working copy.
+       <ul>
+       <li><code>org.eclipse.jdt.core.WorkingCopyOwner.findSource(String, String)</code></li>
+       <li><code>org.eclipse.jdt.core.WorkingCopyOwner.isPackage(String[])</code></li>
+       </ul>
+       See <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257528">bug 257528</a> for details.
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=267088">267088</a>
+[1.5][compiler] Misleading error message in case of inherited methods
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=260840">260840</a>
+NamingConventions creates wrong plural for name ending in &lt;vowel&gt;y
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=243406">243406</a>
+[code assist] Content assist gives &quot;assertion failed&quot; for import Foo|.Bar
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237241">237241</a>
+Content assist does not scale with javadoc on type with many members
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=265962">265962</a>
+[compiler] Internal compiler error on while with return clause
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=236520">236520</a>
+[search] AIOOBE in PatternLocator.updateMatch
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=265103">265103</a>
+Manifest Class-Path is not read correctly with ECJ
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=99399">99399</a>
+[1.5][assist] Code assist propose final classes in methods type parameter extends clause
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257528">257528</a>
+An API to incrementaly generate compilation units for binding resolution environment
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=266582">266582</a>
+[1.5][compiler] AbortCompilation while decoding the type variable of an anonymous type
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=266837">266837</a>
+[model] SourceField.getConstant does not supply a value if type is fully qualified
+
+<a name="v_941"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M6 - March 3, 2009
+<br>Project org.eclipse.jdt.core v_941
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_941">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252442">252442</a>
+[Search] NPE after move followed by undo
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=261722">261722</a>
+[search] NPE after removing a project
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=266421">266421</a>
+[1.5][compiler] code compiles correctly in 3.4.1 but gives compilation errors in 3.5M5
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=260011">260011</a>
+[formatter] Formatting of html in javadoc comments doesn't work with style attributes
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=217108">217108</a>
+[formatter] deletes blank lines between comments
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=198963">198963</a>
+[formatter] 3.3 Code Formatter repeatedly indents block comment
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=265571">265571</a>
+Abstract method that is not directly used is flagged as unused
+
+<a name="v_940"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M6 - February 24, 2009
+<br>Project org.eclipse.jdt.core v_940
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_940">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Fixed odd API in <code>ReferenceMatch</code><br>
+(see more details in bug <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=248878">248878</a>).
+</li>
+</ul>
+
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=265820">265820</a>
+Unused methods inside org.eclipse.jdt.internal.core.dom.rewrite.ImportRewriteAnalyzer
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=233356">233356</a>
+[search] NPE in org.eclipse.jdt.internal.compiler.util.SimpleLookupTable.get()
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=265630">265630</a>
+[search][perfs] Regression in testSearchPackageDeclarationsWorkspace
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=248878">248878</a>
+[search] Odd API in ReferenceMatch
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=206930">206930</a>
+[1.5][compiler] Mismatch between javac and Eclipse compiler
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=265142">265142</a>
+Compiler fails to warn on unused constructors of private classes
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=264950">264950</a>
+[scanner] IScanner does not return whitespace token
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=264843">264843</a>
+[1.5][compiler] Eclipse compiler fails to reject invalid code with primitives autoboxed to generics
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=265065">265065</a>
+[search] java.lang.ClassCastException while running &quot;Refactor...Extract Class&quot;
+
+<a name="v_939"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M6 - February 17, 2009
+<br>Project org.eclipse.jdt.core v_939
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_939">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added a new API method on <code>SearchPattern</code> to provide matching
+regions between a pattern and a name when they are compared using a given match rule<br>
+(see more details in bug <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=218605">218605</a>).
+<pre>
+/**
+ * Answers all the regions in a given name matching a given pattern using
+ * a specified match rule.
+ * 
+ * Each of these regions is made of its starting index and its length in the given
+ * name. They are all concatenated in a single array of <code>int</code>
+ * which therefore always has an even length.
+ * 
+ * All returned regions are disjointed from each other. That means that the end
+ * of a region is always different than the start of the following one.
+ * For example, if two regions are returned:
+ * <code>{ start1, length1, start2, length2 }</code>
+ * then <code>start1+length1</code> will always be smaller than
+ * <code>start2</code>.
+ * 
+ * The possible comparison rules between the name and the pattern are:
+ *     . {@link #R_EXACT_MATCH exact matching}
+ *     . {@link #R_PREFIX_MATCH prefix matching}
+ *     . {@link #R_PATTERN_MATCH pattern matching}
+ *     . {@link #R_CAMELCASE_MATCH camel case matching}
+ *     . {@link #R_CAMELCASE_SAME_PART_COUNT_MATCH camel case matching with same parts count}
+ *
+ * Each of these rules may be combined with the
+ * {@link #R_CASE_SENSITIVE case sensitive flag} if the match comparison
+ * should respect the case.
+ *
+ * Examples:
+ *    .   pattern = "NPE"
+ *        name = NullPointerException / NoPermissionException
+ *        matchRule = {@link #R_CAMELCASE_MATCH}
+ *        result:  { 0, 1, 4, 1, 11, 1 } / { 0, 1, 2, 1, 12, 1 } 
+ *     .  pattern = "NuPoEx"
+ *        name = NullPointerException
+ *        matchRule = {@link #R_CAMELCASE_MATCH}
+ *        result:  { 0, 2, 4, 2, 11, 2 }
+ *     .  pattern = "IPL3"
+ *        name = "IPerspectiveListener3"
+ *        matchRule = {@link #R_CAMELCASE_MATCH}
+ *        result:  { 0, 2, 12, 1, 20, 1 }
+ *     .  pattern = "HashME"
+ *        name = "HashMapEntry"
+ *        matchRule = {@link #R_CAMELCASE_MATCH}
+ *        result:  { 0, 5, 7, 1 }
+ *     .  pattern = "N???Po*Ex?eption"
+ *        name = NullPointerException
+ *        matchRule = {@link #R_PATTERN_MATCH} | {@link #R_CASE_SENSITIVE}
+ *        result:  { 0, 1, 4, 2, 11, 2, 14, 6 }
+ *     .  pattern = "Ha*M*ent*"
+ *        name = "HashMapEntry"
+ *        matchRule = {@link #R_PATTERN_MATCH}
+ *        result:  { 0, 2, 4, 1, 7, 3 }
+ * 
+ * @see #camelCaseMatch(String, String, boolean) for more details on the
+ * 	camel case behavior
+ * @see CharOperation#match(char[], char[], boolean) for more details on the
+ * 	pattern match behavior
+ *
+ * @param pattern the given pattern. If <code>null</code>,
+ *     then an empty region (<code>new int[0]</code>) will be returned
+ *     showing that the name matches the pattern but no common
+ *     character has been found.
+ * @param name the given name
+ * @param matchRule the rule to apply for the comparison.
+ *     The following values are accepted:
+ *         . {@link #R_EXACT_MATCH}
+ *         . {@link #R_PREFIX_MATCH}
+ *         . {@link #R_PATTERN_MATCH}
+ *         . {@link #R_CAMELCASE_MATCH}
+ *         . {@link #R_CAMELCASE_SAME_PART_COUNT_MATCH}
+ * 
+ *     Each of these valid values may be also combined with
+ *     the {@link #R_CASE_SENSITIVE} flag.
+ * 
+ *     Some examples:
+ *         . {@link #R_EXACT_MATCH} | {@link #R_CASE_SENSITIVE}:
+ *           if an exact case sensitive match is expected,
+ *         . {@link #R_PREFIX_MATCH}:
+ *           if a case insensitive prefix match is expected,
+ *         . {@link #R_CAMELCASE_MATCH}:
+ *           if a case insensitive camel case match is expected,
+ *         . {@link #R_CAMELCASE_SAME_PART_COUNT_MATCH}
+ *            | {@link #R_CASE_SENSITIVE}:
+ *           if a case sensitive camel case with same parts count match
+ *           is expected,
+ *         . etc.
+ * 
+ * @return an array of <code>int</code> having two slots per returned
+ *     regions (the first one is the region starting index and the second one
+ *     is the region length or <code>null</code> if the given name does not
+ *     match the given pattern).
+ *
+ *     The returned regions may be empty (<code>new int[0]</code>) if the
+ *     pattern is <code>null</code> (whatever the match rule is). The returned
+ *     regions will also be empty if the pattern is only made of <code>'?'</code>
+ *     and/or <code>'*'</code> character(s) (e.g. <code>'*'</code>,
+ *     <code>'?*'</code>, <code>'???'</code>, etc.) when using a pattern
+ *     match rule.
+ * 
+ * @since 3.5
+ */
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=264991">264991</a>
+Wrong 'unused' problem reported
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237742">237742</a>
+[javadoc] Javadoc tag name validation is incorrect
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=264843">264843</a>
+[1.5][compiler] Eclipse compiler fails to reject invalid code with primitives autoboxed to generics
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=264881">264881</a>
+[1.5][compiler]Incorrect unchecked conversion warnings for return types
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=201912">201912</a>
+[compiler] Unused public members of private classes not flagged
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=264817">264817</a>
+[search] &lt;char&gt; + * returns 'null' from SearchPattern.getMatchingRegions(String, String, int)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=264816">264816</a>
+[search] AIOOBE in StringOperation.getPatternMatchingRegions(..) with pattern &quot;?*&quot;
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250454">250454</a>
+[search] Cannot find method references between projects
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=218605">218605</a>
+[search] SearchPattern: provide way to get the matching regions
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=263558">263558</a>
+Can't compile package-info.java from FindBugs with 3.5 Eclipse
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=264443">264443</a>
+[parser] ASTParser.createASTs and IVariableBinding
+
+<a name="v_938"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M6 - February 10, 2009
+<br>Project org.eclipse.jdt.core v_938
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_938">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=261594">261594</a>
+Adjust code to new PRE_REFRESH semantics
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=263877">263877</a>
+[1.5][compiler] forward reference error flagged within enum
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=263633">263633</a>
+[1.5][compiler] Invalid type mismatch for after generic method inference
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262932">262932</a>
+[assist] Constructor completion makes array allocation difficult
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=263653">263653</a>
+patch for jdt.core.model.tests to accommodate icu 4.0.1
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=246627">246627</a>
+[ast rewrite] Wrong indentation for statement inserted before SwitchCase
+
+<a name="v_937"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M6 - February 3, 2009
+<br>Project org.eclipse.jdt.core v_937
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_937">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=202393">202393</a>
+[compiler] Incomplete code coverage or useless statement within ThrowStatement#resolve
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=263215">263215</a>
+[1.5][compiler]  I20090129-1200 generates suddenly an generics compile error that 3.5M4  didnt do
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=261510">261510</a>
+[compiler] Deadlock in static initializer of JDT classes
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262517">262517</a>
+[ast rewrite] Whitespace settings in formatter ignored when adding annotation
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=260848">260848</a>
+[perfs] Regression on JDT/Core plugin initialization performance test
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257716">257716</a>
+[compiler] Erroneous blank field may not have been initialized
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262408">262408</a>
+remove deprecated NamingConventions.VK_CONSTANT_FIELD
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262717">262717</a>
+Wrong line numbers in classfile
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262568">262568</a>
+improve Javadoc for ICompilationUnit.applyTextEdit(TextEdit, IProgressMonitor)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262389">262389</a>
+Internal code must not use ICompilationUnit.applyTextEdit
+
+<a name="v_936"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M5 - January 27, 2009 - 3.5 MILESTONE 5
+<br>Project org.eclipse.jdt.core v_936
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_936">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262304">262304</a>
+[1.5][compiler] Enum constant in annotation value: javac vs Eclipse differ
+
+<a name="v_935"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M5 - January 25, 2009
+<br>Project org.eclipse.jdt.core v_935
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_935">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added APIs to take into account the generic type and the rank of a wildcard type binding:
+       <code>ITypeBinding#getGenericTypeOfWildcardType()</code>, <code>ITypeBinding#getRank()</code>, and
+       <code>BindingKey#createWildcardTypeBindingKey(String genericTypeKey, char boundKind, String boundTypeKey, int rank)</code>.</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262208">262208</a>
+[1.5][compiler]Incorrect @Override and name clash errors 
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=262209">262209</a>
+[1.5][compiler]Incorrect ambiguous method calls 
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=234609">234609</a>
+[dom] BindingKey#toSignature() fails with key from createWilcardTypeBindingKey(..)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=261973">261973</a>
+[assist] Constructor completion should be improved (bug 6930)
+
+<a name="v_934"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M5 - January 20, 2009
+<br>Project org.eclipse.jdt.core v_934
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_934">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added new API to propose constructor completion<br>
+When "new ArrayLis" is completed now constructors are proposed instead of type references.
+This new completion kind is <code>CONSTRUCTOR_INVOCATION</code> and this proposal has always a 
+<code>TYPE_REF</code> required proposal to describe the type of the constructor.
+The <code>CONSTRUCTOR_INVOCATION</code> has "()" as completion string and <code>TYPE_REF</code> has
+"java.util.ArrayList" as completion string.<br>
+There is also a similar new API to complete anonymous type constructor: <code>ANONYMOUS_CLASS_CONSTRUCTOR_INVOCATION</code><br>
+
+
+<pre>
+
+	/**
+	 * Completion is a reference to a constructor.
+	 * This kind of completion might occur in a context like
+	 * &lt;code&gt;"new Lis"&lt;/code&gt; and complete it to
+	 * &lt;code&gt;"new List();"&lt;/code&gt; if List is a class that is not abstract.
+	 * &lt;p&gt;
+	 * The following additional context information is available
+	 * for this kind of completion proposal at little extra cost:
+	 * &lt;ul&gt;
+	 * &lt;li&gt;{@link #getDeclarationSignature()} -
+	 * the type signature of the type that declares the constructor that is referenced
+	 * &lt;/li&gt;
+	 * &lt;li&gt;{@link #getFlags()} -
+	 * the modifiers flags of the constructor that is referenced
+	 * &lt;/li&gt;
+	 * &lt;li&gt;{@link #getName()} -
+	 * the simple name of the constructor that is referenced
+	 * &lt;/li&gt;
+	 * &lt;li&gt;{@link #getSignature()} -
+	 * the method signature of the constructor that is referenced
+	 * &lt;/li&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/p&gt;
+	 * &lt;p&gt;
+	 * This kind of proposal could require a long computation, so they are computed only if completion operation is called with a {@link IProgressMonitor}
+	 * (eg. {@link ICodeAssist#codeComplete(int, CompletionRequestor, IProgressMonitor)}).&lt;br&gt;
+	 * This kind of proposal is always is only proposals with a {@link #TYPE_REF} required proposal, so this kind of required proposal must be allowed:
+	 * &lt;code&gt;requestor.setAllowsRequiredProposals(CONSTRUCTOR_INVOCATION, TYPE_REF, true)&lt;/code&gt;.
+	 * &lt;/p&gt;
+	 *
+	 * @see #getKind()
+	 * @see CompletionRequestor#setAllowsRequiredProposals(int, int, boolean)
+	 * 
+	 * @since 3.5
+	 */
+	public static final int CONSTRUCTOR_INVOCATION = 26;
+	
+	/**
+	 * Completion is a reference of a constructor of an anonymous class.
+	 * This kind of completion might occur in a context like
+	 * &lt;code&gt;"new Lis^;"&lt;/code&gt; and complete it to
+	 * &lt;code&gt;"new List() {}"&lt;/code&gt; if List is an interface or abstract class.
+	 * &lt;p&gt;
+	 * The following additional context information is available
+	 * for this kind of completion proposal at little extra cost:
+	 * &lt;ul&gt;
+	 * &lt;li&gt;{@link #getDeclarationSignature()} -
+	 * the type signature of the type being implemented or subclassed
+	 * &lt;/li&gt;
+	 * &lt;li&gt;{@link #getDeclarationKey()} -
+	 * the type unique key of the type being implemented or subclassed
+	 * &lt;/li&gt;
+	 * &lt;li&gt;{@link #getSignature()} -
+	 * the method signature of the constructor that is referenced
+	 * &lt;/li&gt;
+	 * &lt;li&gt;{@link #getKey()} -
+	 * the method unique key of the constructor that is referenced
+	 * if the declaring type is not an interface
+	 * &lt;/li&gt;
+	 * &lt;li&gt;{@link #getFlags()} -
+	 * the modifiers flags of the constructor that is referenced
+	 * &lt;/li&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/p&gt;
+	 * &lt;p&gt;
+	 * This kind of proposal could require a long computation, so they are computed only if completion operation is called with a {@link IProgressMonitor}
+	 * (eg. {@link ICodeAssist#codeComplete(int, CompletionRequestor, IProgressMonitor)})&lt;br&gt;
+	 * This kind of proposal is always is only proposals with a {@link #TYPE_REF} required proposal, so this kind of required proposal must be allowed:
+	 * &lt;code&gt;requestor.setAllowsRequiredProposals(CONSTRUCTOR_INVOCATION, TYPE_REF, true)&lt;/code&gt;.
+	 * &lt;/p&gt;
+	 *
+	 * @see #getKind()
+	 * @see CompletionRequestor#setAllowsRequiredProposals(int, int, boolean)
+	 * 
+	 * @since 3.5
+	 */
+	public static final int ANONYMOUS_CLASS_CONSTRUCTOR_INVOCATION = 27;
+</pre>
+These new proposals can require a long computation so they are proposed only if code assist was called with a progress monitor.
+To avoid that the code assist operation takes too much time a <code>IProgressMonitor</code> which automatically cancel the code
+assist operation when a specified amount of time is reached could be used.
+
+<pre>
+new IProgressMonitor() {
+    private final static int TIMEOUT = 500; //ms
+    private long endTime;
+    public void beginTask(String name, int totalWork) {
+        fEndTime= System.currentTimeMillis() + TIMEOUT;
+    }
+    public boolean isCanceled() {
+        return endTime &lt;= System.currentTimeMillis();
+    }
+    ...
+ };
+</pre>
+</li>
+<li>Fix for <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=6930">bug 6930</a> required the index version to be incremented. 
+    Indexes will be automatically regenerated upon subsequent search queries (accounting for indexing notification in search progress 
+    dialogs) and the size of the new indexes will be bigger.
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=260717">260717</a>
+[assist] Constructors should be proposed even when the declaring type is not imported
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=6930">6930</a>
+[assist] Constructor completion
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=220311">220311</a>
+[1.5][compiler] package-info.java does not recognise duplicate annotations as a problem
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=259685">259685</a>
+Bogus build error &quot;Cannot nest&quot; xyz &quot;inside library&quot;
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=260798">260798</a>
+[formatter] Strange behavior of never join lines
+
+<a name="v_933"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M5 - January 13, 2009
+<br>Project org.eclipse.jdt.core v_933
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_933">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Improved generic method inference to better match JLS 15.12.2.6. The compiler now infers better in presence of unchecked conversion in argument types (raw types). </li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=214948">214948</a>
+Incorrect deprecation warning on annotation instances
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=260276">260276</a>
+[formatter] Inconsistent formatting of one-line block comment
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239607">239607</a>
+[formatter] Incorrect removal of asterisk (*) within a block comment when formatting
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=254998">254998</a>
+[formatter] wrong type comment format during code generation
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=258798">258798</a>
+[1.5][compiler] Return type should be erased after unchecked conversion during inference
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=258906">258906</a>
+[jsr269] Package annotations not visible to Java 6 APT processors
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=259633">259633</a>
+[1.5][compiler] Bound of type parameter of class in method not checked
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=149768">149768</a>
+Annotations should be a compilation dependency
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=260257">260257</a>
+Reduce space taken by SourceRefElementInfos
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=259607">259607</a>
+Deadlock opening launch configuration dialog
+
+<a name="v_932"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M5 - January 6, 2009
+<br>Project org.eclipse.jdt.core v_932
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_932">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=258145">258145</a>
+Fup of bug 252555, JME is thrown when package-info.java exists twice in the same project
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=259129">259129</a>
+[compiler] Fup of bug 258950, wrong line number attribute for cascading method invocations
+
+<a name="v_931"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M5 - December 16, 2008
+<br>Project org.eclipse.jdt.core v_931
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_931">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=171136">171136</a>
+[buildpath] Illegal type of archive for required library is an incorrect message.
+
+<a name="v_930"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M4 - December 10, 2008 - 3.5 MILESTONE 4
+<br>Project org.eclipse.jdt.core v_930
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_930">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=255008">255008</a>
+[compiler] Assert statement discrepancy with javac caused by an uninitialized variable
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=258039">258039</a>
+[1.5][compiler] Misleading error message for &quot;instanceof List&lt;Object&gt;&quot;
+
+<a name="v_929"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M4 - December 8, 2008
+<br>Project org.eclipse.jdt.core v_929
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_929">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added property to adjust the size of the openable cache: "org.eclipse.jdt.core.javamodelcache.ratio". For example, starting Eclipse as follows will increase the
+     size of the openable cache by 50%: 
+     <pre>eclipse.exe -vmArgs -Dorg.eclipse.jdt.core.javamodelcache.ratio=1.5</pre>
+</li>
+<li>
+As users may want to have different behavior in comments, the new formatter
+preference to preserve line breaks is now controlled by two different options:
+<ul>
+<li>for the already wrapped code lines:<br>
+<code>DefaultCodeFormatterConstants.FORMATTER_JOIN_WRAPPED_LINES</code>
+<pre>
+/**
+ * FORMATTER / Option to specify whether the formatter can join wrapped lines or not
+ * 
+ * 		For example, the wrapped lines of method foo return statement in following test case:
+ * 			class X {
+ * 			String foo() {
+ * 			return "select x "
+ * 			       + "from y "
+ * 			       + "where z=a";
+ * 			}
+ * 			}
+ *
+ * 		will be preserved by the formatter when the new preference is used
+ * 		even if the maximum line width would give it enough space to join the lines.
+ * 		Hence produces the following output:
+ * 			class X {
+ * 			    String foo() {
+ * 			        return "select x "
+ * 			                + "from y "
+ * 			                + "where z=a";
+ * 			    }
+ * 			}
+ *
+ *     - option id:         "org.eclipse.jdt.core.formatter.join_wrapped_lines"
+ *     - possible values:   { TRUE, FALSE }
+ *     - default:           TRUE
+ * 
+ * @since 3.5
+ */
+</pre>
+</li>
+<li>for the lines in comments:<br>
+<code>DefaultCodeFormatterConstants.FORMATTER_JOIN_LINES_IN_COMMENTS</code>
+<pre>
+/**
+ * FORMATTER / Option to specify whether the formatter can join text lines in comments or not
+ * 
+ * 		For example, the following comment:
+ * 			/**
+ * 			 * The foo method.
+ * 			 * foo is a substitute for bar.
+ * 			 */
+ * 			public class X {
+ * 			}
+ * 
+ * 		will be unchanged by the formatter when this new preference is used,
+ * 		even if the maximum line width would give it enough space to join the lines.
+ *
+ *     - option id:         "org.eclipse.jdt.core.formatter.join_lines_in_comments"
+ *     - possible values:   { TRUE, FALSE }
+ *     - default:           TRUE
+ *
+ * @since 3.5
+ */
+</pre>
+</li>
+</ul>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257907">257907</a>
+[Formatter] FORMATTER_PRESERVE_EXISTING_LINE_BREAKS needs clarification
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257906">257906</a>
+[Formatter] should have separate 'preserve existing line breaks' for code and comment formatting
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=232816">232816</a>
+[buildpath] Misleading problem text for missing jar in user library
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257849">257849</a>
+[1.5][compiler] Internal compiler error using generics w/ abstract classes &amp; interfaces
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257869">257869</a>
+Adjust Java model cache size using a property
+
+<a name="v_928"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M4 - December 7, 2008
+<br>Project org.eclipse.jdt.core v_928
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_928">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>
+Added a new formatter preference to preserve existing breaks in already wrapped and comments lines.<br>
+<p>
+For example, the wrapped lines of method foo return statement in following test case:
+</p>
+<pre>
+class X {
+String foo() {
+return "select x "
+       + "from y "
+       + "where z=a";
+}
+}
+</pre>
+will be preserved by the formatter when the new preference is used, hence produces
+now the following output:
+<pre>
+class X {
+    String foo() {
+        return "select x "
+                + "from y "
+                + "where z=a";
+    }
+}
+</pre>
+Similarly, following comment:
+<pre>
+/**
+ * The foo method.
+ * foo is a substitute for bar.
+ */
+public class X {
+}
+</pre>
+is now unchanged by the formatter when this new preference is used...<br>
+<p>
+This diagnosis is controlled by the option:<br>
+<code>DefaultCodeFormatterConstants.FORMATTER_PRESERVE_EXISTING_LINE_BREAKS</code>:</p>
+<pre>
+/**
+ * FORMATTER / Option to specify whether the formatter should preserve existing line breaks or not
+ *     - option id:         "org.eclipse.jdt.core.formatter.preserve_existing_line_breaks"
+ *     - possible values:   { TRUE, FALSE }
+ *     - default:           FALSE
+ * @since 3.5
+ */
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257434">257434</a>
+[1.5][compiler] Should detect type mismatch after capture
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=257384">257384</a>
+AIOOBE during problem reporting
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239130">239130</a>
+[formatter] Comment formatter does not keep blank lines after @see references
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=198074">198074</a>
+[formatter] the code formatter doesn't respect my new lines
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=256799">256799</a>
+[formatter] Formatter wrongly adds space to //$FALL-THROUGH$ is
+
+<a name="v_927"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M4 - December 2, 2008
+<br>Project org.eclipse.jdt.core v_927
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_927">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>
+Improved dead code detection by having it (optionally) tolerate trivial IF statement,
+such as <code>if (DEBUG) ...</code>. This extra option is defined by
+<code>JavaCore.COMPILER_PB_DEAD_CODE_IN_TRIVIAL_IF_STATEMENT</code>.
+<pre>
+* Compiler option ID: Reporting Dead Code Inside Trivial If Statement.
+* When enabled, the compiler will signal presence of dead code inside trivial IF statement, e.g. if (DEBUG)...
+* The severity of the problem is controlled with option {@link #COMPILER_PB_DEAD_CODE}.
+* 
+* Option id:"org.eclipse.jdt.core.compiler.problem.deadCodeInTrivialIfStatement"
+* Possible values:{ "enabled", "disabled" }
+* Default:"warning"
+</pre>
+</li>
+<li>Dead code detection warning also got enabled by default.
+<pre>
+* Compiler option ID: Reporting Dead Code.
+* When enabled, the compiler will issue an error or a warning if some non fatal dead code is detected. For instance, if (false) foo();
+* is not reported as truly unreachable code by the Java Language Specification. If this diagnostic is enabled, then the invocation of foo() is
+* going to be signaled as being dead code.
+* Option id:"org.eclipse.jdt.core.compiler.problem.deadCode"
+* Possible values:{ "error", "warning", "ignore" }
+* Default:"warning"
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=256329">256329</a>
+Impossible NPE in JavaModelManager.getOptions
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=256882">256882</a>
+[compiler] Enable DeadCode detection by default
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=255970">255970</a>
+test tear down failed causing cascade of failures
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=207093">207093</a>
+Perf: adding a new top-level package is slow if many source files exist
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252948">252948</a>
+Unncessary compilation when adding packages with an existing path segment at the beginning
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=256735">256735</a>
+Marker property value is too long for internal compiler error (java.lang.StackOverflowError)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=227986">227986</a>
+Avoid duplicated strings in Java model
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=256463">256463</a>
+[compiler] Support common debug pattern in unreachable code detection
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=256679">256679</a>
+[perfs] SearchAllTypeNames performance tests are slower on eplnx2
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=228845">228845</a>
+[hierarchy] Type hierarchy should include subtypes in primary working copies
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252571">252571</a>
+[buildpath] External folder appears empty after workspace move
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=256404">256404</a>
+Wrong handle identifier for external library folder
+
+<a name="v_926"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M4 - November 25, 2008
+<br>Project org.eclipse.jdt.core v_926
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_926">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>
+Added a new compiler warning to signal presence of dead code,  e.g. <code>if (false) deadCode(); </code>.
+This diagnosis is controlled by option: 
+<code>JavaCore.COMPILER_PB_DEAD_CODE</code> and produces a problem marker which ID is <code>IProblem.DeadCode</code> problem ID.
+<pre>
+* Compiler option ID: Reporting Dead Code.
+* When enabled, the compiler will issue an error or a warning if some non fatal dead code is detected. For instance, if (false) foo();
+* is not reported as truly unreachable code by the Java Language Specification. If this diagnostic is enabled, then the invocation of foo() is
+* going to be signaled as being dead code.
+* Option id:"org.eclipse.jdt.core.compiler.problem.deadCode"
+* Possible values:{ "error", "warning", "ignore" }
+* Default:"ignore"
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251504">251504</a>
+[index] Wrong indexes may be used while performing a search request
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=48399">48399</a>
+[compiler] Enhance unreachable code detection
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=254825">254825</a>
+[javadoc] compile error when referencing outer param from inner class javadoc
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252555">252555</a>
+[javadoc] NPE on duplicate package-info
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251690">251690</a>
+[compiler] NPE if type collides with a package
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249134">249134</a>
+[compiler] error message (implement abstract method) not as intended
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=154162">154162</a>
+[1.5][compiler] Uninformative error message for qualified enum constants in switch statement
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=255974">255974</a>
+Abusive usage of InvalidInputException in the compiler
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251693">251693</a>
+NamingConventions.suggestXXXNames should call suggestVariableNames()
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=255345">255345</a>
+Problems in new NamingConventions APIs
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=255452">255452</a>
+[1.5][compiler] Eclipse allows forward reference in enum constructor
+
+<a name="v_925"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M4 - November 18, 2008
+<br>Project org.eclipse.jdt.core v_925
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_925">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=255501">255501</a>
+EncodingTests failing when run by itself
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=255035">255035</a>
+[compiler] Internal compile error gets reported (NPE)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250297">250297</a>
+[compiler] NPE in org.eclipse.jdt.internal.compiler.problem.ProblemReporter.missingTypeInMethod(ProblemReporter.java:4925)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=232558">232558</a>
+[compiler] += is not allowed between Object and String
+
+<a name="v_924"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M4 - November 10, 2008
+<br>Project org.eclipse.jdt.core v_924
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_924">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252868">252868</a>
+[batch][compiler] ConcurrentModificationException in org.eclipse.jdt.internal.compiler.batch.ClasspathJar.fetchLinkedJars
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=236242">236242</a>
+[compiler][1.7] compiler difference to javac 7 involving parameterized uses of raw methods
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=211256">211256</a>
+[ast rewrite] whitespace missing between return and expression
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=253891">253891</a>
+Incorrect tag closure in JavaModel javadoc
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252120">252120</a>
+[1.5][compiler] raw type diagnostic not coherent with javac one
+
+<a name="v_923"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M4 - November 4, 2008
+<br>Project org.eclipse.jdt.core v_923
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_923">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250211">250211</a>
+[search] Organize Imports Hangs
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=241821">241821</a>
+[compiler] Multiple interfaces and incompatible return types
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251279">251279</a>
+[1.5][compiler] Covariant generics interfaces causes compile error
+
+<a name="v_922"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - October 29, 2008 - 3.5 MILESTONE 3
+<br>Project org.eclipse.jdt.core v_922
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_922">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252481">252481</a>
+[code assist] NPE in findAllTypes
+
+<a name="v_921"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - October 28, 2008
+<br>Project org.eclipse.jdt.core v_921
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_921">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252264">252264</a>
+Invalid classpath header messages should be logged in verbose mode only
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=252392">252392</a>
+Missing jars referenced in the Class-Path: clause of a MANIFEST.MF file should not be reported as errors
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247845">247845</a>
+[misc] Errors in log from fetching Javadoc when working disconnected
+
+<a name="v_920"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - October 25, 2008
+<br>Project org.eclipse.jdt.core v_920
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_920">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>NamingConventions has now a more flexible API to suggest variable name: <code>NamingConventions.suggestVariableNames()</code>.<br>
+The same method can be used to suggest local, instance field, static field and constant field name.
+This method use a new specific heuristic to generate constant name with upper case and underscore (e.g. <code>CONSTANT_FIELD_NAME</code>).
+<pre>
+public static String[] suggestVariableNames(
+			int variableKind,
+			int baseNameKind,
+			String baseName,
+			IJavaProject javaProject,
+			int dim,
+			String[] excluded,
+			boolean evaluateDefault)
+</pre>
+</li>
+<li>NamingConventions has now an API to compute the name used to generate a variable name: <code>NamingConventions.getBaseName()</code>.<br>
+<pre>
+public static String getBaseName(
+			int variableKind,
+			String variableName,
+			IJavaProject javaProject)
+</pre>
+</li>
+<li>New options are added to specify the prefixes and suffixes of a constant field: <code>JavaCore.CODEASSIST_STATIC_FIELD_PREFIXES</code> and <code>JavaCore.CODEASSIST_STATIC_FIELD_SUFFIXES</code>.
+</li></ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250975">250975</a>
+[1.5][compiler] Stack overflow on static import.
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249785">249785</a>
+[javadoc][assist] Javadoc content assist after &quot;@see #&quot; does not work with deprecated member before
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249692">249692</a>
+The ImportRewriteAnalyzer does not honor a formatter setting
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251814">251814</a>
+[1.5][compiler] Dup Enum#valueOf(...) should keep the synthetic one
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=248309">248309</a>
+[model] IAnnotatable#getAnnotations() does not work for standard annotations on binary members
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251518">251518</a>
+Tons of invalid API tooling errors when checking out jdt.core
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251356">251356</a>
+Fix for bug 146768 breaks JDT Refactoring and its test
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249027">249027</a>
+NPE in Engine if type collides with a package
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=85946">85946</a>
+NamingConventions.suggestFieldNames(..) does not consider 'final' modifier for constants
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=38111">38111</a>
+[DCR] Make NamingConventions more flexible
+
+<a name="v_919"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - October 21, 2008
+<br>Project org.eclipse.jdt.core v_919
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_919">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>The compiler is now better resilient with duplicate field/method definitions and will avoid secondary errors 
+detected when subsenquently using the offending field/method.
+</li></ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251523">251523</a>
+[1.5][compiler] Should still flag Enum#valueOf override
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=246276">246276</a>
+NPE during code completion
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249844">249844</a>
+IBinding#getJavaElement() always returns null for IAnnotationBindings declared in annotation or enum types
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=146768">146768</a>
+[compiler] Should be more resilient with duplicate fields/methods
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251091">251091</a>
+Covariant return types not honored for combined extension and implementation
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=251079">251079</a>
+Got error dialog after switching default JRE
+
+<a name="v_918"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - October 16, 2008
+<br>Project org.eclipse.jdt.core v_918
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_918">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>New API for the ASTVisitor class: <code>org.eclipse.jdt.core.dom.ASTVisitor.preVisit2(ASTNode)</code>.<br>
+New API type: <code>org.eclipse.jdt.core.dom.NodeFinder</code>.<br>
+All details are available in bug <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=53024">53024</a>.<br>
+These new APIs are still under discussion and are released for JDT/UI adoption.</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250946">250946</a>
+Bogus jar file is added to the project build path
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250022">250022</a>
+Java Model Exception: Java Model Status when getting code assist in debug detail formatter dialog
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=53024">53024</a>
+[DOM] Move NodeFinder to a non-internal package
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250753">250753</a>
+[formatter] Insert space between empty braces in array initializers ignored without &quot;Keep empty array initializer on one line&quot;
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=248319">248319</a>
+[compiler][1.5] Valid Java source produces class file that doesn't verify (VerifyError, javac compiles correctly)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249567">249567</a>
+Incorrect behavior of Util.getUnresolvedJavaElement(...) method
+
+<a name="v_917"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - October 14, 2008
+<br>Project org.eclipse.jdt.core v_917
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_917">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Duplicate classpath entries are no longer reported if they are duplicate because of the classpath resolution
+      (e.g. if two classpath containers add the same entry to the resolved classpath).
+       Duplicate classpath entries at the raw classpath level are still reported.
+       See <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=175226">bug 175226</a> for details.
+</li>
+<li>
+Added a new compiler warning to report a missing hashCode() method when overriding the equals() method from Object. 
+This diagnosis is controlled by option: 
+<code>JavaCore.COMPILER_PB_MISSING_HASHCODE_METHOD</code> and produces a problem marker which ID is
+<code>IProblem.MissingHashCodeMethod</code> problem ID.
+<pre>
+  Compiler option ID: Reporting Missing HashCode Method.
+  When enabled, the compiler will issue an error or a warning if a type
+  overrides Object.equals(Object) but does not override hashCode().
+  Option id: "org.eclipse.jdt.core.compiler.problem.missingHashCodeMethod"
+  Possible values: { "error", "warning", "ignore" }
+  Default: "ignore"
+</pre>
+</li>
+<li>The "Class-Path:" clause of a jar manifest is now honored in the Java model. Jars referenced by "Class-Path:" are now automatically
+      added to the build path. See <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=198572">bug 198572</a> for details.</li>
+<li>Code Select search types outside the current project scope if no types are found in this scope</li>
+<li>Code Assist operation can be called with a progress monitor:
+<pre>
+public interface ICodeAssist {
+	/**
+	 * Performs code completion at the given offset position in this compilation unit,
+	 * reporting results to the given completion requestor. The &lt;code&gt;offset&lt;/code&gt;
+	 * is the 0-based index of the character, after which code assist is desired.
+	 * An &lt;code&gt;offset&lt;/code&gt; of -1 indicates to code assist at the beginning of this
+	 * compilation unit.
+	 * It considers types in the working copies with the given owner first. In other words,
+	 * the owner's working copies will take precedence over their original compilation units
+	 * in the workspace.
+	 * &lt;p&gt;
+	 * Note that if a working copy is empty, it will be as if the original compilation
+	 * unit had been deleted.
+	 * &lt;/p&gt;
+	 *
+	 * @param offset the given offset position
+	 * @param requestor the given completion requestor
+	 * @param owner the owner of working copies that take precedence over their original compilation units
+	 * @exception JavaModelException if code assist could not be performed. Reasons include:&lt;ul&gt;
+	 *  &lt;li&gt;This Java element does not exist (ELEMENT_DOES_NOT_EXIST)&lt;/li&gt;
+	 *  &lt;li&gt; The position specified is &lt; -1 or is greater than this compilation unit's
+	 *      source length (INDEX_OUT_OF_BOUNDS)
+	 * &lt;/ul&gt;
+	 *
+	 * @exception IllegalArgumentException if &lt;code&gt;requestor&lt;/code&gt; is &lt;code&gt;null&lt;/code&gt;
+	 * @since 3.0
+	 * @deprecated Use {@link #codeComplete(int, CompletionRequestor, WorkingCopyOwner)} instead.
+	 */
+	void codeComplete(int offset, ICompletionRequestor requestor, WorkingCopyOwner owner)
+		throws JavaModelException;
+
+	/**
+	 * Performs code completion at the given offset position in this compilation unit,
+	 * reporting results to the given completion requestor. The &lt;code&gt;offset&lt;/code&gt;
+	 * is the 0-based index of the character, after which code assist is desired.
+	 * An &lt;code&gt;offset&lt;/code&gt; of -1 indicates to code assist at the beginning of this
+	 * compilation unit.
+	 * &lt;p&gt;
+	 *
+	 * @param offset the given offset position
+	 * @param requestor the given completion requestor
+	 * @exception JavaModelException if code assist could not be performed. Reasons include:&lt;ul&gt;
+	 *  &lt;li&gt;This Java element does not exist (ELEMENT_DOES_NOT_EXIST)&lt;/li&gt;
+	 *  &lt;li&gt; The position specified is &lt; -1 or is greater than this compilation unit's
+	 *      source length (INDEX_OUT_OF_BOUNDS)
+	 * &lt;/ul&gt;
+	 *
+	 * @exception IllegalArgumentException if &lt;code&gt;requestor&lt;/code&gt; is &lt;code&gt;null&lt;/code&gt;
+	 * @since 3.0
+ 	 */
+	void codeComplete(int offset, CompletionRequestor requestor)
+		throws JavaModelException;
+}
+
+public interface IType {
+	/**
+	 * Do code completion inside a code snippet in the context of the current type.
+	 *
+	 * If the type can access to his source code and the insertion position is valid,
+	 * then completion is performed against source. Otherwise the completion is performed
+	 * against type structure and given locals variables.
+	 *
+	 * @param snippet the code snippet
+	 * @param insertion the position with in source where the snippet
+	 * is inserted. This position must not be in comments.
+	 * A possible value is -1, if the position is not known.
+	 * @param position the position within snippet where the user
+	 * is performing code assist.
+	 * @param localVariableTypeNames an array (possibly empty) of fully qualified
+	 * type names of local variables visible at the current scope
+	 * @param localVariableNames an array (possibly empty) of local variable names
+	 * that are visible at the current scope
+	 * @param localVariableModifiers an array (possible empty) of modifiers for
+	 * local variables
+	 * @param isStatic whether the current scope is in a static context
+	 * @param requestor the completion requestor
+	 * @param monitor the progress monitor used to report progress
+	 * @exception JavaModelException if this element does not exist or if an
+	 *		exception occurs while accessing its corresponding resource.
+	 * @since 3.5
+	 */
+	void codeComplete(
+		char[] snippet,
+		int insertion,
+		int position,
+		char[][] localVariableTypeNames,
+		char[][] localVariableNames,
+		int[] localVariableModifiers,
+		boolean isStatic,
+		CompletionRequestor requestor,
+		IProgressMonitor monitor)
+		throws JavaModelException;
+
+	/**
+	 * Do code completion inside a code snippet in the context of the current type.
+	 * It considers types in the working copies with the given owner first. In other words,
+	 * the owner's working copies will take precedence over their original compilation units
+	 * in the workspace.
+	 * &lt;p&gt;
+	 * Note that if a working copy is empty, it will be as if the original compilation
+	 * unit had been deleted.
+	 * &lt;/p&gt;&lt;p&gt;
+	 * If the type can access to his source code and the insertion position is valid,
+	 * then completion is performed against source. Otherwise the completion is performed
+	 * against type structure and given locals variables.
+	 * &lt;/p&gt;
+	 *
+	 * @param snippet the code snippet
+	 * @param insertion the position with in source where the snippet
+	 * is inserted. This position must not be in comments.
+	 * A possible value is -1, if the position is not known.
+	 * @param position the position with in snippet where the user
+	 * is performing code assist.
+	 * @param localVariableTypeNames an array (possibly empty) of fully qualified
+	 * type names of local variables visible at the current scope
+	 * @param localVariableNames an array (possibly empty) of local variable names
+	 * that are visible at the current scope
+	 * @param localVariableModifiers an array (possible empty) of modifiers for
+	 * local variables
+	 * @param isStatic whether the current scope is in a static context
+	 * @param requestor the completion requestor
+	 * @param owner the owner of working copies that take precedence over their original compilation units
+	 * @param monitor the progress monitor used to report progress
+	 * @exception JavaModelException if this element does not exist or if an
+	 *		exception occurs while accessing its corresponding resource.
+	 * @since 3.5
+	 */
+	void codeComplete(
+		char[] snippet,
+		int insertion,
+		int position,
+		char[][] localVariableTypeNames,
+		char[][] localVariableNames,
+		int[] localVariableModifiers,
+		boolean isStatic,
+		CompletionRequestor requestor,
+		WorkingCopyOwner owner,
+		IProgressMonitor monitor)
+		throws JavaModelException;
+}
+
+public interface IEvaluationContext {
+	/**
+	 * Performs a code completion at the given position in the given code snippet,
+	 * reporting results to the given completion requestor.
+	 * &lt;p&gt;
+	 * Note that code completion does not involve evaluation.
+	 * &lt;p&gt;
+	 *
+	 * @param codeSnippet the code snippet to complete in
+	 * @param position the character position in the code snippet to complete at,
+	 *   or -1 indicating the beginning of the snippet
+	 * @param requestor the code completion requestor capable of accepting all
+	 *    possible types of completions
+	 * @param monitor the progress monitor used to report progress
+	 * @exception JavaModelException if code completion could not be performed. Reasons include:
+	 *  &lt;ul&gt;
+	 *	  &lt;li&gt;The position specified is less than -1 or is greater than the snippet's
+	 *	    length (INDEX_OUT_OF_BOUNDS)&lt;/li&gt;
+	 *  &lt;/ul&gt;
+	 * @since 3.5
+	 */
+	public void codeComplete(
+		String codeSnippet,
+		int position,
+		CompletionRequestor requestor,
+		IProgressMonitor monitor)
+		throws JavaModelException;
+
+	/**
+	 * Performs a code completion at the given position in the given code snippet,
+	 * reporting results to the given completion requestor.
+	 * It considers types in the working copies with the given owner first. In other words,
+	 * the owner's working copies will take precedence over their original compilation units
+	 * in the workspace.
+	 * &lt;p&gt;
+	 * Note that if a working copy is empty, it will be as if the original compilation
+	 * unit had been deleted.
+	 * &lt;/p&gt;
+	 * &lt;p&gt;
+	 * Note that code completion does not involve evaluation.
+	 * &lt;p&gt;
+	 *
+	 * @param codeSnippet the code snippet to complete in
+	 * @param position the character position in the code snippet to complete at,
+	 *   or -1 indicating the beginning of the snippet
+	 * @param requestor the code completion requestor capable of accepting all
+	 *    possible types of completions
+	 * @param owner the owner of working copies that take precedence over their original compilation units
+	 * @param monitor the progress monitor used to report progress
+	 * @exception JavaModelException if code completion could not be performed. Reasons include:
+	 *  &lt;ul&gt;
+	 *	  &lt;li&gt;The position specified is less than -1 or is greater than the snippet's
+	 *	    length (INDEX_OUT_OF_BOUNDS)&lt;/li&gt;
+	 *  &lt;/ul&gt;
+	 * @since 3.5
+	 */
+	public void codeComplete(
+		String codeSnippet,
+		int position,
+		CompletionRequestor requestor,
+		WorkingCopyOwner owner,
+		IProgressMonitor monitor)
+		throws JavaModelException;
+}
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250685">250685</a>
+[assist] Code assist can bot be canceled when search indexes are not ready
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250083">250083</a>
+[model] Search indexes are not correctly updated
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=175226">175226</a>
+[buildpath] Build path contains duplicate entry
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=38751">38751</a>
+Optionally show compiler warning when equals() is overriden but hashCode() is not
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249930">249930</a>
+Deadlock with JavaModelManager$PerProjectInfo
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=250398">250398</a>
+[assist] Faults in javadoc of IType#codeComplete
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247941">247941</a>
+[assist] Add progress monitor to code completion
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=243820">243820</a>
+[1.5][compiler] Method has same erasure as an interface method but is not considered to implement it
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=232880">232880</a>
+[select] Navigate to classes in workspace even if not on classpath
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=198572">198572</a>
+eclipse does not respect class-path manifest of external jars
+
+<a name="v_916"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - October 7, 2008
+<br>Project org.eclipse.jdt.core v_916
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_916">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>
+The new compiler warning (added during 3.5M1) to signal absence of <code>synchronized</code> modifier 
+when overriding a synchronized method got disabled by default.
+<pre>
+  Compiler option ID: Reporting Missing Synchronized Modifier On Inherited Method.
+  When enabled, the compiler will issue an error or a warning if a method
+  overrides a synchronized method without having a synchronized modifier.
+  Option id: "org.eclipse.jdt.core.compiler.problem.missingSynchronizedOnInheritedMethod"
+  Possible values: { "error", "warning", "ignore" }
+  Default: "ignore"
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249140">249140</a>
+[1.5][compiler] asymmetric errors with covariant inherited methods
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=244762">244762</a>
+[1.5][compiler] Internal compiler error java.lang.NullPointerException after importing file
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=227527">227527</a>
+[1.5][compiler] Useless error message for local enum
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=227530">227530</a>
+[1.5][compiler] Incomplete error message for annotation inside a member type
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247981">247981</a>
+save on a single file (any type - java source, text file  
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249584">249584</a>
+CompilerParticipant constants should be marked as such
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=161977">161977</a>
+[compiler] Identical branches in org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding#syntheticMethods
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249535">249535</a>
+[compiler] Consider disabling the syncOverride warning/error by default
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247666">247666</a>
+[1.5][compiler] AIOOBE inside missing type reporting
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249321">249321</a>
+IPackagerFragmentRoot#getRawClasspathEntry() returns resolved &quot;..&quot; path
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=249107">249107</a>
+[compiler] IllegalAccessError in presence of synthetic field access
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247953">247953</a>
+[1.5][compiler] IllegalAccessError: tried to access class p.IA from class X
+
+<a name="v_915"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - September 30, 2008
+<br>Project org.eclipse.jdt.core v_915
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_915">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added support for ".." in classpath for library, variable and container entries.
+		See <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=57732">bug 57732</a> for details.</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=248680">248680</a>
+Error when create a new element (class, interface,...)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=57732">57732</a>
+[buildpath] relative build classpath leading outside of eclipse workspace
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247612">247612</a>
+[compiler] Compiler could avoid allocating field bindings for receiver type change
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247757">247757</a>
+[model] Move a class to root package, lose block comment at the top
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=241400">241400</a>
+[LinkedResources] Random errors when changing project settings
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=248313">248313</a>
+[DOM] Javadoc bug in StringLiteral#setLiteralValue(String)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=248308">248308</a>
+Typo in Javadoc of IBinding#getAnnotations()
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=248243">248243</a>
+Add apt.pluggable.core as x-friend for jdt.core
+
+<a name="v_914"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M3 - September 23, 2008
+<br>Project org.eclipse.jdt.core v_914
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_914">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247835">247835</a>
+SearchPattern extends non-API type InternalSearchPattern
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245858">245858</a>
+CompletionProposal extends non-API type InternalCompletionProposal
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247688">247688</a>
+SearchDocument extends non-API type InternalSearchDocument
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245860">245860</a>
+BuildContext extends non-API type CompilationParticipantResult
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247292">247292</a>
+[compiler] Compiler should avoid allocating method bindings for receiver type change
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245835">245835</a>
+CompletionContext extends non-API type InternalCompletionContext
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247618">247618</a>
+*ReferenceMatch extends non-API type InternalReferenceMatch
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247307">247307</a>
+[1.5][compiler] Array clone return type should be governed by source level instead of compliance
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=128563">128563</a>
+[compiler] Inner class compiles but IllegalAccessError if splitted with two output folders
+
+<a name="v_913"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M2 - September 13, 2008 - 3.5 MILESTONE 2
+<br>Project org.eclipse.jdt.core v_913
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_913">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=246955">246955</a>
+Add API compatibility filter for ITypeRoot
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=211054">211054</a>
+[javadoc] @see package reference should raise a warning except for the package declaration
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=243692">243692</a>
+[buildpath] Cannot set Attached Source from Class File Editor
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=207765">207765</a>
+[javadoc] Javadoc warning on @see reference could be improved
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=247118">247118</a>
+Endless loop in Signature.encodeQualifiedName
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=244164">244164</a>
+[1.5][compiler] Missing implementation error when referencing a generic field with error
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=233187">233187</a>
+[javadoc] partially qualified inner types  should be warned
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=170637">170637</a>
+[javadoc] incorrect warning about missing parameter javadoc when using many links
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=142990">142990</a>
+[model] Rename operation should not use workspace root rule
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=246712">246712</a>
+[javadoc] Unexpected warning about missing parameter doc in case of @inheritDoc
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=246682">246682</a>
+Inconsistent parser/scanner encoding for commentStart position
+
+<a name="v_912"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M2 - September 9, 2008
+<br>Project org.eclipse.jdt.core v_912
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_912">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Introduced a marker comment (<code>$FALL-THROUGH$</code>) for silencing compiler diagnosis for switch case 
+falling through next case. This allows to document intended fall through situations in the code.
+Note: The marker comment can also be a block comment, i.e. <code>/* $FALL-THROUGH$ */</code>.
+<br>e.g. 
+<pre>
+    switch(val) {
+        case 0 :
+            doit(0);
+            // $FALL-THROUGH$ - also fall into next case
+       case 1:
+            doit(1);
+            break;
+    }
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245257">245257</a>
+[compiler] Allow to suppress fall-through warning
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=240034">240034</a>
+[buildpath] Eclipse ignores .classpath file if it is encoded in UTF8 with BOM
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245963">245963</a>
+deprecate unused JavaCore.COMPILER_PB_BOOLEAN_METHOD_THROWING_EXCEPTION
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237772">237772</a>
+[implementation] Deadlock in JDT causing UI freeze
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=114116">114116</a>
+[assist] name suggestion for collections
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=246066">246066</a>
+[batch] Redundant superinterface warning cannot be activated
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245973">245973</a>
+[compiler] Problem irritant cannot exceed 64bit limit
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=244849">244849</a>
+[implementation] Memory leak in DeltaProcessingState#externalTimeStamps ?
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=207657">207657</a>
+[search] Exception when refactoring member type to top-level.
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=243023">243023</a>
+[content assist] RuntimeException thrown by JavaTypeCompletionProposalComputer
+
+<a name="v_911"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M2 - September 2, 2008
+<br>Project org.eclipse.jdt.core v_911
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_911">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>
+Added a new compiler warning to signal absence of <code>synchronized</code> modifier when overriding a synchronized method. 
+This diagnosis is controlled by option: 
+<code>JavaCore.COMPILER_PB_MISSING_SYNCHRONIZED_ON_INHERITED_METHOD</code> and produces a problem marker which ID is
+<code>IProblem.MissingSynchronizedModifierInInheritedMethod</code> problem ID;
+it may be suppressed using <code>@SuppressWarnings("super")</code>.
+<pre>
+  Compiler option ID: Reporting Missing Synchronized Modifier On Inherited Method.
+  When enabled, the compiler will issue an error or a warning if a method
+  overrides a synchronized method without having a synchronized modifier.
+  Option id: "org.eclipse.jdt.core.compiler.problem.missingSynchronizedOnInheritedMethod"
+  Possible values: { "error", "warning", "ignore" }
+  Default: "warning"
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=222900">222900</a>
+[Javadoc] Missing description is warned if valid description is on a new line
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=186858">186858</a>
+Intermittent failure of org.eclipse.jdt.core.tests.model.ExclusionPatternsTests#testCreateExcludedPackage2
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237453">237453</a>
+[formatter] Save actions fails to remove excess new lines when set to &quot;format edited lines&quot;
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245830">245830</a>
+ClasspathEntry illegally instantiates AssertionFailedException
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=242029">242029</a>
+Multiple source attachment paths don't work when source attachment path points to a folder
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=234583">234583</a>
+[formatter] Code formatter should adapt edits instead of regions
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245576">245576</a>
+No error message for updating read-only .classpath file
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245563">245563</a>
+npe in reconciler
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245518">245518</a>
+ICompilationUnit.createType failing with unexpected exception
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245435">245435</a>
+[1.5][compiler] &quot;Value for annotation attribute must be a constant expression&quot; error on valid constant expression
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=245348">245348</a>
+[DOM] Annotations are recognized by ASTParser even in COMPILER_SOURCE is set &lt; 1.5
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=241751">241751</a>
+Using a ClasspathContainerInitializer requires the use of workspace lock
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=242448">242448</a>
+[1.5][compiler] Sun's javac compiles the following but jdt does not
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239066">239066</a>
+[compiler] Overriding a Synchronized Method with a Non-synchronized Method
+
+<a name="v_910"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M2 - August 26, 2008
+<br>Project org.eclipse.jdt.core v_910
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_910">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239096">239096</a>
+Implementation oddness in TypeHierarchy#getAllSuper*(IType)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=244549">244549</a>
+JavaCore.create(String handleIdentifier) fails for local variable with parameterized type
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=241687">241687</a>
+[formatter] problem formatting block comments
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=240686">240686</a>
+[formatter] Formatter do unexpected things
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=242933">242933</a>
+[1.5] NullPointerException for @Range(min=1, max=9999999999999999)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=241345">241345</a>
+[formatter] Didn't Format HTML tags is unavailable
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=242646">242646</a>
+deadlock on org.eclipse.jdt.internal.core.ExternalFoldersManager
+
+<a name="v_909"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M2 - August 19, 2008
+<br>Project org.eclipse.jdt.core v_909
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_909">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=244477">244477</a>
+[formatter] Formatter fails on special Java array construct
+
+<a name="v_908"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M2 - August 11, 2008
+<br>Project org.eclipse.jdt.core v_908
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_908">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239833">239833</a>
+[compiler] Odd compiler error message "Illegal modifier for the method ..."
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=243715">243715</a>
+[DOM] Parser.createASTs() throws exception on 'illogical' JavaDoc
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=243653">243653</a>
+ASTRewrite is incorrectly documented
+
+<a name="v_907"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M1 - August 6, 2008 - 3.5 MILESTONE 1
+<br>Project org.eclipse.jdt.core v_907
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_907">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=242961">242961</a> [DOM] ITypeBinding.getDeclaredFields returns empty results if any field has undefined type
+
+<a name="v_906"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M1 - July 31, 2008
+<br>Project org.eclipse.jdt.core v_906
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_906">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=242292">242292</a>
+call to createAST(..) throws IllegalStateException when parser source is not char[]
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=218500">218500</a>
+[dom] bug in ITypeBinding.getQualifiedName for member of local type
+
+<a name="v_905"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M1 - July 28, 2008
+<br>Project org.eclipse.jdt.core v_905
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_905">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=236096">236096</a>
+Incorrectly allow raw return type in overridden method
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=238014">238014</a>
+[1.5][compiler] Missing "name clash" error?
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=238817">238817</a>
+[1.5][compiler] Unexpected nameclash reported
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237418">237418</a>
+deadlock between auto-build/refresh right after startup
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=241841">241841</a>
+[compiler] Compilation error 'incompatible types' should use full qualified class names
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239439">239439</a>
+[1.5][compiler] Behavior change for binding for parameterized type
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=106821">106821</a>
+[assist] Code assist: Deprecated elements not marked
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=209639">209639</a>
+codeSelect does not resolve correct key for implicit method type arguments
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239117">239117</a>
+AST overlapping source ranges in recovered AST
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=230830">230830</a>
+[select] Search doesn't find annotated local variable declaration with error
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=229092">229092</a>
+[batch compiler] error reporting is non-deterministic
+
+<a name="v_904"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M1 - July 21, 2008
+<br>Project org.eclipse.jdt.core v_904
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_904">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=169682">169682</a>
+In class that compiles and runs when ctrl+space is pressed I get &quot;No completions available&quot;
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=240815">240815</a>
+[DOM] CCE in AST#resolveWellKnownType(..)  for java.lang.Boolean without rt.jar
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=235727">235727</a>
+misspelling in syntax error message
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=236193">236193</a>
+DiagnoseParser has unreachable code
+
+<a name="v_903"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M1 - July 15, 2008
+<br>Project org.eclipse.jdt.core v_903
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_903">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237469">237469</a>
+[assist] AbortCompilation in log during normal editing
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=240214">240214</a>
+[compiler] final bit should be cleared from class file access flag for anonymous class
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=240349">240349</a>
+Improve disassembler output
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=240206">240206</a>
+ITypeRoot should have @noimplement tag
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237937">237937</a>
+[javadoc] Wrong &quot;Javadoc: Malformed link reference&quot; if href label contains //
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237931">237931</a>
+[1.6][compiler] wrong signature of String[][] in class file
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=101610">101610</a>
+Code assist not offered without transitive dependency
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239229">239229</a>
+[compiler] Regression bug against Eclipse 3.3: cannot resolve correct import
+
+<a name="v_902"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M1 - July 8, 2008
+<br>Project org.eclipse.jdt.core v_902
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_902">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=236336">236336</a>
+[1.6][compiler] Stack map generation error with 10,000-line method in Java
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239941">239941</a>
+[formatter] Unclosed html tags make the formatter to produce incorrect outputs
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239719">239719</a>
+[formatter] Code formatter destroys pre formatted javadoc comments
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=238923">238923</a>
+[1.6][compiler] Internal compiler error caused by a for loop in an initializer block
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239758">239758</a>
+[1.5][compiler] Generic interface inheritance and overriding error
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239305">239305</a>
+[compiler] VerifyError caused by casting long to long to int
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=239198">239198</a>
+[compiler] NegativeArraySizeException thrown for triple quotes
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=238920">238920</a>
+[formatter] Code Formatter removes javadoc status if @category present
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=238853">238853</a>
+[formatter] Code Formatter does not properly format valid xhtml (&lt;br /&gt; &amp; &lt;p /&gt;) in javadoc.
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=160217">160217</a>
+[ast rewrite] ASTRewrite#getListRewrite does not fullfill spec
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=232565">232565</a>
+[1.5][compiler] wrong autoboxing code generation leads to VerifyError at runtime
+
+<a name="v_901"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M1 - July 1, 2008
+<br>Project org.eclipse.jdt.core v_901
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_901">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=232478">232478</a>
+[buildpath] Classpath failed to bind to installed JRE
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=238210">238210</a>
+[formatter] CodeFormatter wraps line comments without whitespaces
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=238484">238484</a>
+[1.5][compiler] Eclipse generates bad code (major regression)
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=235370">235370</a>
+Add performance test for bug 234718
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=135906">135906</a>
+CompilationUnitStructureRequestor.resolveDuplicates has bad performance
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=169678">169678</a>
+[hierarchy] Type Hierarchy on static nested class includes unrelated types
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=95480">95480</a>
+[model] Missing INVALID_SIBLING exception when creating a type in an enum type that contains constants
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=235369">235369</a>
+DeltaProcessor.resetProjectCaches() should clear the list of projects to reset
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=190840">190840</a>
+SourceMapper#computeAllRootPaths(IType) factorisation suggestion
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=148664">148664</a>
+[spec] IJavaModel#getJavaProject(String) throws IAE for invalid name
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=231130">231130</a>
+[spec] IClassFile.getPath() not specified for external class folders
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=209425">209425</a>
+[spec] Ambiguous JavaDoc in ASTParser#setUnitName regarding source folders
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=235272">235272</a>
+javadoc of JavaCore#COMPILER_PB_MISSING_JAVADOC_TAG_DESCRIPTION needs improvement
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=235778">235778</a>
+Potential race condition computing resolved classpath
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=154865">154865</a>
+[hierarchy] Focus on Package only shows classes with missing superclasses
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=236445">236445</a>
+NPE in content assist
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237123">237123</a>
+[search] And/OrPatterns miss to override one overload
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=226357">226357</a>
+[dom] NPE in MethodBinding.getParameterAnnotations() if some, but not all parameters are annotated
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=120082">120082</a>
+Signature is missing capture
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=235882">235882</a>
+[compiler] constructor-scoped inner classes unable to recognize final member variable initialization
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=238090">238090</a>
+[formatter] New lines wrongly added while formatting too long @see references
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237942">237942</a>
+[formatter] String references are put on next line when over the max line length
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=233259">233259</a>
+[formatter] html tag should not be split by formatter
+
+
+<a name="v_900"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.5M1 - June 24, 2008
+<br>Project org.eclipse.jdt.core v_900
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_900">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Incremented JDT/Core plug-in id to "3.5.0", since added new API/feature.
+</li>
+<li>Added a new compiler warning to detect comparisons between identical expressions. This diagnosis is controlled by option: 
+<code>JavaCore.COMPILER_PB_COMPARING_IDENTICAL</code> and produces a problem marker which ID is
+<code>IProblem.ComparingIdentical</code> problem ID.
+<pre>
+Compiler option ID: Reporting Comparison of Identical Expressions.
+When enabled, the compiler will issue an error or a warning if a comparison
+is involving identical operands (e.g <code>'x == x'</code>).
+  - Option id:"org.eclipse.jdt.core.compiler.problem.comparingIdentical"
+  - Possible values: { "error", "warning", "ignore" }
+  - Default: "warning"
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=234172">234172</a>
+[1.5][select] no hover in qualified name with generics
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=233568">233568</a>
+Type in Server Runtime is not resolved in editor
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=217287">217287</a>
+[dom]IVariableBinding#getJavaElement() return null for variable inside an initializer
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=235921">235921</a>
+[1.5][compiler] Incorrect generic signature attribute created for inner anonymous type
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=234619">234619</a>
+[1.5][compiler] Object#getClass() has wrong expression type binding with JRE from 1.6
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=115814">115814</a>
+[compiler] warning on comparing same to same
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=235004">235004</a>
+[compiler] Misleading compiler warning
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=232944">232944</a>
+IMember#getJavadocRange() should end with &quot;*/&quot;
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=222665">222665</a>
+Error opening workbench
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=216772">216772</a>
+IJavaModel#refreshExternalArchives fails to refresh ExternalJavaProject jar cache
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=205917">205917</a>
+JavaCore#create(String, WorkingCopyOwner) should deal with null owner
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=237051">237051</a>
+[formatter] Formatter insert blank lines after javadoc if javadoc contains Commons Attributes @@ annotations
+<br><a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=236230">236230</a>
+[formatter] SIOOBE while formatting a compilation unit.
+
+
+<hr>
+<p>For earlier build notes, also see <a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/org.eclipse.jdt.core/notes/R34_buildnotes_jdt-core.html">build notes up to Release 3.4</a>.</p>
+<br>
+  <p>
+    <a href="http://validator.w3.org/check?uri=referer"><img
+        src="http://www.w3.org/Icons/valid-html401"
+        alt="Valid HTML 4.01 Transitional" height="31" width="88"></a>
+  </p>
+</body>
+</html>
+

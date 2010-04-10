@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -242,7 +242,7 @@ protected IJavaModelStatus verify() {
  *	<li>INVALID_DESTINATION - The destination parent specified for <code>element</code>
  *		is of an incompatible type. The destination for a package declaration or import declaration must
  *		be a compilation unit; the destination for a type must be a type or compilation
- *		unit; the destinaion for any type member (other than a type) must be a type. When
+ *		unit; the destination for any type member (other than a type) must be a type. When
  *		this error occurs, the element provided in the operation status is the <code>element</code>.
  *	<li>INVALID_NAME - the new name for <code>element</code> does not have valid syntax.
  *      In this case the element and name are provided in the status.

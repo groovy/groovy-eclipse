@@ -41,6 +41,7 @@ public class SelectionParser extends AssistParser {
 	// KIND : all values known by SelectionParser are between 1025 and 1549
 	protected static final int K_BETWEEN_CASE_AND_COLON = SELECTION_PARSER + 1; // whether we are inside a block
 	protected static final int K_INSIDE_RETURN_STATEMENT = SELECTION_PARSER + 2; // whether we are between the keyword 'return' and the end of a return statement
+	protected static final int K_CAST_STATEMENT = SELECTION_PARSER + 3; // whether we are between ')' and the end of a cast statement
 	
 
 	public ASTNode assistNodeParent; // the parent node of assist node
@@ -126,6 +127,17 @@ private void buildMoreCompletionContext(Expression expression) {
 				if(info == this.bracketDepth) {
 					ReturnStatement returnStatement = new ReturnStatement(expression, expression.sourceStart, expression.sourceEnd);
 					parentNode = returnStatement;
+					this.assistNodeParent = parentNode;
+				}
+				break nextElement;
+			case K_CAST_STATEMENT :
+				Expression castType;
+				if(this.expressionPtr > 0
+					&& ((castType = this.expressionStack[this.expressionPtr-1]) instanceof TypeReference)) {
+					CastExpression cast = new CastExpression(expression, castType);
+					cast.sourceStart = castType.sourceStart;
+					cast.sourceEnd= expression.sourceEnd;
+					parentNode = cast;
 					this.assistNodeParent = parentNode;
 				}
 				break nextElement;
@@ -248,6 +260,26 @@ protected void consumeArrayCreationExpressionWithInitializer() {
 		}
 		this.isOrphanCompletionNode = true;
 	}
+}
+protected void consumeCastExpressionLL1() {
+	popElement(K_CAST_STATEMENT);
+	super.consumeCastExpressionLL1();
+}
+protected void consumeCastExpressionWithGenericsArray() {
+	popElement(K_CAST_STATEMENT);
+	super.consumeCastExpressionWithGenericsArray();
+}
+protected void consumeCastExpressionWithNameArray() {
+	popElement(K_CAST_STATEMENT);
+	super.consumeCastExpressionWithNameArray();
+}
+protected void consumeCastExpressionWithPrimitiveType() {
+	popElement(K_CAST_STATEMENT);
+	super.consumeCastExpressionWithPrimitiveType();
+}
+protected void consumeCastExpressionWithQualifiedGenericsArray() {
+	popElement(K_CAST_STATEMENT);
+	super.consumeCastExpressionWithQualifiedGenericsArray();
 }
 protected void consumeClassInstanceCreationExpressionQualifiedWithTypeArguments() {
 	// ClassInstanceCreationExpression ::= Primary '.' 'new' TypeArguments SimpleName '(' ArgumentListopt ')' ClassBodyopt
@@ -561,6 +593,18 @@ protected void consumeFormalParameter(boolean isVarArgs) {
 			indicating that some arguments are available on the stack */
 		this.listLength++;
 	}
+}
+protected void consumeInsideCastExpression() {
+	super.consumeInsideCastExpression();
+	pushOnElementStack(K_CAST_STATEMENT);
+}
+protected void consumeInsideCastExpressionLL1() {
+	super.consumeInsideCastExpressionLL1();
+	pushOnElementStack(K_CAST_STATEMENT);
+}
+protected void consumeInsideCastExpressionWithQualifiedGenerics() {
+	super.consumeInsideCastExpressionWithQualifiedGenerics();
+	pushOnElementStack(K_CAST_STATEMENT);
 }
 protected void consumeInstanceOfExpression() {
 	if (indexOfAssistIdentifier() < 0) {

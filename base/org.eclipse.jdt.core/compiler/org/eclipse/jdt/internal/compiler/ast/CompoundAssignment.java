@@ -107,6 +107,9 @@ public int nullStatus(FlowInfo flowInfo) {
 			scope.problemReporter().expressionShouldBeAVariable(this.lhs);
 			return null;
 		}
+		boolean expressionIsCast = this.expression instanceof CastExpression;
+		if (expressionIsCast)
+			this.expression.bits |= ASTNode.DisableUnnecessaryCastCheck; // will check later on
 		TypeBinding originalLhsType = this.lhs.resolveType(scope);
 		TypeBinding originalExpressionType = this.expression.resolveType(scope);
 		if (originalLhsType == null || originalExpressionType == null)
@@ -181,6 +184,8 @@ public int nullStatus(FlowInfo flowInfo) {
 		this.expression.computeConversion(scope, TypeBinding.wellKnownType(scope, (result >>> 8) & 0x0000F), originalExpressionType);
 		this.preAssignImplicitConversion =  (unboxedLhs ? BOXING : 0) | (lhsID << 4) | (result & 0x0000F);
 		if (unboxedLhs) scope.problemReporter().autoboxing(this, lhsType, originalLhsType);
+		if (expressionIsCast)
+			CastExpression.checkNeedForArgumentCasts(scope, this.operator, result, this.lhs, originalLhsType.id, false, this.expression, originalExpressionType.id, true);
 		return this.resolvedType = originalLhsType;
 	}
 

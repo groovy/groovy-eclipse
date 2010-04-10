@@ -54,4 +54,11 @@ public void updateSourceEndIfNecessary(int bodyStart, int bodyEnd){
 	if (this.statement.sourceEnd == 0)
 		this.statement.sourceEnd = bodyEnd;
 }
+public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
+	if ((--this.bracketBalance <= 0) && (this.parent != null)){
+		this.updateSourceEndIfNecessary(braceStart, braceEnd);
+		return this.parent.updateOnClosingBrace(braceStart, braceEnd);
+	}
+	return this;
+}
 }

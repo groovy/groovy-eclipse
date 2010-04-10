@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,7 +46,6 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.*;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.*;
-import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.parser.SourceTypeConverter;
 import org.eclipse.jdt.internal.compiler.parser.JavadocTagConstants;
@@ -549,7 +548,6 @@ public final class CompletionEngine
 	int javadocTagPosition; // Position of previous tag while completing in javadoc
 	HashtableOfObject knownPkgs = new HashtableOfObject(10);
 	HashtableOfObject knownTypes = new HashtableOfObject(10);
-	Scanner nameScanner;
 	
  	/*
 		static final char[][] mainDeclarations =
@@ -663,15 +661,6 @@ public final class CompletionEngine
 			new LookupEnvironment(this, this.compilerOptions, this.problemReporter, nameEnvironment);
 		this.parser =
 			new CompletionParser(this.problemReporter, this.requestor.isExtendedContextRequired());
-		this.nameScanner =
-			new Scanner(
-				false /*comment*/,
-				false /*whitespace*/,
-				false /*nls*/,
-				this.compilerOptions.sourceLevel,
-				null /*taskTags*/,
-				null/*taskPriorities*/,
-				true/*taskCaseSensitive*/);
 		this.owner = owner;
 		this.monitor = monitor;
 	}
@@ -757,7 +746,10 @@ public final class CompletionEngine
 		
 		HashtableOfObject onDemandFound = new HashtableOfObject();
 		
-		ArrayList deferredProposals = new ArrayList();
+		ArrayList deferredProposals = null;
+		if (DEFER_QUALIFIED_PROPOSALS) {
+			deferredProposals = new ArrayList();
+		}
 		
 		try {
 			next : for (int i = 0; i < length; i++) {
@@ -1161,6 +1153,10 @@ public final class CompletionEngine
 					accessibility = IAccessRule.K_DISCOURAGED;
 					break;
 			}
+		}
+		
+		if (isForbiddenType(packageName, simpleTypeName, enclosingTypeNames)) {
+			return;
 		}
 
 		if(this.acceptedTypes == null) {
@@ -3630,6 +3626,13 @@ public final class CompletionEngine
 			addExpectedType(TypeBinding.BOOLEAN, scope);
 		} else if (parent instanceof IfStatement) {  
 			addExpectedType(TypeBinding.BOOLEAN, scope);
+		} else if (parent instanceof AssertStatement) {
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=274466
+			// If the assertExpression is same as the node , then the assistNode is the conditional part of the assert statement
+			AssertStatement assertStatement = (AssertStatement) parent;
+			if (assertStatement.assertExpression == node) {
+				addExpectedType(TypeBinding.BOOLEAN, scope);
+			}
 		} else if (parent instanceof ForStatement) {   // astNodeParent set to ForStatement only for the condition  
 			addExpectedType(TypeBinding.BOOLEAN, scope);
 
@@ -3779,15 +3782,26 @@ public final class CompletionEngine
 			TypeDeclaration typeDeclaration = ((ClassScope)scope).referenceContext;
 			if(typeDeclaration.superclass == astNode) {
 				addForbiddenBindings(typeDeclaration.binding);
+				addForbiddenBindingsForMemberTypes(typeDeclaration);
 				return scope.parent;
 			}
 			TypeReference[] superInterfaces = typeDeclaration.superInterfaces;
 			int length = superInterfaces == null ? 0 : superInterfaces.length;
+			int astNodeIndex = -1;
 			for (int i = 0; i < length; i++) {
 				if(superInterfaces[i] == astNode) {
 					addForbiddenBindings(typeDeclaration.binding);
-					return scope.parent;
+					addForbiddenBindingsForMemberTypes(typeDeclaration);
+					astNodeIndex = i;
+					break;
 				}
+			}
+			if (astNodeIndex >= 0) {
+				// Need to loop only up to astNodeIndex as the rest will be undefined.
+				for (int i = 0; i < astNodeIndex; i++) {
+					addForbiddenBindings(superInterfaces[i].resolvedType);
+				}
+				return scope.parent;
 			}
 		} else {
 			if (astNodeParent != null && astNodeParent instanceof TryStatement) {
@@ -3820,6 +3834,16 @@ public final class CompletionEngine
 //			}
 //		}
 		return scope;
+	}
+
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=270437
+	private void addForbiddenBindingsForMemberTypes(TypeDeclaration typeDeclaration) {
+		TypeDeclaration[] memberTypes = typeDeclaration.memberTypes;
+		int memberTypesLen = memberTypes == null ? 0 : memberTypes.length;
+		for (int i = 0; i < memberTypesLen; i++) {
+			addForbiddenBindings(memberTypes[i].binding);
+			addForbiddenBindingsForMemberTypes(memberTypes[i]);
+		}
 	}
 
 	private char[] computePrefix(SourceTypeBinding declarationType, SourceTypeBinding invocationType, boolean isStatic){
@@ -3956,6 +3980,11 @@ public final class CompletionEngine
 	private int computeRelevanceForExpectingType(TypeBinding proposalType){
 		if(this.expectedTypes != null && proposalType != null) {
 			int relevance = 0;
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=271296
+			// If there is at least one expected type, then void proposal types attract a degraded relevance.  
+			if (proposalType == TypeBinding.VOID && this.expectedTypesPtr >=0) {
+				return R_VOID;
+			}	
 			for (int i = 0; i <= this.expectedTypesPtr; i++) {
 				if((this.expectedTypesFilter & SUBTYPE) != 0
 						&& proposalType.isCompatibleWith(this.expectedTypes[i])) {
@@ -6001,7 +6030,7 @@ public final class CompletionEngine
 			int relevance = computeBaseRelevance();
 			relevance += computeRelevanceForResolution();
 			relevance += computeRelevanceForInterestingProposal(field);
-			if (fieldName != null) relevance += computeRelevanceForCaseMatching(fieldName, field.name);
+			relevance += computeRelevanceForCaseMatching(fieldName, field.name);
 			relevance += computeRelevanceForExpectingType(field.type);
 			relevance += computeRelevanceForEnumConstant(field.type);
 			relevance += computeRelevanceForStatic(onlyStaticFields, field.isStatic());
@@ -7162,7 +7191,7 @@ public final class CompletionEngine
 			int relevance = computeBaseRelevance();
 			relevance += computeRelevanceForResolution();
 			relevance += computeRelevanceForInterestingProposal(field);
-			if (fieldName != null) relevance += computeRelevanceForCaseMatching(fieldName, field.name);
+			relevance += computeRelevanceForCaseMatching(fieldName, field.name);
 			relevance += computeRelevanceForExpectingType(field.type);
 			relevance += computeRelevanceForEnumConstant(field.type);
 			relevance += computeRelevanceForStatic(true, true);
@@ -8301,7 +8330,7 @@ public final class CompletionEngine
 			int relevance = computeBaseRelevance();
 			relevance += computeRelevanceForResolution();
 			relevance += computeRelevanceForInterestingProposal();
-			if (methodName != null) relevance += computeRelevanceForCaseMatching(methodName, method.selector);
+			relevance += computeRelevanceForCaseMatching(methodName, method.selector);
 			relevance += computeRelevanceForExpectingType(method.returnType);
 			relevance += computeRelevanceForEnumConstant(method.returnType);
 			relevance += computeRelevanceForStatic(onlyStaticMethods, method.isStatic());
@@ -8560,7 +8589,7 @@ public final class CompletionEngine
 				int relevance = computeBaseRelevance();
 				relevance += computeRelevanceForResolution();
 				relevance += computeRelevanceForInterestingProposal();
-				if (methodName != null) relevance += computeRelevanceForCaseMatching(methodName, method.selector);
+				relevance += computeRelevanceForCaseMatching(methodName, method.selector);
 				relevance += computeRelevanceForExpectingType(method.returnType);
 				relevance += computeRelevanceForEnumConstant(method.returnType);
 				relevance += computeRelevanceForStatic(true, method.isStatic());
@@ -10325,6 +10354,10 @@ public final class CompletionEngine
 				checkCancel();
 				
 				SourceTypeBinding sourceType = types[i];
+				
+				if (isForbidden(sourceType)) continue;
+				if (this.assistNodeIsClass && sourceType.isInterface()) continue;
+				if (this.assistNodeIsInterface && sourceType.isClass()) continue;
 
 				char[] qualifiedSourceTypeName = CharOperation.concatWith(sourceType.compoundName, '.');
 
@@ -11667,6 +11700,24 @@ public final class CompletionEngine
 						this.forbbidenBindings[i] instanceof TypeBinding &&
 						((TypeBinding)binding).isCompatibleWith((TypeBinding)this.forbbidenBindings[i])) {
 					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean isForbiddenType(char[] givenPkgName, char[] givenTypeName, char[][] enclosingTypeNames) {
+		// CharOperation.concatWith() handles the cases where input args are null/empty
+		char[] fullTypeName = CharOperation.concatWith(enclosingTypeNames, givenTypeName, '.');
+		for (int i = 0; i <= this.forbbidenBindingsPtr; i++) {
+			if (this.forbbidenBindings[i] instanceof TypeBinding) {
+				TypeBinding typeBinding = (TypeBinding) this.forbbidenBindings[i];
+				char[] currPkgName = typeBinding.qualifiedPackageName();
+				if (CharOperation.equals(givenPkgName, currPkgName))	{
+					char[] currTypeName = typeBinding.qualifiedSourceName();
+					if (CharOperation.equals(fullTypeName, currTypeName)) {
+						return true;
+					}
 				}
 			}
 		}

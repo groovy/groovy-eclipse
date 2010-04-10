@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1106,7 +1106,6 @@ public MethodBinding[] methods() {
 
 		// find & report collision cases
 		boolean complyTo15 = this.scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
-		boolean complyTo17 = this.scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_7;
 		for (int i = 0, length = this.methods.length; i < length; i++) {
 			MethodBinding method = resolvedMethods[i];
 			if (method == null)
@@ -1120,64 +1119,8 @@ public MethodBinding[] methods() {
 				if (!CharOperation.equals(selector, method2.selector))
 					break nextSibling; // methods with same selector are contiguous
 
-				if (complyTo15 && method.returnType != null && method2.returnType != null) {
-					// 8.4.2, for collision to be detected between m1 and m2:
-					// signature(m1) == signature(m2) i.e. same arity, same type parameter count, can be substituted
-					// signature(m1) == erasure(signature(m2)) or erasure(signature(m1)) == signature(m2)
-					TypeBinding[] params1 = method.parameters;
-					TypeBinding[] params2 = method2.parameters;
-					int pLength = params1.length;
-					if (pLength != params2.length)
-						continue nextSibling;
-
-					TypeVariableBinding[] vars = method.typeVariables;
-					TypeVariableBinding[] vars2 = method2.typeVariables;
-					boolean equalTypeVars = vars == vars2;
-					MethodBinding subMethod = method2;
-					if (!equalTypeVars) {
-						MethodBinding temp = method.computeSubstitutedMethod(method2, this.scope.environment());
-						if (temp != null) {
-							equalTypeVars = true;
-							subMethod = temp;
-						}
-					}
-					boolean equalParams = method.areParametersEqual(subMethod);
-					if (equalParams && equalTypeVars) {
-						// duplicates regardless of return types
-					} else if ((complyTo17 || method.returnType.erasure() == subMethod.returnType.erasure())
-						&& (equalParams || method.areParameterErasuresEqual(method2))) {
-						// with fix for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
-						// we now ignore return types when detecting duplicates, just as we did before 1.5 
-						// name clash for sure if not duplicates, report as duplicates
-						// FYI for now we will only make this change when compliance is set to 1.7 or higher
-					} else if (!equalTypeVars && vars != Binding.NO_TYPE_VARIABLES && vars2 != Binding.NO_TYPE_VARIABLES) {
-						// type variables are different so we can distinguish between methods
-						continue nextSibling;
-					} else if (pLength > 0) {
-						// check to see if the erasure of either method is equal to the other
-						int index = pLength;
-						for (; --index >= 0;) {
-							if (params1[index] != params2[index].erasure())
-								break;
-							if (params1[index] == params2[index]) {
-								TypeBinding type = params1[index].leafComponentType();
-								if (type instanceof SourceTypeBinding && type.typeVariables() != Binding.NO_TYPE_VARIABLES) {
-									index = pLength; // handle comparing identical source types like X<T>... its erasure is itself BUT we need to answer false
-									break;
-								}
-							}
-						}
-						if (index >= 0 && index < pLength) {
-							for (index = pLength; --index >= 0;)
-								if (params1[index].erasure() != params2[index])
-									break;
-						}
-						if (index >= 0)
-							continue nextSibling;
-					}
-				} else if (!method.areParametersEqual(method2)) { // prior to 1.5, parameter identity meant a collision case
-					continue nextSibling;
-				}
+				if (complyTo15 ? !method.areParameterErasuresEqual(method2) : !method.areParametersEqual(method2))
+					continue nextSibling; // otherwise duplicates / name clash
 				boolean isEnumSpecialMethod = isEnum() && (CharOperation.equals(selector,TypeConstants.VALUEOF) || CharOperation.equals(selector,TypeConstants.VALUES));
 				// report duplicate
 				boolean removeMethod2 = true;
@@ -1624,12 +1567,16 @@ public String toString() {
 	return buffer.toString();
 }
 public TypeVariableBinding[] typeVariables() {
-	return this.typeVariables;
+	return this.typeVariables != null ? this.typeVariables : Binding.NO_TYPE_VARIABLES;
 }
 void verifyMethods(MethodVerifier verifier) {
 	verifier.verify(this);
 
 	for (int i = this.memberTypes.length; --i >= 0;)
 		 ((SourceTypeBinding) this.memberTypes[i]).verifyMethods(verifier);
+}
+
+public FieldBinding[] unResolvedFields() {
+	return this.fields;
 }
 }

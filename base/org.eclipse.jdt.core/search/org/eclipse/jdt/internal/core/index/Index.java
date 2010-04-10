@@ -34,6 +34,7 @@ public ReadWriteMonitor monitor;
 // Separator to use after the container path
 static final char DEFAULT_SEPARATOR = '/';
 public char separator = DEFAULT_SEPARATOR;
+static final char JAR_SEPARATOR = IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR.charAt(0);
 
 protected DiskIndex diskIndex;
 protected MemoryIndex memoryIndex;
@@ -203,5 +204,9 @@ public void stopQuery() {
 }
 public String toString() {
 	return "Index for " + this.containerPath; //$NON-NLS-1$
+}
+public boolean isIndexForJar()
+{
+	return this.separator == JAR_SEPARATOR;
 }
 }

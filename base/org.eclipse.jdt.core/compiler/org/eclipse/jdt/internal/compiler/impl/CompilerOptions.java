@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,8 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Benjamin Muskalla - Contribution for bug 239066
+ *     Stephan Herrmann  - Contribution for bug 236385
+ *     Stephan Herrmann  - Contribution for bug 295551
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.impl;
 
@@ -105,11 +107,13 @@ public class CompilerOptions {
 	public static final String OPTION_ReportAutoboxing = "org.eclipse.jdt.core.compiler.problem.autoboxing"; //$NON-NLS-1$
 	public static final String OPTION_ReportAnnotationSuperInterface = "org.eclipse.jdt.core.compiler.problem.annotationSuperInterface"; //$NON-NLS-1$
 	public static final String OPTION_ReportMissingOverrideAnnotation = "org.eclipse.jdt.core.compiler.problem.missingOverrideAnnotation"; //$NON-NLS-1$
+	public static final String OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation = "org.eclipse.jdt.core.compiler.problem.missingOverrideAnnotationForInterfaceMethodImplementation"; //$NON-NLS-1$
 	public static final String OPTION_ReportMissingDeprecatedAnnotation = "org.eclipse.jdt.core.compiler.problem.missingDeprecatedAnnotation"; //$NON-NLS-1$
 	public static final String OPTION_ReportIncompleteEnumSwitch = "org.eclipse.jdt.core.compiler.problem.incompleteEnumSwitch"; //$NON-NLS-1$
 	public static final String OPTION_ReportForbiddenReference =  "org.eclipse.jdt.core.compiler.problem.forbiddenReference"; //$NON-NLS-1$
 	public static final String OPTION_ReportDiscouragedReference =  "org.eclipse.jdt.core.compiler.problem.discouragedReference"; //$NON-NLS-1$
 	public static final String OPTION_SuppressWarnings =  "org.eclipse.jdt.core.compiler.problem.suppressWarnings"; //$NON-NLS-1$
+	public static final String OPTION_SuppressOptionalErrors = "org.eclipse.jdt.core.compiler.problem.suppressOptionalErrors"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnhandledWarningToken =  "org.eclipse.jdt.core.compiler.problem.unhandledWarningToken"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnusedWarningToken =  "org.eclipse.jdt.core.compiler.problem.unusedWarningToken"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnusedLabel =  "org.eclipse.jdt.core.compiler.problem.unusedLabel"; //$NON-NLS-1$
@@ -125,6 +129,8 @@ public class CompilerOptions {
 	public static final String OPTION_ReportMissingHashCodeMethod =  "org.eclipse.jdt.core.compiler.problem.missingHashCodeMethod"; //$NON-NLS-1$
 	public static final String OPTION_ReportDeadCode =  "org.eclipse.jdt.core.compiler.problem.deadCode"; //$NON-NLS-1$
 	public static final String OPTION_ReportDeadCodeInTrivialIfStatement =  "org.eclipse.jdt.core.compiler.problem.deadCodeInTrivialIfStatement"; //$NON-NLS-1$
+	public static final String OPTION_ReportTasks = "org.eclipse.jdt.core.compiler.problem.tasks"; //$NON-NLS-1$
+	public static final String OPTION_ReportUnusedObjectAllocation = "org.eclipse.jdt.core.compiler.problem.unusedObjectAllocation";  //$NON-NLS-1$
 
 	
 	// GROOVY start
@@ -239,9 +245,8 @@ public class CompilerOptions {
 	// group 2
 	public static final int ShouldImplementHashcode = IrritantSet.GROUP2 | ASTNode.Bit1;
 	public static final int DeadCode = IrritantSet.GROUP2 | ASTNode.Bit2;
-	
-	// Map: String optionKey --> Long irritant>
-	private static Map OptionToIrritants;
+	public static final int Tasks = IrritantSet.GROUP2 | ASTNode.Bit3;
+	public static final int UnusedObjectAllocation = IrritantSet.GROUP2 | ASTNode.Bit4;
 
 	// Severity level for handlers
 	/** 
@@ -261,11 +266,11 @@ public class CompilerOptions {
 	
 	/** Classfile debug information, may contain source file name, line numbers, local variable tables, etc... */
 	public int produceDebugAttributes; 
-	/** Compliance level for the compiler, refers to a JDK version, e.g. {lnk {@link ClassFileConstants#JDK1_4} */
+	/** Compliance level for the compiler, refers to a JDK version, e.g. {link {@link ClassFileConstants#JDK1_4} */
 	public long complianceLevel;
-	/** Java source level, refers to a JDK version, e.g. {lnk {@link ClassFileConstants#JDK1_4} */
+	/** Java source level, refers to a JDK version, e.g. {link {@link ClassFileConstants#JDK1_4} */
 	public long sourceLevel;
-	/** VM target level, refers to a JDK version, e.g. {lnk {@link ClassFileConstants#JDK1_4} */
+	/** VM target level, refers to a JDK version, e.g. {link {@link ClassFileConstants#JDK1_4} */
 	public long targetJDK;
 	/** Source encoding format */
 	public String defaultEncoding;
@@ -282,7 +287,7 @@ public class CompilerOptions {
 	/** Tags used to recognize tasks in comments */
 	public char[][] taskTags;
 	/** Respective priorities of recognized task tags */
-	public char[][] taskPriorites;
+	public char[][] taskPriorities;
 	/** Indicate whether tag detection is case sensitive or not */
 	public boolean isTaskCaseSensitive;
 	/** Specify whether deprecation inside deprecated code is to be reported */
@@ -327,8 +332,10 @@ public class CompilerOptions {
 	public boolean reportMissingJavadocCommentsOverriding;
 	/** Indicate whether the JSR bytecode should be inlined to avoid its presence in classfile */
 	public boolean inlineJsrBytecode;
-	/** Indicate if @SuppressWarning annotation are activated */
+	/** Indicate if @SuppressWarning annotations are activated */
 	public boolean suppressWarnings;
+	/** Indicate if @SuppressWarning annotations should also suppress optional errors */
+	public boolean suppressOptionalErrors;
 	/** Specify if should treat optional error as fatal or just like warning */
 	public boolean treatOptionalErrorAsFatal;
 	/** Specify if parser should perform structural recovery in methods */
@@ -339,6 +346,8 @@ public class CompilerOptions {
 	public boolean processAnnotations;
 	/** Store annotations */
 	public boolean storeAnnotations;
+	/** Specify if need to report missing override annotation for a method implementing an interface method (java 1.6 and above)*/
+	public boolean reportMissingOverrideAnnotationForInterfaceMethodImplementation;
 	/** Indicate if annotation processing generates classfiles */
 	public boolean generateClassFiles;
 	/** Indicate if method bodies should be ignored */
@@ -366,6 +375,7 @@ public class CompilerOptions {
 		"nls", //$NON-NLS-1$
 		"null", //$NON-NLS-1$
 		"restriction", //$NON-NLS-1$
+		"rawtypes", //$NON-NLS-1$
 		"serial", //$NON-NLS-1$
 		"static-access", //$NON-NLS-1$
 		"super", //$NON-NLS-1$
@@ -530,29 +540,10 @@ public class CompilerOptions {
 				return OPTION_ReportMissingHashCodeMethod;
 			case DeadCode :
 				return OPTION_ReportDeadCode;
+			case UnusedObjectAllocation:
+				return OPTION_ReportUnusedObjectAllocation;
 		}
 		return null;
-	}
-
-	public static long optionKeyToIrritant(String optionName) {
-		if (OptionToIrritants == null) {
-			Map temp = new HashMap();
-			int group = 0;
-			for (int g = 0; g < 8; g++) {
-				group <<= 1;
-				int index = 0;
-				for (int i = 0; i < 30; i++) {
-					index <<= 1;
-					int irritant = (group<<IrritantSet.GROUP_SHIFT)+index;
-					String optionKey = optionKeyFromIrritant(irritant);
-					if (optionKey == null) continue;
-					temp.put(optionKey, new Integer(irritant));
-				}
-			}
-			OptionToIrritants = temp;
-		}
-		Long irritant = (Long)OptionToIrritants.get(optionName);
-		return irritant == null ? 0 : irritant.longValue();
 	}
 
 	public static String versionFromJdkLevel(long jdkLevel) {
@@ -677,6 +668,7 @@ public class CompilerOptions {
 			OPTION_ReportUnusedDeclaredThrownException,
 			OPTION_ReportUnusedImport,
 			OPTION_ReportUnusedLocal,
+			OPTION_ReportUnusedObjectAllocation,
 			OPTION_ReportUnusedParameter,
 			OPTION_ReportUnusedPrivateMember,
 			OPTION_ReportVarargsArgumentNeedCast,
@@ -707,12 +699,6 @@ public class CompilerOptions {
 				return "nls"; //$NON-NLS-1$
 			case UnnecessaryTypeCheck :
 				return "cast"; //$NON-NLS-1$
-			case UnusedLocalVariable :
-			case UnusedArgument :
-			case UnusedImport :
-			case UnusedPrivateMember :
-			case UnusedDeclaredThrownException :
-				return "unused"; //$NON-NLS-1$
 			case IndirectStaticAccess :
 			case NonStaticAccessToStatic :
 				return "static-access"; //$NON-NLS-1$
@@ -733,10 +719,17 @@ public class CompilerOptions {
 			case MissingDeprecatedAnnotation :
 				return "dep-ann"; //$NON-NLS-1$
 			case RawTypeReference :
-				return "unchecked"; //$NON-NLS-1$
+				return "rawtypes"; //$NON-NLS-1$
 			case UnusedLabel :
 			case UnusedTypeArguments :
 			case RedundantSuperinterface :
+			case UnusedLocalVariable :
+			case UnusedArgument :
+			case UnusedImport :
+			case UnusedPrivateMember :
+			case UnusedDeclaredThrownException :
+			case DeadCode :
+			case UnusedObjectAllocation :
 				return "unused"; //$NON-NLS-1$
 			case DiscouragedReference :
 			case ForbiddenReference :
@@ -796,6 +789,8 @@ public class CompilerOptions {
 					return IrritantSet.NULL;
 				break;
 			case 'r' :
+				if ("rawtypes".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.RAW;
 				if ("restriction".equals(warningToken)) //$NON-NLS-1$
 					return IrritantSet.RESTRICTION;
 				break;
@@ -886,6 +881,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportDiscouragedReference, getSeverityString(DiscouragedReference));
 		optionsMap.put(OPTION_ReportVarargsArgumentNeedCast, getSeverityString(VarargsArgumentNeedCast));
 		optionsMap.put(OPTION_ReportMissingOverrideAnnotation, getSeverityString(MissingOverrideAnnotation));
+		optionsMap.put(OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation, this.reportMissingOverrideAnnotationForInterfaceMethodImplementation ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportMissingDeprecatedAnnotation, getSeverityString(MissingDeprecatedAnnotation));
 		optionsMap.put(OPTION_ReportIncompleteEnumSwitch, getSeverityString(IncompleteEnumSwitch));
 		optionsMap.put(OPTION_ReportUnusedLabel, getSeverityString(UnusedLabel));
@@ -898,7 +894,7 @@ public class CompilerOptions {
 			optionsMap.put(OPTION_Encoding, this.defaultEncoding);
 		}
 		optionsMap.put(OPTION_TaskTags, this.taskTags == null ? Util.EMPTY_STRING : new String(CharOperation.concatWith(this.taskTags,',')));
-		optionsMap.put(OPTION_TaskPriorities, this.taskPriorites == null ? Util.EMPTY_STRING : new String(CharOperation.concatWith(this.taskPriorites,',')));
+		optionsMap.put(OPTION_TaskPriorities, this.taskPriorities == null ? Util.EMPTY_STRING : new String(CharOperation.concatWith(this.taskPriorities,',')));
 		optionsMap.put(OPTION_TaskCaseSensitive, this.isTaskCaseSensitive ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportUnusedParameterWhenImplementingAbstract, this.reportUnusedParameterWhenImplementingAbstract ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportUnusedParameterWhenOverridingConcrete, this.reportUnusedParameterWhenOverridingConcrete ? ENABLED : DISABLED);
@@ -910,6 +906,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportPotentialNullReference, getSeverityString(PotentialNullReference));
 		optionsMap.put(OPTION_ReportRedundantNullCheck, getSeverityString(RedundantNullCheck));
 		optionsMap.put(OPTION_SuppressWarnings, this.suppressWarnings ? ENABLED : DISABLED);
+		optionsMap.put(OPTION_SuppressOptionalErrors, this.suppressOptionalErrors ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportUnhandledWarningToken, getSeverityString(UnhandledWarningToken));
 		optionsMap.put(OPTION_ReportUnusedWarningToken, getSeverityString(UnusedWarningToken));
 		optionsMap.put(OPTION_ReportParameterAssignment, getSeverityString(ParameterAssignment));
@@ -923,6 +920,8 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportMissingHashCodeMethod, getSeverityString(ShouldImplementHashcode));
 		optionsMap.put(OPTION_ReportDeadCode, getSeverityString(DeadCode));
 		optionsMap.put(OPTION_ReportDeadCodeInTrivialIfStatement, this.reportDeadCodeInTrivialIfStatement ? ENABLED : DISABLED);
+		optionsMap.put(OPTION_ReportTasks, getSeverityString(Tasks));
+		optionsMap.put(OPTION_ReportUnusedObjectAllocation, getSeverityString(UnusedObjectAllocation));
 		return optionsMap;
 	}
 
@@ -994,7 +993,7 @@ public class CompilerOptions {
 
 		// tags used to recognize tasks in comments
 		this.taskTags = null;
-		this.taskPriorites = null;
+		this.taskPriorities = null;
 		this.isTaskCaseSensitive = true;
 
 		// deprecation report
@@ -1038,8 +1037,11 @@ public class CompilerOptions {
 		// suppress warning annotation
 		this.suppressWarnings = true;
 
-		// treat optional error as fatal or just like warning?
-		this.treatOptionalErrorAsFatal = true;
+		// suppress also optional errors
+		this.suppressOptionalErrors = false;
+
+		// treat optional error as non fatal
+		this.treatOptionalErrorAsFatal = false;
 
 		// parser perform statements recovery
 		this.performMethodsFullRecovery = true;
@@ -1056,9 +1058,12 @@ public class CompilerOptions {
 		// enable annotation processing by default only in batch mode
 		this.processAnnotations = false;
 		
+		// disable missing override annotation reporting for interface method implementation
+		this.reportMissingOverrideAnnotationForInterfaceMethodImplementation = true;
+		
 		// dead code detection
 		this.reportDeadCodeInTrivialIfStatement = false;
-
+		
 		// ignore method bodies
 		this.ignoreMethodBodies = false;
 	}
@@ -1217,9 +1222,9 @@ public class CompilerOptions {
 			if (optionValue instanceof String) {
 				String stringValue = (String) optionValue;
 				if (stringValue.length() == 0) {
-					this.taskPriorites = null;
+					this.taskPriorities = null;
 				} else {
-					this.taskPriorites = CharOperation.splitAndTrimOn(',', stringValue.toCharArray());
+					this.taskPriorities = CharOperation.splitAndTrimOn(',', stringValue.toCharArray());
 				}
 			}
 		}
@@ -1246,11 +1251,25 @@ public class CompilerOptions {
 				this.suppressWarnings = false;
 			}
 		}
+		if ((optionValue = optionsMap.get(OPTION_SuppressOptionalErrors)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.suppressOptionalErrors = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.suppressOptionalErrors = false;
+			}
+		}
 		if ((optionValue = optionsMap.get(OPTION_FatalOptionalError)) != null) {
 			if (ENABLED.equals(optionValue)) {
 				this.treatOptionalErrorAsFatal = true;
 			} else if (DISABLED.equals(optionValue)) {
 				this.treatOptionalErrorAsFatal = false;
+			}
+		}
+		if ((optionValue = optionsMap.get(OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.reportMissingOverrideAnnotationForInterfaceMethodImplementation = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.reportMissingOverrideAnnotationForInterfaceMethodImplementation = false;
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTION_ReportMethodWithConstructorName)) != null) updateSeverity(MethodWithConstructorName, optionValue);
@@ -1308,6 +1327,8 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_ReportMissingSynchronizedOnInheritedMethod)) != null) updateSeverity(MissingSynchronizedModifierInInheritedMethod, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportMissingHashCodeMethod)) != null) updateSeverity(ShouldImplementHashcode, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportDeadCode)) != null) updateSeverity(DeadCode, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportTasks)) != null) updateSeverity(Tasks, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportUnusedObjectAllocation)) != null) updateSeverity(UnusedObjectAllocation, optionValue);
 
 		// Javadoc options
 		if ((optionValue = optionsMap.get(OPTION_DocCommentSupport)) != null) {
@@ -1493,7 +1514,7 @@ public class CompilerOptions {
 		buf.append("\n\t- parse literal expressions as constants : ").append(this.parseLiteralExpressionsAsConstants ? "ON" : "OFF"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		buf.append("\n\t- encoding : ").append(this.defaultEncoding == null ? "<default>" : this.defaultEncoding); //$NON-NLS-1$ //$NON-NLS-2$
 		buf.append("\n\t- task tags: ").append(this.taskTags == null ? Util.EMPTY_STRING : new String(CharOperation.concatWith(this.taskTags,',')));  //$NON-NLS-1$
-		buf.append("\n\t- task priorities : ").append(this.taskPriorites == null ? Util.EMPTY_STRING : new String(CharOperation.concatWith(this.taskPriorites,','))); //$NON-NLS-1$
+		buf.append("\n\t- task priorities : ").append(this.taskPriorities == null ? Util.EMPTY_STRING : new String(CharOperation.concatWith(this.taskPriorities,','))); //$NON-NLS-1$
 		buf.append("\n\t- report deprecation inside deprecated code : ").append(this.reportDeprecationInsideDeprecatedCode ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report deprecation when overriding deprecated method : ").append(this.reportDeprecationWhenOverridingDeprecatedMethod ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report unused parameter when implementing abstract method : ").append(this.reportUnusedParameterWhenImplementingAbstract ? ENABLED : DISABLED); //$NON-NLS-1$
@@ -1514,9 +1535,11 @@ public class CompilerOptions {
 		buf.append("\n\t- autoboxing: ").append(getSeverityString(AutoBoxing)); //$NON-NLS-1$
 		buf.append("\n\t- annotation super interface: ").append(getSeverityString(AnnotationSuperInterface)); //$NON-NLS-1$
 		buf.append("\n\t- missing @Override annotation: ").append(getSeverityString(MissingOverrideAnnotation)); //$NON-NLS-1$
+		buf.append("\n\t- missing @Override annotation for interface method implementation: ").append(this.reportMissingOverrideAnnotationForInterfaceMethodImplementation ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- missing @Deprecated annotation: ").append(getSeverityString(MissingDeprecatedAnnotation)); //$NON-NLS-1$
 		buf.append("\n\t- incomplete enum switch: ").append(getSeverityString(IncompleteEnumSwitch)); //$NON-NLS-1$
 		buf.append("\n\t- suppress warnings: ").append(this.suppressWarnings ? ENABLED : DISABLED); //$NON-NLS-1$
+		buf.append("\n\t- suppress optional errors: ").append(this.suppressOptionalErrors ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- unhandled warning token: ").append(getSeverityString(UnhandledWarningToken)); //$NON-NLS-1$
 		buf.append("\n\t- unused warning token: ").append(getSeverityString(UnusedWarningToken)); //$NON-NLS-1$
 		buf.append("\n\t- unused label: ").append(getSeverityString(UnusedLabel)); //$NON-NLS-1$
@@ -1531,6 +1554,8 @@ public class CompilerOptions {
 		buf.append("\n\t- should implement hashCode() method: ").append(getSeverityString(ShouldImplementHashcode)); //$NON-NLS-1$
 		buf.append("\n\t- dead code: ").append(getSeverityString(DeadCode)); //$NON-NLS-1$
 		buf.append("\n\t- dead code in trivial if statement: ").append(this.reportDeadCodeInTrivialIfStatement ? ENABLED : DISABLED); //$NON-NLS-1$
+		buf.append("\n\t- tasks severity: ").append(getSeverityString(Tasks)); //$NON-NLS-1$
+		buf.append("\n\t- unused object allocation: ").append(getSeverityString(UnusedObjectAllocation)); //$NON-NLS-1$
 		// GROOVY start
 		buf.append("\n\t- build groovy files: ").append((buildGroovyFiles==0)?"dontknow":(buildGroovyFiles==1?"no":"yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(groovyFlags)); //$NON-NLS-1$

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,6 +58,7 @@ public class LookupEnvironment implements ProblemReasons, TypeConstants {
 	private SimpleLookupTable uniqueRawTypeBindings;
 	private SimpleLookupTable uniqueWildcardBindings;
 	private SimpleLookupTable uniqueParameterizedGenericMethodBindings;
+	private SimpleLookupTable uniqueGetClassMethodBinding; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=300734
 
 	public CompilationUnitDeclaration unitBeingCompleted = null; // only set while completing units
 	public Object missingClassFileLocation = null; // only set when resolving certain references, to help locating problems
@@ -151,10 +152,10 @@ ReferenceBinding askForType(PackageBinding packageBinding, char[] name) {
 * NOTE: This method can be called multiple times as additional source files are needed
 */
 public void buildTypeBindings(CompilationUnitDeclaration unit, AccessRestriction accessRestriction) {
-	// GROOVY start
-	// old code:
-	// CompilationUnitScope scope = new CompilationUnitScope(unit, this);
-	// new code:
+	/* GROOVY start
+	// original
+	CompilationUnitScope scope = new CompilationUnitScope(unit, this);
+	// new */
 	CompilationUnitScope scope = unit.buildCompilationUnitScope(this);
 	// GROOVY end
 	scope.buildTypeBindings(accessRestriction);
@@ -267,6 +268,39 @@ public void completeTypeBindings(CompilationUnitDeclaration parsedUnit, boolean 
 	parsedUnit.scope.checkParameterizedTypes();
 	if (buildFieldsAndMethods)
 		parsedUnit.scope.buildFieldsAndMethods();
+	this.unitBeingCompleted = null;
+}
+
+/*
+* Used by other compiler tools which do not start by calling completeTypeBindings()
+* and have more than 1 unit to complete.
+*
+* 1. Connect the type hierarchy for the type bindings created for parsedUnits.
+* 2. Create the field bindings
+* 3. Create the method bindings
+*/
+public void completeTypeBindings(CompilationUnitDeclaration[] parsedUnits, boolean[] buildFieldsAndMethods, int unitCount) {
+	for (int i = 0; i < unitCount; i++) {
+		CompilationUnitDeclaration parsedUnit = parsedUnits[i];
+		if (parsedUnit.scope != null)
+			(this.unitBeingCompleted = parsedUnit).scope.checkAndSetImports();
+	}
+
+	for (int i = 0; i < unitCount; i++) {
+		CompilationUnitDeclaration parsedUnit = parsedUnits[i];
+		if (parsedUnit.scope != null)
+			(this.unitBeingCompleted = parsedUnit).scope.connectTypeHierarchy();
+	}
+
+	for (int i = 0; i < unitCount; i++) {
+		CompilationUnitDeclaration parsedUnit = parsedUnits[i];
+		if (parsedUnit.scope != null) {
+			(this.unitBeingCompleted = parsedUnit).scope.checkParameterizedTypes();
+			if (buildFieldsAndMethods[i])
+				parsedUnit.scope.buildFieldsAndMethods();
+		}
+	}
+
 	this.unitBeingCompleted = null;
 }
 public MethodBinding computeArrayClone(MethodBinding objectClone) {
@@ -791,6 +825,21 @@ public ParameterizedGenericMethodBinding createParameterizedGenericMethod(Method
 	return parameterizedGenericMethod;
 }
 
+public ParameterizedMethodBinding createGetClassMethod(TypeBinding receiverType, MethodBinding originalMethod, Scope scope) {
+	// see if we have already cached this method for the given receiver type.
+	ParameterizedMethodBinding retVal = null;
+	if (this.uniqueGetClassMethodBinding == null) {
+		this.uniqueGetClassMethodBinding = new SimpleLookupTable(3);
+	} else {
+		retVal = (ParameterizedMethodBinding)this.uniqueGetClassMethodBinding.get(receiverType);
+	}
+	if (retVal == null) {
+		retVal = ParameterizedMethodBinding.instantiateGetClass(receiverType, originalMethod, scope);
+		this.uniqueGetClassMethodBinding.put(receiverType, retVal);
+	}
+	return retVal;
+}
+
 public ParameterizedTypeBinding createParameterizedType(ReferenceBinding genericType, TypeBinding[] typeArguments, ReferenceBinding enclosingType) {
 	// cached info is array of already created parameterized types for this type
 	ParameterizedTypeBinding[] cachedInfo = (ParameterizedTypeBinding[])this.uniqueParameterizedTypeBindings.get(genericType);
@@ -1283,8 +1332,8 @@ public MethodVerifier methodVerifier() {
 
 public MethodVerifier newMethodVerifier() {
 	return this.globalOptions.sourceLevel < ClassFileConstants.JDK1_5
-			? new MethodVerifier(this)
-			: new MethodVerifier15(this); // covariance only if sourceLevel is >= 1.5
+		? new MethodVerifier(this)
+		: new MethodVerifier15(this); // covariance only if sourceLevel is >= 1.5
 }
 
 public void releaseClassFiles(org.eclipse.jdt.internal.compiler.ClassFile[] classFiles) {
@@ -1310,6 +1359,7 @@ public void reset() {
 	this.uniqueRawTypeBindings = new SimpleLookupTable(3);
 	this.uniqueWildcardBindings = new SimpleLookupTable(3);
 	this.uniqueParameterizedGenericMethodBindings = new SimpleLookupTable(3);
+	this.uniqueGetClassMethodBinding = null;
 	this.missingTypes = null;
 
 	for (int i = this.units.length; --i >= 0;)

@@ -54,6 +54,14 @@ public class Argument extends LocalDeclaration {
 
 		if (this.binding == null) {
 			this.binding = new LocalVariableBinding(this, typeBinding, this.modifiers, true);
+		} else if (!this.binding.type.isValidBinding()) {
+			AbstractMethodDeclaration methodDecl = scope.referenceMethod();
+			if (methodDecl != null) {
+				MethodBinding methodBinding = methodDecl.binding;
+				if (methodBinding != null) {
+					methodBinding.tagBits |= TagBits.HasUnresolvedArguments;
+				}
+			}
 		}
 		scope.addLocalVariable(this.binding);
 		resolveAnnotations(scope, this.annotations, this.binding);

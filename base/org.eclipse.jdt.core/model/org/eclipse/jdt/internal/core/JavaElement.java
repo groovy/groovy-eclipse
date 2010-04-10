@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -749,7 +749,15 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=156307
 				connection.setUseCaches(false);
 			}
-			stream = new BufferedInputStream(connection.getInputStream());
+			try {
+				stream = new BufferedInputStream(connection.getInputStream());
+			} catch (IllegalArgumentException e) {
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=304316
+				return null;
+			} catch (NullPointerException e) {
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=304316
+				return null;
+			}
 			String encoding = connection.getContentEncoding();
 			byte[] contents = org.eclipse.jdt.internal.compiler.util.Util.getInputStreamAsByteArray(stream, connection.getContentLength());
 			if (encoding == null) {
@@ -784,8 +792,8 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 					return new String(contents);
 				}
 			}
- 		} catch (MalformedURLException e) {
- 			throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.CANNOT_RETRIEVE_ATTACHED_JAVADOC, this));
+		} catch (MalformedURLException e) {
+			throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.CANNOT_RETRIEVE_ATTACHED_JAVADOC, this));
 		} catch (FileNotFoundException e) {
 			// ignore. see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=120559
 		} catch(SocketException e) {

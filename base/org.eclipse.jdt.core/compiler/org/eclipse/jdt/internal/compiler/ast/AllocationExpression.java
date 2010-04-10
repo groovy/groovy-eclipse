@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for bug 236385
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -82,8 +83,11 @@ public Expression enclosingInstance() {
 }
 
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
+	if (!valueRequired)
+		currentScope.problemReporter().unusedObjectAllocation(this);
+
 	int pc = codeStream.position;
-	 MethodBinding codegenBinding = this.binding.original();
+	MethodBinding codegenBinding = this.binding.original();
 	ReferenceBinding allocatedType = codegenBinding.declaringClass;
 
 	codeStream.new_(allocatedType);
@@ -197,7 +201,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 	if (codegenBinding.isPrivate() && currentScope.enclosingSourceType() != (declaringClass = codegenBinding.declaringClass)) {
 
 		// from 1.4 on, local type constructor can lose their private flag to ease emulation
-		if ((declaringClass.tagBits & TagBits.IsLocalType) != 0 	&& currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
+		if ((declaringClass.tagBits & TagBits.IsLocalType) != 0 && currentScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
 			// constructor will not be dumped as private, no emulation required thus
 			codegenBinding.tagBits |= TagBits.ClearPrivateModifier;
 		} else {

@@ -125,7 +125,11 @@ public final boolean canBeSeenByForCodeSnippet(FieldBinding fieldBinding, TypeBi
 	PackageBinding declaringPackage = fieldBinding.declaringClass.fPackage;
 	TypeBinding originalDeclaringClass = fieldBinding.declaringClass .original();
 	do {
-		if (originalDeclaringClass == type.original()) return true;
+		if (type.isCapture()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=285002
+			if (originalDeclaringClass == type.erasure().original()) return true;	
+		} else {
+			if (originalDeclaringClass == type.original()) return true;
+		}
 		if (declaringPackage != type.fPackage) return false;
 	} while ((type = type.superclass()) != null);
 	return false;
@@ -196,7 +200,11 @@ public final boolean canBeSeenByForCodeSnippet(MethodBinding methodBinding, Type
 	PackageBinding declaringPackage = methodBinding.declaringClass.fPackage;
 	TypeBinding originalDeclaringClass = methodBinding.declaringClass .original();
 	do {
-		if (originalDeclaringClass == type.original()) return true;
+		if (type.isCapture()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=285002
+			if (originalDeclaringClass == type.erasure().original()) return true;
+		} else {
+			if (originalDeclaringClass == type.original()) return true;
+		}
 		if (declaringPackage != type.fPackage) return false;
 	} while ((type = type.superclass()) != null);
 	return false;

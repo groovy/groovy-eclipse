@@ -296,7 +296,7 @@ public abstract class Engine implements ITypeRequestor {
 			int length = methods.length;
 			for (int i = 0; i < length; i++) {
 				AbstractMethodDeclaration method = methods[i];
-				if (method.bodyStart > position)
+				if (method.bodyStart > position + 1)
 					continue;
 
 				if(method.isDefaultConstructor())

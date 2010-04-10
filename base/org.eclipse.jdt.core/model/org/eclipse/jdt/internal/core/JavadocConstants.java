@@ -13,25 +13,25 @@ package org.eclipse.jdt.internal.core;
 public interface JavadocConstants {
 
 	String ANCHOR_PREFIX_END = "\""; //$NON-NLS-1$
-	String ANCHOR_PREFIX_START = "<A NAME=\""; //$NON-NLS-1$
-	int ANCHOR_PREFIX_START_LENGHT = ANCHOR_PREFIX_START.length();
-	String ANCHOR_SUFFIX = "</A>"; //$NON-NLS-1$
-	int ANCHOR_SUFFIX_LENGTH = JavadocConstants.ANCHOR_SUFFIX.length();
-	String CONSTRUCTOR_DETAIL = "<!-- ========= CONSTRUCTOR DETAIL ======== -->"; //$NON-NLS-1$
-	String CONSTRUCTOR_SUMMARY = "<!-- ======== CONSTRUCTOR SUMMARY ======== -->"; //$NON-NLS-1$
-	String FIELD_DETAIL= "<!-- ============ FIELD DETAIL =========== -->"; //$NON-NLS-1$
-	String FIELD_SUMMARY = "<!-- =========== FIELD SUMMARY =========== -->"; //$NON-NLS-1$
-	String ENUM_CONSTANT_SUMMARY = "<!-- =========== ENUM CONSTANT SUMMARY =========== -->"; //$NON-NLS-1$
-	String ANNOTATION_TYPE_REQUIRED_MEMBER_SUMMARY = "<!-- =========== ANNOTATION TYPE REQUIRED MEMBER SUMMARY =========== -->"; //$NON-NLS-1$
-	String ANNOTATION_TYPE_OPTIONAL_MEMBER_SUMMARY = "<!-- =========== ANNOTATION TYPE OPTIONAL MEMBER SUMMARY =========== -->"; //$NON-NLS-1$
-	String END_OF_CLASS_DATA = "<!-- ========= END OF CLASS DATA ========= -->"; //$NON-NLS-1$
+	char[] ANCHOR_PREFIX_START = "<A NAME=\"".toCharArray(); //$NON-NLS-1$
+	int ANCHOR_PREFIX_START_LENGHT = ANCHOR_PREFIX_START.length;
+	char[] ANCHOR_SUFFIX = "</A>".toCharArray(); //$NON-NLS-1$
+	int ANCHOR_SUFFIX_LENGTH = JavadocConstants.ANCHOR_SUFFIX.length;
+	char[] CONSTRUCTOR_DETAIL = "<!-- ========= CONSTRUCTOR DETAIL ======== -->".toCharArray(); //$NON-NLS-1$
+	char[] CONSTRUCTOR_SUMMARY = "<!-- ======== CONSTRUCTOR SUMMARY ======== -->".toCharArray(); //$NON-NLS-1$
+	char[] FIELD_DETAIL= "<!-- ============ FIELD DETAIL =========== -->".toCharArray(); //$NON-NLS-1$
+	char[] FIELD_SUMMARY = "<!-- =========== FIELD SUMMARY =========== -->".toCharArray(); //$NON-NLS-1$
+	char[] ENUM_CONSTANT_SUMMARY = "<!-- =========== ENUM CONSTANT SUMMARY =========== -->".toCharArray(); //$NON-NLS-1$
+	char[] ANNOTATION_TYPE_REQUIRED_MEMBER_SUMMARY = "<!-- =========== ANNOTATION TYPE REQUIRED MEMBER SUMMARY =========== -->".toCharArray(); //$NON-NLS-1$
+	char[] ANNOTATION_TYPE_OPTIONAL_MEMBER_SUMMARY = "<!-- =========== ANNOTATION TYPE OPTIONAL MEMBER SUMMARY =========== -->".toCharArray(); //$NON-NLS-1$
+	char[] END_OF_CLASS_DATA = "<!-- ========= END OF CLASS DATA ========= -->".toCharArray(); //$NON-NLS-1$
 	String HTML_EXTENSION = ".html"; //$NON-NLS-1$
 	String INDEX_FILE_NAME = "index.html"; //$NON-NLS-1$
-	String METHOD_DETAIL = "<!-- ============ METHOD DETAIL ========== -->"; //$NON-NLS-1$
-	String METHOD_SUMMARY = "<!-- ========== METHOD SUMMARY =========== -->"; //$NON-NLS-1$
-	String NESTED_CLASS_SUMMARY = "<!-- ======== NESTED CLASS SUMMARY ======== -->"; //$NON-NLS-1$
+	char[] METHOD_DETAIL = "<!-- ============ METHOD DETAIL ========== -->".toCharArray(); //$NON-NLS-1$
+	char[] METHOD_SUMMARY = "<!-- ========== METHOD SUMMARY =========== -->".toCharArray(); //$NON-NLS-1$
+	char[] NESTED_CLASS_SUMMARY = "<!-- ======== NESTED CLASS SUMMARY ======== -->".toCharArray(); //$NON-NLS-1$
 	String PACKAGE_FILE_NAME = "package-summary.html"; //$NON-NLS-1$
-	String SEPARATOR_START = "<!-- ="; //$NON-NLS-1$
-	String START_OF_CLASS_DATA = "<!-- ======== START OF CLASS DATA ======== -->"; //$NON-NLS-1$
-	int START_OF_CLASS_DATA_LENGTH = JavadocConstants.START_OF_CLASS_DATA.length();
+	char[] SEPARATOR_START = "<!-- =".toCharArray(); //$NON-NLS-1$
+	char[] START_OF_CLASS_DATA = "<!-- ======== START OF CLASS DATA ======== -->".toCharArray(); //$NON-NLS-1$
+	int START_OF_CLASS_DATA_LENGTH = JavadocConstants.START_OF_CLASS_DATA.length;
 }

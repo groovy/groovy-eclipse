@@ -226,10 +226,10 @@ public class CommentRecorderParser extends Parser {
 				this.options.getSeverity(CompilerOptions.NonExternalizedString) != ProblemSeverities.Ignore /*nls*/,
 				this.options.sourceLevel /*sourceLevel*/,
 				this.options.taskTags/*taskTags*/,
-				this.options.taskPriorites/*taskPriorities*/,
+				this.options.taskPriorities/*taskPriorities*/,
 				this.options.isTaskCaseSensitive/*taskCaseSensitive*/);
 		// GROOVY start - workaround JDT bug where it sorts the tasks but not the priorities!
-		this.options.taskPriorites = scanner.taskPriorities;
+		this.options.taskPriorities = scanner.taskPriorities;
 		// GROOVY end
 	}
 

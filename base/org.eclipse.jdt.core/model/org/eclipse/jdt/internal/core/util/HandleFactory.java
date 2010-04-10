@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -144,10 +144,11 @@ public class HandleFactory {
 			if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(simpleName)) {
 				ICompilationUnit unit= pkgFragment.getCompilationUnit(simpleName);
 				return (Openable) unit;
-			} else {
+			} else if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(simpleName)){
 				IClassFile classFile= pkgFragment.getClassFile(simpleName);
 				return (Openable) classFile;
 			}
+			return null;
 		}
 	}
 

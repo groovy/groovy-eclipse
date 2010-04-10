@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -155,7 +155,15 @@ private void storeHandle(int idx) {
 	            	System.arraycopy(this.otherElements, 0, this.otherElements = new IJavaElement[length+10], 0, length);
 	            }
             }
-	    	this.otherElements[this.ptr] = handle;
+    		if (this.annotation == null) {
+		    	this.otherElements[this.ptr] = handle;
+    		} else {
+		    	IJavaElement annotHandle = this.locator.createHandle(this.annotation, (IAnnotatable) handle);
+		    	if (annotHandle == null) {
+			    	annotHandle = this.locator.createHandle(this.annotation, (IAnnotatable) this.enclosingElement);
+		    	}
+		    	this.otherElements[this.ptr] = annotHandle == null ? handle : annotHandle;
+    		}
     	}
     } else {
     	if (this.localElements[idx] == null) {
@@ -179,7 +187,15 @@ private void storeHandle(int idx) {
 	            	System.arraycopy(this.allOtherElements[idx], 0, this.allOtherElements[idx] = new IJavaElement[length+10], 0, length);
         	    }
 	        }
- 		   	this.allOtherElements[idx][oPtr] = handle;
+	    	if (this.annotation == null) {
+	 		   	this.allOtherElements[idx][oPtr] = handle;
+    		} else {
+		    	IJavaElement annotHandle = this.locator.createHandle(this.annotation, (IAnnotatable) handle);
+		    	if (annotHandle == null) {
+			    	annotHandle = this.locator.createHandle(this.annotation, (IAnnotatable) this.enclosingElement);
+		    	}
+	 		   	this.allOtherElements[idx][oPtr] = annotHandle == null ? handle : annotHandle;
+    		}
     	}
     }
 }

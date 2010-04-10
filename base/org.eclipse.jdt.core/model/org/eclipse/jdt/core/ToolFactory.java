@@ -162,6 +162,8 @@ public class ToolFactory {
 		if (options == null) options = JavaCore.getOptions();
 		Map currentOptions = new HashMap(options);
 		if (mode == M_FORMAT_NEW) {
+			// disable the option for not formatting comments starting on first column
+			currentOptions.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_FORMAT_LINE_COMMENT_STARTING_ON_FIRST_COLUMN, DefaultCodeFormatterConstants.TRUE);
 			// disable the option for not indenting comments starting on first column
 			currentOptions.put(DefaultCodeFormatterConstants.FORMATTER_NEVER_INDENT_BLOCK_COMMENTS_ON_FIRST_COLUMN, DefaultCodeFormatterConstants.FALSE);
 			currentOptions.put(DefaultCodeFormatterConstants.FORMATTER_NEVER_INDENT_LINE_COMMENTS_ON_FIRST_COLUMN, DefaultCodeFormatterConstants.FALSE);

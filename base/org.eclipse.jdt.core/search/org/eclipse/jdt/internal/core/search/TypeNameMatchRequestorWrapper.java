@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,10 +7,12 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for bug 215139
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -19,6 +21,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.TypeNameMatchRequestor;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
@@ -79,6 +82,8 @@ public TypeNameMatchRequestorWrapper(TypeNameMatchRequestor requestor, IJavaSear
  * @see org.eclipse.jdt.internal.core.search.IRestrictedAccessTypeRequestor#acceptType(int, char[], char[], char[][], java.lang.String, org.eclipse.jdt.internal.compiler.env.AccessRestriction)
  */
 public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, String path, AccessRestriction access) {
+
+	// Get type
 	try {
 		IType type = null;
 		if (this.handleFactory != null) {
@@ -107,8 +112,30 @@ public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName,
 				? createTypeFromPath(path, new String(simpleTypeName), enclosingTypeNames)
 				: createTypeFromJar(path, separatorIndex);
 		}
+
+		// Accept match if the type has been found
 		if (type != null) {
-			this.requestor.acceptTypeNameMatch(new JavaSearchTypeNameMatch(type, modifiers));
+			// hierarchy scopes require one more check:
+			if (!(this.scope instanceof HierarchyScope) || ((HierarchyScope)this.scope).enclosesFineGrained(type)) {
+
+				// Create the match
+				final JavaSearchTypeNameMatch match = new JavaSearchTypeNameMatch(type, modifiers);
+
+				// Update match accessibility
+				if(access != null) {
+					switch (access.getProblemId()) {
+						case IProblem.ForbiddenReference:
+							match.setAccessibility(IAccessRule.K_NON_ACCESSIBLE);
+							break;
+						case IProblem.DiscouragedReference:
+							match.setAccessibility(IAccessRule.K_DISCOURAGED);
+							break;
+					}
+				}
+
+				// Accept match
+				this.requestor.acceptTypeNameMatch(match);
+			}
 		}
 	} catch (JavaModelException e) {
 		// skip
@@ -187,9 +214,10 @@ private IType createTypeFromPath(String resourcePath, String simpleTypeName, cha
 			type = type.getType(simpleTypeName);
 		}
 		return type;
-	} else {
+	} else if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(simpleName)){
 		IClassFile classFile= pkgFragment.getClassFile(simpleName);
 		return classFile.getType();
 	}
+	return null;
 }
 }

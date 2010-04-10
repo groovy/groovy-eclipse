@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -115,7 +115,8 @@
  *								   RedundantSuperinterface
  *		Benjamin Muskalla - added the following constants
  *									MissingSynchronizedModifierInInheritedMethod
- *									
+ *		Stephan Herrmann  - added the following constants
+ *									UnusedObjectAllocation									
  *******************************************************************************/
 package org.eclipse.jdt.core.compiler;
 
@@ -356,6 +357,8 @@ void setSourceStart(int sourceStart);
 	int FinalFieldAssignment = FieldRelated + 80;
 	int UninitializedBlankFinalField = FieldRelated + 81;
 	int DuplicateBlankFinalFieldInitialization = FieldRelated + 82;
+	/** @since 3.6 */
+	int UnresolvedVariable = FieldRelated + 83;
 
 	// variable hiding
 	/** @since 3.0 */
@@ -426,6 +429,8 @@ void setSourceStart(int sourceStart);
 	int UnhandledExceptionInImplicitConstructorCall = TypeRelated + 147;
 
 	// expressions
+	/** @since 3.6 */
+	int UnusedObjectAllocation = Internal + 148;
 	/** @since 3.5 */
 	int DeadCode = Internal + 149;
 	int ArrayReferenceRequired = Internal + 150;
@@ -1123,6 +1128,8 @@ void setSourceStart(int sourceStart);
 	int IncompatibleTypesInForeach = TypeRelated + 580;
 	/** @since 3.1 */
 	int InvalidTypeForCollection = Internal + 581;
+	/** @since 3.6*/
+	int InvalidTypeForCollectionTarget14 = Internal + 582;
 
 	/**
 	 * 1.5 Syntax errors (when source level < 1.5)
@@ -1223,6 +1230,8 @@ void setSourceStart(int sourceStart);
 	int MethodMustOverrideOrImplement = MethodRelated + 634;
 	/** @since 3.4 */
 	int UnusedWarningToken = Internal + 635;
+	/** @since 3.6 */
+	int MissingOverrideAnnotationForInterfaceMethodImplementation = MethodRelated + 636;
 
 	/**
 	 * More problems in generics

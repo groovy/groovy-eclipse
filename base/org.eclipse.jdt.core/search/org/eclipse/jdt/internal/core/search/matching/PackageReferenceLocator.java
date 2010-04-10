@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -132,7 +132,6 @@ protected int matchLevelForTokens(char[][] tokens) {
 			break;
 
 		case SearchPattern.R_CAMELCASE_SAME_PART_COUNT_MATCH:
-			packageName = CharOperation.concatWith(tokens, '.');
 			if (CharOperation.camelCaseMatch(this.pattern.pkgName, CharOperation.concatWith(tokens, '.'), true)) {
 				return POSSIBLE_MATCH;
 			}

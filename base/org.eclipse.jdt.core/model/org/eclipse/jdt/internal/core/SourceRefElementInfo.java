@@ -11,6 +11,7 @@
 package org.eclipse.jdt.internal.core;
 
 import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.SourceRange;
 
 /**
  * Element info for ISourceReference elements.

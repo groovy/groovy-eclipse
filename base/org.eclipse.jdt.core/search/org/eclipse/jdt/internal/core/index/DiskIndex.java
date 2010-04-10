@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -132,14 +132,14 @@ SimpleSet addDocumentNames(String substring, MemoryIndex memoryIndex) throws IOE
 	}
 	return results;
 }
-private HashtableOfObject addQueryResult(HashtableOfObject results, char[] word, HashtableOfObject wordsToDocNumbers, MemoryIndex memoryIndex) throws IOException {
+private HashtableOfObject addQueryResult(HashtableOfObject results, char[] word, CategoryTable wordsToDocNumbers, MemoryIndex memoryIndex) throws IOException {
 	// must skip over documents which have been added/changed/deleted in the memory index
 	if (results == null)
 		results = new HashtableOfObject(13);
 	EntryResult result = (EntryResult) results.get(word);
 	if (memoryIndex == null) {
 		if (result == null)
-			results.put(word, new EntryResult(word, wordsToDocNumbers));
+			results.putUnsafely(word, new EntryResult(word, wordsToDocNumbers));
 		else
 			result.addDocumentTable(wordsToDocNumbers);
 	} else {
@@ -163,7 +163,7 @@ HashtableOfObject addQueryResults(char[][] categories, char[] key, int matchRule
 	HashtableOfObject results = null; // initialized if needed
 	if (key == null) {
 		for (int i = 0, l = categories.length; i < l; i++) {
-			HashtableOfObject wordsToDocNumbers = readCategoryTable(categories[i], true); // cache if key is null since its a definite match
+			CategoryTable wordsToDocNumbers = readCategoryTable(categories[i], true); // cache if key is null since its a definite match
 			if (wordsToDocNumbers != null) {
 				char[][] words = wordsToDocNumbers.keyTable;
 				if (results == null)
@@ -179,14 +179,14 @@ HashtableOfObject addQueryResults(char[][] categories, char[] key, int matchRule
 		switch (matchRule) {
 			case SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE:
 				for (int i = 0, l = categories.length; i < l; i++) {
-					HashtableOfObject wordsToDocNumbers = readCategoryTable(categories[i], false);
+					CategoryTable wordsToDocNumbers = readCategoryTable(categories[i], false);
 					if (wordsToDocNumbers != null && wordsToDocNumbers.containsKey(key))
 						results = addQueryResult(results, key, wordsToDocNumbers, memoryIndex);
 				}
 				break;
 			case SearchPattern.R_PREFIX_MATCH | SearchPattern.R_CASE_SENSITIVE:
 				for (int i = 0, l = categories.length; i < l; i++) {
-					HashtableOfObject wordsToDocNumbers = readCategoryTable(categories[i], false);
+					CategoryTable wordsToDocNumbers = readCategoryTable(categories[i], false);
 					if (wordsToDocNumbers != null) {
 						char[][] words = wordsToDocNumbers.keyTable;
 						for (int j = 0, m = words.length; j < m; j++) {
@@ -199,7 +199,7 @@ HashtableOfObject addQueryResults(char[][] categories, char[] key, int matchRule
 				break;
 			default:
 				for (int i = 0, l = categories.length; i < l; i++) {
-					HashtableOfObject wordsToDocNumbers = readCategoryTable(categories[i], false);
+					CategoryTable wordsToDocNumbers = readCategoryTable(categories[i], false);
 					if (wordsToDocNumbers != null) {
 						char[][] words = wordsToDocNumbers.keyTable;
 						for (int j = 0, m = words.length; j < m; j++) {
@@ -336,9 +336,9 @@ private void copyQueryResults(HashtableOfObject categoryToWords, int newPosition
 		char[] categoryName = categoryNames[i];
 		if (categoryName != null) {
 			SimpleWordSet wordSet = (SimpleWordSet) wordSets[i];
-			HashtableOfObject wordsToDocs = (HashtableOfObject) this.categoryTables.get(categoryName);
+			CategoryTable wordsToDocs = (CategoryTable) this.categoryTables.get(categoryName);
 			if (wordsToDocs == null)
-				this.categoryTables.put(categoryName, wordsToDocs = new HashtableOfObject(wordSet.elementSize));
+				this.categoryTables.put(categoryName, wordsToDocs = new CategoryTable(wordSet.elementSize));
 
 			char[][] words = wordSet.words;
 			for (int j = 0, m = words.length; j < m; j++) {
@@ -346,7 +346,7 @@ private void copyQueryResults(HashtableOfObject categoryToWords, int newPosition
 				if (word != null) {
 					Object o = wordsToDocs.get(word);
 					if (o == null) {
-						wordsToDocs.put(word, new int[] {newPosition});
+						wordsToDocs.putUnsafely(word, new int[] {newPosition});
 					} else if (o instanceof IntList) {
 						((IntList) o).add(newPosition);
 					} else {
@@ -442,11 +442,11 @@ private void mergeCategories(DiskIndex onDisk, int[] positions, FileOutputStream
 	this.categoryTables = null;
 }
 private void mergeCategory(char[] categoryName, DiskIndex onDisk, int[] positions, FileOutputStream stream) throws IOException {
-	HashtableOfObject wordsToDocs = (HashtableOfObject) this.categoryTables.get(categoryName);
+	CategoryTable wordsToDocs = (CategoryTable) this.categoryTables.get(categoryName);
 	if (wordsToDocs == null)
-		wordsToDocs = new HashtableOfObject(3);
+		wordsToDocs = new CategoryTable(3);
 
-	HashtableOfObject oldWordsToDocs = onDisk.readCategoryTable(categoryName, true);
+	CategoryTable oldWordsToDocs = onDisk.readCategoryTable(categoryName, true);
 	if (oldWordsToDocs != null) {
 		char[][] oldWords = oldWordsToDocs.keyTable;
 		Object[] oldArrayOffsets = oldWordsToDocs.valueTable;
@@ -469,7 +469,7 @@ private void mergeCategory(char[] categoryName, DiskIndex onDisk, int[] position
 
 				Object o = wordsToDocs.get(oldWord);
 				if (o == null) {
-					wordsToDocs.put(oldWord, mappedNumbers);
+					wordsToDocs.putUnsafely(oldWord, mappedNumbers);
 				} else {
 					IntList list = null;
 					if (o instanceof IntList) {
@@ -580,7 +580,7 @@ private synchronized String[] readAllDocumentNames() throws IOException {
 		this.streamBuffer = null;
 	}
 }
-private synchronized HashtableOfObject readCategoryTable(char[] categoryName, boolean readDocNumbers) throws IOException {
+private synchronized CategoryTable readCategoryTable(char[] categoryName, boolean readDocNumbers) throws IOException {
 	// result will be null if categoryName is unknown
 	int offset = this.categoryOffsets.get(categoryName);
 	if (offset == HashtableOfIntValues.NO_VALUE) {
@@ -590,7 +590,7 @@ private synchronized HashtableOfObject readCategoryTable(char[] categoryName, bo
 	if (this.categoryTables == null) {
 		this.categoryTables = new HashtableOfObject(3);
 	} else {
-		HashtableOfObject cachedTable = (HashtableOfObject) this.categoryTables.get(categoryName);
+		CategoryTable cachedTable = (CategoryTable) this.categoryTables.get(categoryName);
 		if (cachedTable != null) {
 			if (readDocNumbers) { // must cache remaining document number arrays
 				Object[] arrayOffsets = cachedTable.valueTable;
@@ -603,7 +603,7 @@ private synchronized HashtableOfObject readCategoryTable(char[] categoryName, bo
 	}
 
 	FileInputStream stream = new FileInputStream(this.indexFile);
-	HashtableOfObject categoryTable = null;
+	CategoryTable categoryTable = null;
 	char[][] matchingWords = null;
 	int count = 0;
 	int firstOffset = -1;
@@ -621,7 +621,7 @@ private synchronized HashtableOfObject readCategoryTable(char[] categoryName, bo
 				System.err.println("size = "+size); //$NON-NLS-1$
 				System.err.println("--------------------   END   --------------------"); //$NON-NLS-1$
 			}
-			categoryTable = new HashtableOfObject(size);
+			categoryTable = new CategoryTable(size);
 		} catch (OutOfMemoryError oom) {
 			// DEBUG
 			oom.printStackTrace();
@@ -641,9 +641,9 @@ private synchronized HashtableOfObject readCategoryTable(char[] categoryName, bo
 			//		> 1 & < 256 then the size of the array is > 1 & < 256, the document array follows immediately
 			//		256 if the array size >= 256 followed by another int which is the offset to the array (written prior to the table)
 			if (arrayOffset <= 0) {
-				categoryTable.put(word, new int[] {-arrayOffset}); // store 1 element array by negating documentNumber
+				categoryTable.putUnsafely(word, new int[] {-arrayOffset}); // store 1 element array by negating documentNumber
 			} else if (arrayOffset < largeArraySize) {
-				categoryTable.put(word, readStreamDocumentArray(stream, arrayOffset)); // read in-lined array providing size
+				categoryTable.putUnsafely(word, readStreamDocumentArray(stream, arrayOffset)); // read in-lined array providing size
 			} else {
 				arrayOffset = readStreamInt(stream); // read actual offset
 				if (readDocNumbers) {
@@ -653,7 +653,7 @@ private synchronized HashtableOfObject readCategoryTable(char[] categoryName, bo
 						firstOffset = arrayOffset;
 					matchingWords[count++] = word;
 				}
-				categoryTable.put(word, new Integer(arrayOffset)); // offset to array in the file
+				categoryTable.putUnsafely(word, new Integer(arrayOffset)); // offset to array in the file
 			}
 		}
 		this.categoryTables.put(INTERNED_CATEGORY_NAMES.get(categoryName), categoryTable);
@@ -1030,10 +1030,10 @@ private void writeCategories(FileOutputStream stream) throws IOException {
 	Object[] tables = this.categoryTables.valueTable;
 	for (int i = 0, l = categoryNames.length; i < l; i++)
 		if (categoryNames[i] != null)
-			writeCategoryTable(categoryNames[i], (HashtableOfObject) tables[i], stream);
+			writeCategoryTable(categoryNames[i], (CategoryTable) tables[i], stream);
 	this.categoryTables = null;
 }
-private void writeCategoryTable(char[] categoryName, HashtableOfObject wordsToDocs, FileOutputStream stream) throws IOException {
+private void writeCategoryTable(char[] categoryName, CategoryTable wordsToDocs, FileOutputStream stream) throws IOException {
 	// the format of a category table is as follows:
 	// any document number arrays with >= 256 elements are written before the table (the offset to each array is remembered)
 	// then the number of word->int[] pairs in the table is written

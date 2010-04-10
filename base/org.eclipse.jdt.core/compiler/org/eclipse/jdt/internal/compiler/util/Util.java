@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -31,6 +32,8 @@ import java.util.zip.ZipFile;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.batch.FileSystem;
+import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
@@ -880,6 +883,87 @@ public class Util implements SuffixConstants {
 			}
 		} else if (typeBinding.isNestedType()) {
 			classFile.recordInnerClasses(typeBinding);
+		}
+	}
+	/*
+	 * External API
+	 */
+	public static File getJavaHome() {
+		String javaHome = System.getProperty("java.home");//$NON-NLS-1$
+		if (javaHome != null) {
+			File javaHomeFile = new File(javaHome);
+			if (javaHomeFile.exists()) {
+				return javaHomeFile;
+			}
+		}
+		return null;
+	}
+
+	public static void collectRunningVMBootclasspath(List bootclasspaths) {
+		/* no bootclasspath specified
+		 * we can try to retrieve the default librairies of the VM used to run
+		 * the batch compiler
+		 */
+		String javaversion = System.getProperty("java.version");//$NON-NLS-1$
+		if (javaversion != null && javaversion.equalsIgnoreCase("1.1.8")) { //$NON-NLS-1$
+			throw new IllegalStateException();
+		}
+
+		/*
+		 * Handle >= JDK 1.2.2 settings: retrieve the bootclasspath
+		 */
+		// check bootclasspath properties for Sun, JRockit and Harmony VMs
+		String bootclasspathProperty = System.getProperty("sun.boot.class.path"); //$NON-NLS-1$
+		if ((bootclasspathProperty == null) || (bootclasspathProperty.length() == 0)) {
+			// IBM J9 VMs
+			bootclasspathProperty = System.getProperty("vm.boot.class.path"); //$NON-NLS-1$
+			if ((bootclasspathProperty == null) || (bootclasspathProperty.length() == 0)) {
+				// Harmony using IBM VME
+				bootclasspathProperty = System.getProperty("org.apache.harmony.boot.class.path"); //$NON-NLS-1$
+			}
+		}
+		if ((bootclasspathProperty != null) && (bootclasspathProperty.length() != 0)) {
+			StringTokenizer tokenizer = new StringTokenizer(bootclasspathProperty, File.pathSeparator);
+			String token;
+			while (tokenizer.hasMoreTokens()) {
+				token = tokenizer.nextToken();
+				FileSystem.Classpath currentClasspath = FileSystem.getClasspath(token, null, null);
+				if (currentClasspath != null) {
+					bootclasspaths.add(currentClasspath);
+				}
+			}
+		} else {
+			// try to get all jars inside the lib folder of the java home
+			final File javaHome = getJavaHome();
+			if (javaHome != null) {
+				File[] directoriesToCheck = null;
+				if (System.getProperty("os.name").startsWith("Mac")) {//$NON-NLS-1$//$NON-NLS-2$
+					directoriesToCheck = new File[] {
+						new File(javaHome, "../Classes"), //$NON-NLS-1$
+					};
+				} else {
+					// fall back to try to retrieve them out of the lib directory
+					directoriesToCheck = new File[] {
+						new File(javaHome, "lib") //$NON-NLS-1$
+					};
+				}
+				File[][] systemLibrariesJars = Main.getLibrariesFiles(directoriesToCheck);
+				if (systemLibrariesJars != null) {
+					for (int i = 0, max = systemLibrariesJars.length; i < max; i++) {
+						File[] current = systemLibrariesJars[i];
+						if (current != null) {
+							for (int j = 0, max2 = current.length; j < max2; j++) {
+								FileSystem.Classpath classpath =
+									FileSystem.getClasspath(current[j].getAbsolutePath(),
+										null, false, null, null);
+								if (classpath != null) {
+									bootclasspaths.add(classpath);
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }

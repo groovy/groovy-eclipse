@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,7 +130,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 			this.astPtr = -1;
 			this.identifierPtr = -1;
 			this.currentTokenType = -1;
-			this.inlineTagStarted = false;
+			setInlineTagStarted(false);
 			this.inlineTagStart = -1;
 			this.lineStarted = false;
 			this.returnStatement = null;
@@ -147,6 +147,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 			boolean verifText = (this.kind & TEXT_VERIF) != 0;
 			boolean isDomParser = (this.kind & DOM_PARSER) != 0;
 			boolean isFormatterParser = (this.kind & FORMATTER_COMMENT_PARSER) != 0;
+			int lastStarPosition = -1;
 
 			// Init scanner position
 			this.linePtr = getLineNumber(this.firstTagPosition);
@@ -207,7 +208,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 						// Start tag parsing only if we are on line beginning or at inline tag beginning
 						if ((!this.lineStarted || previousChar == '{')) {
 							if (this.inlineTagStarted) {
-								this.inlineTagStarted = false;
+								setInlineTagStarted(false);
 								// bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=53279
 								// Cannot have @ inside inline comment
 								if (this.reportProblems) {
@@ -228,7 +229,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 										pushText(this.textStart, textEndPosition);
 									}
 								}
-								this.inlineTagStarted = true;
+								setInlineTagStarted(true);
 								invalidInlineTagLineEnd = this.lineEnd;
 							} else if (this.textStart != -1 && this.textStart < invalidTagLineEnd) {
 								pushText(this.textStart, invalidTagLineEnd);
@@ -287,7 +288,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 							}
 							refreshInlineTagPosition(previousPosition);
 							if (!isFormatterParser) this.textStart = this.index;
-							this.inlineTagStarted = false;
+							setInlineTagStarted(false);
 						} else {
 							if (!this.lineStarted) {
 								this.textStart = previousPosition;
@@ -301,7 +302,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 							refreshReturnStatement();
 						}
 						if (this.inlineTagStarted) {
-							this.inlineTagStarted = false;
+							setInlineTagStarted(false);
 							// bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=53279
 							// Cannot have opening brace in inline comment
 							if (this.reportProblems) {
@@ -325,6 +326,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 						break;
 					case '*' :
 						// Store the star position as text start while formatting
+						lastStarPosition = previousPosition;
 						if (previousChar != '*') {
 							this.starPosition = previousPosition;
 							if (isDomParser || isFormatterParser) {
@@ -400,8 +402,8 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 					pushText(this.textStart, textEndPosition);
 				}
 				refreshInlineTagPosition(textEndPosition);
-				this.inlineTagStarted = false;
-			} else if (this.lineStarted && this.textStart != -1 && this.textStart <= textEndPosition) {
+				setInlineTagStarted(false);
+			} else if (this.lineStarted && this.textStart != -1 && this.textStart <= textEndPosition && (this.textStart < this.starPosition || this.starPosition == lastStarPosition)) {
 				pushText(this.textStart, textEndPosition);
 			}
 			updateDocComment();
@@ -981,16 +983,22 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 			// Report problem
 			this.currentTokenType = -1;
 			if (isCompletionParser) return false;
-			end = hasMultiLines ? this.lineEnd: this.scanner.getCurrentTokenEndPosition();
-			while ((token=readToken()) != TerminalTokens.TokenNameWHITESPACE && token != TerminalTokens.TokenNameEOF) {
-				this.currentTokenType = -1;
+			if (this.reportProblems) {
+				// we only need end if we report problems
 				end = hasMultiLines ? this.lineEnd: this.scanner.getCurrentTokenEndPosition();
-			}
-			if (this.reportProblems)
+				try {
+					while ((token=readToken()) != TerminalTokens.TokenNameWHITESPACE && token != TerminalTokens.TokenNameEOF) {
+						this.currentTokenType = -1;
+						end = hasMultiLines ? this.lineEnd: this.scanner.getCurrentTokenEndPosition();
+					}
+				} catch (InvalidInputException e) {
+					end = this.lineEnd;
+				}
 				if (mayBeGeneric && isTypeParam)
 					this.sourceParser.problemReporter().javadocInvalidParamTypeParameter(start, end);
 				else
 					this.sourceParser.problemReporter().javadocInvalidParamTagName(start, end);
+			}
 			this.scanner.currentPosition = start;
 			this.index = start;
 			this.currentTokenType = -1;
@@ -1033,23 +1041,62 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 					consumeToken();
 					break;
 
-				case TerminalTokens.TokenNamevoid :
-				case TerminalTokens.TokenNameboolean :
-				case TerminalTokens.TokenNamebyte :
-				case TerminalTokens.TokenNamechar :
-				case TerminalTokens.TokenNamedouble :
-				case TerminalTokens.TokenNamefloat :
-				case TerminalTokens.TokenNameint :
-				case TerminalTokens.TokenNamelong :
-				case TerminalTokens.TokenNameshort :
-					if (iToken > 0) {
-						throw new InvalidInputException();
+				case TerminalTokens.TokenNameabstract:
+				case TerminalTokens.TokenNameassert:
+				case TerminalTokens.TokenNameboolean:
+				case TerminalTokens.TokenNamebreak:
+				case TerminalTokens.TokenNamebyte:
+				case TerminalTokens.TokenNamecase:
+				case TerminalTokens.TokenNamecatch:
+				case TerminalTokens.TokenNamechar:
+				case TerminalTokens.TokenNameclass:
+				case TerminalTokens.TokenNamecontinue:
+				case TerminalTokens.TokenNamedefault:
+				case TerminalTokens.TokenNamedo:
+				case TerminalTokens.TokenNamedouble:
+				case TerminalTokens.TokenNameelse:
+				case TerminalTokens.TokenNameextends:
+				case TerminalTokens.TokenNamefalse:
+				case TerminalTokens.TokenNamefinal:
+				case TerminalTokens.TokenNamefinally:
+				case TerminalTokens.TokenNamefloat:
+				case TerminalTokens.TokenNamefor:
+				case TerminalTokens.TokenNameif:
+				case TerminalTokens.TokenNameimplements:
+				case TerminalTokens.TokenNameimport:
+				case TerminalTokens.TokenNameinstanceof:
+				case TerminalTokens.TokenNameint:
+				case TerminalTokens.TokenNameinterface:
+				case TerminalTokens.TokenNamelong:
+				case TerminalTokens.TokenNamenative:
+				case TerminalTokens.TokenNamenew:
+				case TerminalTokens.TokenNamenull:
+				case TerminalTokens.TokenNamepackage:
+				case TerminalTokens.TokenNameprivate:
+				case TerminalTokens.TokenNameprotected:
+				case TerminalTokens.TokenNamepublic:
+				case TerminalTokens.TokenNameshort:
+				case TerminalTokens.TokenNamestatic:
+				case TerminalTokens.TokenNamestrictfp:
+				case TerminalTokens.TokenNamesuper:
+				case TerminalTokens.TokenNameswitch:
+				case TerminalTokens.TokenNamesynchronized:
+				case TerminalTokens.TokenNamethis:
+				case TerminalTokens.TokenNamethrow:
+				case TerminalTokens.TokenNametransient:
+				case TerminalTokens.TokenNametrue:
+				case TerminalTokens.TokenNametry:
+				case TerminalTokens.TokenNamevoid:
+				case TerminalTokens.TokenNamevolatile:
+				case TerminalTokens.TokenNamewhile:
+					if (iToken == 0) {
+						pushIdentifier(true, true);
+						primitiveToken = token;
+						consumeToken();
+						break nextToken;
 					}
-					pushIdentifier(true, false);
-					primitiveToken = token;
-					consumeToken();
-					break nextToken;
-
+					// Fall through default case to verify that we do not leave on a dot
+					//$FALL-THROUGH$
 				default :
 					if (iToken == 0) {
 						if (this.identifierPtr>=0) {
@@ -1503,6 +1550,13 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 	 */
 	protected void refreshReturnStatement() {
 		// do nothing by default
+	}
+
+	/**
+	 * @param started the inlineTagStarted to set
+	 */
+	protected void setInlineTagStarted(boolean started) {
+		this.inlineTagStarted = started;
 	}
 
 	/*

@@ -10,36 +10,18 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
 
-import java.io.PrintWriter;
-import java.util.Map;
-
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
-import org.eclipse.jdt.core.compiler.CompilationProgress;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ImportReference;
-import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
-import org.eclipse.jdt.internal.compiler.env.IBinaryType;
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
-import org.eclipse.jdt.internal.compiler.env.ISourceType;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.impl.CompilerStats;
-import org.eclipse.jdt.internal.compiler.impl.ITypeRequestor;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeCollisionException;
-import org.eclipse.jdt.internal.compiler.parser.Parser;
-import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
-import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
-import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
-import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
-import org.eclipse.jdt.internal.compiler.util.Messages;
-import org.eclipse.jdt.internal.compiler.util.Util;
+import org.eclipse.jdt.core.compiler.*;
+import org.eclipse.jdt.internal.compiler.env.*;
+import org.eclipse.jdt.internal.compiler.impl.*;
+import org.eclipse.jdt.internal.compiler.ast.*;
+import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.parser.*;
+import org.eclipse.jdt.internal.compiler.problem.*;
+import org.eclipse.jdt.internal.compiler.util.*;
+
+import java.io.*;
+import java.util.*;
 
 public class Compiler implements ITypeRequestor, ProblemSeverities {
 	public Parser parser;
@@ -657,16 +639,16 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 			result
 				.record(
 					this.problemReporter
-					.createProblem(
-						result.getFileName(),
-						IProblem.Unclassified,
-						pbArguments,
-						pbArguments,
-						Error, // severity
-						0, // source start
-						0, // source end
-						0, // line number
-						0),// column number
+						.createProblem(
+							result.getFileName(),
+							IProblem.Unclassified,
+							pbArguments,
+							pbArguments,
+							Error, // severity
+							0, // source start
+							0, // source end
+							0, // line number
+							0),// column number
 					unit);
 
 			/* hand back the compilation result */
@@ -749,9 +731,9 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 
 	public void initializeParser() {
 		// GROOVY start
-		// old
-		// this.parser = new Parser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
-		// new
+		/* old
+		this.parser = new Parser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
+		// new */
 		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 1);
 		// GROOVY end
 	}
@@ -835,15 +817,15 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 
 		long analyzeStart = System.currentTimeMillis();
 		this.stats.resolveTime += analyzeStart - resolveStart;
-
-		// no need to analyse or generate code if statements are not required
+		
+		//No need of analysis or generation of code if statements are not required		
 		if (!this.options.ignoreMethodBodies) unit.analyseCode(); // flow analysis
 
 		long generateStart = System.currentTimeMillis();
 		this.stats.analyzeTime += generateStart - analyzeStart;
-
+	
 		if (!this.options.ignoreMethodBodies) unit.generateCode(); // code generation
-
+		
 		// reference info
 		if (this.options.produceReferenceInfo && unit.scope != null)
 			unit.scope.storeDependencyInfo();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,11 +12,21 @@ package org.eclipse.jdt.internal.codeassist;
 
 public interface RelevanceConstants {
 
-	int R_DEFAULT = 0;
+	
+	/*
+	 * Important: The following rules must be strictly adhered to while declaring new relevance constants or modifying the existing:
+	 * 1. One or more relevance constants are used in combination to form a relevance.
+	 * 2. A particular relevance constant can be added only once to form a relevance.
+	 * 3. A resultant relevance (after combining all the applicable relevance constants) must be a positive number.
+	 * 4. The value of R_DEFAULT is maintained at a positive value such that the sum of all the negative relevance constants
+	 *    and R_DEFAULT must not be negative. 
+	 */
+	int R_DEFAULT = 5;
 	int R_INTERESTING = 5;
 	int R_CASE = 10;
 	int R_CAMEL_CASE = 5;
 	int R_EXACT_NAME = 4;
+	int R_VOID = -5;
 	int R_EXPECTED_TYPE = 20;
 	int R_EXACT_EXPECTED_TYPE = 30;
 	int R_INTERFACE = 20;

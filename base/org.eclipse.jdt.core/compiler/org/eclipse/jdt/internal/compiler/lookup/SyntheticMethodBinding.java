@@ -301,8 +301,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				// check for collision with known methods
 				MethodBinding[] methods = sourceType.methods();
 				for (int i = 0, length = methods.length; i < length; i++) {
-					if (CharOperation.equals(this.selector, methods[i].selector)
-						&& areParametersEqual(methods[i])) {
+					if (CharOperation.equals(this.selector, methods[i].selector) && areParameterErasuresEqual(methods[i])) {
 						needRename = true;
 						break check;
 					}
@@ -312,8 +311,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 					for (int i = 0, length = knownSyntheticMethods.length; i < length; i++) {
 						if (knownSyntheticMethods[i] == null)
 							continue;
-						if (CharOperation.equals(this.selector, knownSyntheticMethods[i].selector)
-								&& areParametersEqual(knownSyntheticMethods[i])) {
+						if (CharOperation.equals(this.selector, knownSyntheticMethods[i].selector) && areParameterErasuresEqual(knownSyntheticMethods[i])) {
 							needRename = true;
 							break check;
 						}
@@ -380,7 +378,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				// check for collision with known methods
 				MethodBinding[] methods = declaringSourceType.methods();
 				for (int i = 0, length = methods.length; i < length; i++) {
-					if (CharOperation.equals(this.selector, methods[i].selector) && areParametersEqual(methods[i])) {
+					if (CharOperation.equals(this.selector, methods[i].selector) && areParameterErasuresEqual(methods[i])) {
 						needRename = true;
 						break check;
 					}
@@ -389,7 +387,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 				if (knownAccessMethods != null) {
 					for (int i = 0, length = knownAccessMethods.length; i < length; i++) {
 						if (knownAccessMethods[i] == null) continue;
-						if (CharOperation.equals(this.selector, knownAccessMethods[i].selector) && areParametersEqual(knownAccessMethods[i])) {
+						if (CharOperation.equals(this.selector, knownAccessMethods[i].selector) && areParameterErasuresEqual(knownAccessMethods[i])) {
 							needRename = true;
 							break check;
 						}

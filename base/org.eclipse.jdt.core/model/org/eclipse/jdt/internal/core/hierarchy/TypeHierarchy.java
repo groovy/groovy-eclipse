@@ -984,6 +984,14 @@ private boolean isAffectedByPackageFragmentRoot(IJavaElementDelta delta, IJavaEl
 protected boolean isAffectedByOpenable(IJavaElementDelta delta, IJavaElement element, int eventType) {
 	if (element instanceof CompilationUnit) {
 		CompilationUnit cu = (CompilationUnit)element;
+		ICompilationUnit focusCU = 
+			this.focusType != null ? this.focusType.getCompilationUnit() : null;
+		if (focusCU != null && focusCU.getOwner() != cu.getOwner())
+			return false;
+		//ADDED delta arising from getWorkingCopy() should be ignored
+		if (eventType != ElementChangedEvent.POST_RECONCILE && !cu.isPrimary() &&
+				delta.getKind() == IJavaElementDelta.ADDED)
+			return false;
 		ChangeCollector collector = this.changeCollector;
 		if (collector == null) {
 		    collector = new ChangeCollector(this);

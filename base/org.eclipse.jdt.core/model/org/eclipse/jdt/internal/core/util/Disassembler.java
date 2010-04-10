@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -158,105 +158,62 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		});
 	}
 	public static String escapeString(String s) {
-		StringBuffer buffer = new StringBuffer();
-		for (int i = 0, max = s.length(); i < max; i++) {
-			char c = s.charAt(i);
-			switch(c) {
-				case '\b' :
-					buffer.append("\\b"); //$NON-NLS-1$
-					break;
-				case '\t' :
-					buffer.append("\\t"); //$NON-NLS-1$
-					break;
-				case '\n' :
-					buffer.append("\\n"); //$NON-NLS-1$
-					break;
-				case '\f' :
-					buffer.append("\\f"); //$NON-NLS-1$
-					break;
-				case '\r' :
-					buffer.append("\\r"); //$NON-NLS-1$
-					break;
-				case '\0' :
-					buffer.append("\\0"); //$NON-NLS-1$
-					break;
-				case '\1' :
-					buffer.append("\\1"); //$NON-NLS-1$
-					break;
-				case '\2' :
-					buffer.append("\\2"); //$NON-NLS-1$
-					break;
-				case '\3' :
-					buffer.append("\\3"); //$NON-NLS-1$
-					break;
-				case '\4' :
-					buffer.append("\\4"); //$NON-NLS-1$
-					break;
-				case '\5' :
-					buffer.append("\\5"); //$NON-NLS-1$
-					break;
-				case '\6' :
-					buffer.append("\\6"); //$NON-NLS-1$
-					break;
-				case '\7' :
-					buffer.append("\\7"); //$NON-NLS-1$
-					break;
-				default:
-					buffer.append(c);
-			}
-		}
-		return buffer.toString();
+		return decodeStringValue(s);
 	}
 
 	static String decodeStringValue(char[] chars) {
 		StringBuffer buffer = new StringBuffer();
 		for (int i = 0, max = chars.length; i < max; i++) {
 			char c = chars[i];
-			switch(c) {
-				case '\b' :
-					buffer.append("\\b"); //$NON-NLS-1$
-					break;
-				case '\t' :
-					buffer.append("\\t"); //$NON-NLS-1$
-					break;
-				case '\n' :
-					buffer.append("\\n"); //$NON-NLS-1$
-					break;
-				case '\f' :
-					buffer.append("\\f"); //$NON-NLS-1$
-					break;
-				case '\r' :
-					buffer.append("\\r"); //$NON-NLS-1$
-					break;
-				case '\0' :
-					buffer.append("\\0"); //$NON-NLS-1$
-					break;
-				case '\1' :
-					buffer.append("\\1"); //$NON-NLS-1$
-					break;
-				case '\2' :
-					buffer.append("\\2"); //$NON-NLS-1$
-					break;
-				case '\3' :
-					buffer.append("\\3"); //$NON-NLS-1$
-					break;
-				case '\4' :
-					buffer.append("\\4"); //$NON-NLS-1$
-					break;
-				case '\5' :
-					buffer.append("\\5"); //$NON-NLS-1$
-					break;
-				case '\6' :
-					buffer.append("\\6"); //$NON-NLS-1$
-					break;
-				case '\7' :
-					buffer.append("\\7"); //$NON-NLS-1$
-					break;
-				default:
-					buffer.append(c);
-			}
+			escapeChar(buffer, c);
 		}
 		return buffer.toString();
+	}
+
+	private static void escapeChar(StringBuffer buffer, char c) {
+		switch(c) {
+			case '\b' :
+				buffer.append("\\b"); //$NON-NLS-1$
+				break;
+			case '\t' :
+				buffer.append("\\t"); //$NON-NLS-1$
+				break;
+			case '\n' :
+				buffer.append("\\n"); //$NON-NLS-1$
+				break;
+			case '\f' :
+				buffer.append("\\f"); //$NON-NLS-1$
+				break;
+			case '\r' :
+				buffer.append("\\r"); //$NON-NLS-1$
+				break;
+			case '\0' :
+				buffer.append("\\0"); //$NON-NLS-1$
+				break;
+			case '\1' :
+				buffer.append("\\1"); //$NON-NLS-1$
+				break;
+			case '\2' :
+				buffer.append("\\2"); //$NON-NLS-1$
+				break;
+			case '\3' :
+				buffer.append("\\3"); //$NON-NLS-1$
+				break;
+			case '\4' :
+				buffer.append("\\4"); //$NON-NLS-1$
+				break;
+			case '\5' :
+				buffer.append("\\5"); //$NON-NLS-1$
+				break;
+			case '\6' :
+				buffer.append("\\6"); //$NON-NLS-1$
+				break;
+			case '\7' :
+				buffer.append("\\7"); //$NON-NLS-1$
+				break;
+			default:
+				buffer.append(c);
+		}
 	}
 
 	static String decodeStringValue(String s) {
@@ -337,22 +294,26 @@ public class Disassembler extends ClassFileBytesDisassembler {
 						value = Double.toString(constantPoolEntry.getDoubleValue());
 						break;
 					case IConstantPoolConstant.CONSTANT_Integer:
+						StringBuffer temp = new StringBuffer();
 						switch(annotationComponentValue.getTag()) {
 							case IAnnotationComponentValue.CHAR_TAG :
-								value = "'" + (char) constantPoolEntry.getIntegerValue() + "'"; //$NON-NLS-1$//$NON-NLS-2$
+								temp.append('\'');
+								escapeChar(temp, (char) constantPoolEntry.getIntegerValue());
+								temp.append('\'');
 								break;
 							case IAnnotationComponentValue.BOOLEAN_TAG :
-								value = constantPoolEntry.getIntegerValue() == 1 ? "true" : "false";//$NON-NLS-1$//$NON-NLS-2$
+								temp.append(constantPoolEntry.getIntegerValue() == 1 ? "true" : "false");//$NON-NLS-1$//$NON-NLS-2$
 								break;
 							case IAnnotationComponentValue.BYTE_TAG :
-								value = "(byte) " + constantPoolEntry.getIntegerValue(); //$NON-NLS-1$
+								temp.append("(byte) ").append(constantPoolEntry.getIntegerValue()); //$NON-NLS-1$
 								break;
 							case IAnnotationComponentValue.SHORT_TAG :
-								value =  "(short) " + constantPoolEntry.getIntegerValue(); //$NON-NLS-1$
+								temp.append("(short) ").append(constantPoolEntry.getIntegerValue()); //$NON-NLS-1$
 								break;
 							case IAnnotationComponentValue.INTEGER_TAG :
-								value =  "(int) " + constantPoolEntry.getIntegerValue(); //$NON-NLS-1$
+								temp.append("(int) ").append(constantPoolEntry.getIntegerValue()); //$NON-NLS-1$
 						}
+						value = String.valueOf(temp);
 						break;
 					case IConstantPoolConstant.CONSTANT_Utf8:
 						value = "\"" + decodeStringValue(constantPoolEntry.getUtf8Value()) + "\"";//$NON-NLS-1$//$NON-NLS-2$
@@ -1836,22 +1797,26 @@ public class Disassembler extends ClassFileBytesDisassembler {
 						value = Double.toString(constantPoolEntry.getDoubleValue());
 						break;
 					case IConstantPoolConstant.CONSTANT_Integer:
+						StringBuffer temp = new StringBuffer();
 						switch(annotationComponentValue.getTag()) {
 							case IAnnotationComponentValue.CHAR_TAG :
-								value = "'" + (char) constantPoolEntry.getIntegerValue() + "'"; //$NON-NLS-1$//$NON-NLS-2$
+								temp.append('\'');
+								escapeChar(temp, (char) constantPoolEntry.getIntegerValue());
+								temp.append('\'');
 								break;
 							case IAnnotationComponentValue.BOOLEAN_TAG :
-								value = constantPoolEntry.getIntegerValue() == 1 ? "true" : "false";//$NON-NLS-1$//$NON-NLS-2$
+								temp.append(constantPoolEntry.getIntegerValue() == 1 ? "true" : "false");//$NON-NLS-1$//$NON-NLS-2$
 								break;
 							case IAnnotationComponentValue.BYTE_TAG :
-								value = "(byte) " + constantPoolEntry.getIntegerValue(); //$NON-NLS-1$
+								temp.append("(byte) ").append(constantPoolEntry.getIntegerValue()); //$NON-NLS-1$
 								break;
 							case IAnnotationComponentValue.SHORT_TAG :
-								value =  "(short) " + constantPoolEntry.getIntegerValue(); //$NON-NLS-1$
+								temp.append("(short) ").append(constantPoolEntry.getIntegerValue()); //$NON-NLS-1$
 								break;
 							case IAnnotationComponentValue.INTEGER_TAG :
-								value =  "(int) " + constantPoolEntry.getIntegerValue(); //$NON-NLS-1$
+								temp.append("(int) ").append(constantPoolEntry.getIntegerValue()); //$NON-NLS-1$
 						}
+						value = String.valueOf(temp);
 						break;
 					case IConstantPoolConstant.CONSTANT_Utf8:
 						value = "\"" + decodeStringValue(constantPoolEntry.getUtf8Value()) + "\"";//$NON-NLS-1$//$NON-NLS-2$

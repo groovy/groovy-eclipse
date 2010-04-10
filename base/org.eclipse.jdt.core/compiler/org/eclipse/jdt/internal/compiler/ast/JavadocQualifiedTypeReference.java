@@ -57,7 +57,7 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 			return null;
 		}
 		if (isTypeUseDeprecated(type, scope))
-			reportDeprecatedType(type, scope);
+			reportDeprecatedType(type, scope, Integer.MAX_VALUE);
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=209936
 		// raw convert all enclosing types when dealing with Javadoc references
 		if (type.isGenericType() || type.isParameterizedType()) {
@@ -67,6 +67,10 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 	}
 	protected void reportDeprecatedType(TypeBinding type, Scope scope) {
 		scope.problemReporter().javadocDeprecatedType(type, this, scope.getDeclarationModifiers());
+	}
+	
+	protected void reportDeprecatedType(TypeBinding type, Scope scope, int index) {
+		scope.problemReporter().javadocDeprecatedType(type, this, scope.getDeclarationModifiers(), index);
 	}
 
 	protected void reportInvalidType(Scope scope) {

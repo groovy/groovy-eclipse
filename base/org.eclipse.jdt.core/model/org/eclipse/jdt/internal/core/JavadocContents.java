@@ -27,7 +27,7 @@ public class JavadocContents {
 	private static final int[] UNKNOWN_FORMAT = new int[0]; 
 	
 	private BinaryType type;
-	private String content;
+	private char[] content;
 	
 	private int childrenStart;
 	
@@ -60,16 +60,8 @@ public class JavadocContents {
 	
 	public JavadocContents(BinaryType type, String content) {
 		this.type = type;
-		this.content = content;
+		this.content = content != null ? content.toCharArray() : null;
 	}
-	
-	/*
-	 * Return the full content of the javadoc
-	 */
-	public String getContent() {
-		return this.content;
-	}
-	
 	/*
 	 * Returns the part of the javadoc that describe the type
 	 */
@@ -84,7 +76,7 @@ public class JavadocContents {
 		
 		if (this.typeDocRange != null) {
 			if (this.typeDocRange == UNKNOWN_FORMAT) throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.UNKNOWN_JAVADOC_FORMAT, this.type));
-			return this.content.substring(this.typeDocRange[0], this.typeDocRange[1]);
+			return String.valueOf(CharOperation.subarray(this.content, this.typeDocRange[0], this.typeDocRange[1]));
 		}
 		return null;
 	}
@@ -111,7 +103,7 @@ public class JavadocContents {
 		
 		if (range != null) {
 			if (range == UNKNOWN_FORMAT) throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.UNKNOWN_JAVADOC_FORMAT, child));
-			return this.content.substring(range[0], range[1]);
+			return String.valueOf(CharOperation.subarray(this.content, range[0], range[1]));
 		}
 		return null;
 	}
@@ -138,7 +130,7 @@ public class JavadocContents {
 		
 		if (range != null) {
 			if (range == UNKNOWN_FORMAT) throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.UNKNOWN_JAVADOC_FORMAT, child));
-			return this.content.substring(range[0], range[1]);
+			return String.valueOf(CharOperation.subarray(this.content, range[0], range[1]));
 		}
 		return null;
 	}
@@ -146,14 +138,14 @@ public class JavadocContents {
 	/*
 	 * Compute the ranges of the parts of the javadoc that describe each method of the type
 	 */
-	private int[] computeChildRange(String anchor, int indexOfSectionBottom) throws JavaModelException {
+	private int[] computeChildRange(char[] anchor, int indexOfSectionBottom) throws JavaModelException {
 		
 		// checks each known anchor locations
 		if (this.tempAnchorIndexesCount > 0) {
 			for (int i = 0; i < this.tempAnchorIndexesCount; i++) {
 				int anchorEndStart = this.tempAnchorIndexes[i];
 				
-				if (anchorEndStart != -1 && this.content.startsWith(anchor, anchorEndStart)) {
+				if (anchorEndStart != -1 && CharOperation.indexOf(anchor, this.content, false, anchorEndStart) == anchorEndStart) {
 					
 					this.tempAnchorIndexes[i] = -1;
 					
@@ -166,15 +158,14 @@ public class JavadocContents {
 		int index;
 		
 		// check each next unknown anchor locations
-		while ((index = this.content.indexOf(JavadocConstants.ANCHOR_PREFIX_START, fromIndex)) != -1 && (index < indexOfSectionBottom || indexOfSectionBottom == -1)) {
+		while ((index = CharOperation.indexOf(JavadocConstants.ANCHOR_PREFIX_START, this.content, false, fromIndex)) != -1 && (index < indexOfSectionBottom || indexOfSectionBottom == -1)) {
 			fromIndex = index + 1;
 			
 			int anchorEndStart = index + JavadocConstants.ANCHOR_PREFIX_START_LENGHT;
 			
 			this.tempLastAnchorFoundIndex = anchorEndStart;
 			
-			if (this.content.startsWith(anchor, anchorEndStart)) {
-				
+			if (CharOperation.indexOf(anchor, this.content, false, anchorEndStart) == anchorEndStart) {
 				return computeChildRange(anchorEndStart, anchor, indexOfSectionBottom);
 			} else {
 				if (this.tempAnchorIndexes.length == this.tempAnchorIndexesCount) {
@@ -188,16 +179,16 @@ public class JavadocContents {
 		return null;
 	}
 	
-	private int[] computeChildRange(int anchorEndStart, String anchor, int indexOfBottom) {
+	private int[] computeChildRange(int anchorEndStart, char[] anchor, int indexOfBottom) {
 		int[] range = null;
 				
 		// try to find the bottom of the section
 		if (indexOfBottom != -1) {
 			// try to find the end of the anchor
-			int indexOfEndLink = this.content.indexOf(JavadocConstants.ANCHOR_SUFFIX, anchorEndStart + anchor.length());
+			int indexOfEndLink = CharOperation.indexOf(JavadocConstants.ANCHOR_SUFFIX, this.content, false, anchorEndStart + anchor.length);
 			if (indexOfEndLink != -1) {
 				// try to find the next anchor
-				int indexOfNextElement = this.content.indexOf(JavadocConstants.ANCHOR_PREFIX_START, indexOfEndLink);
+				int indexOfNextElement = CharOperation.indexOf(JavadocConstants.ANCHOR_PREFIX_START, this.content, false, indexOfEndLink);
 				
 				int javadocStart = indexOfEndLink + JavadocConstants.ANCHOR_SUFFIX_LENGTH;
 				int javadocEnd = indexOfNextElement == -1 ? indexOfBottom : Math.min(indexOfNextElement, indexOfBottom);
@@ -216,22 +207,22 @@ public class JavadocContents {
 
 	private void computeChildrenSections() {
 		// try to find the next separator part
-		int lastIndex = this.content.indexOf(JavadocConstants.SEPARATOR_START, this.childrenStart);
+		int lastIndex = CharOperation.indexOf(JavadocConstants.SEPARATOR_START, this.content, false, this.childrenStart);
 		
 		// try to find field detail start
-		this.indexOfFieldDetails = this.content.indexOf(JavadocConstants.FIELD_DETAIL, lastIndex);
+		this.indexOfFieldDetails = CharOperation.indexOf(JavadocConstants.FIELD_DETAIL, this.content, false, lastIndex);
 		lastIndex = this.indexOfFieldDetails == -1 ? lastIndex : this.indexOfFieldDetails;
 		
 		// try to find constructor detail start
-		this.indexOfConstructorDetails = this.content.indexOf(JavadocConstants.CONSTRUCTOR_DETAIL, lastIndex);
+		this.indexOfConstructorDetails = CharOperation.indexOf(JavadocConstants.CONSTRUCTOR_DETAIL, this.content, false, lastIndex);
 		lastIndex = this.indexOfConstructorDetails == -1 ? lastIndex : this.indexOfConstructorDetails;
 		
 		// try to find method detail start
-		this.indexOfMethodDetails = this.content.indexOf(JavadocConstants.METHOD_DETAIL, lastIndex);
+		this.indexOfMethodDetails = CharOperation.indexOf(JavadocConstants.METHOD_DETAIL, this.content, false, lastIndex);
 		lastIndex = this.indexOfMethodDetails == -1 ? lastIndex : this.indexOfMethodDetails;
 		
 		// we take the end of class data
-		this.indexOfEndOfClassData = this.content.indexOf(JavadocConstants.END_OF_CLASS_DATA, lastIndex);
+		this.indexOfEndOfClassData = CharOperation.indexOf(JavadocConstants.END_OF_CLASS_DATA, this.content, false, lastIndex);
 		
 		// try to find the field detail end
 		this.indexOfFieldsBottom =
@@ -257,7 +248,9 @@ public class JavadocContents {
 			computeChildrenSections();
 		}
 		
-		String anchor = field.getElementName() + JavadocConstants.ANCHOR_PREFIX_END;
+		StringBuffer buffer = new StringBuffer(field.getElementName());
+		buffer.append(JavadocConstants.ANCHOR_PREFIX_END);
+		char[] anchor = String.valueOf(buffer).toCharArray();
 		
 		int[] range = null;
 		
@@ -307,7 +300,7 @@ public class JavadocContents {
 			computeChildrenSections();
 		}
 		
-		String anchor = computeMethodAnchorPrefixEnd((BinaryMethod)method);
+		char[] anchor = computeMethodAnchorPrefixEnd((BinaryMethod)method).toCharArray();
 		
 		int[] range = null;
 		
@@ -420,45 +413,45 @@ public class JavadocContents {
 	 * Compute the range of the part of the javadoc that describe the type
 	 */
 	private void computeTypeRange() throws JavaModelException {
-		final int indexOfStartOfClassData = this.content.indexOf(JavadocConstants.START_OF_CLASS_DATA);
+		final int indexOfStartOfClassData = CharOperation.indexOf(JavadocConstants.START_OF_CLASS_DATA, this.content, false);
 		if (indexOfStartOfClassData == -1) {
 			this.typeDocRange = UNKNOWN_FORMAT;
 			return;
 		}
-		int indexOfNextSeparator = this.content.indexOf(JavadocConstants.SEPARATOR_START, indexOfStartOfClassData);
+		int indexOfNextSeparator = CharOperation.indexOf(JavadocConstants.SEPARATOR_START, this.content, false, indexOfStartOfClassData);
 		if (indexOfNextSeparator == -1) {
 			this.typeDocRange = UNKNOWN_FORMAT;
 			return;
 		}
-		int indexOfNextSummary = this.content.indexOf(JavadocConstants.NESTED_CLASS_SUMMARY, indexOfNextSeparator);
+		int indexOfNextSummary = CharOperation.indexOf(JavadocConstants.NESTED_CLASS_SUMMARY, this.content, false, indexOfNextSeparator);
 		if (indexOfNextSummary == -1 && this.type.isEnum()) {
 			// try to find enum constant summary start
-			indexOfNextSummary = this.content.indexOf(JavadocConstants.ENUM_CONSTANT_SUMMARY, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.ENUM_CONSTANT_SUMMARY, this.content, false, indexOfNextSeparator);
 		}
 		if (indexOfNextSummary == -1 && this.type.isAnnotation()) {
 			// try to find required enum constant summary start
-			indexOfNextSummary = this.content.indexOf(JavadocConstants.ANNOTATION_TYPE_REQUIRED_MEMBER_SUMMARY, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.ANNOTATION_TYPE_REQUIRED_MEMBER_SUMMARY, this.content, false, indexOfNextSeparator);
 			if (indexOfNextSummary == -1) {
 				// try to find optional enum constant summary start
-				indexOfNextSummary = this.content.indexOf(JavadocConstants.ANNOTATION_TYPE_OPTIONAL_MEMBER_SUMMARY, indexOfNextSeparator);
+				indexOfNextSummary = CharOperation.indexOf(JavadocConstants.ANNOTATION_TYPE_OPTIONAL_MEMBER_SUMMARY, this.content, false, indexOfNextSeparator);
 			}
 		}
 		if (indexOfNextSummary == -1) {
 			// try to find field summary start
-			indexOfNextSummary = this.content.indexOf(JavadocConstants.FIELD_SUMMARY, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.FIELD_SUMMARY, this.content, false, indexOfNextSeparator);
 		}
 		if (indexOfNextSummary == -1) {
 			// try to find constructor summary start
-			indexOfNextSummary = this.content.indexOf(JavadocConstants.CONSTRUCTOR_SUMMARY, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.CONSTRUCTOR_SUMMARY, this.content, false, indexOfNextSeparator);
 		}
 		if (indexOfNextSummary == -1) {
 			// try to find method summary start
-			indexOfNextSummary = this.content.indexOf(JavadocConstants.METHOD_SUMMARY, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.METHOD_SUMMARY, this.content, false, indexOfNextSeparator);
 		}
 		
 		if (indexOfNextSummary == -1) {
 			// we take the end of class data
-			indexOfNextSummary = this.content.indexOf(JavadocConstants.END_OF_CLASS_DATA, indexOfNextSeparator);
+			indexOfNextSummary = CharOperation.indexOf(JavadocConstants.END_OF_CLASS_DATA, this.content, false, indexOfNextSeparator);
 		} else {
 			// improve performance of computation of children ranges
 			this.childrenStart = indexOfNextSummary + 1;
@@ -473,10 +466,7 @@ public class JavadocContents {
 		 * We remove what the contents between the start of class data and the first <P>
 		 */
 		int start = indexOfStartOfClassData + JavadocConstants.START_OF_CLASS_DATA_LENGTH;
-		int indexOfFirstParagraph = this.content.indexOf("<P>", start); //$NON-NLS-1$
-		if (indexOfFirstParagraph == -1) {
-			indexOfFirstParagraph = this.content.indexOf("<p>", start); //$NON-NLS-1$
-		}
+		int indexOfFirstParagraph = CharOperation.indexOf("<P>".toCharArray(), this.content, false, start); //$NON-NLS-1$
 		if (indexOfFirstParagraph != -1 && indexOfFirstParagraph < indexOfNextSummary) {
 			start = indexOfFirstParagraph;
 		}

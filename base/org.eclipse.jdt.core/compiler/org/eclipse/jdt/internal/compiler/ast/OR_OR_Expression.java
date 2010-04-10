@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,9 +62,12 @@ public class OR_OR_Expression extends BinaryExpression {
 			}
 		}
 		rightInfo = this.right.analyseCode(currentScope, flowContext, rightInfo);
+		// The definitely null variables in right info when true should not be missed out while merging
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=299900
+		FlowInfo leftInfoWhenTrueForMerging = leftInfo.initsWhenTrue().unconditionalCopy().addPotentialInitializationsFrom(rightInfo.unconditionalInitsWithoutSideEffect());
 		FlowInfo mergedInfo = FlowInfo.conditional(
 					// merging two true initInfos for such a negative case: if ((t && (b = t)) || f) r = b; // b may not have been initialized
-					leftInfo.initsWhenTrue().unconditionalInits().mergedWith(
+				leftInfoWhenTrueForMerging.unconditionalInits().mergedWith(
 						rightInfo.safeInitsWhenTrue().setReachMode(previousMode).unconditionalInits()),
 					rightInfo.initsWhenFalse());
 		this.mergedInitStateIndex =

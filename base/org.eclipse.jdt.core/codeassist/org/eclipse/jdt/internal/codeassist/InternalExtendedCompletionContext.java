@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2009 IBM Corporation and others.
+ * Copyright (c) 2008, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -81,7 +81,6 @@ public class InternalExtendedCompletionContext {
 	private ObjectVector visibleMethods;
 
 	private boolean hasComputedEnclosingJavaElements;
-	Map bindingsToNodes;
 	private Map bindingsToHandles;
 	private Map nodesWithProblemsToHandles;
 	private ICompilationUnit compilationUnit;
@@ -167,7 +166,6 @@ public class InternalExtendedCompletionContext {
 			this.visibleLocalVariables = new ObjectVector();
 			this.visibleFields = new ObjectVector();
 			this.visibleMethods = new ObjectVector();
-			this.bindingsToNodes = new HashMap();
 	
 			ReferenceContext referenceContext = scope.referenceContext();
 			if (referenceContext instanceof AbstractMethodDeclaration) {

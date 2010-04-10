@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2009 IBM Corporation and others.
+ * Copyright (c) 2004, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,12 +19,12 @@ import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 
-public class CancelableNameEnvironment extends SearchableEnvironment {
-	public IProgressMonitor monitor;
+public class CancelableNameEnvironment extends SearchableEnvironment implements INameEnviromentWithProgress {
+	private IProgressMonitor monitor;
 
 	public CancelableNameEnvironment(JavaProject project, WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException {
 		super(project, owner);
-		this.monitor = monitor;
+		setMonitor(monitor);
 	}
 
 	private void checkCanceled() {
@@ -53,5 +53,9 @@ public class CancelableNameEnvironment extends SearchableEnvironment {
 	public void findTypes(char[] prefix, boolean findMembers, boolean camelCaseMatch, int searchFor, ISearchRequestor storage, IProgressMonitor progressMonitor) {
 		checkCanceled();
 		super.findTypes(prefix, findMembers, camelCaseMatch, searchFor, storage, progressMonitor);
+	}
+	
+	public void setMonitor(IProgressMonitor monitor) {
+		this.monitor = monitor;
 	}
 }

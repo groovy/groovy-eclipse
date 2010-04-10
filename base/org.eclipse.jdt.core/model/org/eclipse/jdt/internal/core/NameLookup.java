@@ -583,12 +583,6 @@ public class NameLookup implements SuffixConstants {
 	 * Find secondary type for a project.
 	 */
 	private IType findSecondaryType(String packageName, String typeName, IJavaProject project, boolean waitForIndexes, IProgressMonitor monitor) {
-		if (JavaModelManager.VERBOSE) {
-			Util.verbose("NameLookup FIND SECONDARY TYPES:"); //$NON-NLS-1$
-			Util.verbose(" -> pkg name: " + packageName);  //$NON-NLS-1$
-			Util.verbose(" -> type name: " + typeName);  //$NON-NLS-1$
-			Util.verbose(" -> project: "+project.getElementName()); //$NON-NLS-1$
-		}
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		try {
 			IJavaProject javaProject = project;
@@ -599,6 +593,10 @@ public class NameLookup implements SuffixConstants {
 					IType type = (IType) types.get(typeName);
 					if (type != null) {
 						if (JavaModelManager.VERBOSE) {
+							Util.verbose("NameLookup FIND SECONDARY TYPES:"); //$NON-NLS-1$
+							Util.verbose(" -> pkg name: " + packageName);  //$NON-NLS-1$
+							Util.verbose(" -> type name: " + typeName);  //$NON-NLS-1$
+							Util.verbose(" -> project: "+project.getElementName()); //$NON-NLS-1$
 							Util.verbose(" -> type: " + type.getElementName());  //$NON-NLS-1$
 						}
 						return type;

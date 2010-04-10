@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,13 +18,13 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.codehaus.jdt.groovy.integration.LanguageSupport;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IFile;
@@ -48,6 +48,7 @@ import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.content.IContentDescription;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -261,6 +262,20 @@ public class JavaProject
 		if (output.getContentKind() != ClasspathEntry.K_OUTPUT
 				|| !output.getPath().equals(newOutputLocation))
 			return false;
+		return true;
+	}
+	
+	private static boolean areClasspathsEqual(IClasspathEntry[] first, IClasspathEntry[] second) {
+		if (first != second){
+		    if (first == null) return false;
+			int length = first.length;
+			if (second == null || second.length != length)
+				return false;
+			for (int i = 0; i < length; i++) {
+				if (!first[i].equals(second[i]))
+					return false;
+			}
+		}
 		return true;
 	}
 
@@ -851,10 +866,13 @@ public class JavaProject
 		return new JavaProjectElementInfo();
 	}
 
-	/*
-	 * Reads and decode an XML classpath string
+	/**
+	 * Reads and decode an XML classpath string. Returns a two-dimensional array, where the number of elements in the row is fixed to 2.
+	 * The first element is an array of raw classpath entries and the second element is an array of referenced entries that may have been stored
+	 * by the client earlier. See {@link IJavaProject#getReferencedClasspathEntries()} for more details. 
+	 * 
 	 */
-	public IClasspathEntry[] decodeClasspath(String xmlClasspath, Map unknownElements) throws IOException, ClasspathEntry.AssertionFailedException {
+	public IClasspathEntry[][] decodeClasspath(String xmlClasspath, Map unknownElements) throws IOException, ClasspathEntry.AssertionFailedException {
 
 		ArrayList paths = new ArrayList();
 		IClasspathEntry defaultOutput = null;
@@ -874,7 +892,7 @@ public class JavaProject
 		if (!cpElement.getNodeName().equalsIgnoreCase("classpath")) { //$NON-NLS-1$
 			throw new IOException(Messages.file_badFormat);
 		}
-		NodeList list = cpElement.getElementsByTagName("classpathentry"); //$NON-NLS-1$
+		NodeList list = cpElement.getElementsByTagName(ClasspathEntry.TAG_CLASSPATHENTRY);
 		int length = list.getLength();
 
 		for (int i = 0; i < length; ++i) {
@@ -886,15 +904,32 @@ public class JavaProject
 						defaultOutput = entry; // separate output
 					} else {
 						paths.add(entry);
+					}
+				}
 			}
 		}
-			}
-		}
-		// return a new empty classpath is it size is 0, to differenciate from an INVALID_CLASSPATH
 		int pathSize = paths.size();
-		IClasspathEntry[] entries = new IClasspathEntry[pathSize + (defaultOutput == null ? 0 : 1)];
-		paths.toArray(entries);
-		if (defaultOutput != null) entries[pathSize] = defaultOutput; // ensure output is last item
+		IClasspathEntry[][] entries = new IClasspathEntry[2][];
+		entries[0] = new IClasspathEntry[pathSize + (defaultOutput == null ? 0 : 1)];
+		paths.toArray(entries[0]);
+		if (defaultOutput != null) entries[0][pathSize] = defaultOutput; // ensure output is last item
+		
+		paths.clear();
+		list = cpElement.getElementsByTagName(ClasspathEntry.TAG_REFERENCED_ENTRY);
+		length = list.getLength();
+
+		for (int i = 0; i < length; ++i) {
+			Node node = list.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				IClasspathEntry entry = ClasspathEntry.elementDecode((Element)node, this, unknownElements);
+				if (entry != null){
+					paths.add(entry);
+				}
+			}
+		}
+		entries[1] = new IClasspathEntry[paths.size()];
+		paths.toArray(entries[1]);
+
 		return entries;
 	}
 
@@ -917,7 +952,7 @@ public class JavaProject
 				reader.close();
 			}
 
-			if (!node.getNodeName().equalsIgnoreCase("classpathentry") //$NON-NLS-1$
+			if (!node.getNodeName().equalsIgnoreCase(ClasspathEntry.TAG_CLASSPATHENTRY)
 					|| node.getNodeType() != Node.ELEMENT_NODE) {
 				return null;
 			}
@@ -962,7 +997,7 @@ public class JavaProject
 	/**
 	 * Returns the XML String encoding of the class path.
 	 */
-	protected String encodeClasspath(IClasspathEntry[] classpath, IPath outputLocation, boolean indent, Map unknownElements) throws JavaModelException {
+	protected String encodeClasspath(IClasspathEntry[] classpath, IClasspathEntry[] referencedEntries, IPath outputLocation, boolean indent, Map unknownElements) throws JavaModelException {
 		try {
 			ByteArrayOutputStream s = new ByteArrayOutputStream();
 			OutputStreamWriter writer = new OutputStreamWriter(s, "UTF8"); //$NON-NLS-1$
@@ -970,7 +1005,7 @@ public class JavaProject
 
 			xmlWriter.startTag(ClasspathEntry.TAG_CLASSPATH, indent);
 			for (int i = 0; i < classpath.length; ++i) {
-				((ClasspathEntry)classpath[i]).elementEncode(xmlWriter, this.project.getFullPath(), indent, true, unknownElements);
+				((ClasspathEntry)classpath[i]).elementEncode(xmlWriter, this.project.getFullPath(), indent, true, unknownElements, false);
 			}
 
 			if (outputLocation != null) {
@@ -982,6 +1017,12 @@ public class JavaProject
 				xmlWriter.printTag(ClasspathEntry.TAG_CLASSPATHENTRY, parameters, indent, true, true);
 			}
 
+			if (referencedEntries != null) {
+				for (int i = 0; i < referencedEntries.length; ++i) {
+					((ClasspathEntry) referencedEntries[i]).elementEncode(xmlWriter, this.project.getFullPath(), indent, true, unknownElements, true);
+				}
+			}
+			
 			xmlWriter.endTag(ClasspathEntry.TAG_CLASSPATH, indent, true/*insert new line*/);
 			writer.flush();
 			writer.close();
@@ -997,7 +1038,7 @@ public class JavaProject
 			OutputStreamWriter writer = new OutputStreamWriter(s, "UTF8"); //$NON-NLS-1$
 			XMLWriter xmlWriter = new XMLWriter(writer, this, false/*don't print XML version*/);
 
-			((ClasspathEntry)classpathEntry).elementEncode(xmlWriter, this.project.getFullPath(), true/*indent*/, true/*insert new line*/, null/*not interested in unknown elements*/);
+			((ClasspathEntry)classpathEntry).elementEncode(xmlWriter, this.project.getFullPath(), true/*indent*/, true/*insert new line*/, null/*not interested in unknown elements*/, (classpathEntry.getReferencingEntry() != null));
 
 			writer.flush();
 			writer.close();
@@ -1579,13 +1620,11 @@ public class JavaProject
 	 * @see org.eclipse.jdt.core.IJavaProject#getOption(String, boolean)
 	 */
 	public String getOption(String optionName, boolean inheritJavaCoreOptions) {
-
-		String propertyName = optionName;
-		if (JavaModelManager.getJavaModelManager().optionNames.contains(propertyName)){
+		if (JavaModelManager.getJavaModelManager().optionNames.contains(optionName)){
 			IEclipsePreferences projectPreferences = getEclipsePreferences();
-			String javaCoreDefault = inheritJavaCoreOptions ? JavaCore.getOption(propertyName) : null;
+			String javaCoreDefault = inheritJavaCoreOptions ? JavaCore.getOption(optionName) : null;
 			if (projectPreferences == null) return javaCoreDefault;
-			String value = projectPreferences.get(propertyName, javaCoreDefault);
+			String value = projectPreferences.get(optionName, javaCoreDefault);
 			return value == null ? null : value.trim();
 		}
 		return null;
@@ -1849,7 +1888,7 @@ public class JavaProject
 		IClasspathEntry[] classpath = perProjectInfo.rawClasspath;
 		if (classpath != null) return classpath;
 
-		classpath = perProjectInfo.readAndCacheClasspath(this);
+		classpath = perProjectInfo.readAndCacheClasspath(this)[0];
 
 		if (classpath == JavaProject.INVALID_CLASSPATH)
 			return defaultClasspath();
@@ -1857,6 +1896,13 @@ public class JavaProject
 		return classpath;
 	}
 
+	/**
+	 * @see IJavaProject
+	 */
+	public IClasspathEntry[] getReferencedClasspathEntries() throws JavaModelException {
+		return getPerProjectInfo().referencedEntries;
+	}
+	
 	/**
 	 * @see IJavaProject#getRequiredProjectNames()
 	 */
@@ -2117,45 +2163,20 @@ public class JavaProject
 		if (isSource)
 			return false;
 
-		// then look at resolved entries
-		for (int i = 0; i < length; i++) {
-			IClasspathEntry rawEntry = rawClasspath[i];
-			switch (rawEntry.getEntryKind()) {
-				case IClasspathEntry.CPE_CONTAINER:
-					IClasspathContainer container;
-					try {
-						container = JavaCore.getClasspathContainer(rawEntry.getPath(), this);
-					} catch (JavaModelException e) {
-						break;
-					}
-					if (container == null)
-						break;
-					IClasspathEntry[] containerEntries = container.getClasspathEntries();
-					if (containerEntries == null)
-						break;
-					// container was bound
-					for (int j = 0, containerLength = containerEntries.length; j < containerLength; j++){
-						IClasspathEntry resolvedEntry = containerEntries[j];
-						if (resolvedEntry == null) {
-							if (JavaModelManager.CP_RESOLVE_VERBOSE || JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-								JavaModelManager.getJavaModelManager().verbose_missbehaving_container(this, rawEntry.getPath(), containerEntries);
-							}
-							return false;
-						}
-						if (isOnClasspathEntry(elementPath, isFolderPath, isPackageFragmentRoot, resolvedEntry))
-							return true;
-					}
-					break;
-				case IClasspathEntry.CPE_VARIABLE:
-					IClasspathEntry resolvedEntry = JavaCore.getResolvedClasspathEntry(rawEntry);
-					if (resolvedEntry == null)
-						break;
-					if (isOnClasspathEntry(elementPath, isFolderPath, isPackageFragmentRoot, resolvedEntry))
-						return true;
-					break;
-			}
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=304081
+		// All the resolved classpath entries need to be considered, including the referenced classpath entries
+		IClasspathEntry[] resolvedClasspath = null;
+		try {
+			resolvedClasspath = getResolvedClasspath();
+		} catch (JavaModelException e) {
+			return false; // Perhaps, not a Java project
 		}
 
+		for (int index = 0; index < resolvedClasspath.length; index++) {
+			if (isOnClasspathEntry(elementPath, isFolderPath, isPackageFragmentRoot, resolvedClasspath[index]))
+				return true;
+		}
+		
 		return false;
 	}
 
@@ -2385,14 +2406,17 @@ public class JavaProject
 			return result;
 		}
 	}
-
-	/*
+	/**
 	 * Reads the classpath file entries of this project's .classpath file.
-	 * This includes the output entry.
+	 * Returns a two-dimensional array, where the number of elements in the row is fixed to 2.
+	 * The first element is an array of raw classpath entries, which includes the output entry,
+	 * and the second element is an array of referenced entries that may have been stored 
+	 * by the client earlier. 
+	 * See {@link IJavaProject#getReferencedClasspathEntries()} for more details.
 	 * As a side effect, unknown elements are stored in the given map (if not null)
 	 * Throws exceptions if the file cannot be accessed or is malformed.
 	 */
-	public IClasspathEntry[] readFileEntriesWithException(Map unknownElements) throws CoreException, IOException, ClasspathEntry.AssertionFailedException {
+	public IClasspathEntry[][] readFileEntriesWithException(Map unknownElements) throws CoreException, IOException, ClasspathEntry.AssertionFailedException {
 		IFile rscFile = this.project.getFile(JavaProject.CLASSPATH_FILENAME);
 		byte[] bytes;
 		if (rscFile.exists()) {
@@ -2411,7 +2435,7 @@ public class JavaProject
 				bytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(file);
 			} catch (IOException e) {
 				if (!file.exists())
-					return defaultClasspath();
+					return new IClasspathEntry[][]{defaultClasspath(), ClasspathEntry.NO_ENTRIES};
 				throw e;
 			}
 		}
@@ -2435,18 +2459,18 @@ public class JavaProject
 	 * This includes the output entry.
 	 * As a side effect, unknown elements are stored in the given map (if not null)
 	 */
-	private IClasspathEntry[] readFileEntries(Map unkwownElements) {
+	private IClasspathEntry[][] readFileEntries(Map unkwownElements) {
 		try {
 			return readFileEntriesWithException(unkwownElements);
 		} catch (CoreException e) {
 			Util.log(e, "Exception while reading " + getPath().append(JavaProject.CLASSPATH_FILENAME)); //$NON-NLS-1$
-			return JavaProject.INVALID_CLASSPATH;
+			return new IClasspathEntry[][]{JavaProject.INVALID_CLASSPATH, ClasspathEntry.NO_ENTRIES};
 		} catch (IOException e) {
 			Util.log(e, "Exception while reading " + getPath().append(JavaProject.CLASSPATH_FILENAME)); //$NON-NLS-1$
-			return JavaProject.INVALID_CLASSPATH;
+			return new IClasspathEntry[][]{JavaProject.INVALID_CLASSPATH, ClasspathEntry.NO_ENTRIES};
 		} catch (ClasspathEntry.AssertionFailedException e) {
 			Util.log(e, "Exception while reading " + getPath().append(JavaProject.CLASSPATH_FILENAME)); //$NON-NLS-1$
-			return JavaProject.INVALID_CLASSPATH;
+			return new IClasspathEntry[][]{JavaProject.INVALID_CLASSPATH, ClasspathEntry.NO_ENTRIES};
 		}
 	}
 
@@ -2455,14 +2479,14 @@ public class JavaProject
 	 */
 	public IPath readOutputLocation() {
 		// Read classpath file without creating markers nor logging problems
-		IClasspathEntry[] classpath = readFileEntries(null/*not interested in unknown elements*/);
-		if (classpath == JavaProject.INVALID_CLASSPATH)
+		IClasspathEntry[][] classpath = readFileEntries(null/*not interested in unknown elements*/);
+		if (classpath[0] == JavaProject.INVALID_CLASSPATH)
 			return defaultOutputLocation();
 
 		// extract the output location
 		IPath outputLocation = null;
-		if (classpath.length > 0) {
-			IClasspathEntry entry = classpath[classpath.length - 1];
+		if (classpath[0].length > 0) {
+			IClasspathEntry entry = classpath[0][classpath[0].length - 1];
 			if (entry.getContentKind() == ClasspathEntry.K_OUTPUT) {
 				outputLocation = entry.getPath();
 			}
@@ -2475,20 +2499,20 @@ public class JavaProject
 	 */
 	public IClasspathEntry[] readRawClasspath() {
 		// Read classpath file without creating markers nor logging problems
-		IClasspathEntry[] classpath = readFileEntries(null/*not interested in unknown elements*/);
-		if (classpath == JavaProject.INVALID_CLASSPATH)
+		IClasspathEntry[][] classpath = readFileEntries(null/*not interested in unknown elements*/);
+		if (classpath[0] == JavaProject.INVALID_CLASSPATH)
 			return defaultClasspath();
 
 		// discard the output location
-		if (classpath.length > 0) {
-			IClasspathEntry entry = classpath[classpath.length - 1];
+		if (classpath[0].length > 0) {
+			IClasspathEntry entry = classpath[0][classpath[0].length - 1];
 			if (entry.getContentKind() == ClasspathEntry.K_OUTPUT) {
-				IClasspathEntry[] copy = new IClasspathEntry[classpath.length - 1];
-				System.arraycopy(classpath, 0, copy, 0, copy.length);
-				classpath = copy;
+				IClasspathEntry[] copy = new IClasspathEntry[classpath[0].length - 1];
+				System.arraycopy(classpath[0], 0, copy, 0, copy.length);
+				classpath[0] = copy;
 			}
 		}
-		return classpath;
+		return classpath[0];
 	}
 
 	/**
@@ -2541,14 +2565,45 @@ public class JavaProject
 		IJavaModelStatus unresolvedEntryStatus = JavaModelStatus.VERIFIED_OK;
 		HashMap rawReverseMap = new HashMap();
 		Map rootPathToResolvedEntries = new HashMap();
+		IClasspathEntry[] referencedEntries = null;
 	}
 	
 	public ResolvedClasspath resolveClasspath(IClasspathEntry[] rawClasspath, boolean usePreviousSession, boolean resolveChainedLibraries) throws JavaModelException {
+		return resolveClasspath(rawClasspath, null, usePreviousSession, resolveChainedLibraries);
+	}
+
+	public ResolvedClasspath resolveClasspath(IClasspathEntry[] rawClasspath, IClasspathEntry[] referencedEntries, boolean usePreviousSession, boolean resolveChainedLibraries) throws JavaModelException {
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		ExternalFoldersManager externalFoldersManager = JavaModelManager.getExternalManager();
 		ResolvedClasspath result = new ResolvedClasspath();
 
+		Map referencedEntriesMap = new HashMap();
+		List rawLibrariesPath = new ArrayList();
 		LinkedHashSet resolvedEntries = new LinkedHashSet();
+		
+		if(resolveChainedLibraries) {
+			for (int index = 0; index < rawClasspath.length; index++) {
+				IClasspathEntry currentEntry = rawClasspath[index]; 
+				if (currentEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+					rawLibrariesPath.add(ClasspathEntry.resolveDotDot(currentEntry.getPath()));
+				}
+			}
+			if (referencedEntries != null) {
+				// The Set is required to keep the order intact while the referencedEntriesMap (Map)
+				// is used to map the referenced entries with path
+				LinkedHashSet referencedEntriesSet = new LinkedHashSet();
+				for (int index = 0; index < referencedEntries.length; index++) {
+					IPath path = referencedEntries[index].getPath();
+					if (!rawLibrariesPath.contains(path) && referencedEntriesMap.get(path) == null) {
+						referencedEntriesMap.put(path, referencedEntries[index]);
+						referencedEntriesSet.add(referencedEntries[index]);
+					}
+				}
+				result.referencedEntries = new IClasspathEntry[referencedEntriesSet.size()];
+				referencedEntriesSet.toArray(result.referencedEntries);
+			}
+		}
+		
 		int length = rawClasspath.length;
 		for (int i = 0; i < length; i++) {
 
@@ -2569,14 +2624,19 @@ public class JavaProject
 					if (resolvedEntry == null) {
 						result.unresolvedEntryStatus = new JavaModelStatus(IJavaModelStatusConstants.CP_VARIABLE_PATH_UNBOUND, this, rawEntry.getPath());
 					} else {
-						if (resolveChainedLibraries && resolvedEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+						// If the entry is already present in the rawReversetMap, it means the entry and the chained libraries
+						// have already been processed. So, skip it.
+						if (resolveChainedLibraries && resolvedEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY
+													&& result.rawReverseMap.get(resolvedEntry.getPath()) == null) {
 							// resolve Class-Path: in manifest
 							ClasspathEntry[] extraEntries = ((ClasspathEntry) resolvedEntry).resolvedChainedLibraries();
 							for (int j = 0, length2 = extraEntries.length; j < length2; j++) {
-								addToResult(rawEntry, extraEntries[j], result, resolvedEntries, externalFoldersManager);
+								if (!rawLibrariesPath.contains(extraEntries[j].getPath())) {
+									addToResult(rawEntry, extraEntries[j], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true);
+								}
 							}
 						}
-						addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager);
+						addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
 					}
 					break;
 
@@ -2611,15 +2671,17 @@ public class JavaProject
 							// resolve ".." in library path
 							cEntry = cEntry.resolvedDotDot();
 							
-							if (resolveChainedLibraries) {
+							if (resolveChainedLibraries && result.rawReverseMap.get(cEntry.getPath()) == null) {
 								// resolve Class-Path: in manifest
 								ClasspathEntry[] extraEntries = cEntry.resolvedChainedLibraries();
 								for (int k = 0, length2 = extraEntries.length; k < length2; k++) {
-									addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager);
+									if (!rawLibrariesPath.contains(extraEntries[k].getPath())) {
+										addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true);
+									}
 								}
 							}
 						}
-						addToResult(rawEntry, cEntry, result, resolvedEntries, externalFoldersManager);
+						addToResult(rawEntry, cEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
 					}
 					break;
 
@@ -2627,18 +2689,20 @@ public class JavaProject
 					// resolve ".." in library path
 					resolvedEntry = ((ClasspathEntry) rawEntry).resolvedDotDot();
 					
-					if (resolveChainedLibraries) {
+					if (resolveChainedLibraries && result.rawReverseMap.get(resolvedEntry.getPath()) == null) {
 						// resolve Class-Path: in manifest
 						ClasspathEntry[] extraEntries = ((ClasspathEntry) resolvedEntry).resolvedChainedLibraries();
 						for (int k = 0, length2 = extraEntries.length; k < length2; k++) {
-							addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager);
+							if (!rawLibrariesPath.contains(extraEntries[k].getPath())) {
+								addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true);
+							}
 						}
 					}
 
-					addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager);
+					addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
 					break;
 				default :
-					addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager);
+					addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
 					break;
 			}
 		}
@@ -2647,18 +2711,49 @@ public class JavaProject
 		return result;
 	}
 
-	private void addToResult(IClasspathEntry rawEntry, IClasspathEntry resolvedEntry, ResolvedClasspath result, LinkedHashSet resolvedEntries, ExternalFoldersManager externalFoldersManager) {
+	private void addToResult(IClasspathEntry rawEntry, IClasspathEntry resolvedEntry, ResolvedClasspath result,
+			LinkedHashSet resolvedEntries, ExternalFoldersManager externalFoldersManager,
+			Map oldChainedEntriesMap, boolean addAsChainedEntry) {
+
 		IPath resolvedPath;
+		// If it's already been resolved, do not add to resolvedEntries
 		if (result.rawReverseMap.get(resolvedPath = resolvedEntry.getPath()) == null) {
 			result.rawReverseMap.put(resolvedPath, rawEntry);
 			result.rootPathToResolvedEntries.put(resolvedPath, resolvedEntry);
+			resolvedEntries.add(resolvedEntry);
+			if (addAsChainedEntry) {
+				IClasspathEntry chainedEntry = null;
+				if (rawEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+
+					chainedEntry = (ClasspathEntry) oldChainedEntriesMap.get(resolvedPath);
+					if (chainedEntry != null) {
+						// This is required to keep the attributes if any added by the user in
+						// the previous session such as source attachment path etc.
+						copyFromOldChainedEntry((ClasspathEntry) resolvedEntry, (ClasspathEntry) chainedEntry);
+					}
+				}
+			}
 		}
-		resolvedEntries.add(resolvedEntry);
 		if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY && ExternalFoldersManager.isExternalFolderPath(resolvedPath)) {
 			externalFoldersManager.addFolder(resolvedPath); // no-op if not an external folder or if already registered
 		}
 	}
 
+	private void copyFromOldChainedEntry(ClasspathEntry resolvedEntry, ClasspathEntry chainedEntry) {
+		IPath path = chainedEntry.getSourceAttachmentPath();
+		if ( path != null) {
+			resolvedEntry.sourceAttachmentPath = path;
+		}
+		path = chainedEntry.getSourceAttachmentRootPath();
+		if (path != null) {
+			resolvedEntry.sourceAttachmentRootPath = path;
+		}
+		IClasspathAttribute[] attributes = chainedEntry.getExtraAttributes();
+		if (attributes != null) {
+			resolvedEntry.extraAttributes = attributes;
+		}
+	}
+	
 	/*
 	 * Resolve the given perProjectInfo's raw classpath and store the resolved classpath in the perProjectInfo.
 	 */
@@ -2673,22 +2768,24 @@ public class JavaProject
 			}
 
 			// get raw info inside a synchronized block to ensure that it is consistent
-			IClasspathEntry[] rawClasspath;
+			IClasspathEntry[][] classpath = new IClasspathEntry[2][];
 			int timeStamp;
 			synchronized (perProjectInfo) {
-				rawClasspath= perProjectInfo.rawClasspath;
-				if (rawClasspath == null)
-					rawClasspath = perProjectInfo.readAndCacheClasspath(this);
+				classpath[0] = perProjectInfo.rawClasspath;
+				classpath[1] = perProjectInfo.referencedEntries;
+				// Checking null only for rawClasspath enough
+				if (classpath[0] == null)
+					classpath = perProjectInfo.readAndCacheClasspath(this);
 				timeStamp = perProjectInfo.rawTimeStamp;
 			}
-			
-			ResolvedClasspath result = resolveClasspath(rawClasspath, usePreviousSession, true/*resolve chained libraries*/);
 
+			ResolvedClasspath result = resolveClasspath(classpath[0], classpath[1], usePreviousSession, true/*resolve chained libraries*/);
+			
 			if (CP_RESOLUTION_BP_LISTENERS != null)
 				breakpoint(2, this);
 
 			// store resolved info along with the raw info to ensure consistency
-			perProjectInfo.setResolvedClasspath(result.resolvedClasspath, result.rawReverseMap, result.rootPathToResolvedEntries, usePreviousSession ? PerProjectInfo.NEED_RESOLUTION : result.unresolvedEntryStatus, timeStamp, addClasspathChange);
+			perProjectInfo.setResolvedClasspath(result.resolvedClasspath, result.referencedEntries, result.rawReverseMap, result.rootPathToResolvedEntries, usePreviousSession ? PerProjectInfo.NEED_RESOLUTION : result.unresolvedEntryStatus, timeStamp, addClasspathChange);
 		} finally {
 			if (!isClasspathBeingResolved) {
 				manager.setClasspathBeingResolved(this, false);
@@ -2716,24 +2813,29 @@ public class JavaProject
 	 * @return boolean Return whether the .classpath file was modified.
 	 * @throws JavaModelException
 	 */
-	public boolean writeFileEntries(IClasspathEntry[] newClasspath, IPath newOutputLocation) throws JavaModelException {
+	public boolean writeFileEntries(IClasspathEntry[] newClasspath, IClasspathEntry[] referencedEntries, IPath newOutputLocation) throws JavaModelException {
 
 		if (!this.project.isAccessible()) return false;
 
 		Map unknownElements = new HashMap();
-		IClasspathEntry[] fileEntries = readFileEntries(unknownElements);
-		if (fileEntries != JavaProject.INVALID_CLASSPATH && areClasspathsEqual(newClasspath, newOutputLocation, fileEntries)) {
+		IClasspathEntry[][] fileEntries = readFileEntries(unknownElements);
+		if (fileEntries[0] != JavaProject.INVALID_CLASSPATH && 
+				areClasspathsEqual(newClasspath, newOutputLocation, fileEntries[0])
+				&& (referencedEntries == null || areClasspathsEqual(referencedEntries, fileEntries[1])) ) {
 			// no need to save it, it is the same
 			return false;
 		}
 
 		// actual file saving
 		try {
-			setSharedProperty(JavaProject.CLASSPATH_FILENAME, encodeClasspath(newClasspath, newOutputLocation, true, unknownElements));
+			setSharedProperty(JavaProject.CLASSPATH_FILENAME, encodeClasspath(newClasspath, referencedEntries, newOutputLocation, true, unknownElements));
 			return true;
 		} catch (CoreException e) {
 			throw new JavaModelException(e);
 		}
+	}
+	public boolean writeFileEntries(IClasspathEntry[] newClasspath, IPath newOutputLocation) throws JavaModelException {
+		return writeFileEntries(newClasspath, ClasspathEntry.NO_ENTRIES, newOutputLocation);
 	}
 
 	/**
@@ -2882,22 +2984,7 @@ public class JavaProject
 			boolean canModifyResources,
 			IProgressMonitor monitor)
 			throws JavaModelException {
-
-		try {
-			if (newRawClasspath == null) //are we already with the default classpath
-				newRawClasspath = defaultClasspath();
-
-			SetClasspathOperation op =
-				new SetClasspathOperation(
-					this,
-					newRawClasspath,
-					newOutputLocation,
-					canModifyResources);
-			op.runOperation(monitor);
-		} catch (JavaModelException e) {
-			JavaModelManager.getJavaModelManager().getDeltaProcessor().flush();
-			throw e;
-		}
+		setRawClasspath(newRawClasspath, null, newOutputLocation, canModifyResources, monitor);
 	}
 
 	/**
@@ -2914,6 +3001,32 @@ public class JavaProject
 			outputLocation,
 			true/*can change resource (as per API contract)*/,
 			monitor);
+	}
+	
+	public void setRawClasspath(IClasspathEntry[] entries, IClasspathEntry[] referencedEntries, IPath outputLocation,
+			IProgressMonitor monitor) throws JavaModelException {
+		setRawClasspath(entries, referencedEntries, outputLocation, true, monitor);
+	}
+	
+	protected void setRawClasspath(IClasspathEntry[] newRawClasspath, IClasspathEntry[] referencedEntries, IPath newOutputLocation,
+			boolean canModifyResources,	IProgressMonitor monitor) throws JavaModelException {
+
+		try {
+			if (newRawClasspath == null) //are we already with the default classpath
+				newRawClasspath = defaultClasspath();
+
+			SetClasspathOperation op =
+				new SetClasspathOperation(
+					this,
+					newRawClasspath,
+					referencedEntries,
+					newOutputLocation,
+					canModifyResources);
+			op.runOperation(monitor);
+		} catch (JavaModelException e) {
+			JavaModelManager.getJavaModelManager().getDeltaProcessor().flush();
+			throw e;
+		}
 	}
 
 	/**

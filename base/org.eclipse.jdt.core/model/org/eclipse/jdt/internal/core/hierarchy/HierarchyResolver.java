@@ -784,21 +784,23 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 			CompilationUnitDeclaration parsedUnit = parsedUnits[i];
 			if (parsedUnit != null) {
 				try {
-					boolean containsLocalType = hasLocalType[i];
-					if (containsLocalType) { // NB: no-op if method bodies have been already parsed
+					if (hasLocalType[i]) // NB: no-op if method bodies have been already parsed
 						parser.getMethodBodies(parsedUnit);
-					}
-					// complete type bindings and build fields and methods only for local types
-					// (in this case the constructor is needed when resolving local types)
-					// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=145333)
-					this.lookupEnvironment.completeTypeBindings(parsedUnit, containsLocalType);
 				} catch (AbortCompilation e) {
 					// classpath problem for this type: don't try to resolve (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=49809)
 					hasLocalType[i] = false;
 				}
 			}
-			worked(monitor, 1);
 		}
+		// complete type bindings and build fields and methods only for local types
+		// (in this case the constructor is needed when resolving local types)
+		// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=145333)
+		try {
+			this.lookupEnvironment.completeTypeBindings(parsedUnits, hasLocalType, unitsIndex);
+		} catch (AbortCompilation e) {
+			// skip it silently
+		}
+		worked(monitor, 1);
 
 		// remember type bindings
 		for (int i = 0; i < unitsIndex; i++) {

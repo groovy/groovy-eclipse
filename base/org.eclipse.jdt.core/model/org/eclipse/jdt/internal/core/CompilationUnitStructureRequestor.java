@@ -29,15 +29,17 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.Literal;
 import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
 import org.eclipse.jdt.internal.compiler.ast.NullLiteral;
+import org.eclipse.jdt.internal.compiler.ast.OperatorIds;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
+import org.eclipse.jdt.internal.compiler.ast.UnaryExpression;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.util.ReferenceInfoAdapter;
 import org.eclipse.jdt.internal.core.util.Util;
-
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 /**
  * A requestor for the fuzzy parser, used to compute the children of an ICompilationUnit.
  */
@@ -719,7 +721,19 @@ protected Object getMemberValue(org.eclipse.jdt.internal.core.MemberValuePair me
 		if (memberValuePair.valueKind == -1)
 			memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
 		return values;
+	} else if (expression instanceof UnaryExpression) {			// to deal with negative numerals (see bug - 248312)
+		UnaryExpression unaryExpression = (UnaryExpression) expression;
+		if ((unaryExpression.bits & ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT == OperatorIds.MINUS) {
+			if (unaryExpression.expression instanceof Literal) {
+				Literal subExpression = (Literal) unaryExpression.expression;
+				subExpression.computeConstant();
+				return Util.getNegativeAnnotationMemberValue(memberValuePair, subExpression.constant);
+			}
+		}
+		memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
+		return null;
 	} else {
+		memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
 		return null;
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,6 +46,9 @@ public class EqualExpression extends BinaryExpression {
 							FlowContext.CAN_ONLY_NULL_NON_NULL | FlowContext.IN_COMPARISON_NON_NULL, flowInfo);
 					initsWhenTrue.markAsComparedEqualToNonNull(local); // from thereon it is set
 					initsWhenFalse.markAsComparedEqualToNull(local); // from thereon it is set
+				}
+				if ((flowContext.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0) {
+					flowInfo.markedAsNullOrNonNullInAssertExpression(local);
 				}
 				break;
 			case FlowInfo.NON_NULL :
@@ -811,9 +814,16 @@ public class EqualExpression extends BinaryExpression {
 
 			// check whether comparing identical expressions
 			Binding leftDirect = Expression.getDirectBinding(this.left);
-			if (leftDirect != null && leftDirect == Expression.getDirectBinding(this.right)
-					&& !(this.right instanceof Assignment)) {
-				scope.problemReporter().comparingIdenticalExpressions(this);
+			if (leftDirect != null && leftDirect == Expression.getDirectBinding(this.right)) {
+				if (leftTypeID != TypeIds.T_double && leftTypeID != TypeIds.T_float
+						&&(!(this.right instanceof Assignment))) // https://bugs.eclipse.org/bugs/show_bug.cgi?id=281776
+					scope.problemReporter().comparingIdenticalExpressions(this);
+			} else if (this.constant != Constant.NotAConstant) {
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=276740
+				int operator = (this.bits & OperatorMASK) >> OperatorSHIFT;
+				if ((operator == EQUAL_EQUAL && this.constant == BooleanConstant.fromValue(true))
+						|| (operator == NOT_EQUAL && this.constant == BooleanConstant.fromValue(false)))
+					scope.problemReporter().comparingIdenticalExpressions(this);
 			}
 			return this.resolvedType = TypeBinding.BOOLEAN;
 		}

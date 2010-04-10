@@ -131,10 +131,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 							addPotentialInitializationsFrom(
 								handlingContext.initsOnException(
 									this.caughtExceptionTypes[i]))
-							.addPotentialInitializationsFrom(
-								tryInfo.nullInfoLessUnconditionalCopy())
-								// remove null info to protect point of
-								// exception null info
+							.addPotentialInitializationsFrom(tryInfo.unconditionalCopy())
 							.addPotentialInitializationsFrom(
 								handlingContext.initsOnReturn.
 									nullInfoLessUnconditionalCopy());
@@ -243,10 +240,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 							.addPotentialInitializationsFrom(
 								handlingContext.initsOnException(
 									this.caughtExceptionTypes[i]))
-									.addPotentialInitializationsFrom(
-								tryInfo.nullInfoLessUnconditionalCopy())
-								// remove null info to protect point of
-								// exception null info
+									.addPotentialInitializationsFrom(tryInfo.unconditionalCopy())
 							.addPotentialInitializationsFrom(
 									handlingContext.initsOnReturn.
 									nullInfoLessUnconditionalCopy());

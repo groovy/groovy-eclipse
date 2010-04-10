@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -444,7 +444,7 @@ public final boolean checkCastTypesCompatibility(Scope scope, TypeBinding castTy
 						// ( TYPE_PARAMETER ) CLASS
 						match = expressionType.findSuperTypeOriginatingFrom(castType);
 						if (match == null) {
-							checkUnsafeCast(scope, castType, expressionType, match, true);
+							checkUnsafeCast(scope, castType, expressionType, null, true);
 						}
 						// recurse on the type variable upper bound
 						return checkCastTypesCompatibility(scope, ((TypeVariableBinding)castType).upperBound(), expressionType, expression);
@@ -521,7 +521,7 @@ public boolean checkUnsafeCast(Scope scope, TypeBinding castType, TypeBinding ex
 		if (!isNarrowing) tagAsUnnecessaryCast(scope, castType);
 		return true;
 	}
-	if (match != null && (castType.isBoundParameterizedType() || expressionType.isBoundParameterizedType())) {
+	if (match != null && (!castType.isReifiable() || !expressionType.isReifiable())) {
 		if(isNarrowing
 				? match.isProvablyDistinct(expressionType)
 				: castType.isProvablyDistinct(match)) {
@@ -776,6 +776,8 @@ public static Binding getDirectBinding(Expression someExpression) {
 			// case where a static field is retrieved using ClassName.fieldname
 			return qualifiedNameReference.binding;
 		}
+	} else if (someExpression.isThis()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=276741
+		return someExpression.resolvedType;
 	}
 //		} else if (someExpression instanceof PostfixExpression) { // recurse for postfix: i++ --> i
 //			// note: "b = b++" is equivalent to doing nothing, not to "b++"

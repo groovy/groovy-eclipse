@@ -1100,8 +1100,8 @@ public void resolve() {
 				}
 			}
 			if (needSerialVersion) {
-			this.scope.problemReporter().missingSerialVersion(this);
-		}
+				this.scope.problemReporter().missingSerialVersion(this);
+			}
 		}
 
 		// check extends/implements for annotation type

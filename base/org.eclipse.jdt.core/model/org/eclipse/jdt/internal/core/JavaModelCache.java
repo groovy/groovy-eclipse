@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -155,7 +155,7 @@ public IJavaElement getExistingElement(IJavaElement element) {
 }
 
 protected double getMemoryRatio() {
-	if (this.memoryRatio == -1) {
+	if ((int) this.memoryRatio == -1) {
 		long maxMemory = Runtime.getRuntime().maxMemory();
 		// if max memory is infinite, set the ratio to 4d which corresponds to the 256MB that Eclipse defaults to
 		// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=111299)

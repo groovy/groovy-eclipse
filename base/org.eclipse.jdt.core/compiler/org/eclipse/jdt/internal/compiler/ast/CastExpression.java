@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -115,31 +115,17 @@ public static void checkNeedForArgumentCast(BlockScope scope, int operator, int 
 	if (scope.compilerOptions().getSeverity(CompilerOptions.UnnecessaryTypeCheck) == ProblemSeverities.Ignore) return;
 
 	// check need for left operand cast
-	int alternateLeftTypeId = expressionTypeId;
 	if ((expression.bits & ASTNode.UnnecessaryCast) == 0 && expression.resolvedType.isBaseType()) {
 		// narrowing conversion on base type may change value, thus necessary
 		return;
-	} else  {
+	} else {
 		TypeBinding alternateLeftType = ((CastExpression)expression).expression.resolvedType;
 		if (alternateLeftType == null) return; // cannot do better
-		if ((alternateLeftTypeId = alternateLeftType.id) == expressionTypeId) { // obvious identity cast
+		if (alternateLeftType.id == expressionTypeId) { // obvious identity cast
 			scope.problemReporter().unnecessaryCast((CastExpression)expression);
-			return;
-		} else if (alternateLeftTypeId == TypeIds.T_null) {
-			alternateLeftTypeId = expressionTypeId;  // tolerate null argument cast
 			return;
 		}
 	}
-/*		tolerate widening cast in unary expressions, as may be used when combined in binary expressions (41680)
-		int alternateOperatorSignature = OperatorExpression.OperatorSignatures[operator][(alternateLeftTypeId << 4) + alternateLeftTypeId];
-		// (cast)  left   Op (cast)  right --> result
-		//  1111   0000       1111   0000     1111
-		//  <<16   <<12       <<8    <<4       <<0
-		final int CompareMASK = (0xF<<16) + (0xF<<8) + 0xF; // mask hiding compile-time types
-		if ((operatorSignature & CompareMASK) == (alternateOperatorSignature & CompareMASK)) { // same promotions and result
-			scope.problemReporter().unnecessaryCastForArgument((CastExpression)expression,  TypeBinding.wellKnownType(scope, expression.implicitConversion >> 4));
-		}
-*/
 }
 
 /**
@@ -199,7 +185,7 @@ public static void checkNeedForArgumentCasts(BlockScope scope, int operator, int
 		} else  {
 			TypeBinding alternateLeftType = ((CastExpression)left).expression.resolvedType;
 			if (alternateLeftType == null) return; // cannot do better
-			if ((alternateLeftTypeId = alternateLeftType.id) == leftTypeId) { // obvious identity cast
+			if ((alternateLeftTypeId = alternateLeftType.id) == leftTypeId || scope.environment().computeBoxingType(alternateLeftType).id == leftTypeId) { // obvious identity cast
 				scope.problemReporter().unnecessaryCast((CastExpression)left);
 				leftIsCast = false;
 			} else if (alternateLeftTypeId == TypeIds.T_null) {
@@ -217,7 +203,7 @@ public static void checkNeedForArgumentCasts(BlockScope scope, int operator, int
 		} else {
 			TypeBinding alternateRightType = ((CastExpression)right).expression.resolvedType;
 			if (alternateRightType == null) return; // cannot do better
-			if ((alternateRightTypeId = alternateRightType.id) == rightTypeId) { // obvious identity cast
+			if ((alternateRightTypeId = alternateRightType.id) == rightTypeId || scope.environment().computeBoxingType(alternateRightType).id == rightTypeId) { // obvious identity cast
 				scope.problemReporter().unnecessaryCast((CastExpression)right);
 				rightIsCast = false;
 			} else if (alternateRightTypeId == TypeIds.T_null) {
@@ -311,7 +297,7 @@ public boolean checkUnsafeCast(Scope scope, TypeBinding castType, TypeBinding ex
 	}
 	switch (castType.kind()) {
 		case Binding.PARAMETERIZED_TYPE :
-			if (castType.isBoundParameterizedType()) {
+			if (!castType.isReifiable()) {
 				if (match == null) { // unrelated types
 					this.bits |= ASTNode.UnsafeCast;
 					return true;
@@ -330,7 +316,7 @@ public boolean checkUnsafeCast(Scope scope, TypeBinding castType, TypeBinding ex
 							ParameterizedTypeBinding paramMatch = (ParameterizedTypeBinding) match;
 							// easy case if less parameters on match
 							TypeBinding[] castArguments = paramCastType.arguments;
-							int length = castArguments.length;
+							int length = castArguments == null ? 0 : castArguments.length;
 							if (paramMatch.arguments == null || length > paramMatch.arguments.length) {
 								this.bits |= ASTNode.UnsafeCast;
 							} else if ((paramCastType.tagBits & (TagBits.HasDirectWildcard|TagBits.HasTypeVariable)) != 0) {
@@ -379,7 +365,7 @@ public boolean checkUnsafeCast(Scope scope, TypeBinding castType, TypeBinding ex
 			break;
 		case Binding.ARRAY_TYPE :
 			TypeBinding leafType = castType.leafComponentType();
-			if (isNarrowing && (leafType.isBoundParameterizedType() || leafType.isTypeVariable())) {
+			if (isNarrowing && (!leafType.isReifiable() || leafType.isTypeVariable())) {
 				this.bits |= ASTNode.UnsafeCast;
 				return true;
 			}

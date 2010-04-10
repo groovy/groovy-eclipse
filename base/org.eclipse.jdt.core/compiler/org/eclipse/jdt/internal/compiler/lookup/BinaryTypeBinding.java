@@ -306,7 +306,9 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 			char[] methodDescriptor = binaryType.getEnclosingMethod();
 			if (methodDescriptor != null) {
 				MethodBinding enclosingMethod = findMethod(methodDescriptor, missingTypeNames);
-				typeVars = enclosingMethod.typeVariables;
+				if (enclosingMethod != null) {
+					typeVars = enclosingMethod.typeVariables;
+				}
 			}
 
 			// attempt to find the superclass if it exists in the cache (otherwise - resolve it when requested)
@@ -342,7 +344,7 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 					if (!method.isDeprecated()) {
 						method.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
 					}
-		}
+				}
 			}
 		}
 		if (this.environment.globalOptions.storeAnnotations)
@@ -419,7 +421,7 @@ private MethodBinding createMethod(IBinaryMethod method, long sourceLevel, char[
 		char[] methodDescriptor = method.getMethodDescriptor();   // of the form (I[Ljava/jang/String;)V
 		int numOfParams = 0;
 		char nextChar;
-		int index = 0;   // first character is always '(' so skip it
+		int index = 0; // first character is always '(' so skip it
 		while ((nextChar = methodDescriptor[++index]) != ')') {
 			if (nextChar != '[') {
 				numOfParams++;
@@ -560,7 +562,7 @@ private void createMethods(IBinaryMethod[] iMethods, long sourceLevel, char[][][
 	if (iMethods != null) {
 		total = initialTotal = iMethods.length;
 		boolean keepBridgeMethods = sourceLevel < ClassFileConstants.JDK1_5
-			&& this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_5;			
+			&& this.environment.globalOptions.complianceLevel >= ClassFileConstants.JDK1_5;
 		for (int i = total; --i >= 0;) {
 			IBinaryMethod method = iMethods[i];
 			if ((method.getModifiers() & ClassFileConstants.AccSynthetic) != 0) {
@@ -710,6 +712,7 @@ private MethodBinding findMethod(char[] methodDescriptor, char[][][] missingType
 	TypeBinding[] parameters = Binding.NO_PARAMETERS;
 	int numOfParams = 0;
 	char nextChar;
+	int paramStart = index;
 	while ((nextChar = methodDescriptor[++index]) != ')') {
 		if (nextChar != '[') {
 			numOfParams++;
@@ -717,27 +720,41 @@ private MethodBinding findMethod(char[] methodDescriptor, char[][][] missingType
 				while ((nextChar = methodDescriptor[++index]) != ';'){/*empty*/}
 		}
 	}
-
-	int startIndex = 0;
 	if (numOfParams > 0) {
 		parameters = new TypeBinding[numOfParams];
-		index = 1;
-		int end = 0;   // first character is always '(' so skip it
+		index = paramStart + 1;
+		int end = paramStart; // first character is always '(' so skip it
 		for (int i = 0; i < numOfParams; i++) {
 			while ((nextChar = methodDescriptor[++end]) == '['){/*empty*/}
 			if (nextChar == 'L')
 				while ((nextChar = methodDescriptor[++end]) != ';'){/*empty*/}
 
-			if (i >= startIndex) {   // skip the synthetic arg if necessary
-				parameters[i - startIndex] = this.environment.getTypeFromSignature(methodDescriptor, index, end, false, this, missingTypeNames);
+			TypeBinding param = this.environment.getTypeFromSignature(methodDescriptor, index, end, false, this, missingTypeNames);
+			if (param instanceof UnresolvedReferenceBinding) {
+				param = resolveType(param, this.environment, true /* raw conversion */);
 			}
+			parameters[i] = param;
 			index = end + 1;
 		}
 	}
 
-	return CharOperation.equals(selector, TypeConstants.INIT)
-		? this.enclosingType.getExactConstructor(parameters)
-		: this.enclosingType.getExactMethod(selector, parameters, null);
+	int parameterLength = parameters.length;
+	MethodBinding[] methods2 = this.enclosingType.getMethods(selector, parameterLength);
+	// find matching method using parameters
+	loop: for (int i = 0, max = methods2.length; i < max; i++) {
+		MethodBinding currentMethod = methods2[i];
+		TypeBinding[] parameters2 = currentMethod.parameters;
+		int currentMethodParameterLength = parameters2.length;
+		if (parameterLength == currentMethodParameterLength) {
+			for (int j = 0; j < currentMethodParameterLength; j++) {
+				if (parameters[j] != parameters2[j] && parameters[j].erasure() != parameters2[j].erasure()) {
+					continue loop;
+				}
+			}
+			return currentMethod;
+		}
+	}
+	return null;
 }
 
 /**

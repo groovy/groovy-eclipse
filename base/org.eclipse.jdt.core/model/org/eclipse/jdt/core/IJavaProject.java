@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1007,6 +1007,56 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 */
 	void setRawClasspath(IClasspathEntry[] entries, boolean canModifyResources, IProgressMonitor monitor) throws JavaModelException;
 
+	/**
+	 * Works similar to {@link #setRawClasspath(IClasspathEntry[], IPath, IProgressMonitor)} and 
+	 * additionally allows persisting the given array of referenced entries for this project.
+	 * The referenced entries and their attributes are stored in the .classpath file of this 
+	 * project. For details on referenced entries, see 
+	 * {@link JavaCore#getReferencedClasspathEntries(IClasspathEntry, IJavaProject)}
+	 * and {@link IClasspathEntry#getReferencingEntry()}.
+	 * <p>
+	 * Since the referenced entries are stored in the .classpath file, clients can store additional 
+	 * information that belong to these entries and retrieve them across sessions, though the referenced
+	 * entries themselves may not be present in the raw classpath. By passing a <code>null</code>
+	 * referencedEntries, clients can choose not to modify the already persisted referenced entries,
+	 * which is fully equivalent to {@link #setRawClasspath(IClasspathEntry[], IPath, IProgressMonitor)}.
+	 * If an empty array is passed as referencedEntries, the already persisted referenced entries, 
+	 * if any, will be cleared. 
+	 * </p> <p>
+	 * If there are duplicates of a referenced entry or if any of the <code>referencedEntries</code> 
+	 * is already present in the raw classpath(<code>entries</code>) those referenced entries will 
+	 * be excluded and not be persisted.
+	 *</p>
+	 * @param entries a list of classpath entries
+	 * @param referencedEntries the list of referenced classpath entries to be persisted
+	 * @param outputLocation the default output location
+	 * @param monitor the given progress monitor
+	 * @exception JavaModelException if the classpath could not be set. Reasons include:
+	 * <ul>
+	 * <li> This Java element does not exist (ELEMENT_DOES_NOT_EXIST)</li>
+	 * <li> The classpath is being modified during resource change event notification (CORE_EXCEPTION)
+	 * <li> The classpath failed the validation check as defined by {@link JavaConventions#validateClasspath(IJavaProject, IClasspathEntry[], IPath)}
+	 * </ul>
+	 * @see IClasspathEntry
+	 * @see #getReferencedClasspathEntries()
+	 * @since 3.6
+	 */
+	void setRawClasspath(IClasspathEntry[] entries, IClasspathEntry[] referencedEntries, IPath outputLocation,
+			IProgressMonitor monitor) throws JavaModelException;
+
+	/**
+	 * Returns the list of referenced classpath entries stored in the .classpath file of <code>this</code> 
+	 * java project. Clients can store the referenced classpath entries using 
+	 * {@link #setRawClasspath(IClasspathEntry[], IClasspathEntry[], IPath, IProgressMonitor)}
+	 * If the client has not stored any referenced entries for this project, an empty array is returned.
+	 *
+	 * @throws JavaModelException
+	 * @return an array of referenced classpath entries stored for this java project or an empty array if none
+	 * 			stored earlier.
+	 * @since 3.6
+	 */
+	IClasspathEntry[] getReferencedClasspathEntries() throws JavaModelException;
+	
 	/**
 	 * Sets the classpath of this project using a list of classpath entries. In particular such a classpath may contain
 	 * classpath variable entries. Classpath variable entries can be resolved individually ({@link JavaCore#getClasspathVariable(String)}),

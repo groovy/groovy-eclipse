@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -213,5 +213,15 @@ public UnconditionalFlowInfo unconditionalInitsWithoutSideEffect() {
 	// operation for UnconditionalFlowInfo
 	return this.initsWhenTrue.unconditionalCopy().
 			mergedWith(this.initsWhenFalse.unconditionalInits());
+}
+
+public void markedAsNullOrNonNullInAssertExpression(LocalVariableBinding local) {
+	this.initsWhenTrue.markedAsNullOrNonNullInAssertExpression(local);
+	this.initsWhenFalse.markedAsNullOrNonNullInAssertExpression(local);
+}
+
+public boolean isMarkedAsNullOrNonNullInAssertExpression(LocalVariableBinding local) {
+	return (this.initsWhenTrue.isMarkedAsNullOrNonNullInAssertExpression(local)
+		|| this.initsWhenFalse.isMarkedAsNullOrNonNullInAssertExpression(local));
 }
 }

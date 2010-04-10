@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,9 @@
 package org.eclipse.jdt.core.dom.rewrite;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -22,12 +24,14 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.internal.core.dom.rewrite.ImportRewriteAnalyzer;
 import org.eclipse.jdt.internal.core.util.Messages;
+import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 
@@ -122,6 +126,7 @@ public final class ImportRewrite {
 
 	private final boolean restoreExistingImports;
 	private final List existingImports;
+	private final Map importsKindMap;
 
 	private String[] importOrder;
 	private int importOnDemandThreshold;
@@ -134,6 +139,7 @@ public final class ImportRewrite {
 	private String[] createdStaticImports;
 
 	private boolean filterImplicitImports;
+	private boolean useContextToFilterImplicitImports;
 
 	/**
 	 * Creates a {@link ImportRewrite} from a {@link ICompilationUnit}. If <code>restoreExistingImports</code>
@@ -218,6 +224,8 @@ public final class ImportRewrite {
 			this.restoreExistingImports= false;
 		}
 		this.filterImplicitImports= true;
+		// consider that no contexts are used
+		this.useContextToFilterImplicitImports = false;
 
 		this.defaultContext= new ImportRewriteContext() {
 			public int findInContext(String qualifier, String name, int kind) {
@@ -232,6 +240,8 @@ public final class ImportRewrite {
 		this.importOrder= CharOperation.NO_STRINGS;
 		this.importOnDemandThreshold= 99;
 		this.staticImportOnDemandThreshold= 99;
+		
+		this.importsKindMap = new HashMap();
 	}
 
 
@@ -298,15 +308,46 @@ public final class ImportRewrite {
 	}
 
 	/**
-	 * Specifies that implicit imports (types in default package, package <code>java.lang</code> or
-	 * in the same package as the rewrite compilation unit should not be created except if necessary
-	 * to resolve an on-demand import conflict. The filter is enabled by default.
-	 * @param filterImplicitImports if set, implicit imports will be filtered.
+	 * Specifies that implicit imports (for types in <code>java.lang</code>, types in the same package as the rewrite
+	 * compilation unit, and types in the compilation unit's main type) should not be created, except if necessary to
+	 * resolve an on-demand import conflict.
+	 * <p>
+	 * The filter is enabled by default.
+	 * </p>
+	 * <p>
+	 * Note: {@link #setUseContextToFilterImplicitImports(boolean)} can be used to filter implicit imports
+	 * when a context is used.
+	 * </p>
+	 * 
+	 * @param filterImplicitImports
+	 *            if <code>true</code>, implicit imports will be filtered
+	 * 
+	 * @see #setUseContextToFilterImplicitImports(boolean)
 	 */
 	public void setFilterImplicitImports(boolean filterImplicitImports) {
 		this.filterImplicitImports= filterImplicitImports;
 	}
 
+	/**
+	* Sets whether a context should be used to properly filter implicit imports.
+	* <p>
+	* By default, the option is disabled to preserve pre-3.6 behavior.
+	* </p>
+	* <p>
+	* When this option is set, the context passed to the <code>addImport*(...)</code> methods is used to determine
+	* whether an import can be filtered because the type is implicitly visible. Note that too many imports
+	* may be kept if this option is set and <code>addImport*(...)</code> methods are called without a context.
+	* </p>
+	* 
+	* @param useContextToFilterImplicitImports the given setting
+	* 
+	* @see #setFilterImplicitImports(boolean)
+	* @since 3.6
+	*/
+	public void setUseContextToFilterImplicitImports(boolean useContextToFilterImplicitImports) {
+		this.useContextToFilterImplicitImports = useContextToFilterImplicitImports;
+	}
+	
 	private static int compareImport(char prefix, String qualifier, String name, String curr) {
 		if (curr.charAt(0) != prefix || !curr.endsWith(name)) {
 			return ImportRewriteContext.RES_NAME_UNKNOWN;
@@ -345,13 +386,27 @@ public final class ImportRewrite {
 			int res= compareImport(prefix, qualifier, name, curr);
 			if (res != ImportRewriteContext.RES_NAME_UNKNOWN) {
 				if (!allowAmbiguity || res == ImportRewriteContext.RES_NAME_FOUND) {
-					return res;
+					if (prefix != STATIC_PREFIX) {
+						return res;
+					}
+					Object currKind = this.importsKindMap.get(curr.substring(1));
+					if (currKind != null && currKind.equals(this.importsKindMap.get(qualifier + '.' + name))) {
+						return res;
+					}
 				}
 			}
 		}
+		if (this.filterImplicitImports && this.useContextToFilterImplicitImports) {
+			String fPackageName= this.compilationUnit.getParent().getElementName();
+			String mainTypeSimpleName= JavaCore.removeJavaLikeExtension(this.compilationUnit.getElementName());
+			String fMainTypeName= Util.concatenateName(fPackageName, mainTypeSimpleName, '.');
+			if (kind == ImportRewriteContext.KIND_TYPE
+					&& (qualifier.equals(fPackageName)
+							|| fMainTypeName.equals(Util.concatenateName(qualifier, name, '.'))))
+				return ImportRewriteContext.RES_NAME_FOUND;
+		}
 		return ImportRewriteContext.RES_NAME_UNKNOWN;
 	}
-
 	/**
 	 * Adds a new import to the rewriter's record and returns a {@link Type} node that can be used
 	 * in the code as a reference to the type. The type binding can be an array binding, type variable or wildcard.
@@ -832,19 +887,21 @@ public final class ImportRewrite {
 	 * an import conflict prevented the import.
 	 */
 	public String addStaticImport(String declaringTypeName, String simpleName, boolean isField, ImportRewriteContext context) {
+		String key = declaringTypeName + '.' + simpleName;
 		if (declaringTypeName.indexOf('.') == -1) {
-			return declaringTypeName + '.' + simpleName;
+			return key;
 		}
 		if (context == null) {
 			context= this.defaultContext;
 		}
 		int kind= isField ? ImportRewriteContext.KIND_STATIC_FIELD : ImportRewriteContext.KIND_STATIC_METHOD;
+		this.importsKindMap.put(key, new Integer(kind));
 		int res= context.findInContext(declaringTypeName, simpleName, kind);
 		if (res == ImportRewriteContext.RES_NAME_CONFLICT) {
-			return declaringTypeName + '.' + simpleName;
+			return key;
 		}
 		if (res == ImportRewriteContext.RES_NAME_UNKNOWN) {
-			addEntry(STATIC_PREFIX + declaringTypeName + '.' + simpleName);
+			addEntry(STATIC_PREFIX + key);
 		}
 		return simpleName;
 	}
@@ -980,7 +1037,15 @@ public final class ImportRewrite {
 				usedAstRoot= (CompilationUnit) parser.createAST(new SubProgressMonitor(monitor, 1));
 			}
 
-			ImportRewriteAnalyzer computer= new ImportRewriteAnalyzer(this.compilationUnit, usedAstRoot, this.importOrder, this.importOnDemandThreshold, this.staticImportOnDemandThreshold, this.restoreExistingImports);
+			ImportRewriteAnalyzer computer=
+				new ImportRewriteAnalyzer(
+						this.compilationUnit,
+						usedAstRoot,
+						this.importOrder,
+						this.importOnDemandThreshold,
+						this.staticImportOnDemandThreshold,
+						this.restoreExistingImports,
+						this.useContextToFilterImplicitImports);
 			computer.setFilterImplicitImports(this.filterImplicitImports);
 
 			if (this.addedImports != null) {

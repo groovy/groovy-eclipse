@@ -49,6 +49,25 @@ protected void clear() {
 protected int fineGrain() {
 	return this.pattern.fineGrain;
 }
+
+private MethodBinding getMethodBinding(ReferenceBinding type, TypeBinding[] argumentTypes) {
+	MethodBinding[] methods = type.getMethods(this.pattern.selector);
+	MethodBinding method = null;
+	methodsLoop: for (int i=0, length=methods.length; i<length; i++) {
+		method = methods[i];
+		TypeBinding[] parameters = method.parameters;
+		if (argumentTypes.length == parameters.length) {
+			for (int j=0,l=parameters.length; j<l; j++) {
+				if (parameters[j].erasure() != argumentTypes[j].erasure()) {
+					continue methodsLoop;
+				}
+			}
+			return method;
+		}
+	}
+	return null;
+}
+
 public void initializePolymorphicSearch(MatchLocator locator) {
 	long start = 0;
 	if (BasicSearchEngine.VERBOSE) {
@@ -662,7 +681,8 @@ protected int resolveLevelAsSubtype(char[] qualifiedPattern, ReferenceBinding ty
 
 	int level = resolveLevelForType(qualifiedPattern, type);
 	if (level != IMPOSSIBLE_MATCH) {
-		if (!type.isAbstract() && !type.isInterface()) { // if concrete class, then method is overridden
+		MethodBinding method = argumentTypes == null ? null : getMethodBinding(type, argumentTypes);
+		if (((method != null && !method.isAbstract()) || !type.isAbstract()) && !type.isInterface()) { // if concrete, then method is overridden
 			level |= OVERRIDDEN_METHOD_FLAVOR;
 		}
 		return level;
@@ -674,28 +694,15 @@ protected int resolveLevelAsSubtype(char[] qualifiedPattern, ReferenceBinding ty
 		if (level != IMPOSSIBLE_MATCH) {
 			if (argumentTypes != null) {
 				// need to verify if method may be overridden
-				MethodBinding[] methods = type.getMethods(this.pattern.selector);
-				for (int i=0, length=methods.length; i<length; i++) {
-					MethodBinding method = methods[i];
-					TypeBinding[] parameters = method.parameters;
-					if (argumentTypes.length == parameters.length) {
-						boolean found = true;
-						for (int j=0,l=parameters.length; j<l; j++) {
-							if (parameters[j].erasure() != argumentTypes[j].erasure()) {
-								found = false;
-								break;
-							}
-						}
-						if (found) { // one method match in hierarchy
-							if ((level & OVERRIDDEN_METHOD_FLAVOR) != 0) {
-								// this method is already overridden on a super class, current match is impossible
-								return IMPOSSIBLE_MATCH;
-							}
-							if (!method.isAbstract() && !type.isInterface()) {
-								// store the fact that the method is overridden
-								level |= OVERRIDDEN_METHOD_FLAVOR;
-							}
-						}
+				MethodBinding method = getMethodBinding(type, argumentTypes);
+				if (method != null) { // one method match in hierarchy
+					if ((level & OVERRIDDEN_METHOD_FLAVOR) != 0) {
+						// this method is already overridden on a super class, current match is impossible
+						return IMPOSSIBLE_MATCH;
+					}
+					if (!method.isAbstract() && !type.isInterface()) {
+						// store the fact that the method is overridden
+						level |= OVERRIDDEN_METHOD_FLAVOR;
 					}
 				}
 			}

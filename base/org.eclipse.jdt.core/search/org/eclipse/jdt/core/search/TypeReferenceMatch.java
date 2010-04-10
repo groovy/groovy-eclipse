@@ -57,6 +57,7 @@ public TypeReferenceMatch(IJavaElement enclosingElement, int accuracy, int offse
  *         </pre>
  * 		will return one match whose other elements is an array of two fields:
  * 		{@link IField test2} and {@link IField test3}.
+ * 		<br><br>
  * 	</li>
  * 	<li>searching for the references to the type <code>Test</code> in
  * 		<pre>
@@ -69,6 +70,21 @@ public TypeReferenceMatch(IJavaElement enclosingElement, int accuracy, int offse
  *         </pre>
  * 		will return one match whose other elements is an array of two local
  * 		variables: {@link ILocalVariable local2} and {@link ILocalVariable local3}.
+ * 		<br><br>
+ * 	</li>
+ * 	<li>since 3.6, searching for the references to the type
+ * 		<code>Test</code> in
+ * 		<pre>
+ *         public class Test {
+ *                 void testB(int testKind) {
+ *                         &#064;Annot int test1, test2;
+ *                 }
+ *         }
+ *         &#064;interface Annot {}
+ *         </pre>
+ * 		will return one match whose other elements is an array of one annotation:
+ * 		{@link IAnnotation Annot} which parent is the local variable
+ * 		{@link ILocalVariable test2}.
  * 	</li>
  * </ul>
  *
@@ -76,10 +92,7 @@ public TypeReferenceMatch(IJavaElement enclosingElement, int accuracy, int offse
  * @since 3.2
  */
 public final IJavaElement[] getOtherElements() {
-	if (this.localElement == null || this.localElement.getElementType() != IJavaElement.ANNOTATION) {
-		return this.otherElements;
-	}
-	return null;
+	return this.otherElements;
 }
 
 /**

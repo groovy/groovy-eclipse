@@ -11,8 +11,28 @@
  -->
 
 <!-- build script to create a plugin from ${plugin} -->
-<project name="${plugin}" default="export plug-in [_3.5.0]" basedir="..">
-
+<project name="${plugin}" default="export plug-in [_3.6.0]" basedir="..">
+<target name="export plug-in [_3.6.0]">
+    <tstamp/>
+	<property name="qualifier" value="z${DSTAMP}-${TSTAMP}" />
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="3.6.0"/>
+	</antcall>
+</target>
+<target name="export plug-in [_3.6.0.qualifier] (binary only)">
+    <tstamp/>
+	<property name="qualifier" value="z${DSTAMP}-${TSTAMP}" />
+	<antcall target="zz_internal_export_binary_only">
+		<param name="jdt_core_version" value="3.6.0.${qualifier}"/>
+	</antcall>
+</target>
+<target name="export plug-in [_3.6.0.qualifier] (with sources)">
+    <tstamp/>
+	<property name="qualifier" value="z${DSTAMP}-${TSTAMP}" />
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="3.6.0.${qualifier}"/>
+	</antcall>
+</target>
 <target name="export plug-in [_3.5.0]">
     <tstamp/>
 	<property name="qualifier" value="z${DSTAMP}-${TSTAMP}" />

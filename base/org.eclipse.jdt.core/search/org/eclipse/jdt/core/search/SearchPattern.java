@@ -1459,23 +1459,86 @@ private static SearchPattern createPackagePattern(String patternString, int limi
  *	</ul>
  * @param limitTo determines the nature of the expected matches
  *	<ul>
- * 	<li>{@link IJavaSearchConstants#DECLARATIONS}: will search declarations matching
+ * 	<li>{@link IJavaSearchConstants#DECLARATIONS DECLARATIONS}: will search declarations matching
  * 			with the corresponding element. In case the element is a method, declarations of matching
  * 			methods in sub-types will also be found, allowing to find declarations of abstract methods, etc.<br>
- * 			Note that additional flags {@link IJavaSearchConstants#IGNORE_DECLARING_TYPE} and
- * 			{@link IJavaSearchConstants#IGNORE_RETURN_TYPE} are ignored for string patterns.
+ * 			Note that additional flags {@link IJavaSearchConstants#IGNORE_DECLARING_TYPE IGNORE_DECLARING_TYPE} and
+ * 			{@link IJavaSearchConstants#IGNORE_RETURN_TYPE IGNORE_RETURN_TYPE} are ignored for string patterns.
  * 			This is due to the fact that client may omit to define them in string pattern to have same behavior.
  * 	</li>
- *		 <li>{@link IJavaSearchConstants#REFERENCES}: will search references to the given element.</li>
- *		 <li>{@link IJavaSearchConstants#ALL_OCCURRENCES}: will search for either declarations or
+ *		 <li>{@link IJavaSearchConstants#REFERENCES REFERENCES}: will search references to the given element.</li>
+ *		 <li>{@link IJavaSearchConstants#ALL_OCCURRENCES ALL_OCCURRENCES}: will search for either declarations or
  *				references as specified above.
  *		</li>
- *		 <li>{@link IJavaSearchConstants#IMPLEMENTORS}: for types, will find all types
+ *		 <li>{@link IJavaSearchConstants#IMPLEMENTORS IMPLEMENTORS}: for types, will find all types
  *				which directly implement/extend a given interface.
- *				Note that types may be only classes or only interfaces if {@link IJavaSearchConstants#CLASS } or
- *				{@link IJavaSearchConstants#INTERFACE} is respectively used instead of {@link IJavaSearchConstants#TYPE}.
+ *				Note that types may be only classes or only interfaces if {@link IJavaSearchConstants#CLASS CLASS} or
+ *				{@link IJavaSearchConstants#INTERFACE INTERFACE} is respectively used instead of {@link IJavaSearchConstants#TYPE TYPE}.
  *		</li>
- *		<li>TODO (frederic) add specification for fine grain flags
+ *		 <li>All other fine grain constants defined in the <b>limitTo</b> category
+ *				of the {@link IJavaSearchConstants} are also accepted nature: 
+ * 			<table border=0>
+ *     			<tr>
+ *         		<th align=left>Fine grain constant
+ *         		<th align=left>Meaning
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#FIELD_DECLARATION_TYPE_REFERENCE FIELD_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a field declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#LOCAL_VARIABLE_DECLARATION_TYPE_REFERENCE LOCAL_VARIABLE_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a local variable declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#PARAMETER_DECLARATION_TYPE_REFERENCE PARAMETER_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a method parameter declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#SUPERTYPE_TYPE_REFERENCE SUPERTYPE_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a super type or as a super interface.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#THROWS_CLAUSE_TYPE_REFERENCE THROWS_CLAUSE_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a throws clause.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CAST_TYPE_REFERENCE CAST_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a cast expression.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CATCH_TYPE_REFERENCE CATCH_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a catch header.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CLASS_INSTANCE_CREATION_TYPE_REFERENCE CLASS_INSTANCE_CREATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used in class instance creation.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#RETURN_TYPE_REFERENCE RETURN_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a method return type.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#IMPORT_DECLARATION_TYPE_REFERENCE IMPORT_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used in an import declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#ANNOTATION_TYPE_REFERENCE ANNOTATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as an annotation.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#TYPE_ARGUMENT_TYPE_REFERENCE TYPE_ARGUMENT_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type argument in a parameterized type or a parameterized method.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#TYPE_VARIABLE_BOUND_TYPE_REFERENCE TYPE_VARIABLE_BOUND_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type variable bound.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#WILDCARD_BOUND_TYPE_REFERENCE WILDCARD_BOUND_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a wildcard bound.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#INSTANCEOF_TYPE_REFERENCE INSTANCEOF_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type of an <code>instanceof</code> expression.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#SUPER_REFERENCE SUPER_REFERENCE}
+ *         		<td>Return only super field accesses or super method invocations (e.g. using the <code>super</code> qualifier).
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#QUALIFIED_REFERENCE QUALIFIED_REFERENCE}
+ *         		<td>Return only qualified field accesses or qualified method invocations.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#THIS_REFERENCE THIS_REFERENCE}
+ *         		<td>Return only primary field accesses or primary method invocations (e.g. using the <code>this</code> qualifier).
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#IMPLICIT_THIS_REFERENCE IMPLICIT_THIS_REFERENCE}
+ *         		<td>Return only field accesses or method invocations without any qualification.
+ * 			</table>
  *		</li>
  *	</ul>
  * @param matchRule one of the following match rules
@@ -1560,12 +1623,12 @@ public static SearchPattern createPattern(String stringPattern, int searchFor, i
  * @param element the Java element the search pattern is based on
  * @param limitTo determines the nature of the expected matches
  *	<ul>
- * 	<li>{@link IJavaSearchConstants#DECLARATIONS}: will search declarations matching
+ * 	<li>{@link IJavaSearchConstants#DECLARATIONS DECLARATIONS}: will search declarations matching
  * 			with the corresponding element. In case the element is a method, declarations of matching
  * 			methods in sub-types will also be found, allowing to find declarations of abstract methods, etc.
  *				Some additional flags may be specified while searching declaration:
  *				<ul>
- *					<li>{@link IJavaSearchConstants#IGNORE_DECLARING_TYPE}: declaring type will be ignored
+ *					<li>{@link IJavaSearchConstants#IGNORE_DECLARING_TYPE IGNORE_DECLARING_TYPE}: declaring type will be ignored
  *							during the search.<br>
  *							For example using following test case:
  *					<pre>
@@ -1576,7 +1639,7 @@ public static SearchPattern createPattern(String stringPattern, int searchFor, i
  *							search for <code>method</code> declaration with this flag
  *							will return 2 matches: in A and in C
  *					</li>
- *					<li>{@link IJavaSearchConstants#IGNORE_RETURN_TYPE}: return type will be ignored
+ *					<li>{@link IJavaSearchConstants#IGNORE_RETURN_TYPE IGNORE_RETURN_TYPE}: return type will be ignored
  *							during the search.<br>
  *							Using same example, search for <code>method</code> declaration with this flag
  *							will return 2 matches: in A and in B.
@@ -1586,14 +1649,74 @@ public static SearchPattern createPattern(String stringPattern, int searchFor, i
  *				during the search. Then, using same example, search for <code>method</code> declaration
  *				with these 2 flags will return 3 matches: in A, in B  and in C
  * 	</li>
- *		 <li>{@link IJavaSearchConstants#REFERENCES}: will search references to the given element.</li>
- *		 <li>{@link IJavaSearchConstants#ALL_OCCURRENCES}: will search for either declarations or
+ *		 <li>{@link IJavaSearchConstants#REFERENCES REFERENCES}: will search references to the given element.</li>
+ *		 <li>{@link IJavaSearchConstants#ALL_OCCURRENCES ALL_OCCURRENCES}: will search for either declarations or
  *				references as specified above.
  *		</li>
- *		 <li>{@link IJavaSearchConstants#IMPLEMENTORS}: for types, will find all types
- *				which directly implement/extend a given interface.
- *		</li>
- *		<li>TODO (frederic) add specification for fine grain flags
+ *		 <li>All other fine grain constants defined in the <b>limitTo</b> category
+ *				of the {@link IJavaSearchConstants} are also accepted nature: 
+ * 			<table border=0>
+ *     			<tr>
+ *         		<th align=left>Fine grain constant
+ *         		<th align=left>Meaning
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#FIELD_DECLARATION_TYPE_REFERENCE FIELD_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a field declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#LOCAL_VARIABLE_DECLARATION_TYPE_REFERENCE LOCAL_VARIABLE_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a local variable declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#PARAMETER_DECLARATION_TYPE_REFERENCE PARAMETER_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a method parameter declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#SUPERTYPE_TYPE_REFERENCE SUPERTYPE_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a super type or as a super interface.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#THROWS_CLAUSE_TYPE_REFERENCE THROWS_CLAUSE_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a throws clause.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CAST_TYPE_REFERENCE CAST_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a cast expression.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CATCH_TYPE_REFERENCE CATCH_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a catch header.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CLASS_INSTANCE_CREATION_TYPE_REFERENCE CLASS_INSTANCE_CREATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used in class instance creation.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#RETURN_TYPE_REFERENCE RETURN_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a method return type.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#IMPORT_DECLARATION_TYPE_REFERENCE IMPORT_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used in an import declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#ANNOTATION_TYPE_REFERENCE ANNOTATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as an annotation.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#TYPE_ARGUMENT_TYPE_REFERENCE TYPE_ARGUMENT_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type argument in a parameterized type or a parameterized method.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#TYPE_VARIABLE_BOUND_TYPE_REFERENCE TYPE_VARIABLE_BOUND_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type variable bound.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#WILDCARD_BOUND_TYPE_REFERENCE WILDCARD_BOUND_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a wildcard bound.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#INSTANCEOF_TYPE_REFERENCE INSTANCEOF_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type of an <code>instanceof</code> expression.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#SUPER_REFERENCE SUPER_REFERENCE}
+ *         		<td>Return only super field accesses or super method invocations (e.g. using the <code>super</code> qualifier).
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#QUALIFIED_REFERENCE QUALIFIED_REFERENCE}
+ *         		<td>Return only qualified field accesses or qualified method invocations.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#THIS_REFERENCE THIS_REFERENCE}
+ *         		<td>Return only primary field accesses or primary method invocations (e.g. using the <code>this</code> qualifier).
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#IMPLICIT_THIS_REFERENCE IMPLICIT_THIS_REFERENCE}
+ *         		<td>Return only field accesses or method invocations without any qualification.
+ * 			</table>
  *		</li>
  *	</ul>
  * @return a search pattern for a Java element or <code>null</code> if the given element is ill-formed
@@ -1609,12 +1732,12 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo) {
  * @param element the Java element the search pattern is based on
  * @param limitTo determines the nature of the expected matches
  *	<ul>
- * 	<li>{@link IJavaSearchConstants#DECLARATIONS}: will search declarations matching
+ * 	<li>{@link IJavaSearchConstants#DECLARATIONS DECLARATIONS}: will search declarations matching
  * 			with the corresponding element. In case the element is a method, declarations of matching
  * 			methods in sub-types will also be found, allowing to find declarations of abstract methods, etc.
  *				Some additional flags may be specified while searching declaration:
  *				<ul>
- *					<li>{@link IJavaSearchConstants#IGNORE_DECLARING_TYPE}: declaring type will be ignored
+ *					<li>{@link IJavaSearchConstants#IGNORE_DECLARING_TYPE IGNORE_DECLARING_TYPE}: declaring type will be ignored
  *							during the search.<br>
  *							For example using following test case:
  *					<pre>
@@ -1625,7 +1748,7 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo) {
  *							search for <code>method</code> declaration with this flag
  *							will return 2 matches: in A and in C
  *					</li>
- *					<li>{@link IJavaSearchConstants#IGNORE_RETURN_TYPE}: return type will be ignored
+ *					<li>{@link IJavaSearchConstants#IGNORE_RETURN_TYPE IGNORE_RETURN_TYPE}: return type will be ignored
  *							during the search.<br>
  *							Using same example, search for <code>method</code> declaration with this flag
  *							will return 2 matches: in A and in B.
@@ -1635,15 +1758,75 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo) {
  *				during the search. Then, using same example, search for <code>method</code> declaration
  *				with these 2 flags will return 3 matches: in A, in B  and in C
  * 	</li>
- *		 <li>{@link IJavaSearchConstants#REFERENCES}: will search references to the given element.</li>
- *		 <li>{@link IJavaSearchConstants#ALL_OCCURRENCES}: will search for either declarations or
+ *		 <li>{@link IJavaSearchConstants#REFERENCES REFERENCES}: will search references to the given element.</li>
+ *		 <li>{@link IJavaSearchConstants#ALL_OCCURRENCES ALL_OCCURRENCES}: will search for either declarations or
  *				references as specified above.
  *		</li>
- *		 <li>{@link IJavaSearchConstants#IMPLEMENTORS}: for types, will find all types
- *				which directly implement/extend a given interface.
- *		</li>
- *		<li>TODO (frederic) add specification for fine grain flags
- *		</li>
+ *		 <li>All other fine grain constants defined in the <b>limitTo</b> category
+ *				of the {@link IJavaSearchConstants} are also accepted nature: 
+ * 			<table border=0>
+ *     			<tr>
+ *         		<th align=left>Fine grain constant
+ *         		<th align=left>Meaning
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#FIELD_DECLARATION_TYPE_REFERENCE FIELD_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a field declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#LOCAL_VARIABLE_DECLARATION_TYPE_REFERENCE LOCAL_VARIABLE_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a local variable declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#PARAMETER_DECLARATION_TYPE_REFERENCE PARAMETER_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as the type of a method parameter declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#SUPERTYPE_TYPE_REFERENCE SUPERTYPE_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a super type or as a super interface.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#THROWS_CLAUSE_TYPE_REFERENCE THROWS_CLAUSE_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a throws clause.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CAST_TYPE_REFERENCE CAST_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a cast expression.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CATCH_TYPE_REFERENCE CATCH_TYPE_REFERENCE}
+ *         		<td>Return only type references used in a catch header.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#CLASS_INSTANCE_CREATION_TYPE_REFERENCE CLASS_INSTANCE_CREATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used in class instance creation.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#RETURN_TYPE_REFERENCE RETURN_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a method return type.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#IMPORT_DECLARATION_TYPE_REFERENCE IMPORT_DECLARATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used in an import declaration.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#ANNOTATION_TYPE_REFERENCE ANNOTATION_TYPE_REFERENCE}
+ *         		<td>Return only type references used as an annotation.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#TYPE_ARGUMENT_TYPE_REFERENCE TYPE_ARGUMENT_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type argument in a parameterized type or a parameterized method.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#TYPE_VARIABLE_BOUND_TYPE_REFERENCE TYPE_VARIABLE_BOUND_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type variable bound.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#WILDCARD_BOUND_TYPE_REFERENCE WILDCARD_BOUND_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a wildcard bound.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#INSTANCEOF_TYPE_REFERENCE INSTANCEOF_TYPE_REFERENCE}
+ *         		<td>Return only type references used as a type of an <code>instanceof</code> expression.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#SUPER_REFERENCE SUPER_REFERENCE}
+ *         		<td>Return only super field accesses or super method invocations (e.g. using the <code>super</code> qualifier).
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#QUALIFIED_REFERENCE QUALIFIED_REFERENCE}
+ *         		<td>Return only qualified field accesses or qualified method invocations.
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#THIS_REFERENCE THIS_REFERENCE}
+ *         		<td>Return only primary field accesses or primary method invocations (e.g. using the <code>this</code> qualifier).
+ *     			<tr>
+ *         		<td>{@link IJavaSearchConstants#IMPLICIT_THIS_REFERENCE IMPLICIT_THIS_REFERENCE}
+ *         		<td>Return only field accesses or method invocations without any qualification.
+ * 			</table>
+ * 	</li>
  *	</ul>
  * @param matchRule one of the following match rules:
  * 	<ul>
@@ -2176,7 +2359,6 @@ public char[][] getIndexCategories() {
  * @return one of R_EXACT_MATCH, R_PREFIX_MATCH, R_PATTERN_MATCH, R_REGEXP_MATCH combined with R_CASE_SENSITIVE,
  *   e.g. R_EXACT_MATCH | R_CASE_SENSITIVE if an exact and case sensitive match is requested,
  *   or R_PREFIX_MATCH if a prefix non case sensitive match is requested.
- * [TODO (frederic) I hope R_ERASURE_MATCH doesn't need to be on this list. Because it would be a breaking API change.]
  */
 public final int getMatchRule() {
 	return this.matchRule;
@@ -2237,7 +2419,6 @@ public boolean matchesName(char[] pattern, char[] name) {
 				break;
 
 			case R_PATTERN_MATCH :
-				// TODO_PERFS (frederic) not sure this lowercase was necessary...
 				if (!isCaseSensitive)
 					pattern = CharOperation.toLowerCase(pattern);
 				return CharOperation.match(pattern, name, isCaseSensitive);
@@ -2256,7 +2437,7 @@ public boolean matchesName(char[] pattern, char[] name) {
 				return matchFirstChar && CharOperation.camelCaseMatch(pattern, name, true);
 
 			case R_REGEXP_MATCH :
-				// TODO (frederic) implement regular expression match
+				// TODO implement regular expression match
 				return true;
 		}
 	}

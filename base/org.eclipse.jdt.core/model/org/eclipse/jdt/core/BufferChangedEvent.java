@@ -36,12 +36,8 @@ import java.util.EventObject;
  * When a buffer is closed, <code>getOffset</code> is 0, <code>getLength</code>
  * is 0, and <code>getText</code> is <code>null</code>.
  * </p>
- * <p>
- * Instances of this class are automatically created by the Java model.
- * </p>
  *
  * @see IBuffer
- * @noinstantiate This class is not intended to be instantiated by clients.
  * @noextend This class is not intended to be subclassed by clients.
  */
 public class BufferChangedEvent extends EventObject {

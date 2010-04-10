@@ -472,6 +472,10 @@ public interface IType extends IMember, IAnnotatable {
 	 * Returns the children of this type that have the given category as a <code>@category</code> tag.
 	 * Returns an empty array if no children with this category exist.
 	 *
+	 * <p>
+	 * The results are listed in the order in which they appear in the source or class file.
+	 * </p>
+	 * 
 	 * @return the children for the given category.
 	 * @exception JavaModelException if this element does not exist or if an
 	 *      exception occurs while accessing its corresponding resource.
@@ -498,10 +502,8 @@ public interface IType extends IMember, IAnnotatable {
 	IField getField(String name);
 
 	/**
-	 * Returns the fields declared by this type.
-	 * If this is a source type, the results are listed in the order
-	 * in which they appear in the source, otherwise, the results are
-	 * in no particular order.  For binary types, this includes synthetic fields.
+	 * Returns the fields declared by this type in the order in which they appear 
+	 * in the source or class file. For binary types, this includes synthetic fields.
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
@@ -580,10 +582,9 @@ public interface IType extends IMember, IAnnotatable {
 	IInitializer getInitializer(int occurrenceCount);
 
 	/**
-	 * Returns the initializers declared by this type.
-	 * For binary types this is an empty collection.
-	 * If this is a source type, the results are listed in the order
-	 * in which they appear in the source.
+	 * Returns the initializers declared by this type. For binary types this is an 
+	 * empty collection. For source types, the results are listed in the order in 
+	 * which they appear in the source. 
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
@@ -623,11 +624,11 @@ public interface IType extends IMember, IAnnotatable {
 
 	/**
 	 * Returns the methods and constructors declared by this type.
-	 * For binary types, this may include the special <code>&lt;clinit&gt;</code>; method
+	 * For binary types, this may include the special <code>&lt;clinit&gt;</code> method
 	 * and synthetic methods.
-	 * If this is a source type, the results are listed in the order
-	 * in which they appear in the source, otherwise, the results are
-	 * in no particular order.
+	 * <p>
+	 * The results are listed in the order in which they appear in the source or class file. 
+	 * </p>
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.

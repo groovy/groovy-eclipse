@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -4904,7 +4904,7 @@ public void ldc(String constant) {
 	if (index > 0) {
 		// the string already exists inside the constant pool
 		// we reuse the same index
-		ldcForIndex(index, constantChars);
+		ldcForIndex(index);
 	} else {
 		// the string is too big to be utf8-encoded in one pass.
 		// we have to split it into different pieces.
@@ -4949,7 +4949,7 @@ public void ldc(String constant) {
 		System.arraycopy(constantChars, 0, subChars, 0, i);
 		System.arraycopy(utf8encoding, 0, utf8encoding = new byte[length], 0, length);
 		index = this.constantPool.literalIndex(subChars, utf8encoding);
-		ldcForIndex(index, subChars);
+		ldcForIndex(index);
 		// write the remaining part
 		invokeStringConcatenationStringConstructor();
 		while (i < constantLength) {
@@ -4986,7 +4986,7 @@ public void ldc(String constant) {
 			System.arraycopy(constantChars, startIndex, subChars, 0, newCharLength);
 			System.arraycopy(utf8encoding, 0, utf8encoding = new byte[length], 0, length);
 			index = this.constantPool.literalIndex(subChars, utf8encoding);
-			ldcForIndex(index, subChars);
+			ldcForIndex(index);
 			// now on the stack it should be a StringBuffer and a string.
 			invokeStringConcatenationAppendForType(TypeIds.T_JavaLangString);
 		}
@@ -5050,7 +5050,7 @@ public void ldc2_w(long constant) {
 	writeUnsignedShort(index);
 }
 
-public void ldcForIndex(int index, char[] constant) {
+public void ldcForIndex(int index) {
 	this.stackDepth++;
 	if (this.stackDepth > this.stackMax) {
 		this.stackMax = this.stackDepth;

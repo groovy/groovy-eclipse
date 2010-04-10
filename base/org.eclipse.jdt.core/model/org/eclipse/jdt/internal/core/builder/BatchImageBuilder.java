@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -106,7 +106,7 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 							member.accept(
 								new IResourceVisitor() {
 									public boolean visit(IResource resource) throws CoreException {
-										resource.setDerived(true);
+										resource.setDerived(true, null);
 										return resource.getType() != IResource.FILE;
 									}
 								}
@@ -138,7 +138,7 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 										if (Util.isExcluded(resource.getFullPath(), inclusionPatterns, exclusionPatterns, false))
 											return false;
 									if (!resource.isDerived())
-										resource.setDerived(true);
+										resource.setDerived(true, null);
 									resource.delete(IResource.FORCE, null);
 								}
 								return false;
@@ -201,11 +201,11 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 				IResource resource = null;
 				switch(proxy.getType()) {
 					case IResource.FILE :
-						// GROOVY start
+						/* GROOVY start
 						// original 
-//						if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName()) ||
-//							org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName())) return false;
-						// new
+						if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName()) ||
+							org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName())) return false;
+						// new */
 						// copy groovy files if not in a groovy project
 						// Also, must keep the call to 'isJavaLikeFileName' to keep Scala plugin happy: GRECLIPSE-404
 						// here it is the same test as above, except 
@@ -248,7 +248,6 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 				}
 				return true;
 			}
-
 		},
 		IResource.NONE
 	);

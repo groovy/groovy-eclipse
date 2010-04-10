@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,6 +22,7 @@ import java.util.List;
  *    <b>catch</b> <b>(</b> FormalParameter <b>)</b> Block
  * </pre>
  *
+ * <p>The FormalParameter is represented by a {@link SingleVariableDeclaration}.</p>
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
  */

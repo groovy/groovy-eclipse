@@ -460,8 +460,8 @@ public static void searchAllPossibleSubTypes(
 			boolean isLocalOrAnonymous = record.enclosingTypeName == IIndexConstants.ONE_ZERO;
 			pathRequestor.acceptPath(documentPath, isLocalOrAnonymous);
 			char[] typeName = record.simpleName;
-			int suffix = documentPath.toLowerCase().lastIndexOf(SUFFIX_STRING_class);
-			if (suffix != -1){
+			if (documentPath.toLowerCase().endsWith(SUFFIX_STRING_class)) {
+			    int suffix = documentPath.length()-SUFFIX_STRING_class.length();
 				HierarchyBinaryType binaryType = (HierarchyBinaryType)binariesFromIndexMatches.get(documentPath);
 				if (binaryType == null){
 					char[] enclosingTypeName = record.enclosingTypeName;

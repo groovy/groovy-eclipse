@@ -377,13 +377,18 @@ public final class JavaConventions {
 	 * @deprecated Use {@link #validateJavaTypeName(String id, String sourceLevel, String complianceLevel)} instead
 	 */
 	public static IStatus validateJavaTypeName(String name) {
-		return validateJavaTypeName(name, CompilerOptions.VERSION_1_3,CompilerOptions.VERSION_1_3);
+		return validateJavaTypeName(name, JavaCore.VERSION_1_3, JavaCore.VERSION_1_3);
 	}
 
 	/**
 	 * Validate the given Java type name, either simple or qualified, for the given source and compliance levels.
-	 * For example, <code>"java.lang.Object"</code>, or <code>"Object"</code>.
-	 * <p>
+	 * 
+	 * <p>For example, <code>"java.lang.Object"</code>, or <code>"Object"</code>.</p>
+	 * 
+	 * <p>The source level and compliance level values should be taken from the constant defined inside
+	 * {@link JavaCore} class. The constants are named <code>JavaCore#VERSION_1_x</code>, x being set
+	 * between '1' and '7'.
+	 * </p>
 	 *
 	 * @param name the name of a type
 	 * @param sourceLevel the source level
@@ -395,6 +400,13 @@ public final class JavaConventions {
 	 *      otherwise a status object indicating what is wrong with
 	 *      the name
 	 * @since 3.3
+	 * @see JavaCore#VERSION_1_1
+	 * @see JavaCore#VERSION_1_2
+	 * @see JavaCore#VERSION_1_3
+	 * @see JavaCore#VERSION_1_4
+	 * @see JavaCore#VERSION_1_5
+	 * @see JavaCore#VERSION_1_6
+	 * @see JavaCore#VERSION_1_7
 	 */
 	public static IStatus validateJavaTypeName(String name, String sourceLevel, String complianceLevel) {
 		if (name == null) {

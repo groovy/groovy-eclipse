@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -191,6 +191,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 					AbstractMethodDeclaration methodDecl = methodDecls[i];
 					MethodBinding method = methodDecl.binding;
 					if (method == null || method.isConstructor()) continue;
+					method.modifiers = ClassFileConstants.AccPublic | ClassFileConstants.AccAbstract;
 					classFile.addAbstractMethod(methodDecl, method);
 				}
 			} else {
@@ -209,7 +210,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 			// add abstract methods
 			classFile.addDefaultAbstractMethods();
-			//classFile.addSpecialMethods();
 		}
 
 		// propagate generation of (problem) member types
@@ -260,17 +260,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 	/**
 	 * INTERNAL USE-ONLY
-	 * Generate the byte for a problem method info that correspond to a boggus method.
+	 * Generate the byte for a problem method info that correspond to a bogus method.
 	 *
 	 * @param method org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration
 	 * @param methodBinding org.eclipse.jdt.internal.compiler.nameloopkup.MethodBinding
 	 */
 	public void addAbstractMethod(
-		AbstractMethodDeclaration method,
-		MethodBinding methodBinding) {
-
-		// force the modifiers to be public and abstract
-		methodBinding.modifiers = ClassFileConstants.AccPublic | ClassFileConstants.AccAbstract;
+			AbstractMethodDeclaration method,
+			MethodBinding methodBinding) {
 
 		this.generateMethodInfoHeader(methodBinding);
 		int methodAttributeOffset = this.contentsOffset;
@@ -401,7 +398,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			this.contents[this.contentsOffset++] = methodIndexByte2;
 			attributesNumber++;
 		}
-		if (this.targetJDK >= ClassFileConstants.JDK1_5) {
+		if (this.targetJDK >= ClassFileConstants.JDK1_4) {
 			TypeDeclaration typeDeclaration = this.referenceBinding.scope.referenceContext;
 			if (typeDeclaration != null) {
 				final Annotation[] annotations = typeDeclaration.annotations;
@@ -673,7 +670,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			this.contents[this.contentsOffset++] = (byte) signatureIndex;
 			attributesNumber++;
 		}
-		if (this.targetJDK >= ClassFileConstants.JDK1_5) {
+		if (this.targetJDK >= ClassFileConstants.JDK1_4) {
 			FieldDeclaration fieldDeclaration = fieldBinding.sourceField();
 			if (fieldDeclaration != null) {
 				Annotation[] annotations = fieldDeclaration.annotations;
@@ -6290,7 +6287,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			this.contents[this.contentsOffset++] = (byte) signatureIndex;
 			attributeNumber++;
 		}
-		if (this.targetJDK >= ClassFileConstants.JDK1_5) {
+		if (this.targetJDK >= ClassFileConstants.JDK1_4) {
 			AbstractMethodDeclaration methodDeclaration = methodBinding.sourceMethod();
 			if (methodDeclaration != null) {
 				Annotation[] annotations = methodDeclaration.annotations;
@@ -6856,9 +6853,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 0);
 
 		long targetVersion = this.targetJDK;
-		if (targetVersion == ClassFileConstants.JDK1_7) {
-			targetVersion = ClassFileConstants.JDK1_6;
-		}
 		this.header[this.headerOffset++] = (byte) (targetVersion >> 8); // minor high
 		this.header[this.headerOffset++] = (byte) (targetVersion>> 0); // minor low
 		this.header[this.headerOffset++] = (byte) (targetVersion >> 24); // major high

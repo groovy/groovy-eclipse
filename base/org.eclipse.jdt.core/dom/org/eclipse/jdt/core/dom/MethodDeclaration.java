@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,6 +17,7 @@ import java.util.List;
 /**
  * Method declaration AST node type. A method declaration
  * is the union of a method declaration and a constructor declaration.
+ * 
  * For JLS2:
  * <pre>
  * MethodDeclaration:
@@ -59,6 +60,7 @@ import java.util.List;
  * no modifiers). The source range extends through the last character of the
  * ";" token (if no body), or the last character of the block (if body).
  * </p>
+ * <p>The FormalParameter is represented by a {@link SingleVariableDeclaration}.</p>
  *
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.

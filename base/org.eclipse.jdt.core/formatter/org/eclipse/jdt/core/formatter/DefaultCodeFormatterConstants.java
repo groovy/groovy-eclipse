@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Brock Janiczak - Contribution for bug 150741
  *******************************************************************************/
 package org.eclipse.jdt.core.formatter;
 
@@ -86,6 +87,17 @@ public class DefaultCodeFormatterConstants {
 	public static final String FORMATTER_ALIGNMENT_FOR_ARGUMENTS_IN_ENUM_CONSTANT = JavaCore.PLUGIN_ID + ".formatter.alignment_for_arguments_in_enum_constant";	 //$NON-NLS-1$
 	/**
 	 * <pre>
+	 * FORMATTER / Option for alignment of arguments in annotation
+	 *     - option id:         "org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation"
+	 *     - possible values:   values returned by <code>createAlignmentValue(boolean, int, int)</code> call
+	 *     - default:           createAlignmentValue(false, WRAP_NO_SPLIT, INDENT_DEFAULT)
+	 * </pre>
+	 * @see #createAlignmentValue(boolean, int, int)
+	 * @since 3.6
+	 */
+	public static final String FORMATTER_ALIGNMENT_FOR_ARGUMENTS_IN_ANNOTATION = JavaCore.PLUGIN_ID + ".formatter.alignment_for_arguments_in_annotation";	 //$NON-NLS-1$
+	/**
+	 * <pre>
 	 * FORMATTER / Option for alignment of arguments in explicit constructor call
 	 *     - option id:         "org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call"
 	 *     - possible values:   values returned by <code>createAlignmentValue(boolean, int, int)</code> call
@@ -122,7 +134,7 @@ public class DefaultCodeFormatterConstants {
 	 * FORMATTER / Option for alignment of assignment
 	 *     - option id:         "org.eclipse.jdt.core.formatter.alignment_for_assignment"
 	 *     - possible values:   values returned by <code>createAlignmentValue(boolean, int, int)</code> call
-	 *     - default:           createAlignmentValue(false, M_NO_ALIGNMENT, INDENT_DEFAULT)
+	 *     - default:           createAlignmentValue(false, WRAP_NO_SPLIT, INDENT_DEFAULT)
 	 * </pre>
 	 * @see #createAlignmentValue(boolean, int, int)
 	 * @since 3.2
@@ -183,6 +195,17 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.0
 	 */
 	public static final String FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_ARRAY_INITIALIZER = JavaCore.PLUGIN_ID + ".formatter.alignment_for_expressions_in_array_initializer";	 //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option for alignment of method declaration
+	 *     - option id:         "org.eclipse.jdt.core.formatter.alignment_for_method_declaration"
+	 *     - possible values:   values returned by <code>createAlignmentValue(boolean, int, int)</code> call
+	 *     - default:           createAlignmentValue(false, WRAP_NO_SPLIT, INDENT_DEFAULT)
+	 * </pre>
+	 * @see #createAlignmentValue(boolean, int, int)
+	 * @since 3.6
+	 */
+	public static final String FORMATTER_ALIGNMENT_FOR_METHOD_DECLARATION = JavaCore.PLUGIN_ID + ".formatter.alignment_for_method_declaration";	 //$NON-NLS-1$
 	/**
 	 * <pre>
 	 * FORMATTER / Option for alignment of multiple fields
@@ -629,6 +652,24 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.3
 	 */
 	public final static String FORMATTER_COMMENT_FORMAT_LINE_COMMENT = "org.eclipse.jdt.core.formatter.comment.format_line_comments"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to format line comments that start on the first column
+	 *     - option id:         "org.eclipse.jdt.core.formatter.format_line_comment_starting_on_first_column"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           TRUE
+	 * </pre>
+	 * Note that this option is ignored if either the
+	 * {@link #FORMATTER_COMMENT_FORMAT_LINE_COMMENT} option has been set to
+	 * {@link #FALSE} or the formatter is created with the mode
+	 * {@link ToolFactory#M_FORMAT_NEW}.
+	 * 
+	 * @see #TRUE
+	 * @see #FALSE
+	 * @see ToolFactory#createCodeFormatter(Map, int)
+	 * @since 3.6
+	 */
+	public static final String FORMATTER_COMMENT_FORMAT_LINE_COMMENT_STARTING_ON_FIRST_COLUMN = JavaCore.PLUGIN_ID + ".formatter.format_line_comment_starting_on_first_column"; //$NON-NLS-1$
 
 	/**
 	 * <pre>
@@ -760,6 +801,32 @@ public class DefaultCodeFormatterConstants {
 
 	/**
 	 * <pre>
+	 * FORMATTER / Option to control whether block comments will have new lines at boundaries
+	 *     - option id:         "org.eclipse.jdt.core.formatter.comment.new_lines_at_block_boundaries"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           TRUE
+	 * </pre>
+	 * @see #TRUE
+	 * @see #FALSE
+	 * @since 3.6
+	 */
+	public final static String FORMATTER_COMMENT_NEW_LINES_AT_BLOCK_BOUNDARIES = "org.eclipse.jdt.core.formatter.comment.new_lines_at_block_boundaries"; //$NON-NLS-1$
+
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control whether javadoc comments will have new lines at boundaries
+	 *     - option id:         "org.eclipse.jdt.core.formatter.comment.new_lines_at_javadoc_boundaries"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           TRUE
+	 * </pre>
+	 * @see #TRUE
+	 * @see #FALSE
+	 * @since 3.6
+	 */
+	public final static String FORMATTER_COMMENT_NEW_LINES_AT_JAVADOC_BOUNDARIES = "org.eclipse.jdt.core.formatter.comment.new_lines_at_javadoc_boundaries"; //$NON-NLS-1$
+
+	/**
+	 * <pre>
 	 * FORMATTER / Option to compact else/if
 	 *     - option id:         "org.eclipse.jdt.core.formatter.compact_else_if"
 	 *     - possible values:   { TRUE, FALSE }
@@ -791,6 +858,176 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.0
 	 */
 	public static final String FORMATTER_CONTINUATION_INDENTATION_FOR_ARRAY_INITIALIZER = JavaCore.PLUGIN_ID + ".formatter.continuation_indentation_for_array_initializer";	//$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to define the tag to put in a comment to disable the formatting.
+	 * See the {@link #FORMATTER_ENABLING_TAG} option to re-enable it.
+	 *     - possible values:   String, with constraints mentioned below
+	 *     - default:           ""
+	 * </pre>
+	 * 
+	 * <p>
+	 * Note that:
+	 * <ol>
+	 * <li>The tag name will be trimmed. Hence if it does contain white spaces
+	 * at the beginning or at the end, they will not be taken into account while
+	 * searching for the tag in the comments</li>
+	 * <li>If a tag is starting with a letter or digit, then it cannot be leaded by
+	 * another letter or digit to be recognized
+	 * (<code>"ToDisableFormatter"</code> will not be recognized as a disabling tag
+	 * <code>"DisableFormatter"</code>, but <code>"To:DisableFormatter"</code>
+	 * will be detected for either tag <code>"DisableFormatter"</code> or
+	 * <code>":DisableFormatter"</code>).<br>
+	 * Respectively, a tag ending with a letter or digit cannot be followed by a letter
+	 * or digit to be recognized (<code>"DisableFormatter1"</code> will not be
+	 * recognized as a disabling tag <code>"DisableFormatter"</code>, but
+	 * <code>"DisableFormatter:1"</code> will be detected either for tag
+	 * <code>"DisableFormatter"</code> or <code>"DisableFormatter:"</code>)</li>
+	 * <li>As soon as the formatter encounters the defined disabling tag, it stops to
+	 * format the code from the beginning of the comment including this tag. If it
+	 * was already disabled, the tag has no special effect.
+	 * <p>
+	 * For example, the second defined enabling tag &quot;<b>disable-formatter</b>&quot;
+	 * in the following snippet is not necessary as the formatter was already disabled
+	 * since the first one:
+	 * <pre>
+	 * class X {
+	 * // disable-formatter
+	 * void foo1() {}
+	 * // disable-formatter
+	 * void foo2() {}
+	 * void bar1() {}
+	 * void bar2() {}
+	 * }
+	 * </pre>
+	 * </li>
+	 * <li>If no enabling tag is found by the formatter after the disabling tag, then
+	 * the end of the snippet won't be formatted.<br>
+	 * For example, when a disabling tag is put at the beginning of the code, then
+	 * the entire content of a compilation unit is not formatted:
+	 * <pre>
+	 * // disable-formatter
+	 * class X {
+	 * void foo1() {}
+	 * void foo2() {}
+	 * void bar1() {}
+	 * void bar2() {}
+	 * }
+	 * </pre>
+	 * </li>
+	 * <li>If a mix of disabling and enabling tags is done in the same comment, then
+	 * the formatter will only take into account the last encountered tag in the
+	 * comment.
+	 * <p>For example, in the following snippet, the formatter will be disabled after
+	 * the comment:</p>
+	 * <pre>
+	 * class X {
+	 * &#47;&#42;
+	 * &nbsp;&#42; This is a comment with a mix of disabling and enabling tags:
+	 * &nbsp;&#42;  - <b>disable-formatter</b>
+	 * &nbsp;&#42;  - <b>enable-formatter</b>
+	 * &nbsp;&#42;  - <b>disable-formatter</b>
+	 * &nbsp;&#42; The formatter will stop to format from the beginning of this comment...
+	 * &nbsp;&#42;&#47;
+	 * void foo() {}
+	 * void bar() {}
+	 * }
+	 * </pre>
+	 * </li>
+	 * <li>The tag cannot include newline character (i.e. '\n') but it can have white
+	 * spaces.<br>
+	 * E.g. "<b>format: off</b>" is a valid disabling tag.<br>
+	 * In the future, newlines may be used to support multiple disabling tags.</li>
+	 * </ol>
+	 * </p>
+	 * @since 3.6
+	 */
+	public static final String FORMATTER_DISABLING_TAG = JavaCore.PLUGIN_ID + ".formatter.disabling_tag";	//$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to define the tag to put in a comment to re-enable the
+	 * formatting after it has been disabled (see {@link #FORMATTER_DISABLING_TAG})
+	 *     - option id:         "org.eclipse.jdt.core.formatter.enabling_tag"
+	 *     - possible values:   String, with constraints mentioned below
+	 *     - default:           ""
+	 * </pre>
+	 * 
+	 * <p>
+	 * Note that:
+	 * <ol>
+	 * <li>The tag name will be trimmed. Hence if it does contain white spaces
+	 * at the beginning or at the end, they will not be taken into account while
+	 * searching for the tag in the comments</li>
+	 * <li>If a tag is starting with a letter or digit, then it cannot be leaded by
+	 * another letter or digit to be recognized
+	 * (<code>"ReEnableFormatter"</code> will not be recognized as an enabling tag
+	 * <code>"EnableFormatter"</code>, but <code>"Re:EnableFormatter"</code>
+	 * will be detected for either tag <code>"EnableFormatter"</code> or
+	 * <code>":EnableFormatter"</code>).<br>
+	 * Respectively, a tag ending with a letter or digit cannot be followed by a letter
+	 * or digit to be recognized (<code>"EnableFormatter1"</code> will not be
+	 * recognized as an enabling tag <code>"EnableFormatter"</code>, but
+	 * <code>"EnableFormatter:1"</code> will be detected either for tag
+	 * <code>"EnableFormatter"</code> or <code>"EnableFormatter:"</code>)</li>
+	 * <li>As soon as the formatter encounters the defined enabling tag, it re-starts
+	 * to format the code just after the comment including this tag. If it was already
+	 * active, i.e. already re-enabled or never disabled, the tag has no special effect.
+	 * <p>
+	 * For example, the defined enabling tag &quot;<b>enable-formatter</b>&quot;
+	 * in the following snippet is not necessary as the formatter has never been
+	 * disabled:
+	 * <pre>
+	 * class X {
+	 * void foo1() {}
+	 * void foo2() {}
+	 * // enable-formatter
+	 * void bar1() {}
+	 * void bar2() {}
+	 * }
+	 * </pre>
+	 * Or, in the following other snippet, the second enabling tag is not necessary as
+	 * the formatting will have been re-enabled by the first one:
+	 * <pre>
+	 * class X {
+	 * // disable-formatter
+	 * void foo1() {}
+	 * void foo2() {}
+	 * // enable-formatter
+	 * void bar1() {}
+	 * // enable-formatter
+	 * void bar2() {}
+	 * }
+	 * </pre>
+	 * </li>
+	 * <li>If a mix of disabling and enabling tags is done in the same comment, then
+	 * the formatter will only take into account the last encountered tag in the
+	 * comment.
+	 * <p>For example, in the following snippet, the formatter will be re-enabled after
+	 * the comment:</p>
+	 * <pre>
+	 * // disable-formatter
+	 * class X {
+	 * &#47;&#42;
+	 * &nbsp;&#42; This is a comment with a mix of disabling and enabling tags:
+	 * &nbsp;&#42;  - <b>enable-formatter</b>
+	 * &nbsp;&#42;  - <b>disable-formatter</b>
+	 * &nbsp;&#42;  - <b>enable-formatter</b>
+	 * &nbsp;&#42; The formatter will restart to format after this comment...
+	 * &nbsp;&#42;&#47;
+	 * void foo() {}
+	 * void bar() {}
+	 * }
+	 * </pre>
+	 * <li>The tag cannot include newline character (i.e. '\n') but it can have white
+	 * spaces.<br>
+	 * E.g. "<b>format: on</b>" is a valid enabling tag<br>
+	 * In the future, newlines may be used to support multiple enabling tags.</li>
+	 * </li>
+	 * </ol>
+	 * </p>
+	 * @since 3.6
+	 */
+	public static final String FORMATTER_ENABLING_TAG = JavaCore.PLUGIN_ID + ".formatter.enabling_tag";	//$NON-NLS-1$
 	/**
 	 * <pre>
 	 * FORMATTER / Option to indent body declarations compare to its enclosing annotation declaration header
@@ -983,6 +1220,18 @@ public class DefaultCodeFormatterConstants {
 	 */
 	public static final String FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_LOCAL_VARIABLE = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_after_annotation_on_local_variable";//$NON-NLS-1$
 
+	/**
+	 * <pre>
+	 * FORMATTER / Option to insert a new line after a label
+	 *     - option id:         "org.eclipse.jdt.core.formatter.insert_new_line_after_label"
+	 *     - possible values:   { INSERT, DO_NOT_INSERT }
+	 *     - default:           DO_NOT_INSERT
+	 * </pre>
+	 * @see JavaCore#INSERT
+	 * @see JavaCore#DO_NOT_INSERT
+	 * @since 3.6
+	 */
+	public static final String FORMATTER_INSERT_NEW_LINE_AFTER_LABEL = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_after_label";	//$NON-NLS-1$	
 
 	/**
 	 * <pre>
@@ -3096,7 +3345,12 @@ public class DefaultCodeFormatterConstants {
 	 *     - possible values:   { TRUE, FALSE }
 	 *     - default:           FALSE
 	 * </pre>
-	 * Note that this option is ignored if the formatter is created with the mode {@link ToolFactory#M_FORMAT_NEW}.
+	 * Note that:
+	 * <ul>
+	 * <li>this option is ignored if the formatter is created with the mode {@link ToolFactory#M_FORMAT_NEW}</li>
+	 * <li>even with this option activated, the formatter still can ignore line comments starting at first column
+	 * if the option {@link #FORMATTER_COMMENT_FORMAT_LINE_COMMENT_STARTING_ON_FIRST_COLUMN} is set to {@value #FALSE}</li>
+	 * </ul>
 	 * @see #TRUE
 	 * @see #FALSE
 	 * @see ToolFactory#createCodeFormatter(Map, int)

@@ -27,9 +27,9 @@ public TestResult() {
 	 */
 	public synchronized void addError(Test test, Throwable t) {
 		TestFailure testFailure= new TestFailure(test, t);
-		fErrors.addElement(testFailure);
-		for (Enumeration e= cloneListeners().elements(); e.hasMoreElements(); ) {
-			((TestListener)e.nextElement()).addError(test, testFailure);
+		this.fErrors.add(testFailure);
+		for (Iterator e= cloneListeners().iterator(); e.hasNext(); ) {
+			((TestListener)e.next()).addError(test, testFailure);
 		}
 	}
 	/**
@@ -38,16 +38,18 @@ public TestResult() {
 	 */
 	public synchronized void addFailure(Test test, AssertionFailedError t) {
 		TestFailure testFailure= new TestFailure(test, t);
-		fFailures.addElement(testFailure);
-		for (Enumeration e= cloneListeners().elements(); e.hasMoreElements(); ) {
-			((TestListener)e.nextElement()).addFailure(test, testFailure);
+		this.fFailures.add(testFailure);
+		for (Iterator e= cloneListeners().iterator(); e.hasNext(); ) {
+			((TestListener)e.next()).addFailure(test, testFailure);
 		}
 	}
 	/**
 	 * Returns a copy of the listeners.
 	 */
-	private synchronized Vector cloneListeners() {
-		return (Vector)fListeners.clone();
+	private synchronized List cloneListeners() {
+		List result = new ArrayList();
+		result.addAll(this.fListeners);
+		return result;
 	}
 	protected void run(final TestCase test) {
 		this.currentTest = test;

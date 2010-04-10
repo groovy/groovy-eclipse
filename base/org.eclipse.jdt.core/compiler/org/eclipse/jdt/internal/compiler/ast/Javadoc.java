@@ -820,6 +820,18 @@ public class Javadoc extends ASTNode {
 					}
 				}
 			}
+			/*
+			 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=286918
+			 *
+			 * We are concerned only about the Single type references (i.e. without any package) If they are not in default package,
+			 * then report an error. References with qualified yet incorrect names would have already been taken care of.
+			 */
+			if (scope.referenceCompilationUnit().isPackageInfo() && typeReference instanceof JavadocSingleTypeReference) {
+				if (resolvedType.fPackage.compoundName.length > 0) {
+					scope.problemReporter().javadocInvalidReference(typeReference.sourceStart, typeReference.sourceEnd);
+					return; // Not really needed - just in case more code added in future
+				}
+			}
 		}
 	}
 

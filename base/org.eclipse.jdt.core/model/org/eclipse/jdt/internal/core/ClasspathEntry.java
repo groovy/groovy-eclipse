@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -77,6 +77,7 @@ public class ClasspathEntry implements IClasspathEntry {
 
 	public static final String TAG_CLASSPATH = "classpath"; //$NON-NLS-1$
 	public static final String TAG_CLASSPATHENTRY = "classpathentry"; //$NON-NLS-1$
+	public static final String TAG_REFERENCED_ENTRY = "referencedentry"; //$NON-NLS-1$
 	public static final String TAG_OUTPUT = "output"; //$NON-NLS-1$
 	public static final String TAG_KIND = "kind"; //$NON-NLS-1$
 	public static final String TAG_PATH = "path"; //$NON-NLS-1$
@@ -141,8 +142,9 @@ public class ClasspathEntry implements IClasspathEntry {
 	private IPath[] exclusionPatterns;
 	private char[][] fullExclusionPatternChars;
 	private final static char[][] UNINIT_PATTERNS = new char[][] { "Non-initialized yet".toCharArray() }; //$NON-NLS-1$
-	private final static ClasspathEntry[] NO_ENTRIES = new ClasspathEntry[0];
+	public final static ClasspathEntry[] NO_ENTRIES = new ClasspathEntry[0];
 	private final static IPath[] NO_PATHS = new IPath[0];
+	private final static IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 
 	private boolean combineAccessRules;
 
@@ -196,6 +198,11 @@ public class ClasspathEntry implements IClasspathEntry {
 	 * a non-<code>null</code> value.
 	 */
 	public IPath sourceAttachmentRootPath;
+	
+	/**
+	 * See {@link IClasspathEntry#getReferencingEntry()}
+	 */
+	public IClasspathEntry referencingEntry;
 
 	/**
 	 * Specific output location (for this source entry)
@@ -214,11 +221,40 @@ public class ClasspathEntry implements IClasspathEntry {
 	 */
 	public boolean isExported;
 
-	/*
+	/**
 	 * The extra attributes
 	 */
-	IClasspathAttribute[] extraAttributes;
+	public IClasspathAttribute[] extraAttributes;
 
+	public ClasspathEntry(
+			int contentKind,
+			int entryKind,
+			IPath path,
+			IPath[] inclusionPatterns,
+			IPath[] exclusionPatterns,
+			IPath sourceAttachmentPath,
+			IPath sourceAttachmentRootPath,
+			IPath specificOutputLocation,
+			boolean isExported,
+			IAccessRule[] accessRules,
+			boolean combineAccessRules,
+			IClasspathAttribute[] extraAttributes) {
+
+		this(	contentKind, 
+				entryKind, 
+				path, 
+				inclusionPatterns, 
+				exclusionPatterns, 
+				sourceAttachmentPath, 
+				sourceAttachmentRootPath, 
+				specificOutputLocation,
+				null,
+				isExported,
+				accessRules,
+				combineAccessRules,
+				extraAttributes);
+	}
+	
 	/**
 	 * Creates a class path entry of the specified kind with the given path.
 	 */
@@ -231,6 +267,7 @@ public class ClasspathEntry implements IClasspathEntry {
 		IPath sourceAttachmentPath,
 		IPath sourceAttachmentRootPath,
 		IPath specificOutputLocation,
+		IClasspathEntry referencingEntry,
 		boolean isExported,
 		IAccessRule[] accessRules,
 		boolean combineAccessRules,
@@ -241,7 +278,8 @@ public class ClasspathEntry implements IClasspathEntry {
 		this.path = path;
 		this.inclusionPatterns = inclusionPatterns;
 		this.exclusionPatterns = exclusionPatterns;
-
+		this.referencingEntry = referencingEntry;
+		
 		int length;
 		if (accessRules != null && (length = accessRules.length) > 0) {
 			AccessRule[] rules = new AccessRule[length];
@@ -488,7 +526,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * Returns the XML encoding of the class path.
 	 */
-	public void elementEncode(XMLWriter writer, IPath projectPath, boolean indent, boolean newLine, Map unknownElements) {
+	public void elementEncode(XMLWriter writer, IPath projectPath, boolean indent, boolean newLine, Map unknownElements, boolean isReferencedEntry) {
 		HashMap parameters = new HashMap();
 
 		parameters.put(TAG_KIND, ClasspathEntry.kindToString(this.entryKind));
@@ -552,12 +590,15 @@ public class ClasspathEntry implements IClasspathEntry {
 		boolean hasRestrictions = getAccessRuleSet() != null; // access rule set is null if no access rules
 		ArrayList unknownChildren = unknownXmlElements != null ? unknownXmlElements.children : null;
 		boolean hasUnknownChildren = unknownChildren != null;
+		
+		/* close tag if no extra attributes, no restriction and no unknown children */
+		String tagName = isReferencedEntry ? TAG_REFERENCED_ENTRY : TAG_CLASSPATHENTRY; 
 		writer.printTag(
-			TAG_CLASSPATHENTRY,
+			tagName,
 			parameters,
 			indent,
 			newLine,
-			!hasExtraAttributes && !hasRestrictions && !hasUnknownChildren/*close tag if no extra attributes, no restriction and no unknown children*/);
+			!hasExtraAttributes && !hasRestrictions && !hasUnknownChildren);
 
 		if (hasExtraAttributes)
 			encodeExtraAttributes(writer, indent, newLine);
@@ -569,7 +610,7 @@ public class ClasspathEntry implements IClasspathEntry {
 			encodeUnknownChildren(writer, indent, newLine, unknownChildren);
 
 		if (hasExtraAttributes || hasRestrictions || hasUnknownChildren)
-			writer.endTag(TAG_CLASSPATHENTRY, indent, true/*insert new line*/);
+			writer.endTag(tagName, indent, true/*insert new line*/);
 	}
 
 	void encodeExtraAttributes(XMLWriter writer, boolean indent, boolean newLine) {
@@ -956,14 +997,13 @@ public class ClasspathEntry implements IClasspathEntry {
 	 */
 	public static IPath resolveDotDot(IPath path) {
 		IPath newPath = null;
-		IWorkspaceRoot root = null;
 		IPath workspaceLocation = null;
 		for (int i = 0, length = path.segmentCount(); i < length; i++) {
 			String segment = path.segment(i);
 			if (DOT_DOT.equals(segment)) {
 				if (newPath == null) {
 					if (i == 0) {
-						workspaceLocation = (root = ResourcesPlugin.getWorkspace().getRoot()).getLocation();
+						workspaceLocation = workspaceRoot.getLocation();
 						newPath = workspaceLocation;
 					} else {
 						newPath = path.removeFirstSegments(i);
@@ -972,12 +1012,12 @@ public class ClasspathEntry implements IClasspathEntry {
 					if (newPath.segmentCount() > 0) {
 						newPath = newPath.removeLastSegments(1);
 					} else {
-						workspaceLocation = (root = ResourcesPlugin.getWorkspace().getRoot()).getLocation();
+						workspaceLocation = workspaceRoot.getLocation();
 						newPath = workspaceLocation;
 					}
 				}
 			} else if (newPath != null) {
-				if (newPath.equals(workspaceLocation) && root.getProject(segment).isAccessible()) {
+				if (newPath.equals(workspaceLocation) && workspaceRoot.getProject(segment).isAccessible()) {
 					newPath = new Path(segment).makeAbsolute();
 				} else {
 					newPath = newPath.append(segment);
@@ -1176,6 +1216,11 @@ public class ClasspathEntry implements IClasspathEntry {
 	 */
 	public IPath getSourceAttachmentRootPath() {
 		return this.sourceAttachmentRootPath;
+	}
+
+
+	public IClasspathEntry getReferencingEntry() {
+		return this.referencingEntry;
 	}
 
 	/**
@@ -1380,6 +1425,7 @@ public class ClasspathEntry implements IClasspathEntry {
 							getSourceAttachmentPath(),
 							getSourceAttachmentRootPath(),
 							getOutputLocation(),
+							this.getReferencingEntry(),
 							this.isExported,
 							getAccessRules(),
 							this.combineAccessRules,
@@ -1397,19 +1443,21 @@ public class ClasspathEntry implements IClasspathEntry {
 			return NO_ENTRIES;
 		ClasspathEntry[] result = new ClasspathEntry[length];
 		for (int i = 0; i < length; i++) {
+			// Chained(referenced) libraries can have their own attachment path. Hence, set them to null
 			result[i] = new ClasspathEntry(
-									getContentKind(),
-									getEntryKind(),
-									paths[i],
-									this.inclusionPatterns,
-									this.exclusionPatterns,
-									getSourceAttachmentPath(),
-									getSourceAttachmentRootPath(),
-									getOutputLocation(),
-									this.isExported,
-									getAccessRules(),
-									this.combineAccessRules,
-									this.extraAttributes);
+					getContentKind(),
+					getEntryKind(),
+					paths[i],
+					this.inclusionPatterns,
+					this.exclusionPatterns,
+					null,
+					null,
+					getOutputLocation(),
+					this,
+					this.isExported,
+					getAccessRules(),
+					this.combineAccessRules,
+					NO_EXTRA_ATTRIBUTES);
 		}
 		return result;
 	}
@@ -1758,15 +1806,20 @@ public class ClasspathEntry implements IClasspathEntry {
 	 */
 	public static IJavaModelStatus validateClasspathEntry(IJavaProject project, IClasspathEntry entry, boolean checkSourceAttachment, boolean referredByContainer){
 		IJavaModelStatus status = validateClasspathEntry(project, entry, null, checkSourceAttachment, referredByContainer);
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=171136, ignore class path errors from optional entries.
-		if (status.getCode() == IJavaModelStatusConstants.INVALID_CLASSPATH && ((ClasspathEntry) entry).isOptional())
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=171136 and https://bugs.eclipse.org/bugs/show_bug.cgi?id=300136
+		// Ignore class path errors from optional entries.
+		int statusCode = status.getCode();
+		if ( (statusCode == IJavaModelStatusConstants.INVALID_CLASSPATH || 
+				statusCode == IJavaModelStatusConstants.CP_CONTAINER_PATH_UNBOUND ||
+				statusCode == IJavaModelStatusConstants.CP_VARIABLE_PATH_UNBOUND ||
+				statusCode == IJavaModelStatusConstants.INVALID_PATH) &&
+				((ClasspathEntry) entry).isOptional())
 			return JavaModelStatus.VERIFIED_OK;
 		return status;
 	}
 	
 	private static IJavaModelStatus validateClasspathEntry(IJavaProject project, IClasspathEntry entry, IClasspathContainer entryContainer, boolean checkSourceAttachment, boolean referredByContainer){
 
-		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 		IPath path = entry.getPath();
 
 		// Build some common strings for status message
@@ -1812,8 +1865,6 @@ public class ClasspathEntry implements IClasspathEntry {
 									|| kind == IClasspathEntry.CPE_SOURCE
 									|| kind == IClasspathEntry.CPE_VARIABLE
 									|| kind == IClasspathEntry.CPE_CONTAINER){
-										String description = container.getDescription();
-										if (description == null) description = path.makeRelative().toString();
 										return new JavaModelStatus(IJavaModelStatusConstants.INVALID_CP_CONTAINER_ENTRY, project, path);
 								}
 								IJavaModelStatus containerEntryStatus = validateClasspathEntry(project, containerEntry, container, checkSourceAttachment, true/*referred by container*/);
@@ -1960,6 +2011,12 @@ public class ClasspathEntry implements IClasspathEntry {
 	private static IJavaModelStatus validateLibraryEntry(IPath path, IJavaProject project, String container, IPath sourceAttachment, String entryPathMsg) {
 		if (path.isAbsolute() && !path.isEmpty()) {
 			Object target = JavaModel.getTarget(path, true);
+			if (target == null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=248661
+				IPath workspaceLocation = workspaceRoot.getLocation(); 
+				if (workspaceLocation.isPrefixOf(path)) {
+					target = JavaModel.getTarget(path.makeRelativeTo(workspaceLocation).makeAbsolute(), true);
+				}
+			}
 			if (target != null && !JavaCore.IGNORE.equals(project.getOption(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL, true))) {
 				long projectTargetJDK = CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, true));
 				long libraryJDK = Util.getJdkLevel(target);

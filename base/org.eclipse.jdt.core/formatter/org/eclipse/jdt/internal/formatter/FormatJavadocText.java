@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,6 +31,7 @@ public class FormatJavadocText extends FormatJavadocNode implements IJavaDocTagC
 	long[] separators;
 	int separatorsPtr = -1;
 	private int htmlTagIndex = -1;
+	boolean immutable = false;
 	FormatJavadocNode[] htmlNodes;
 	int[] htmlIndexes;
 	int htmlNodesPtr = -1;
@@ -49,6 +50,7 @@ public FormatJavadocText(int start, int end, int line, int htmlIndex, int htmlDe
  * child node.
  */
 void appendText(FormatJavadocText text) {
+	text.immutable = this.immutable;
 	if (this.depth == text.depth) {
 		addSeparator(text);
 		this.sourceEnd = text.sourceEnd;
@@ -174,6 +176,21 @@ public boolean isImmutableHtmlTag() {
 }
 
 /**
+ * Returns whether the text is immutable or not.
+ * <p>
+ * A text in considered as immutable when it  belongs to an immutable block
+ * or when it's an immutable html tag.
+ * </p>
+ *
+ * @return <code>true</code> if the node is an immutable tag,
+ *		<code>false</code> otherwise.
+ */
+public boolean isImmutable() {
+	return this.immutable || (this.htmlTagIndex != -1 && (this.htmlTagIndex & JAVADOC_TAGS_ID_MASK) == JAVADOC_IMMUTABLE_TAGS_ID);
+
+}
+
+/**
  * Returns whether the text at the given separator index position is after a
  * separator tag or not.
  *
@@ -212,6 +229,9 @@ protected void toString(StringBuffer buffer) {
 	StringBuffer indentation = new StringBuffer();
 	for (int t=0; t<=this.depth; t++) indentation.append('\t');
 	buffer.append(indentation);
+	if (isImmutable()) {
+		buffer.append("immutable "); //$NON-NLS-1$
+	}
 	buffer.append("text"); //$NON-NLS-1$
 	super.toString(buffer);
 	buffer.append(" ("); //$NON-NLS-1$

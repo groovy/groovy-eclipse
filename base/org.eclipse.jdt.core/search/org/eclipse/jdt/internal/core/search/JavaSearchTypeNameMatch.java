@@ -20,8 +20,10 @@ import org.eclipse.jdt.core.search.*;
  */
 public class JavaSearchTypeNameMatch extends TypeNameMatch {
 
-private IType type;
-private int modifiers = -1; // store modifiers to avoid java model population
+	private IType type;
+	private int modifiers = -1; // store modifiers to avoid java model population
+
+	private int accessibility = IAccessRule.K_ACCESSIBLE;
 
 /**
  * Creates a new Java Search type name match.
@@ -48,6 +50,13 @@ public boolean equals(Object obj) {
 }
 
 /* (non-Javadoc)
+ * @see org.eclipse.jdt.core.search.TypeNameMatch#getAccessibility()
+ */
+public int getAccessibility() {
+	return this.accessibility;
+}
+
+/* (non-Javadoc)
  * @see org.eclipse.jdt.core.search.TypeNameMatch#getModifiers()
  */
 public int getModifiers() {
@@ -70,6 +79,15 @@ public IType getType() {
 public int hashCode() {
 	if (this.type == null) return this.modifiers;
 	return this.type.hashCode();
+}
+
+/**
+ * Sets the accessibility of the accepted match.
+ * 
+ * @param accessibility the accessibility of the current match
+ */
+public void setAccessibility(int accessibility) {
+	this.accessibility = accessibility;
 }
 
 /**

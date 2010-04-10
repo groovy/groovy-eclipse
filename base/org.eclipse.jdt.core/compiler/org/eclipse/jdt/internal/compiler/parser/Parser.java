@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -409,7 +409,7 @@ public class Parser implements  ParserBasicInformation, TerminalTokens, Operator
 				newRecoveyTemplatesIndex[index] = (char)newRecoveyTemplatesPtr;
 	
 				String token = tokens[i + 2].trim();
-				java.util.StringTokenizer st = new java.util.StringTokenizer(new String(token), " ");  //$NON-NLS-1$
+				java.util.StringTokenizer st = new java.util.StringTokenizer(token, " ");  //$NON-NLS-1$
 				String[] terminalNames = new String[st.countTokens()];
 				int t = 0;
 				while (st.hasMoreTokens()) {
@@ -1657,17 +1657,18 @@ protected void consumeAssignment() {
 	int op = this.intStack[this.intPtr--] ; //<--the encoded operator
 
 	this.expressionPtr -- ; this.expressionLengthPtr -- ;
+	Expression expression = this.expressionStack[this.expressionPtr+1];
 	this.expressionStack[this.expressionPtr] =
 		(op != EQUAL ) ?
 			new CompoundAssignment(
 				this.expressionStack[this.expressionPtr] ,
-				this.expressionStack[this.expressionPtr+1],
+				expression,
 				op,
-				this.scanner.startPosition - 1)	:
+				expression.sourceEnd):
 			new Assignment(
 				this.expressionStack[this.expressionPtr] ,
-				this.expressionStack[this.expressionPtr+1],
-				this.scanner.startPosition - 1);
+				expression,
+				expression.sourceEnd);
 
 	if (this.pendingRecoveredType != null) {
 		// Used only in statements recovery.
@@ -2026,7 +2027,7 @@ protected void consumeCastExpressionLL1() {
 	this.expressionStack[this.expressionPtr] =
 		cast = new CastExpression(
 			exp=this.expressionStack[this.expressionPtr+1] ,
-			getTypeReference(this.expressionStack[this.expressionPtr]));
+			this.expressionStack[this.expressionPtr]);
 	this.expressionLengthPtr -- ;
 	updateSourcePosition(cast);
 	cast.sourceEnd=exp.sourceEnd;
@@ -2546,24 +2547,24 @@ protected void consumeConstructorDeclaration() {
 	if ((length = this.astLengthStack[this.astLengthPtr--]) != 0) {
 		this.astPtr -= length;
 		if (!this.options.ignoreMethodBodies) {
-		if (this.astStack[this.astPtr + 1] instanceof ExplicitConstructorCall) {
-			//avoid a isSomeThing that would only be used here BUT what is faster between two alternatives ?
-			System.arraycopy(
-				this.astStack,
-				this.astPtr + 2,
-				statements = new Statement[length - 1],
-				0,
-				length - 1);
-			constructorCall = (ExplicitConstructorCall) this.astStack[this.astPtr + 1];
-		} else { //need to add explicitly the super();
-			System.arraycopy(
-				this.astStack,
-				this.astPtr + 1,
-				statements = new Statement[length],
-				0,
-				length);
-			constructorCall = SuperReference.implicitSuperConstructorCall();
-		}
+			if (this.astStack[this.astPtr + 1] instanceof ExplicitConstructorCall) {
+				//avoid a isSomeThing that would only be used here BUT what is faster between two alternatives ?
+				System.arraycopy(
+					this.astStack,
+					this.astPtr + 2,
+					statements = new Statement[length - 1],
+					0,
+					length - 1);
+				constructorCall = (ExplicitConstructorCall) this.astStack[this.astPtr + 1];
+			} else { //need to add explicitly the super();
+				System.arraycopy(
+					this.astStack,
+					this.astPtr + 1,
+					statements = new Statement[length],
+					0,
+					length);
+				constructorCall = SuperReference.implicitSuperConstructorCall();
+			}
 		}
 	} else {
 		boolean insideFieldInitializer = false;
@@ -3195,6 +3196,8 @@ protected void consumeEnumConstantHeader() {
       anonymousType.modifiers = 0;
       anonymousType.bodyStart = this.scanner.currentPosition;
       markEnclosingMemberWithLocalType();
+      consumeNestedType();
+      this.variablesCounter[this.nestedType]++;
       pushOnAstStack(anonymousType);
       QualifiedAllocationExpression allocationExpression = new QualifiedAllocationExpression(anonymousType);
       allocationExpression.enumConstant = enumConstant;
@@ -3315,6 +3318,8 @@ protected void consumeEnumConstantWithClassBody() {
    fieldDeclaration.declarationEnd = this.endStatementPosition;
    fieldDeclaration.declarationSourceEnd = anonymousType.declarationSourceEnd;
    this.intPtr --; // remove end position of the arguments
+   this.variablesCounter[this.nestedType] = 0;
+   this.nestedType--;
 }
 protected void consumeEnumDeclaration() {
 	// EnumDeclaration ::= EnumHeader ClassHeaderImplementsopt EnumBody
@@ -3866,7 +3871,9 @@ protected void consumeInsideCastExpression() {
 }
 protected void consumeInsideCastExpressionLL1() {
 	// InsideCastExpressionLL1 ::= $empty
-	pushOnExpressionStack(getUnspecifiedReferenceOptimized());
+	pushOnGenericsLengthStack(0); // handle type arguments
+	pushOnGenericsIdentifiersLengthStack(this.identifierLengthStack[this.identifierLengthPtr]);
+	pushOnExpressionStack(getTypeReference(0));
 }
 protected void consumeInsideCastExpressionWithQualifiedGenerics() {
 	// InsideCastExpressionWithQualifiedGenerics ::= $empty
@@ -4317,18 +4324,19 @@ protected void consumeMethodDeclaration(boolean isNotAbstract) {
 	if (isNotAbstract) {
 		//statements
 		explicitDeclarations = this.realBlockStack[this.realBlockPtr--];
-		if ((length = this.astLengthStack[this.astLengthPtr--]) != 0) {
-			if (this.options.ignoreMethodBodies) {
-				this.astPtr -= length;
-			} else {
-			System.arraycopy(
-				this.astStack,
-				(this.astPtr -= length) + 1,
-				statements = new Statement[length],
-				0,
-				length);
+		if (!this.options.ignoreMethodBodies) {
+			if ((length = this.astLengthStack[this.astLengthPtr--]) != 0) {
+				System.arraycopy(
+					this.astStack,
+					(this.astPtr -= length) + 1,
+					statements = new Statement[length],
+					0,
+					length);
+			}
+		} else {
+			length = this.astLengthStack[this.astLengthPtr--];
+			this.astPtr -= length;
 		}
-	}
 	}
 
 	// now we know that we have a method declaration at the top of the ast stack
@@ -7734,11 +7742,17 @@ protected void consumeTypeHeaderNameWithTypeParameters() {
 
 	this.listTypeParameterLength = 0;
 
-	if (this.currentElement != null) { // is recovering
-		RecoveredType recoveredType = (RecoveredType) this.currentElement;
-		recoveredType.pendingTypeParameters = null;
-
-		this.lastCheckPoint = typeDecl.bodyStart;
+	if (this.currentElement != null) {
+		// is recovering
+		if (this.currentElement instanceof RecoveredType) {
+			RecoveredType recoveredType = (RecoveredType) this.currentElement;
+			recoveredType.pendingTypeParameters = null;
+			this.lastCheckPoint = typeDecl.bodyStart;
+		} else {
+			this.lastCheckPoint = typeDecl.bodyStart;
+			this.currentElement = this.currentElement.add(typeDecl, 0);
+			this.lastIgnoredToken = -1;
+		}
 	}
 }
 protected void consumeTypeImportOnDemandDeclarationName() {
@@ -8971,10 +8985,10 @@ public void initializeScanner(){
 		this.options.sourceLevel /*sourceLevel*/,
 		this.options.complianceLevel /*complianceLevel*/,
 		this.options.taskTags/*taskTags*/,
-		this.options.taskPriorites/*taskPriorities*/,
+		this.options.taskPriorities/*taskPriorities*/,
 		this.options.isTaskCaseSensitive/*taskCaseSensitive*/);
 	// GROOVY start - workaround JDT bug where it sorts the tasks but not the priorities!
-	this.options.taskPriorites = scanner.taskPriorities;
+	this.options.taskPriorities = scanner.taskPriorities;
 	// GROOVY end
 }
 public void jumpOverMethodBody() {
@@ -9457,29 +9471,29 @@ public void parse(ConstructorDeclaration cd, CompilationUnitDeclaration unit, bo
 	if (this.astLengthPtr > -1 && (length = this.astLengthStack[this.astLengthPtr--]) != 0) {
 		this.astPtr -= length;
 		if (!this.options.ignoreMethodBodies) {
-		if (this.astStack[this.astPtr + 1] instanceof ExplicitConstructorCall)
-			//avoid a isSomeThing that would only be used here BUT what is faster between two alternatives ?
-			{
-			System.arraycopy(
-				this.astStack,
-				this.astPtr + 2,
-				cd.statements = new Statement[length - 1],
-				0,
-				length - 1);
-			cd.constructorCall = (ExplicitConstructorCall) this.astStack[this.astPtr + 1];
-		} else { //need to add explicitly the super();
-			System.arraycopy(
-				this.astStack,
-				this.astPtr + 1,
-				cd.statements = new Statement[length],
-				0,
-				length);
-			cd.constructorCall = SuperReference.implicitSuperConstructorCall();
-		}
+			if (this.astStack[this.astPtr + 1] instanceof ExplicitConstructorCall)
+				//avoid a isSomeThing that would only be used here BUT what is faster between two alternatives ?
+				{
+				System.arraycopy(
+					this.astStack,
+					this.astPtr + 2,
+					cd.statements = new Statement[length - 1],
+					0,
+					length - 1);
+				cd.constructorCall = (ExplicitConstructorCall) this.astStack[this.astPtr + 1];
+			} else { //need to add explicitly the super();
+				System.arraycopy(
+					this.astStack,
+					this.astPtr + 1,
+					cd.statements = new Statement[length],
+					0,
+					length);
+				cd.constructorCall = SuperReference.implicitSuperConstructorCall();
+			}
 		}
 	} else {
 		if (!this.options.ignoreMethodBodies) {
-		cd.constructorCall = SuperReference.implicitSuperConstructorCall();
+			cd.constructorCall = SuperReference.implicitSuperConstructorCall();
 		}
 		if (!containsComment(cd.bodyStart, cd.bodyEnd)) {
 			cd.bits |= ASTNode.UndocumentedEmptyBlock;
@@ -9706,12 +9720,12 @@ public void parse(MethodDeclaration md, CompilationUnitDeclaration unit) {
 			// ignore statements
 			this.astPtr -= length;
 		} else {
-		System.arraycopy(
-			this.astStack,
-			(this.astPtr -= length) + 1,
-			md.statements = new Statement[length],
-			0,
-			length);
+			System.arraycopy(
+				this.astStack,
+				(this.astPtr -= length) + 1,
+				md.statements = new Statement[length],
+				0,
+				length);
 		}
 	} else {
 		if (!containsComment(md.bodyStart, md.bodyEnd)) {
@@ -9794,7 +9808,7 @@ public ASTNode[] parseClassBodyDeclarations(char[] source, int offset, int lengt
 	}
 	boolean containsInitializers = false;
 	TypeDeclaration typeDeclaration = null;
-	for (int i = 0, max = result.length; i< max; i++) {
+	for (int i = 0, max = result.length; i < max; i++) {
 		// parse each class body declaration
 		ASTNode node = result[i];
 		if (node instanceof TypeDeclaration) {

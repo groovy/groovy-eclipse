@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -45,6 +45,7 @@ public interface ISourceManipulation {
  * </ul>
  *
  * @exception IllegalArgumentException if container is <code>null</code>
+ * @see org.eclipse.jdt.core.IJavaModelStatusConstants#INVALID_DESTINATION
  */
 void copy(IJavaElement container, IJavaElement sibling, String rename, boolean replace, IProgressMonitor monitor) throws JavaModelException;
 /**
@@ -88,6 +89,7 @@ void delete(boolean force, IProgressMonitor monitor) throws JavaModelException;
  * </ul>
  *
  * @exception IllegalArgumentException if container is <code>null</code>
+ * @see org.eclipse.jdt.core.IJavaModelStatusConstants#INVALID_DESTINATION
  */
 void move(IJavaElement container, IJavaElement sibling, String rename, boolean replace, IProgressMonitor monitor) throws JavaModelException;
 /**

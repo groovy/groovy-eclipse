@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMemberValuePair;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryElementValuePair;
 import org.eclipse.jdt.internal.core.util.Util;

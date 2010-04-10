@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,9 +10,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import org.eclipse.core.resources.IResourceRuleFactory;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.MultiRule;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -140,6 +143,23 @@ public class SetContainerOperation extends ChangeClasspathOperation {
 		}
 	}
 
+	protected ISchedulingRule getSchedulingRule() {
+		if (this.canChangeResources) {
+			int length = this.affectedProjects.length;
+			IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
+			ISchedulingRule[] rules = new ISchedulingRule[length + 1];
+
+			for (int index = 0; index < length; index++) {
+				rules[index] = ruleFactory.modifyRule(this.affectedProjects[index].getProject());
+			}
+			// External folders might get changed inside ChangeClasspathOperation.classpathChanged(ClasspathChange)
+			rules[length] = ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject());
+
+			return new MultiRule(rules);
+		}
+		return super.getSchedulingRule();
+	}
+	
 	private void verbose_failure(CoreException e) {
 		Util.verbose(
 			"CPContainer SET  - FAILED DUE TO EXCEPTION\n" + //$NON-NLS-1$

@@ -141,7 +141,11 @@ public final boolean canBeSeenBy(TypeBinding receiverType, InvocationSite invoca
 	TypeBinding originalDeclaringClass = this.declaringClass.original();
 	ReferenceBinding currentType = (ReferenceBinding) receiverType;
 	do {
-		if (originalDeclaringClass == currentType.original()) return true;
+		if (currentType.isCapture()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=285002
+			if (originalDeclaringClass == currentType.erasure().original()) return true;
+		} else {
+			if (originalDeclaringClass == currentType.original()) return true;
+		}
 		PackageBinding currentPackage = currentType.fPackage;
 		// package could be null for wildcards/intersection types, ignore and recurse in superclass
 		if (currentPackage != null && currentPackage != declaringPackage) return false;

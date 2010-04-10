@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -612,7 +612,7 @@ public boolean isProvablyDistinct(TypeBinding otherType) {
 		            		ReferenceBinding otherEnclosing = otherParamType.enclosingType();
 		            		if (otherEnclosing == null) return true;
 		            		if ((otherEnclosing.tagBits & TagBits.HasDirectWildcard) == 0) {
-								if (enclosing != otherEnclosing) return true;
+		            			if (enclosing.isProvablyDistinct(otherEnclosing)) return true; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=302919
 		            		} else {
 		            			if (!enclosing.isEquivalentTo(otherParamType.enclosingType())) return true;
 		            		}
@@ -854,18 +854,22 @@ public boolean isReifiable() {
 			case Binding.INTERSECTION_TYPE:
 			case Binding.GENERIC_TYPE:
 				return false;
-				case Binding.PARAMETERIZED_TYPE:
+			case Binding.PARAMETERIZED_TYPE:
 				if (current.isBoundParameterizedType())
 					return false;
 				break;
 			case Binding.RAW_TYPE:
 				return true;
 		}
-		if (current.isStatic())
+		if (current.isStatic()) {
 			return true;
+		}
 		if (current.isLocalType()) {
-			NestedTypeBinding nestedType = (NestedTypeBinding) current.erasure();
-			if (nestedType.scope.methodScope().isStatic) return true;
+			LocalTypeBinding localTypeBinding = (LocalTypeBinding) current.erasure();
+			MethodBinding enclosingMethod = localTypeBinding.enclosingMethod;
+			if (enclosingMethod != null && enclosingMethod.isStatic()) {
+				return true;
+			}
 		}
 	} while ((current = current.enclosingType()) != null);
 	return true;

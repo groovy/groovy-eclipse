@@ -120,6 +120,7 @@ public class Alignment {
 	public static final int R_OUTERMOST = 1;
 	public static final int R_INNERMOST = 2;
 	public int tieBreakRule;
+	public int startingColumn = -1;
 
 	// alignment effects on a per fragment basis
 	public static final int NONE = 0;
@@ -351,11 +352,14 @@ public class Alignment {
 			}
 		}
 
-		if (this.fragmentBreaks[this.fragmentIndex] == BREAK) {
-			this.scribe.printNewLine();
-		}
-		if (this.fragmentIndentations[this.fragmentIndex] > 0) {
-			this.scribe.indentationLevel = this.fragmentIndentations[this.fragmentIndex];
+		int fragmentIndentation = this.fragmentIndentations[this.fragmentIndex];
+		if (this.startingColumn < 0 || (fragmentIndentation+1) < this.startingColumn) {
+			if (this.fragmentBreaks[this.fragmentIndex] == BREAK) {
+				this.scribe.printNewLine();
+			}
+			if (fragmentIndentation > 0) {
+				this.scribe.indentationLevel = fragmentIndentation;
+			}
 		}
 	}
 
@@ -383,20 +387,20 @@ public class Alignment {
 	}
 
 	public String toString(StringBuffer buffer, int level) {
-
+		
 		// Compute the indentation at the given level
 		StringBuffer indentation = new StringBuffer();
 		for (int i=0; i<level; i++) {
 			indentation.append('\t');
 		}
-
+		
 		// First line is for class and name
 		buffer.append(indentation);
 		buffer
 			.append("<name: ")	//$NON-NLS-1$
 			.append(this.name)
 			.append(">\n");	//$NON-NLS-1$
-
+		
 		// Line for depth and break indentation
 		buffer.append(indentation);
 		buffer
@@ -435,7 +439,7 @@ public class Alignment {
 		buffer
 			.append(indentation)
 			.append(">\n"); //$NON-NLS-1$
-
+		
 		// Display enclosing
 		if (this.enclosing != null && level >= 0) {
 			buffer
@@ -446,7 +450,7 @@ public class Alignment {
 				.append(indentation)
 				.append(">\n"); //$NON-NLS-1$
 		}
-
+		
 		// Return the result
 		return buffer.toString();
 	}

@@ -18,9 +18,8 @@ import org.eclipse.jdt.core.*;
  * <p>
  * The type of this match is available from {@link #getType()}.
  * </p>
- * <p>
- * This class is not intended to be overridden by clients.
- * </p>
+ *
+ * @noextend This class is not intended to be subclassed by clients.
  *
  * @see TypeNameMatchRequestor
  * @see SearchEngine#searchAllTypeNames(char[], int, char[], int, int, IJavaSearchScope, TypeNameMatchRequestor, int, org.eclipse.core.runtime.IProgressMonitor)
@@ -28,6 +27,20 @@ import org.eclipse.jdt.core.*;
  * @since 3.3
  */
 public abstract class TypeNameMatch {
+
+/**
+ * Returns the accessibility of the type name match
+ *
+ * @see IAccessRule
+ *
+ * @return the accessibility of the type name which may be
+ * 		{@link IAccessRule#K_ACCESSIBLE}, {@link IAccessRule#K_DISCOURAGED}
+ * 		or {@link IAccessRule#K_NON_ACCESSIBLE}.
+ * 		The default returned value is {@link IAccessRule#K_ACCESSIBLE}.
+ *
+ * @since 3.6
+ */
+public abstract int getAccessibility();
 
 /**
  * Returns the matched type's fully qualified name using '.' character

@@ -137,7 +137,7 @@ public class SortElementsOperation extends JavaModelOperation {
 			}
 
 			Document document= new Document(content);
-			return rewrite.rewriteAST(document, null);
+			return rewrite.rewriteAST(document, cu.getJavaProject().getOptions(true));
 		} finally {
 			done();
 		}
@@ -162,7 +162,7 @@ public class SortElementsOperation extends JavaModelOperation {
 		if (rewriter == null)
 			return document.get();
 
-		TextEdit edits = rewriter.rewriteAST(document, null);
+		TextEdit edits = rewriter.rewriteAST(document, unit.getJavaProject().getOptions(true));
 
 		RangeMarker[] markers = null;
 		if (this.positions != null) {

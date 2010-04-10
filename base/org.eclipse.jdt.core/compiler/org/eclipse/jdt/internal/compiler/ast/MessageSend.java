@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,7 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
@@ -409,7 +410,14 @@ public TypeBinding resolveType(BlockScope scope) {
 				return null;
 			}
 		}
-		scope.problemReporter().invalidMethod(this, this.binding);
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=245007 avoid secondary errors in case of
+		// missing super type for anonymous classes ... 
+		ReferenceBinding declaringClass = this.binding.declaringClass;
+		boolean avoidSecondary = declaringClass != null &&
+								 declaringClass.isAnonymousType() &&
+								 declaringClass.superclass() instanceof MissingTypeBinding;
+		if (!avoidSecondary)
+			scope.problemReporter().invalidMethod(this, this.binding);
 		MethodBinding closestMatch = ((ProblemMethodBinding)this.binding).closestMatch;
 		switch (this.binding.problemId()) {
 			case ProblemReasons.Ambiguous :

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -125,7 +125,7 @@ public interface IMemberValuePair {
 	 *      analyzed to determine its kind. For example, in <code>@MyAnnot({3.4, 1 + 2.3})</code>,
 	 *      the kind of the second element "1 + 2.3" is unknown.</li>
 	 * <li>the value is an array that contains heterogeneous values, e.g.
-	 *      <code>@MyAnnot(1, 2.3, "abc")</code></li>
+	 *      <code>@MyAnnot({1, 2.3, "abc"})</code></li>
 	 * </ul>
 	 * If the value kind is unknown, the returned value is always either <code>null</code>, or an
 	 * array containing {@link Object}s and/or <code>null</code>s for unknown elements.

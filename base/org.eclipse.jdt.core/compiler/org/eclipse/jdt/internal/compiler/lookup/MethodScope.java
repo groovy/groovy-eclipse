@@ -469,7 +469,7 @@ public final int recordInitializationStates(FlowInfo flowInfo) {
 }
 
 /**
- *  Answer the reference method of this scope, or null if initialization scoope.
+ *  Answer the reference method of this scope, or null if initialization scope.
  */
 public AbstractMethodDeclaration referenceMethod() {
 	if (this.referenceContext instanceof AbstractMethodDeclaration) return (AbstractMethodDeclaration) this.referenceContext;

@@ -1046,6 +1046,19 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 					visitor._invokeinterface(pc - this.codeOffset, index, count, constantPoolEntry);
 					pc += 5;
 					break;
+				case IOpcodeMnemonics.INVOKEDYNAMIC :
+					index = u2At(this.classFileBytes, 1, pc);
+					constantPoolEntry = this.constantPool.decodeEntry(index);
+					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_NameAndType) {
+						throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
+					}
+					visitor._invokedynamic(
+							pc - this.codeOffset,
+							index,
+							this.constantPool.decodeEntry(constantPoolEntry.getNameAndTypeInfoNameIndex()),
+							this.constantPool.decodeEntry(constantPoolEntry.getNameAndTypeInfoDescriptorIndex()));
+					pc += 5;
+					break;
 				case IOpcodeMnemonics.NEW :
 					index = u2At(this.classFileBytes, 1, pc);
 					constantPoolEntry = this.constantPool.decodeEntry(index);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -987,13 +987,13 @@ public ICompilationUnit getWorkingCopy(WorkingCopyOwner workingCopyOwner, IProbl
 
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 
-	// GROOVY start
-    // old
-    // CompilationUnit workingCopy = new CompilationUnit((PackageFragment)getParent(), getElementName(), workingCopyOwner);
-    // new
+	/* GROOVY start
+    // original
+	CompilationUnit workingCopy = new CompilationUnit((PackageFragment)getParent(), getElementName(), workingCopyOwner);
+    // new */
     CompilationUnit workingCopy = LanguageSupportFactory.newCompilationUnit((PackageFragment)getParent(), getElementName(), workingCopyOwner);
     // GROOVY end
-    JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo =
+	JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo =
 		manager.getPerWorkingCopyInfo(workingCopy, false/*don't create*/, true/*record usage*/, null/*not used since don't create*/);
 	if (perWorkingCopyInfo != null) {
 		return perWorkingCopyInfo.getWorkingCopy(); // return existing handle instead of the one created above

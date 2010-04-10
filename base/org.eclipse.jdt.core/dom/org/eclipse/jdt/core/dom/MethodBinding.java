@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@
 package org.eclipse.jdt.core.dom;
 
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedGenericMethodBinding;
@@ -243,9 +244,13 @@ class MethodBinding implements IMethodBinding {
 	}
 
 	private JavaElement getUnresolvedJavaElement() {
+		if (JavaCore.getPlugin() == null) {
+			return null;
+		}
 		if (!(this.resolver instanceof DefaultBindingResolver)) return null;
 
 		DefaultBindingResolver defaultBindingResolver = (DefaultBindingResolver) this.resolver;
+		if (!defaultBindingResolver.fromJavaProject) return null;
 		return Util.getUnresolvedJavaElement(
 				this.binding,
 				defaultBindingResolver.workingCopyOwner,

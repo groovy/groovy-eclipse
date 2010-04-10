@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,11 +12,15 @@
 package org.eclipse.jdt.core.dom;
 
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.util.IModifierConstants;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.Initializer;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
@@ -126,7 +130,22 @@ class VariableBinding implements IVariableBinding {
 		if (!isField()) {
 			ASTNode node = this.resolver.findDeclaringNode(this);
 			while (true) {
-				if (node == null) break;
+				if (node == null) {
+					if (this.binding instanceof LocalVariableBinding) {
+						LocalVariableBinding localVariableBinding = (LocalVariableBinding) this.binding;
+						BlockScope blockScope = localVariableBinding.declaringScope;
+						if (blockScope != null) {
+							ReferenceContext referenceContext = blockScope.referenceContext();
+							if (referenceContext instanceof Initializer) {
+								return null;
+							}
+							if (referenceContext instanceof AbstractMethodDeclaration) {
+								return this.resolver.getMethodBinding(((AbstractMethodDeclaration) referenceContext).binding);
+							}
+						}
+					}
+					return null;
+				}
 				switch(node.getNodeType()) {
 					case ASTNode.INITIALIZER :
 						return null;
@@ -202,20 +221,25 @@ class VariableBinding implements IVariableBinding {
 	}
 
 	private JavaElement getUnresolvedJavaElement() {
+		if (JavaCore.getPlugin() == null) {
+			return null;
+		}
 		if (isField()) {
 			if (this.resolver instanceof DefaultBindingResolver) {
 				DefaultBindingResolver defaultBindingResolver = (DefaultBindingResolver) this.resolver;
+				if (!defaultBindingResolver.fromJavaProject) return null;
 				return Util.getUnresolvedJavaElement(
 						(FieldBinding) this.binding,
 						defaultBindingResolver.workingCopyOwner,
 						defaultBindingResolver.getBindingsToNodesMap());
-			} else {
-				return Util.getUnresolvedJavaElement((FieldBinding) this.binding, null, null);
 			}
+			return null;
 		}
 		// local variable
 		if (!(this.resolver instanceof DefaultBindingResolver)) return null;
-		VariableDeclaration localVar = (VariableDeclaration) ((DefaultBindingResolver) this.resolver).bindingsToAstNodes.get(this);
+		DefaultBindingResolver defaultBindingResolver = (DefaultBindingResolver) this.resolver;
+		if (!defaultBindingResolver.fromJavaProject) return null;
+		VariableDeclaration localVar = (VariableDeclaration) defaultBindingResolver.bindingsToAstNodes.get(this);
 		if (localVar == null) return null;
 		int nameStart;
 		int nameLength;
@@ -244,15 +268,10 @@ class VariableBinding implements IVariableBinding {
 				// Local variable is declared inside an initializer
 				TypeDeclaration typeDeclaration = (TypeDeclaration) referenceContext;
 				JavaElement typeHandle = null;
-				if (this.resolver instanceof DefaultBindingResolver) {
-					DefaultBindingResolver defaultBindingResolver = (DefaultBindingResolver) this.resolver;
-					typeHandle = Util.getUnresolvedJavaElement(
-						typeDeclaration.binding,
-						defaultBindingResolver.workingCopyOwner,
-						defaultBindingResolver.getBindingsToNodesMap());
-				} else {
-					typeHandle = Util.getUnresolvedJavaElement(typeDeclaration.binding, null, null);
-				}
+				typeHandle = Util.getUnresolvedJavaElement(
+					typeDeclaration.binding,
+					defaultBindingResolver.workingCopyOwner,
+					defaultBindingResolver.getBindingsToNodesMap());
 				parent = Util.getUnresolvedJavaElement(sourceStart, sourceEnd, typeHandle);
 			} else {
 				return null;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Benjamin Muskalla - Contribution for bug 239066
+ *     Stephan Herrmann  - Contribution for bug 236385
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
 
@@ -254,6 +255,7 @@ public static int getIrritant(int problemID) {
 			return CompilerOptions.RawTypeReference;
 
 		case IProblem.MissingOverrideAnnotation:
+		case IProblem.MissingOverrideAnnotationForInterfaceMethodImplementation:
 			return CompilerOptions.MissingOverrideAnnotation;
 
 		case IProblem.FieldMissingDeprecatedAnnotation:
@@ -410,6 +412,12 @@ public static int getIrritant(int problemID) {
 			
 		case IProblem.DeadCode:
 			return CompilerOptions.DeadCode;
+			
+		case IProblem.Task :
+			return CompilerOptions.Tasks;
+
+		case IProblem.UnusedObjectAllocation:
+			return CompilerOptions.UnusedObjectAllocation;
 	}
 	return 0;
 }
@@ -439,7 +447,7 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.AutoBoxing :
 			case CompilerOptions.MissingOverrideAnnotation :
 			case CompilerOptions.MissingDeprecatedAnnotation :
-			case CompilerOptions.ParameterAssignment :				
+			case CompilerOptions.ParameterAssignment :
 				return CategorizedProblem.CAT_CODE_STYLE;
 
 			case CompilerOptions.MaskedCatchBlock :
@@ -460,6 +468,7 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.MissingSynchronizedModifierInInheritedMethod :
 			case CompilerOptions.ShouldImplementHashcode :
 			case CompilerOptions.DeadCode :
+			case CompilerOptions.UnusedObjectAllocation :
 				return CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM;
 			
 			case CompilerOptions.OverriddenPackageDefaultMethod :
@@ -467,7 +476,7 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.LocalVariableHiding :
 			case CompilerOptions.FieldHiding :
 			case CompilerOptions.TypeHiding :
-				return CategorizedProblem.CAT_NAME_SHADOWING_CONFLICT;		
+				return CategorizedProblem.CAT_NAME_SHADOWING_CONFLICT;
 
 			case CompilerOptions.UnusedLocalVariable :
 			case CompilerOptions.UnusedArgument :
@@ -480,7 +489,7 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.UnusedWarningToken :
 			case CompilerOptions.UnusedLabel :
 			case CompilerOptions.RedundantSuperinterface :	
-				return CategorizedProblem.CAT_UNNECESSARY_CODE;					
+				return CategorizedProblem.CAT_UNNECESSARY_CODE;
 
 			case CompilerOptions.UsingDeprecatedAPI :
 				return CategorizedProblem.CAT_DEPRECATION;
@@ -495,11 +504,11 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.MissingJavadocTags :
 			case CompilerOptions.InvalidJavadoc :
 			case CompilerOptions.InvalidJavadoc|CompilerOptions.UsingDeprecatedAPI :
-				return CategorizedProblem.CAT_JAVADOC;					
+				return CategorizedProblem.CAT_JAVADOC;
 
 			case CompilerOptions.UncheckedTypeOperation :
 			case CompilerOptions.RawTypeReference :
-				return CategorizedProblem.CAT_UNCHECKED_RAW;				
+				return CategorizedProblem.CAT_UNCHECKED_RAW;
 			
 			case CompilerOptions.ForbiddenReference :
 			case CompilerOptions.DiscouragedReference :
@@ -1208,9 +1217,7 @@ public void comparingIdenticalExpressions(Expression comparison){
 public int computeSeverity(int problemID){
 
 	switch (problemID) {
-		case IProblem.Task :
-			return ProblemSeverities.Warning;
- 		case IProblem.VarargsConflict :
+		case IProblem.VarargsConflict :
 			return ProblemSeverities.Warning;
  		case IProblem.TypeCollidesWithPackage :
 			return ProblemSeverities.Warning;
@@ -1373,6 +1380,11 @@ public void deprecatedMethod(MethodBinding method, ASTNode location) {
 	}
 }
 public void deprecatedType(TypeBinding type, ASTNode location) {
+	deprecatedType(type, location, Integer.MAX_VALUE);
+}
+// The argument 'index' makes sure that we demarcate partial types correctly while marking off
+// a deprecated type in a qualified reference (see bug 292510)
+public void deprecatedType(TypeBinding type, ASTNode location, int index) {
 	if (location == null) return; // 1G828DN - no type ref for synthetic arguments
 	int severity = computeSeverity(IProblem.UsingDeprecatedType);
 	if (severity == ProblemSeverities.Ignore) return;
@@ -1383,7 +1395,7 @@ public void deprecatedType(TypeBinding type, ASTNode location) {
 		new String[] {new String(type.shortReadableName())},
 		severity,
 		location.sourceStart,
-		nodeSourceEnd(null, location));
+		nodeSourceEnd(null, location, index));
 }
 public void disallowedTargetForAnnotation(Annotation annotation) {
 	this.handle(
@@ -2663,6 +2675,9 @@ public void incompatibleReturnType(MethodBinding currentMethod, MethodBinding in
 		sourceEnd);
 }
 public void incorrectArityForParameterizedType(ASTNode location, TypeBinding type, TypeBinding[] argumentTypes) {
+	incorrectArityForParameterizedType(location, type, argumentTypes, Integer.MAX_VALUE);
+}
+public void incorrectArityForParameterizedType(ASTNode location, TypeBinding type, TypeBinding[] argumentTypes, int index) {
     if (location == null) {
 		this.handle(
 			IProblem.IncorrectArityForParameterizedType,
@@ -2678,7 +2693,7 @@ public void incorrectArityForParameterizedType(ASTNode location, TypeBinding typ
 		new String[] {new String(type.readableName()), typesAsString(false, argumentTypes, false)},
 		new String[] {new String(type.shortReadableName()), typesAsString(false, argumentTypes, true)},
 		location.sourceStart,
-		location.sourceEnd);
+		nodeSourceEnd(null, location, index));
 }
 public void incorrectLocationForNonEmptyDimension(ArrayAllocationExpression expression, int index) {
 	this.handle(
@@ -3282,14 +3297,17 @@ public void invalidField(QualifiedNameReference nameRef, FieldBinding field, int
 						(int) nameRef.sourcePositions[index-1]);
 					return;
 			}
-			id = IProblem.UndefinedField;
-/* also need to check that the searchedType is the receiver type
-			if (searchedType.isHierarchyInconsistent())
-				severity = SecondaryError;
-*/
-			break;
-		case ProblemReasons.NotVisible :
 			String fieldName = new String(nameRef.tokens[index]);
+			String[] arguments = new String[] {fieldName };
+			this.handle(
+					id,
+					arguments,
+					arguments,
+					nodeSourceStart(field, nameRef),
+					nodeSourceEnd(field, nameRef));
+			return;
+		case ProblemReasons.NotVisible :
+			fieldName = new String(nameRef.tokens[index]);
 			this.handle(
 				IProblem.NotVisibleField,
 				new String[] {fieldName, new String(field.declaringClass.readableName())},
@@ -3716,6 +3734,14 @@ public void invalidTypeForCollection(Expression expression) {
 			expression.sourceStart,
 			expression.sourceEnd);
 }
+public void invalidTypeForCollectionTarget14(Expression expression) {
+	this.handle(
+			IProblem.InvalidTypeForCollectionTarget14,
+			NoArgument,
+			NoArgument,
+			expression.sourceStart,
+			expression.sourceEnd);
+}
 public void invalidTypeReference(Expression expression) {
 	this.handle(
 		IProblem.InvalidTypeExpression,
@@ -3994,6 +4020,9 @@ public void javadocDeprecatedMethod(MethodBinding method, ASTNode location, int 
 	}
 }
 public void javadocDeprecatedType(TypeBinding type, ASTNode location, int modifiers) {
+	javadocDeprecatedType(type, location, modifiers, Integer.MAX_VALUE);
+}
+public void javadocDeprecatedType(TypeBinding type, ASTNode location, int modifiers, int index) {
 	if (location == null) return; // 1G828DN - no type ref for synthetic arguments
 	int severity = computeSeverity(IProblem.JavadocUsingDeprecatedType);
 	if (severity == ProblemSeverities.Ignore) return;
@@ -4007,7 +4036,7 @@ public void javadocDeprecatedType(TypeBinding type, ASTNode location, int modifi
 				new String[] {new String(type.shortReadableName())},
 				severity,
 				location.sourceStart,
-				location.sourceEnd);
+				nodeSourceEnd(null, location, index));
 		}
 	}
 }
@@ -4899,10 +4928,10 @@ public void localVariableRedundantNullAssignment(LocalVariableBinding local, AST
 		nodeSourceEnd(local, location));
 }
 
-public void methodMustOverride(AbstractMethodDeclaration method) {
+public void methodMustOverride(AbstractMethodDeclaration method, long complianceLevel) {
 	MethodBinding binding = method.binding;
 	this.handle(
-		this.options.sourceLevel == ClassFileConstants.JDK1_5 ? IProblem.MethodMustOverride : IProblem.MethodMustOverrideOrImplement,
+		complianceLevel == ClassFileConstants.JDK1_5 ? IProblem.MethodMustOverride : IProblem.MethodMustOverrideOrImplement,
 		new String[] {new String(binding.selector), typesAsString(binding.isVarargs(), binding.parameters, false), new String(binding.declaringClass.readableName()), },
 		new String[] {new String(binding.selector), typesAsString(binding.isVarargs(), binding.parameters, true), new String(binding.declaringClass.shortReadableName()),},
 		method.sourceStart,
@@ -5017,6 +5046,18 @@ public void missingOverrideAnnotation(AbstractMethodDeclaration method) {
 	MethodBinding binding = method.binding;
 	this.handle(
 		IProblem.MissingOverrideAnnotation,
+		new String[] {new String(binding.selector), typesAsString(binding.isVarargs(), binding.parameters, false), new String(binding.declaringClass.readableName()), },
+		new String[] {new String(binding.selector), typesAsString(binding.isVarargs(), binding.parameters, true), new String(binding.declaringClass.shortReadableName()),},
+		severity,
+		method.sourceStart,
+		method.sourceEnd);
+}
+public void missingOverrideAnnotationForInterfaceMethodImplementation(AbstractMethodDeclaration method) {
+	int severity = computeSeverity(IProblem.MissingOverrideAnnotationForInterfaceMethodImplementation);
+	if (severity == ProblemSeverities.Ignore) return;
+	MethodBinding binding = method.binding;
+	this.handle(
+		IProblem.MissingOverrideAnnotationForInterfaceMethodImplementation,
 		new String[] {new String(binding.selector), typesAsString(binding.isVarargs(), binding.parameters, false), new String(binding.declaringClass.readableName()), },
 		new String[] {new String(binding.selector), typesAsString(binding.isVarargs(), binding.parameters, true), new String(binding.declaringClass.shortReadableName()),},
 		severity,
@@ -5235,7 +5276,11 @@ private int nodeSourceEnd(Binding field, ASTNode node, int index) {
 			if (index == 0) {
 				return (int) (ref.sourcePositions[ref.indexOfFirstFieldBinding-1]);
 			} else {
-				return (int) (ref.sourcePositions[index]);
+				int length = ref.sourcePositions.length;
+				if (index < length) {
+					return (int) (ref.sourcePositions[index]);
+				}
+				return (int) (ref.sourcePositions[0]);
 			}
 		}
 		FieldBinding[] otherFields = ref.otherBindings;
@@ -5262,7 +5307,16 @@ private int nodeSourceEnd(Binding field, ASTNode node, int index) {
 	} else if (node instanceof ArrayQualifiedTypeReference) {
 		ArrayQualifiedTypeReference reference = (ArrayQualifiedTypeReference) node;
 		int length = reference.sourcePositions.length;
+		if (index < length) {
+			return (int) reference.sourcePositions[index];
+		}
 		return (int) reference.sourcePositions[length - 1];
+	} else if (node instanceof QualifiedTypeReference) {
+		QualifiedTypeReference reference = (QualifiedTypeReference) node;
+		int length = reference.sourcePositions.length;
+		if (index < length) {
+			return (int) reference.sourcePositions[index];
+		}
 	}
 	return node.sourceEnd;
 }
@@ -5629,7 +5683,7 @@ private String parameterBoundAsString(TypeVariableBinding typeVariable, boolean 
 	}
 	return nameBuffer.toString();
 }
-public void parameterizedMemberTypeMissingArguments(ASTNode location, TypeBinding type) {
+public void parameterizedMemberTypeMissingArguments(ASTNode location, TypeBinding type, int index) {
 	if (location == null) { // binary case
 	    this.handle(
 			IProblem.MissingArgumentsForParameterizedMemberType,
@@ -5645,7 +5699,7 @@ public void parameterizedMemberTypeMissingArguments(ASTNode location, TypeBindin
 		new String[] {new String(type.readableName())},
 		new String[] {new String(type.shortReadableName())},
 		location.sourceStart,
-		location.sourceEnd);
+		nodeSourceEnd(null, location, index));
 }
 public void parseError(
 	int startPosition,
@@ -5976,7 +6030,7 @@ public void rawTypeReference(ASTNode location, TypeBinding type) {
 		new String[] {new String(type.readableName()), new String(type.erasure().readableName()), },
 		new String[] {new String(type.shortReadableName()),new String(type.erasure().shortReadableName()),},
 		location.sourceStart,
-		nodeSourceEnd(null, location));
+		nodeSourceEnd(null, location, Integer.MAX_VALUE));
 }
 public void recursiveConstructorInvocation(ExplicitConstructorCall constructorCall) {
 	this.handle(
@@ -6278,7 +6332,7 @@ public void staticInheritedMethodConflicts(SourceTypeBinding type, MethodBinding
 		type.sourceStart(),
 		type.sourceEnd());
 }
-public void staticMemberOfParameterizedType(ASTNode location, ReferenceBinding type) {
+public void staticMemberOfParameterizedType(ASTNode location, ReferenceBinding type, int index) {
 	if (location == null) { // binary case
 	    this.handle(
 			IProblem.StaticMemberOfParameterizedType,
@@ -6289,7 +6343,6 @@ public void staticMemberOfParameterizedType(ASTNode location, ReferenceBinding t
 			0);
 	    return;
 	}
-	int end = location.sourceEnd;
 	/*if (location instanceof ArrayTypeReference) {
 		ArrayTypeReference arrayTypeReference = (ArrayTypeReference) location;
 		if (arrayTypeReference.token != null && arrayTypeReference.token.length == 0) return;
@@ -6300,7 +6353,7 @@ public void staticMemberOfParameterizedType(ASTNode location, ReferenceBinding t
 		new String[] {new String(type.readableName()), new String(type.enclosingType().readableName()), },
 		new String[] {new String(type.shortReadableName()), new String(type.enclosingType().shortReadableName()), },
 		location.sourceStart,
-		end);
+		nodeSourceEnd(null, location, index));
 }
 public void stringConstantIsExceedingUtf8Limit(ASTNode location) {
 	this.handle(
@@ -6833,8 +6886,11 @@ public void unresolvableReference(NameReference nameRef, Binding binding) {
 		SingleNameReference ref = (SingleNameReference) nameRef;
 		if (isRecoveredName(ref.token)) return;
 	}
+	int problemId = (nameRef.bits & Binding.VARIABLE) != 0 && (nameRef.bits & Binding.TYPE) == 0
+		? IProblem.UnresolvedVariable
+		: IProblem.UndefinedName;
 	this.handle(
-		IProblem.UndefinedName,
+		problemId,
 		arguments,
 		arguments,
 		nameRef.sourceStart,
@@ -7097,6 +7153,14 @@ public void unusedLocalVariable(LocalDeclaration localDecl) {
 		severity,
 		localDecl.sourceStart,
 		localDecl.sourceEnd);
+}
+public void unusedObjectAllocation(AllocationExpression allocationExpression) {
+	this.handle(
+		IProblem.UnusedObjectAllocation, 
+		NoArgument, 
+		NoArgument, 
+		allocationExpression.sourceStart, 
+		allocationExpression.sourceEnd);
 }
 public void unusedPrivateConstructor(ConstructorDeclaration constructorDecl) {
 

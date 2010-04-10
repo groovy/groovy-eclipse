@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,25 +24,53 @@ public abstract class CodeFormatter {
 
 	/**
 	 * Unknown kind
-	 *
-	 * Note that since 3.4, the {@link #F_INCLUDE_COMMENTS} flag can be added
-	 * to this constant in order to get the comments formatted if a compilation unit
-	 * is processed.
+	 *<p>
+	 * <b>Since 3.6</b>, if the corresponding comment options are set to
+	 * <code>true</code> then it is also possible to format the comments on the fly
+	 * by adding the {@link #F_INCLUDE_COMMENTS} flag to this kind of format.
+	 * </p>
 	 */
 	public static final int K_UNKNOWN = 0x00;
 
 	/**
 	 * Kind used to format an expression
+	 * <p>
+	 * Note that using this constant, the comments encountered while formatting
+	 * the expression may be shifted to match the correct indentation but are not
+	 * formatted.
+	 * </p><p>
+	 * <b>Since 3.6</b>, if the corresponding comment options are set to
+	 * <code>true</code> then it is also possible to format the comments on the fly
+	 * by adding the {@link #F_INCLUDE_COMMENTS} flag to this kind of format.
+	 * </p>
 	 */
 	public static final int K_EXPRESSION = 0x01;
 
 	/**
 	 * Kind used to format a set of statements
+	 * <p>
+	 * Note that using this constant, the comments encountered while formatting
+	 * the statements may be shifted to match the correct indentation but are not
+	 * formatted.
+	 * </p><p>
+	 * <b>Since 3.6</b>, if the corresponding comment options are set to
+	 * <code>true</code> then it is also possible to format the comments on the fly
+	 * by adding the {@link #F_INCLUDE_COMMENTS} flag to this kind of format.
+	 * </p>
 	 */
 	public static final int K_STATEMENTS = 0x02;
 
 	/**
 	 * Kind used to format a set of class body declarations
+	 * <p>
+	 * Note that using this constant, the comments encountered while formatting
+	 * the body declarations may be shifted to match the correct indentation but
+	 * are not formatted.
+	 * </p><p>
+	 * <b>Since 3.6</b>, if the corresponding comment options are set to
+	 * <code>true</code> then it is also possible to format the comments on the fly
+	 * by adding the {@link #F_INCLUDE_COMMENTS} flag to this kind of format.
+	 * </p>
 	 */
 	public static final int K_CLASS_BODY_DECLARATIONS = 0x04;
 
@@ -50,11 +78,12 @@ public abstract class CodeFormatter {
 	 * Kind used to format a compilation unit
 	 * <p>
 	 * Note that using this constant, the comments are only indented while
-	 * processing the compilation unit.
+	 * formatting the compilation unit.
 	 * </p><p>
 	 * <b>Since 3.4</b>, if the corresponding comment option is set to
 	 * <code>true</code> then it is also possible to format the comments on the fly
 	 * by adding the {@link #F_INCLUDE_COMMENTS} flag to this kind of format.
+	 * </p>
 	 */
 	public static final int K_COMPILATION_UNIT = 0x08;
 
@@ -81,18 +110,28 @@ public abstract class CodeFormatter {
 	 * Flag used to include the comments during the formatting of the code
 	 * snippet.
 	 * <p>
-	 * This flag can only be combined with {@link #K_COMPILATION_UNIT} and
-	 * {@link #K_UNKNOWN} kinds for now but might be extended to other ones
-	 * in future versions.
+	 * This flag can be combined with the following kinds:
+	 * <ul>
+	 * 		<li>{@link #K_COMPILATION_UNIT}</li>
+	 * 		<li>{@link #K_UNKNOWN}</li>
+	 * 		<li>{@link #K_CLASS_BODY_DECLARATIONS} <i>(since 3.6)</i></li>
+	 * 		<li>{@link #K_EXPRESSION} <i>(since 3.6)</i></li>
+	 * 		<li>{@link #K_STATEMENTS} <i>(since 3.6)</i></li>
+	 * </ul>
 	 * </p><p>
-	 * Note also that it has an effect only when the option
-	 * {@link DefaultCodeFormatterConstants#FORMATTER_COMMENT_FORMAT_JAVADOC_COMMENT}
-	 * is set to {@link DefaultCodeFormatterConstants#TRUE} while calling
+	 * Note also that it has an effect only when one or several format comments
+	 * options for
+	 * {@link DefaultCodeFormatterConstants#FORMATTER_COMMENT_FORMAT_JAVADOC_COMMENT javadoc}
+	 * ,
+	 * {@link DefaultCodeFormatterConstants#FORMATTER_COMMENT_FORMAT_BLOCK_COMMENT block}
+	 * or
+	 * {@link DefaultCodeFormatterConstants#FORMATTER_COMMENT_FORMAT_LINE_COMMENT line}
+	 * are set to {@link DefaultCodeFormatterConstants#TRUE true} while calling
 	 * {@link #format(int, String, int, int, int, String)} or
 	 * {@link #format(int, String, IRegion[], int, String)} methods
 	 * </p><p>
-	 * For example, with the Eclipse default formatter options, the formatting of
-	 * the following code snippet using {@link #K_COMPILATION_UNIT}:
+	 * For example, with the Eclipse default formatter options, the formatting
+	 * of the following code snippet using {@link #K_COMPILATION_UNIT}:
 	 * <pre>
 	 * public class X {
 	 * &#047;&#042;&#042;

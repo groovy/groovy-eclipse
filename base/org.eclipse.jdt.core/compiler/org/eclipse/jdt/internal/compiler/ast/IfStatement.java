@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,7 @@ public class IfStatement extends Statement {
 	int elseInitStateIndex = -1;
 	int mergedInitStateIndex = -1;
 
-public IfStatement(Expression condition, Statement thenStatement, 	int sourceStart, int sourceEnd) {
+public IfStatement(Expression condition, Statement thenStatement, int sourceStart, int sourceEnd) {
 	this.condition = condition;
 	this.thenStatement = thenStatement;
 	// remember useful empty statement
@@ -69,12 +69,27 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	if (isConditionOptimizedTrue) {
 		elseFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
 	}
+	if (((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) && 
+			((thenFlowInfo.tagBits & FlowInfo.UNREACHABLE) != 0)) {
+		// Mark then block as unreachable
+		// No need if the whole if-else construct itself lies in unreachable code
+		this.bits |= ASTNode.IsThenStatementUnreachable;
+	} else if (((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) &&
+			((elseFlowInfo.tagBits & FlowInfo.UNREACHABLE) != 0)) {
+		// Mark else block as unreachable
+		// No need if the whole if-else construct itself lies in unreachable code
+		this.bits |= ASTNode.IsElseStatementUnreachable;
+	}
 	if (this.thenStatement != null) {
 		// Save info for code gen
 		this.thenInitStateIndex = currentScope.methodScope().recordInitializationStates(thenFlowInfo);
-		if (isConditionOptimizedFalse) {
+		if (isConditionOptimizedFalse || ((this.bits & ASTNode.IsThenStatementUnreachable) != 0)) {
 			if (!isKnowDeadCodePattern(this.condition) || currentScope.compilerOptions().reportDeadCodeInTrivialIfStatement) {
 				this.thenStatement.complainIfUnreachable(thenFlowInfo, currentScope, initialComplaintLevel);
+			} else {
+				// its a known coding pattern which should be tolerated by dead code analysis
+				// according to isKnowDeadCodePattern()
+				this.bits &= ~ASTNode.IsThenStatementUnreachable;
 			}
 		}
 		thenFlowInfo = this.thenStatement.analyseCode(currentScope, flowContext, thenFlowInfo);
@@ -86,28 +101,33 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 	// process the ELSE part
 	if (this.elseStatement != null) {
-	    // signal else clause unnecessarily nested, tolerate else-if code pattern
-	    if (thenFlowInfo == FlowInfo.DEAD_END
-	            && (this.bits & IsElseIfStatement) == 0 	// else of an else-if
-	            && !(this.elseStatement instanceof IfStatement)) {
-	        currentScope.problemReporter().unnecessaryElse(this.elseStatement);
-	    }
+		// signal else clause unnecessarily nested, tolerate else-if code pattern
+		if (thenFlowInfo == FlowInfo.DEAD_END
+				&& (this.bits & IsElseIfStatement) == 0 	// else of an else-if
+				&& !(this.elseStatement instanceof IfStatement)) {
+			currentScope.problemReporter().unnecessaryElse(this.elseStatement);
+		}
 		// Save info for code gen
 		this.elseInitStateIndex = currentScope.methodScope().recordInitializationStates(elseFlowInfo);
-		if (isConditionOptimizedTrue) {
+		if (isConditionOptimizedTrue || ((this.bits & ASTNode.IsElseStatementUnreachable) != 0)) {
 			if (!isKnowDeadCodePattern(this.condition) || currentScope.compilerOptions().reportDeadCodeInTrivialIfStatement) {
 				this.elseStatement.complainIfUnreachable(elseFlowInfo, currentScope, initialComplaintLevel);
+			} else {
+				// its a known coding pattern which should be tolerated by dead code analysis
+				// according to isKnowDeadCodePattern()
+				this.bits &= ~ASTNode.IsElseStatementUnreachable;
 			}
 		}
 		elseFlowInfo = this.elseStatement.analyseCode(currentScope, flowContext, elseFlowInfo);
 	}
 	// merge THEN & ELSE initializations
-	FlowInfo mergedInfo = FlowInfo.mergedOptimizedBranches(
+	FlowInfo mergedInfo = FlowInfo.mergedOptimizedBranchesIfElse(
 		thenFlowInfo,
 		isConditionOptimizedTrue,
 		elseFlowInfo,
 		isConditionOptimizedFalse,
-		true /*if(true){ return; }  fake-reachable(); */);
+		true /*if(true){ return; }  fake-reachable(); */,
+		flowInfo);
 	this.mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(mergedInfo);
 	return mergedInfo;
 }
@@ -138,13 +158,20 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 			|| this.elseStatement.isEmptyBlock());
 	if (hasThenPart) {
 		BranchLabel falseLabel = null;
-		// generate boolean condition
-		this.condition.generateOptimizedBoolean(
-			currentScope,
-			codeStream,
-			null,
-			hasElsePart ? (falseLabel = new BranchLabel(codeStream)) : endifLabel,
-			true/*cst == Constant.NotAConstant*/);
+		// generate boolean condition only if needed
+		if (((this.bits & ASTNode.IsElseStatementUnreachable) != 0) ||
+				(cst != Constant.NotAConstant && cst.booleanValue() == true)) {
+			// No need to generate if condition statement when we know that only the then action
+			// will be executed
+			this.condition.generateCode(currentScope, codeStream, false);
+		} else {
+			this.condition.generateOptimizedBoolean(
+				currentScope,
+				codeStream,
+				null,
+				hasElsePart ? (falseLabel = new BranchLabel(codeStream)) : endifLabel,
+				true/*cst == Constant.NotAConstant*/);
+		}
 		// May loose some local variable initializations : affecting the local variable attributes
 		if (this.thenInitStateIndex != -1) {
 			codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.thenInitStateIndex);
@@ -173,13 +200,20 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 			this.elseStatement.generateCode(currentScope, codeStream);
 		}
 	} else if (hasElsePart) {
-		// generate boolean condition
-		this.condition.generateOptimizedBoolean(
-			currentScope,
-			codeStream,
-			endifLabel,
-			null,
-			true/*cst == Constant.NotAConstant*/);
+		// generate boolean condition only if needed
+		if (((this.bits & ASTNode.IsThenStatementUnreachable) != 0) ||
+				(cst != Constant.NotAConstant && cst.booleanValue() == false)) {
+			// No need to generate if condition statement when we know that only the else action
+			// will be executed
+			this.condition.generateCode(currentScope, codeStream, false);
+		} else {
+			this.condition.generateOptimizedBoolean(
+				currentScope,
+				codeStream,
+				endifLabel,
+				null,
+				true/*cst == Constant.NotAConstant*/);
+		}
 		// generate else statement
 		// May loose some local variable initializations : affecting the local variable attributes
 		if (this.elseInitStateIndex != -1) {
@@ -205,37 +239,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
-/**
- * Answers true if the if is identified as a known coding pattern which
- * should be tolerated by dead code analysis.
- * e.g. if (DEBUG) print(); // no complaint
- * Only invoked when overall condition is known to be optimizeable into false.
- */
-public static boolean isKnowDeadCodePattern(Expression expression) {
-	// if (!DEBUG) print(); - tolerated
-	if (expression instanceof UnaryExpression) {
-		expression = ((UnaryExpression) expression).expression;
-	}
-	// if (DEBUG) print(); - tolerated
-	if (expression instanceof Reference) return true;
 
-//	if (expression instanceof BinaryExpression) {
-//		BinaryExpression binary = (BinaryExpression) expression;
-//		switch ((binary.bits & ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT/* operator */) {
-//			case OperatorIds.AND_AND :
-//			case OperatorIds.OR_OR :
-//				break;
-//			default: 
-//				// if (DEBUG_LEVEL > 0) print(); - tolerated
-//				if ((binary.left instanceof Reference) && binary.right.constant != Constant.NotAConstant)
-//					return true;
-//				// if (0 < DEBUG_LEVEL) print(); - tolerated
-//				if ((binary.right instanceof Reference) && binary.left.constant != Constant.NotAConstant)
-//					return true;
-//		}
-//	}
-	return false;
-}
 
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	printIndent(indent, output).append("if ("); //$NON-NLS-1$

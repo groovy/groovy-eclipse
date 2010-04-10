@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -417,6 +417,28 @@ public interface IClasspathEntry {
 	 *    not applicable
 	 */
 	IPath getSourceAttachmentRootPath();
+
+	
+	/**
+	 * Returns the classpath entry that is making a reference to this classpath entry. For entry kinds 
+	 * {@link #CPE_LIBRARY}, the return value is the entry that is representing the JAR that includes 
+	 * <code>this</code> in the MANIFEST.MF file's Class-Path section. For entry kinds other than 
+	 * {@link #CPE_LIBRARY}, this returns <code>null</code>. For those entries that are on the raw classpath already, 
+	 * this returns <code>null</code>.  
+	 * <p>
+	 * It is possible that multiple library entries refer to the same entry
+	 * via the MANIFEST.MF file. In those cases, this method returns the first classpath entry 
+	 * that appears in the raw classpath. However, this does not mean that the other referencing 
+	 * entries do not relate to their referenced entries. 
+	 * See {@link JavaCore#getReferencedClasspathEntries(IClasspathEntry, IJavaProject)} for 
+	 * more details.
+	 * </p>
+	 * 
+	 * @return the classpath entry that is referencing this entry or <code>null</code> if 
+	 * 		not applicable.
+	 * @since 3.6
+	 */
+	IClasspathEntry getReferencingEntry();
 
 	/**
 	 * Returns whether this entry is exported to dependent projects.

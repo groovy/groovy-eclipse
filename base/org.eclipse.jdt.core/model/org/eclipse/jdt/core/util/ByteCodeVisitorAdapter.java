@@ -922,7 +922,17 @@ public class ByteCodeVisitorAdapter implements IBytecodeVisitor {
 	public void _instanceof(int pc, int index, IConstantPoolEntry constantClass) {
 		// default behavior is to do nothing
 	}
-
+	/**
+	 * @see IBytecodeVisitor#_invokeinterface(int, int, byte, IConstantPoolEntry)
+	 * @since 3.6
+	 */
+	public void _invokedynamic(
+			int pc,
+			int index,
+			IConstantPoolEntry nameEntry,
+			IConstantPoolEntry descriptorEntry) {
+		// default behavior is to do nothing
+	}
 	/**
 	 * @see IBytecodeVisitor#_invokeinterface(int, int, byte, IConstantPoolEntry)
 	 */

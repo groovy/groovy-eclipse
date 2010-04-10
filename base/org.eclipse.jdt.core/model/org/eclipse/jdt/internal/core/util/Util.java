@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -95,7 +95,7 @@ public class Util {
 		public org.eclipse.jdt.internal.compiler.ast.ASTNode get(Binding binding);
 	}
 
-	private static final String ARGUMENTS_DELIMITER = "#"; //$NON-NLS-1$
+	private static final char ARGUMENTS_DELIMITER = '#';
 
 	private static final String EMPTY_ARGUMENT = "   "; //$NON-NLS-1$
 
@@ -267,44 +267,6 @@ public class Util {
 		}
 		return len1 - len2;
 	}
-
-	/**
-	 * Concatenate two strings with a char in between.
-	 * @see #concat(String, String)
-	 */
-	public static String concat(String s1, char c, String s2) {
-		if (s1 == null) s1 = "null"; //$NON-NLS-1$
-		if (s2 == null) s2 = "null"; //$NON-NLS-1$
-		int l1 = s1.length();
-		int l2 = s2.length();
-		char[] buf = new char[l1 + 1 + l2];
-		s1.getChars(0, l1, buf, 0);
-		buf[l1] = c;
-		s2.getChars(0, l2, buf, l1 + 1);
-		return new String(buf);
-	}
-
-	/**
-	 * Concatenate two strings.
-	 * Much faster than using +, which:
-	 * 		- creates a StringBuffer,
-	 * 		- which is synchronized,
-	 * 		- of default size, so the resulting char array is
-	 *        often larger than needed.
-	 * This implementation creates an extra char array, since the
-	 * String constructor copies its argument, but there's no way around this.
-	 */
-	public static String concat(String s1, String s2) {
-		if (s1 == null) s1 = "null"; //$NON-NLS-1$
-		if (s2 == null) s2 = "null"; //$NON-NLS-1$
-		int l1 = s1.length();
-		int l2 = s2.length();
-		char[] buf = new char[l1 + l2];
-		s1.getChars(0, l1, buf, 0);
-		s2.getChars(0, l2, buf, l1);
-		return new String(buf);
-	}
-
 	/**
 	 * Concatenate a String[] compound name to a continuous char[].
 	 */
@@ -327,7 +289,19 @@ public class Util {
 		}
 		return compoundChars;
 	}
-
+	public static String concatenateName(String name1, String name2, char separator) {
+		StringBuffer buf= new StringBuffer();
+		if (name1 != null && name1.length() > 0) {
+			buf.append(name1);
+		}
+		if (name2 != null && name2.length() > 0) {
+			if (buf.length() > 0) {
+				buf.append(separator);
+			}
+			buf.append(name2);
+		}
+		return buf.toString();
+	}
 	/**
 	 * Returns the concatenation of the given array parts using the given separator between each part.
 	 * <br>
@@ -411,25 +385,6 @@ public class Util {
 		return buffer.toString();
 
 	}
-
-	/**
-	 * Concatenate three strings.
-	 * @see #concat(String, String)
-	 */
-	public static String concat(String s1, String s2, String s3) {
-		if (s1 == null) s1 = "null"; //$NON-NLS-1$
-		if (s2 == null) s2 = "null"; //$NON-NLS-1$
-		if (s3 == null) s3 = "null"; //$NON-NLS-1$
-		int l1 = s1.length();
-		int l2 = s2.length();
-		int l3 = s3.length();
-		char[] buf = new char[l1 + l2 + l3];
-		s1.getChars(0, l1, buf, 0);
-		s2.getChars(0, l2, buf, l1);
-		s3.getChars(0, l3, buf, l1 + l2);
-		return new String(buf);
-	}
-
 	/**
 	 * Converts a type signature from the IBinaryType representation to the DC representation.
 	 */
@@ -1058,7 +1013,7 @@ public class Util {
 			if(arguments[j].length() == 0) {
 				args.append(EMPTY_ARGUMENT);
 			} else {
-				args.append(arguments[j]);
+				encodeArgument(arguments[j], args);
 			}
 		}
 
@@ -1066,16 +1021,39 @@ public class Util {
 	}
 
 	/**
+	 * Encode the argument by doubling the '#' if present into the argument value.
+	 * 
+	 * <p>This stores the encoded argument into the given buffer.</p>
+	 *
+	 * @param argument the given argument
+	 * @param buffer the buffer in which the encoded argument is stored
+	 */
+	private static void encodeArgument(String argument, StringBuffer buffer) {
+		for (int i = 0, max = argument.length(); i < max; i++) {
+			char charAt = argument.charAt(i);
+			switch(charAt) {
+				case ARGUMENTS_DELIMITER :
+					buffer.append(ARGUMENTS_DELIMITER).append(ARGUMENTS_DELIMITER);
+					break;
+				default:
+					buffer.append(charAt);
+			}
+		}
+	}
+
+	/**
 	 * Separate all the arguments of a String made by getProblemArgumentsForMarker
 	 */
 	public static String[] getProblemArgumentsFromMarker(String argumentsString){
-		if (argumentsString == null) return null;
+		if (argumentsString == null) {
+			return null;
+		}
 		int index = argumentsString.indexOf(':');
 		if(index == -1)
 			return null;
 
 		int length = argumentsString.length();
-		int numberOfArg;
+		int numberOfArg = 0;
 		try{
 			numberOfArg = Integer.parseInt(argumentsString.substring(0 , index));
 		} catch (NumberFormatException e) {
@@ -1083,22 +1061,64 @@ public class Util {
 		}
 		argumentsString = argumentsString.substring(index + 1, length);
 
-		String[] args = new String[length];
-		int count = 0;
+		return decodeArgumentString(numberOfArg, argumentsString);
+	}
 
-		StringTokenizer tokenizer = new StringTokenizer(argumentsString, ARGUMENTS_DELIMITER);
-		while(tokenizer.hasMoreTokens()) {
-			String argument = tokenizer.nextToken();
-			if(argument.equals(EMPTY_ARGUMENT))
-				argument = "";  //$NON-NLS-1$
-			args[count++] = argument;
+	private static String[] decodeArgumentString(int length, String argumentsString) {
+		// decode the argumentString knowing that '#' is doubled if part of the argument value
+		if (length == 0) {
+			if (argumentsString.length() != 0) {
+				return null;
+			}
+			return CharOperation.NO_STRINGS;
 		}
-
-		if(count != numberOfArg)
+		String[] result = new String[length];
+		int count = 0;
+		StringBuffer buffer = new StringBuffer();
+		for (int i = 0, max = argumentsString.length(); i < max; i++) {
+			char current = argumentsString.charAt(i);
+			switch(current) {
+				case ARGUMENTS_DELIMITER :
+					/* check the next character. If this is also ARGUMENTS_DELIMITER then only put one into the
+					 * decoded argument and proceed with the next character
+					 */
+					if ((i + 1) == max) {
+						return null;
+					}
+					char next = argumentsString.charAt(i + 1);
+					if (next == ARGUMENTS_DELIMITER) {
+						buffer.append(ARGUMENTS_DELIMITER);
+						i++; // proceed with the next character
+					} else {
+						// this means the current argument is over
+						String currentArgumentContents = String.valueOf(buffer);
+						if (EMPTY_ARGUMENT.equals(currentArgumentContents)) {
+							currentArgumentContents = org.eclipse.jdt.internal.compiler.util.Util.EMPTY_STRING;
+						}
+						result[count++] = currentArgumentContents;
+						if (count > length) {
+							// too many elements - ill-formed
+							return null;
+						}
+						buffer.delete(0, buffer.length());
+					}
+					break;
+				default :
+					buffer.append(current);
+			}
+		}
+		// process last argument
+		String currentArgumentContents = String.valueOf(buffer);
+		if (EMPTY_ARGUMENT.equals(currentArgumentContents)) {
+			currentArgumentContents = org.eclipse.jdt.internal.compiler.util.Util.EMPTY_STRING;
+		}
+		result[count++] = currentArgumentContents;
+		if (count > length) {
+			// too many elements - ill-formed
 			return null;
-
-		System.arraycopy(args, 0, args = new String[count], 0, count);
-		return args;
+		}
+		buffer.delete(0, buffer.length());
+		return result;
 	}
 
 	/**
@@ -1382,7 +1402,7 @@ public class Util {
 
 					}
 				} else {
-					parameterSignatures = new String[0];
+					parameterSignatures = CharOperation.NO_STRINGS;
 				}
 				return (JavaElement) declaringType.getMethod(String.valueOf(methodDeclaration.selector), parameterSignatures);
 			}
@@ -2552,7 +2572,7 @@ public class Util {
 
 		// decode declaring class name
 		// it can be either an array signature or a type signature
-		if (declaringClass.length > 0) {
+		if (declaringClass != null && declaringClass.length > 0) {
 			char[] declaringClassSignature = null;
 			if (declaringClass[0] == Signature.C_ARRAY) {
 				CharOperation.replace(declaringClass, '/', '.');
@@ -2567,14 +2587,14 @@ public class Util {
 			} else {
 				buffer.append(declaringClassSignature);
 			}
+			if (!isConstructor) {
+				buffer.append('.');
+			}
 		}
 
 		// selector
-		if (!isConstructor) {
-			buffer.append('.');
-			if (methodName != null) {
-				buffer.append(methodName);
-			}
+		if (!isConstructor && methodName != null) {
+			buffer.append(methodName);
 		}
 
 		// parameters
@@ -3191,6 +3211,34 @@ public class Util {
 			case TypeIds.T_JavaLangString :
 				memberValuePair.valueKind = IMemberValuePair.K_STRING;
 				return constant.stringValue();
+			default:
+				memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
+				return null;
+		}
+	}
+	
+	/*
+	 * Creates a member value from the given constant in case of negative numerals,
+	 * and sets the valueKind on the given memberValuePair
+	 */
+	public static Object getNegativeAnnotationMemberValue(MemberValuePair memberValuePair, Constant constant) {
+		if (constant == null) {
+			memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
+			return null;
+		}
+		switch (constant.typeID()) {
+			case TypeIds.T_int :
+				memberValuePair.valueKind = IMemberValuePair.K_INT;
+				return new Integer(constant.intValue() * -1);
+			case TypeIds.T_float :
+				memberValuePair.valueKind = IMemberValuePair.K_FLOAT;
+				return new Float(constant.floatValue() * -1.0f);
+			case TypeIds.T_double :
+				memberValuePair.valueKind = IMemberValuePair.K_DOUBLE;
+				return new Double(constant.doubleValue() * -1.0);
+			case TypeIds.T_long :
+				memberValuePair.valueKind = IMemberValuePair.K_LONG;
+				return new Long(constant.longValue() * -1L);
 			default:
 				memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
 				return null;

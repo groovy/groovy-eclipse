@@ -17,6 +17,37 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public abstract class Statement extends ASTNode {
 
+	/**
+	 * Answers true if the if is identified as a known coding pattern which
+	 * should be tolerated by dead code analysis.
+	 * e.g. if (DEBUG) print(); // no complaint
+	 * Only invoked when overall condition is known to be optimizeable into false/true.
+	 */
+	protected static boolean isKnowDeadCodePattern(Expression expression) {
+		// if (!DEBUG) print(); - tolerated
+		if (expression instanceof UnaryExpression) {
+			expression = ((UnaryExpression) expression).expression;
+		}
+		// if (DEBUG) print(); - tolerated
+		if (expression instanceof Reference) return true;
+
+//		if (expression instanceof BinaryExpression) {
+//			BinaryExpression binary = (BinaryExpression) expression;
+//			switch ((binary.bits & ASTNode.OperatorMASK) >> ASTNode.OperatorSHIFT/* operator */) {
+//				case OperatorIds.AND_AND :
+//				case OperatorIds.OR_OR :
+//					break;
+//				default: 
+//					// if (DEBUG_LEVEL > 0) print(); - tolerated
+//					if ((binary.left instanceof Reference) && binary.right.constant != Constant.NotAConstant)
+//						return true;
+//					// if (0 < DEBUG_LEVEL) print(); - tolerated
+//					if ((binary.right instanceof Reference) && binary.left.constant != Constant.NotAConstant)
+//						return true;
+//			}
+//		}
+		return false;
+	}
 public abstract FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo);
 
 	public static final int NOT_COMPLAINED = 0;
@@ -132,14 +163,14 @@ public boolean isEmptyBlock() {
 public boolean isValidJavaStatement() {
 	//the use of this method should be avoid in most cases
 	//and is here mostly for documentation purpose.....
-	//while the parser is responsable for creating
+	//while the parser is responsible for creating
 	//welled formed expression statement, which results
 	//in the fact that java-non-semantic-expression-used-as-statement
-	//should not be parsable...thus not being built.
+	//should not be parsed...thus not being built.
 	//It sounds like the java grammar as help the compiler job in removing
 	//-by construction- some statement that would have no effect....
 	//(for example all expression that may do side-effects are valid statement
-	// -this is an appromative idea.....-)
+	// -this is an approximative idea.....-)
 
 	return true;
 }

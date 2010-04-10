@@ -68,7 +68,7 @@ public void place() {
 		for (int i = 0, length = forwardReferenceCount(); i < length; i++) {
 			this.codeStream.writeSignedWord(forwardRefs[i], offset);
 		}
-		// add the label int the codeStream labels collection
+		// add the label in the codeStream labels collection
 		this.codeStream.addLabel(this);
 	}
 }

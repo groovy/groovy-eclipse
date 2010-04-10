@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,7 +56,6 @@ class CodeSnippetToCuMapper implements EvaluationConstants {
 	// Mapping of external local variables
 	char[][] localVarNames;
 	char[][] localVarTypeNames;
-	int[] localVarModifiers;
 
 /**
  * Rebuild source in presence of external local variables
@@ -69,7 +68,6 @@ class CodeSnippetToCuMapper implements EvaluationConstants {
 	this.snippetVarClassName = varClassName;
 	this.localVarNames = localVarNames;
 	this.localVarTypeNames = localVarTypeNames;
-	this.localVarModifiers = localVarModifiers;
 	this.snippetDeclaringTypeName = declaringTypeName;
 	buildCUSource(lineSeparator);
 }

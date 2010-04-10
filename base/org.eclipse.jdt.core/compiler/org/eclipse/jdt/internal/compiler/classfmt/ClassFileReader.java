@@ -658,10 +658,15 @@ public char[][][] getMissingTypeNames() {
  * @return int
  */
 public int getModifiers() {
+	int modifiers;
 	if (this.innerInfo != null) {
-		return this.innerInfo.getModifiers() | (this.accessFlags & ClassFileConstants.AccDeprecated);
+		modifiers = this.innerInfo.getModifiers()
+			| (this.accessFlags & ClassFileConstants.AccDeprecated)
+			| (this.accessFlags & ClassFileConstants.AccSynthetic);
+	} else {
+		modifiers = this.accessFlags;
 	}
-	return this.accessFlags;
+	return modifiers;
 }
 
 /**

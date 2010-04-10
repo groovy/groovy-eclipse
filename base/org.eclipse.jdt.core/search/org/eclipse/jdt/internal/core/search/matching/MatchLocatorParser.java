@@ -229,8 +229,8 @@ protected void consumeCastExpressionLL1() {
 	super.consumeCastExpressionLL1();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
 		CastExpression castExpression = (CastExpression) this.expressionStack[this.expressionPtr];
-		if (castExpression.type instanceof Reference) {
-			this.patternLocator.match((Reference) castExpression.type, this.nodeSet);
+		if (castExpression.type instanceof TypeReference) {
+			this.patternLocator.match((TypeReference) castExpression.type, this.nodeSet);
         }
 	}
 }

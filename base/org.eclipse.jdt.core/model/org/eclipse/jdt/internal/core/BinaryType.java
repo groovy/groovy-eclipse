@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -315,7 +316,7 @@ public IField[] getFields() throws JavaModelException {
  */
 public int getFlags() throws JavaModelException {
 	IBinaryType info = (IBinaryType) getElementInfo();
-	return info.getModifiers();
+	return info.getModifiers() & ~ClassFileConstants.AccSuper;
 }
 /*
  * @see IType#getFullyQualifiedName()

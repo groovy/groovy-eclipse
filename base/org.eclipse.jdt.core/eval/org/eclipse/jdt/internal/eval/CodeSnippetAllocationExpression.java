@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,10 @@ package org.eclipse.jdt.internal.eval;
 import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
+import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Wildcard;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
@@ -119,6 +123,48 @@ public TypeBinding resolveType(BlockScope scope) {
 	// Propagate the type checking to the arguments, and check if the constructor is defined.
 	this.constant = Constant.NotAConstant;
 	this.resolvedType = this.type.resolveType(scope, true /* check bounds*/); // will check for null after args are resolved
+	checkParameterizedAllocation: {
+		if (this.type instanceof ParameterizedQualifiedTypeReference) { // disallow new X<String>.Y<Integer>()
+			ReferenceBinding currentType = (ReferenceBinding)this.resolvedType;
+			if (currentType == null) return currentType;
+			do {
+				// isStatic() is answering true for toplevel types
+				if ((currentType.modifiers & ClassFileConstants.AccStatic) != 0) break checkParameterizedAllocation;
+				if (currentType.isRawType()) break checkParameterizedAllocation;
+			} while ((currentType = currentType.enclosingType())!= null);
+			ParameterizedQualifiedTypeReference qRef = (ParameterizedQualifiedTypeReference) this.type;
+			for (int i = qRef.typeArguments.length - 2; i >= 0; i--) {
+				if (qRef.typeArguments[i] != null) {
+					scope.problemReporter().illegalQualifiedParameterizedTypeAllocation(this.type, this.resolvedType);
+					break;
+				}
+			}
+		}
+	}
+
+	// resolve type arguments (for generic constructor call)
+	if (this.typeArguments != null) {
+		int length = this.typeArguments.length;
+		boolean argHasError = scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_5;
+		this.genericTypeArguments = new TypeBinding[length];
+		for (int i = 0; i < length; i++) {
+			TypeReference typeReference = this.typeArguments[i];
+			if ((this.genericTypeArguments[i] = typeReference.resolveType(scope, true /* check bounds*/)) == null) {
+				argHasError = true;
+			}
+			if (argHasError && typeReference instanceof Wildcard) {
+				scope.problemReporter().illegalUsageOfWildcard(typeReference);
+			}
+		}
+		if (argHasError) {
+			if (this.arguments != null) { // still attempt to resolve arguments
+				for (int i = 0, max = this.arguments.length; i < max; i++) {
+					this.arguments[i].resolveType(scope);
+				}
+			}
+			return null;
+		}
+	}
 
 	// buffering the arguments' types
 	boolean argsContainCast = false;
@@ -204,8 +250,8 @@ public TypeBinding resolveType(BlockScope scope) {
 	}
 	if (this.arguments != null) {
 		for (int i = 0; i < this.arguments.length; i++) {
-		    TypeBinding parameterType = this.binding.parameters[i];
-		    TypeBinding argumentType = argumentTypes[i];
+			TypeBinding parameterType = this.binding.parameters[i];
+			TypeBinding argumentType = argumentTypes[i];
 			this.arguments[i].computeConversion(scope, parameterType, argumentType);
 			if (argumentType.needsUncheckedConversion(parameterType)) {
 				scope.problemReporter().unsafeTypeConversion(this.arguments[i], argumentType, parameterType);
@@ -216,7 +262,10 @@ public TypeBinding resolveType(BlockScope scope) {
 		}
 	}
 	if (allocatedType.isRawType() && this.binding.hasSubstitutedParameters()) {
-	    scope.problemReporter().unsafeRawInvocation(this, this.binding);
+		scope.problemReporter().unsafeRawInvocation(this, this.binding);
+	}
+	if (this.typeArguments != null && this.binding.original().typeVariables == Binding.NO_TYPE_VARIABLES) {
+		scope.problemReporter().unnecessaryTypeArgumentsForMethodInvocation(this.binding, this.genericTypeArguments, this.typeArguments);
 	}
 	return allocatedType;
 }

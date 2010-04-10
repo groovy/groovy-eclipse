@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -253,8 +253,22 @@ void checkForRedundantSuperinterfaces(ReferenceBinding superclass, ReferenceBind
 	if (superInterfaces == Binding.NO_SUPERINTERFACES) return;
 
 	SimpleSet interfacesToCheck = new SimpleSet(superInterfaces.length);
-	for (int i = 0, l = superInterfaces.length; i < l; i++)
-		interfacesToCheck.add(superInterfaces[i]);
+	next : for (int i = 0, l = superInterfaces.length; i < l; i++) {
+		ReferenceBinding toCheck = superInterfaces[i];
+		for (int j = 0; j < l; j++) {
+			if (i != j && toCheck.implementsInterface(superInterfaces[j], true)) {
+				TypeReference[] refs = this.type.scope.referenceContext.superInterfaces;
+				for (int r = 0, rl = refs.length; r < rl; r++) {
+					if (refs[r].resolvedType == toCheck) {
+						problemReporter().redundantSuperInterface(this.type, refs[j], superInterfaces[j], toCheck);
+						continue next;
+					}
+				}
+			}
+		}
+		interfacesToCheck.add(toCheck);
+	}
+
 	ReferenceBinding[] itsInterfaces = null;
 	SimpleSet inheritedInterfaces = new SimpleSet(5);
 	ReferenceBinding superType = superclass;
@@ -409,15 +423,26 @@ For each inherited method identifier (message pattern - vm signature minus the r
 void checkMethods() {
 	boolean mustImplementAbstractMethods = mustImplementAbstractMethods();
 	boolean skipInheritedMethods = mustImplementAbstractMethods && canSkipInheritedMethods(); // have a single concrete superclass so only check overridden methods
+	boolean isOrEnclosedByPrivateType = this.type.isOrEnclosedByPrivateType();
 	char[][] methodSelectors = this.inheritedMethods.keyTable;
 	nextSelector : for (int s = methodSelectors.length; --s >= 0;) {
 		if (methodSelectors[s] == null) continue nextSelector;
 
 		MethodBinding[] current = (MethodBinding[]) this.currentMethods.get(methodSelectors[s]);
+		MethodBinding[] inherited = (MethodBinding[]) this.inheritedMethods.valueTable[s];
+		
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660, if current type is exposed,
+		// inherited methods of super classes are too. current != null case handled below.
+		if (current == null && !isOrEnclosedByPrivateType) {
+			int length = inherited.length;
+			for (int i = 0; i < length; i++){
+				inherited[i].original().modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
+			}
+		}
+
 		if (current == null && skipInheritedMethods)
 			continue nextSelector;
 
-		MethodBinding[] inherited = (MethodBinding[]) this.inheritedMethods.valueTable[s];
 		if (inherited.length == 1 && current == null) { // handle the common case
 			if (mustImplementAbstractMethods && inherited[0].isAbstract())
 				checkAbstractMethod(inherited[0]);
@@ -448,7 +473,11 @@ void checkMethods() {
 		for (int i = 0, length = inherited.length; i < length; i++) {
 			MethodBinding inheritedMethod = inherited[i];
 			if (inheritedMethod == null) continue;
-
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660, if current type is exposed,
+			// inherited methods of super classes are too. current == null case handled already.
+			if (!isOrEnclosedByPrivateType && current != null) {
+				inheritedMethod.original().modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
+			}
 			matchingInherited[++index] = inheritedMethod;
 			for (int j = i + 1; j < length; j++) {
 				MethodBinding otherInheritedMethod = inherited[j];
@@ -521,8 +550,8 @@ Binding creation is responsible for reporting:
 */
 void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] superInterfaces) {
 	// only want to remember inheritedMethods that can have an impact on the current type
-	// if an inheritedMethod has been 'replaced' by a supertype's method then skip it
-
+	// if an inheritedMethod has been 'replaced' by a supertype's method then skip it, however
+    // see usage of canOverridingMethodDifferInErasure below.
 	this.inheritedMethods = new HashtableOfObject(51); // maps method selectors to an array of methods... must search to match paramaters & return type
 	ReferenceBinding[] interfacesToVisit = null;
 	int nextPosition = 0;
@@ -534,30 +563,24 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 
 	ReferenceBinding superType = superclass;
 	HashtableOfObject nonVisibleDefaultMethods = new HashtableOfObject(3); // maps method selectors to an array of methods
-	boolean allSuperclassesAreAbstract = true;
 
 	while (superType != null && superType.isValidBinding()) {
-	    if (allSuperclassesAreAbstract) {
-		    if (superType.isAbstract()) {
-				// only need to include superinterfaces if immediate superclasses are abstract
-				if ((itsInterfaces = superType.superInterfaces()) != Binding.NO_SUPERINTERFACES) {
-					if (interfacesToVisit == null) {
-						interfacesToVisit = itsInterfaces;
-						nextPosition = interfacesToVisit.length;
-					} else {
-						int itsLength = itsInterfaces.length;
-						if (nextPosition + itsLength >= interfacesToVisit.length)
-							System.arraycopy(interfacesToVisit, 0, interfacesToVisit = new ReferenceBinding[nextPosition + itsLength + 5], 0, nextPosition);
-						nextInterface : for (int a = 0; a < itsLength; a++) {
-							ReferenceBinding next = itsInterfaces[a];
-							for (int b = 0; b < nextPosition; b++)
-								if (next == interfacesToVisit[b]) continue nextInterface;
-							interfacesToVisit[nextPosition++] = next;
-						}
-					}
-				}
+		// We used to only include superinterfaces if immediate superclasses are abstract
+		// but that is problematic. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=302358
+		if ((itsInterfaces = superType.superInterfaces()) != Binding.NO_SUPERINTERFACES) {
+			if (interfacesToVisit == null) {
+				interfacesToVisit = itsInterfaces;
+				nextPosition = interfacesToVisit.length;
 			} else {
-			    allSuperclassesAreAbstract = false;
+				int itsLength = itsInterfaces.length;
+				if (nextPosition + itsLength >= interfacesToVisit.length)
+					System.arraycopy(interfacesToVisit, 0, interfacesToVisit = new ReferenceBinding[nextPosition + itsLength + 5], 0, nextPosition);
+				nextInterface : for (int a = 0; a < itsLength; a++) {
+					ReferenceBinding next = itsInterfaces[a];
+					for (int b = 0; b < nextPosition; b++)
+						if (next == interfacesToVisit[b]) continue nextInterface;
+					interfacesToVisit[nextPosition++] = next;
+				}
 			}
 		}
 
@@ -570,10 +593,12 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 			if (existingMethods != null) {
 				existing : for (int i = 0, length = existingMethods.length; i < length; i++) {
 					MethodBinding existingMethod = existingMethods[i];
-					if (existingMethod.declaringClass != inheritedMethod.declaringClass && areMethodsCompatible(existingMethod, inheritedMethod)) {
+					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=302358, skip inherited method only if any overriding version
+					// in a subclass is guaranteed to have the same erasure as an existing method.
+					if (existingMethod.declaringClass != inheritedMethod.declaringClass && areMethodsCompatible(existingMethod, inheritedMethod) && !canOverridingMethodDifferInErasure(existingMethod, inheritedMethod)) {
 						if (inheritedMethod.isDefault()) {
 							if (inheritedMethod.isAbstract()) {
-							checkPackagePrivateAbstractMethod(inheritedMethod);
+								checkPackagePrivateAbstractMethod(inheritedMethod);
 							} else if (existingMethod.declaringClass.fPackage != inheritedMethod.declaringClass.fPackage) {
 								if (this.type.fPackage == inheritedMethod.declaringClass.fPackage && !areReturnTypesCompatible(inheritedMethod, existingMethod))
 									continue existing; // may need to record incompatible return type
@@ -652,8 +677,10 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 				} else {
 					int length = existingMethods.length;
 					// look to see if any of the existingMethods implement this inheritedMethod
+					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=302358, skip inherited method only if any overriding version
+					// in a subclass is guaranteed to have the same erasure as an existing method.
 					for (int e = 0; e < length; e++)
-						if (isInterfaceMethodImplemented(inheritedMethod, existingMethods[e], superType))
+						if (isInterfaceMethodImplemented(inheritedMethod, existingMethods[e], superType) && !canOverridingMethodDifferInErasure(existingMethods[e], inheritedMethod))
 							continue nextMethod; // skip interface method with the same signature if visible to its declaringClass
 					System.arraycopy(existingMethods, 0, existingMethods = new MethodBinding[length + 1], 0, length);
 					existingMethods[length] = inheritedMethod;
@@ -664,6 +691,11 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 	}
 }
 
+// Given `overridingMethod' which overrides `inheritedMethod' answer whether some subclass method that
+// differs in erasure from overridingMethod could override `inheritedMethod'
+protected boolean canOverridingMethodDifferInErasure(MethodBinding overridingMethod, MethodBinding inheritedMethod) {
+	return false;   // the case for <= 1.4  (cannot differ)
+}
 void computeMethods() {
 	MethodBinding[] methods = this.type.methods();
 	int size = methods.length;

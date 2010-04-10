@@ -219,9 +219,9 @@ public int getNextToken() throws InvalidInputException {
 					return TokenNameCOMMA;
 				case '.' :
 					if (this.startPosition <= this.cursorLocation
-					    && this.cursorLocation < this.currentPosition){
-					    	return TokenNameDOT; // completion inside .<|>12
-				    }
+							&& this.cursorLocation < this.currentPosition){
+						return TokenNameDOT; // completion inside .<|>12
+					}
 					if (getNextCharAsDigit()) {
 						return scanNumber(true);
 					}

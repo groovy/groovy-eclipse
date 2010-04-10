@@ -832,7 +832,7 @@ protected void writeClassFileContents(ClassFile classfile, IFile file, String qu
 			if (JavaBuilder.DEBUG)
 				System.out.println("Writing changed class file " + file.getName());//$NON-NLS-1$
 			if (!file.isDerived())
-				file.setDerived(true);
+				file.setDerived(true, null);
 			file.setContents(new ByteArrayInputStream(bytes), true, false, null);
 		} else if (JavaBuilder.DEBUG) {
 			System.out.println("Skipped over unchanged class file " + file.getName());//$NON-NLS-1$

@@ -16,32 +16,10 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="model/org/eclipse/jdt/core/ITypeRoot.java" type="org.eclipse.jdt.core.ITypeRoot">
-        <filter id="403853384">
+    <resource path="search/org/eclipse/jdt/core/search/TypeNameMatch.java" type="org.eclipse.jdt.core.search.TypeNameMatch">
+        <filter id="336744520">
             <message_arguments>
-                <message_argument value="org.eclipse.jdt.core.ITypeRoot"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="model/org/eclipse/jdt/core/compiler/CompilationParticipant.java" type="org.eclipse.jdt.core.compiler.CompilationParticipant">
-        <filter id="388100214">
-            <message_arguments>
-                <message_argument value="org.eclipse.jdt.core.compiler.CompilationParticipant"/>
-                <message_argument value="READY_FOR_BUILD"/>
-            </message_arguments>
-        </filter>
-        <filter id="388100214">
-            <message_arguments>
-                <message_argument value="org.eclipse.jdt.core.compiler.CompilationParticipant"/>
-                <message_argument value="NEEDS_FULL_BUILD"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="search/org/eclipse/jdt/core/search/ReferenceMatch.java" type="org.eclipse.jdt.core.search.ReferenceMatch">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.eclipse.jdt.core.search.ReferenceMatch"/>
-                <message_argument value="localElement()"/>
+                <message_argument value="org.eclipse.jdt.core.search.TypeNameMatch"/>
             </message_arguments>
         </filter>
     </resource>

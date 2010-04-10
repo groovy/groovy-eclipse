@@ -87,7 +87,7 @@ public void resolve(BlockScope scope) {
  */
 public Constant resolveCase(BlockScope scope, TypeBinding switchExpressionType, SwitchStatement switchStatement) {
 	// switchExpressionType maybe null in error case
-    scope.enclosingCase = this; // record entering in a switch case block
+	scope.enclosingCase = this; // record entering in a switch case block
 
 	if (this.constantExpression == null) {
 		// remember the default case into the associated switch statement

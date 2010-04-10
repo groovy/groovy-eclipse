@@ -161,13 +161,22 @@ MethodBinding asRawMethod(LookupEnvironment env) {
 			arguments[i] = env.convertToRawType(var.upperBound(), false /*do not force conversion of enclosing types*/);
 		} else {
 			// use an intersection type to retain full bound information if more than 1 bound
-			TypeBinding rawSuperclass = env.convertToRawType(var.superclass(), false);
 			TypeBinding[] itsSuperinterfaces = var.superInterfaces();
 			int superLength = itsSuperinterfaces.length;
-			TypeBinding[] rawSuperinterfaces = new TypeBinding[superLength];
-			for (int s = 0; s < superLength; s++)
-				rawSuperinterfaces[s] = env.convertToRawType(itsSuperinterfaces[s], false);
-			arguments[i] = env.createWildcard(null, 0, rawSuperclass, rawSuperinterfaces, org.eclipse.jdt.internal.compiler.ast.Wildcard.EXTENDS);
+			TypeBinding rawFirstBound = null;
+			TypeBinding[] rawOtherBounds = null;
+			if (var.boundsCount() == superLength) {
+				rawFirstBound = env.convertToRawType(itsSuperinterfaces[0], false);
+				rawOtherBounds = new TypeBinding[superLength - 1];
+				for (int s = 1; s < superLength; s++)
+					rawOtherBounds[s - 1] = env.convertToRawType(itsSuperinterfaces[s], false);
+			} else {
+				rawFirstBound = env.convertToRawType(var.superclass(), false);
+				rawOtherBounds = new TypeBinding[superLength];
+				for (int s = 0; s < superLength; s++)
+					rawOtherBounds[s] = env.convertToRawType(itsSuperinterfaces[s], false);
+			}
+			arguments[i] = env.createWildcard(null, 0, rawFirstBound, rawOtherBounds, org.eclipse.jdt.internal.compiler.ast.Wildcard.EXTENDS);
 		}
 	}
 	return env.createParameterizedGenericMethod(this, arguments);
@@ -312,9 +321,13 @@ public final boolean canBeSeenBy(TypeBinding receiverType, InvocationSite invoca
 	if (receiverType instanceof ArrayBinding)
 		return false;
 	TypeBinding originalDeclaringClass = this.declaringClass.original();
-	ReferenceBinding currentType = (ReferenceBinding) receiverType;
+	ReferenceBinding currentType = (ReferenceBinding) (receiverType);
 	do {
-		if (originalDeclaringClass == currentType.original()) return true;
+		if (currentType.isCapture()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=285002
+			if (originalDeclaringClass == currentType.erasure().original()) return true;
+		} else {
+			if (originalDeclaringClass == currentType.original()) return true;
+		}
 		PackageBinding currentPackage = currentType.fPackage;
 		// package could be null for wildcards/intersection types, ignore and recurse in superclass
 		if (currentPackage != null && currentPackage != declaringPackage) return false;
@@ -425,7 +438,7 @@ public char[] computeUniqueKey(boolean isLeaf) {
 public final char[] constantPoolName() {
 	return this.selector;
 }
- 
+
 public MethodBinding findOriginalInheritedMethod(MethodBinding inheritedMethod) {
 	MethodBinding inheritedOriginal = inheritedMethod.original();
 	TypeBinding superType = this.declaringClass.findSuperTypeOriginatingFrom(inheritedOriginal.declaringClass);
@@ -537,86 +550,6 @@ public Object getDefaultValue() {
 	}
 	AnnotationHolder holder = originalMethod.declaringClass.retrieveAnnotationHolder(originalMethod, true);
 	return holder == null ? null : holder.getDefaultValue();
-}
-
-/**
- * Return the highest method/constructor in supertype hierarchy with same selector and arguments
- */
-public MethodBinding getHighestOverridenMethod(LookupEnvironment environment) {
-	MethodBinding bestMethod = this;
-    ReferenceBinding currentType = this.declaringClass;
-    if (this.isConstructor()) {
-    	// walk superclasses - only
-    	do {
-    		MethodBinding superMethod = currentType.getExactConstructor(this.parameters);
-    		if (superMethod != null) {
-    			bestMethod = superMethod;
-    		}
-    	} while ((currentType = currentType.superclass()) != null);
-    	return bestMethod;
-    }
-    MethodVerifier verifier = environment.methodVerifier();
-	// walk superclasses
-	ReferenceBinding[] interfacesToVisit = null;
-	int nextPosition = 0;
-	do {
-		MethodBinding[] superMethods = currentType.getMethods(this.selector);
-		for (int i = 0, length = superMethods.length; i < length; i++) {
-			if (verifier.doesMethodOverride(this, superMethods[i])) {
-				bestMethod = superMethods[i];
-				break;
-			}
-		}
-		ReferenceBinding[] itsInterfaces = currentType.superInterfaces();
-		if (itsInterfaces != null && itsInterfaces != Binding.NO_SUPERINTERFACES) {
-			if (interfacesToVisit == null) {
-				interfacesToVisit = itsInterfaces;
-				nextPosition = interfacesToVisit.length;
-			} else {
-				int itsLength = itsInterfaces.length;
-				if (nextPosition + itsLength >= interfacesToVisit.length)
-					System.arraycopy(interfacesToVisit, 0, interfacesToVisit = new ReferenceBinding[nextPosition + itsLength + 5], 0, nextPosition);
-				nextInterface : for (int a = 0; a < itsLength; a++) {
-					ReferenceBinding next = itsInterfaces[a];
-					for (int b = 0; b < nextPosition; b++)
-						if (next == interfacesToVisit[b]) continue nextInterface;
-					interfacesToVisit[nextPosition++] = next;
-				}
-			}
-		}
-	} while ((currentType = currentType.superclass()) != null);
-	if (bestMethod.declaringClass.id == TypeIds.T_JavaLangObject) {
-		return bestMethod;
-	}
-	// walk superinterfaces
-	for (int i = 0; i < nextPosition; i++) {
-		currentType = interfacesToVisit[i];
-		MethodBinding[] superMethods = currentType.getMethods(this.selector);
-		for (int j = 0, length = superMethods.length; j < length; j++) {
-			MethodBinding superMethod = superMethods[j];
-			if (verifier.doesMethodOverride(this, superMethod)) {
-				TypeBinding bestReturnType = bestMethod.returnType;
-				if (bestReturnType == superMethod.returnType
-						|| bestMethod.returnType.findSuperTypeOriginatingFrom(superMethod.returnType) != null) {
-					bestMethod = superMethod;
-				}
-				break;
-			}
-		}
-		ReferenceBinding[] itsInterfaces = currentType.superInterfaces();
-		if (itsInterfaces != null && itsInterfaces != Binding.NO_SUPERINTERFACES) {
-			int itsLength = itsInterfaces.length;
-			if (nextPosition + itsLength >= interfacesToVisit.length)
-				System.arraycopy(interfacesToVisit, 0, interfacesToVisit = new ReferenceBinding[nextPosition + itsLength + 5], 0, nextPosition);
-			nextInterface : for (int a = 0; a < itsLength; a++) {
-				ReferenceBinding next = itsInterfaces[a];
-				for (int b = 0; b < nextPosition; b++)
-					if (next == interfacesToVisit[b]) continue nextInterface;
-				interfacesToVisit[nextPosition++] = next;
-			}
-		}
-	}	
-	return bestMethod;
 }
 
 /**
@@ -1110,6 +1043,9 @@ public final int sourceEnd() {
 	return method.sourceEnd;
 }
 public AbstractMethodDeclaration sourceMethod() {
+	if (isSynthetic()) {
+		return null;
+	}
 	SourceTypeBinding sourceType;
 	try {
 		sourceType = (SourceTypeBinding) this.declaringClass;
@@ -1118,9 +1054,11 @@ public AbstractMethodDeclaration sourceMethod() {
 	}
 
 	AbstractMethodDeclaration[] methods = sourceType.scope.referenceContext.methods;
-	for (int i = methods.length; --i >= 0;)
-		if (this == methods[i].binding)
-			return methods[i];
+	if (methods != null) {
+		for (int i = methods.length; --i >= 0;)
+			if (this == methods[i].binding)
+				return methods[i];
+	}
 	return null;
 }
 public final int sourceStart() {

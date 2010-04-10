@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.core;
+
+import org.eclipse.core.resources.IMarker;
 
 /**
  * Markers used by the Java model.
@@ -60,9 +62,14 @@ public interface IJavaModelMarker {
 	 * Id marker attribute (value <code>"arguments"</code>). Arguments are
 	 * concatenated into one String, prefixed with an argument count (followed
 	 * with colon separator) and separated with '#' characters. For example: {
-	 * "foo", "bar" } is encoded as "2:foo#bar", { } is encoded as "0: "
-	 *
+	 * "foo", "bar" } is encoded as "2:foo#bar", { } is encoded as "0:".
+	 * <p>Empty argument is encoded as three spaces ("   ").</p>
+	 * <p>If the argument contains a '#', the character is doubled.<br>
+	 * {"foo#test", "bar" } is encoded as "2:foo##test#bar"
+	 * </p>
+	 * 
 	 * @since 2.0
+	 * @see CorrectionEngine#getProblemArguments(IMarker)
 	 */
 	String ARGUMENTS = "arguments"; //$NON-NLS-1$
 

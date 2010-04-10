@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,8 +30,8 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public final static int Bit5 = 0x10;					// value for return (expression) | has all method bodies (unit) | supertype ref (type ref) | resolved (field decl)
 	public final static int Bit6 = 0x20;					// depth (name ref, msg) | ignore need cast check (cast expression) | error in signature (method declaration/ initializer) | is recovered (annotation reference)
 	public final static int Bit7 = 0x40;					// depth (name ref, msg) | operator (operator) | need runtime checkcast (cast expression) | label used (labelStatement) | needFreeReturn (AbstractMethodDeclaration)
-	public final static int Bit8 = 0x80;					// depth (name ref, msg) | operator (operator) | unsafe cast (cast expression) | is default constructor (constructor declaration)
-	public final static int Bit9 = 0x100;				// depth (name ref, msg) | operator (operator) | is local type (type decl)
+	public final static int Bit8 = 0x80;					// depth (name ref, msg) | operator (operator) | unsafe cast (cast expression) | is default constructor (constructor declaration) | isElseStatementUnreachable (if statement)
+	public final static int Bit9 = 0x100;				// depth (name ref, msg) | operator (operator) | is local type (type decl) | isThenStatementUnreachable (if statement)
 	public final static int Bit10= 0x200;				// depth (name ref, msg) | operator (operator) | is anonymous type (type decl)
 	public final static int Bit11 = 0x400;				// depth (name ref, msg) | operator (operator) | is member type (type decl)
 	public final static int Bit12 = 0x800;				// depth (name ref, msg) | operator (operator) | has abstract methods (type decl)
@@ -194,6 +194,8 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	// for if statement
 	public static final int IsElseIfStatement = Bit30;
 	public static final int ThenExit = Bit31;
+	public static final int IsElseStatementUnreachable = Bit8;
+	public static final int IsThenStatementUnreachable = Bit9;
 
 	// for type reference
 	public static final int IsSuperType = Bit5;

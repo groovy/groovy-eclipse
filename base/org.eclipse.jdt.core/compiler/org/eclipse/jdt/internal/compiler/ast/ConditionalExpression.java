@@ -41,7 +41,8 @@ public class ConditionalExpression extends OperatorExpression {
 	}
 
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
-		FlowInfo flowInfo) {
+			FlowInfo flowInfo) {
+		int initialComplaintLevel = (flowInfo.reachMode() & FlowInfo.UNREACHABLE) != 0 ? Statement.COMPLAINED_FAKE_REACHABLE : Statement.NOT_COMPLAINED;
 		Constant cst = this.condition.optimizedBooleanConstant();
 		boolean isConditionOptimizedTrue = cst != Constant.NotAConstant && cst.booleanValue() == true;
 		boolean isConditionOptimizedFalse = cst != Constant.NotAConstant && cst.booleanValue() == false;
@@ -53,8 +54,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo trueFlowInfo = flowInfo.initsWhenTrue().copy();
 		if (isConditionOptimizedFalse) {
 			if ((mode & FlowInfo.UNREACHABLE) == 0) {
-				currentScope.problemReporter().fakeReachable(this.valueIfTrue);
 				trueFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
+			}
+			if (!isKnowDeadCodePattern(this.condition) || currentScope.compilerOptions().reportDeadCodeInTrivialIfStatement) {
+				this.valueIfTrue.complainIfUnreachable(trueFlowInfo, currentScope, initialComplaintLevel);
 			}
 		}
 		this.trueInitStateIndex = currentScope.methodScope().recordInitializationStates(trueFlowInfo);
@@ -64,8 +67,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo falseFlowInfo = flowInfo.initsWhenFalse().copy();
 		if (isConditionOptimizedTrue) {
 			if ((mode & FlowInfo.UNREACHABLE) == 0) {
-				currentScope.problemReporter().fakeReachable(this.valueIfFalse);
 				falseFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
+			}
+			if (!isKnowDeadCodePattern(this.condition) || currentScope.compilerOptions().reportDeadCodeInTrivialIfStatement) {
+				this.valueIfFalse.complainIfUnreachable(falseFlowInfo, currentScope, initialComplaintLevel);
 			}
 		}
 		this.falseInitStateIndex = currentScope.methodScope().recordInitializationStates(falseFlowInfo);

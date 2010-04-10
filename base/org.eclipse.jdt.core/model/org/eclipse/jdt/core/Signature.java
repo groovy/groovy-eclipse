@@ -138,6 +138,9 @@ import org.eclipse.jdt.internal.core.util.Util;
  * <p>
  * This class provides static methods and constants only.
  * </p>
+ * <p>Note: An empty signature is considered to be syntactically incorrect. So most methods will throw
+ * an IllegalArgumentException if an empty signature is provided.</p>
+ * 
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class Signature {
@@ -2141,7 +2144,7 @@ public static String removeCapture(String methodOrTypeSignature) {
  * @param includeReturnType <code>true</code> if the return type is to be
  *   included
  * @return the char array representation of the method signature
- *
+ * @throws IllegalArgumentException if the method signature is syntactically incorrect
  * @since 2.0
  */
 public static char[] toCharArray(char[] methodSignature, char[] methodName, char[][] parameterNames, boolean fullyQualifyTypeNames, boolean includeReturnType) {
@@ -2172,6 +2175,7 @@ public static char[] toCharArray(char[] methodSignature, char[] methodName, char
  * @param isVargArgs <code>true</code> if the last argument should be displayed as a
  * variable argument,  <code>false</code> otherwise.
  * @return the char array representation of the method signature
+ * @throws IllegalArgumentException if the method signature is syntactically incorrect
  *
  * @since 3.1
  */
@@ -2242,14 +2246,16 @@ public static char[] toCharArray(char[] methodSignature, char[] methodName, char
  *
  * @param signature the type signature
  * @return the string representation of the type
- * @exception IllegalArgumentException if the signature is not syntactically
- *   correct
+ * @exception IllegalArgumentException if the signature is syntactically incorrect
  *
  * @since 2.0
  */
 public static char[] toCharArray(char[] signature) throws IllegalArgumentException {
 		int sigLength = signature.length;
-		if (sigLength == 0 || signature[0] == C_PARAM_START || signature[0] == C_GENERIC_START) {
+		if (sigLength == 0) {
+			throw new IllegalArgumentException();
+		}
+		if (signature[0] == C_PARAM_START || signature[0] == C_GENERIC_START) {
 			return toCharArray(signature, CharOperation.NO_CHAR, null, true, true);
 		}
 

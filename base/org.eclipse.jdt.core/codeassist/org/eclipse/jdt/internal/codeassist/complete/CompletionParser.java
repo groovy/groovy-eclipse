@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -562,15 +562,39 @@ protected void attachOrphanCompletionNode(){
 				}
 			}
 			if(expression == this.assistNode
+				|| (expression instanceof Assignment	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=287939
+					&& ((Assignment)expression).expression == this.assistNode
+					&& (this.expressionPtr > 0 && this.expressionStack[this.expressionPtr - 1] instanceof InstanceOfExpression))
 				|| (expression instanceof AllocationExpression
 					&& ((AllocationExpression)expression).type == this.assistNode)){
 				buildMoreCompletionContext(expression);
+				if (this.assistNodeParent == null
+					&& expression instanceof Assignment) {
+					this.assistNodeParent = detector.getCompletionNodeParent();
+				}
+				return;
 			} else {
 				this.assistNodeParent = detector.getCompletionNodeParent();
 				if(this.assistNodeParent != null) {
 					this.currentElement = this.currentElement.add((Statement)this.assistNodeParent, 0);
 				} else {
 					this.currentElement = this.currentElement.add(expression, 0);
+				}
+				return;
+			}
+		}
+	}
+	if (this.astPtr > -1 && this.astStack[this.astPtr] instanceof LocalDeclaration) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=287939
+		// To take care of:  if (a instance of X)  int i = a.|
+		LocalDeclaration local = (LocalDeclaration) this.astStack[this.astPtr];
+		if (local.initialization == this.assistNode) {
+			Statement enclosing = buildMoreCompletionEnclosingContext(local);
+			if (enclosing instanceof IfStatement) {
+				if (this.currentElement instanceof RecoveredBlock) {
+					// RecoveredLocalVariable must be removed from its parent because the IfStatement will be added instead
+					RecoveredBlock recoveredBlock = (RecoveredBlock) this.currentElement;
+					recoveredBlock.statements[--recoveredBlock.statementCount] = null;
+					this.currentElement = this.currentElement.add(enclosing, 0);
 				}
 			}
 		}
@@ -771,9 +795,8 @@ private void buildMoreCompletionContext(Expression expression) {
 			case K_CAST_STATEMENT :
 				Expression castType;
 				if(this.expressionPtr > 0
-					&& ((castType = this.expressionStack[this.expressionPtr-1]) instanceof TypeReference
-						|| castType instanceof NameReference)) {
-					CastExpression cast = new CastExpression(expression, getTypeReference(castType));
+					&& ((castType = this.expressionStack[this.expressionPtr-1]) instanceof TypeReference)) {
+					CastExpression cast = new CastExpression(expression, castType);
 					cast.sourceStart = castType.sourceStart;
 					cast.sourceEnd= expression.sourceEnd;
 					this.assistNodeParent = cast;

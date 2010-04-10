@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeParameter;
@@ -90,6 +91,9 @@ public class DOMFinder extends ASTVisitor {
 		switch (parent.getNodeType()) {
 			case ASTNode.CLASS_INSTANCE_CREATION:
 				name = ((ClassInstanceCreation) parent).getType();
+				if (name.getNodeType() == ASTNode.PARAMETERIZED_TYPE) {
+					name = ((ParameterizedType) name).getType();
+				}
 				break;
 			case ASTNode.ENUM_CONSTANT_DECLARATION:
 				name = ((EnumConstantDeclaration) parent).getName();

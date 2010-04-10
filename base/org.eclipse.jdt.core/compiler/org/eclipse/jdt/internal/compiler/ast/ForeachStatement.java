@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -381,6 +381,7 @@ public class ForeachStatement extends Statement {
 
 		TypeBinding expectedCollectionType = null;
 		if (elementType != null && collectionType != null) {
+			boolean isTargetJsr14 = this.scope.compilerOptions().targetJDK == ClassFileConstants.JDK1_4;
 			if (collectionType.isArrayType()) { // for(E e : E[])
 				this.kind = ARRAY;
 				this.collectionElementType = ((ArrayBinding) collectionType).elementsType();
@@ -414,7 +415,6 @@ public class ForeachStatement extends Statement {
 				}
 			} else if (collectionType instanceof ReferenceBinding) {
 				ReferenceBinding iterableType = ((ReferenceBinding)collectionType).findSuperTypeOriginatingFrom(T_JavaLangIterable, false /*Iterable is not a class*/);
-				boolean isTargetJsr14 = upperScope.compilerOptions().targetJDK == ClassFileConstants.JDK1_4;
 				if (iterableType == null && isTargetJsr14) {
 					iterableType = ((ReferenceBinding)collectionType).findSuperTypeOriginatingFrom(T_JavaUtilCollection, false /*Iterable is not a class*/);
 				}
@@ -482,9 +482,7 @@ public class ForeachStatement extends Statement {
 						}
 					} else {
 						if (this.collectionElementType.isBaseType()) {
-							int boxedID = this.scope.environment().computeBoxingType(this.collectionElementType).id;
 							this.elementVariableImplicitWidening = BOXING | (compileTimeTypeID << 4) | compileTimeTypeID; // use primitive type in implicit conversion
-							compileTimeTypeID = boxedID;
 						}
 					}
 				}
@@ -516,7 +514,11 @@ public class ForeachStatement extends Statement {
 					this.indexVariable.setConstant(Constant.NotAConstant); // not inlinable
 					break;
 				default :
-					this.scope.problemReporter().invalidTypeForCollection(this.collection);
+					if (isTargetJsr14) {
+						this.scope.problemReporter().invalidTypeForCollectionTarget14(this.collection);
+					} else {
+						this.scope.problemReporter().invalidTypeForCollection(this.collection);
+					}
 			}
 		}
 		if (this.action != null) {

@@ -1058,7 +1058,7 @@ public final class NamingConventions {
 	 * There is a heuristic by variable kind.
 	 * <ul>
 	 * <li>{@link #VK_PARAMETER}, {@link #VK_LOCAL}, {@link #VK_INSTANCE_FIELD} and {@link #VK_STATIC_FIELD}:<br>
-	 * In this case the first character will be converted to lower case and the other characters won't be changed.<br>
+	 * In this case the first word will be converted to lower case and the other characters won't be changed.<br>
 	 * If the base name is <code>SimpleName</code> then the suggested name will be <code>simpleName</code>.<br></li>
 	 * <li>{@link #VK_STATIC_FINAL_FIELD} :<br>
 	 * In this case all letters of the name will be converted to upper case and words will be separated by an underscore (<code>"_"</code>).<br>
@@ -1068,7 +1068,7 @@ public final class NamingConventions {
 	 * There is a heuristic by variable kind.
 	 * <ul>
 	 * <li>{@link #VK_PARAMETER}, {@link #VK_LOCAL}, {@link #VK_INSTANCE_FIELD} and {@link #VK_STATIC_FIELD}:<br>
-	 * In this case a variable name will contain some words of the base name and the first character will be converted to lower case.<br>
+	 * In this case a variable name will contain some words of the base name and the first word will be converted to lower case.<br>
 	 * If the type is <code>TypeName</code> then the suggested names will be <code>typeName</code> and <code>name</code>.</li>
 	 * <li>{@link #VK_STATIC_FINAL_FIELD} :<br>
 	 * In this case a variable name will contain some words of the base name, all letters of the name will be converted to upper case and segments will be separated by a underscore (<code>"_"</code>).<br>

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -191,7 +191,7 @@ public boolean exists() {
  */
 public IClassFile getClassFile(String classFileName) {
 	if (!org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(classFileName)) {
-		throw new IllegalArgumentException(Messages.element_invalidClassFileName);
+		throw new IllegalArgumentException(Messages.bind(Messages.element_invalidClassFileName, classFileName));
 	}
 	// don't hold on the .class file extension to save memory
 	// also make sure to not use substring as the resulting String may hold on the underlying char[] which might be much bigger than necessary

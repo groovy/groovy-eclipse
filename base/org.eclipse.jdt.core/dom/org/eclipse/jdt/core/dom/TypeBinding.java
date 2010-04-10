@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@
 package org.eclipse.jdt.core.dom;
 
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
@@ -80,9 +81,13 @@ class TypeBinding implements ITypeBinding {
 		if (this.annotations != null) {
 			return this.annotations;
 		}
-		if (this.binding.isAnnotationType() || this.binding.isClass() || this.binding.isEnum() || this.binding.isInterface()) {
-			org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding refType =
-				(org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding) this.binding;
+		org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding refType = null;
+		if (this.binding instanceof ParameterizedTypeBinding) {
+			refType = ((ParameterizedTypeBinding) this.binding).genericType();
+		} else if (this.binding.isAnnotationType() || this.binding.isClass() || this.binding.isEnum() || this.binding.isInterface()) {
+			refType = (org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding) this.binding;
+		}
+		if (refType != null) {
 			org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding[] internalAnnotations = refType.getAnnotations();
 			int length = internalAnnotations == null ? 0 : internalAnnotations.length;
 			if (length != 0) {
@@ -512,15 +517,18 @@ class TypeBinding implements ITypeBinding {
 		return getUnresolvedJavaElement(this.binding);
 	}
 	private JavaElement getUnresolvedJavaElement(org.eclipse.jdt.internal.compiler.lookup.TypeBinding typeBinding ) {
+		if (JavaCore.getPlugin() == null) {
+			return null;
+		}
 		if (this.resolver instanceof DefaultBindingResolver) {
 			DefaultBindingResolver defaultBindingResolver = (DefaultBindingResolver) this.resolver;
+			if (!defaultBindingResolver.fromJavaProject) return null;
 			return org.eclipse.jdt.internal.core.util.Util.getUnresolvedJavaElement(
 					typeBinding,
 					defaultBindingResolver.workingCopyOwner,
 					defaultBindingResolver.getBindingsToNodesMap());
-		} else {
-			return org.eclipse.jdt.internal.core.util.Util.getUnresolvedJavaElement(typeBinding, null, null);
 		}
+		return null;
 	}
 
 	/*

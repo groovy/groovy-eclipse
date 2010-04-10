@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -122,7 +122,6 @@ public class CompilationUnitProblemFinder extends Compiler {
 			this.lookupEnvironment.completeTypeBindings(unit);
 		}
 	}
-	
 
 	protected static CompilerOptions getCompilerOptions(Map settings, boolean creatingAST, boolean statementsRecovery) {
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
@@ -181,7 +180,10 @@ public class CompilationUnitProblemFinder extends Compiler {
 				compilerOptions,
 				getRequestor(),
 				problemFactory);
-			boolean analyzeAndGenerateCode = !ignoreMethodBodies;
+			boolean analyzeAndGenerateCode = true;
+			if (ignoreMethodBodies) {
+				analyzeAndGenerateCode = false;
+			}
 			CompilationUnitDeclaration unit = null;
 			if (parser != null) {
 				problemFinder.parser = parser;
@@ -241,7 +243,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 			throw new JavaModelException(e, IJavaModelStatusConstants.COMPILER_FAILURE);
 		} finally {
 			if (environment != null)
-				environment.monitor = null; // don't hold a reference to this external object
+				environment.setMonitor(null); // don't hold a reference to this external object
 			if (problemFactory != null)
 				problemFactory.monitor = null; // don't hold a reference to this external object
 			// NB: unit.cleanUp() is done by caller

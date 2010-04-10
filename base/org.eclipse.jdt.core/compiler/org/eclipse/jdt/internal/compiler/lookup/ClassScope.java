@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -312,13 +312,16 @@ public class ClassScope extends Scope {
 			methodBindings[1] = sourceType.addSyntheticEnumMethod(TypeConstants.VALUEOF); // add <EnumType> valueOf()
 		}
 		// create bindings for source methods
+		boolean hasNativeMethods = false;
 		if (sourceType.isAbstract()) {
 			for (int i = 0; i < size; i++) {
 				if (i != clinitIndex) {
 					MethodScope scope = new MethodScope(this, methods[i], false);
 					MethodBinding methodBinding = scope.createMethod(methods[i]);
-					if (methodBinding != null) // is null if binding could not be created
+					if (methodBinding != null) { // is null if binding could not be created
 						methodBindings[count++] = methodBinding;
+						hasNativeMethods = hasNativeMethods || methodBinding.isNative();
+					}
 				}
 			}
 		} else {
@@ -330,6 +333,7 @@ public class ClassScope extends Scope {
 					if (methodBinding != null) { // is null if binding could not be created
 						methodBindings[count++] = methodBinding;
 						hasAbstractMethods = hasAbstractMethods || methodBinding.isAbstract();
+						hasNativeMethods = hasNativeMethods || methodBinding.isNative();
 					}
 				}
 			}
@@ -343,6 +347,17 @@ public class ClassScope extends Scope {
 		// GROOVY end
 		sourceType.tagBits &= ~(TagBits.AreMethodsSorted|TagBits.AreMethodsComplete); // in case some static imports reached already into this type
 		sourceType.setMethods(methodBindings);
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=243917, conservatively tag all methods and fields as
+		// being in use if there is a native method in the class.
+		if (hasNativeMethods) {
+			for (int i = 0; i < methodBindings.length; i++) {
+				methodBindings[i].modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
+			}
+			FieldBinding[] fields = sourceType.unResolvedFields(); // https://bugs.eclipse.org/bugs/show_bug.cgi?id=301683
+			for (int i = 0; i < fields.length; i++) {
+				fields[i].modifiers |= ExtraCompilerModifiers.AccLocallyUsed;	
+			}
+		}
 	}
 
 	// GROOVY start: new method that can be overridden for groovy
@@ -1108,6 +1123,12 @@ public class ClassScope extends Scope {
 			compilationUnitScope().recordSuperTypeReference(superType); // to record supertypes
 			return detectHierarchyCycle(this.referenceContext.binding, (ReferenceBinding) superType, reference);
 		}
+		// Reinstate the code deleted by the fix for https://bugs.eclipse.org/bugs/show_bug.cgi?id=205235
+		// For details, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=294057. 
+		if ((superType.tagBits & TagBits.BeginHierarchyCheck) == 0 && superType instanceof SourceTypeBinding)
+			// ensure if this is a source superclass that it has already been checked
+			((SourceTypeBinding) superType).scope.connectTypeHierarchyWithoutMembers();
+
 		return false;
 	}
 
@@ -1126,7 +1147,7 @@ public class ClassScope extends Scope {
 		if (superType.isMemberType()) {
 			ReferenceBinding current = superType.enclosingType();
 			do {
-				if (current.isHierarchyBeingConnected() && current == sourceType) {
+				if (current.isHierarchyBeingActivelyConnected() && current == sourceType) {
 					problemReporter().hierarchyCircularity(sourceType, current, reference);
 					sourceType.tagBits |= TagBits.HierarchyHasProblems;
 					current.tagBits |= TagBits.HierarchyHasProblems;
@@ -1179,11 +1200,11 @@ public class ClassScope extends Scope {
 			return hasCycle;
 		}
 
-		if (superType.isHierarchyBeingConnected()) {
+		if (superType.isHierarchyBeingActivelyConnected()) {
 			org.eclipse.jdt.internal.compiler.ast.TypeReference ref = ((SourceTypeBinding) superType).scope.superTypeReference;
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=133071
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=121734
-			if (ref != null && (ref.resolvedType == null || ((ReferenceBinding) ref.resolvedType).isHierarchyBeingConnected())) {
+			if (ref != null && (ref.resolvedType == null || ((ReferenceBinding) ref.resolvedType).isHierarchyBeingActivelyConnected())) {
 				problemReporter().hierarchyCircularity(sourceType, superType, reference);
 				sourceType.tagBits |= TagBits.HierarchyHasProblems;
 				superType.tagBits |= TagBits.HierarchyHasProblems;

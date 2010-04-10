@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -445,8 +445,8 @@ public IJavaElement getElementAtConsideringSibling(int position) throws JavaMode
 
 				SourceRange range = mapper.getSourceRange(classFile.getType());
 				if (range == SourceMapper.UNKNOWN_RANGE) continue;
-				int newStart = range.offset;
-				int newEnd = newStart + range.length - 1;
+				int newStart = range.getOffset();
+				int newEnd = newStart + range.getLength() - 1;
 				if(newStart > start && newEnd < end
 						&& newStart <= position && newEnd >= position) {
 					type = classFile.getType();
@@ -625,17 +625,24 @@ private IStatus validateClassFile() {
  * @see Openable
  */
 protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelException {
-	SourceMapper mapper = getSourceMapper();
-	if (mapper != null) {
-		return mapSource(mapper, info instanceof IBinaryType ? (IBinaryType) info : null);
+	// Check the cache for the top-level type first
+	IType outerMostEnclosingType = getOuterMostEnclosingType();
+	IBuffer buffer = getBufferManager().getBuffer(outerMostEnclosingType.getClassFile());
+	if (buffer == null) {
+		SourceMapper mapper = getSourceMapper();
+		IBinaryType typeInfo = info instanceof IBinaryType ? (IBinaryType) info : null;
+		if (mapper != null) {
+			buffer = mapSource(mapper, typeInfo, outerMostEnclosingType.getClassFile());
+		}
 	}
-	return null;
+	return buffer;
 }
-private IBuffer mapSource(SourceMapper mapper, IBinaryType info) {
+/** Loads the buffer via SourceMapper, and maps it in SourceMapper */
+private IBuffer mapSource(SourceMapper mapper, IBinaryType info, IClassFile bufferOwner) {
 	char[] contents = mapper.findSource(getType(), info);
 	if (contents != null) {
 		// create buffer
-		IBuffer buffer = BufferManager.createBuffer(this);
+		IBuffer buffer = BufferManager.createBuffer(bufferOwner);
 		if (buffer == null) return null;
 		BufferManager bufManager = getBufferManager();
 		bufManager.addBuffer(buffer);
@@ -649,12 +656,12 @@ private IBuffer mapSource(SourceMapper mapper, IBinaryType info) {
 		buffer.addBufferChangedListener(this);
 
 		// do the source mapping
-		mapper.mapSource(getType(), contents, info);
+		mapper.mapSource(getOuterMostEnclosingType(), contents, info);
 
 		return buffer;
 	} else {
 		// create buffer
-		IBuffer buffer = BufferManager.createNullBuffer(this);
+		IBuffer buffer = BufferManager.createNullBuffer(bufferOwner);
 		if (buffer == null) return null;
 		BufferManager bufManager = getBufferManager();
 		bufManager.addBuffer(buffer);
@@ -674,6 +681,18 @@ private IBuffer mapSource(SourceMapper mapper, IBinaryType info) {
 	else
 		return simpleName;
 }
+
+/** Returns the type of the top-level declaring class used to find the source code */
+private IType getOuterMostEnclosingType() {
+	IType type = getType();
+	IType enclosingType = type.getDeclaringType();
+	while (enclosingType != null) {
+		type = enclosingType;
+		enclosingType = type.getDeclaringType();
+	}
+	return type;
+}
+
 /**
  * Returns the Java Model representation of the given name
  * which is provided in diet class file format, or <code>null</code>

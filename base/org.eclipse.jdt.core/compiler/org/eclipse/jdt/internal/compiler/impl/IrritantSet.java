@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,50 +36,26 @@ public class IrritantSet {
 	// public final static int GROUP7 = 7 << GROUP_SHIFT;
 
 	// Predefine sets of irritants matching warning tokens
-	public static final IrritantSet ALL = new IrritantSet(
-			0xFFFFFFFF & ~GROUP_MASK);
-	public static final IrritantSet BOXING = new IrritantSet(
-			CompilerOptions.AutoBoxing);
-	public static final IrritantSet CAST = new IrritantSet(
-			CompilerOptions.UnnecessaryTypeCheck);
-	public static final IrritantSet DEPRECATION = new IrritantSet(
-			CompilerOptions.UsingDeprecatedAPI);
-	public static final IrritantSet DEP_ANN = new IrritantSet(
-			CompilerOptions.MissingDeprecatedAnnotation);
-	public static final IrritantSet FALLTHROUGH = new IrritantSet(
-			CompilerOptions.FallthroughCase);
-	public static final IrritantSet FINALLY = new IrritantSet(
-			CompilerOptions.FinallyBlockNotCompleting);
-	public static final IrritantSet HIDING = new IrritantSet(
-			CompilerOptions.MaskedCatchBlock); // further scenarii in static
-												// initializer
-	public static final IrritantSet INCOMPLETE_SWITCH = new IrritantSet(
-			CompilerOptions.IncompleteEnumSwitch);
-	public static final IrritantSet NLS = new IrritantSet(
-			CompilerOptions.NonExternalizedString);
-	public static final IrritantSet NULL = new IrritantSet(
-			CompilerOptions.NullReference); // further scenarii in static
-											// initializer
-	public static final IrritantSet RESTRICTION = new IrritantSet(
-			CompilerOptions.ForbiddenReference); // further scenarii in static
-													// initializer
-	public static final IrritantSet SERIAL = new IrritantSet(
-			CompilerOptions.MissingSerialVersion);
-	public static final IrritantSet STATIC_ACCESS = new IrritantSet(
-			CompilerOptions.IndirectStaticAccess); // further scenarii in static
-													// initializer
-	public static final IrritantSet SYNTHETIC_ACCESS = new IrritantSet(
-			CompilerOptions.AccessEmulation);
-	public static final IrritantSet SUPER = new IrritantSet(
-			CompilerOptions.OverridingMethodWithoutSuperInvocation);
-	public static final IrritantSet UNUSED = new IrritantSet(
-			CompilerOptions.UnusedLocalVariable); // further scenarii in static
-													// initializer
-	public static final IrritantSet UNCHECKED = new IrritantSet(
-			CompilerOptions.UncheckedTypeOperation); // further scenarii in
-														// static initializer
-	public static final IrritantSet UNQUALIFIED_FIELD_ACCESS = new IrritantSet(
-			CompilerOptions.UnqualifiedFieldAccess);
+	public static final IrritantSet ALL = new IrritantSet(0xFFFFFFFF & ~GROUP_MASK);
+	public static final IrritantSet BOXING = new IrritantSet(CompilerOptions.AutoBoxing);
+	public static final IrritantSet CAST = new IrritantSet(CompilerOptions.UnnecessaryTypeCheck);
+	public static final IrritantSet DEPRECATION = new IrritantSet(CompilerOptions.UsingDeprecatedAPI);
+	public static final IrritantSet DEP_ANN = new IrritantSet(CompilerOptions.MissingDeprecatedAnnotation);
+	public static final IrritantSet FALLTHROUGH = new IrritantSet(CompilerOptions.FallthroughCase);
+	public static final IrritantSet FINALLY = new IrritantSet(CompilerOptions.FinallyBlockNotCompleting);
+	public static final IrritantSet HIDING = new IrritantSet(CompilerOptions.MaskedCatchBlock);
+	public static final IrritantSet INCOMPLETE_SWITCH = new IrritantSet(CompilerOptions.IncompleteEnumSwitch);
+	public static final IrritantSet NLS = new IrritantSet(CompilerOptions.NonExternalizedString);
+	public static final IrritantSet NULL = new IrritantSet(CompilerOptions.NullReference);
+	public static final IrritantSet RAW = new IrritantSet(CompilerOptions.RawTypeReference);
+	public static final IrritantSet RESTRICTION = new IrritantSet(CompilerOptions.ForbiddenReference);
+	public static final IrritantSet SERIAL = new IrritantSet(CompilerOptions.MissingSerialVersion);
+	public static final IrritantSet STATIC_ACCESS = new IrritantSet(CompilerOptions.IndirectStaticAccess);
+	public static final IrritantSet SYNTHETIC_ACCESS = new IrritantSet(CompilerOptions.AccessEmulation);
+	public static final IrritantSet SUPER = new IrritantSet(CompilerOptions.OverridingMethodWithoutSuperInvocation);
+	public static final IrritantSet UNUSED = new IrritantSet(CompilerOptions.UnusedLocalVariable);
+	public static final IrritantSet UNCHECKED = new IrritantSet(CompilerOptions.UncheckedTypeOperation);
+	public static final IrritantSet UNQUALIFIED_FIELD_ACCESS = new IrritantSet(CompilerOptions.UnqualifiedFieldAccess);
 
 	public static final IrritantSet COMPILER_DEFAULT_ERRORS = new IrritantSet(0); // no optional error by default	
 	public static final IrritantSet COMPILER_DEFAULT_WARNINGS = new IrritantSet(0); // see static initializer below
@@ -119,7 +95,9 @@ public class IrritantSet {
 				| CompilerOptions.UnusedWarningToken
 				| CompilerOptions.ComparingIdentical)
 			// group-2 warnings enabled by default
-			.set(CompilerOptions.DeadCode);
+			.set(
+				CompilerOptions.DeadCode
+				|CompilerOptions.Tasks);
 			
 		ALL.setAll();
 		HIDING
@@ -138,8 +116,13 @@ public class IrritantSet {
 			.set(CompilerOptions.UnusedLabel)
 			.set(CompilerOptions.UnusedImport)
 			.set(CompilerOptions.UnusedTypeArguments)
-			.set(CompilerOptions.RedundantSuperinterface);
-		UNCHECKED.set(CompilerOptions.RawTypeReference);
+			.set(CompilerOptions.RedundantSuperinterface)
+			.set(CompilerOptions.DeadCode)
+			.set(CompilerOptions.UnusedObjectAllocation);
+		String suppressRawWhenUnchecked = System.getProperty("suppressRawWhenUnchecked"); //$NON-NLS-1$
+		if (suppressRawWhenUnchecked != null && "true".equalsIgnoreCase(suppressRawWhenUnchecked)) { //$NON-NLS-1$
+			UNCHECKED.set(CompilerOptions.RawTypeReference);
+		}
 	}
 
 	// Internal state

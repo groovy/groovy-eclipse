@@ -12,7 +12,7 @@ package org.eclipse.jdt.internal.compiler.problem;
 
 public interface ProblemSeverities {
 
-	final int Ignore = -1; // during handling only
+	final int Ignore = 256; // during handling only
 	final int Warning = 0; // during handling only
 
 	final int Error = 1; // when bit is set: problem is error, if not it is a warning

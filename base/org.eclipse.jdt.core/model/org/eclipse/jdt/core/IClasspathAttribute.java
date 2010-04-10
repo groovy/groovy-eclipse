@@ -52,6 +52,8 @@ public interface IClasspathAttribute {
 
 	/**
 	 * Constant for the name of the javadoc location attribute.
+	 * 
+	 * <p>The value for this attribute has to be the string representation of a URL.</p>
 	 *
 	 * @since 3.1
 	 */

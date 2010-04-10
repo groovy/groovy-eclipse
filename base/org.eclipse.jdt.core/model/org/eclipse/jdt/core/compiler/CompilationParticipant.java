@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2009 IBM Corporation and others.
+ * Copyright (c) 2005, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,7 @@ package org.eclipse.jdt.core.compiler;
 import org.eclipse.jdt.core.IJavaProject;
 
 /**
- * A compilation participant is notified of events occuring during the compilation process.
+ * A compilation participant is notified of events occurring during the compilation process.
  * The compilation process not only involves generating .class files (i.e. building), it also involves
  * cleaning the output directory, reconciling a working copy, etc.
  * So the notified events are the result of a build action, a clean action, a reconcile operation

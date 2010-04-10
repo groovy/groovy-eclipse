@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2009 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1490,7 +1490,28 @@ public class DefaultBytecodeVisitor implements IBytecodeVisitor {
 		}));
 		writeNewLine();
 	}
+	/**
+	 * @see IBytecodeVisitor#_invokedynamic(int, int, IConstantPoolEntry, IConstantPoolEntry)
+	 */
+	public void _invokedynamic(
+		int pc,
+		int index,
+		IConstantPoolEntry nameEntry,
+		IConstantPoolEntry descriptorEntry) {
 
+		dumpPcNumber(pc);
+		this.buffer.append(Messages.bind(Messages.classformat_invokedynamic, new String[] {
+			OpcodeStringValues.BYTECODE_NAMES[IOpcodeMnemonics.INVOKEDYNAMIC],
+			Integer.toString(index),
+			Util.toString(
+				null,
+				nameEntry.getUtf8Value(),
+				descriptorEntry.getUtf8Value(),
+				true,
+				isCompact())
+		}));
+		writeNewLine();
+	}
 	/**
 	 * @see IBytecodeVisitor#_invokeinterface(int, int, byte, IConstantPoolEntry)
 	 */

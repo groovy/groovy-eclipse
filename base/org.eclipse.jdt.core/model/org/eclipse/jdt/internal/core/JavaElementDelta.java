@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -106,19 +106,17 @@ protected void addAffectedChild(JavaElementDelta child) {
 		fineGrained();
 	}
 
-	if (this.affectedChildren.length == 0) {
+	if (this.affectedChildren == null || this.affectedChildren.length == 0) {
 		this.affectedChildren = new IJavaElementDelta[] {child};
 		return;
 	}
 	JavaElementDelta existingChild = null;
 	int existingChildIndex = -1;
-	if (this.affectedChildren != null) {
-		for (int i = 0; i < this.affectedChildren.length; i++) {
-			if (equalsAndSameParent(this.affectedChildren[i].getElement(), child.getElement())) { // handle case of two jars that can be equals but not in the same project
-				existingChild = (JavaElementDelta)this.affectedChildren[i];
-				existingChildIndex = i;
-				break;
-			}
+	for (int i = 0; i < this.affectedChildren.length; i++) {
+		if (equalsAndSameParent(this.affectedChildren[i].getElement(), child.getElement())) { // handle case of two jars that can be equals but not in the same project
+			existingChild = (JavaElementDelta)this.affectedChildren[i];
+			existingChildIndex = i;
+			break;
 		}
 	}
 	if (existingChild == null) { //new affected child
