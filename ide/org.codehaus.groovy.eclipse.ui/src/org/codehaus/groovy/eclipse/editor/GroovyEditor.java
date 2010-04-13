@@ -739,14 +739,6 @@ public class GroovyEditor extends CompilationUnitEditor {
      * Make accessible to source viewer
      */
     @Override
-    protected void setStatusLineErrorMessage(String message) {
-        super.setStatusLineErrorMessage(message);
-    }
-    
-    /*
-     * Make accessible to source viewer
-     */
-    @Override
     protected ITypeRoot getInputJavaElement() {
         return super.getInputJavaElement();
     }

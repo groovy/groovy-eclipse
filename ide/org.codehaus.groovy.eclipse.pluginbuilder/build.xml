@@ -64,7 +64,7 @@
 		
 		<property name="buildTypePresentation" value=""/>
 		<echo message="tstampQual=${tstampQual}"/>
-    <property name="forceContextQualifier" value="${tstampQual}-${buildTypePresentation}"/>
+    <property name="forceContextQualifier" value="${buildTypePresentation}${tstampQual}-${buildTypePresentation}"/>
 		<echo message="=============================================="/>
 		<echo message="forceContextQualifier=${forceContextQualifier}"/>
 		<echo message="=============================================="/>
@@ -75,7 +75,6 @@
 
 		<!-- includes -->
 		<property file="build_local.properties" />
-		<property file="pluginbuilder.config" />
 		
 		<!-- set defaults -->
 		<property name="buildTarget" value="main"/>

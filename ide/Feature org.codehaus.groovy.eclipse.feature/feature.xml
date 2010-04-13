@@ -108,19 +108,6 @@
          unpack="false"/>
 
    <plugin
-         id="org.codehaus.groovy.eclipse.cstviewer"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.core.help"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
          id="org.codehaus.groovy.eclipse.refactoring"
          download-size="0"
          install-size="0"

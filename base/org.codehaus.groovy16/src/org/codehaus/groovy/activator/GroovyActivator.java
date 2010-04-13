@@ -1,19 +1,24 @@
 package org.codehaus.groovy.activator;
 
-import org.eclipse.core.runtime.IStatus;
+import java.net.URL;
+
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.prefs.BackingStoreException;
 
 public class GroovyActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy"; //$NON-NLS-1$
     
-    public static final String REFRESH_ON_STARTUP = "refresh.on.startup"; //$NON-NLS-1$
-    
+    public static final String GROOVY_ALL_JAR = "lib/groovy-all-1.6.7.jar"; //$NON-NLS-1$
+    public static final String GROOVY_JAR = "lib/groovy-1.6.7.jar"; //$NON-NLS-1$
+    public static final String ASM_JAR = "lib/asm-2.2.3.jar"; //$NON-NLS-1$
+    public static final int GROOVY_LEVEL = 16;
+
+    public static URL GROOVY_JAR_URL;
+    public static URL GROOVY_ALL_JAR_URL;
+    public static URL ASM_JAR_URL;
     
     private static GroovyActivator DEFAULT;
     
@@ -28,43 +33,13 @@ public class GroovyActivator extends Plugin {
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
-        if (isRefreshOnStartup()) {
-            setRefreshOnStartup(false);
-            // do not force a package refresh at next startup
-//            IStatus status = new RefreshPackages().removeJvmArg();
-//            if (status.getSeverity() >= IStatus.WARNING) {
-//                getLog().log(status);
-//            }
-        }
+        GROOVY_JAR_URL = FileLocator.resolve(Platform.getBundle(PLUGIN_ID).getEntry(GroovyActivator.GROOVY_JAR));
+        GROOVY_ALL_JAR_URL = FileLocator.resolve(Platform.getBundle(PLUGIN_ID).getEntry(GroovyActivator.GROOVY_ALL_JAR));
+        ASM_JAR_URL = FileLocator.resolve(Platform.getBundle(PLUGIN_ID).getEntry(GroovyActivator.ASM_JAR));
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         super.stop(context);
-        logInfo("Stopping Groovy compiler version " + context.getBundle().getVersion());
-    }
-    
-    public void setRefreshOnStartup(boolean doIt) {
-        // set the preference
-        IEclipsePreferences contextNode = new InstanceScope().getNode(PLUGIN_ID);
-        contextNode.putBoolean(REFRESH_ON_STARTUP, doIt);
-        try {
-            contextNode.flush();
-        } catch (BackingStoreException e) {
-            logException(e);
-        }
-    }
-    
-    private boolean isRefreshOnStartup() {
-        IEclipsePreferences contextNode = new InstanceScope().getNode(PLUGIN_ID);
-        return contextNode.getBoolean(REFRESH_ON_STARTUP, false);
-    }
-    
-    private void logException(Exception e) {
-        getLog().log(new Status(IStatus.ERROR, PLUGIN_ID,e.getMessage(), e));
-    }
-    
-    private void logInfo(String message) {
-        getLog().log(new Status(IStatus.INFO, PLUGIN_ID, message));
     }
 }

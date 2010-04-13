@@ -18,6 +18,7 @@ import java.util.Map;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -62,12 +63,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyCompilationUnitDeclaration.defaultCheckGenerics=true;
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
-		groovyLevel=17;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.0.jar");
-    	if (groovyJar==null) {
-    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-    		groovyLevel=16;
-    	}
+		groovyLevel=GroovyActivator.GROOVY_LEVEL;
 	}
 
 	public static Class testClass() {
@@ -93,17 +89,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	groovyLevel=17;
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.0.jar");
-        	if (groovyJar==null) {
-        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-        		groovyLevel=16;
-        	}
+        	groovyLevel=GroovyActivator.GROOVY_LEVEL;
+        	URL groovyJar = GroovyActivator.GROOVY_JAR_URL;
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
-        	URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
-        	if (asmJar==null) {
-        		asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
-        	}
+        	URL asmJar = GroovyActivator.ASM_JAR_URL;
             newcps[newcps.length-2] = FileLocator.resolve(asmJar).getFile();
 	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
 	        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when

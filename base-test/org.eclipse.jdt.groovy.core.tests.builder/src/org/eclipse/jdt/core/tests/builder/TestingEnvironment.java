@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -1209,16 +1210,8 @@ public void cleanBuild() {
 	}
 
 	public void addGroovyJars(IPath projectPath) throws Exception {
-		URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.0.jar");
-		if (groovyJar==null) {
-			groovyJar =Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-		}
-        addExternalJar(projectPath, FileLocator.resolve(groovyJar).getFile());
-        URL asmJar =Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
-		if (asmJar==null) {
-			asmJar=Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
-		}
-        addExternalJar(projectPath, FileLocator.resolve(asmJar).getFile());
+        addExternalJar(projectPath, GroovyActivator.GROOVY_JAR_URL.getFile());
+        addExternalJar(projectPath, GroovyActivator.ASM_JAR_URL.getFile());
 	}	
 
 }

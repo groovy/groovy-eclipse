@@ -192,17 +192,6 @@
 			    <include name="*sdk*"/>
 			</fileset>
 		</delete>
-  	<!--
-  	<delete>
-			<fileset dir="${updateSiteDir}/plugins">
-			    <include name="*tests_*"/>
-			    <include name="*test_*"/>
-			    <include name="*tests.builder_*"/>
-			    <include name="*tests.compiler_*"/>
-			    <include name="*performance_*"/>
-			</fileset>
-		</delete>
-		-->
   	
   	<!-- need the site.xml file before we can generate -->
 		<copy todir="${updateSiteDir}">
@@ -249,7 +238,8 @@
   	<!-- fix feature patch version -->
   	<!-- Ensure that feature patch can be installed on multiple versions of Eclipse -->
   	<!-- See http://aniefer.blogspot.com/2009/06/patching-features-part-2.html -->
-  	<property name="orig.jdt.feature.version.range" value="[3.5.0.v20090527-2000-7r88FEeFJePyvYeA33DjZ_c1,3.5.0.v20090527-2000-7r88FEeFJePyvYeA33DjZ_c1]"/>  	<property name="new.jdt.feature.version.range" value="[3.5.0.v20090527-2000-7r88FEeFJePyvYeA33DjZ_c1,3.5.3)"/>
+  	<property name="orig.jdt.feature.version.range" value="[3.6.0.v20100124-2000-7z8WFRAFMTdeCo0y7FJt1Zi45027,3.6.0.v20100124-2000-7z8WFRAFMTdeCo0y7FJt1Zi45027]"/>  	
+  		<property name="new.jdt.feature.version.range" value="[3.6.0,3.6.1)"/>
   	<replace file="${updateSiteDir}/content.xml" summary="yes"
 	    token="${orig.jdt.feature.version.range}" value="${new.jdt.feature.version.range}"/>
 

@@ -30,12 +30,9 @@
    </url>
 
    <requires>
+      <import plugin="org.apache.ant"/>
+      <import plugin="org.junit"/>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.equinox.p2.metadata" version="1.0.100" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.equinox.p2.metadata.generator" version="1.0.100" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.equinox.p2.metadata.repository" version="1.0.100" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.equinox.p2.engine" version="1.0.100" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.equinox.p2.core" version="1.0.100" match="greaterOrEqual"/>
    </requires>
 
    <plugin
