@@ -23,6 +23,7 @@ import groovy.lang.MetaClass;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,7 +72,7 @@ import org.objectweb.asm.Opcodes;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 18248 $
+ * @version $Revision: 19727 $
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
@@ -174,14 +175,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             throw new RuntimeParserException("Duplicate interfaces in implements list: " + interfaces, classNode);
         }
 
-        // check if the class implements itself by mistake GROOVY-2855
-        for (Object intf : interfaces) {
-        	String intfName = (String) intf;
-        	if(intfName.equals(node.getName())) {
-        		throw new RuntimeParserException("Cycle detected: the type " + node.getName() + " cannot implement itself", classNode);
-        	}
-        }
-
         addDefaultParameterMethods(node);
         addDefaultParameterConstructors(node);
 
@@ -210,8 +203,16 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private void addDefaultConstructor(ClassNode node) {
         if (!node.getDeclaredConstructors().isEmpty()) return;
         
-        ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, null);
-        constructor.setSynthetic(true);
+        BlockStatement empty = new BlockStatement();
+        // FIXASC (groovychange) We don't want source locations for synthetic default constructors
+        // oldcode
+/*        empty.setSourcePosition(node); 
+        ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, empty);
+        constructor.setSourcePosition(node);
+        */
+        // newcode
+        ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, empty);
+        // end
         node.addConstructor(constructor);
     }
 
@@ -395,7 +396,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
      * call will either be made to ClassNode.addSyntheticMethod() or ClassNode.addMethod(). If a non-synthetic method 
      * is to be added the ACC_SYNTHETIC modifier is removed if it has been accidentally supplied.
      */
-    private void addMethod(ClassNode node, boolean shouldBeSynthetic, String name, int modifiers, ClassNode returnType, Parameter[] parameters,
+    protected void addMethod(ClassNode node, boolean shouldBeSynthetic, String name, int modifiers, ClassNode returnType, Parameter[] parameters,
 			ClassNode[] exceptions, Statement code) {
     	if (shouldBeSynthetic) {
     		node.addSyntheticMethod(name,modifiers,returnType,parameters,exceptions,code);
@@ -406,7 +407,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
 	protected void addTimeStamp(ClassNode node) {
         if(node.getDeclaredField(Verifier.__TIMESTAMP) == null) { // in case if verifier visited the call already
-        // GROOVY change, skip timestamp creation
+        // FIXASC (groovychange) skip timestamp creation
 //        FieldNode timeTagField = new FieldNode(
 //                Verifier.__TIMESTAMP,
 //                ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC,
@@ -481,6 +482,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     public void visitMethod(MethodNode node) {
+    	//GROOVY-3712 - if it's an MOP method, it's an error as they aren't supposed to exist before ACG is invoked
+    	if(AsmClassGenerator.isMopMethod(node.getName())) {
+    		throw new RuntimeParserException("Found unexpected MOP methods in the class node for " + classNode.getName() +
+    				"(" + node.getName() + ")", classNode);
+    	}
         this.methodNode = node;
         adjustTypesIfStaticMainMethod(node);
         addReturnIfNeeded(node);
@@ -593,7 +599,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     // Implementation methods
     //-------------------------------------------------------------------------
     
-    private interface DefaultArgsAction {
+    public interface DefaultArgsAction {
         void call(ArgumentListExpression arguments, Parameter[] newParams, MethodNode method);
     }
     
@@ -624,7 +630,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                             "\" that is already defined.",
                             method);
                 }
-                node.addMethod(newMethod);
+                addPropertyMethod(newMethod);
                 newMethod.setGenericsTypes(method.getGenericsTypes());
             }
         });
@@ -637,9 +643,13 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 ConstructorNode ctor = (ConstructorNode) method;
                 ConstructorCallExpression expression = new ConstructorCallExpression(ClassNode.THIS, arguments);
                 Statement code = new ExpressionStatement(expression);
-                node.addConstructor(ctor.getModifiers(), newParams, ctor.getExceptions(), code);
+                addConstructor(newParams, ctor, code, node);
             }
         });
+    }
+
+    protected void addConstructor(Parameter[] newParams, ConstructorNode ctor, Statement code, ClassNode node) {
+        node.addConstructor(ctor.getModifiers(), newParams, ctor.getExceptions(), code);
     }
 
     /**
@@ -649,6 +659,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         for (Iterator iter = methods.iterator(); iter.hasNext();) {
             MethodNode method = (MethodNode) iter.next();
             if (method.hasDefaultValue()) {
+                addDefaultParameters(action, method);
+            }
+        }
+    }
+
+    protected void addDefaultParameters(DefaultArgsAction action, MethodNode method) {
                 Parameter[] parameters = method.getParameters();
                 int counter = 0;
                 List paramValues = new ArrayList();
@@ -710,8 +726,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     parameters[i].setInitialExpression(null);
                 }
             }
-        }
-    }
 
     protected void addClosureCode(InnerClassNode node) {
         // add a new invoke
@@ -725,6 +739,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     protected void addInitialization(ClassNode node, ConstructorNode constructorNode) {
         Statement firstStatement = constructorNode.getFirstStatement();
+        // if some transformation decided to generate constructor then it probably knows who it does
+        if (firstStatement instanceof BytecodeSequence)
+            return;
+
         ConstructorCallExpression first = getFirstIfSpecialConstructorCall(firstStatement);
         
         // in case of this(...) let the other constructor do the init
@@ -742,6 +760,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         			explicitStaticPropsInEnum.add(propNode.getField().getName());
         		}
         	}
+        	for (FieldNode fieldNode : node.getFields()) {
+        		if(!fieldNode.isSynthetic() && fieldNode.isStatic() && fieldNode.getType() != node) {
+        			explicitStaticPropsInEnum.add(fieldNode.getName());
+        		}
+        }
         }
         for (Iterator iter = node.getFields().iterator(); iter.hasNext();) {
         	addFieldInitialization(statements, staticStatements, 
@@ -912,13 +935,17 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
         // unimplemented abstract methods from interfaces
         Map abstractMethods = new HashMap();
+        Map<String, MethodNode> allInterfaceMethods = new HashMap<String, MethodNode>();
         ClassNode[] interfaces = classNode.getInterfaces();
         for (int i = 0; i < interfaces.length; i++) {
             ClassNode iface = interfaces[i];
             Map ifaceMethodsMap = iface.getDeclaredMethodsMap();
             abstractMethods.putAll(ifaceMethodsMap);
+            allInterfaceMethods.putAll(ifaceMethodsMap);
         }
         
+        collectSuperInterfaceMethods(classNode, allInterfaceMethods);
+
         List declaredMethods = new ArrayList(classNode.getMethods());
         // remove all static, private and package private methods
         for (Iterator methodsIterator = declaredMethods.iterator(); methodsIterator.hasNext();) {
@@ -927,6 +954,14 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             if (m.isStatic() || !(m.isPublic() || m.isProtected())) {
                 methodsIterator.remove();
             } 
+            MethodNode intfMethod = allInterfaceMethods.get(m.getTypeDescriptor());
+            if(intfMethod != null && ((m.getModifiers() & ACC_SYNTHETIC) == 0) 
+            		&& !m.isPublic() && !m.isStaticConstructor()) {
+                throw new RuntimeParserException("The method " + m.getName() +
+                        " should be public as it implements the corresponding method from interface " +
+                        intfMethod.getDeclaringClass(), m);
+
+            }
         }
         
         addCovariantMethods(classNode, declaredMethods, abstractMethods, methodsToAdd, genericsSpec);
@@ -945,10 +980,31 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             // we skip bridge methods implemented in current class already
             MethodNode mn = (MethodNode) declaredMethodsMap.get(entry.getKey());
             if (mn!=null && mn.getDeclaringClass().equals(classNode)) continue;
-            classNode.addMethod(method);
+            addPropertyMethod(method);
         }
     }
     
+    private void collectSuperInterfaceMethods(ClassNode cn, Map allInterfaceMethods) {
+    	List cnInterfaces = Arrays.asList(cn.getInterfaces());
+    	ClassNode sn = cn.getSuperClass();
+    	/* FIXASC (groovychange) temp change - ought to ensure the JDTclassnodes fit expectations here and return Object at the top
+    	// was:
+    	while(!sn.equals(ClassHelper.OBJECT_TYPE)) {
+	// new */
+    	while(sn!=null && !sn.equals(ClassHelper.OBJECT_TYPE)) {
+    	// end
+            ClassNode[] interfaces = sn.getInterfaces();
+            for (int i = 0; i < interfaces.length; i++) {
+                ClassNode iface = interfaces[i];
+                if(!cnInterfaces.contains(iface)) {
+                    Map ifaceMethodsMap = iface.getDeclaredMethodsMap();
+                    allInterfaceMethods.putAll(ifaceMethodsMap);
+                }
+            }
+            sn = sn.getSuperClass();
+    	}
+    }
+
     private void addCovariantMethods(ClassNode classNode, List declaredMethods, Map abstractMethods, Map methodsToAdd, Map oldGenericsSpec) {
         ClassNode sn = classNode.getUnresolvedSuperClass(false);
         
@@ -990,6 +1046,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private MethodNode getCovariantImplementation(final MethodNode oldMethod, final MethodNode overridingMethod, Map genericsSpec) {
         // method name
         if (!oldMethod.getName().equals(overridingMethod.getName())) return null;
+        if ((overridingMethod.getModifiers() & ACC_BRIDGE) != 0) return null;
 
         // parameters
         boolean normalEqualParameters = equalParametersNormal(overridingMethod,oldMethod);

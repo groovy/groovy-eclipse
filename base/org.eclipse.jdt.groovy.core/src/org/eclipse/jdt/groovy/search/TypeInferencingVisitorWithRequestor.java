@@ -230,6 +230,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 							break;
 					}
 				}
+
+				// visit synthetic default constructor...this is where the object initializers are stuffed
+				if (!type.getMethod("<init>", new String[0]).exists()) {
+					ConstructorNode defConstructor = findDefaultConstructor(node);
+					if (defConstructor != null) {
+						visitConstructorOrMethod(defConstructor, true);
+					}
+				}
 			} catch (JavaModelException e) {
 				Util.log(e, "Error getting children of " + type.getFullyQualifiedName());
 			}
@@ -244,6 +252,20 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			rethrowVisitComplete = oldRethrow;
 			scopes.pop();
 		}
+	}
+
+	/**
+	 * @param node
+	 * @return
+	 */
+	private ConstructorNode findDefaultConstructor(ClassNode node) {
+		List<ConstructorNode> constructors = node.getDeclaredConstructors();
+		for (ConstructorNode constructor : constructors) {
+			if (constructor.getParameters() == null || constructor.getParameters().length == 0) {
+				return constructor;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -695,7 +717,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitVariableExpression(VariableExpression node) {
-		visitAnnotations(node);
+		// VariableExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
+		Object maybeAnnotatedNode = node;
+		if (maybeAnnotatedNode instanceof AnnotatedNode) {
+			visitAnnotations((AnnotatedNode) maybeAnnotatedNode);
+		}
 
 		// this is a declaration
 		if (node.getAccessedVariable() == node) {
@@ -735,7 +761,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBinaryExpression(BinaryExpression node) {
-		visitAnnotations(node);
+		// BinaryExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
+		Object maybeAnnotatedNode = node;
+		if (maybeAnnotatedNode instanceof AnnotatedNode) {
+			visitAnnotations((AnnotatedNode) maybeAnnotatedNode);
+		}
 
 		propertyExpression.push(node);
 		node.getRightExpression().visit(this);

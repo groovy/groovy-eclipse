@@ -2777,7 +2777,7 @@ regexExpression[int lc_stmt]
 
 // equality/inequality (==/!=) (level 8)
 equalityExpression[int lc_stmt]
-    :   relationalExpression[lc_stmt] ((NOT_EQUAL^ | EQUAL^ | COMPARE_TO^) nls! relationalExpression[0])*
+    :   relationalExpression[lc_stmt] ((NOT_EQUAL^ | EQUAL^ |IDENTICAL^ |NOT_IDENTICAL^ | COMPARE_TO^) nls! relationalExpression[0])*
     ;
 
 // boolean relational expressions (level 7)
@@ -3712,9 +3712,11 @@ DOT               options {paraphrase="'.'";}           :   '.'             ;
 ASSIGN            options {paraphrase="'='";}           :   '='             ;
 COMPARE_TO        options {paraphrase="'<=>'";}         :   "<=>"           ;
 EQUAL             options {paraphrase="'=='";}          :   "=="            ;
+IDENTICAL         options {paraphrase="'==='";}         :   "==="           ;
 LNOT              options {paraphrase="'!'";}           :   '!'             ;
 BNOT              options {paraphrase="'~'";}           :   '~'             ;
 NOT_EQUAL         options {paraphrase="'!='";}          :   "!="            ;
+NOT_IDENTICAL     options {paraphrase="'!=='";}         :   "!=="           ;
 protected  //switched from combined rule
 DIV               options {paraphrase="'/'";}           :   '/'             ;
 protected  //switched from combined rule

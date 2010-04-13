@@ -36,7 +36,7 @@ import org.objectweb.asm.Opcodes;
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Revision: 18195 $
+ * @version $Revision: 19492 $
  */
 public class BytecodeHelper implements Opcodes {
 
@@ -705,9 +705,13 @@ public class BytecodeHelper implements Opcodes {
         if (param.length == 0) return false;
         for (int i = 0; i < param.length; i++) {
             ClassNode type = param[i].getType();
-            if (type.getGenericsTypes() != null) return true;
+            if (hasGenerics(type)) return true;
         }
         return false;
+    }
+
+    private static boolean hasGenerics(ClassNode type) {
+        return type.isArray() ? hasGenerics(type.getComponentType()) : type.getGenericsTypes() != null;
     }
 
     public static String getGenericsMethodSignature(MethodNode node) {
@@ -715,7 +719,7 @@ public class BytecodeHelper implements Opcodes {
         Parameter[] param = node.getParameters();
         ClassNode returnType = node.getReturnType();
 
-        if (generics == null && !hasGenerics(param) && returnType.getGenericsTypes() == null) return null;
+        if (generics == null && !hasGenerics(param) && !hasGenerics(returnType)) return null;
 
         StringBuffer ret = new StringBuffer(100);
         getGenericsTypeSpec(ret, generics);
@@ -730,17 +734,13 @@ public class BytecodeHelper implements Opcodes {
             }
         }
         addSubTypes(ret, paramTypes, "(", ")");
-        if (returnType.isGenericsPlaceHolder()) {
-            addSubTypes(ret, returnType.getGenericsTypes(), "", "");
-        } else {
-            writeGenericsBounds(ret, new GenericsType(returnType), false);
-        }
+        addSubTypes(ret, new GenericsType[]{new GenericsType(returnType)}, "", "");
         return ret.toString();
     }
 
     private static boolean usesGenericsInClassSignature(ClassNode node) {
         if (!node.isUsingGenerics()) return false;
-        if (node.getGenericsTypes() != null) return true;
+        if (hasGenerics(node)) return true;
         ClassNode sclass = node.getUnresolvedSuperClass(false);
         if (sclass.isUsingGenerics()) return true;
         ClassNode[] interfaces = node.getInterfaces();
@@ -796,9 +796,16 @@ public class BytecodeHelper implements Opcodes {
 
     private static void writeGenericsBoundType(StringBuffer ret, ClassNode printType, boolean writeInterfaceMarker) {
         if (writeInterfaceMarker && printType.isInterface()) ret.append(":");
-        ret.append(getTypeDescription(printType, false));
-        addSubTypes(ret, printType.getGenericsTypes(), "<", ">");
-        if (!ClassHelper.isPrimitiveType(printType)) ret.append(";");
+        if (printType.equals(ClassHelper.OBJECT_TYPE) && printType.getGenericsTypes() != null) {
+            ret.append("T");
+            ret.append(printType.getGenericsTypes()[0].getName());
+            ret.append(";");
+        }
+        else {
+            ret.append(getTypeDescription(printType, false));
+            addSubTypes(ret, printType.getGenericsTypes(), "<", ">");
+        	if (!ClassHelper.isPrimitiveType(printType)) ret.append(";");
+    	  }
     }
 
     private static void writeGenericsBounds(StringBuffer ret, GenericsType type, boolean writeInterfaceMarker) {

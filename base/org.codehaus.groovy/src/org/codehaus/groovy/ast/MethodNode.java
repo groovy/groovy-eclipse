@@ -15,17 +15,17 @@
  */
 package org.codehaus.groovy.ast;
 
-import java.util.List;
-
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.objectweb.asm.Opcodes;
+
+import java.util.List;
 
 /**
  * Represents a method declaration
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 18462 $
+ * @version $Revision: 18461 $
  */
 public class MethodNode extends AnnotatedNode implements Opcodes {
 

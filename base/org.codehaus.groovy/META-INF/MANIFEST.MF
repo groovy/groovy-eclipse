@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Runtime Plug-in
 Bundle-SymbolicName: org.codehaus.groovy
-Bundle-Version: 1.7.0.qualifier
+Bundle-Version: 1.7.2.qualifier
 Bundle-ClassPath: groovy-eclipse.jar,
  lib/asm-3.2.jar,
  lib/asm-tree-3.2.jar,
@@ -10,7 +10,7 @@ Bundle-ClassPath: groovy-eclipse.jar,
  lib/ivy-2.1.0.jar,
  lib/commons-cli-1.2.jar,
  lib/bsf-2.4.0.jar,
- lib/groovy-1.7.0.jar
+ lib/groovy-1.7.2.jar
 Groovy-Runtime-Jars: groovy.jar
 Export-Package: antlr,
  antlr.ASdebug,
@@ -107,7 +107,12 @@ Export-Package: antlr,
  org.objectweb.asm.tree
 Require-Bundle: org.apache.ant,
  org.junit,
- org.eclipse.core.runtime
+ org.eclipse.core.runtime,
+ org.eclipse.equinox.p2.metadata;bundle-version="1.0.100";resolution:=optional,
+ org.eclipse.equinox.p2.metadata.generator;bundle-version="1.0.100";resolution:=optional,
+ org.eclipse.equinox.p2.metadata.repository;bundle-version="1.0.100";resolution:=optional,
+ org.eclipse.equinox.p2.engine;bundle-version="1.0.100";resolution:=optional,
+ org.eclipse.equinox.p2.core;bundle-version="1.0.100";resolution:=optional
 Bundle-Vendor: Codehaus.org
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

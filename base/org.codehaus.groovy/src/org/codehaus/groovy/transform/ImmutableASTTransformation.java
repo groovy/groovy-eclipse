@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 the original author or authors.
+ * Copyright 2008-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,48 +16,13 @@
 
 package org.codehaus.groovy.transform;
 
+import groovy.lang.GroovyObject;
 import groovy.lang.Immutable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.BooleanExpression;
-import org.codehaus.groovy.ast.expr.CastExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.EmptyStatement;
-import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.IfStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
+import groovy.lang.MetaClass;
+import groovy.lang.MissingPropertyException;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.*;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
@@ -65,6 +30,8 @@ import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.util.HashCodeHelper;
 import org.objectweb.asm.Opcodes;
+
+import java.util.*;
 
 /**
  * Handles generation of code for the @Immutable annotation.
@@ -95,6 +62,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
             java.math.BigInteger.class,
             java.math.BigDecimal.class,
             java.awt.Color.class,
+            java.net.URI.class,
     };
     private static final Class MY_CLASS = Immutable.class;
     private static final ClassNode MY_TYPE = new ClassNode(MY_CLASS);
@@ -111,7 +79,6 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
     private static final ClassNode SELF_TYPE = new ClassNode(ImmutableASTTransformation.class);
     private static final Token COMPARE_EQUAL = Token.newSymbol(Types.COMPARE_EQUAL, -1, -1);
     private static final Token COMPARE_NOT_EQUAL = Token.newSymbol(Types.COMPARE_NOT_EQUAL, -1, -1);
-    private static final Token COMPARE_IDENTICAL = Token.newSymbol(Types.COMPARE_IDENTICAL, -1, -1);
     private static final Token ASSIGN = Token.newSymbol(Types.ASSIGN, -1, -1);
 
     public void visit(ASTNode[] nodes, SourceUnit source) {
@@ -134,12 +101,12 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
                 cNode.setModifiers(cNode.getModifiers() | ACC_FINAL);
             }
 
-            final List<PropertyNode> pList = cNode.getProperties();
+            final List<PropertyNode> pList = getInstanceProperties(cNode);
             for (PropertyNode pNode : pList) {
                 adjustPropertyForImmutability(pNode, newNodes);
             }
             for (PropertyNode pNode : newNodes) {
-                pList.remove(pNode);
+                cNode.getProperties().remove(pNode);
                 addProperty(cNode, pNode);
             }
             final List<FieldNode> fList = cNode.getFields();
@@ -180,7 +147,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         final FieldNode hashField = cNode.addField("$hash$code", ACC_PRIVATE | ACC_SYNTHETIC, ClassHelper.int_TYPE, null);
         final BlockStatement body = new BlockStatement();
         final Expression hash = new FieldExpression(hashField);
-        final List<PropertyNode> list = cNode.getProperties();
+        final List<PropertyNode> list = getInstanceProperties(cNode);
 
         body.addStatement(new IfStatement(
                 isZeroExpr(hash),
@@ -200,7 +167,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         if (hasExistingToString && hasDeclaredMethod(cNode, "_toString", 0)) return;
         
         final BlockStatement body = new BlockStatement();
-        final List<PropertyNode> list = cNode.getProperties();
+        final List<PropertyNode> list = getInstanceProperties(cNode);
         // def _result = new StringBuffer()
         final Expression result = new VariableExpression("_result");
         final Expression init = new ConstructorCallExpression(STRINGBUFFER_TYPE, MethodCallExpression.NO_ARGUMENTS);
@@ -273,7 +240,9 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         body.addStatement(returnFalseIfWrongType(cNode, other));
         body.addStatement(returnTrueIfIdentical(VariableExpression.THIS_EXPRESSION, other));
 
-        final List<PropertyNode> list = cNode.getProperties();
+        body.addStatement(new ExpressionStatement(new BinaryExpression(other, ASSIGN, new CastExpression(cNode, other))));
+
+        final List<PropertyNode> list = getInstanceProperties(cNode);
         // fields
         for (PropertyNode pNode : list) {
             body.addStatement(returnFalseIfPropertyNotEqual(pNode, other));
@@ -338,7 +307,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
             throw new RuntimeException("Explicit constructors not allowed for " + MY_TYPE_NAME + " class: " + cNode.getNameWithoutPackage());
         }
 
-        List<PropertyNode> list = cNode.getProperties();
+        List<PropertyNode> list = getInstanceProperties(cNode);
         boolean specialHashMapCase = list.size() == 1 && list.get(0).getField().getType().equals(HASHMAP_TYPE);
         if (specialHashMapCase) {
             createConstructorMapSpecial(cNode, constructorStyle, list);
@@ -346,6 +315,16 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
             createConstructorMap(cNode, constructorStyle, list);
             createConstructorOrdered(cNode, constructorStyle, list);
         }
+    }
+
+    private List<PropertyNode> getInstanceProperties(ClassNode cNode) {
+        final List<PropertyNode> result = new ArrayList<PropertyNode>();
+        for (PropertyNode pNode : cNode.getProperties()) {
+            if (!pNode.isStatic()) {
+                result.add(pNode);
+            }
+        }
+        return result;
     }
 
     private void createConstructorMapSpecial(ClassNode cNode, FieldExpression constructorStyle, List<PropertyNode> list) {
@@ -359,6 +338,9 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         for (PropertyNode pNode : list) {
             body.addStatement(createConstructorStatement(cNode, pNode));
         }
+        // check for missing properties
+        Expression checkArgs = new ArgumentListExpression(new VariableExpression("this"), new VariableExpression("args"));
+        body.addStatement(new ExpressionStatement(new StaticMethodCallExpression(SELF_TYPE, "checkPropNames", checkArgs)));
         createConstructorMapCommon(cNode, constructorStyle, body);
     }
 
@@ -582,7 +564,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
     }
 
     private BooleanExpression identicalExpr(Expression self, Expression other) {
-        return new BooleanExpression(new BinaryExpression(self, COMPARE_IDENTICAL, other));
+        return new BooleanExpression(new MethodCallExpression(self, "is", new ArgumentListExpression(other)));
     }
 
     private BooleanExpression notEqualClasses(ClassNode cNode, Expression other) {
@@ -631,8 +613,8 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
                 prettyTypeName(typeName) + "' while " + mode + " class " + className + ".\n" +
                 MY_TYPE_NAME + " classes currently only support properties with known immutable types " +
                 "or types where special handling achieves immutable behavior, including:\n" +
-                "- Strings, primitive types, wrapper types, BigInteger and BigDecimal\n" +
-                "- enums, other " + MY_TYPE_NAME + " classes and known immutables (java.awt.Color)\n" +
+                "- Strings, primitive types, wrapper types, BigInteger and BigDecimal, enums\n" +
+                "- other " + MY_TYPE_NAME + " classes and known immutables (java.awt.Color, java.net.URI)\n" +
                 "- Cloneable classes, collections, maps and arrays, and other classes with special handling (java.util.Date)\n" +
                 "Other restrictions apply, please see the groovydoc for " + MY_TYPE_NAME + " for further details";
     }
@@ -668,7 +650,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
                 new ExpressionStatement(expression));
     }
 
-    private static Object checkImmutable(String className, String fieldName, Object field) {
+    public static Object checkImmutable(String className, String fieldName, Object field) {
         if (field == null || field instanceof Enum || inImmutableList(field.getClass())) return field;
         if (field instanceof Collection) return DefaultGroovyMethods.asImmutable((Collection) field);
         if (field.getClass().getAnnotation(MY_CLASS) != null) return field;
@@ -676,4 +658,11 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         throw new RuntimeException(createErrorMessage(className, fieldName, typeName, "constructing"));
     }
 
+    public static void checkPropNames(GroovyObject instance, Map<String, Object> args) {
+        final MetaClass metaClass = instance.getMetaClass();
+        for (String k : args.keySet()) {
+            if (metaClass.hasProperty(instance, k) == null)
+                throw new MissingPropertyException(k, instance.getClass());
+        }
+    }
 }

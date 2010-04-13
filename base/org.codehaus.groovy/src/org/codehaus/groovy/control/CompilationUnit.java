@@ -66,7 +66,7 @@ import org.objectweb.asm.ClassWriter;
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href="mailto:roshandawrani@codehaus.org">Roshan Dawrani</a>
- * @version $Id: CompilationUnit.java 18431 2009-11-27 13:21:46Z roshandawrani $
+ * @version $Id: CompilationUnit.java 19419 2010-02-22 15:37:39Z roshandawrani $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -199,7 +199,9 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
-//        addPhaseOperation(output);
+        // FIXASC (groovychange) skip output phase
+	  // addPhaseOperation(output);
+        
         // FIXASC (groovychange)
         if (transformLoader!=null) {
         // FIXASC (groovychange) end
@@ -685,24 +687,6 @@ public class CompilationUnit extends ProcessingUnit {
                 scopeVisitor.visitClass(node);
 
                 resolveVisitor.startResolving(node, source);
-
-            }
-
-        }
-    };
-    
-    // FIXASC (groovychange) new phase split out of previous - still necessary?
-    /**
-     * Check generics usage
-     */
-    private final SourceUnitOperation checkGenerics = new SourceUnitOperation() {
-        public void call(SourceUnit source) throws CompilationFailedException {
-            List classes = source.ast.getClasses();
-            for (Iterator it = classes.iterator(); it.hasNext();) {
-                ClassNode node = (ClassNode) it.next();
-
-                GenericsVisitor genericsVisitor = new GenericsVisitor(source);
-                genericsVisitor.visitClass(node);
             }
 
         }
@@ -872,9 +856,13 @@ public class CompilationUnit extends ProcessingUnit {
 
 
             byte[] bytes = ((ClassWriter) visitor).toByteArray();
-            // GROOVYCHANGE - added classNode, sourceUnit
+            /* FIXASC (groovychange) added classNode, sourceUnit
+             was
+            generatedClasses.add(new GroovyClass(classNode.getName(), bytes));
+             now*/
             generatedClasses.add(new GroovyClass(classNode.getName(), bytes, classNode, source));
-
+		// end
+		
             //
             // Handle any callback that's been set
             //

@@ -175,43 +175,45 @@ REGEX_FIND("'=~'")=175
 REGEX_MATCH("'==~'")=176
 NOT_EQUAL("'!='")=177
 EQUAL("'=='")=178
-COMPARE_TO("'<=>'")=179
-LE("'<='")=180
-GE("'>='")=181
-SL("'<<'")=182
-RANGE_INCLUSIVE("'..'")=183
-RANGE_EXCLUSIVE("'..<'")=184
-INC("'++'")=185
-DIV("'/'")=186
-MOD("'%'")=187
-DEC("'--'")=188
-STAR_STAR("'**'")=189
-BNOT("'~'")=190
-LNOT("'!'")=191
-STRING_CTOR_START=192
-STRING_CTOR_END("a string literal end")=193
-NUM_INT("a numeric literal")=194
-NUM_FLOAT=195
-NUM_LONG=196
-NUM_DOUBLE=197
-NUM_BIG_INT=198
-NUM_BIG_DECIMAL=199
-DOLLAR("'$'")=200
-WS("whitespace")=201
-ONE_NL("a newline")=202
-ONE_NL_KEEP("a newline")=203
-SL_COMMENT("a single line comment")=204
-ML_COMMENT("a comment")=205
-STRING_CH("a string character")=206
-REGEXP_LITERAL("a regular expression literal")=207
-REGEXP_CTOR_END("a regular expression literal end")=208
-REGEXP_SYMBOL("a regular expression character")=209
-ESC("an escape sequence")=210
-STRING_NL("a newline inside a string")=211
-HEX_DIGIT("a hexadecimal digit")=212
-VOCAB("a character")=213
-LETTER("a letter")=214
-DIGIT("a digit")=215
-EXPONENT("an exponent")=216
-FLOAT_SUFFIX("a float or double suffix")=217
-BIG_SUFFIX("a big decimal suffix")=218
+IDENTICAL("'==='")=179
+NOT_IDENTICAL("'!=='")=180
+COMPARE_TO("'<=>'")=181
+LE("'<='")=182
+GE("'>='")=183
+SL("'<<'")=184
+RANGE_INCLUSIVE("'..'")=185
+RANGE_EXCLUSIVE("'..<'")=186
+INC("'++'")=187
+DIV("'/'")=188
+MOD("'%'")=189
+DEC("'--'")=190
+STAR_STAR("'**'")=191
+BNOT("'~'")=192
+LNOT("'!'")=193
+STRING_CTOR_START=194
+STRING_CTOR_END("a string literal end")=195
+NUM_INT("a numeric literal")=196
+NUM_FLOAT=197
+NUM_LONG=198
+NUM_DOUBLE=199
+NUM_BIG_INT=200
+NUM_BIG_DECIMAL=201
+DOLLAR("'$'")=202
+WS("whitespace")=203
+ONE_NL("a newline")=204
+ONE_NL_KEEP("a newline")=205
+SL_COMMENT("a single line comment")=206
+ML_COMMENT("a comment")=207
+STRING_CH("a string character")=208
+REGEXP_LITERAL("a regular expression literal")=209
+REGEXP_CTOR_END("a regular expression literal end")=210
+REGEXP_SYMBOL("a regular expression character")=211
+ESC("an escape sequence")=212
+STRING_NL("a newline inside a string")=213
+HEX_DIGIT("a hexadecimal digit")=214
+VOCAB("a character")=215
+LETTER("a letter")=216
+DIGIT("a digit")=217
+EXPONENT("an exponent")=218
+FLOAT_SUFFIX("a float or double suffix")=219
+BIG_SUFFIX("a big decimal suffix")=220

@@ -38,7 +38,7 @@ import org.codehaus.groovy.syntax.SyntaxException;
  * resolve imports, and that sort of thing.
  * 
  * @author <a href="mailto:james@coredevelopers.net">James Strachan </a>
- * @version $Revision: 16708 $
+ * @version $Revision: 18963 $
  */
 public class CompileUnit {
 
@@ -131,7 +131,7 @@ public class CompileUnit {
         ClassNode stored = classes.get(name);
         if (stored != null && stored != node) {
             // we have a duplicate class!
-            // One possibility for this is, that we delcared a script and a 
+            // One possibility for this is, that we declared a script and a
             // class in the same file and named the class like the file
             SourceUnit nodeSource = node.getModule().getContext();
             SourceUnit storedSource = stored.getModule().getContext();
@@ -160,7 +160,7 @@ public class CompileUnit {
     }
      
     /**
-     * this emthod actually does not compile a class. It's only
+     * this method actually does not compile a class. It's only
      * a marker that this type has to be compiled by the CompilationUnit
      * at the end of a parse step no node should be be left.
      */

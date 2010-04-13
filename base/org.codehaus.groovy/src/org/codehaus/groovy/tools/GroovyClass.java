@@ -19,6 +19,7 @@ package org.codehaus.groovy.tools;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.SourceUnit;
 
+// FIXASC (groovychange) extended to know classNode/source
 public class GroovyClass
 {
     public static final GroovyClass[] EMPTY_ARRAY = new GroovyClass[ 0 ];

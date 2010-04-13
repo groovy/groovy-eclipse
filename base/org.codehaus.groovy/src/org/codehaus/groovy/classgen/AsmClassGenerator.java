@@ -21,6 +21,7 @@ import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.*;
+import org.codehaus.groovy.classgen.CompileStack.BlockRecorder;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.Janitor;
 import org.codehaus.groovy.control.SourceUnit;
@@ -31,6 +32,7 @@ import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.transform.powerassert.SourceText;
 import org.codehaus.groovy.transform.powerassert.SourceTextNotAvailableException;
 import org.objectweb.asm.AnnotationVisitor;
@@ -46,7 +48,7 @@ import java.util.*;
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href='mailto:the[dot]mindstorm[at]gmail[dot]com'>Alex Popescu</a>
  * @author Alex Tkachman
- * @version $Revision: 18252 $
+ * @version $Revision: 19688 $
  */
 public class AsmClassGenerator extends ClassGenerator {
 
@@ -121,6 +123,7 @@ public class AsmClassGenerator extends ClassGenerator {
     static final MethodCaller isCaseMethod = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "isCase");
     //compare
     static final MethodCaller compareIdenticalMethod = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "compareIdentical");
+    static final MethodCaller compareNotIdenticalMethod = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "compareNotIdentical");
     static final MethodCaller compareEqualMethod = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "compareEqual");
     static final MethodCaller compareNotEqualMethod = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "compareNotEqual");
     static final MethodCaller compareToMethod = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "compareTo");
@@ -159,7 +162,6 @@ public class AsmClassGenerator extends ClassGenerator {
     static final MethodCaller selectConstructorAndTransformArguments = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "selectConstructorAndTransformArguments");
 
     // exception blocks list
-    private List<Runnable> exceptionBlocks = new ArrayList<Runnable>();
     private Map<String,ClassNode> referencedClasses = new HashMap<String,ClassNode>();
     private boolean passingParams;
 
@@ -517,15 +519,15 @@ public class AsmClassGenerator extends ClassGenerator {
 
     /**
      * method to determine if a method is a MOP method. This is done by the
-     * method name. If the name starts with "this$" or "super$", then it is
-     * a MOP method
+     * method name. If the name starts with "this$" or "super$" but does not
+     * contain "$dist$", then it is an MOP method
      *
      * @param methodName name of the method to test
      * @return true if the method is a MOP method
      */
     public static boolean isMopMethod(String methodName) {
-        return methodName.startsWith("this$") ||
-                methodName.startsWith("super$");
+        return (methodName.startsWith("this$") ||
+        		methodName.startsWith("super$")) && !methodName.contains("$dist$");
     }
 
     protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
@@ -546,7 +548,7 @@ public class AsmClassGenerator extends ClassGenerator {
         }
         helper = new BytecodeHelper(mv);
 
-        if (classNode.isAnnotationDefinition()) {
+        if (classNode.isAnnotationDefinition() && !node.isStaticConstructor()) {
             visitAnnotationDefault(node, mv);
         } else if (!node.isAbstract()) {
             Statement code = node.getCode();
@@ -557,7 +559,8 @@ public class AsmClassGenerator extends ClassGenerator {
             } else{
               visitStdMethod(node, isConstructor, parameters, code);
             }
-
+            // we use this NOP to have a valid jump target for the various labels 
+            mv.visitInsn(NOP);
             mv.visitMaxs(0, 0);
         }
         mv.visitEnd();
@@ -583,16 +586,8 @@ public class AsmClassGenerator extends ClassGenerator {
         if (!outputReturn || node.isVoidMethod()) {
             mv.visitInsn(RETURN);
         }
+
         compileStack.clear();
-
-        final Label finallyStart = new Label();
-        mv.visitJumpInsn(GOTO, finallyStart);
-
-        // let's do all the exception blocks
-        for (Runnable runnable : exceptionBlocks) {
-            runnable.run();
-        }
-        exceptionBlocks.clear();
     }
 
     void visitAnnotationDefaultExpression(AnnotationVisitor av, ClassNode type, Expression exp) {
@@ -1023,15 +1018,14 @@ public class AsmClassGenerator extends ClassGenerator {
                     "()V");
             mv.visitInsn(ATHROW);
             // add catch any block to exception table
-            exceptionBlocks.add(new Runnable() {
-                public void run() {
-                    mv.visitTryCatchBlock(tryStart, tryEnd, catchAny, null);
-                }
-            });
+            compileStack.addExceptionBlock(tryStart, tryEnd, catchAny, null);
         }
         
         mv.visitLabel(afterAssert);
         assertionTracker = oldTracker;
+        // close possibly open file handles from getting a sample for 
+        // power asserts
+        janitor.cleanup();
     }
     
     private void writeSourclessAssertText(AssertStatement statement) {
@@ -1108,88 +1102,101 @@ public class AsmClassGenerator extends ClassGenerator {
         Statement tryStatement = statement.getTryStatement();
         final Statement finallyStatement = statement.getFinallyStatement();
 
-        int anyExceptionIndex = compileStack.defineTemporaryVariable("exception", false);
-        if (!finallyStatement.isEmpty()) {
-            compileStack.pushFinallyBlock(
-                    new Runnable() {
-                        public void run() {
-                            compileStack.pushFinallyBlockVisit(this);
-                            finallyStatement.visit(AsmClassGenerator.this);
-                            compileStack.popFinallyBlockVisit(this);
-                        }
-                    }
-            );
-        }
-
         // start try block, label needed for exception table
-        final Label tryStart = new Label();
+        Label tryStart = new Label();
         mv.visitLabel(tryStart);
+        BlockRecorder tryBlock = makeBlockRecorder(finallyStatement);
+        tryBlock.startRange(tryStart);
+
         tryStatement.visit(this);
         // goto finally part
-        final Label finallyStart = new Label();
+        Label finallyStart = new Label();
         mv.visitJumpInsn(GOTO, finallyStart);
-        // marker needed for Exception table
-        final Label greEnd = new Label();
-        mv.visitLabel(greEnd);
 
-        final Label tryEnd = new Label();
+        Label tryEnd = new Label();
         mv.visitLabel(tryEnd);
+        tryBlock.closeRange(tryEnd);
+        // pop for "makeBlockRecorder(finallyStatement)"
+        compileStack.pop();
 
+        BlockRecorder catches = makeBlockRecorder(finallyStatement);
         for (CatchStatement catchStatement : statement.getCatchStatements()) {
             ClassNode exceptionType = catchStatement.getExceptionType();
+            String exceptionTypeInternalName = BytecodeHelper.getClassInternalName(exceptionType);
+            
             // start catch block, label needed for exception table
-            final Label catchStart = new Label();
+            Label catchStart = new Label();
             mv.visitLabel(catchStart);
+            catches.startRange(catchStart);
+            
             // create exception variable and store the exception
             compileStack.pushState();
             compileStack.defineVariable(catchStatement.getVariable(), true);
             // handle catch body
             catchStatement.visit(this);
+            // place holder to avoid problems with empty catch blocks
+            mv.visitInsn(NOP);  
+            // pop for the variable
             compileStack.pop();
+
+            // end of catch
+            Label catchEnd = new Label();
+            mv.visitLabel(catchEnd);
+            catches.closeRange(catchEnd);
+            
             // goto finally start
             mv.visitJumpInsn(GOTO, finallyStart);
-            // add exception to table
-            final String exceptionTypeInternalName = BytecodeHelper.getClassInternalName(exceptionType);
-            exceptionBlocks.add(new Runnable() {
-                public void run() {
-                    mv.visitTryCatchBlock(tryStart, tryEnd, catchStart, exceptionTypeInternalName);
-                }
-            });
+            compileStack.writeExceptionTable(tryBlock, catchStart, exceptionTypeInternalName);
         }
 
-        // marker needed for the exception table
-        final Label endOfAllCatches = new Label();
-        mv.visitLabel(endOfAllCatches);
+        // Label used to handle exceptions in catches and regularly
+        // visited finals.
+        Label catchAny = new Label();
 
-        // remove the finally, don't let it visit itself
-        if (!finallyStatement.isEmpty()) compileStack.popFinallyBlock();
+        // add "catch any" block to exception table for try part we do this 
+        // after the exception blocks, because else this one would superseed
+        // any of those otherwise
+        compileStack.writeExceptionTable(tryBlock, catchAny, null);
+        // same for the catch parts
+        compileStack.writeExceptionTable(catches, catchAny, null);
+        
+        // pop for "makeBlockRecorder(catches)"
+        compileStack.pop();
 
         // start finally
         mv.visitLabel(finallyStart);
         finallyStatement.visit(this);
-        // goto end of finally
-        Label afterFinally = new Label();
-        mv.visitJumpInsn(GOTO, afterFinally);
+        mv.visitInsn(NOP);  //**
+
+        // goto after all-catching block
+        Label skipCatchAll = new Label();
+        mv.visitJumpInsn(GOTO, skipCatchAll);
 
         // start a block catching any Exception
-        final Label catchAny = new Label();
         mv.visitLabel(catchAny);
         //store exception
-        mv.visitVarInsn(ASTORE, anyExceptionIndex);
+        int anyExceptionIndex = compileStack.defineTemporaryVariable("exception", true);
+
         finallyStatement.visit(this);
         // load the exception and rethrow it
         mv.visitVarInsn(ALOAD, anyExceptionIndex);
         mv.visitInsn(ATHROW);
 
-        // end of all catches and finally parts
-        mv.visitLabel(afterFinally);
+        mv.visitLabel(skipCatchAll);
+    }
 
-        // add catch any block to exception table
-        exceptionBlocks.add(new Runnable() {
+    private BlockRecorder makeBlockRecorder(final Statement finallyStatement) {
+    	final BlockRecorder block = new BlockRecorder();
+    	Runnable tryRunner = new Runnable() {
             public void run() {
-                mv.visitTryCatchBlock(tryStart, endOfAllCatches, catchAny, null);
+    			compileStack.pushBlockRecorderVisit(block);
+    			finallyStatement.visit(AsmClassGenerator.this);
+    			compileStack.popBlockRecorderVisit(block);
             }
-        });
+    	};        
+    	block.excludedStatement = tryRunner;
+    	compileStack.pushBlockRecorder(block);
+    	return block;
     }
 
     public void visitSwitch(SwitchStatement statement) {
@@ -1301,6 +1308,9 @@ public class AsmClassGenerator extends ClassGenerator {
         mv.visitVarInsn(ALOAD, index);
         mv.visitInsn(MONITORENTER);
         mv.visitLabel(synchronizedStart);
+        // place holder for "empty" synchronized blocks, for example
+        // if there is only a break/continue.
+        mv.visitInsn(NOP);  
 
         Runnable finallyPart = new Runnable() {
             public void run() {
@@ -1308,7 +1318,9 @@ public class AsmClassGenerator extends ClassGenerator {
                 mv.visitInsn(MONITOREXIT);
             }
         };
-        compileStack.pushFinallyBlock(finallyPart);
+        BlockRecorder fb = new BlockRecorder(finallyPart);
+        fb.startRange(synchronizedStart);
+        compileStack.pushBlockRecorder(fb);
         statement.getCode().visit(this);
 
         finallyPart.run();
@@ -1316,14 +1328,11 @@ public class AsmClassGenerator extends ClassGenerator {
         mv.visitLabel(catchAll);
         finallyPart.run();
         mv.visitInsn(ATHROW);
-        mv.visitLabel(synchronizedEnd);
 
-        compileStack.popFinallyBlock();
-        exceptionBlocks.add(new Runnable() {
-            public void run() {
-                mv.visitTryCatchBlock(synchronizedStart, catchAll, catchAll, null);
-            }
-        });
+        mv.visitLabel(synchronizedEnd);
+        fb.closeRange(synchronizedEnd);
+        compileStack.writeExceptionTable(fb, catchAll, null);
+        compileStack.pop(); //pop fb
     }
 
     public void visitThrowStatement(ThrowStatement statement) {
@@ -1355,7 +1364,7 @@ public class AsmClassGenerator extends ClassGenerator {
             if (!(statement.isReturningNullOrVoid())) {
                 throwException("Cannot use return statement with an expression on a method that returns void");
             }
-            compileStack.applyFinallyBlocks();
+            compileStack.applyBlockRecorder();
             mv.visitInsn(RETURN);
             outputReturn = true;
             return;
@@ -1370,10 +1379,10 @@ public class AsmClassGenerator extends ClassGenerator {
             // we may need to cast
             doConvertAndCast(returnType, expression, false, true, false);
         }
-        if (compileStack.hasFinallyBlocks()) {
+        if (compileStack.hasBlockRecorder()) {
             // value is always saved in boxed form, so no need to have a special load routine here
             int returnValueIdx = compileStack.defineTemporaryVariable("returnValue", ClassHelper.OBJECT_TYPE, true);
-            compileStack.applyFinallyBlocks();
+            compileStack.applyBlockRecorder();
             helper.load(ClassHelper.OBJECT_TYPE, returnValueIdx);
         }
         // value is always saved in boxed form, so we need to unbox it here
@@ -1442,8 +1451,17 @@ public class AsmClassGenerator extends ClassGenerator {
                 evaluateEqual(expression,false);
                 break;
 
+//            case Types.COMPARE_IDENTICAL: // ===
+//                evaluateBinaryExpression(compareIdenticalMethod, expression);
+//                break;
+//
+//            case Types.COMPARE_NOT_IDENTICAL: // !==
+//                evaluateBinaryExpression(compareNotIdenticalMethod, expression);
+//                break;
+
             case Types.COMPARE_IDENTICAL: // ===
-                evaluateBinaryExpression(compareIdenticalMethod, expression);
+            case Types.COMPARE_NOT_IDENTICAL: // !==
+                source.addError(new SyntaxException("Operators === and !== are not supported. Use this.is(that) instead", expression.getLineNumber(), expression.getColumnNumber()));
                 break;
 
             case Types.COMPARE_EQUAL: // ==
@@ -1740,7 +1758,7 @@ public class AsmClassGenerator extends ClassGenerator {
             if (!compileStack.containsVariable(name) && compileStack.getScope().isReferencedClassVariable(name)) {
                 visitFieldExpression(new FieldExpression(classNode.getDeclaredField(name)));
             } else {
-                Variable v = compileStack.getVariable(name, classNode.getSuperClass() != ClassHelper.CLOSURE_TYPE);
+                Variable v = compileStack.getVariable(name, !classNodeUsesReferences());
                 if (v == null) {
                     // variable is not on stack because we are
                     // inside a nested Closure and this variable
@@ -1772,6 +1790,16 @@ public class AsmClassGenerator extends ClassGenerator {
                 "<init>",
                 BytecodeHelper.getMethodDescriptor(ClassHelper.VOID_TYPE, localVariableParams));
     }
+
+    private boolean classNodeUsesReferences() {
+		boolean ret = classNode.getSuperClass() == ClassHelper.CLOSURE_TYPE;
+		if (ret) return ret;
+		if (classNode instanceof InnerClassNode) {
+			InnerClassNode inner = (InnerClassNode) classNode;
+			return inner.isAnonymous();
+		}
+		return false;
+	}
 
     /**
      * Loads either this object or if we're inside a closure then load the top level owner
@@ -1916,7 +1944,9 @@ public class AsmClassGenerator extends ClassGenerator {
         // message name
         Expression messageName = new CastExpression(ClassHelper.STRING_TYPE, call.getMethod());
         if (useSuper) {
-            makeCall(new ClassExpression(getOutermostClass().getSuperClass()),
+        	ClassNode superClass = isInClosure() ? 
+        			getOutermostClass().getSuperClass() : classNode.getSuperClass(); // GROOVY-4035
+            makeCall(new ClassExpression(superClass),
                     objectExpression, messageName,
                     call.getArguments(), adapter,
                     call.isSafe(), call.isSpreadSafe(),
@@ -3624,6 +3654,7 @@ public class AsmClassGenerator extends ClassGenerator {
         InnerClassNode answer = new InnerClassNode(outerClass, name, 0, ClassHelper.CLOSURE_TYPE); // closures are local inners and not public
         answer.setEnclosingMethod(this.methodNode);
         answer.setSynthetic(true);
+        answer.setUsingGenerics(outerClass.isUsingGenerics());
 
         if (staticMethodOrInStaticClass) {
             answer.setStaticClass(true);
@@ -4216,6 +4247,7 @@ public class AsmClassGenerator extends ClassGenerator {
                 case Types.COMPARE_LESS_THAN_EQUAL:
                 case Types.COMPARE_IDENTICAL:
                 case Types.COMPARE_NOT_EQUAL:
+                case Types.COMPARE_NOT_IDENTICAL:
                 case Types.KEYWORD_INSTANCEOF:
                 case Types.KEYWORD_IN:
                     return true;
