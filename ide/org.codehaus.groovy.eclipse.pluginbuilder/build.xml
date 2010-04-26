@@ -52,8 +52,7 @@
     	  </classpath>
 			</java>
 	  	
-	  	<echo message="Error is : ${is.build.error}"></echo>
-    
+	  	<fail if="${is.build.error}" message="Failed because of: ${is.build.error}"/>
     </target>
 
   				
