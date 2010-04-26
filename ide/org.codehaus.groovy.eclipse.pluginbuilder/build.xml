@@ -64,7 +64,7 @@
 		
 		<property name="buildTypePresentation" value=""/>
 		<echo message="tstampQual=${tstampQual}"/>
-    <property name="forceContextQualifier" value="${buildTypePresentation}${tstampQual}-${buildTypePresentation}"/>
+    <property name="forceContextQualifier" value="${buildTypePresentationPrefix}${tstampQual}-${buildTypePresentation}"/>
 		<echo message="=============================================="/>
 		<echo message="forceContextQualifier=${forceContextQualifier}"/>
 		<echo message="=============================================="/>
