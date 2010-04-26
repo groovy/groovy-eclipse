@@ -103,9 +103,7 @@
 	<target name="-build" depends="-properties,-clean">
 		<property name="no.rcp.build" value="true"/>
 		<antcall target="unpack.eclipse"/>
-		<antcall target="-build.internal">
-			<param name="buildfile" value="${regularbuildfile}"/>
-    </antcall>
+		<antcall target="-build.internal"/>
 	</target>
 	
 	
