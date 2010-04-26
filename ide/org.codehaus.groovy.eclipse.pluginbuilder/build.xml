@@ -51,6 +51,8 @@
     	    </fileset>
     	  </classpath>
 			</java>
+	  	
+	  	<echo message="Error is : ${is.build.error}"></echo>
     
     </target>
 
