@@ -21,7 +21,7 @@
   		<property name="buildResultsDirectory" value="${buildDirectory}/results" />
 
   		<java classname="org.eclipse.equinox.launcher.Main" fork="true"
-  			failonerror="true" errorproperty="is.build.error">
+  			errorproperty="is.build.error">
   			<arg value="-application"/>
   			<arg value="org.eclipse.ant.core.antRunner"/>
   			<arg value="-f"/>
