@@ -37,7 +37,7 @@ test_ws=gtk
 test_arch=x86_64
 
 # the location of the eclipse tarball to build against
-eclipse.local.tar.non.server=/opt/eclipse/src/eclipse-SDK-3.6M6-linux-gtk.tar.gz
+target.eclipse.zip=/opt/eclipse/src/eclipse-SDK-3.6M6-linux-gtk.tar.gz
 
 # location to install the downloaded eclipse into
 eclipse.installation.dir=${workDir}/build/target

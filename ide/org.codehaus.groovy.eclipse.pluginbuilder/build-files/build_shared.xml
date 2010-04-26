@@ -45,8 +45,8 @@
 		<property name="eclipse.local.tar" value="${archive.location}"/>
 	</target>
 	
-	<target name="-set.eclipse.local.tar.non.server" unless="pluginbuilder.is.server">
-		<property name="eclipse.local.tar" value="${eclipse.local.tar.non.server}"/>
+	<target name="-set.target.eclipse.zip" unless="pluginbuilder.is.server">
+		<property name="eclipse.local.tar" value="${target.eclipse.zip}"/>
 	</target>
 	
 	<target name="-get.archive.ifnecessary" unless="eclipse.is.downloaded">
@@ -64,11 +64,11 @@
 		<antcall target="-unpack.eclipse.linux"/>
 	</target>
 	
-	<target name="-unpack.eclipse.windows" if="is.windows" depends="-set.eclipse.local.tar.server,-set.eclipse.local.tar.non.server">
+	<target name="-unpack.eclipse.windows" if="is.windows" depends="-set.eclipse.local.tar.server,-set.target.eclipse.zip">
 		<unzip src="${eclipse.local.tar}" overwrite="true" dest="${eclipse.installation.dir}/.."/>		
 	</target>
 	
-	<target name="-unpack.eclipse.linux" unless="is.windows" depends="-set.eclipse.local.tar.server,-set.eclipse.local.tar.non.server">
+	<target name="-unpack.eclipse.linux" unless="is.windows" depends="-set.eclipse.local.tar.server,-set.target.eclipse.zip">
 		<untar src="${eclipse.local.tar}" overwrite="true" dest="${eclipse.installation.dir}" compression="gzip"/>		
 	</target>
 	
