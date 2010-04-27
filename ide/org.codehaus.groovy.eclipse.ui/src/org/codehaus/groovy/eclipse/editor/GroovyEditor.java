@@ -54,6 +54,7 @@ import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
 import org.eclipse.jdt.ui.actions.RefactorActionGroup;
+import org.eclipse.jdt.ui.actions.SelectionDispatchAction;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
 import org.eclipse.jface.action.IAction;
@@ -700,7 +701,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         // remove most refactorings since they are not yet really supported
         removeRefactoringAction("fSelfEncapsulateField");
         removeRefactoringAction("fMoveAction");
-        removeRefactoringAction("fRenameAction");
+//        removeRefactoringAction("fRenameAction");
         removeRefactoringAction("fModifyParametersAction");
         // fPullUpAction
         // fPushDownAction
@@ -711,9 +712,12 @@ public class GroovyEditor extends CompilationUnitEditor {
         removeRefactoringAction("fExtractInterfaceAction");
         removeRefactoringAction("fExtractClassAction");
         removeRefactoringAction("fExtractSupertypeAction");
+        removeRefactoringAction("fExtractTempAction");
+        removeRefactoringAction("fExtractConstantAction");
         removeRefactoringAction("fChangeTypeAction");
         removeRefactoringAction("fConvertNestedToTopAction");
         removeRefactoringAction("fInferTypeArgumentsAction");
+        removeRefactoringAction("fInlineAction");
         removeRefactoringAction("fConvertLocalToFieldAction");
         removeRefactoringAction("fConvertAnonymousToNestedAction");
         removeRefactoringAction("fIntroduceIndirectionAction");
@@ -721,20 +725,25 @@ public class GroovyEditor extends CompilationUnitEditor {
         removeRefactoringAction("fUseSupertypeAction");
         
         // use our Rename action instead
-        IAction renameAction = new GroovyRenameAction(this);
+        GroovyRenameAction renameAction = new GroovyRenameAction(this);
         renameAction
                 .setActionDefinitionId(IJavaEditorActionDefinitionIds.RENAME_ELEMENT);
         setAction("RenameElement", renameAction); //$NON-NLS-1$
+        replaceRefactoringAction("fRenameAction", renameAction);
     }
     
     private void removeRefactoringAction(String actionFieldName) {
+        replaceRefactoringAction(actionFieldName, null);
+    }
+    
+    private void replaceRefactoringAction(String actionFieldName, SelectionDispatchAction newAction) {
         RefactorActionGroup group = getRefactorActionGroup();
         ISelectionChangedListener action = (ISelectionChangedListener) 
                 ReflectionUtils.getPrivateField(RefactorActionGroup.class, actionFieldName, group);
         getSite().getSelectionProvider().removeSelectionChangedListener(action);
-        ReflectionUtils.setPrivateField(RefactorActionGroup.class, actionFieldName, group, null);
+        ReflectionUtils.setPrivateField(RefactorActionGroup.class, actionFieldName, group, newAction);
     }
-    
+
     /*
      * Make accessible to source viewer
      */

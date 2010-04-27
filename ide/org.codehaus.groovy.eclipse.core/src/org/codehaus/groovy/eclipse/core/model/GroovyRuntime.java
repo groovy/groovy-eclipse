@@ -28,7 +28,6 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.junit.buildpath.BuildPathSupport;
 
 /**
  * This class contains all the utility methods used in adding the Groovy Runtime
@@ -51,16 +50,6 @@ public class GroovyRuntime {
                 return;
             }
         }
-    }
-
-    public static void addJunitSupport(final IJavaProject project)
-            throws JavaModelException {
-        GroovyCore.trace("GroovyRuntime.addJunitSupprt()");
-        boolean junitExists = includesClasspathEntry(project, junitJarName);
-        if (junitExists) {
-            return;
-        }
-        addClassPathEntry(project, BuildPathSupport.getJUnit3ClasspathEntry());
     }
 
     public static void removeLibraryFromClasspath(

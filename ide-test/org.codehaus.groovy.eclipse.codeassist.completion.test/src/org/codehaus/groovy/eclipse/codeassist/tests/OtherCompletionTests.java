@@ -118,6 +118,43 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, ".c"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "center", 2);
     }
+    
+    // GRECLIPSE-706
+    public void testContentAssistInInitializers1() throws Exception {
+        String groovyClass = 
+            "class A { { aa }\n def aaaa }";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "aa"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "aaaa", 1);
+    }
+    // GRECLIPSE-706
+    public void testContentAssistInInitializers2() throws Exception {
+        String groovyClass = 
+            "class A { {  }\n def aaaa }";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "{ { "), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "aaaa", 1);
+    }
+    // GRECLIPSE-706
+    public void testContentAssistInStaticInitializers1() throws Exception {
+        String groovyClass = 
+            "class A { static { aa }\n static aaaa }";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "aa"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "aaaa", 1);
+    }
+    // GRECLIPSE-706
+    public void testContentAssistInStaticInitializers2() throws Exception {
+        String groovyClass = 
+            "class A { static {  }\n static aaaa }";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "static { "), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "aaaa", 1);
+    }
 
     
     // not working in multiline strings yet

@@ -91,8 +91,6 @@ public class GroovyProjectFacade {
          }
          
          try {
-             int line = node.getLineNumber();
-             int col = node.getColumnNumber();
              int start = node.getStart();
              IJavaElement elt = unit.getElementAt(start);
              

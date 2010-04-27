@@ -14,7 +14,7 @@ Export-Package: org.eclipse.jdt.core.tests.compiler.parser,
  org.eclipse.jdt.core.tests.junit.extension,
  org.eclipse.jdt.core.tests.runtime,
  org.eclipse.jdt.core.tests.util
-Require-Bundle: org.junit;bundle-version="3.8.1",
+Require-Bundle: org.junit;bundle-version="[3.8.1,4.0.0)",
  org.eclipse.jdt.debug;bundle-version="[3.2.0,4.0.0)",
  org.eclipse.jdt.core;bundle-version="[3.3.0,4.0.0)",
  org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)",

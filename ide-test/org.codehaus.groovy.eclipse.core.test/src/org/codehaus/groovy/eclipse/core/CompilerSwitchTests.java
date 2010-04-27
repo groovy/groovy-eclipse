@@ -38,7 +38,7 @@ public class CompilerSwitchTests extends EclipseTestCase {
         CompilerUtils.switchVersions(false);
         
         current = CompilerUtils.getGroovyVersion();
-        
+         
         assertTrue("Compiler version should be 1.6, but is instead" + current, 
                 current.contains("1.6"));
         

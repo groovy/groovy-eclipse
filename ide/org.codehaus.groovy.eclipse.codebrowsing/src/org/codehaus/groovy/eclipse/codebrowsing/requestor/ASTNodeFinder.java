@@ -84,7 +84,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitVariableExpression(VariableExpression expression) {
-        visitAnnotations(expression);
+        // VariableExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
+        Object maybeAnnotatedNode = expression;
+        if (maybeAnnotatedNode instanceof AnnotatedNode) {
+            visitAnnotations((AnnotatedNode) maybeAnnotatedNode);
+        }
         check(expression);
         super.visitVariableExpression(expression);
     }
@@ -187,7 +191,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     
     @Override
     public void visitDeclarationExpression(DeclarationExpression expression) {
-        visitAnnotations(expression);
+        // DeclarationExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
+        Object maybeAnnotatedNode = expression;
+        if (maybeAnnotatedNode instanceof AnnotatedNode) {
+            visitAnnotations((AnnotatedNode) maybeAnnotatedNode);
+        }
         check(expression.getLeftExpression().getType());
         super.visitDeclarationExpression(expression);
     }

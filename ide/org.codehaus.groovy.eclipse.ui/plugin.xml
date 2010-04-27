@@ -91,6 +91,9 @@
 	                    property="org.eclipse.debug.ui.projectNature"
                       value="org.eclipse.jdt.groovy.core.groovyNature">
                   </test>
+                  <adapt
+                        type="org.eclipse.core.resources.IProject">
+                  </adapt>
               </iterate>
                </with>
             </enablement>
@@ -123,11 +126,9 @@
                            property="org.eclipse.debug.ui.projectNature"
                            value="org.eclipse.jdt.groovy.core.groovyNature">
                      </test>
-                     <or>
-                        <test
-                              property="org.codehaus.groovy.eclipse.ui.isScript">
-                        </test>
-                     </or>
+                     <test
+                           property="org.codehaus.groovy.eclipse.ui.isScript">
+                     </test>
                   </iterate>
                </with>
             </enablement>
@@ -395,6 +396,7 @@
      <viewerContribution
                id="org.codehaus.groovy.viewer.refactorings"
                targetID="#CompilationUnitEditorContext">
+               <!--
         <action
               class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
               definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
@@ -405,15 +407,6 @@
               tooltip="Inline a groovy method">
         </action>
         <action
-              class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
-              definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
-              id="org.codehaus.groovy.eclipse.refactoring.renameMethodViewer"
-              label="Rename..."
-              menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-              style="push"
-              tooltip="Rename a groovy element">
-        </action>
-        <action
               class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
               definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
               id="org.codehaus.groovy.eclipse.refactoring.extractMethodViewer"
@@ -421,6 +414,16 @@
               menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
               style="push"
               tooltip="Extract a groovy method from an expression">
+        </action>
+        -->
+        <action
+              class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
+              definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+              id="org.codehaus.groovy.eclipse.refactoring.renameMethodViewer"
+              label="Rename..."
+              menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+              style="push"
+              tooltip="Rename a groovy element">
         </action>
         <menu
               id="org.codehaus.groovy.refactoring.menu"
@@ -726,6 +729,7 @@
       <editorContribution
             targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             id="org.codehaus.groovy.editor.actions">
+         <!--
          <menu
                id="org.codehaus.groovy.eclipse.refactoring.refactoringMenu"
                label="Groovy Refac&amp;tor"
@@ -764,7 +768,7 @@
                style="push"
                tooltip="Extract a groovy method from an expression">
          </action>
-
+				 -->
 				 <!-- Ruler actions -->
          <action
                label="Toggle Breakpoint"

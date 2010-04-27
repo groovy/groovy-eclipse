@@ -28,6 +28,7 @@ import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLoca
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -35,6 +36,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -223,6 +225,19 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             blockStack.pop();
         }
         
+        // visit default constructors that have been added by the verifier.  This is 
+        // where initializers lie
+        ConstructorNode init = findDefaultConstructor(node);
+        if (init != null) {
+            blockStack.push(init.getCode());
+            for (Statement element : (Iterable<Statement>) ((BlockStatement) init.getCode()).getStatements()) {
+                element.visit(this);
+            }
+            blockStack.pop();
+        }
+        
+        
+        
         currentDeclaration = node;
         for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
             element.visit(this);
@@ -286,7 +301,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         visitClassCodeContainer(code);
         
         
-        if (completionOffset < node.getCode().getStart()) {
+        if (completionOffset < code.getStart()) {
             // probably inside an empty parameters list
             createContext(null, node, PARAMETER);
         }
@@ -294,7 +309,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // if we get here, then it is probably because the block statement
         // has been swapped with a new one that has not had
         // its locations set properly
-        createContext(node.getCode(), node.getCode(), expressionScriptOrStatement(node));
+        createContext(code, code, expressionScriptOrStatement(node));
     }
 
     /**
@@ -547,6 +562,20 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             createContext(p, declaringNode, expressionOrStatement());
         }
     }
+    
+    private ConstructorNode findDefaultConstructor(ClassNode node) {
+        List<ConstructorNode> constructors = node.getDeclaredConstructors();
+        for (ConstructorNode constructor : constructors) {
+            if (constructor.getParameters() == null || constructor.getParameters().length == 0) {
+                // only return automatically generated constructors
+                if (constructor.getEnd() <= 0) {
+                    return constructor;
+                }
+            }
+        }
+        return null;
+    }
+
     
     private void createContext(ASTNode completionNode, ASTNode declaringNode, ContentAssistLocation location) {
         context = new ContentAssistContext(completionOffset, completionExpression, fullCompletionExpression,
