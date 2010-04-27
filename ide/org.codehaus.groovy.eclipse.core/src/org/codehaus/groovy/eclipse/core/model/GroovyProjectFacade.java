@@ -40,15 +40,12 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.core.SourceType;
-import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.IDocument;
 /**
  * @author Andrew Eisenberg
  * @created May 29, 2009
@@ -96,7 +93,6 @@ public class GroovyProjectFacade {
          try {
              int line = node.getLineNumber();
              int col = node.getColumnNumber();
-             IDocument doc = new Document(new String(((GroovyCompilationUnit) unit).getContents()));
              int start = node.getStart();
              IJavaElement elt = unit.getElementAt(start);
              

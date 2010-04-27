@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.codeassist.DocumentSourceBuffer;
 import org.codehaus.groovy.eclipse.codeassist.factories.ExpressionCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.IGroovyCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.LocalVariableCompletionProcessorFactory;
@@ -16,7 +17,6 @@ import org.codehaus.groovy.eclipse.codeassist.factories.NewMethodCompletionProce
 import org.codehaus.groovy.eclipse.codeassist.factories.PackageCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.TypeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
-import org.codehaus.groovy.eclipse.core.DocumentSourceBuffer;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;

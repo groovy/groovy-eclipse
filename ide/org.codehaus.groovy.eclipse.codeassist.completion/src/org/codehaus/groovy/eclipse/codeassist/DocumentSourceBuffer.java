@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.core;
+package org.codehaus.groovy.eclipse.codeassist;
 
+import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
