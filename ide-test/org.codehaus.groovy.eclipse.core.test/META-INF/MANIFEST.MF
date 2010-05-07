@@ -11,7 +11,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jdt.core,
  org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.tests,
- org.junit;bundle-version="3.8.2",
+ org.junit,
  org.codehaus.groovy,
  org.eclipse.jface.text;bundle-version="3.4.1",
  org.eclipse.jdt.groovy.core;bundle-version="1.0.0"
