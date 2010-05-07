@@ -11,7 +11,8 @@ Require-Bundle: org.codehaus.groovy,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core,
  org.eclipse.debug.core;resolution:=optional,
- org.eclipse.jdt.groovy.core;bundle-version="1.0.0"
+ org.eclipse.jdt.groovy.core;bundle-version="1.0.0",
+ org.eclipse.jdt.launching;bundle-version="3.5.0"
 Bundle-ActivationPolicy: lazy
 Export-Package: org.apache.commons.io,
  org.apache.commons.io.filefilter,
@@ -30,6 +31,8 @@ Export-Package: org.apache.commons.io,
  org.codehaus.groovy.eclipse.core.builder,
  org.codehaus.groovy.eclipse.core.compiler,
  org.codehaus.groovy.eclipse.core.impl,
+ org.codehaus.groovy.eclipse.core.inference,
+ org.codehaus.groovy.eclipse.core.launchers,
  org.codehaus.groovy.eclipse.core.model,
  org.codehaus.groovy.eclipse.core.preferences,
  org.codehaus.groovy.eclipse.core.templates,

@@ -302,6 +302,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         setClassLoader(classLoader);
         makeModule();
         try {
+            // FIXASC (groovychange)
+            // just in case buildAST is called twice
+            innerClassCounter = 1;
+            // end
+
             convertGroovy(ast);
             if(output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
             	output.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
@@ -1222,6 +1227,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         String name = identifier(node);
+        // FIXASC (groovychange)
+        GroovySourceAST groovySourceAST = (GroovySourceAST) node;
+        int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
+        int nameEnd = nameStart + name.length();
+        // end
         node = node.getNextSibling();
 
         VariableExpression leftExpression = new VariableExpression(name, type);
@@ -1240,6 +1250,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             parameter = new Parameter(type, name);
 
         configureAST(parameter, paramNode);
+        // FIXASC (groovychange)
+        parameter.setNameStart(nameStart);
+        parameter.setNameEnd(nameEnd);
+        // end
         parameter.addAnnotations(annotations);
         return parameter;
     }
@@ -1527,6 +1541,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             collectionExpression = expression(collectionNode);
             forParameter = new Parameter(type, variable);
             configureAST(forParameter, variableNode);
+            // FIXASC (groovychange)
+            // not exactly right since we should be setting the start of the parameter to 
+            // being the start of the type declaration
+            forParameter.setNameStart(forParameter.getStart());
+            forParameter.setNameEnd(forParameter.getEnd());
+            // end
         }
 
         final AST node = inNode.getNextSibling();
@@ -1775,6 +1795,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Parameter catchParameter = new Parameter(exceptionType,variable);
         CatchStatement answer = new CatchStatement(catchParameter, code);
         configureAST(answer, catchNode);
+        // FIXASC (groovychange)
+        // not exactly right since we should be setting the start of the parameter to 
+        // being the start of the type declaration
+        catchParameter.setNameStart(catchParameter.getStart());
+        catchParameter.setNameEnd(catchParameter.getEnd());
+        // end
         return answer;
     }
 

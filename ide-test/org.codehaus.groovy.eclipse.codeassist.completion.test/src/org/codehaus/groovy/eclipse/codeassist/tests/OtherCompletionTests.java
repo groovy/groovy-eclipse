@@ -81,19 +81,6 @@ public class OtherCompletionTests extends CompletionTestCase {
                      (proposals[1].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)"))));
     }
     
-    /**
-     * @param proposals
-     * @return
-     */
-    private String printProposals(ICompletionProposal[] proposals) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Incorrect proposals:\n");
-        for (ICompletionProposal proposal : proposals) {
-            sb.append(proposal.getDisplayString() + "\n");
-        }
-        return sb.toString();
-    }
-
     public void testVisibility() throws Exception {
         String groovyClass = 
 "class B { }\n" +
@@ -155,6 +142,25 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "static { "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "aaaa", 1);
     }
+    
+    // GRECLIPSE-692
+    public void testMethodWithSpaces() throws Exception {
+        String groovyClass = 
+            "class A { def \"ff f\"()  { ff } }";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "{ ff"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "\"ff f\"()", 1);
+    }
+    // GRECLIPSE-692
+    public void testMethodWithSpaces2() throws Exception {
+        String groovyClass = 
+            "class A { def \"fff\"()  { fff } }";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "{ fff"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "fff()", 1);
+    }
 
     
     // not working in multiline strings yet
@@ -167,12 +173,4 @@ public class OtherCompletionTests extends CompletionTestCase {
 //        proposalExists(proposals, "center", 2);
 //    }
     
-    private ICompilationUnit create(String contents) throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "GroovyClass", contents);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
-    }
 }

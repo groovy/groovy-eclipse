@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.launchers;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.launchers.GroovyShellLaunchDelegate;
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.debug.core.DebugPlugin;
@@ -100,7 +101,8 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
 	}
 	
 	private void launchGroovy(IJavaProject project, String mode) {
-        String className = groovy.ui.InteractiveShell.class.getName();
+//        String className = groovy.ui.InteractiveShell.class.getName();
+        String className = groovy.ui.Console.class.getName();
         
         try {
             String launchName = getLaunchManager().generateUniqueLaunchConfigurationNameFrom(project.getProject().getName());

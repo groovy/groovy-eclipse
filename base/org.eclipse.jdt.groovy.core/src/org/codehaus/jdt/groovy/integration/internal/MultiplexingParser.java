@@ -35,7 +35,7 @@ public class MultiplexingParser extends Parser {
 			boolean optimizeStringLiterals) {
 		super(problemReporter, optimizeStringLiterals);
 		// The superclass that is extended is in charge of parsing .java files
-		groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter);
+		groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, true);
 	}
 
 	@Override

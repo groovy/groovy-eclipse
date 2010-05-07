@@ -19,30 +19,6 @@
    <extension-point id="syntaxHighlightingExtension" name="Groovy Editor Syntax Highlighting Extension" schema="schema/syntaxHighlightingExtension.exsd"/>
 
    <extension
-         id="org.codehaus.groovy.eclipse.groovy.launcher"
-         point="org.eclipse.debug.core.launchConfigurationTypes">
-      <launchConfigurationType
-            delegate="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchDelegate"
-            delegateDescription="Launches a Groovy shell using the current project as its classpath"
-            delegateName="Groovy Shell Launcher"
-            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
-            modes="run,debug"
-            name="Groovy Shell"
-            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
-            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
-      </launchConfigurationType>
-      <launchConfigurationType
-            delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
-            delegateDescription="Launches an uncompiled groovy script"
-            delegateName="Groovy Script Launcher"
-            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration"
-            modes="run,debug"
-            name="Groovy Script"
-            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
-            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
-      </launchConfigurationType>
-   </extension>
-   <extension
          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
       <launchConfigurationTypeImage
             configTypeID="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
@@ -53,6 +29,11 @@
             configTypeID="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration"
             icon="icons/run_groovy_class.gif"
             id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyScript">
+      </launchConfigurationTypeImage>
+      <launchConfigurationTypeImage
+            configTypeID="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration"
+            icon="icons/run_groovy_class.gif"
+            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyConsole">
       </launchConfigurationTypeImage>
    </extension>
    <extension
@@ -68,6 +49,12 @@
             description="Launch a Groovy Script"
             id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.tabGroup"
             type="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration">
+      </launchConfigurationTabGroup>
+      <launchConfigurationTabGroup
+            class="org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchConfigurationTabGroup"
+            description="Launch a Groovy Console"
+            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration.tabGroup"
+            type="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration">
       </launchConfigurationTabGroup>
    </extension>
    <extension
@@ -139,6 +126,39 @@
          </description>
          <description
                description="Debug a Groovy script"
+               mode="debug">
+         </description>
+      </shortcut>
+      <shortcut
+            class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLaunchShortcut"
+            description="Run a Groovy Console"
+            icon="icons/run_groovy_class.gif"
+            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut"
+            label="Groovy Console"
+            modes="run,debug">
+         <contextualLaunch>
+            <enablement>
+               <or>
+                  <with
+                        variable="selection">
+                     <count
+                           value="1">
+                     </count>
+                     <iterate>
+                        <test
+                              property="org.eclipse.debug.ui.projectNature"
+                              value="org.eclipse.jdt.groovy.core.groovyNature">
+                        </test> </iterate>
+                  </with>
+               </or>
+            </enablement>
+         </contextualLaunch>
+         <description
+               description="Run a Groovy console"
+               mode="run">
+         </description>
+         <description
+               description="Debug a Groovy console"
                mode="debug">
          </description>
       </shortcut>

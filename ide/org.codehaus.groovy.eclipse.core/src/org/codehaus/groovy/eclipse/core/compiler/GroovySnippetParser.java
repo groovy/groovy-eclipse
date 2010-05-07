@@ -102,7 +102,7 @@ public class GroovySnippetParser {
         ProblemReporter reporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
                 new DefaultProblemFactory());
 
-        GroovyParser parser = new GroovyParser(options, reporter);
+        GroovyParser parser = new GroovyParser(options, reporter, false);
         ICompilationUnit unit = new MockCompilationUnit(source.toCharArray(), "Hello.groovy".toCharArray());
         CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
 
@@ -136,7 +136,7 @@ public class GroovySnippetParser {
         ProblemReporter reporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
                 new DefaultProblemFactory());
 
-        GroovyParser parser = new GroovyParser(null, reporter);
+        GroovyParser parser = new GroovyParser(null, reporter,false);
         ICompilationUnit unit = new MockCompilationUnit(source.toCharArray(), "Hello.groovy".toCharArray());
         CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
 

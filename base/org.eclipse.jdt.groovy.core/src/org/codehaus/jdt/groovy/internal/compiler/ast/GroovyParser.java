@@ -87,17 +87,17 @@ public class GroovyParser {
 		// System.out.println("Cleaning up loader for project " + projectName + "?" + (removed == null ? "no" : "yes"));
 	}
 
-	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
-		this(null, options, problemReporter);
-	}
+	// public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
+	// this(null, options, problemReporter);
+	// }
 
 	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms) {
 		this(null, options, problemReporter, allowTransforms);
 	}
 
-	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter) {
-		this(requestor, options, problemReporter, true);
-	}
+	// public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter) {
+	// this(requestor, options, problemReporter, true);
+	// }
 
 	private GroovyClassLoader getLoaderFor(String path) {
 		GroovyClassLoader gcl = null;
@@ -138,7 +138,7 @@ public class GroovyParser {
 		this.projectName = options.groovyProjectName;
 		GroovyClassLoader gcl = getLoaderFor(path);
 		// Grab needs them on, even for reconciling to behave *sigh*, so might as well turn them on for everything
-		allowTransforms = true;
+		// allowTransforms = true;
 
 		// Basic grab support: the design here is that a special classloader is created that will be augmented
 		// with URLs when grab processing is running. This classloader is used as a last resort when resolving

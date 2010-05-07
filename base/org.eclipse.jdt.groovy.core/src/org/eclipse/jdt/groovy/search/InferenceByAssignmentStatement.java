@@ -71,7 +71,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 						}
 					}
 				} else {
-					// FIXADE 2.0.1M1 this is a property node, eg- 'foo.bar = somevalue' just do Object type
+					// FIXADE this is a property node, eg- 'foo.bar = somevalue' just do Object type
 				}
 			}
 

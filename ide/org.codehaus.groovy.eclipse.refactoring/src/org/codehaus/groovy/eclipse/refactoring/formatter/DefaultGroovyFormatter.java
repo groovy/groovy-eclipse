@@ -18,8 +18,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Vector;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -110,38 +110,38 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 			throw new Exception("Problem parsing Compilation unit.  Fix all syntax errors and try.");
 		}
 
-			InputStream input = new ByteArrayInputStream(formattedDocument.get().getBytes());
-			GroovyLexer lexer = new GroovyLexer(input);	
-			lexer.setWhitespaceIncluded(true);
-			TokenStream stream = (TokenStream) lexer.plumb();
-			
-			Token token = null;
-			Vector<Token> line = new Vector<Token>();
-			while ((token = stream.nextToken()).getType() != GroovyTokenTypes.EOF) {
-				if (token.getType() != GroovyTokenTypes.WS) {
-					// Ignore Tokens inside a String
-					if(token.getType() == GroovyTokenTypes.STRING_CTOR_START) {
-						tokens.add(token);
-						Token prevToken = token;
-						inner: while((token = stream.nextToken()).getType() != GroovyTokenTypes.STRING_CTOR_END) {
-						    if (equalTokens(prevToken, token)) {
-						        break inner;
-						    }
-						    prevToken = token;
-						}
-					}
-					tokens.add(token);
-					line.add(token);
-					if(token.getType() == GroovyTokenTypes.NLS) {
-						tokenLines.add(line);
-						line = new Vector<Token>();
-					}
-				}
-			}
-			// Adding last Line with EOF at End
-			tokens.add(token);
-			line.add(token);
-			tokenLines.add(line);
+		Reader input = new StringReader(formattedDocument.get());
+		GroovyLexer lexer = new GroovyLexer(input);	
+		lexer.setWhitespaceIncluded(true);
+		TokenStream stream = (TokenStream) lexer.plumb();
+
+		Token token = null;
+		Vector<Token> line = new Vector<Token>();
+		while ((token = stream.nextToken()).getType() != GroovyTokenTypes.EOF) {
+		    if (token.getType() != GroovyTokenTypes.WS) {
+		        // Ignore Tokens inside a String
+		        if(token.getType() == GroovyTokenTypes.STRING_CTOR_START) {
+		            tokens.add(token);
+		            Token prevToken = token;
+		            inner: while((token = stream.nextToken()).getType() != GroovyTokenTypes.STRING_CTOR_END) {
+		                if (equalTokens(prevToken, token)) {
+		                    break inner;
+		                }
+		                prevToken = token;
+		            }
+		        }
+		        tokens.add(token);
+		        line.add(token);
+		        if(token.getType() == GroovyTokenTypes.NLS) {
+		            tokenLines.add(line);
+		            line = new Vector<Token>();
+		        }
+		    }
+		}
+		// Adding last Line with EOF at End
+		tokens.add(token);
+		line.add(token);
+		tokenLines.add(line);
 	}
 	
 	

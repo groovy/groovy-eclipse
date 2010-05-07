@@ -1,6 +1,7 @@
 package org.codehaus.groovy.eclipse.refactoring.core.rename;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -14,7 +15,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 
-public class ForcePreviewParticpant extends RenameParticipant {
+public class ForcePreviewParticipant extends RenameParticipant {
     
     // give tests ability to disable this participant
     private static boolean muted = false;
@@ -28,7 +29,7 @@ public class ForcePreviewParticpant extends RenameParticipant {
     		"the 'Move Compilation Unit' option in the preview pane."; 
     private IType type;
     
-    public ForcePreviewParticpant() { }
+    public ForcePreviewParticipant() { }
 
     @Override
     public RefactoringStatus checkConditions(IProgressMonitor pm,
@@ -58,14 +59,11 @@ public class ForcePreviewParticpant extends RenameParticipant {
         }
         if (element instanceof IMember || element instanceof ILocalVariable) {
             IJavaElement member = (IJavaElement) element;
-            try {
-                if (element instanceof IType) {
-                    type = (IType) element;
-                }
-                return member.getJavaProject().getProject().hasNature(GroovyNature.GROOVY_NATURE);
-            } catch (CoreException e) {
-                GroovyCore.logException("Exception initializing Groovy Rename Refactoring participant", e);
+            boolean groovyElement = member.getAncestor(IJavaElement.COMPILATION_UNIT) instanceof GroovyCompilationUnit;
+            if (groovyElement && element instanceof IType) {
+                type = (IType) element;
             }
+            return groovyElement;
         }
         return false;
     }

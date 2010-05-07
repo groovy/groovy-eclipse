@@ -41,6 +41,11 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         this.relevance = -1;
         this.contributor = "Groovy";
     }
+    public GroovyFieldProposal(FieldNode field, String contributor) {
+        this.field = field;
+        this.relevance = -1;
+        this.contributor = contributor;
+    }
     public GroovyFieldProposal(FieldNode field, int relevance) {
         this.field = field;
         this.relevance = relevance;

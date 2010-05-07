@@ -228,35 +228,48 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
     }
 
-    public void testCodeSelectStaticMethodInSuperClass() throws Exception {
-        System.err.println("Test disabled.  Fix me later.");
-//        IPath projectPath = createGenericProject();
-//        IPath root = projectPath.append("src");
-//        String contents = "class PlantController {\n"+
-//        "def redirect(controller, action)  { }\n"+
-//        "static def checkUser() {\n" +
-//        "redirect(controller:'user',action:'login')\n" +
-//        "}}\n";
-//        env.addGroovyClass(root, "", "Hello", contents);
-//        
-//        String contents2 = "class Other extends PlantController {\nstatic def doNothing() {\nredirect(controller:'user',action:'login')\n}}";
-//        env.addGroovyClass(root, "", "Hello2", contents2);
-//        incrementalBuild();
-//        env.waitForAutoBuild();
-//        expectingNoProblems();
-//
-//        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello2.groovy");
-//        unit.becomeWorkingCopy(null);
-//        IJavaElement[] elt = unit.codeSelect(contents2.lastIndexOf("redirect"), "redirect".length());
-//        assertEquals("Should have found a selection", 1, elt.length);
-//        assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
+    public void testCodeSelectStaticMethodInOtherClass2() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = 
+            "class C {\n"+
+               "static def r(controller)  { }\n"+
+               "def checkUser() {\n" +
+                  "r(List)\n" +
+               "}" +
+            "}\n";
+        env.addGroovyClass(root, "", "Hello", contents);
+        
+        incrementalBuild(projectPath);
+        env.waitForAutoBuild();
+        expectingNoProblems();
+
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("List"), "List".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found class 'List'", "List", elt[0].getElementName());
     }
-    
-    /*
-     * Not able to do yet:
-     * 1. closure variables
-     * 6. method call with default methods (inside and outside of the current class)
-     * 7. must have correct package declaration
-     */
-    
+    public void testCodeSelectStaticMethodInSuperClass() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class PlantController {\n"+
+        "def redirect(controller, action)  { }\n"+
+        "static def checkUser() {\n" +
+        "redirect(controller:'user',action:'login')\n" +
+        "}}\n";
+        env.addGroovyClass(root, "", "Hello", contents);
+        
+        String contents2 = "class Other extends PlantController {\nstatic def doNothing() {\nredirect(controller:'user',action:'login')\n}}";
+        env.addGroovyClass(root, "", "Hello2", contents2);
+        incrementalBuild();
+        env.waitForAutoBuild();
+        expectingNoProblems();
+
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello2.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents2.lastIndexOf("redirect"), "redirect".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
+    }
 }

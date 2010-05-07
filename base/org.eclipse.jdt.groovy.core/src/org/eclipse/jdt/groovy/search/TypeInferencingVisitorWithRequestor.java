@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
@@ -96,6 +97,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  * 
  *          Visits a GroovyCompilationUnit in order to determine the type of expressions contained in it.
  */
+@SuppressWarnings("nls")
 public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport {
 
 	public class VisitCompleted extends RuntimeException {
@@ -194,12 +196,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		boolean oldRethrow = rethrowVisitComplete;
 		rethrowVisitComplete = true;
 		enclosingElement = type;
+		ClassNode node = findClassWithName(createName(type));
+		if (node == null) {
+			// probably some sort of AST transformation is making this node invisible
+			return;
+		}
 		try {
-			ClassNode node = findClassWithName(createName(type));
-			if (node == null) {
-				// probably some sort of AST transformation is making this node invisible
-				return;
-			}
 
 			scopes.push(new VariableScope(scopes.peek(), node));
 			enclosingDeclarationNode = node;
@@ -589,11 +591,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	// @Override
 	public void visitImports(ModuleNode node) {
-		for (ImportNode imp : (Iterable<ImportNode>) node.getImports()) {
+		for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
 			TypeLookupResult result = null;
 			IJavaElement oldEnclosingElement = enclosingElement;
 			// FIXADE this will not work for static or * imports
-			if (imp.getClassName() != null) {
+			if (imp.getType() != null) {
 				enclosingElement = unit.getImport(imp.getClassName());
 				if (!enclosingElement.exists()) {
 					enclosingElement = oldEnclosingElement;
@@ -1241,7 +1243,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (groovyParams.length != jdtParamTypes.length) {
 						continue;
 					}
-					// FIXADE 2.0.1M1 this is not precise. Doesn't take into account generics
+					// FIXADE this is not precise. Doesn't take into account generics
 					for (int i = 0; i < groovyParams.length; i++) {
 						String groovyClassType = groovyParams[i].getType().getName();
 						if (!groovyClassType.startsWith("[")) { //$NON-NLS-1$
@@ -1261,7 +1263,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (groovyParams.length != jdtParamTypes.length) {
 						continue;
 					}
-					// FIXADE 2.0.1M1 this is not precise. Doesn't take into account generics
+					// FIXADE this is not precise. Doesn't take into account generics
 					for (int i = 0; i < groovyParams.length; i++) {
 						String groovyClassType = groovyParams[i].getType().getName();
 						if (!groovyClassType.startsWith("[")) { //$NON-NLS-1$

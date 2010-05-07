@@ -26,10 +26,8 @@ import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLoca
 import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.SCRIPT;
 import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.STATEMENT;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -39,6 +37,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -120,56 +119,16 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     
     
     public void visitImports(ModuleNode node) {
-        for (ImportNode importNode : (Iterable<ImportNode>) node.getImports()) {
+        ImportNodeCompatibilityWrapper wrapper = new ImportNodeCompatibilityWrapper(node);
+        for (ImportNode importNode : wrapper.getAllImportNodes()) {
             visitAnnotations(importNode);
-            if (doTest(importNode.getType())) {
+            if (importNode.getType() != null && doTest(importNode.getType())) {
                 currentDeclaration = importNode;
                 createContext(null, importNode, IMPORT);
             }
         }
-        // for 1.7 stream only
-        for (ImportNode importStarNode : getImports(node, "getStarImports")) {
-            visitAnnotations(importStarNode);
-            if (importStarNode.getType() != null && doTest(importStarNode.getType())) {
-                currentDeclaration = importStarNode;
-                createContext(null, importStarNode, IMPORT);
-            }
-        }
-        for (ImportNode importStaticNode : getImports(node, "getStaticImports")) {
-            visitAnnotations(importStaticNode);
-            if (importStaticNode.getType() != null && doTest(importStaticNode.getType())) {
-                currentDeclaration = importStaticNode;
-                createContext(null, importStaticNode, IMPORT);
-            }
-        }
-        for (ImportNode importStaticStarNode : getImports(node, "getStaticStarImports")) {
-            visitAnnotations(importStaticStarNode);
-            if (doTest(importStaticStarNode.getType())) {
-                currentDeclaration = importStaticStarNode;
-                createContext(null, importStaticStarNode, IMPORT);
-            }
-        }
     }
 
-
-    /**
-     * Use reflection because this is a 1.7 only method
-     * @return
-     */
-    private Iterable<ImportNode> getImports(ModuleNode node, String methodName) {
-        try {
-            Object obj = ReflectionUtils.throwableExecutePrivateMethod(ModuleNode.class, 
-                    methodName, new Class<?>[0], node, new Object[0]);
-            if (obj instanceof Iterable<?>) {
-                return (Iterable<ImportNode>) obj;
-            } else if (obj instanceof Map<?,?>) {
-                return (Iterable<ImportNode>) ((Map<?,ImportNode>) obj).values();
-            }
-        } catch (Exception e) {
-            // using 1.6.5
-        }
-        return Collections.emptyList();
-    }
 
     @Override
     public void visitClass(ClassNode node) {

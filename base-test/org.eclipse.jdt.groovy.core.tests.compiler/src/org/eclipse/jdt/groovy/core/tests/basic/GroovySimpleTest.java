@@ -18,7 +18,7 @@ import java.util.Map;
 
 import junit.framework.Test;
 
-import org.codehaus.groovy.activator.GroovyActivator;
+import org.codehaus.jdt.groovy.internal.compiler.ast.AliasImportReference;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -34,6 +34,7 @@ import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
@@ -63,7 +64,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyCompilationUnitDeclaration.defaultCheckGenerics=true;
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
-		groovyLevel=GroovyActivator.GROOVY_LEVEL;
+		groovyLevel=17;
+    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.2.jar");
+    	if (groovyJar==null) {
+    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
+    		groovyLevel=16;
+    	}
 	}
 
 	public static Class testClass() {
@@ -89,10 +95,17 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	groovyLevel=GroovyActivator.GROOVY_LEVEL;
-        	URL groovyJar = GroovyActivator.GROOVY_JAR_URL;
+        	groovyLevel=17;
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.2.jar");
+        	if (groovyJar==null) {
+        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
+        		groovyLevel=16;
+        	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
-        	URL asmJar = GroovyActivator.ASM_JAR_URL;
+        	URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
+        	if (asmJar==null) {
+        		asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
+        	}
             newcps[newcps.length-2] = FileLocator.resolve(asmJar).getFile();
 	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
 	        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
@@ -179,6 +192,20 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n");
     }
     
+    public void testAnnos_GRE697() {
+	    	this.runConformTest(new String[]{
+	    			"A.groovy",
+	    			
+	    			"@B\n"+
+	    			"class A { \n"+
+	    			"  public static void main(String[]argv) {print 'abc';}\n"+
+	    			"}\n"+
+	    			"@interface B {\n"+
+	    			"   String value() default \"\"\n"+
+	    			"}",
+	    	},"abc");
+    }
+    
     public void testConstAnnotationValue_GRE629() {
 	    	this.runConformTest(new String[]{
 	    			"Const.java",
@@ -194,7 +221,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"class XXX {}\n"+
 	    			"@Retention(RetentionPolicy.RUNTIME)\n"+
 	    			"@interface Anno { String value(); }\n"},
-	    		"@Anno(value=abc)");
+	    			"@Anno(value=abc)");
     }
 	    
 
@@ -1786,7 +1813,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"\n"+
 			"import java.nio.ByteBuffer;\n"+
 			"\n"+
-			"@SuppressWarnings(\"rawtypes\")\n"+
+			"@SuppressWarnings(\"unchecked\")\n"+
 			"public class StructureBase implements Structure {\n"+
 			"\n"+
 			"	protected final Structure str = null;\n"+
@@ -3279,6 +3306,35 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		checkDisassemblyFor("p/X.class", expectedOutput);
 	}	
 	
+	public void testFieldLevelAnnotations_delegate() throws Exception {
+		runConformTest(new String[] {
+			"Bar.groovy",
+			"class Bar {\n"+
+			" public void m() {\n"+
+			"Object o = new Other().me;\n"+
+			"}}",
+				
+			"Other.groovy",
+			"public class Other {\n" +
+			"  public @Anno Date me\n"+
+			"}\n",
+
+			"Anno.java",
+			"import java.lang.annotation.*;\n"+
+			"@Retention(RetentionPolicy.RUNTIME)\n"+
+			"@interface Anno {}\n",
+
+		},
+		"");
+
+		checkGCUDeclaration("Other.groovy",
+				"public class Other {\n" + 
+				"  public @Anno Date me;\n" + 
+				"  public Other() {\n" + 
+				"  }\n" + 
+				"}\n");
+	}	
+	
 	public void testHalfFinishedGenericsProgram() {
 		this.runNegativeTest(new String[] {
 			"Demo.groovy",
@@ -3323,7 +3379,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"Demo.groovy",
 			"public class Demo {\n"+
 			"\n"+
-			"@SuppressWarnings(\"rawtypes\")\n"+ // should cause no warnings
+			"@SuppressWarnings(\"unchecked\")\n"+ // should cause no warnings
 			"List myList;\n"+
 			"}\n"
 		},"");
@@ -3332,7 +3388,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	public void testHalfFinishedGenericsProgramWithCorrectSuppressionAtTheTypeLevel() {
 		this.runNegativeTest(new String[] {
 			"Demo.groovy",
-			"@SuppressWarnings(\"rawtypes\")\n"+ // should cause no warnings
+			"@SuppressWarnings(\"unchecked\")\n"+ // should cause no warnings
 			"public class Demo {\n"+
 			"\n"+
 			"List myList;\n"+
@@ -3380,7 +3436,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"Demo.groovy",
 			"public class Demo {\n"+
 			"\n"+
-			"@SuppressWarnings([\"rawtypes\",\"cast\"])\n"+
+			"@SuppressWarnings([\"unchecked\",\"cast\"])\n"+
 			"List myList;\n"+
 			"}\n"
 		},"");
@@ -3391,13 +3447,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"Demo.groovy",
 			"public class Demo {\n"+
 			"\n"+
-			"@SuppressWarnings([\"rawtypes\",\"cast2\"])\n"+
+			"@SuppressWarnings([\"unchecked\",\"cast2\"])\n"+
 			"List myList;\n"+
 			"}\n"
 		},"----------\n" + 
 		"1. WARNING in Demo.groovy (at line 3)\n" + 
-		"	@SuppressWarnings([\"rawtypes\",\"cast2\"])\n" + 
-		"	                              ^^^^^^^\n" + 
+		"	@SuppressWarnings([\"unchecked\",\"cast2\"])\n" + 
+		"	                               ^^^^^^^\n" + 
 		"Unsupported @SuppressWarnings(\"cast2\")\n" + 
 		"----------\n");
 	}
@@ -5974,6 +6030,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			},
 			"falsetrue");
 	}
+	
+	
 
 	public void testGroovyPropertyAccessorsGenerics() {
 		this.runConformTest(new String[] {
@@ -6595,6 +6653,19 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n"
 		},		
 		"123");
+	}
+	
+	
+	public void testGrab() {
+		this.runConformTest(new String[]{
+				"Printer.groovy",
+				"import groovy.lang.Grab;\n"+
+				"\n"+
+				"@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
+				"def printDate() {\n"+
+				"      def dt = new org.joda.time.DateTime()\n"+
+				"}\n"+
+				"printDate()"},"");
 	}
 	
 	public void testScriptWithError() {
@@ -7427,6 +7498,59 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			assertFalse((tds[1].bits&ASTNode.IsSecondaryType)!=0);
 			assertTrue((tds[2].bits&ASTNode.IsSecondaryType)!=0);
 			assertTrue((tds[3].bits&ASTNode.IsSecondaryType)!=0);
+	}
+	
+	// Test 'import static a.B.FOO'
+	public void testImportStatic1() {
+		this.runConformTest(new String[] {
+			"b/Run.groovy",
+			"package b\n"+
+			"import static a.B.FOO\n"+
+			"class Run { public static void main(String[]argv) { print FOO;} }\n",
+			"a/B.groovy",
+			"package a\n"+
+			"class B { public static String FOO='abc';}\n",
+		},"abc");		
+		GroovyCompilationUnitDeclaration gcud = getDecl("Run.groovy");
+		ImportReference[] irs = gcud.imports;
+		assertEquals("a.B.FOO",irs[0].toString().trim());
+		assertTrue(irs[0].isStatic());
+	}
+	
+	// Test 'import static a.B.*'
+	public void testImportStatic2() {
+		this.runConformTest(new String[] {
+			"b/Run.groovy",
+			"package b\n"+
+			"import static a.B.*\n"+
+			"class Run { public static void main(String[]argv) { print FOO;} }\n",
+			"a/B.groovy",
+			"package a\n"+
+			"class B { public static String FOO='abc';}\n",
+		},"abc");		
+		GroovyCompilationUnitDeclaration gcud = getDecl("Run.groovy");
+		ImportReference[] irs = gcud.imports;
+		assertEquals("a.B.*",irs[0].toString().trim());
+		assertTrue(irs[0].isStatic());
+	}
+	
+	// Test 'import static a.B.FOO as Wibble'
+	public void testImportStatic3() {
+		this.runConformTest(new String[] {
+			"b/Run.groovy",
+			"package b\n"+
+			"import static a.B.FOO as Wibble\n"+
+			"class Run { public static void main(String[]argv) { print Wibble;} }\n",
+			"a/B.groovy",
+			"package a\n"+
+			"class B { public static String FOO='abc';}\n",
+		},"abc");		
+		GroovyCompilationUnitDeclaration gcud = getDecl("Run.groovy");
+		ImportReference[] irs = gcud.imports;
+		assertTrue(irs[0] instanceof AliasImportReference);
+		assertEquals("a.B.Wibble",irs[0].toString().trim()); // FIXASC hmmm, why isn't that a.B.FOO (ie. declared long name)
+		assertTrue(irs[0].isStatic());
+		assertEquals("Wibble",new String(((AliasImportReference)irs[0]).getSimpleName()));
 	}
 	
 	// Parser should correctly parse this code, but 

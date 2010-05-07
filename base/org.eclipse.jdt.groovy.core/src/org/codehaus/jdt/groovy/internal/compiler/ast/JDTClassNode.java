@@ -294,7 +294,7 @@ public class JDTClassNode extends ClassNode {
 					thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
 				}
 			}
-			mNode = new MethodNode(name, modifiers, returnType, gParameters, thrownExceptions, null);
+			mNode = new JDTMethodNode(methodBinding, resolver, name, modifiers, returnType, gParameters, thrownExceptions, null);
 
 			// FIXASC (M3) likely to need something like this...
 			// if (jdtBinding.isEnum()) {
@@ -384,7 +384,8 @@ public class JDTClassNode extends ClassNode {
 				initializerExpression = new ConstantExpression(((ShortConstant) c).shortValue());
 			}
 		}
-		FieldNode fNode = new FieldNode(name, modifiers, fieldType, this, initializerExpression);
+		FieldNode fNode = new JDTFieldNode(fieldBinding, resolver, name, modifiers, fieldType, this, initializerExpression);
+		// Object o = fNode.getAnnotations();
 		return fNode;
 	}
 

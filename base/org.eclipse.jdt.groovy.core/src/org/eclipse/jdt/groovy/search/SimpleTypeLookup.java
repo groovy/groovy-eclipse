@@ -104,7 +104,13 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 	public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
 		ClassNode baseType = node.getType();
-		return new TypeLookupResult(baseType, baseType, baseType, EXACT, scope);
+		if (baseType != null) {
+			return new TypeLookupResult(baseType, baseType, baseType, EXACT, scope);
+		} else {
+			// * import
+			return new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE,
+					VariableScope.OBJECT_CLASS_NODE, INFERRED, scope);
+		}
 	}
 
 	/**
@@ -148,6 +154,10 @@ public class SimpleTypeLookup implements ITypeLookup {
 				return type;
 			} else if (var instanceof FieldNode) {
 				return ((FieldNode) var).getDeclaringClass();
+			} else if (scope.isThisOrSuper((VariableExpression) node)) { // use 'node' because 'var' may be null
+				// this or super expression, but it is not bound,
+				// probably because concrete ast was requested
+				return scope.lookupName(((VariableExpression) node).getName()).declaringType;
 			} else {
 				// local variable, no declaring type
 				// fall through
@@ -239,7 +249,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return new TypeLookupResult(VariableScope.MAP_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
-			// FIXADE 2.0.1M1 hmmmm...because of operator overloading, we should be looking at the type
+			// FIXADE because of operator overloading, we should be looking at the type
 			// of the inner expression, but Number will be safe for most of the time.
 			return new TypeLookupResult(VariableScope.NUMBER_CLASS_NODE, null, null, confidence, scope);
 

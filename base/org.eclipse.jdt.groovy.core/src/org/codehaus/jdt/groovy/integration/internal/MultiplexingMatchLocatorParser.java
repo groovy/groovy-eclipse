@@ -36,7 +36,7 @@ public class MultiplexingMatchLocatorParser extends MatchLocatorParser {
 	protected MultiplexingMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
 		super(problemReporter, locator);
 		// The superclass that is extended is in charge of parsing .java files
-		groovyParser = new GroovyParser(locator.options, problemReporter);
+		groovyParser = new GroovyParser(locator.options, problemReporter, false);
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class MultiplexingMatchLocatorParser extends MatchLocatorParser {
 		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
 			// FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
 			// FIXASC ought to reuse to ensure types end up in same groovy CU
-			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter).dietParse(
+			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter, false).dietParse(
 					sourceUnit, compilationResult);
 			// return groovyParser.dietParse(sourceUnit, compilationResult);
 		} else {

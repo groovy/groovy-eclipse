@@ -21,7 +21,8 @@
   		<property name="buildResultsDirectory" value="${buildDirectory}/results" />
 
   		<java classname="org.eclipse.equinox.launcher.Main" fork="true"
-  			errorproperty="is.build.error">
+  			errorproperty="is.build.error"
+  			resultproperty="java.result">
   			<arg value="-application"/>
   			<arg value="org.eclipse.ant.core.antRunner"/>
   			<arg value="-f"/>
@@ -53,7 +54,15 @@
     	  </classpath>
 			</java>
 	  	
-	  	<fail if="${is.build.error}" message="Failed because of: ${is.build.error}"/>
+	  	
+	  	
+	  	<fail message="Failed because of: ${is.build.error}">
+	      <condition>
+	         <not>
+	           <equals arg1="${java.result}" arg2="0"/>
+	         </not>
+	       </condition>
+	  	</fail>
     </target>
 
   				

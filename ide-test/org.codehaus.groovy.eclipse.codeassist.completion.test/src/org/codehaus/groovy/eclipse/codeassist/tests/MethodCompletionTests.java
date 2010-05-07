@@ -16,12 +16,13 @@ import java.util.List;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -204,38 +205,17 @@ public class MethodCompletionTests extends CompletionTestCase {
                     CharOperation.toString(expected) + "\n\nbut found:\n" + CharOperation.toString(names));
         }
     }
-
-
     private ClassNode extract(GroovyCompilationUnit unit) {
-        return ((Expression) ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression()).getType();
-    }
-
-
-    private ICompilationUnit create(String contents) throws Exception {
-        return create(contents, "GroovyClass");
-    }
-    private ICompilationUnit create(String contents, String cuName) throws Exception {
-        IPath projectPath;
-        if (genericProjectExists()) {
-            projectPath = env.getProject("Project").getFullPath();
+        Statement state = unit.getModuleNode().getStatementBlock().getStatements().get(0);
+        if (state instanceof ReturnStatement) {
+            ReturnStatement ret = (ReturnStatement) state;
+            return ((Expression) ret.getExpression()).getType();
+        } else if (state instanceof ExpressionStatement) {
+            ExpressionStatement expr = (ExpressionStatement) state;
+            return ((Expression) expr.getExpression()).getType();
         } else {
-            projectPath = createGenericProject();
+            fail ("Invalid statement kind for " + state + "\nExpecting return statement or expression statement");
+            return null;
         }
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, cuName, contents);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
-    }
-    
-    private void createJava(String contents, String cuName) throws Exception {
-        IPath projectPath;
-        if (genericProjectExists()) {
-            projectPath = env.getProject("Project").getFullPath();
-        } else {
-            projectPath = createGenericProject();
-        }
-        IPath src = projectPath.append("src");
-        env.addClass(src, cuName, contents);
     }
 }

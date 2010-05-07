@@ -23,6 +23,8 @@ import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameLocalTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests;
 
+import formatter.FormatterTestSuite;
+
 /**
  * 
  * @author Andrew Eisenberg
@@ -36,6 +38,7 @@ public class AllRefactoringTests {
         suite.addTest(RenameMethodTests.suite());
         suite.addTest(RenameFieldTests.suite());
         suite.addTest(RenameLocalTests.suite());
+        suite.addTest(FormatterTestSuite.suite());
         return suite;
     }
 

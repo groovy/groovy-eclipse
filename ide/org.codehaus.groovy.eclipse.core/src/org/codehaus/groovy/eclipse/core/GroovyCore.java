@@ -84,6 +84,4 @@ public class GroovyCore {
     public static void errorRunningGroovy(Exception exception) {
         logException("Error running Groovy", exception);
     }
-
-    public static final String GROOVY_ERROR_MARKER = "org.codehaus.groovy.eclipse.groovyFailure";
 }

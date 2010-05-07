@@ -23,14 +23,21 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.util.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -55,8 +62,6 @@ public abstract class CompletionTestCase extends BuilderTests {
         UIPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
         super.tearDown();
     }
-    
-
     
     protected IPath createGenericProject() throws Exception {
         IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
@@ -123,16 +128,18 @@ public abstract class CompletionTestCase extends BuilderTests {
     protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType) {
         int foundCount = 0;
         for (ICompletionProposal proposal : proposals) {
+            
             // if a field
-            if (proposal.getDisplayString().startsWith(name + " ")) {
+            String propName = proposal.getDisplayString();
+            if (propName.startsWith(name + " ")) {
                 foundCount ++;
             } else
             // if a method
-            if (proposal.getDisplayString().startsWith(name + "(")) {
+            if (propName.startsWith(name + "(")) {
                 foundCount ++;
             } else
             // if a type
-            if (isType && proposal.getDisplayString().startsWith(name)) {
+            if (isType && propName.startsWith(name)) {
                 foundCount ++;
             }
         }
@@ -215,4 +222,58 @@ public abstract class CompletionTestCase extends BuilderTests {
         return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
         
     }
+    
+    protected ICompilationUnit create(String contents) throws Exception {
+        return create(contents, "GroovyClass");
+    }
+    protected ICompilationUnit create(String contents, String cuName) throws Exception {
+        IPath projectPath;
+        if (genericProjectExists()) {
+            projectPath = env.getProject("Project").getFullPath();
+        } else {
+            projectPath = createGenericProject();
+        }
+        IPath src = projectPath.append("src");
+        IPath pathToJavaClass = env.addGroovyClass(src, cuName, contents);
+        incrementalBuild();
+        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
+        return unit;
+    }
+    
+    protected void createJava(String contents, String cuName) throws Exception {
+        IPath projectPath;
+        if (genericProjectExists()) {
+            projectPath = env.getProject("Project").getFullPath();
+        } else {
+            projectPath = createGenericProject();
+        }
+        IPath src = projectPath.append("src");
+        env.addClass(src, cuName, contents);
+    }
+
+
+    protected String printProposals(ICompletionProposal[] proposals) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Incorrect proposals:\n");
+        for (ICompletionProposal proposal : proposals) {
+            sb.append(proposal.getDisplayString() + "\n");
+        }
+        return sb.toString();
+    }
+
+    public void performDummySearch(IJavaElement element) throws Exception{
+        new SearchEngine().searchAllTypeNames(
+            null,
+            SearchPattern.R_EXACT_MATCH,
+            "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
+            SearchPattern.R_EXACT_MATCH,
+            IJavaSearchConstants.CLASS,
+            SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
+            new Requestor(),
+            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
+            null);
+    }
+    private static class Requestor extends TypeNameRequestor {
+    }
+
 }

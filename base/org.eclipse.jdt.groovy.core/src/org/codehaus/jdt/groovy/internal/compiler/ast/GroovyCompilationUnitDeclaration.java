@@ -63,6 +63,7 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
+import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
@@ -227,16 +228,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private void createImports(ModuleNode moduleNode) {
 		List<ImportNode> importNodes = moduleNode.getImports();
 		List<String> importPackages = moduleNode.getImportPackages();
-		if (importNodes.size() > 0 || importPackages.size() > 0) {
+		Map<String, ImportNode> importStatics = moduleNode.getStaticImports();
+		Map<String, ImportNode> importStaticStars = moduleNode.getStaticStarImports();
+		if (importNodes.size() > 0 || importPackages.size() > 0 || importStatics.size() > 0 || importStaticStars.size() > 0) {
 			int importNum = 0;
-			imports = new ImportReference[importNodes.size() + importPackages.size()];
+			imports = new ImportReference[importNodes.size() + importPackages.size() + importStatics.size()
+					+ importStaticStars.size()];
 			for (ImportNode importNode : importNodes) {
 				char[][] splits = CharOperation.splitOn('.', importNode.getClassName().toCharArray());
-				// FIXASC (M3) the importNode itself does not have correct start and end positions but the type inside of it does.
-				// this should be changed so that the importNode itself has the locations
-				// FIXADE (2.0.2) --- Fixed! importNode now has correct sloc, or at least it does if its type is not null
 				ImportReference ref = null;
-
 				ClassNode type = importNode.getType();
 				int typeStartOffset = startOffset(type);
 				int typeEndOffset = endOffset(type);
@@ -257,6 +257,35 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			for (String importPackage : importPackages) {
 				char[][] splits = CharOperation.splitOn('.', importPackage.substring(0, importPackage.length() - 1).toCharArray());
 				imports[importNum++] = new ImportReference(splits, getPositionsFor(splits), true, ClassFileConstants.AccDefault);
+			}
+			for (Map.Entry<String, ImportNode> importStatic : importStatics.entrySet()) {
+				ImportNode importNode = importStatic.getValue();
+				String importName = importNode.getClassName() + "." + importStatic.getKey();
+				char[][] splits = CharOperation.splitOn('.', importName.toCharArray());
+
+				ImportReference ref = null;
+				ClassNode type = importNode.getType();
+				int typeStartOffset = startOffset(type);
+				int typeEndOffset = endOffset(type);
+				if (importNode.getAlias() != null && importNode.getAlias().length() > 0) {
+					// FIXASC will need extra positional info for the 'as' and the alias
+					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positionsFor(splits,
+							typeStartOffset, typeEndOffset), false, ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+				} else {
+					ref = new ImportReference(splits, positionsFor(splits, typeStartOffset, typeEndOffset), false,
+							ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+				}
+				ref.sourceEnd = Math.max(typeEndOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
+				ref.declarationSourceStart = importNode.getStart();
+				ref.declarationSourceEnd = importNode.getEnd();
+				ref.declarationEnd = ref.sourceEnd;
+				imports[importNum++] = ref;
+			}
+			for (Map.Entry<String, ImportNode> importStaticStar : importStaticStars.entrySet()) {
+				String classname = importStaticStar.getKey();
+				char[][] splits = CharOperation.splitOn('.', classname.toCharArray());
+				imports[importNum++] = new ImportReference(splits, getPositionsFor(splits), true, ClassFileConstants.AccDefault
+						| ClassFileConstants.AccStatic);
 			}
 
 			// ensure proper lexical order
@@ -908,49 +937,65 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private MethodDeclaration createMethodDeclaration(ClassNode classNode, MethodNode methodNode, boolean isEnum,
 			CompilationResult compilationResult) {
-		MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
-		boolean isMain = false;
-		// Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
-		// AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
-		int modifiers = methodNode.getModifiers();
-		modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
-		methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
-		methodDeclaration.modifiers = modifiers;
-		methodDeclaration.selector = methodNode.getName().toCharArray();
-		// Need to capture the rule in Verifier.adjustTypesIfStaticMainMethod(MethodNode node)
-		// if (node.getName().equals("main") && node.isStatic()) {
-		// Parameter[] params = node.getParameters();
-		// if (params.length == 1) {
-		// Parameter param = params[0];
-		// if (param.getType() == null || param.getType()==ClassHelper.OBJECT_TYPE) {
-		// param.setType(ClassHelper.STRING_TYPE.makeArray());
-		// ClassNode returnType = node.getReturnType();
-		// if(returnType == ClassHelper.OBJECT_TYPE) {
-		// node.setReturnType(ClassHelper.VOID_TYPE);
-		// }
-		// }
-		// }
-		Parameter[] params = methodNode.getParameters();
-		ClassNode returnType = methodNode.getReturnType();
+		if (classNode.isAnnotationDefinition()) {
+			AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(compilationResult);
+			int modifiers = methodNode.getModifiers();
+			modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
+			methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
+			methodDeclaration.modifiers = modifiers;
+			if (methodNode.hasAnnotationDefault()) {
+				methodDeclaration.modifiers |= ClassFileConstants.AccAnnotationDefault;
+			}
+			methodDeclaration.selector = methodNode.getName().toCharArray();
+			fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
+			ClassNode returnType = methodNode.getReturnType();
+			methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
+			return methodDeclaration;
+		} else {
+			MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
+			boolean isMain = false;
+			// Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
+			// AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
+			int modifiers = methodNode.getModifiers();
+			modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
+			methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
+			methodDeclaration.modifiers = modifiers;
+			methodDeclaration.selector = methodNode.getName().toCharArray();
+			// Need to capture the rule in Verifier.adjustTypesIfStaticMainMethod(MethodNode node)
+			// if (node.getName().equals("main") && node.isStatic()) {
+			// Parameter[] params = node.getParameters();
+			// if (params.length == 1) {
+			// Parameter param = params[0];
+			// if (param.getType() == null || param.getType()==ClassHelper.OBJECT_TYPE) {
+			// param.setType(ClassHelper.STRING_TYPE.makeArray());
+			// ClassNode returnType = node.getReturnType();
+			// if(returnType == ClassHelper.OBJECT_TYPE) {
+			// node.setReturnType(ClassHelper.VOID_TYPE);
+			// }
+			// }
+			// }
+			Parameter[] params = methodNode.getParameters();
+			ClassNode returnType = methodNode.getReturnType();
 
-		// source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
-		if ((modifiers & ClassFileConstants.AccStatic) != 0 && params != null && params.length == 1
-				&& methodNode.getName().equals("main")) {
-			Parameter p = params[0];
-			if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
-				String name = p.getName();
-				params = new Parameter[1];
-				params[0] = new Parameter(ClassHelper.STRING_TYPE.makeArray(), name);
-				if (returnType.getName().equals(ClassHelper.OBJECT)) {
-					returnType = ClassHelper.VOID_TYPE;
+			// source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
+			if ((modifiers & ClassFileConstants.AccStatic) != 0 && params != null && params.length == 1
+					&& methodNode.getName().equals("main")) {
+				Parameter p = params[0];
+				if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
+					String name = p.getName();
+					params = new Parameter[1];
+					params[0] = new Parameter(ClassHelper.STRING_TYPE.makeArray(), name);
+					if (returnType.getName().equals(ClassHelper.OBJECT)) {
+						returnType = ClassHelper.VOID_TYPE;
+					}
 				}
 			}
-		}
 
-		methodDeclaration.arguments = createArguments(params, isMain);
-		methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
-		fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
-		return methodDeclaration;
+			methodDeclaration.arguments = createArguments(params, isMain);
+			methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
+			fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
+			return methodDeclaration;
+		}
 	}
 
 	/**
@@ -1069,7 +1114,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		if (signature.length() == (pos + 1)) {
 			// primitive array component
-			return TypeReference.baseTypeReference(charToTypeId.get(signature.charAt(pos)), dim);
+			Integer ii = charToTypeId.get(signature.charAt(pos));
+			if (ii == null) {
+				// silly groovy constructed signature for type variable reference (see GRECLIPSE-700)
+				return createJDTArrayTypeReference(signature.substring(1), dim, start, end);
+			} else {
+				return TypeReference.baseTypeReference(ii, dim);
+			}
 		}
 
 		// array component is something like La.b.c;

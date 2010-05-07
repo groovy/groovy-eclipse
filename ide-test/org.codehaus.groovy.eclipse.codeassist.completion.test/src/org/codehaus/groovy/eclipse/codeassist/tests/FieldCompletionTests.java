@@ -105,17 +105,4 @@ public class FieldCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "setX", 0);
         proposalExists(proposals, "x", 1);
     }
-    
-    
-    
-    
-
-    private ICompilationUnit create(String contents) throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "GroovyClass", contents);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
-    }
 }

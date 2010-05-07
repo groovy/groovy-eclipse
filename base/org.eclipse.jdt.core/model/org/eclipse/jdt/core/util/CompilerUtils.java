@@ -222,7 +222,26 @@ public class CompilerUtils {
 							IProject iproject = project.getWorkspace().getRoot().getProject(prefix);
 							IJavaProject ijp = JavaCore.create(iproject);
 							pathElement = pathToString(ijp.getOutputLocation(),iproject);
-							// FIXASC this ought to also allow for separate output folders in the project we depend upon *sigh*
+                            
+                            // Look for exported entries from the 'other project'
+                            IClasspathEntry[] otherCpes = ijp.getResolvedClasspath(true);
+                            if (otherCpes!=null) {
+                                for (int j=0;j<otherCpes.length;j++) {
+                                    if (otherCpes[j].isExported()) {
+                                        IPath otherCpePath = otherCpes[j].getPath();
+                                        String otherPathElement = null;
+                                        if (otherCpePath.segment(0)!=null && otherCpePath.segment(0).equals(iproject.getName())) {
+                                            otherPathElement = iproject.getFile(otherCpePath.removeFirstSegments(1)).getRawLocation().toOSString();
+                                        } else {
+                                            otherPathElement = otherCpePath.toOSString();
+                                        }
+                                        path.append(otherPathElement);
+                                        path.append(File.pathSeparator);
+//                                      System.out.println("exported from other project is "+otherCpePath);
+                                    }
+                                }
+                            }
+                            // FIXASC this ought to also allow for separate output folders in the project we depend upon *sigh*
 							// FIXASC what does all this look like for batch compilation?  Should it be passed in rather than computed here
 						} else {
 							pathElement = cpe.getPath().toOSString();

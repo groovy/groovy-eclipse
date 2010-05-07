@@ -102,14 +102,9 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 	};
 	private static String[] groovyKeywords = {
 		"as",
+		"def",
 		"assert",
-		"def",
-		"mixin",
-		"property",
-		"test",
-		"using",
 		"in",
-		"def",
 	};
 	
 	private static String[] gjdkWords = {

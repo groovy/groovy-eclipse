@@ -92,7 +92,7 @@
       <extension
          point="org.eclipse.ltk.core.refactoring.renameParticipants">
          <renameParticipant
-               class="org.codehaus.groovy.eclipse.refactoring.core.rename.ForcePreviewParticpant"
+               class="org.codehaus.groovy.eclipse.refactoring.core.rename.ForcePreviewParticipant"
                id="org.codehaus.groovy.eclipse.refactoring.forcepreview"
                name="Force Preview Particpant">
             <enablement>

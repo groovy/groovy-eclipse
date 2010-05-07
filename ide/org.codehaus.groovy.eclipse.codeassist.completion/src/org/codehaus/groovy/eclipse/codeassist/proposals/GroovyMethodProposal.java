@@ -102,7 +102,19 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 
 
     protected char[] completionName() {
-        return (method.getName() + "()").toCharArray();
+        String name = method.getName();
+        char[] nameArr = name.toCharArray();
+        boolean hasWhitespace = false;
+        for (int i = 0; i < nameArr.length; i++) {
+            if (Character.isWhitespace(nameArr[i])) {
+                hasWhitespace = true;
+                break;
+            }
+        }
+        if (hasWhitespace) {
+            name = "\"" + name + "\"";
+        }
+        return (name + "()").toCharArray();
     }
     
     protected char[][] createParameterNames(ICompilationUnit unit) {
@@ -131,9 +143,9 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
     /**
-     * FIXADE 2.0.1M1 I am concerned that this takes a long time since we are doing a lookup for each method
+     * FIXADE I am concerned that this takes a long time since we are doing a lookup for each method
      * any way to cache?
-     * FIXADE 2.0.1M1 cannot find parameters names with type parameters.
+     * FIXADE cannot find parameters names with type parameters.
      * @throws JavaModelException 
      */
     protected char[][] getParameterNames(ICompilationUnit unit, MethodNode method) {

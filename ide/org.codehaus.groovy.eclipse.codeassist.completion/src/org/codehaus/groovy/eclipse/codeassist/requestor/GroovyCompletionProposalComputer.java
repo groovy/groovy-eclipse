@@ -171,8 +171,10 @@ public class GroovyCompletionProposalComputer implements
 
     protected String findCompletionText(IDocument doc, int offset) {
         try{
-            ISourceBuffer buffer = new DocumentSourceBuffer(doc);
-            return new ExpressionFinder().findForCompletions(buffer, offset - 1);
+            if (offset > 0) {
+                ISourceBuffer buffer = new DocumentSourceBuffer(doc);
+                return new ExpressionFinder().findForCompletions(buffer, offset - 1);
+            }
         } catch (ParseException e) {
             // can ignore.  probably just invalid code that is being completed at
             GroovyCore.trace("Cannot complete code:" + e.getMessage());

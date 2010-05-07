@@ -48,17 +48,6 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 	private GroovyParser parser;
 
 	public MultiplexingSourceElementRequestorParser(ProblemReporter problemReporter, ISourceElementRequestor requestor,
-			IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations,
-			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
-		super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
-		// The superclass that is extended is in charge of parsing .java files
-		this.groovyRequestor = requestor;
-		this.notifier = new SourceElementNotifier(requestor, reportLocalDeclarations);
-		this.groovyReportReferenceInfo = reportLocalDeclarations;
-		this.parser = new GroovyParser(this.options, problemReporter);
-	}
-
-	public MultiplexingSourceElementRequestorParser(ProblemReporter problemReporter, ISourceElementRequestor requestor,
 			IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals) {
 		super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals);
 		// The superclass that is extended is in charge of parsing .java files

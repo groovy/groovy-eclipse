@@ -34,6 +34,7 @@ import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants;
 import org.eclipse.debug.ui.console.IConsole;
 import org.eclipse.debug.ui.console.IConsoleLineTrackerExtension;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
@@ -53,6 +54,11 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         @Override
         protected Map<String, String> createLaunchProperties(IType runType) {
             return super.createLaunchProperties(runType);
+        }
+        
+        @Override
+        protected String generateClasspath(IJavaProject javaProject) {
+            return super.generateClasspath(javaProject);
         }
     }
 
@@ -211,6 +217,30 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         }
     }
     
+    // test that the classpath generation occurs as expected
+    public void testClasspathGeneration() throws Exception {
+        TestProject p4 = new TestProject("P4");
+        p4.createSourceFolder("src2", "bin2");
+
+        TestProject p3 = new TestProject("P3");
+        p3.addProjectReference(p4.getJavaProject());
+        p3.createSourceFolder("src2", "bin2");
+        
+        TestProject p2 = new TestProject("P2");
+        p2.addProjectReference(p4.getJavaProject());
+        p2.addProjectReference(p3.getJavaProject());
+
+        TestProject p1 = new TestProject("P1");
+        p1.addProjectReference(p4.getJavaProject());
+        p1.addProjectReference(p3.getJavaProject());
+        p1.addProjectReference(p2.getJavaProject());
+        
+        String classpath = new MockGroovyScriptLaunchShortcut().generateClasspath(p1.getJavaProject());
+        assertEquals("Invalid classpath generated", "\"${workspace_loc:/P1}/src:${workspace_loc:/P2}/src:" +
+        		"${workspace_loc:/P3}/src:${workspace_loc:/P3}/src2:${workspace_loc:/P4}/src:${workspace_" +
+        		"loc:/P4}/src2:${workspace_loc:/P1}/bin:${workspace_loc:/P2}/bin:${workspace_loc:/P3}/bin" +
+        		":${workspace_loc:/P3}/bin2:${workspace_loc:/P4}/bin:${workspace_loc:/P4}/bin2\"", classpath);
+    }
     
     /**
      * @param newRoot

@@ -61,16 +61,10 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 	 */
 	static class EmptyCommentDetector implements IWordDetector {
 
-		/* (non-Javadoc)
-		* Method declared on IWordDetector
-	 	*/
 		public boolean isWordStart(char c) {
 			return (c == '/');
 		}
 
-		/* (non-Javadoc)
-		* Method declared on IWordDetector
-	 	*/
 		public boolean isWordPart(char c) {
 			return (c == '*' || c == '/');
 		}

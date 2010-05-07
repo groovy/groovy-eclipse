@@ -130,12 +130,4 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         return leftAcc < rightAcc;
     }
 
-    /**
-     * @param field
-     * @return
-     */
-    private boolean checkModifiers(FieldNode field) {
-        return (field.getModifiers() | (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) != 0;
-    }
-
 }

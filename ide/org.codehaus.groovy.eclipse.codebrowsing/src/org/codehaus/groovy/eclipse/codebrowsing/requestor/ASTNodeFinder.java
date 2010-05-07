@@ -28,6 +28,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -240,10 +241,13 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     	if(call.getOwnerType().getNameEnd() == 0) {
     	    check(call.getOwnerType());
     	}
-        // the method itself is not an expression, but only a string
+    	
+    	
+    	super.visitStaticMethodCallExpression(call);
+    	
+    	// the method itself is not an expression, but only a string
         // so this check call will test for open declaration on the method
         check(call);
-        super.visitStaticMethodCallExpression(call);
     }
 
     @Override
@@ -393,8 +397,10 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      */
     public ASTNode doVisit(ModuleNode module) {
         try {
-            for (ImportNode importNode : (Iterable<ImportNode>) module.getImports()) {
-                check(importNode.getType());
+            for (ImportNode importNode : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
+                if (importNode.getType() != null) {
+                    check(importNode.getType());
+                }
             }
             for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
                 this.visitClass(clazz);

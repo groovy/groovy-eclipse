@@ -2,6 +2,7 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
@@ -138,8 +139,22 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         
         // we're inserting a method plus the argument list - respect formatter preferences
         StringBuffer buffer= new StringBuffer();
+        char[] proposalName = fProposal.getName();
+        boolean hasWhitespace = false;
+        for (int i = 0; i < proposalName.length; i++) {
+            if (CharOperation.isWhitespace(proposalName[i])) {
+                hasWhitespace = true;
+            }
+        }
+        char[] newProposalName;
+        if (hasWhitespace) {
+            newProposalName = CharOperation.concat(new char[] {'"'}, CharOperation.append(proposalName, '"'));
+        } else {
+            newProposalName = proposalName;
+        }
+        fProposal.setName(newProposalName);
         appendMethodNameReplacement(buffer);
-
+        fProposal.setName(proposalName);
         FormatterPrefs prefs= getFormatterPrefs();
 
         if (hasParameters()) {

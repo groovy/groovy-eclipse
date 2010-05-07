@@ -31,6 +31,7 @@ public class AllCompletionTests {
         suite.addTestSuite(TypeCompletionTests.class);
         suite.addTestSuite(GroovyLikeCompletionTests.class);
         suite.addTestSuite(InnerTypeCompletionTests.class);
+        suite.addTestSuite(StandardASTTransformCompletionTests.class);
         suite.addTestSuite(OtherCompletionTests.class);
         
         return suite;

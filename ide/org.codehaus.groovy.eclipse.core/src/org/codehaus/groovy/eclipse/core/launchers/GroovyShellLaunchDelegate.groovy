@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.launchers;
+package org.codehaus.groovy.eclipse.core.launchers
+;
 
 import static org.eclipse.core.runtime.FileLocator.resolve;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.GroovyCoreActivator 
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
@@ -58,7 +58,7 @@ public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
             URL jar = resolve(enu.nextElement())
             return jar.getFile()
         } else {
-            throw new CoreException(new Status(Status.ERROR, GroovyPlugin.PLUGIN_ID, "Could not find $jarName on the class path.  Please add it manually"))
+            throw new CoreException(new Status(Status.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find $jarName on the class path.  Please add it manually"))
         }
     }
 

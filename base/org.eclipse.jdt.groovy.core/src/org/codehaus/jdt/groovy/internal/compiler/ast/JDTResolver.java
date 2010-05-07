@@ -97,7 +97,12 @@ public class JDTResolver extends ResolveVisitor {
 	private GroovyCompilationUnitScope activeScope = null;
 
 	// map of scopes in which resolution can happen
-	private Map<ClassNode, GroovyTypeDeclaration> scopes = new HashMap<ClassNode, GroovyTypeDeclaration>();
+	// FIXADE use the class name instead of the class because the mapping from
+	// class node to groovy type declaration is many to one when using multiple
+	// resovlers while requesting the concrete AST.
+	// And besides, equality testing and hashcode makes use of the fully qualified name
+	// anyway.
+	private Map<String, GroovyTypeDeclaration> scopes = new HashMap<String, GroovyTypeDeclaration>();
 
 	// Cache from bindings to JDTClassNodes to avoid unnecessary JDTClassNode creation
 	private Map<Binding, JDTClassNode> nodeCache = new HashMap<Binding, JDTClassNode>();
@@ -504,7 +509,7 @@ public class JDTResolver extends ResolveVisitor {
 	 */
 	@Override
 	protected void commencingResolution() {
-		GroovyTypeDeclaration gtDeclaration = scopes.get(this.currentClass);
+		GroovyTypeDeclaration gtDeclaration = scopes.get(this.currentClass.getName());
 		activeScope = null;
 		if (gtDeclaration == null) {
 			GroovyEclipseBug geb = new GroovyEclipseBug("commencingResolution failed: no declaration found for class "
@@ -531,7 +536,7 @@ public class JDTResolver extends ResolveVisitor {
 
 	@Override
 	protected void finishedResolution() {
-		scopes.remove(this.currentClass);
+		scopes.remove(this.currentClass.getName());
 	}
 
 	private GroovyCompilationUnitScope getScope() {
@@ -548,7 +553,7 @@ public class JDTResolver extends ResolveVisitor {
 	 * used.
 	 */
 	public void record(GroovyTypeDeclaration gtDeclaration) {
-		scopes.put(gtDeclaration.getClassNode(), gtDeclaration);
+		scopes.put(gtDeclaration.getClassNode().getName(), gtDeclaration);
 		if (gtDeclaration.memberTypes != null) {
 			TypeDeclaration[] members = gtDeclaration.memberTypes;
 			for (int m = 0; m < members.length; m++) {

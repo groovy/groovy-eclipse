@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.core.adapters;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
@@ -50,15 +51,18 @@ public class GroovyFileAdapterFactory implements IAdapterFactory {
 					    
 					    // we know this will be a GCU because of the file extension
 					    GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-						List<ClassNode> classNodeList = unit.getModuleNode().getClasses();
-
-						if(classNodeList != null && !classNodeList.isEmpty() ) {
-							if (ClassNode.class.equals(adapterType)) {
-								returnValue = classNodeList.get(0) ;
-							} else if (ClassNode[].class.equals(adapterType)) {
-								returnValue = classNodeList.toArray(new ClassNode[0] ); 
-							}
-						}		
+					    ModuleNode module = unit.getModuleNode();
+					    if (module != null) {
+        					List<ClassNode> classNodeList = module.getClasses();
+        
+        					if(classNodeList != null && !classNodeList.isEmpty() ) {
+        						if (ClassNode.class.equals(adapterType)) {
+        							returnValue = classNodeList.get(0) ;
+        						} else if (ClassNode[].class.equals(adapterType)) {
+        							returnValue = classNodeList.toArray(new ClassNode[0] ); 
+        						}
+        					}		
+					    }
 					} catch (Exception ex) {
 						GroovyCore.logException("error adapting file to ClassNode", ex);
 					}

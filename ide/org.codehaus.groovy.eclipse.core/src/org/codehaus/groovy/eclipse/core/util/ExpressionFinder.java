@@ -178,7 +178,7 @@ public class ExpressionFinder {
 	
 
 	/**
-	 * FIXADE RC1: only skip line breaks if the previous character is a '.' otherwise
+	 * FIXADE only skip line breaks if the previous character is a '.' otherwise
 	 * line breaks should signify the end of the completion
 	 * For now, though we just ignore skipping all line breaks 
 	 * 

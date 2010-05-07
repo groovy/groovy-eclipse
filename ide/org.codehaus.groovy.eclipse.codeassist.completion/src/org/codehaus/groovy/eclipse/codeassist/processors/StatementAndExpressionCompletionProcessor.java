@@ -150,7 +150,7 @@ public class StatementAndExpressionCompletionProcessor extends
             // return the category proposals only
             AnnotatedNode node = context.containingDeclaration;
             ClassNode containingClass;
-            if (node instanceof MethodNode) {
+            if (node instanceof ClassNode) {
                 containingClass = (ClassNode) node;
             } else if (node instanceof MethodNode) {
                 containingClass = ((MethodNode) node).getDeclaringClass();

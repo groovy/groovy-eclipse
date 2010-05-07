@@ -16,31 +16,8 @@
 package org.codehaus.groovy.eclipse.launchers;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.ui.ILaunchShortcut;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
-import org.osgi.framework.Bundle;
 
 /**
  * This class is reponsible for creating a launching Groovy script files.  If an 
@@ -57,173 +34,18 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         return getLaunchManager().getLaunchConfigurationType(GROOVY_SCRIPT_LAUNCH_CONFIG_ID) ;
     }
     
-    public IType findClassToRun(IType[] types) {
-        IType returnValue = null;
-        List<IType> candidates = new ArrayList<IType>();
-        for (int i = 0; i < types.length; i++) {
-            if (GroovyProjectFacade.hasRunnableMain(types[i])) {
-                candidates.add(types[i]);
-            }
-        }
-        
-        if (candidates.size() == 1) {
-            returnValue = candidates.get(0);
-        } else {
-            returnValue = LaunchShortcutHelper.chooseClassNode(candidates);
-        }
-        
-        return returnValue;
-    }
     
     @Override
-    protected String applicationOrScript() {
+    protected String applicationOrConsole() {
         return "script";
     }
 
+
     @Override
-    protected Map<String, String> createLaunchProperties(IType runType) {
-        Map<String, String> launchConfigProperties = new HashMap<String, String>();
-        String className = runType.getCompilationUnit().getResource().getFullPath().removeFirstSegments(1).makeRelative().toOSString();
-        launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, 
-                "org.codehaus.groovy.tools.GroovyStarter");
-        IJavaProject javaProject = runType.getJavaProject();
-        launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, 
-                javaProject.getElementName());
-        launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, 
-                "-Dgroovy.starter.conf="+getGroovyConf() + 
-                " -Dgroovy.home="+getGroovyHome()
-                );
-        launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
-                "--classpath " + getClasspath(javaProject) +
-                " --main groovy.ui.GroovyMain \"" +
-                getProjectLocation(runType) + "/" + className + "\"");
-        launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY,
-                getWorkingDirectory(runType));
-     
-        return launchConfigProperties;
+    protected String classToRun() {
+        return "groovy.ui.GroovyMain";
     }
 
+ 
 
-    private String getProjectLocation(IJavaElement elt) {
-        return "${workspace_loc:/" + elt.getJavaProject().getProject().getName() + "}";
-    }
-
-    /**
-     * @return the classpath as a string.  need to include only the source and output folders.
-     * source folders come first since source should be checked before binary for scripts
-     */
-    private String getClasspath(IJavaProject javaProject) {
-        StringBuilder sbSrc = new StringBuilder();
-        StringBuilder sbBin = new StringBuilder();
-        sbSrc.append("\"");
-        List<IJavaProject> dependingProjects = new ArrayList<IJavaProject>();
-        try {
-            IClasspathEntry[] entries = javaProject.getRawClasspath();
-            for (IClasspathEntry entry : entries) {
-                int kind = entry.getEntryKind();
-                switch(kind) {
-                    case IClasspathEntry.CPE_SOURCE:
-                        IPath srcPath = entry.getPath();
-                        sbSrc.append(getProjectLocation(javaProject));
-                        if (srcPath.segmentCount() > 1) {
-                            sbSrc.append(File.separator + srcPath.removeFirstSegments(1).toOSString());
-                        }
-                        sbSrc.append(File.pathSeparator);
-                        
-                        
-                        IPath outPath = entry.getOutputLocation();
-                        if (outPath != null) {
-                            sbBin.append(getProjectLocation(javaProject));
-                            if (outPath.segmentCount() > 1) {
-                                sbBin.append(outPath.removeFirstSegments(1).toOSString());
-                            }
-                            sbBin.append(File.pathSeparator);
-                        }
-                        break;
-                        
-                    case IClasspathEntry.CPE_PROJECT:
-                        dependingProjects.add(javaProject.getJavaModel().getJavaProject(entry.getPath().lastSegment()));
-                        break;
-                }
-            }
-            IPath defaultOutPath = javaProject.getOutputLocation();
-            if (defaultOutPath != null) {
-                sbBin.append(getProjectLocation(javaProject));
-                if (defaultOutPath.segmentCount() > 1) {
-                    sbBin.append(File.separator + defaultOutPath.removeFirstSegments(1).toOSString());
-                }
-            }
-            if (sbBin.length() > 0) {
-                sbSrc.append(sbBin);
-            } else {
-                // remove trailing file separator
-                sbSrc.replace(sbBin.length()-1, sbBin.length(), "");
-            }
-            
-        } catch (JavaModelException e) {
-            GroovyCore.logException("Exception launching groovy script", e);
-        }
-        // recur through dependent projects
-        for (IJavaProject dependingProject : dependingProjects) {
-            if (dependingProject.getProject().isAccessible()) {
-                String dependingProjectStr = getClasspath(dependingProject);
-                // remove opening and trailing close "
-                dependingProjectStr = dependingProjectStr.substring(1, dependingProjectStr.length()-1);
-                sbSrc.append(":").append(dependingProjectStr);
-            }
-        }
-        sbSrc.append("\"");
-        return sbSrc.toString();
-    }
-
-    @SuppressWarnings("unchecked")
-    private String getGroovyConf() {
-        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-        Enumeration<URL> enu = groovyBundle.findEntries("conf", "groovy-starter.conf", false);
-        if (enu != null) {
-            URL jar = enu.nextElement();
-            // remove the "reference:/" protocol
-            try {
-                jar = FileLocator.resolve(jar);
-                return "\"" + jar.getFile() + "\"";
-            } catch (IOException e) {
-                GroovyCore.logException("Error finding groovy-starter.conf", e);
-            }
-        }
-        // should throw an exception here
-        return null;
-    }
-    
-    private String getGroovyHome() {
-        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-        try {
-            return "\"" + 
-            FileLocator.getBundleFile(groovyBundle).toString() + "\"";
-        } catch (IOException e) {
-            GroovyCore.logException("Error finding Groovy Home", e);
-            // should throw an exception here
-            return null;
-        }
-    }
-    
-    private String getWorkingDirectory(IType runType) {
-        String workingDirSetting = GroovyPlugin.getDefault().getPreferenceStore().getString(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY);
-        if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME)) {
-            return getProjectLocation(runType);
-        } else if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME)) {
-            return "${eclipse_home}";
-        } else {
-            try {
-                return runType.getResource().getParent().getLocation().toOSString();
-            } catch (Exception e) {
-                GroovyCore.logException("Exception trying to find the location of " + runType.getElementName(), e);
-                return getProjectLocation(runType);
-            }
-        }
-    }
 }

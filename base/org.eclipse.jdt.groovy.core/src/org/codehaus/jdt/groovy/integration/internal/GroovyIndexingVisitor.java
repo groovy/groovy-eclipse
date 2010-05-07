@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.integration.internal;
 
+import java.util.SortedSet;
+
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -18,6 +20,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -57,7 +60,10 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 	}
 
 	void doVisit(ModuleNode node, ImportReference pkg) {
-
+		if (node == null) {
+			// there is an unrecoverable compile problem.
+			return;
+		}
 		try {
 			this.visitImports(node);
 
@@ -71,24 +77,17 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	public void visitImports(ModuleNode node) {
 		if (node != null) {
-			for (ImportNode importNode : (Iterable<ImportNode>) node.getImports()) {
+			SortedSet<ImportNode> allImports = new ImportNodeCompatibilityWrapper(node).getAllImportNodes();
+
+			for (ImportNode importNode : allImports) {
 				visitAnnotations(importNode);
-				try {
-					importNode.visit(this);
-				} catch (RuntimeException e) {
-					// ImportNode.visit() not implemented in Groovy16
+				if (importNode.getType() != null) {
 					visitClass(importNode.getType());
+					handleType(importNode.getType(), false, true);
 				}
-				handleType(importNode.getType(), false, true);
-			}
-			for (ClassNode staticImportClasses : (Iterable<ClassNode>) node.getStaticImportClasses().values()) {
-				handleType(staticImportClasses, false, true);
-			}
-			for (ClassNode staticImportAliases : (Iterable<ClassNode>) node.getStaticImportAliases().values()) {
-				handleType(staticImportAliases, false, true);
-			}
-			for (String fieldName : (Iterable<String>) node.getStaticImportFields().values()) {
-				requestor.acceptUnknownReference(fieldName.toCharArray(), 0);
+				if (importNode.getFieldName() != null) {
+					requestor.acceptUnknownReference(importNode.getFieldName().toCharArray(), 0);
+				}
 			}
 		}
 	}

@@ -21,13 +21,14 @@ public class RefactoringPreferencePage extends FieldEditorPreferencePage impleme
     @Override
     protected void createFieldEditors() {
         Label refactoringLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
-        refactoringLabel.setText(
-                    "\n\nSome people have been noticing slow downs during Java refactoring when\n" +
-                    "the Groovy plugin is installed.  Uncheck the following to disable joint\n" +
-                    "Java-Groovy refactoring.  Note that this option is a temporary measure\n" +
-                    "while we work on the performance issues and will be removed in future versions.");
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_REFACTORING_ENABLED, 
-                "Enable Groovy refactoring participant for Java refactorings", getFieldEditorParent()));
+        refactoringLabel.setText("Check back later for some exciting improvements in Groovy-Eclipse's refactoring support.");
+//        refactoringLabel.setText(
+//                    "\n\nSome people have been noticing slow downs during Java refactoring when\n" +
+//                    "the Groovy plugin is installed.  Uncheck the following to disable joint\n" +
+//                    "Java-Groovy refactoring.  Note that this option is a temporary measure\n" +
+//                    "while we work on the performance issues and will be removed in future versions.");
+//        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_REFACTORING_ENABLED, 
+//                "Enable Groovy refactoring participant for Java refactorings", getFieldEditorParent()));
     }
 
     /* (non-Javadoc)

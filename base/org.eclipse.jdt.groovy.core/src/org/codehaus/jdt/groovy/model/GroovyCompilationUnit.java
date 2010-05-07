@@ -572,7 +572,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	@Override
 	public void rename(String newName, boolean force, IProgressMonitor monitor) throws JavaModelException {
 		super.rename(newName, force, monitor);
-		// FIXADE 2.0.1M1 we should not have to do this. Somewhere, a working copy is being created and not discarded
+		// FIXADE we should not have to do this. Somewhere, a working copy is being created and not discarded
 		if (this.isWorkingCopy()) {
 			this.discardWorkingCopy();
 		}
