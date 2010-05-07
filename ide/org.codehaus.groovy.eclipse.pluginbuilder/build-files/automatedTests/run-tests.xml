@@ -12,6 +12,7 @@
 <project name="Run automated Tests" default="run" basedir=".">
 
 	<import file="../build_shared.xml" />
+	<import file="../get-dependencies.xml" />
 
 	<target name="-init">
 	<property file="../../build_local.properties" />
@@ -25,12 +26,19 @@
 		<unzip dest="${test.eclipse.base}">
 			<fileset dir="." includes="eclipse-test-framework*.zip" />
 		</unzip>
-		<condition property="buildResultZipDest" value="${test.eclipse.base}" else="${test.eclipse.host}">
-			<equals arg1="${archivePrefix}" arg2="eclipse" />
-		</condition>
-		<unzip dest="${buildResultZipDest}">
-			<fileset dir="${buildDirectory}" includes="${buildType}-**/*.zip" excludes="**/${archiveNamePrefix}-*"/>
-		</unzip>
+		
+		<property name="updateSiteURL" value="file:${buildDirectory}/updateSite"/>
+		<echo message="Update site url = ${updateSiteURL}"/>
+		<!-- Install Groovy Eclipse -->
+		<install-bundle 
+			eclipse.loc="${test.eclipse.base}/eclipse" 
+			updatesite.url="${updateSiteURL}" 
+			feature.id="org.codehaus.groovy.eclipse.feature" />
+		<install-bundle 
+			eclipse.loc="${test.eclipse.base}/eclipse" 
+			updatesite.url="${updateSiteURL}" 
+			feature.id="org.codehaus.groovy.alltests.feature" />
+
 	</target>
 
 	<target name="-runTestSuite">
