@@ -1,0 +1,17 @@
+###prop
+setPreferences=true
+bracesEnd=same
+###src
+while(true) {
+def a = 5 // comment
+}
+while(true) {
+def a = 5
+}
+###exp
+while(true) {
+	def a = 5 // comment
+}
+while(true) {
+	def a = 5 }
+###end

@@ -1,0 +1,12 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+println(
+"hello"
+)
+###exp
+println(
+		"hello"
+		)
+###end

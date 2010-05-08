@@ -1,0 +1,18 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+class Test {
+void test(){
+//中文 works
+def a = 0
+}
+}
+###exp
+class Test {
+	void test(){
+		//中文 works
+		def a = 0
+	}
+}
+###end

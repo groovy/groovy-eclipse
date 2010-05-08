@@ -1,0 +1,9 @@
+###prop
+setPreferences=true
+###src
+4.times {} 
+  a.each { c.append(it) } 
+###exp
+4.times {} 
+a.each { c.append(it) } 
+###end

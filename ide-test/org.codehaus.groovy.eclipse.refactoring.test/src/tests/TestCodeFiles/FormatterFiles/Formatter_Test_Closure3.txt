@@ -1,0 +1,18 @@
+###prop
+setPreferences=true
+###src
+def foo= {	->
+	if(true) { // fragile!
+		println 'foo'
+	}
+}
+foo()
+###exp
+def foo= {
+	->
+	if(true) { // fragile!
+		println 'foo'
+	}
+}
+foo()
+###end
