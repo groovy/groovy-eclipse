@@ -1813,7 +1813,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"\n"+
 			"import java.nio.ByteBuffer;\n"+
 			"\n"+
-			"@SuppressWarnings(\"unchecked\")\n"+
+			"@SuppressWarnings(\"rawtypes\")\n"+
 			"public class StructureBase implements Structure {\n"+
 			"\n"+
 			"	protected final Structure str = null;\n"+
@@ -3379,7 +3379,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"Demo.groovy",
 			"public class Demo {\n"+
 			"\n"+
-			"@SuppressWarnings(\"unchecked\")\n"+ // should cause no warnings
+			"@SuppressWarnings(\"rawtypes\")\n"+ // should cause no warnings
 			"List myList;\n"+
 			"}\n"
 		},"");
@@ -3388,7 +3388,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	public void testHalfFinishedGenericsProgramWithCorrectSuppressionAtTheTypeLevel() {
 		this.runNegativeTest(new String[] {
 			"Demo.groovy",
-			"@SuppressWarnings(\"unchecked\")\n"+ // should cause no warnings
+			"@SuppressWarnings(\"rawtypes\")\n"+ // should cause no warnings
 			"public class Demo {\n"+
 			"\n"+
 			"List myList;\n"+
@@ -3436,7 +3436,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"Demo.groovy",
 			"public class Demo {\n"+
 			"\n"+
-			"@SuppressWarnings([\"unchecked\",\"cast\"])\n"+
+			"@SuppressWarnings([\"rawtypes\",\"cast\"])\n"+
 			"List myList;\n"+
 			"}\n"
 		},"");
@@ -3447,13 +3447,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"Demo.groovy",
 			"public class Demo {\n"+
 			"\n"+
-			"@SuppressWarnings([\"unchecked\",\"cast2\"])\n"+
+			"@SuppressWarnings([\"rawtypes\",\"cast2\"])\n"+
 			"List myList;\n"+
 			"}\n"
 		},"----------\n" + 
 		"1. WARNING in Demo.groovy (at line 3)\n" + 
-		"	@SuppressWarnings([\"unchecked\",\"cast2\"])\n" + 
-		"	                               ^^^^^^^\n" + 
+		"	@SuppressWarnings([\"rawtypes\",\"cast2\"])\n" + 
+		"	                              ^^^^^^^\n" + 
 		"Unsupported @SuppressWarnings(\"cast2\")\n" + 
 		"----------\n");
 	}
@@ -6030,8 +6030,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			},
 			"falsetrue");
 	}
-	
-	
 
 	public void testGroovyPropertyAccessorsGenerics() {
 		this.runConformTest(new String[] {
