@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1886,9 +1886,9 @@ public class DeltaProcessor {
 					// notification we see, implies that all projects are about to be refreshed.
 					 projects = ((IWorkspace) o).getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
 				}
-				for (int i = 0; projects != null && i < projects.length; i++) {
-					JavaModelManager.getExternalManager().refreshReferences(projects[i], null);
-				}
+				//https://bugs.eclipse.org/bugs/show_bug.cgi?id=302295
+				// Refresh all project references together in a single job
+				JavaModelManager.getExternalManager().refreshReferences(projects, null);
 				return;
 
 			case IResourceChangeEvent.POST_CHANGE :
@@ -2336,7 +2336,7 @@ public class DeltaProcessor {
 	}
 
 	/*
-	 * Update the current delta (ie. add/remove/change the given element) and update the correponding index.
+	 * Update the current delta (i.e. add/remove/change the given element) and update the correponding index.
 	 * Returns whether the children of the given delta must be processed.
 	 * @throws a JavaModelException if the delta doesn't correspond to a java element of the given type.
 	 */

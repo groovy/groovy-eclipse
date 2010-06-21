@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -309,7 +309,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 				getSubProgressMonitor(1));
 			setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
 			while (resource instanceof IFolder) {
-				// deleting a package: delete the parent if it is empty (eg. deleting x.y where folder x doesn't have resources but y)
+				// deleting a package: delete the parent if it is empty (e.g. deleting x.y where folder x doesn't have resources but y)
 				// without deleting the package fragment root
 				resource = resource.getParent();
 				if (!resource.equals(rootResource) && resource.members().length == 0) {

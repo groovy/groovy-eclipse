@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeDetector;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionParser;
 import org.eclipse.jdt.internal.codeassist.impl.AssistCompilationUnit;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -717,7 +718,23 @@ public class InternalExtendedCompletionContext {
 
 						if (local.isSecret())
 							continue next;
-
+						// If the local variable declaration's initialization statement itself has the completion,
+						// then don't propose the local variable
+						if (local.declaration.initialization != null) {
+							if(local.declaration.initialization.sourceEnd > 0) {
+									if (this.assistNode.sourceEnd <= local.declaration.initialization.sourceEnd
+											&& this.assistNode.sourceStart >= local.declaration.initialization.sourceStart) {
+										continue next;
+									}
+							} else {
+								CompletionNodeDetector detector = new CompletionNodeDetector(
+										this.assistNode,
+										local.declaration.initialization);
+								if (detector.containsCompletionNode()) {
+									continue next;
+								}
+							}
+						}
 						for (int f = 0; f < localsFound.size; f++) {
 							LocalVariableBinding otherLocal =
 								(LocalVariableBinding) localsFound.elementAt(f);

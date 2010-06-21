@@ -1679,8 +1679,10 @@ public class JavaProject
 					options.put(propertyName, propertyValue.trim());
 				}
 			}
+			Util.fixTaskTags(options);
 			return options;
 		}
+		Util.fixTaskTags(projectOptions);
 		return projectOptions;
 	}
 
@@ -2599,8 +2601,10 @@ public class JavaProject
 						referencedEntriesSet.add(referencedEntries[index]);
 					}
 				}
-				result.referencedEntries = new IClasspathEntry[referencedEntriesSet.size()];
-				referencedEntriesSet.toArray(result.referencedEntries);
+				if (referencedEntriesSet.size() > 0) {
+					result.referencedEntries = new IClasspathEntry[referencedEntriesSet.size()];
+					referencedEntriesSet.toArray(result.referencedEntries);
+				}
 			}
 		}
 		
@@ -2632,6 +2636,8 @@ public class JavaProject
 							ClasspathEntry[] extraEntries = ((ClasspathEntry) resolvedEntry).resolvedChainedLibraries();
 							for (int j = 0, length2 = extraEntries.length; j < length2; j++) {
 								if (!rawLibrariesPath.contains(extraEntries[j].getPath())) {
+									// https://bugs.eclipse.org/bugs/show_bug.cgi?id=305037
+									// referenced entries for variable entries could also be persisted with extra attributes, so addAsChainedEntry = true
 									addToResult(rawEntry, extraEntries[j], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true);
 								}
 							}
@@ -2670,13 +2676,16 @@ public class JavaProject
 						if (cEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
 							// resolve ".." in library path
 							cEntry = cEntry.resolvedDotDot();
-							
-							if (resolveChainedLibraries && result.rawReverseMap.get(cEntry.getPath()) == null) {
+							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=313965
+							// Do not resolve if the system attribute is set to false	
+							if (resolveChainedLibraries
+									&& JavaModelManager.getJavaModelManager().resolveReferencedLibrariesForContainers
+									&& result.rawReverseMap.get(cEntry.getPath()) == null) {
 								// resolve Class-Path: in manifest
 								ClasspathEntry[] extraEntries = cEntry.resolvedChainedLibraries();
 								for (int k = 0, length2 = extraEntries.length; k < length2; k++) {
 									if (!rawLibrariesPath.contains(extraEntries[k].getPath())) {
-										addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true);
+										addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
 									}
 								}
 							}
@@ -2723,14 +2732,11 @@ public class JavaProject
 			resolvedEntries.add(resolvedEntry);
 			if (addAsChainedEntry) {
 				IClasspathEntry chainedEntry = null;
-				if (rawEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
-
-					chainedEntry = (ClasspathEntry) oldChainedEntriesMap.get(resolvedPath);
-					if (chainedEntry != null) {
-						// This is required to keep the attributes if any added by the user in
-						// the previous session such as source attachment path etc.
-						copyFromOldChainedEntry((ClasspathEntry) resolvedEntry, (ClasspathEntry) chainedEntry);
-					}
+				chainedEntry = (ClasspathEntry) oldChainedEntriesMap.get(resolvedPath);
+				if (chainedEntry != null) {
+					// This is required to keep the attributes if any added by the user in
+					// the previous session such as source attachment path etc.
+					copyFromOldChainedEntry((ClasspathEntry) resolvedEntry, (ClasspathEntry) chainedEntry);
 				}
 			}
 		}

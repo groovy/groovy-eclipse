@@ -86,9 +86,9 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 					IJavaElement childElement;
 					if (kind == IPackageFragmentRoot.K_SOURCE && Util.isValidCompilationUnitName(child.getName(), sourceLevel, complianceLevel)) {
 					    // GROOVY start
-	                    // old
-	                    // childElement = new CompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
-	                    // new
+	                    /* old
+						childElement = new CompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
+	                    */// new
 					    childElement = LanguageSupportFactory.newCompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
 	                    // GROOVY end
 						
@@ -151,9 +151,9 @@ public ICompilationUnit createCompilationUnit(String cuName, String contents, bo
 	CreateCompilationUnitOperation op= new CreateCompilationUnitOperation(this, cuName, contents, force);
 	op.runOperation(monitor);
     // GROOVY start
-    // old
-    // return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
-    // new
+    /* old
+	return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+    */// new
     return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
     // GROOVY end
 }

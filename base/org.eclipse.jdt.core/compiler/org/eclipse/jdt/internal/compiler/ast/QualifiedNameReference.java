@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -762,14 +762,19 @@ public TypeBinding getOtherFieldBindings(BlockScope scope) {
 }
 
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
 	//If inlinable field, forget the access emulation, the code gen will directly target it
 	if (((this.bits & ASTNode.DepthMASK) == 0) || (this.constant != Constant.NotAConstant)) {
 		return;
 	}
 	if ((this.bits & ASTNode.RestrictiveFlagMASK) == Binding.LOCAL) {
-		currentScope.emulateOuterAccess((LocalVariableBinding) this.binding);
-	}
+		LocalVariableBinding localVariableBinding = (LocalVariableBinding) this.binding;
+		if (localVariableBinding != null) {
+			switch(localVariableBinding.useFlag) {
+				case LocalVariableBinding.FAKE_USED :
+				case LocalVariableBinding.USED :
+					currentScope.emulateOuterAccess(localVariableBinding);
+			}
+		}
 	}
 }
 
@@ -777,7 +782,7 @@ public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, Fl
  * index is <0 to denote write access emulation
  */
 public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FieldBinding fieldBinding, int index, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0)	return;
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0) return;
 	// index == 0 denotes the first fieldBinding, index > 0 denotes one of the 'otherBindings', index < 0 denotes a write access (to last binding)
 	if (fieldBinding.constant() != Constant.NotAConstant)
 		return;

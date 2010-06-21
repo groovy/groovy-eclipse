@@ -524,7 +524,11 @@ private void reportHierarchy(IType focus, TypeDeclaration focusLocalType, Refere
 	fixSupertypeBindings();
 
 	int objectIndex = -1;
+	IProgressMonitor progressMonitor = this.builder.hierarchy.progressMonitor;
 	for (int current = this.typeIndex; current >= 0; current--) {
+		if (progressMonitor != null && progressMonitor.isCanceled())
+			throw new OperationCanceledException();
+		
 		ReferenceBinding typeBinding = this.typeBindings[current];
 
 		// java.lang.Object treated at the end
@@ -779,13 +783,16 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 			}
 		}
 
-		// complete type bindings (ie. connect super types)
+		// complete type bindings (i.e. connect super types)
 		for (int i = 0; i < unitsIndex; i++) {
 			CompilationUnitDeclaration parsedUnit = parsedUnits[i];
 			if (parsedUnit != null) {
 				try {
-					if (hasLocalType[i]) // NB: no-op if method bodies have been already parsed
+					if (hasLocalType[i]) { // NB: no-op if method bodies have been already parsed
+						if (monitor != null && monitor.isCanceled())
+							throw new OperationCanceledException();
 						parser.getMethodBodies(parsedUnit);
+					}
 				} catch (AbortCompilation e) {
 					// classpath problem for this type: don't try to resolve (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=49809)
 					hasLocalType[i] = false;
@@ -808,6 +815,8 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 			if (parsedUnit != null) {
 				boolean containsLocalType = hasLocalType[i];
 				if (containsLocalType) {
+					if (monitor != null && monitor.isCanceled())
+						throw new OperationCanceledException();
 					parsedUnit.scope.faultInTypes();
 					parsedUnit.resolve();
 				}
@@ -845,7 +854,7 @@ private void setEnvironment(LookupEnvironment lookupEnvironment, HierarchyBuilde
 }
 
 /*
- * Set the focus type (ie. the type that this resolver is computing the hierarch for.
+ * Set the focus type (i.e. the type that this resolver is computing the hierarch for.
  * Returns the binding of this focus type or null if it could not be found.
  */
 public ReferenceBinding setFocusType(char[][] compoundName) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -264,7 +264,7 @@ protected boolean matchesName(char[] pattern, char[] name) {
  * 		<li>{@link #EXACT_FLAVOR}: Given name is equals to pattern</li>
  * 		<li>{@link #PREFIX_FLAVOR}: Given name prefix equals to pattern</li>
  * 		<li>{@link #CAMELCASE_FLAVOR}: Given name matches pattern as Camel Case</li>
- * 		<li>{@link #PATTERN_FLAVOR}: Given name matches pattern as Pattern (ie. using '*' and '?' characters)</li>
+ * 		<li>{@link #PATTERN_FLAVOR}: Given name matches pattern as Pattern (i.e. using '*' and '?' characters)</li>
  * 		</ul>
  * 	</li>
  * </ul>
@@ -426,9 +426,9 @@ protected int referenceType() {
 /**
  * Finds out whether the given ast node matches this search pattern.
  * Returns IMPOSSIBLE_MATCH if it doesn't.
- * Returns INACCURATE_MATCH if it potentially matches this search pattern (ie.
+ * Returns INACCURATE_MATCH if it potentially matches this search pattern (i.e.
  * it has already been resolved but resolving failed.)
- * Returns ACCURATE_MATCH if it matches exactly this search pattern (ie.
+ * Returns ACCURATE_MATCH if it matches exactly this search pattern (i.e.
  * it doesn't need to be resolved or it has already been resolved.)
  */
 public int resolveLevel(ASTNode possibleMatchingNode) {
@@ -702,7 +702,7 @@ public int resolveLevel(Binding binding) {
  * Returns whether the given type binding matches the given simple name pattern
  * and qualification pattern.
  * Note that from since 3.1, this method resolve to accurate member or local types
- * even if they are not fully qualified (ie. X.Member instead of p.X.Member).
+ * even if they are not fully qualified (i.e. X.Member instead of p.X.Member).
  * Returns ACCURATE_MATCH if it does.
  * Returns INACCURATE_MATCH if resolve failed.
  * Returns IMPOSSIBLE_MATCH if it doesn't.
@@ -822,7 +822,7 @@ protected int resolveLevelForType (char[] simpleNamePattern,
 		return level;
 	}
 
-	// Standard types (ie. neither generic nor parameterized nor raw types)
+	// Standard types (i.e. neither generic nor parameterized nor raw types)
 	// cannot match pattern with type parameters or arguments
 	TypeBinding leafType = type.leafComponentType();
 	if (!leafType.isParameterizedType()) {

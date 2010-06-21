@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -65,9 +65,9 @@ public class HandleFactory {
 
 	/**
 	 * Creates an Openable handle from the given resource path.
-	 * The resource path can be a path to a file in the workbench (eg. /Proj/com/ibm/jdt/core/HandleFactory.java)
+	 * The resource path can be a path to a file in the workbench (e.g. /Proj/com/ibm/jdt/core/HandleFactory.java)
 	 * or a path to a file in a jar file - it then contains the path to the jar file and the path to the file in the jar
-	 * (eg. c:/jdk1.2.2/jre/lib/rt.jar|java/lang/Object.class or /Proj/rt.jar|java/lang/Object.class)
+	 * (e.g. c:/jdk1.2.2/jre/lib/rt.jar|java/lang/Object.class or /Proj/rt.jar|java/lang/Object.class)
 	 * NOTE: This assumes that the resource path is the toString() of an IPath,
 	 *       in other words, it uses the IPath.SEPARATOR for file path
 	 *            and it uses '/' for entries in a zip file.

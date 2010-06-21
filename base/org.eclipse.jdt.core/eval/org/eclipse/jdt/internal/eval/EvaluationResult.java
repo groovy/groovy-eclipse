@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.compiler.CategorizedProblem;
  * An EvaluationResult is the result of a code snippet evaluation, a global
  * variable evaluation or it is used to report problems against imports and
  * package declaration.
- * It primarily contains the representation of the resulting value (eg. its
+ * It primarily contains the representation of the resulting value (e.g. its
  * toString() representation). However if the code snippet, a global variable
  * definition, an import or the package declaration could not be compiled, it
  * contains the corresponding compilation problems.
@@ -129,7 +129,7 @@ public Object getValue() {
  * Returns the displayable representation of this result's value.
  * This is obtained by sending toString() to the result object on the target side
  * if it is not a primitive value. If it is a primitive value, the corresponding
- * static toString(...) is used, eg. Integer.toString(int n) if it is an int.
+ * static toString(...) is used, e.g. Integer.toString(int n) if it is an int.
  * Returns null if there is no value.
  */
 public char[] getValueDisplayString() {
@@ -138,7 +138,7 @@ public char[] getValueDisplayString() {
 /**
  * Returns the dot-separated fully qualified name of this result's value type.
  * If the value is a primitive value, returns the toString() representation of its type
- * (eg. "int", "boolean", etc.)
+ * (e.g. "int", "boolean", etc.)
  * Returns null if there is no value.
  */
 public char[] getValueTypeName() {

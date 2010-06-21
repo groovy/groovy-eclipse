@@ -213,9 +213,9 @@ public abstract class WorkingCopyOwner {
 		ExternalJavaProject project = new ExternalJavaProject(classpath);
 		IPackageFragment parent = ((PackageFragmentRoot) project.getPackageFragmentRoot(project.getProject())).getPackageFragment(CharOperation.NO_STRINGS);
         // GROOVY start
-        // old
-        // CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
-        // new
+        /* old
+		CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
+        */// new
 		CompilationUnit result = LanguageSupportFactory.newCompilationUnit((PackageFragment) parent, name, this);
         // GROOVY end
 		result.becomeWorkingCopy(problemRequestor, monitor);
@@ -265,9 +265,9 @@ public abstract class WorkingCopyOwner {
 		ExternalJavaProject project = new ExternalJavaProject(classpath);
 		IPackageFragment parent = ((PackageFragmentRoot) project.getPackageFragmentRoot(project.getProject())).getPackageFragment(CharOperation.NO_STRINGS);
         // GROOVY start
-        // old
-        // CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
-        // new
+        /* old
+		CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
+        */// new
 		CompilationUnit result = LanguageSupportFactory.newCompilationUnit((PackageFragment) parent, name, this);
         // GROOVY end
 		

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,7 @@ public class InstanceOfExpression extends OperatorExpression {
 public InstanceOfExpression(Expression expression, TypeReference type) {
 	this.expression = expression;
 	this.type = type;
+	type.bits |= IgnoreRawTypeCheck; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=282141
 	this.bits |= INSTANCEOF << OperatorSHIFT;
 	this.sourceStart = expression.sourceStart;
 	this.sourceEnd = type.sourceEnd;
@@ -32,12 +33,12 @@ public InstanceOfExpression(Expression expression, TypeReference type) {
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	LocalVariableBinding local = this.expression.localVariableBinding();
 	if (local != null && (local.type.tagBits & TagBits.IsBaseType) == 0) {
-		flowContext.recordUsingNullReference(currentScope, local,
-			this.expression, FlowContext.CAN_ONLY_NULL | FlowContext.IN_INSTANCEOF, flowInfo);
 		flowInfo = this.expression.analyseCode(currentScope, flowContext, flowInfo).
 			unconditionalInits();
 		FlowInfo initsWhenTrue = flowInfo.copy();
 		initsWhenTrue.markAsComparedEqualToNonNull(local);
+		flowContext.recordUsingNullReference(currentScope, local,
+				this.expression, FlowContext.CAN_ONLY_NULL | FlowContext.IN_INSTANCEOF, flowInfo);
 		// no impact upon enclosing try context
 		return FlowInfo.conditional(initsWhenTrue, flowInfo.copy());
 	}

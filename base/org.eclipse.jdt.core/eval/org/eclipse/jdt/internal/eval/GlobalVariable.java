@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,7 @@ public GlobalVariable(char[] typeName, char[] name, char[] initializer) {
 }
 /**
  * Returns the initializer of this global variable. The initializer is a
- * variable initializer (ie. an expression or an array initializer) as defined
+ * variable initializer (i.e. an expression or an array initializer) as defined
  * in the Java Language Specifications.
  */
 public char[] getInitializer() {
@@ -45,7 +45,7 @@ public char[] getName() {
 }
 /**
  * Returns the dot separated fully qualified name of the type of this global variable,
- * or its simple representation if it is a primitive type (eg. int, boolean, etc.)
+ * or its simple representation if it is a primitive type (e.g. int, boolean, etc.)
  */
 public char[] getTypeName() {
 	return this.typeName;

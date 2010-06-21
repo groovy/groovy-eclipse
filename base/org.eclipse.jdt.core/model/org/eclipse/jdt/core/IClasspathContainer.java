@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,6 +27,10 @@ import org.eclipse.core.runtime.IPath;
  * <li> project entries (<code>CPE_PROJECT</code>) </li>
  * </ul>
  * In particular, a classpath container can neither reference further classpath containers or classpath variables.
+ * <p> 
+ * A library entry can reference other libraries through the Class-Path section of the JAR's MANIFEST.MF file. If the
+ * container wants such referenced entries to be part of the classpath, the container must explicitly add them to the
+ * array returned from {@link #getClasspathEntries()}.
  * <p>
  * Classpath container values are persisted locally to the workspace, but are not preserved from a
  * session to another. It is thus highly recommended to register a <code>ClasspathContainerInitializer</code>
@@ -63,7 +67,10 @@ public interface IClasspathContainer {
 	 * </ul>
 	 * A classpath container can neither reference further classpath containers
 	 * or classpath variables.
-	 * </p>
+	 * <p>
+	 * A library entry can reference other libraries through the Class-Path section of the JAR's MANIFEST.MF file. If
+	 * the container wants such referenced entries to be part of the classpath, the container must explicitly add them
+	 * to the result.
 	 * <p>
 	 * This method is called by the Java model when it needs to resolve this
 	 * classpath container entry into a list of library and project entries.
@@ -80,6 +87,7 @@ public interface IClasspathContainer {
 	 * <li>{@link JavaCore#newProjectEntry(IPath, boolean)} and variants</li>
 	 * <li>{@link JavaCore#create(org.eclipse.core.resources.IWorkspaceRoot)}</li>
 	 * <li>{@link JavaCore#create(org.eclipse.core.resources.IProject)}</li>
+	 * <li>{@link JavaCore#getReferencedClasspathEntries(IClasspathEntry, IJavaProject)} with <code>null</code> as project</li>
 	 * <li>{@link IJavaModel#getJavaProjects()}</li>
 	 * <li>{@link IJavaProject#getRawClasspath()}</li>
 	 * <li>{@link IJavaProject#readRawClasspath()}</li>

@@ -40,6 +40,445 @@
 	</td>
   </tr>
 </table>
+<a name="v_A58"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6 - June 3, 2010 - 3.6.0
+<br>Project org.eclipse.jdt.core v_A58
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A58">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=315568">315568</a>
+improve Javadoc of SearchPattern#createPattern(String, int, int, int)
+
+<a name="v_A57"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC4 - June 3, 2010 - 3.6.0 RC4
+<br>Project org.eclipse.jdt.core v_A57
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A57">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Use default disabling/enabling tags in the samples of the Javadoc comments
+of the formatter constants <code>FORMATTER_DISABLING_TAG</code> and
+<code>FORMATTER_ENABLING_TAG</code>.</li>
+<li>Fixed minor javadoc issues of <code>createStrictHierarchyScope()</code>.</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=314709">314709</a>
+Clarify -encoding &lt;encoding name&gt; in jdt_api_compile.htm
+
+<a name="v_A56"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC3 - May 27, 2010 - 3.6.0 RC3
+<br>Project org.eclipse.jdt.core v_A56
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A56">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=313890">313890</a>
+Migration guide to 3.6 for containers with MANIFEST-referred entries
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=313965">313965</a>
+Breaking change in classpath container API
+
+<a name="v_A55"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC3 - May 25, 2010
+<br>Project org.eclipse.jdt.core v_A55
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A55">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=313706">313706</a>
+Replace ie. with i.e. in jdt.core documentation
+
+<a name="v_A54"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC2 - May 20, 2010 - 3.6.0 RC2
+<br>Project org.eclipse.jdt.core v_A54
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A54">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>
+Added a new preference to force the formatter to try to keep nested expressions on one line.
+<p>
+This new preference is controlled with the option:</p>
+<code>DefaultCodeFormatterConstants.FORMATTER_WRAP_OUTER_EXPRESSIONS_WHEN_NESTED</code>
+<pre>
+/**
+ * FORMATTER / Option to wrap outer expressions in nested expressions
+ *     - option id:         "org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested"
+ *     - possible values:   { TRUE, FALSE }
+ *     - default:           TRUE
+ *
+ * This option changes the formatter behavior when nested method calls are encountered.
+ * Since 3.6, the formatter tries to wrap outermost method calls first to have a better output.
+ * For example, let's say we are using the Eclipse built-in profile with a max line width=40+space for tab policy.
+ * Then consider the following snippet:
+ *
+ * public class X01 {
+ *     void test() {
+ *         foo(bar(1, 2, 3, 4), bar(5, 6, 7, 8));
+ *     }
+ * }
+ *
+ * With this new strategy, the formatter will wrap the line earlier, between the arguments of the message call
+ * for this example, and then it will allow to keep each nested call on a single line.
+ * Hence, the output will be:
+ *
+ * public class X01 {
+ *     void test() {
+ *         foo(bar(1, 2, 3, 4),
+ *             bar(5, 6, 7, 8));
+ *     }
+ * }
+ *
+ * Important notes:
+ * 1. This new behavior is automatically activated (i.e. the default value for this preference is {@link #TRUE}).
+ *    If the backward compatibility regarding previous versions' formatter behavior (i.e. before 3.6 version) is necessary,
+ *    then the preference needs to be set to {@link #FALSE} to retrieve the previous formatter behavior.
+ * 2. The new strategy currently only applies to nested method calls, but might be extended to other nested expressions in future versions
+ * 
+ * @see #TRUE
+ * @see #FALSE
+ * @since 3.6
+ */
+</pre>
+See bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=313524">313524</a> for more details.
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=313524">313524</a>
+[formatter] Add preference for improved lines wrapping in nested method calls
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=313109">313109</a>
+@SuppressWarnings on multiple locals is marked unnecessary if any local is never used
+
+<a name="v_A53"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC1 - May 12, 2010 - 3.6.0 RC1
+<br>Project org.eclipse.jdt.core v_A53
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A53">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=312326">312326</a>
+IllegalArgumentException using open type dialog
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=310159">310159</a>
+Hang in JavaModel.getExternalTarget(JavaModel.java:333)
+
+<a name="v_A52"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC1 - May 11, 2010
+<br>Project org.eclipse.jdt.core v_A52
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A52">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=157847">157847</a>
+NPE in WildcardBinding.computeUniqueKey during code assist
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=311849">311849</a>
+[quick fix] @SuppressWarnings does not work as expected inside a for loop
+
+<a name="v_A51"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC1 - May 8, 2010
+<br>Project org.eclipse.jdt.core v_A51
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A51">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306170">306170</a>
+[perfs] Regression for FullSourceWorkspaceTypeHierarchyTests#testPerfAllTypes()
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=298844">298844</a>
+[formatter] New lines in empty method body wrong behavior
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=311864">311864</a>
+[formatter] NPE with empty {@code }
+
+<a name="v_A50"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC1 - May 6, 2010
+<br>Project org.eclipse.jdt.core v_A50
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A50">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>
+Added a new preference to switch on/off the usage of the disabling/enabling tags of the formatter.
+<p>
+This new preference is controlled with the option:</p>
+<code>DefaultCodeFormatterConstants.FORMATTER_USE_ON_OFF_TAGS</code>
+<pre>
+/**
+ * FORMATTER / Option to use the disabling and enabling tags defined respectively by the {@link #FORMATTER_DISABLING_TAG} and the {@link #FORMATTER_ENABLING_TAG} options.
+ *     - option id:         "org.eclipse.jdt.core.formatter.use_on_off_tags"
+ *     - possible values:   TRUE / FALSE
+ *     - default:           FALSE
+ * 
+ * @since 3.6
+ */
+</pre>
+See bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=311582">311582</a> for more details.
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=311617">311617</a>
+[formatter] provide default tags to enable/disable formatter
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=311582">311582</a>
+[formatter] Master switch to enable/disable on/off tags
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=307040">307040</a>
+Search Job with HierarchyScope on Object does not cancel
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=302295">302295</a>
+After associating source folder with rt.jar project refresh takes exceedingly long time.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=311048">311048</a>
+AbortCompilation propagated from CompilationUnitProblemFinder.process()
+
+<a name="v_A49"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6RC1 - May 4, 2010
+<br>Project org.eclipse.jdt.core v_A49
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A49">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=310811">310811</a>
+[perfs] Big regression on FullSourceWorkspaceFormatterTests#testFormatDefaultBigFile()
+
+<a name="v_A48"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - April 25, 2010 - 3.6.0 M7
+<br>Project org.eclipse.jdt.core v_A48
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A48">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=310330">310330</a>
+Add multiple encoding support for the batch compiler
+
+<a name="v_A47"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - April 25, 2010
+<br>Project org.eclipse.jdt.core v_A47
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A47">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=309835">309835</a>
+[formatter] adds blank lines on each run
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=310213">310213</a>
+AIOOBE in IndexSelector.initializeIndexLocations()
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=309966">309966</a>
+IType#getKey() does not work for unresolved local ITypes
+
+<a name="v_A46"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - April 23, 2010
+<br>Project org.eclipse.jdt.core v_A46
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A46">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=59891">59891</a>
+[formatter] improve lines wrapping in nested method calls
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306172">306172</a>
+[perfs] Invalid test duration for FullSourceWorkspaceTypeHierarchyTests#testPerSuperTypes()
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=267091">267091</a>
+[content assist] After 'implements' interface members are not proposed
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=261534">261534</a>
+content assist after instanceof should also work after &amp;&amp;
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308980">308980</a>
+[content assist]An initializer inside a non-array field declaration confuses content assist
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=310002">310002</a>
+ToolFactory.createScanner(..) should use workspace compliance
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=291528">291528</a>
+Synchronize project warning/error settings to build.properties
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=309787">309787</a>
+Extension point &quot;org.eclipse.jdt.core.codeFormatter&quot; is ignored
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=244820">244820</a>
+Content assist after 'instanceof' should also work in assignment
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=309706">309706</a>
+[formatter] doesn't work when code has three semicolons side by side
+
+<a name="v_A45"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - April 20, 2010
+<br>Project org.eclipse.jdt.core v_A45
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A45">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305037">305037</a>
+missing story for attributes of referenced JARs in classpath containers
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305116">305116</a>
+[index] Improve performance of indexes results tables
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=236306">236306</a>
+[content assist] for method invocation in variable initializer should not guess variable
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=302865">302865</a>
+Issue with &quot;import&quot; a class and &quot;import static&quot; a method with the same name
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=309022">309022</a>
+[ImportRewrite] Add Import wrongly removes import for nested type
+
+<a name="v_A44"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - April 13, 2010
+<br>Project org.eclipse.jdt.core v_A44
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A44">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308754">308754</a>
+CompilationUnit.rewrite messes up .class-literal in annotation instead of changing class to interface
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306519">306519</a>
+JavaCore#getReferencedClasspathEntries(IClasspathEntry, IJavaProject) should allow null project
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308428">308428</a>
+Possible problem to get corrections with surrogate characters
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=307295">307295</a>
+Task tags and task priorities
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308476">308476</a>
+Test ClasspathTests#testBug308150 fails on all platforms
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305043">305043</a>
+Internal error during classpath init
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=307486">307486</a>
+DBCS3.6: Fail to propose Ext-B labels with content assist in Java Editor
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308256">308256</a>
+DiagnosticListener always supplies Diagnostic.getSource()==null
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308356">308356</a>
+codeSelect(..) doesn't work for local variable with surrogate in name
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308245">308245</a>
+Valid code fails to compile in 3.6
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=307885">307885</a>
+Error message for instanceof &lt;parameterized type&gt; wrong arguments
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=249704">249704</a>
+[code assist] autocomplete with anonymous classes does stop working
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308150">308150</a>
+JAR with invalid Class-Path entry in MANIFEST.MF crashes the project
+
+<a name="v_A43"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - April 6, 2010
+<br>Project org.eclipse.jdt.core v_A43
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A43">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306223">306223</a>
+[search] Searching for annotation references report all type references
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=292087">292087</a>
+anonymous class in array member initializer confuses content assist
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=307337">307337</a>
+[content assist] Default constructor should not be proposed for anonymous types
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306568">306568</a>
+[ImportRewrite] Add Import does not work for nested type when package is on-demand imported
+
+<a name="v_A42"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - March 30, 2010
+<br>Project org.eclipse.jdt.core v_A42
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A42">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=202634">202634</a>
+[codeassist] missing super proposal in specific source
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=304394">304394</a>
+IJavaElement#getAttachedJavadoc(IProgressMonitor) should support referenced entries
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305122">305122</a>
+FUP of 302949
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306917">306917</a>
+Exception occurred during compilation unit conversion:
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306196">306196</a>
+[search] NPE while searching for annotation references in rt.jar of JRE 6.0
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=288658">288658</a>
+[compiler][1.5] Annotations visibility issues
+
+<a name="v_A41"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - March 23, 2010
+<br>Project org.eclipse.jdt.core v_A41
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A41">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305518">305518</a>
+[formatter] Line inside &lt;pre&gt; tag is wrongly indented by one space when starting just after the star
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=295825">295825</a>
+[formatter] Commentaries are running away after formatting are used
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306477">306477</a>
+Indexer(?) fails to recognise enum as a type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305830">305830</a>
+[formatter] block comment should not be formatted when a non-nls tag is on the same line
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=300031">300031</a>
+The deprecation warning for a type should not include the package name
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306078">306078</a>
+Navigate to Inaccessible Field
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=209479">209479</a>
+infinite loop in BindingKey when signatures are invalid
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=293558">293558</a>
+[quick assist] &quot;Invert if statement&quot; fails when comment follows
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=182459">182459</a>
+[compiler] Inconsistent error range for unresolved field
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=192233">192233</a>
+[AST] CompilationUnit.rewrite() removes whitespace between return type and method name
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=306073">306073</a>
+ASTRewrite Javadoc wrongly talks about getTargetSourceRangeComputer
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305001">305001</a>
+Exception occurred in listener of Java element change notification
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305590">305590</a>
+Redundant null check false-positive
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305755">305755</a>
+Remove deprecated API that has been added for 3.6
+
+<a name="v_A40"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.6M7 - March 16, 2010
+<br>Project org.eclipse.jdt.core v_A40
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A40">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305371">305371</a>
+[formatter] Unexpected indentation of line comment
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=305281">305281</a>
+[formatter] Turning off formatting changes comment's formatting
+
 <a name="v_A39"></a>
 <hr><h1>
 Eclipse Platform Build Notes<br>
@@ -137,18 +576,18 @@ These new preferences are controlled with the options:</p>
  *    For example, in the following snippet, the formatter will be disabled after
  *    the comment:
  *     class X {
- *     &#47;&#42;
- *     &nbsp;&#42; This is a comment with a mix of disabling and enabling tags:
- *     &nbsp;&#42;  - <b>disable-formatter</b>
- *     &nbsp;&#42;  - <b>enable-formatter</b>
- *     &nbsp;&#42;  - <b>disable-formatter</b>
- *     &nbsp;&#42; The formatter will stop to format from the beginning of this comment...
- *     &nbsp;&#42;&#47;
+ *     /*
+ *     &nbsp;* This is a comment with a mix of disabling and enabling tags:
+ *     &nbsp;*  - <b>disable-formatter</b>
+ *     &nbsp;*  - <b>enable-formatter</b>
+ *     &nbsp;*  - <b>disable-formatter</b>
+ *     &nbsp;* The formatter will stop to format from the beginning of this comment...
+ *     &nbsp;*/
  *     void foo() {}
  *     void bar() {}
  *     }
  * 
- * 6. The tag cannot include newline character (i.e. &#39;&#92;n&#39;) but it can have white spaces.
+ * 6. The tag cannot include newline character (i.e. '\n') but it can have white spaces.
  *    E.g. "<b>format: off</b>" is a valid disabling tag
  *    In the future, newlines may be used to support multiple disabling tags.
  * 
@@ -211,18 +650,18 @@ These new preferences are controlled with the options:</p>
  *    the comment:
  *     // disable-formatter
  *     class X {
- *     &#47;&#42;
- *     &nbsp;&#42; This is a comment with a mix of disabling and enabling tags:
- *     &nbsp;&#42;  - <b>enable-formatter</b>
- *     &nbsp;&#42;  - <b>disable-formatter</b>
- *     &nbsp;&#42;  - <b>enable-formatter</b>
- *     &nbsp;&#42; The formatter will restart to format after this comment...
- *     &nbsp;&#42;&#47;
+ *     /*
+ *     &nbsp;* This is a comment with a mix of disabling and enabling tags:
+ *     &nbsp;*  - <b>enable-formatter</b>
+ *     &nbsp;*  - <b>disable-formatter</b>
+ *     &nbsp;*  - <b>enable-formatter</b>
+ *     &nbsp;* The formatter will restart to format after this comment...
+ *     &nbsp;*/
  *     void foo() {}
  *     void bar() {}
  *     }
  * 
- * 5. The tag cannot include newline character (i.e. &#39;&#92;n&#39;) but it can have white spaces.
+ * 5. The tag cannot include newline character (i.e. '\n') but it can have white spaces.
  *    E.g. "<b>format: on</b>" is a valid enabling tag
  *    In the future, newlines may be used to support multiple enabling tags.
  * 
@@ -349,6 +788,7 @@ See bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=284789">284789</a
 </li>
 <li>New API to fix bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=246594">246594</a>. See the bug for details.
 <pre>
+org.eclipse.jdt.core.ITypeParameter
 	/**
 	 * Returns the signatures for this type parameter's bounds. The type parameter may have 
 	 * been declared as part of a type or a method. The signatures represent only the individual 
@@ -559,7 +999,7 @@ Eclipse SDK 3.6M6 - February 23, 2010
 <h2>What's new in this drop</h2>
 <ul>
 <li>
-Added a new formatter preferences to align annotation arguments (ie. element-value pairs).
+Added a new formatter preferences to align annotation arguments (i.e. element-value pairs).
 <p>
 This new preference is controlled with the option:</p>
 <code>DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_ARGUMENTS_IN_ANNOTATION</code>
@@ -591,9 +1031,10 @@ public class Test {
 </pre>
 See bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=282030">282030</a> for more details.
 </li>
-<li>In order to get bindings outside of the Eclipse environment, the following method has been added on the ASTParser class.
+<li>In order to get bindings outside the Eclipse environment, the following methods has been added on the ASTParser class.
 <br>See bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=206391">206391</a> for details.<br>
 <pre>
+org.eclipse.jdt.core.dom.ASTParser
 	/**
 	 * Set the environment that can be used when no IJavaProject are available.
 	 * 
@@ -616,6 +1057,67 @@ See bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=282030">282030</a
 	 * @since 3.6
 	 */
 	public void setEnvironment(String[] classpathEntries, String[] sourcepathEntries, String[] encodings, boolean includeRunningVMBootclasspath);
+	
+	/**
+	 * Creates ASTs for a batch of compilation units. When bindings are being resolved, processing a
+	 * batch of compilation units is more efficient because much of the work involved in resolving 
+	 * bindings can be shared. 
+	 *
+	 * When bindings are being resolved, all compilation units are resolved 
+	 * using the same environment, which must be set beforehand with 
+	 * {@link #setEnvironment(String[], String[], String[], boolean) setEnvironment}.
+	 * The compilation units are processed one at a time in no specified order. 
+	 * For each of the compilation units in turn,
+	 *  - {@link ASTParser#createAST(IProgressMonitor) ASTParser.createAST} is called to parse it 
+	 *           and create a corresponding AST. The calls to {@link ASTParser#createAST(IProgressMonitor) ASTParser.createAST} 
+	 *           all employ the same settings.</li>
+	 *  - {@link FileASTRequestor#acceptAST(String, CompilationUnit) FileASTRequestor.acceptAST} is called passing
+	 *           the compilation unit path and the corresponding AST to <code>requestor</code>. The compilation unit path is the same
+	 *           path that is passed into the given <code>sourceFilePaths</code> parameter.
+	 *
+	 * Note only ASTs from the given compilation units are reported
+	 * to the requestor. If additional compilation units are required to
+	 * resolve the original ones, the corresponding ASTs are <b>not</b>
+	 * reported to the requestor.
+	 * 
+	 * Note also the following parser parameters are used, regardless of what
+	 * may have been specified:
+	 *  - The {@linkplain #setKind(int) parser kind} is <code>K_COMPILATION_UNIT</code>
+	 *  - The {@linkplain #setSourceRange(int,int) source range} is <code>(0, -1)</code>
+	 *  - The {@linkplain #setFocalPosition(int) focal position} is not set
+	 *
+	 * The <code>bindingKeys</code> parameter specifies bindings keys
+	 * ({@link IBinding#getKey()}) that are to be looked up. These keys may
+	 * be for elements either inside or outside the set of compilation
+	 * units being processed. When bindings are being resolved,
+	 * the keys and corresponding bindings (or <code>null</code> if none) are
+	 * passed to {@link FileASTRequestor#acceptBinding(String, IBinding) FileASTRequestor.acceptBinding}. Note that binding keys
+	 * for elements outside the set of compilation units being processed are looked up
+	 * after all {@link FileASTRequestor#acceptAST(String, CompilationUnit) ASTRequestor.acceptAST}
+	 * callbacks have been made.
+	 * Binding keys for elements inside the set of compilation units being processed
+	 * are looked up and reported right after the corresponding
+	 * {@link FileASTRequestor#acceptAST(String, CompilationUnit) FileASTRequestor.acceptAST} callback has been made.
+	 * No {@link FileASTRequestor#acceptBinding(String, IBinding) FileASTRequestor.acceptBinding} callbacks are made unless
+	 * bindings are being resolved.
+	 *
+	 * A successful call to this method returns all settings to their
+	 * default values so the object is ready to be reused.
+	 * 
+	 * The given <code>encodings</code> are used to properly parse the given source units. If the platform encoding is sufficient,
+	 * then the given encodings can be set to <code>null</code>.
+	 *
+	 * @param sourceFilePaths the compilation units to create ASTs for
+	 * @param encodings the given encoding for the source units
+	 * @param bindingKeys the binding keys to create bindings for
+	 * @param requestor the AST requestor that collects abstract syntax trees and bindings
+	 * @param monitor the progress monitor used to report progress and request cancellation,
+	 *   or <code>null</code> if none
+	 * @exception IllegalStateException if the settings provided
+	 * are insufficient, contradictory, or otherwise unsupported
+	 * @since 3.6
+	 */
+	 public void createASTs(String[] sourceFilePaths, String[] encodings, String[] bindingKeys, FileASTRequestor requestor, IProgressMonitor monitor)
 </pre>
 </li>
 <li>
@@ -647,7 +1149,7 @@ These new preferences are controlled respectively with the options:</p>
  * @since 3.6
  */
  </pre>
-<p>For example, when both of these options are used, the following snippet:</p>
+<p>For example, the following snippet:</p>
 <pre>
 public class X {
 	/*
@@ -664,7 +1166,7 @@ public class X {
 	}
 }
 </pre>
-formatted with this preference activated, will produce the following output:
+formatted with both the options set to FALSE, will produce the following output:
 <pre>
 public class X {
 	/* This block comment after formatting will no longer use a new line at the
@@ -735,7 +1237,7 @@ See bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=150741">150741</a
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=270209">270209</a>
 [format] Condensed block comment formatting
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=236406">236406</a>
-[formatter] The comments flags should work for all kind of snippet
+[formatter] The comments flags should work for all kinds of snippet
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=294360">294360</a>
 Duplicate entries in Classpath Resolution when importing dependencies from parent project
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=206391">206391</a>
@@ -1291,33 +1793,6 @@ Eclipse SDK 3.6M3 - October 25, 2009
 <br>Project org.eclipse.jdt.core v_A16
 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_A16">cvs</a>).
 <h2>What's new in this drop</h2>
-<ul>
-<li>New API added in <code>org.eclipse.jdt.core.JavaCore</code> in order to fix bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=263564">263564</a>:
-<pre>
-	/**
-	 * Returns an immutable map of all known configurable options with their original default values
-	 * as defined by JDT/Core.
-	 * 
-	 * The values of these options might be different from the values returned by getDefaultOptions()
-	 * as getDefaultOptions() returned the default options defined by an installation/product/configuration
-	 * (i.e. modified by the usage of a plugin_customization.ini file for example).
-	 * 
-	 * These options allow to configure the behaviour of the underlying components.
-	 * If the map is being modified, an UnsupportedOperationException> exception is thrown.
-	 * Helper constants have been defined on JavaCore for each of the option IDs
-	 * (categorized in Code assist option ID, Compiler option ID and Core option ID)
-	 * and some of their acceptable values (categorized in Option value). Some
-	 * options accept open value sets beyond the documented constant values.
-	 * Note: each release may add new options.
-	 *
-	 * @return an immutable map of all known configurable options with their original default values
-	 * as defined by JDT/Core
-	 * @since 3.6
-	 */
-	public static Map getOriginalDefaultOptions();
-</pre>
-</li>
-</ul>
 
 <h3>Problem Reports Fixed</h3>
 <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=293240">293240</a>

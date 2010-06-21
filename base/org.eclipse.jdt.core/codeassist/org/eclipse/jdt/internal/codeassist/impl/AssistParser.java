@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,7 +33,9 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 public abstract class AssistParser extends Parser {
 	public ASTNode assistNode;
 	public boolean isOrphanCompletionNode;
-
+	// last modifiers info
+	protected int lastModifiers = ClassFileConstants.AccDefault;
+	protected int lastModifiersStart = -1;
 	/* recovery */
 	int[] blockStarts = new int[30];
 
@@ -357,7 +359,7 @@ protected void consumeExplicitConstructorInvocation(int flag, int recFlag) {
 }
 protected void consumeForceNoDiet() {
 	super.consumeForceNoDiet();
-	// if we are not in a method (ie. we are not in a local variable initializer)
+	// if we are not in a method (i.e. we are not in a local variable initializer)
 	// then we are entering a field initializer
 	if (!isInsideMethod()) {
 		if(topKnownElementKind(ASSIST_PARSER) != K_ENUM_CONSTANT_DELIMITER) {
@@ -578,7 +580,7 @@ protected void consumePackageDeclarationNameWithModifiers() {
 }
 protected void consumeRestoreDiet() {
 	super.consumeRestoreDiet();
-	// if we are not in a method (ie. we were not in a local variable initializer)
+	// if we are not in a method (i.e. we were not in a local variable initializer)
 	// then we are exiting a field initializer
 	if (!isInsideMethod()) {
 		popElement(K_FIELD_INITIALIZER_DELIMITER);
@@ -763,13 +765,13 @@ protected void consumeToken(int token) {
 					case TokenNameIdentifier:
 						this.pushOnElementStack(K_SELECTOR, this.identifierPtr);
 						break;
-					case TokenNamethis: // explicit constructor invocation, eg. this(1, 2)
+					case TokenNamethis: // explicit constructor invocation, e.g. this(1, 2)
 						this.pushOnElementStack(K_SELECTOR, THIS_CONSTRUCTOR);
 						break;
-					case TokenNamesuper: // explicit constructor invocation, eg. super(1, 2)
+					case TokenNamesuper: // explicit constructor invocation, e.g. super(1, 2)
 						this.pushOnElementStack(K_SELECTOR, SUPER_CONSTRUCTOR);
 						break;
-					case TokenNameGREATER: // explicit constructor invocation, eg. Fred<X>[(]1, 2)
+					case TokenNameGREATER: // explicit constructor invocation, e.g. Fred<X>[(]1, 2)
 					case TokenNameRIGHT_SHIFT: // or fred<X<X>>[(]1, 2)
 					case TokenNameUNSIGNED_RIGHT_SHIFT: //or Fred<X<X<X>>>[(]1, 2)
 						if(this.identifierPtr > -1) {
@@ -1118,10 +1120,10 @@ protected int indexOfAssistIdentifier(){
 	return this.indexOfAssistIdentifier(false);
 }
 /*
- * Iterate the most recent group of awaiting identifiers (grouped for qualified name reference (eg. aa.bb.cc)
+ * Iterate the most recent group of awaiting identifiers (grouped for qualified name reference (e.g. aa.bb.cc)
  * so as to check whether one of them is the assist identifier.
  * If so, then answer the index of the assist identifier (0 being the first identifier of the set).
- *	eg. aa(0).bb(1).cc(2)
+ *	e.g. aa(0).bb(1).cc(2)
  * If no assist identifier was found, answers -1.
  */
 protected int indexOfAssistIdentifier(boolean useGenericsStack){
@@ -1269,7 +1271,11 @@ public void parseBlockStatements(ConstructorDeclaration cd, CompilationUnitDecla
 	//convert bugs into parse error
 
 	initialize();
-
+	// set the lastModifiers to reflect the modifiers of the constructor whose
+	// block statements are being parsed
+	// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=202634
+	this.lastModifiers = cd.modifiers;
+	this.lastModifiersStart = cd.modifiersSourceStart;
 	// simulate goForConstructorBody except that we don't want to balance brackets because they are not going to be balanced
 	goForBlockStatementsopt();
 
@@ -1335,7 +1341,11 @@ public void parseBlockStatements(
 	CompilationUnitDeclaration unit) {
 
 	initialize();
-
+	// set the lastModifiers to reflect the modifiers of the initializer whose
+	// block statements are being parsed
+	// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=202634
+	this.lastModifiers = initializer.modifiers;
+	this.lastModifiersStart = initializer.modifiersSourceStart;
 	// simulate goForInitializer except that we don't want to balance brackets because they are not going to be balanced
 	goForBlockStatementsopt();
 
@@ -1392,7 +1402,11 @@ public void parseBlockStatements(MethodDeclaration md, CompilationUnitDeclaratio
 		return;
 
 	initialize();
-
+	// set the lastModifiers to reflect the modifiers of the method whose
+	// block statements are being parsed
+	// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=202634
+	this.lastModifiers = md.modifiers;
+	this.lastModifiersStart = md.modifiersSourceStart;
 	// simulate goForMethodBody except that we don't want to balance brackets because they are not going to be balanced
 	goForBlockStatementsopt();
 

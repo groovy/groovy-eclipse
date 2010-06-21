@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,7 @@ public class TypeParameterLocator extends PatternLocator {
 
 	/*
 	 * Verify whether a type reference matches name pattern.
-	 * Type parameter references (ie. type arguments) are compiler type reference nodes
+	 * Type parameter references (i.e. type arguments) are compiler type reference nodes
 	 */
 	public int match(TypeReference node, MatchingNodeSet nodeSet) {
 		if (this.pattern.findReferences) {

@@ -18,6 +18,7 @@ import java.util.Iterator;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.*;
@@ -259,13 +260,16 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 	 * @see IJavaSearchScope#encloses(String)
 	 */
 	public boolean encloses(String resourcePath) {
+		return encloses(resourcePath, null);
+	}
+	public boolean encloses(String resourcePath, IProgressMonitor progressMonitor) {
 		if (this.hierarchy == null) {
 			if (resourcePath.equals(this.focusPath)) {
 				return true;
 			} else {
 				if (this.needsRefresh) {
 					try {
-						initialize();
+						initialize(progressMonitor);
 					} catch (JavaModelException e) {
 						return false;
 					}
@@ -278,7 +282,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 		}
 		if (this.needsRefresh) {
 			try {
-				refresh();
+				refresh(progressMonitor);
 			} catch(JavaModelException e) {
 				return false;
 			}
@@ -305,19 +309,22 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 	public boolean enclosesFineGrained(IJavaElement element) {
 		if ((this.subTypes == null) && this.allowMemberAndEnclosingTypes) 
 			return true; // no fine grained checking requested
-		return encloses(element);
+		return encloses(element, null);
 	}
 	/* (non-Javadoc)
 	 * @see IJavaSearchScope#encloses(IJavaElement)
 	 */
 	public boolean encloses(IJavaElement element) {
+		return encloses(element, null);
+	}
+	public boolean encloses(IJavaElement element, IProgressMonitor progressMonitor) {
 		if (this.hierarchy == null) {
 			if (this.includeFocusType && this.focusType.equals(element.getAncestor(IJavaElement.TYPE))) {
 				return true;
 			} else {
 				if (this.needsRefresh) {
 					try {
-						initialize();
+						initialize(progressMonitor);
 					} catch (JavaModelException e) {
 						return false;
 					}
@@ -330,7 +337,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 		}
 		if (this.needsRefresh) {
 			try {
-				refresh();
+				refresh(progressMonitor);
 			} catch(JavaModelException e) {
 				return false;
 			}
@@ -409,7 +416,7 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 	public IPath[] enclosingProjectsAndJars() {
 		if (this.needsRefresh) {
 			try {
-				refresh();
+				refresh(null);
 			} catch(JavaModelException e) {
 				return new IPath[0];
 			}
@@ -417,18 +424,21 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 		return this.enclosingProjectsAndJars;
 	}
 	protected void initialize() throws JavaModelException {
+		initialize(null);
+	}
+	protected void initialize(IProgressMonitor progressMonitor) throws JavaModelException {
 		this.resourcePaths = new HashSet();
 		this.elements = new IResource[5];
 		this.elementCount = 0;
 		this.needsRefresh = false;
 		if (this.hierarchy == null) {
 			if (this.javaProject != null) {
-				this.hierarchy = this.focusType.newTypeHierarchy(this.javaProject, this.owner, null);
+				this.hierarchy = this.focusType.newTypeHierarchy(this.javaProject, this.owner, progressMonitor);
 			} else {
-				this.hierarchy = this.focusType.newTypeHierarchy(this.owner, null);
+				this.hierarchy = this.focusType.newTypeHierarchy(this.owner, progressMonitor);
 			}
 		} else {
-			this.hierarchy.refresh(null);
+			this.hierarchy.refresh(progressMonitor);
 		}
 		buildResourceVector();
 	}
@@ -440,8 +450,11 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 		this.needsRefresh = this.hierarchy == null ? false : ((TypeHierarchy)this.hierarchy).isAffected(delta, eventType);
 	}
 	protected void refresh() throws JavaModelException {
+		refresh(null);
+	}
+	protected void refresh(IProgressMonitor progressMonitor) throws JavaModelException {
 		if (this.hierarchy != null) {
-			initialize();
+			initialize(progressMonitor);
 		}
 	}
 	public String toString() {

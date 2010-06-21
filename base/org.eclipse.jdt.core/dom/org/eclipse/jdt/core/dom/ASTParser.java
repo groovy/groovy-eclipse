@@ -49,6 +49,10 @@ import org.eclipse.jdt.internal.core.util.Util;
  * char[] source = ...;
  * ASTParser parser = ASTParser.newParser(AST.JLS3);  // handles JDK 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
  * parser.setSource(source);
+ * // In order to parse 1.5 code, some compiler options need to be set to 1.5
+ * Map options = JavaCore.getOptions();
+ * JavaCore.setComplianceOptions(JavaCore.VERSION_1_5, options);
+ * parser.setCompilerOptions(options);
  * CompilationUnit result = (CompilationUnit) parser.createAST(null);
  * </pre>
  * Once a configured parser instance has been used to create an AST,
@@ -297,14 +301,15 @@ public class ASTParser {
 	}
 	
 	/**
-	 * Set the environment that can be used when no IJavaProject are available.
+	 * Sets the environment to be used when no {@link IJavaProject} is available.
 	 * 
-	 * <p>The user has to be sure to include all required types on the classpaths for binary types
-	 * or on the sourcepaths for source types to resolve the given source code.</p>
-	 * <p>All classpath and sourcepath entries are absolute paths.</p>
-	 * <p>If sourcepaths contain units using a specific encoding (not the platform encoding), then the
-	 * given <code>encodings</code> must be set. If the given <code>encodings</code> is set, its length must
-	 * match the length of the sourcepaths parameter or an IllegalArgumentException will be thrown.</p>
+	 * <p>The user has to make sure that all the required types are included either in the classpath or source paths. 
+	 * All the paths containing binary types must be included in the <code>classpathEntries</code> whereas all paths containing  
+	 * source types must be included in the <code>sourcepathEntries</code>.</p>
+	 * <p>All paths in the <code>classpathEntries</code> and <code>sourcepathEntries</code> are absolute paths.</p>
+	 * <p>If the source paths contain units using a specific encoding (other than the platform encoding), then the
+	 * given <code>encodings</code> must be set. When the <code>encodings</code> is set to non <code>null</code>, its length must
+	 * match the length of <code>sourcepathEntries</code> or an IllegalArgumentException will be thrown.</p>
 	 * <p>If <code>encodings</code> is not <code>null</code>, the given <code>sourcepathEntries</code> must not be <code>null</code>.</p>
 	 * 
 	 * @param classpathEntries the given classpath entries to be used to resolve bindings
@@ -559,8 +564,15 @@ public class ASTParser {
 	 * <p>This source is not used when the AST is built using 
 	 * {@link #createASTs(ICompilationUnit[], String[], ASTRequestor, IProgressMonitor)}.</p>
 	 *
+	 * <p>If this method is used, the user needs to specify compiler options explicitly using
+	 * {@link #setCompilerOptions(Map)} as 1.5 code will not be properly parsed without setting
+	 * the appropriate values for the compiler options: {@link JavaCore#COMPILER_SOURCE},
+	 * {@link JavaCore#COMPILER_CODEGEN_TARGET_PLATFORM}, and {@link JavaCore#COMPILER_COMPLIANCE}.</p>
+	 * <p>Otherwise the default values for the compiler options will be used to parse the given source.</p>
+	 *
 	 * @param source the source string to be parsed,
 	 * or <code>null</code> if none
+	 * @see JavaCore#setComplianceOptions(String, Map)
 	 */
 	public void setSource(char[] source) {
 		this.rawSource = source;

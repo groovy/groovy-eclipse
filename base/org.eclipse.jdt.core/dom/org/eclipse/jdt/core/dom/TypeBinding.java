@@ -14,7 +14,7 @@ package org.eclipse.jdt.core.dom;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
+import org.eclipse.jdt.internal.compiler.ast.StringLiteral;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
@@ -42,6 +42,8 @@ import org.eclipse.jdt.internal.core.PackageFragment;
  * Internal implementation of type bindings.
  */
 class TypeBinding implements ITypeBinding {
+	private static final StringLiteral EXPRESSION = new org.eclipse.jdt.internal.compiler.ast.StringLiteral(0,0);
+
 	protected static final IMethodBinding[] NO_METHOD_BINDINGS = new IMethodBinding[0];
 
 	private static final String NO_NAME = ""; //$NON-NLS-1$
@@ -1003,18 +1005,13 @@ class TypeBinding implements ITypeBinding {
 	 */
 	public boolean isCastCompatible(ITypeBinding type) {
 		try {
-			Expression expression = new Expression() {
-				public StringBuffer printExpression(int indent,StringBuffer output) {
-					return null;
-				}
-			};
 			Scope scope = this.resolver.scope();
 			if (scope == null) return false;
 			if (!(type instanceof TypeBinding)) return false;
 			org.eclipse.jdt.internal.compiler.lookup.TypeBinding expressionType = ((TypeBinding) type).binding;
 			// simulate capture in case checked binding did not properly get extracted from a reference
 			expressionType = expressionType.capture(scope, 0);
-			return expression.checkCastTypesCompatibility(scope, this.binding, expressionType, null);
+			return TypeBinding.EXPRESSION.checkCastTypesCompatibility(scope, this.binding, expressionType, null);
 		} catch (AbortCompilation e) {
 			// don't surface internal exception to clients
 			// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=143013

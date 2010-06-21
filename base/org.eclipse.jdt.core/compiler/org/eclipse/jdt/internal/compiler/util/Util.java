@@ -294,7 +294,7 @@ public class Util implements SuffixConstants {
 	*/
 	/**
 	 * Returns the given input stream's contents as a byte array.
-	 * If a length is specified (ie. if length != -1), only length bytes
+	 * If a length is specified (i.e. if length != -1), only length bytes
 	 * are returned. Otherwise all bytes in the stream are returned.
 	 * Note this doesn't close the stream.
 	 * @throws IOException if a problem occured reading the stream.
@@ -377,7 +377,7 @@ public class Util implements SuffixConstants {
 	*/
 	/**
 	 * Returns the given input stream's contents as a character array.
-	 * If a length is specified (ie. if length != -1), this represents the number of bytes in the stream.
+	 * If a length is specified (i.e. if length != -1), this represents the number of bytes in the stream.
 	 * Note this doesn't close the stream.
 	 * @throws IOException if a problem occured reading the stream.
 	 */

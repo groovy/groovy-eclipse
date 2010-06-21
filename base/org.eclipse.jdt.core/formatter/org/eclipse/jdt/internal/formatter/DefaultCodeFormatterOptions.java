@@ -117,8 +117,11 @@ public class DefaultCodeFormatterOptions {
 	public boolean comment_insert_new_line_for_parameter;
 	public int comment_line_length;
 
+	public boolean use_tags;
 	public char[] disabling_tag;
 	public char[] enabling_tag;
+	private final static char[] DEFAULT_DISABLING_TAG = "@formatter:off".toCharArray(); //$NON-NLS-1$
+	private final static char[] DEFAULT_ENABLING_TAG = "@formatter:on".toCharArray(); //$NON-NLS-1$
 
 	public boolean indent_statements_compare_to_block;
 	public boolean indent_statements_compare_to_body;
@@ -322,6 +325,7 @@ public class DefaultCodeFormatterOptions {
 	public int tab_char;
 	public boolean use_tabs_only_for_leading_indentations;
 	public boolean wrap_before_binary_operator;
+	public boolean wrap_outer_expressions_when_nested;
 
 	public int initial_indentation_level;
 	public String line_separator;
@@ -618,6 +622,8 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_WRAP_BEFORE_BINARY_OPERATOR, this.wrap_before_binary_operator ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_DISABLING_TAG, this.disabling_tag == null ? Util.EMPTY_STRING : new String(this.disabling_tag));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ENABLING_TAG, this.enabling_tag == null ? Util.EMPTY_STRING : new String(this.enabling_tag));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_USE_ON_OFF_TAGS, this.use_tags ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_WRAP_OUTER_EXPRESSIONS_WHEN_NESTED, this.wrap_outer_expressions_when_nested ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		return options;
 	}
 
@@ -1955,6 +1961,10 @@ public class DefaultCodeFormatterOptions {
 		if (wrapBeforeBinaryOperatorOption != null) {
 			this.wrap_before_binary_operator = DefaultCodeFormatterConstants.TRUE.equals(wrapBeforeBinaryOperatorOption);
 		}
+		final Object useTags = settings.get(DefaultCodeFormatterConstants.FORMATTER_USE_ON_OFF_TAGS);
+		if (useTags != null) {
+			this.use_tags = DefaultCodeFormatterConstants.TRUE.equals(useTags);
+		}
 		final Object disableTagOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_DISABLING_TAG);
 		if (disableTagOption != null) {
 			if (disableTagOption instanceof String) {
@@ -1967,7 +1977,7 @@ public class DefaultCodeFormatterOptions {
 					if (tag.length() == 0) {
 						this.disabling_tag = null;
 					} else {
-					this.disabling_tag = tag.toCharArray();
+						this.disabling_tag = tag.toCharArray();
 					}
 				}
 			}
@@ -1984,10 +1994,14 @@ public class DefaultCodeFormatterOptions {
 					if (tag.length() == 0) {
 						this.enabling_tag = null;
 					} else {
-					this.enabling_tag = tag.toCharArray();
+						this.enabling_tag = tag.toCharArray();
 					}
 				}
 			}
+		}
+		final Object wrapWrapOuterExpressionsWhenNestedOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_WRAP_OUTER_EXPRESSIONS_WHEN_NESTED);
+		if (wrapWrapOuterExpressionsWhenNestedOption != null) {
+			this.wrap_outer_expressions_when_nested = DefaultCodeFormatterConstants.TRUE.equals(wrapWrapOuterExpressionsWhenNestedOption);
 		}
 	}
 
@@ -2299,6 +2313,10 @@ public class DefaultCodeFormatterOptions {
 		this.tab_char = TAB; // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=49081
 		this.use_tabs_only_for_leading_indentations = false;
 		this.wrap_before_binary_operator = true;
+		this.use_tags = false;
+		this.disabling_tag = DEFAULT_DISABLING_TAG;
+		this.enabling_tag = DEFAULT_ENABLING_TAG;
+		this.wrap_outer_expressions_when_nested = true;
 	}
 
 	public void setEclipseDefaultSettings() {
@@ -2570,5 +2588,9 @@ public class DefaultCodeFormatterOptions {
 		this.tab_char = MIXED;
 		this.use_tabs_only_for_leading_indentations = false;
 		this.wrap_before_binary_operator = true;
+		this.use_tags = false;
+		this.disabling_tag = DEFAULT_DISABLING_TAG;
+		this.enabling_tag = DEFAULT_ENABLING_TAG;
+		this.wrap_outer_expressions_when_nested = true;
 	}
 }

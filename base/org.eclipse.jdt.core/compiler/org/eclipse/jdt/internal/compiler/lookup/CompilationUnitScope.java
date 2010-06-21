@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -478,7 +478,7 @@ void faultInImports() {
 			ReferenceBinding conflictingType = null;
 			if (importBinding instanceof MethodBinding) {
 				conflictingType = (ReferenceBinding) getType(compoundName, compoundName.length);
-				if (!conflictingType.isValidBinding())
+				if (!conflictingType.isValidBinding() || (importReference.isStatic() && !conflictingType.isStatic()))
 					conflictingType = null;
 			}
 			// collisions between an imported static field & a type should be checked according to spec... but currently not by javac
@@ -499,8 +499,29 @@ void faultInImports() {
 				
 				if (existingType != null) {
 					// duplicate test above should have caught this case, but make sure
-					if (existingType == referenceBinding)
+					if (existingType == referenceBinding) {
+						// https://bugs.eclipse.org/bugs/show_bug.cgi?id=302865
+						// Check all resolved imports to see if this import qualifies as a duplicate
+						for (int j = 0; j < index; j++) {
+							ImportBinding resolved = resolvedImports[j];
+							if (resolved instanceof ImportConflictBinding) {
+								ImportConflictBinding importConflictBinding = (ImportConflictBinding) resolved;
+								if (importConflictBinding.conflictingTypeBinding == referenceBinding) {
+									if (!importReference.isStatic()) {
+										// resolved is implicitly static
+										problemReporter().duplicateImport(importReference);
+										resolvedImports[index++] = new ImportBinding(compoundName, false, importBinding, importReference);
+									}
+								}
+							} else if (resolved.resolvedImport == referenceBinding) {
+								if (importReference.isStatic() != resolved.isStatic()) {
+									problemReporter().duplicateImport(importReference);
+									resolvedImports[index++] = new ImportBinding(compoundName, false, importBinding, importReference);
+								}
+							}
+						}
 						continue nextImport;
+					}
 					// either the type collides with a top level type or another imported type
 					for (int j = 0, length = this.topLevelTypes.length; j < length; j++) {
 						if (CharOperation.equals(this.topLevelTypes[j].sourceName, existingType.sourceName)) {

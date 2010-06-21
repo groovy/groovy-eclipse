@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!ELEMENT compiler (error*,command_line?,options?,classpaths?,error*,sources*,extra_problems?,stats?,exception*)>
+<!ELEMENT compiler (error*,command_line?,options?,classpaths?,error*,warning*,sources*,extra_problems?,stats?,exception*)>
 <!ELEMENT command_line (argument*)>
 <!ELEMENT options (option*)>
 <!ELEMENT classpaths (classpath+)>
 <!ELEMENT error (#PCDATA)>
+<!ELEMENT warning (#PCDATA)>
 <!ELEMENT sources (source+)>
 <!ELEMENT source (problems*,tasks*,(classfile | error)*)>
 <!ELEMENT problems (problem+)>
@@ -68,6 +69,7 @@
 >
 <!ATTLIST classfile path CDATA #REQUIRED>
 <!ATTLIST error message CDATA #REQUIRED>
+<!ATTLIST warning message CDATA #REQUIRED>
 <!ATTLIST problem_summary problems CDATA #REQUIRED
                           errors   CDATA #REQUIRED
                           warnings CDATA #REQUIRED

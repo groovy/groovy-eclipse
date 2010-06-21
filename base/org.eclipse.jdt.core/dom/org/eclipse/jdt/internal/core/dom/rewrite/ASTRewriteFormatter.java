@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -546,8 +546,8 @@ import org.eclipse.text.edits.TextEdit;
 
 	public final BlockContext IF_BLOCK_WITH_ELSE= new BlockFormattingPrefixSuffix("if (true)", "else{}", 8); //$NON-NLS-1$ //$NON-NLS-2$
 	public final BlockContext IF_BLOCK_NO_ELSE= new BlockFormattingPrefix("if (true)", 8); //$NON-NLS-1$
-	public final BlockContext ELSE_AFTER_STATEMENT= new BlockFormattingPrefix("if (true) foo(); else ", 15); //$NON-NLS-1$
-	public final BlockContext ELSE_AFTER_BLOCK= new BlockFormattingPrefix("if (true) {} else ", 11); //$NON-NLS-1$
+	public final BlockContext ELSE_AFTER_STATEMENT= new BlockFormattingPrefix("if (true) foo();else ", 15); //$NON-NLS-1$
+	public final BlockContext ELSE_AFTER_BLOCK= new BlockFormattingPrefix("if (true) {}else ", 11); //$NON-NLS-1$
 
 	public final BlockContext FOR_BLOCK= new BlockFormattingPrefix("for (;;) ", 7); //$NON-NLS-1$
 	public final BlockContext WHILE_BLOCK= new BlockFormattingPrefix("while (true)", 11); //$NON-NLS-1$

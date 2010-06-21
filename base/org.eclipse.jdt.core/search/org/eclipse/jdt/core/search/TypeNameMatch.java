@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -74,7 +74,7 @@ public abstract int getModifiers();
  * @see IJavaElement#getAncestor(int)
  *
  * @throws NullPointerException if matched type is <code> null</code>
- * @return the existing java model package fragment root (ie. cannot be <code>null</code>
+ * @return the existing java model package fragment root (i.e. cannot be <code>null</code>
  * 	and will return <code>true</code> to <code>exists()</code> message).
  */
 public IPackageFragmentRoot getPackageFragmentRoot() {

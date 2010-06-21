@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -149,8 +149,8 @@ public final class NodeFinder {
 			IBuffer buffer= source.getBuffer();
 			if (buffer != null) {
 				IScanner scanner= ToolFactory.createScanner(false, false, false, false);
-				scanner.setSource(buffer.getText(start, length).toCharArray());
 				try {
+					scanner.setSource(buffer.getText(start, length).toCharArray());
 					int token= scanner.getNextToken();
 					if (token != ITerminalSymbols.TokenNameEOF) {
 						int tStart= scanner.getCurrentTokenStartPosition();
@@ -163,6 +163,9 @@ public final class NodeFinder {
 					}
 				} catch (InvalidInputException e) {
 					// ignore
+				} catch (IndexOutOfBoundsException e) {
+					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=305001
+					return null;
 				}
 			}
 		}

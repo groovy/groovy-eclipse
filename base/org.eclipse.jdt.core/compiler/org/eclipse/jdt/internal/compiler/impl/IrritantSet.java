@@ -195,6 +195,20 @@ public class IrritantSet {
 		return false;
 	}
 
+	/**
+	 * Returns true if all of the irritants in the given irritant set are set in receiver
+	 * @param irritantSet the given irritant set
+	 */
+	public boolean hasSameIrritants(IrritantSet irritantSet) {
+		if (irritantSet == null)
+			return false;
+		for (int i = 0; i < GROUP_MAX; i++) {
+			if (this.bits[i] != irritantSet.bits[i])
+				return false;
+		}
+		return true;
+	}
+
 	public boolean isSet(int singleGroupIrritants) {
 		int group = (singleGroupIrritants & GROUP_MASK) >> GROUP_SHIFT;
 		return (this.bits[group] & singleGroupIrritants) != 0;

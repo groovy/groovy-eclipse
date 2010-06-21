@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -279,8 +279,8 @@ public ISourceRange getJavadocRange() throws JavaModelException {
 	final int length= range.getLength();
 	if (length > 0 && buf.getChar(start) == '/') {
 		IScanner scanner= ToolFactory.createScanner(true, false, false, false);
-		scanner.setSource(buf.getText(start, length).toCharArray());
 		try {
+			scanner.setSource(buf.getText(start, length).toCharArray());
 			int docOffset= -1;
 			int docEnd= -1;
 
@@ -305,6 +305,8 @@ public ISourceRange getJavadocRange() throws JavaModelException {
 			}
 		} catch (InvalidInputException ex) {
 			// try if there is inherited Javadoc
+		} catch (IndexOutOfBoundsException e) {
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=305001
 		}
 	}
 	return null;

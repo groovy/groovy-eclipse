@@ -2330,7 +2330,7 @@ public static final boolean camelCaseMatch(String pattern, int patternStart, int
 /**
  * Validate compatibility between given string pattern and match rule.
  *
- * Optimized (ie. returned match rule is modified) combinations are:
+ * Optimized (i.e. returned match rule is modified) combinations are:
  *  - {@link #R_PATTERN_MATCH} without any '*' or '?' in string pattern:
  * 		pattern match bit is unset,
  * 	- {@link #R_PATTERN_MATCH} and {@link #R_PREFIX_MATCH}  bits simultaneously set:
@@ -2342,7 +2342,7 @@ public static final boolean camelCaseMatch(String pattern, int patternStart, int
  * 	- {@link #R_CAMELCASE_MATCH} combined with {@link #R_PREFIX_MATCH} and {@link #R_CASE_SENSITIVE}
  * 		bits is reduced to only {@link #R_CAMELCASE_MATCH} as Camel Case search is already prefix and case sensitive.
  *
- * Rejected (ie. returned match rule -1) combinations are:
+ * Rejected (i.e. returned match rule -1) combinations are:
  * 	- {@link #R_REGEXP_MATCH} with any other match mode bit set.
  *
  * @param stringPattern The string pattern
@@ -2355,7 +2355,7 @@ public static int validateMatchRule(String stringPattern, int matchRule) {
 <li>Added Camel Case support in completion.
 When you perform code complete, the proposals list contains proposals whose name match with the camel case pattern.
 <br>
-eg. a possible proposal for TT| is ToTo.
+e.g. a possible proposal for TT| is ToTo.
 </li>
 <li>Added option to control Camel Case completion.
 <pre>

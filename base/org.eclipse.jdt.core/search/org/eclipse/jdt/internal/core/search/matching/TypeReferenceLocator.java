@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -687,12 +687,39 @@ protected int resolveLevel(TypeReference typeRef) {
  * This is just an helper to avoid call of method with all parameters...
  */
 protected int resolveLevelForType(TypeBinding typeBinding) {
-	return resolveLevelForType(
-			this.pattern.simpleName,
-			this.pattern.qualification,
-			this.pattern.getTypeArguments(),
-			0,
-			typeBinding);
+	if (typeBinding == null || !typeBinding.isValidBinding()) {
+		if (this.pattern.typeSuffix != TYPE_SUFFIX) return INACCURATE_MATCH;
+	} else {
+		switch (this.pattern.typeSuffix) {
+			case CLASS_SUFFIX:
+				if (!typeBinding.isClass()) return IMPOSSIBLE_MATCH;
+				break;
+			case CLASS_AND_INTERFACE_SUFFIX:
+				if (!(typeBinding.isClass() || (typeBinding.isInterface() && !typeBinding.isAnnotationType()))) return IMPOSSIBLE_MATCH;
+				break;
+			case CLASS_AND_ENUM_SUFFIX:
+				if (!(typeBinding.isClass() || typeBinding.isEnum())) return IMPOSSIBLE_MATCH;
+				break;
+			case INTERFACE_SUFFIX:
+				if (!typeBinding.isInterface() || typeBinding.isAnnotationType()) return IMPOSSIBLE_MATCH;
+				break;
+			case INTERFACE_AND_ANNOTATION_SUFFIX:
+				if (!(typeBinding.isInterface() || typeBinding.isAnnotationType())) return IMPOSSIBLE_MATCH;
+				break;
+			case ENUM_SUFFIX:
+				if (!typeBinding.isEnum()) return IMPOSSIBLE_MATCH;
+				break;
+			case ANNOTATION_TYPE_SUFFIX:
+				if (!typeBinding.isAnnotationType()) return IMPOSSIBLE_MATCH;
+				break;
+			case TYPE_SUFFIX : // nothing
+		}
+	}
+	return resolveLevelForType( this.pattern.simpleName,
+						this.pattern.qualification,
+						this.pattern.getTypeArguments(),
+						0,
+						typeBinding);
 }
 /**
  * Returns whether the given type binding or one of its enclosing types

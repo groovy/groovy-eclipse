@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,6 +32,7 @@ public class TypeReferencePattern extends IntersectingPattern {
 		CATEGORIES = { REF, ANNOTATION_REF },
 		CATEGORIES_ANNOT_REF = { ANNOTATION_REF };
 	private char[][] categories;
+	char typeSuffix = TYPE_SUFFIX;
 
 	public TypeReferencePattern(char[] qualification, char[] simpleName, int matchRule) {
 		this(matchRule);
@@ -58,14 +59,21 @@ public class TypeReferencePattern extends IntersectingPattern {
 	 * Instantiate a type reference pattern with additional information for generics search
 	 */
 	public TypeReferencePattern(char[] qualification, char[] simpleName, String typeSignature, int matchRule) {
-		this(qualification, simpleName, typeSignature, 0, matchRule);
+		this(qualification, simpleName, typeSignature, 0, TYPE_SUFFIX, matchRule);
+	}
+	/*
+	 * Instantiate a type reference pattern with additional information for generics search and search elements nature
+	 */
+	public TypeReferencePattern(char[] qualification, char[] simpleName, String typeSignature, char typeSuffix, int matchRule) {
+		this(qualification, simpleName, typeSignature, 0, typeSuffix, matchRule);
 	}
 
 	/*
-	 * Instanciate a type reference pattern with additional information for generics search and fine grain information
+	 * Instanciate a type reference pattern with additional information for generics search, search elements nature and fine grain information
 	 */
-	public TypeReferencePattern(char[] qualification, char[] simpleName, String typeSignature, int limitTo, int matchRule) {
+	public TypeReferencePattern(char[] qualification, char[] simpleName, String typeSignature, int limitTo, char typeSuffix, int matchRule) {
 		this(qualification, simpleName,matchRule);
+		this.typeSuffix = typeSuffix;
 		if (typeSignature != null) {
 			// store type signatures and arguments
 			this.typeSignatures = Util.splitTypeLevelsSignature(typeSignature);

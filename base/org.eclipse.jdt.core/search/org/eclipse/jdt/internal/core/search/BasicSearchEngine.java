@@ -109,14 +109,6 @@ public class BasicSearchEngine {
 	}
 
 	/**
-	 * @see SearchEngine#createHierarchyScope(IJavaProject,IType,boolean,boolean,WorkingCopyOwner) for detailed comment.
-	 * @deprecated Will be removed shortly before 3.6M5. Use {@link #createHierarchyScope(IJavaProject, IType, boolean, boolean, WorkingCopyOwner)} instead.
-	 */
-	public static IJavaSearchScope createHierarchyScope(IJavaProject project, IType type, boolean onlySubtypes, boolean noMemberTypes, WorkingCopyOwner owner) throws JavaModelException {
-		return new HierarchyScope(project, type, owner, onlySubtypes, noMemberTypes, !onlySubtypes);
-	}
-
-	/**
 	 * @see SearchEngine#createStrictHierarchyScope(IJavaProject,IType,boolean,boolean,WorkingCopyOwner) for detailed comment.
 	 */
 	public static IJavaSearchScope createStrictHierarchyScope(IJavaProject project, IType type, boolean onlySubtypes, boolean includeFocusType, WorkingCopyOwner owner) throws JavaModelException {
@@ -659,7 +651,12 @@ public class BasicSearchEngine {
 			if (copies != null) {
 				for (int i = 0; i < copiesLength; i++) {
 					final ICompilationUnit workingCopy = copies[i];
-					if (!scope.encloses(workingCopy)) continue;
+					if (scope instanceof HierarchyScope) {
+						if (!((HierarchyScope)scope).encloses(workingCopy, progressMonitor)) continue;
+					} else {
+						if (!scope.encloses(workingCopy)) continue;
+					}
+					
 					final String path = workingCopy.getPath().toString();
 					if (workingCopy.isConsistent()) {
 						IPackageDeclaration[] packageDeclarations = workingCopy.getPackageDeclarations();
@@ -1148,7 +1145,11 @@ public class BasicSearchEngine {
 			if (copies != null) {
 				for (int i = 0; i < copiesLength; i++) {
 					final ICompilationUnit workingCopy = copies[i];
-					if (!scope.encloses(workingCopy)) continue;
+					if (scope instanceof HierarchyScope) {
+						if (!((HierarchyScope)scope).encloses(workingCopy, progressMonitor)) continue;
+					} else {
+						if (!scope.encloses(workingCopy)) continue;
+					}
 					final String path = workingCopy.getPath().toString();
 					if (workingCopy.isConsistent()) {
 						IPackageDeclaration[] packageDeclarations = workingCopy.getPackageDeclarations();

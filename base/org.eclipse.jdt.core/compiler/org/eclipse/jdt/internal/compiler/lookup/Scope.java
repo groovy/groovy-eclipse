@@ -1665,7 +1665,7 @@ public abstract class Scope {
 											}
 										}
 										if (receiverType == fieldBinding.declaringClass || compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
-											// found a valid field in the 'immediate' scope (ie. not inherited)
+											// found a valid field in the 'immediate' scope (i.e. not inherited)
 											// OR in 1.4 mode (inherited shadows enclosing)
 											if (foundField == null) {
 												if (depth > 0){
@@ -1678,7 +1678,7 @@ public abstract class Scope {
 											if (foundField.isValidBinding())
 												// if a valid field was found, complain when another is found in an 'immediate' enclosing type (that is, not inherited)
 												if (foundField.declaringClass != fieldBinding.declaringClass)
-													// ie. have we found the same field - do not trust field identity yet
+													// i.e. have we found the same field - do not trust field identity yet
 													return new ProblemFieldBinding(
 														foundField, // closest match
 														foundField.declaringClass,
@@ -2000,7 +2000,7 @@ public abstract class Scope {
 									if (inheritedHasPrecedence
 											|| receiverType == methodBinding.declaringClass
 											|| (receiverType.getMethods(selector)) != Binding.NO_METHODS) {
-										// found a valid method in the 'immediate' scope (ie. not inherited)
+										// found a valid method in the 'immediate' scope (i.e. not inherited)
 										// OR in 1.4 mode (inherited visible shadows enclosing)
 										// OR the receiverType implemented a method with the correct name
 										// return the methodBinding if it is not declared in a superclass of the scope's binding (that is, inherited)
@@ -2538,11 +2538,11 @@ public abstract class Scope {
 									if (sourceType == memberType.enclosingType() || inheritedHasPrecedence) {
 										if (insideStaticContext && !memberType.isStatic() && sourceType.isGenericType())
 											return new ProblemReferenceBinding(new char[][]{name}, memberType, ProblemReasons.NonStaticReferenceInStaticContext);
-										// found a valid type in the 'immediate' scope (ie. not inherited)
+										// found a valid type in the 'immediate' scope (i.e. not inherited)
 										// OR in 1.4 mode (inherited visible shadows enclosing)
 										if (foundType == null || (inheritedHasPrecedence && foundType.problemId() == ProblemReasons.NotVisible))
 											return memberType;
-										// if a valid type was found, complain when another is found in an 'immediate' enclosing type (ie. not inherited)
+										// if a valid type was found, complain when another is found in an 'immediate' enclosing type (i.e. not inherited)
 										if (foundType.isValidBinding() && foundType != memberType)
 											return new ProblemReferenceBinding(new char[][]{name}, foundType, ProblemReasons.InheritedNameHidesEnclosingName);
 									}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -48,7 +48,6 @@ public class IndexManager extends JobManager implements IIndexConstants {
 
 	/* need to save ? */
 	private boolean needToSave = false;
-	private static final CRC32 checksumCalculator = new CRC32();
 	private IPath javaPluginLocation = null;
 
 	/* can only replace a current state if its less than the new one */
@@ -135,7 +134,7 @@ public IPath computeIndexLocation(IPath containerPath) {
 	IPath indexLocation = (IPath) this.indexLocations.get(containerPath);
 	if (indexLocation == null) {
 		String pathString = containerPath.toOSString();
-		checksumCalculator.reset();
+		CRC32 checksumCalculator = new CRC32();
 		checksumCalculator.update(pathString.getBytes());
 		String fileName = Long.toString(checksumCalculator.getValue()) + ".index"; //$NON-NLS-1$
 		if (VERBOSE)

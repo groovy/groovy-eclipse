@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -593,14 +593,17 @@ public interface IType extends IMember, IAnnotatable {
 	IInitializer[] getInitializers() throws JavaModelException;
 
 	/**
-	 * Returns the binding key for this type. A binding key is a key that uniquely
-	 * identifies this type. It allows access to generic info for parameterized
-	 * types.
+	 * Returns the binding key for this type only if the given type is {@link #isResolved() resolved}.
+	 * A binding key is a key that uniquely identifies this type. It allows access
+	 * to generic info for parameterized types.
 	 *
+	 * <p>If the given type is not resolved, the returned key is simply the java element's key.
+	 * </p>
 	 * @return the binding key for this type
 	 * @see org.eclipse.jdt.core.dom.IBinding#getKey()
 	 * @see BindingKey
 	 * @since 3.1
+	 * @see #isResolved()
 	 */
 	String getKey();
 

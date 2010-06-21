@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -235,7 +235,20 @@ public class CorrectionEngine {
 	private void correct(char[] argument) {
 		try {
 			String source = this.compilationUnit.getSource();
-			Scanner scanner = new Scanner();
+			Map currentProjectOptions = this.compilationUnit.getJavaProject().getOptions(true);
+			long sourceLevel = CompilerOptions.versionToJdkLevel(currentProjectOptions.get(JavaCore.COMPILER_SOURCE));
+			long complianceLevel = CompilerOptions.versionToJdkLevel(currentProjectOptions.get(JavaCore.COMPILER_COMPLIANCE));
+			
+			Scanner scanner =
+				new Scanner(
+					false /*comment*/,
+					false /*whitespace*/,
+					false /*nls*/,
+					sourceLevel,
+					complianceLevel,
+					null/*taskTag*/,
+					null/*taskPriorities*/,
+					true /*taskCaseSensitive*/);
 			scanner.setSource(source.toCharArray());
 
 			scanner.resetTo(this.correctionStart, this.correctionEnd);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2009 IBM Corporation and others.
+ * Copyright (c) 2005, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -444,6 +444,8 @@ public class BindingKeyParser {
 
 	private boolean hasTypeName = true;
 
+	private boolean isMalformed;
+
 	public BindingKeyParser(BindingKeyParser parser) {
 		this(""); //$NON-NLS-1$
 		this.scanner = parser.scanner;
@@ -577,7 +579,7 @@ public class BindingKeyParser {
 	}
 
 	public void malformedKey() {
-		// default is to do nothing
+		this.isMalformed = true;
 	}
 
 	public BindingKeyParser newParser() {
@@ -684,38 +686,38 @@ public class BindingKeyParser {
 				consumeBaseType(this.scanner.getTokenSource());
 				this.hasTypeName = false;
 				break;
-	 		case Scanner.ARRAY:
-	 			this.keyStart = this.scanner.start;
-	 			consumeArrayDimension(this.scanner.getTokenSource());
-	 			switch (this.scanner.nextToken()) {
-	 				case Scanner.TYPE:
-		 				consumeFullyQualifiedName(this.scanner.getTokenSource());
-		 				break;
-	 				case Scanner.BASE_TYPE:
-	 					consumeBaseType(this.scanner.getTokenSource());
-	 					this.hasTypeName = false;
-	 					break;
-	 				default:
+			case Scanner.ARRAY:
+				this.keyStart = this.scanner.start;
+				consumeArrayDimension(this.scanner.getTokenSource());
+				switch (this.scanner.nextToken()) {
+					case Scanner.TYPE:
+						consumeFullyQualifiedName(this.scanner.getTokenSource());
+						break;
+					case Scanner.BASE_TYPE:
+						consumeBaseType(this.scanner.getTokenSource());
+						this.hasTypeName = false;
+						break;
+					default:
 						malformedKey();
 						return;
 				}
 				break;
 			default:
-	 			malformedKey();
+				malformedKey();
 				return;
 		}
 	}
 
 	private void parseParameterizedMethod() {
 		this.scanner.skipParametersStart();
-		while (!this.scanner.isAtParametersEnd()) {
+		while (!this.scanner.isAtParametersEnd() && !this.isMalformed) {
 			parseTypeArgument();
 		}
 		consumeParameterizedGenericMethod();
 	}
 
 	private void parseGenericType() {
-		while (!this.scanner.isAtParametersEnd()) {
+		while (!this.scanner.isAtParametersEnd() && !this.isMalformed) {
 			if (this.scanner.nextToken() != Scanner.TYPE) {
 				malformedKey();
 				return;
@@ -729,17 +731,17 @@ public class BindingKeyParser {
 		if (!this.scanner.isAtMemberTypeStart() || this.scanner.nextToken() != Scanner.TYPE)
 			return;
 		char[] typeName = this.scanner.getTokenSource();
-	 	if (Character.isDigit(typeName[0])) {
-	 		// anonymous or local type
-	 		int nextToken = Scanner.TYPE;
-	 		while (this.scanner.isAtMemberTypeStart())
-	 			nextToken = this.scanner.nextToken();
-	 		typeName = nextToken == Scanner.END ? this.scanner.source : CharOperation.subarray(this.scanner.source, this.keyStart, this.scanner.index+1);
-	 		consumeLocalType(typeName);
-	 	} else {
+		if (Character.isDigit(typeName[0])) {
+			// anonymous or local type
+			int nextToken = Scanner.TYPE;
+			while (this.scanner.isAtMemberTypeStart() && !this.isMalformed)
+				nextToken = this.scanner.nextToken();
+			typeName = nextToken == Scanner.END ? this.scanner.source : CharOperation.subarray(this.scanner.source, this.keyStart, this.scanner.index+1);
+			consumeLocalType(typeName);
+		} else {
 			consumeMemberType(typeName);
 			parseInnerType();
-	 	}
+		}
 	}
 
 	private void parseLocalVariable() {
@@ -792,16 +794,17 @@ public class BindingKeyParser {
 		parser.parse();
 		consumeParser(parser);
 		consumeAnnotation();
+		this.isMalformed = parser.isMalformed;
 		this.scanner.token = token;
 	}
 
 	private void parseCapture() {
 		if (this.scanner.nextToken() != Scanner.CAPTURE) return;
-	 	parseCaptureWildcard();
+		parseCaptureWildcard();
 		if (this.scanner.nextToken() != Scanner.TYPE) {
-	 		malformedKey();
+			malformedKey();
 			return;
-	 	}
+		}
 		char[] positionChars = this.scanner.getTokenSource();
 		int position = Integer.parseInt(new String(positionChars));
 		consumeCapture(position);
@@ -817,6 +820,7 @@ public class BindingKeyParser {
 		BindingKeyParser parser = newParser();
 		parser.parse();
 		consumeParser(parser);
+		this.isMalformed = parser.isMalformed;
 		this.scanner.token = token;
 	}
 
@@ -832,19 +836,20 @@ public class BindingKeyParser {
 		 * See bug 264443
 		 */
 		int token = this.scanner.token;
-		while (this.scanner.isAtThrownStart()) {
+		while (this.scanner.isAtThrownStart() && !this.isMalformed) {
 			this.scanner.skipThrownStart();
 			BindingKeyParser parser = newParser();
 			parser.parse();
 			consumeParser(parser);
 			consumeException();
+			this.isMalformed = parser.isMalformed;
 		}
 		this.scanner.token = token;
 	}
 
 	private void parseParameterizedType(char[] typeName, boolean isRaw) {
 		if (!isRaw) {
-			while (!this.scanner.isAtParametersEnd()) {
+			while (!this.scanner.isAtParametersEnd() && !this.isMalformed) {
 				parseTypeArgument();
 			}
 		}
@@ -886,6 +891,7 @@ public class BindingKeyParser {
 		BindingKeyParser parser = newParser();
 		parser.parse();
 		consumeParser(parser);
+		this.isMalformed = parser.isMalformed;
 		this.scanner.token = token;
 	}
 
@@ -903,6 +909,7 @@ public class BindingKeyParser {
 		BindingKeyParser parser = newParser();
 		parser.parse();
 		consumeParser(parser);
+		this.isMalformed = parser.isMalformed;
 		this.scanner.token = token;
 	}
 
@@ -917,6 +924,7 @@ public class BindingKeyParser {
 		parser.parse();
 		consumeParser(parser);
 		consumeTypeWithCapture();
+		this.isMalformed = parser.isMalformed;
 		this.scanner.token = token;
 	}
 
@@ -942,30 +950,30 @@ public class BindingKeyParser {
 	private void parseWildcard() {
 		parseWildcardRank();
 		if (this.scanner.nextToken() != Scanner.WILDCARD) return;
-	 	char[] source = this.scanner.getTokenSource();
-	 	if (source.length == 0) {
-	 		malformedKey();
-	 		return;
-	 	}
-	 	int kind = -1;
-	 	switch (source[0]) {
-		 	case '*':
-		 		kind = Wildcard.UNBOUND;
-		 		break;
-		 	case '+':
-		 		kind = Wildcard.EXTENDS;
-		 		break;
-		 	case '-':
-		 		kind = Wildcard.SUPER;
-		 		break;
-	 	}
-	 	if (kind == -1) {
-	 		malformedKey();
-	 		return;
-	 	}
-	 	if (kind != Wildcard.UNBOUND)
-	 		parseWildcardBound();
-	 	consumeWildCard(kind);
+		char[] source = this.scanner.getTokenSource();
+		if (source.length == 0) {
+			malformedKey();
+			return;
+		}
+		int kind = -1;
+		switch (source[0]) {
+			case '*':
+				kind = Wildcard.UNBOUND;
+				break;
+			case '+':
+				kind = Wildcard.EXTENDS;
+				break;
+			case '-':
+				kind = Wildcard.SUPER;
+				break;
+		}
+		if (kind == -1) {
+			malformedKey();
+			return;
+		}
+		if (kind != Wildcard.UNBOUND)
+			parseWildcardBound();
+		consumeWildCard(kind);
 	}
 
 	private void parseWildcardRank() {
@@ -985,6 +993,7 @@ public class BindingKeyParser {
 		BindingKeyParser parser = newParser();
 		parser.parse();
 		consumeParser(parser);
+		this.isMalformed = parser.isMalformed;
 		this.scanner.token = token;
 	}
 

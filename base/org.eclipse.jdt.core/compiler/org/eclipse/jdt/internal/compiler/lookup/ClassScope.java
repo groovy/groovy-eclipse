@@ -1020,7 +1020,7 @@ public class ClassScope extends Scope {
 			}
 
 			// check for simple interface collisions
-			// Check for a duplicate interface once the name is resolved, otherwise we may be confused (ie : a.b.I and c.d.I)
+			// Check for a duplicate interface once the name is resolved, otherwise we may be confused (i.e. a.b.I and c.d.I)
 			for (int j = 0; j < i; j++) {
 				if (interfaceBindings[j] == superInterface) {
 					problemReporter().duplicateSuperinterface(sourceType, superInterfaceRef, superInterface);

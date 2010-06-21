@@ -9923,7 +9923,7 @@ public final class CompletionEngine
 		ObjectVector typesFound) {
 
 		ReferenceBinding currentType = receiverType;
-		if (typeName == null || typeName.length == 0)
+		if (typeName == null)
 			return;
 
 		if (this.assistNodeIsSuperType && !this.insideQualifiedReference && isForbidden(currentType)) return; // we're trying to find a supertype

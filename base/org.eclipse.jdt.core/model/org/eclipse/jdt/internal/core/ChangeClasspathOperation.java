@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,7 +39,7 @@ public abstract class ChangeClasspathOperation extends JavaModelOperation {
 	 * - update project references
 	 * - create resolved classpath markers
 	 */
-	protected void classpathChanged(ClasspathChange change) throws JavaModelException {
+	protected void classpathChanged(ClasspathChange change, boolean refreshExternalFolder) throws JavaModelException {
 		// reset the project's caches early since some clients rely on the project's caches being up-to-date when run inside an IWorkspaceRunnable
 		// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=212769#c5 )
 		JavaProject project = change.project;
@@ -59,7 +59,7 @@ public abstract class ChangeClasspathOperation extends JavaModelOperation {
 			new ProjectReferenceChange(project, change.oldResolvedClasspath).updateProjectReferencesIfNecessary();
 
 			// and ensure that external folders are updated as well
-			new ExternalFolderChange(project, change.oldResolvedClasspath).updateExternalFoldersIfNecessary(true/*refresh if external linked folder already exists*/, null);
+			new ExternalFolderChange(project, change.oldResolvedClasspath).updateExternalFoldersIfNecessary(refreshExternalFolder, null);
 
 		} else {
 			DeltaProcessingState state = JavaModelManager.getDeltaState();

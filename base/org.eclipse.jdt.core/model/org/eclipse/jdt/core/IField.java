@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -95,13 +95,16 @@ public Object getConstant() throws JavaModelException;
  */
 String getElementName();
 /**
- * Returns the binding key for this field. A binding key is a key that uniquely
- * identifies this field. It allows access to generic info for parameterized
- * fields.
+ * Returns the binding key for this field only if the given field is {@link #isResolved() resolved}.
+ * A binding key is a key that uniquely identifies this field. It allows access to generic info
+ * for parameterized fields.
  *
+ * <p>If the given field is not resolved, the returned key is simply the java element's key.
+ * </p>
  * @return the binding key for this field
  * @see org.eclipse.jdt.core.dom.IBinding#getKey()
  * @see BindingKey
+ * @see #isResolved()
  * @since 3.1
  */
 String getKey();

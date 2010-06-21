@@ -35,7 +35,7 @@ Binding creation is responsible for reporting all problems with types:
 		- extending a final class
 		- extending an interface instead of a class
 		- implementing a class instead of an interface
-		- implementing the same interface more than once (ie. duplicate interfaces)
+		- implementing the same interface more than once (i.e. duplicate interfaces)
 	- with nested types:
 		- shadowing an enclosing type's source name
 		- defining a static class or interface inside a non-static nested class

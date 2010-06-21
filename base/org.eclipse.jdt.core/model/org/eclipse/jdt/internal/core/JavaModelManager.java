@@ -213,6 +213,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	public static final String ANNOTATION_PROCESSOR_MANAGER_EXTPOINT_ID = "annotationProcessorManager" ;  //$NON-NLS-1$
 
 	/**
+	 * Name of the JVM parameter to specify whether or not referenced JAR should be resolved for container libraries.
+	 */
+	private static final String RESOLVE_REFERENCED_LIBRARIES_FOR_CONTAINERS = "resolveReferencedLibrariesForContainers"; //$NON-NLS-1$
+	
+	/**
 	 * Special value used for recognizing ongoing initialization and breaking initialization cycles
 	 */
 	public final static IPath VARIABLE_INITIALIZATION_IN_PROGRESS = new Path("Variable Initialization In Progress"); //$NON-NLS-1$
@@ -258,6 +263,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 	public static boolean PERF_VARIABLE_INITIALIZER = false;
 	public static boolean PERF_CONTAINER_INITIALIZER = false;
+	// Non-static, which will give it a chance to retain the default when and if JavaModelManager is restarted.
+	boolean resolveReferencedLibrariesForContainers = false;
 
 	public final static ICompilationUnit[] NO_WORKING_COPY = new ICompilationUnit[0];
 
@@ -452,7 +459,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/* whether an AbortCompilationUnit should be thrown when the source of a compilation unit cannot be retrieved */
 	public ThreadLocal abortOnMissingSource = new ThreadLocal();
 
-	private ExternalFoldersManager externalFoldersManager = new ExternalFoldersManager();
+	private ExternalFoldersManager externalFoldersManager = ExternalFoldersManager.getExternalFoldersManager();
 
 	/**
 	 * Returns whether the given full path (for a package) conflicts with the output location
@@ -1541,6 +1548,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		if (Platform.isRunning()) {
 			this.indexManager = new IndexManager();
 			this.nonChainingJars = loadNonChainingJarsCache();
+			String includeContainerReferencedLib = System.getProperty(RESOLVE_REFERENCED_LIBRARIES_FOR_CONTAINERS);
+			this.resolveReferencedLibrariesForContainers = TRUE.equalsIgnoreCase(includeContainerReferencedLib);
 		}
 	}
 
@@ -1553,9 +1562,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 	
 	public void addNonChainingJar(IPath path) {
-		if (this.nonChainingJars == null)
-			return;
-		this.nonChainingJars.add(path);
+		if (this.nonChainingJars != null)
+			this.nonChainingJars.add(path);
 	}
 
 	/**
@@ -1672,7 +1680,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/*
 	 * Return a new Java 6 annotation processor manager.  The manager will need to
 	 * be configured before it can be used.  Returns null if a manager cannot be
-	 * created, ie if the current VM does not support Java 6 annotation processing.
+	 * created, i.e. if the current VM does not support Java 6 annotation processing.
 	 */
 	public AbstractAnnotationProcessorManager createAnnotationProcessorManager() {
 		synchronized(this) {
@@ -1852,8 +1860,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	public IClasspathEntry[] getReferencedClasspathEntries(IClasspathEntry libraryEntry, IJavaProject project) {
 		
 		IClasspathEntry[] referencedEntries = ((ClasspathEntry)libraryEntry).resolvedChainedLibraries();
-		PerProjectInfo perProjectInfo = getPerProjectInfo(project.getProject(), false);
 		
+		if (project == null)
+			return referencedEntries;
+		
+		PerProjectInfo perProjectInfo = getPerProjectInfo(project.getProject(), false);
 		if(perProjectInfo == null) 
 			return referencedEntries;
 		
@@ -2063,6 +2074,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		// backward compatibility
 		addDeprecatedOptions(options);
 
+		Util.fixTaskTags(options);
 		// store built map in cache
 		this.optionsCache = new Hashtable(options);
 
@@ -2929,7 +2941,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 	
 	private Set loadNonChainingJarsCache() {
-		Set nonChainingJarsCache = Collections.synchronizedSet(new HashSet());
+		Set nonChainingJarsCache = new HashSet();
 		File nonChainingJarsFile = getNonChainingJarsFile();
 		DataInputStream in = null;
 		try {
@@ -2951,7 +2963,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				}
 			}
 		}
-		return nonChainingJarsCache;
+		return Collections.synchronizedSet(nonChainingJarsCache);
 	}
 
 	private File getNonChainingJarsFile() {
@@ -2959,9 +2971,12 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 	
 	private Set getNonChainingJarsCache() throws CoreException {
-		if (this.nonChainingJars != null)
+		// Even if there is one entry in the cache, just return it. It may not be 
+		// the complete cache, but avoid going through all the projects to populate the cache.
+		if (this.nonChainingJars != null && this.nonChainingJars.size() > 0) {
 			return this.nonChainingJars;
-		Set result = Collections.synchronizedSet(new HashSet());
+		}
+		Set result = new HashSet();
 		IJavaProject[] projects = getJavaModel().getJavaProjects();
 		for (int i = 0, length = projects.length; i < length; i++) {
 			IJavaProject javaProject = projects[i];
@@ -2976,7 +2991,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				}
 			}
 		}
-		return result;
+		this.nonChainingJars = Collections.synchronizedSet(result);
+		return this.nonChainingJars;
 	}
 
 	public void loadVariablesAndContainers() throws CoreException {
@@ -3655,6 +3671,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				info.forgetExternalTimestampsAndIndexes();
 			}
 		}
+		resetNonChainingJarsCache();
 	}
 
 	/*
@@ -3697,7 +3714,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 	
 	public void resetNonChainingJarsCache() {
-		this.nonChainingJars = null;
+		if (this.nonChainingJars != null) 
+			this.nonChainingJars.clear();
 	}
 
 	/*
@@ -4645,6 +4663,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			instancePreferences.flush();
 
 			// update cache
+			Util.fixTaskTags(cachedValue);
 			this.optionsCache = cachedValue;
 		} catch (BackingStoreException e) {
 			// ignore

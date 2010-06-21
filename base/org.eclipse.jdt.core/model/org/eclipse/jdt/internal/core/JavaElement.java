@@ -649,40 +649,28 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 
 		if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
-			IClasspathEntry entry= root.getRawClasspathEntry();
-			if (entry == null) {
-				return null;
-			}
-			if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
-				entry= getRealClasspathEntry(root.getJavaProject(), entry.getPath(), root.getPath());
-				if (entry == null) {
-					return null;
+			IClasspathEntry entry= null;
+			try {
+				entry= root.getResolvedClasspathEntry();
+				URL url = getLibraryJavadocLocation(entry);
+				if (url != null) {
+					return url;
 				}
 			}
-			return getLibraryJavadocLocation(entry);
+			catch(JavaModelException jme) {
+				// Proceed with raw classpath
+			}
+			
+			entry= root.getRawClasspathEntry();
+			switch (entry.getEntryKind()) {
+				case IClasspathEntry.CPE_LIBRARY:
+				case IClasspathEntry.CPE_VARIABLE:
+					return getLibraryJavadocLocation(entry);
+				default:
+					return null;
+			}			
 		}
 		return null;
-	}
-
-	private static IClasspathEntry getRealClasspathEntry(IJavaProject jproject, IPath containerPath, IPath libPath) throws JavaModelException {
-		IClasspathContainer container= JavaCore.getClasspathContainer(containerPath, jproject);
-		if (container != null) {
-			IClasspathEntry[] entries= container.getClasspathEntries();
-			for (int i= 0; i < entries.length; i++) {
-				IClasspathEntry curr = entries[i];
-				if (curr == null) {
-					if (JavaModelManager.CP_RESOLVE_VERBOSE || JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
-						JavaModelManager.getJavaModelManager().verbose_missbehaving_container(jproject, containerPath, entries);
-					}
-					break;
-				}
-				IClasspathEntry resolved= JavaCore.getResolvedClasspathEntry(curr);
-				if (resolved != null && libPath.equals(resolved.getPath())) {
-					return curr; // return the real entry
-				}
-			}
-		}
-		return null; // not found
 	}
 
 	protected static URL getLibraryJavadocLocation(IClasspathEntry entry) throws JavaModelException {

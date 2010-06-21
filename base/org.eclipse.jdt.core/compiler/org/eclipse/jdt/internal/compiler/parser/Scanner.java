@@ -211,20 +211,30 @@ public Scanner(
 	this.complianceLevel = complianceLevel;
 	this.checkNonExternalizedStringLiterals = checkNonExternalizedStringLiterals;
 	if (taskTags != null) {
-		int length = taskTags.length;
+		int taskTagsLength = taskTags.length;
+		int length = taskTagsLength;
 		if (taskPriorities != null) {
+			int taskPrioritiesLength = taskPriorities.length;
+			if (taskPrioritiesLength != taskTagsLength) {
+				if (taskPrioritiesLength > taskTagsLength) {
+					System.arraycopy(taskPriorities, 0, (taskPriorities = new char[taskTagsLength][]), 0, taskTagsLength);
+				} else {
+					System.arraycopy(taskTags, 0, (taskTags = new char[taskPrioritiesLength][]), 0, taskPrioritiesLength);
+					length = taskPrioritiesLength;
+				}
+			}
 			int[] initialIndexes = new int[length];
 			for (int i = 0; i < length; i++) {
 				initialIndexes[i] = i;
 			}
-			Util.reverseQuickSort(taskTags, 0, taskTags.length - 1, initialIndexes);
+			Util.reverseQuickSort(taskTags, 0, length - 1, initialIndexes);
 			char[][] temp = new char[length][];
 			for (int i = 0; i < length; i++) {
 				temp[i] = taskPriorities[initialIndexes[i]];
 			}
 			this.taskPriorities = temp;
 		} else {
-			Util.reverseQuickSort(taskTags, 0, taskTags.length - 1);
+			Util.reverseQuickSort(taskTags, 0, length - 1);
 		}
 		this.taskTags = taskTags;
 		this.isTaskCaseSensitive = isTaskCaseSensitive;

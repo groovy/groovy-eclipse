@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.core.index.EntryResult;
 import org.eclipse.jdt.internal.core.index.Index;
+import org.eclipse.jdt.internal.core.search.HierarchyScope;
 import org.eclipse.jdt.internal.core.search.IndexQueryRequestor;
 import org.eclipse.jdt.internal.core.search.JavaSearchScope;
 import org.eclipse.jdt.internal.core.search.StringOperation;
@@ -275,6 +276,13 @@ public SearchPattern(int matchRule) {
  * @nooverride This method is not intended to be re-implemented or extended by clients.
  */
 public void acceptMatch(String relativePath, String containerPath, char separator, SearchPattern pattern, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope) {
+	acceptMatch(relativePath, containerPath, separator, pattern, requestor, participant, scope, null);
+}
+/**
+ * @noreference This method is not intended to be referenced by clients.
+ * @nooverride This method is not intended to be re-implemented or extended by clients.
+ */
+public void acceptMatch(String relativePath, String containerPath, char separator, SearchPattern pattern, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor monitor) {
 
 	if (scope instanceof JavaSearchScope) {
 		JavaSearchScope javaSearchScope = (JavaSearchScope) scope;
@@ -295,7 +303,9 @@ public void acceptMatch(String relativePath, String containerPath, char separato
 		buffer.append(separator);
 		buffer.append(relativePath);
 		String documentPath = buffer.toString();
-		if (scope.encloses(documentPath))
+		boolean encloses = (scope instanceof HierarchyScope) ? ((HierarchyScope)scope).encloses(documentPath, monitor)
+							: scope.encloses(documentPath);
+		if (encloses) 
 			if (!requestor.acceptIndexMatch(documentPath, pattern, participant, null))
 				throw new OperationCanceledException();
 
@@ -1379,83 +1389,76 @@ private static SearchPattern createPackagePattern(String patternString, int limi
  * <ul>
  * 	<li>Type patterns have the following syntax:
  * 		<p><b><code>[qualification '.']typeName ['&lt;' typeArguments '&gt;']</code></b></p>
- *			<p>Some samples:<code>
+ *			<p>Examples:</p>
  *			<ul>
- * 			<li>java.lang.Object</li>
- *				<li>Runnable</li>
- *				<li>List&lt;String&gt;</li>
+ * 			<li><code>java.lang.Object</code></li>
+ *				<li><code>Runnable</code></li>
+ *				<li><code>List&lt;String&gt;</code></li>
  *			</ul>
- *			</code>
- *			</p><p>
+ *			<p>
  *			Type arguments can be specified to search for references to parameterized types
  * 		using following syntax:</p><p>
  * 		<b><code>'&lt;' { [ '?' {'extends'|'super'} ] type ( ',' [ '?' {'extends'|'super'} ] type )* | '?' } '&gt;'</code></b>
- * 		</p><p><i>
+ * 		</p><div style="font-style:italic;">
  * 		Note that:
  * 		<ul>
  * 			<li>'*' is not valid inside type arguments definition &lt;&gt;</li>
  * 			<li>'?' is treated as a wildcard when it is inside &lt;&gt; (i.e. it must be put on first position of the type argument)</li>
  * 		</ul>
- * 		</i></p>
+ * 		</div>
  * 	</li>
  * 	<li>Method patterns have the following syntax:
  * 		<p><b><code>[declaringType '.'] ['&lt;' typeArguments '&gt;'] methodName ['(' parameterTypes ')'] [returnType]</code></b></p>
- *			<p>Type arguments have the same syntax as explained in the type patterns section</p>
- *			<p>Some samples:<code>
+ *			<p>Type arguments have the same syntax as explained in the type patterns section.</p>
+ *			<p>Examples:</p>
  *			<ul>
- *				<li>java.lang.Runnable.run() void</li>
- *				<li>main(*)</li>
- *				<li>&lt;String&gt;toArray(String[])</li>
+ *				<li><code>java.lang.Runnable.run() void</code></li>
+ *				<li><code>main(*)</code></li>
+ *				<li><code>&lt;String&gt;toArray(String[])</code></li>
  *			</ul>
- *			</code>
- *			</p>
- *		</li>
+ *	</li>
  * 	<li>Constructor patterns have the following syntax:
  *			<p><b><code>['&lt;' typeArguments '&gt;'] [declaringQualification '.'] typeName ['(' parameterTypes ')']</code></b></p>
- *			<p>Type arguments have the same syntax as explained in the type patterns section</p>
- *			<p>Some samples:<code>
+ *			<p>Type arguments have the same syntax as explained in the type patterns section.</p>
+ *			<p><i>Note that the constructor name should not be entered as it is always the same as the type name.</i></p>
+ *			<p>Examples:</p>
  *			<ul>
- *				<li>java.lang.Object()</li>
- *				<li>Test(*)</li>
- *				<li>&lt;Exception&gt;Sample(Exception)</li>
+ *				<li><code>java.lang.Object()</code></li>
+ *				<li><code>Test(*)</code></li>
+ *				<li><code>&lt;Exception&gt;Sample(Exception)</code></li>
  *			</ul>
- *			</code>
- *			 </p>
+ * 		<br>
  * 	</li>
  * 	<li>Field patterns have the following syntax:
  *			<p><b><code>[declaringType '.'] fieldName [fieldType]</code></b></p>
- *			<p>Some samples:<code>
+ *			<p>Examples:</p>
  *			<ul>
- *				<li>java.lang.String.serialVersionUID long</li>
- *				<li>field*</li>
+ *				<li><code>java.lang.String.serialVersionUID long</code></li>
+ *				<li><code>field*</code></li>
  *			</ul>
- *			</code>
- *			</p>
  * 	</li>
  * 	<li>Package patterns have the following syntax:
  *			<p><b><code>packageNameSegment {'.' packageNameSegment}</code></b></p>
- *			<p>Some samples:<code>
+ *			<p>Examples:</p>
  *			<ul>
- *				<li>java.lang</li>
- *				<li>org.e*.jdt.c*e</li>
+ *				<li><code>java.lang</code></li>
+ *				<li><code>org.e*.jdt.c*e</code></li>
  *			</ul>
- *			</code>
- *			</p>
  * 	</li>
  * </ul>
  * @param searchFor determines the nature of the searched elements
  *	<ul>
  * 	<li>{@link IJavaSearchConstants#CLASS}: only look for classes</li>
- *		<li>{@link IJavaSearchConstants#INTERFACE}: only look for interfaces</li>
+ *	<li>{@link IJavaSearchConstants#INTERFACE}: only look for interfaces</li>
  * 	<li>{@link IJavaSearchConstants#ENUM}: only look for enumeration</li>
- *		<li>{@link IJavaSearchConstants#ANNOTATION_TYPE}: only look for annotation type</li>
+ *	<li>{@link IJavaSearchConstants#ANNOTATION_TYPE}: only look for annotation type</li>
  * 	<li>{@link IJavaSearchConstants#CLASS_AND_ENUM}: only look for classes and enumerations</li>
- *		<li>{@link IJavaSearchConstants#CLASS_AND_INTERFACE}: only look for classes and interfaces</li>
+ *	<li>{@link IJavaSearchConstants#CLASS_AND_INTERFACE}: only look for classes and interfaces</li>
  * 	<li>{@link IJavaSearchConstants#TYPE}: look for all types (i.e. classes, interfaces, enum and annotation types)</li>
- *		<li>{@link IJavaSearchConstants#FIELD}: look for fields</li>
- *		<li>{@link IJavaSearchConstants#METHOD}: look for methods</li>
- *		<li>{@link IJavaSearchConstants#CONSTRUCTOR}: look for constructors</li>
- *		<li>{@link IJavaSearchConstants#PACKAGE}: look for packages</li>
+ *	<li>{@link IJavaSearchConstants#FIELD}: look for fields</li>
+ *	<li>{@link IJavaSearchConstants#METHOD}: look for methods</li>
+ *	<li>{@link IJavaSearchConstants#CONSTRUCTOR}: look for constructors</li>
+ *	<li>{@link IJavaSearchConstants#PACKAGE}: look for packages</li>
  *	</ul>
  * @param limitTo determines the nature of the expected matches
  *	<ul>
@@ -1564,10 +1567,10 @@ private static SearchPattern createPackagePattern(String patternString, int limi
  *			<li>{@link #R_EXACT_MATCH} | {@link #R_ERASURE_MATCH}: if a case
  *				insensitive and erasure match is requested.</li>
  *		</ul>
- * 	Note that {@link #R_ERASURE_MATCH} or {@link #R_EQUIVALENT_MATCH} has no effect
- * 	on non-generic types/methods search.
+ * 	<p>Note that {@link #R_ERASURE_MATCH} or {@link #R_EQUIVALENT_MATCH} has no effect
+ * 	on non-generic types/methods search.</p>
  * 	<p>
- * 	Note also that the default behavior for generic types/methods search is to find exact matches.
+ * 	Note also that the default behavior for generic types/methods search is to find exact matches.</p>
  * @return a search pattern on the given string pattern, or <code>null</code> if the string pattern is ill-formed
  */
 public static SearchPattern createPattern(String stringPattern, int searchFor, int limitTo, int matchRule) {
@@ -2222,15 +2225,15 @@ private static SearchPattern createTypePattern(String patternString, int limitTo
 		case IJavaSearchConstants.DECLARATIONS : // cannot search for explicit member types
 			return new QualifiedTypeDeclarationPattern(qualificationChars, typeChars, indexSuffix, matchRule);
 		case IJavaSearchConstants.REFERENCES :
-			return new TypeReferencePattern(qualificationChars, typeChars, typeSignature, matchRule);
+			return new TypeReferencePattern(qualificationChars, typeChars, typeSignature, indexSuffix, matchRule);
 		case IJavaSearchConstants.IMPLEMENTORS :
 			return new SuperTypeReferencePattern(qualificationChars, typeChars, SuperTypeReferencePattern.ONLY_SUPER_INTERFACES, indexSuffix, matchRule);
 		case IJavaSearchConstants.ALL_OCCURRENCES :
 			return new OrPattern(
 				new QualifiedTypeDeclarationPattern(qualificationChars, typeChars, indexSuffix, matchRule),// cannot search for explicit member types
-				new TypeReferencePattern(qualificationChars, typeChars, typeSignature, matchRule));
+				new TypeReferencePattern(qualificationChars, typeChars, typeSignature, indexSuffix, matchRule));
 		default:
-			return new TypeReferencePattern(qualificationChars, typeChars, typeSignature, limitTo, matchRule);
+			return new TypeReferencePattern(qualificationChars, typeChars, typeSignature, limitTo, indexSuffix, matchRule);
 	}
 }
 /**
@@ -2304,7 +2307,7 @@ public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchP
 				// TODO (kent) some clients may not need the document names
 				String[] names = entry.getDocumentNames(index);
 				for (int j = 0, n = names.length; j < n; j++)
-					acceptMatch(names[j], containerPath, separator, decodedResult, requestor, participant, scope);
+					acceptMatch(names[j], containerPath, separator, decodedResult, requestor, participant, scope, monitor);
 			}
 		}
 	} finally {

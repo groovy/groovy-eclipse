@@ -335,9 +335,9 @@ class CompilationUnitResolver extends Compiler {
 	 */
 	public void initializeParser() {
 		// GROOVY start
-		// old
-		// this.parser = new CommentRecorderParser(this.problemReporter, false);
-		// new
+		/* old
+		this.parser = new CommentRecorderParser(this.problemReporter, false);
+		*/// new
 		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant);
 		// GROOVY end
 	}

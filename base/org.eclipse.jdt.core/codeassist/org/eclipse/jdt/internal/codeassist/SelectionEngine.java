@@ -478,11 +478,20 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		}
 	}
 	private boolean checkSelection(
-		char[] source,
-		int selectionStart,
-		int selectionEnd) {
+			char[] source,
+			int selectionStart,
+			int selectionEnd) {
 
-		Scanner scanner = new Scanner();
+		Scanner scanner =
+			new Scanner(
+				false /*comment*/,
+				false /*whitespace*/,
+				false /*nls*/,
+				this.compilerOptions.sourceLevel,
+				this.compilerOptions.complianceLevel,
+				null/*taskTag*/,
+				null/*taskPriorities*/,
+				true /*taskCaseSensitive*/);
 		scanner.setSource(source);
 
 		int lastIdentifierStart = -1;
@@ -1096,126 +1105,139 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 					this.actualSelectionEnd);
 			}
 			this.acceptedAnswer = true;
-		} else
-			if (binding instanceof MethodBinding) {
-				MethodBinding methodBinding = (MethodBinding) binding;
-				this.noProposal = false;
+		} else if (binding instanceof MethodBinding) {
+			MethodBinding methodBinding = (MethodBinding) binding;
+			this.noProposal = false;
 
-				boolean isValuesOrValueOf = false;
-				if(binding instanceof SyntheticMethodBinding) {
-					SyntheticMethodBinding syntheticMethodBinding = (SyntheticMethodBinding) binding;
-					if(syntheticMethodBinding.purpose  == SyntheticMethodBinding.EnumValues
-							|| syntheticMethodBinding.purpose  == SyntheticMethodBinding.EnumValueOf) {
-						isValuesOrValueOf =  true;
+			boolean isValuesOrValueOf = false;
+			if(binding instanceof SyntheticMethodBinding) {
+				SyntheticMethodBinding syntheticMethodBinding = (SyntheticMethodBinding) binding;
+				if(syntheticMethodBinding.purpose  == SyntheticMethodBinding.EnumValues
+						|| syntheticMethodBinding.purpose  == SyntheticMethodBinding.EnumValueOf) {
+					isValuesOrValueOf =  true;
+				}
+			}
+
+			if(!isValuesOrValueOf && !methodBinding.isSynthetic()) {
+				TypeBinding[] parameterTypes = methodBinding.original().parameters;
+				int length = parameterTypes.length;
+				char[][] parameterPackageNames = new char[length][];
+				char[][] parameterTypeNames = new char[length][];
+				String[] parameterSignatures = new String[length];
+				for (int i = 0; i < length; i++) {
+					parameterPackageNames[i] = parameterTypes[i].qualifiedPackageName();
+					parameterTypeNames[i] = parameterTypes[i].qualifiedSourceName();
+					parameterSignatures[i] = new String(getSignature(parameterTypes[i])).replace('/', '.');
+				}
+
+				TypeVariableBinding[] typeVariables = methodBinding.original().typeVariables;
+				length = typeVariables == null ? 0 : typeVariables.length;
+				char[][] typeParameterNames = new char[length][];
+				char[][][] typeParameterBoundNames = new char[length][][];
+				for (int i = 0; i < length; i++) {
+					TypeVariableBinding typeVariable = typeVariables[i];
+					typeParameterNames[i] = typeVariable.sourceName;
+					if (typeVariable.firstBound == null) {
+						typeParameterBoundNames[i] = new char[0][];
+					} else if (typeVariable.firstBound == typeVariable.superclass) {
+						int boundCount = 1 + (typeVariable.superInterfaces == null ? 0 : typeVariable.superInterfaces.length);
+						typeParameterBoundNames[i] = new char[boundCount][];
+						typeParameterBoundNames[i][0] = typeVariable.superclass.sourceName;
+						for (int j = 1; j < boundCount; j++) {
+							typeParameterBoundNames[i][j] = typeVariables[i].superInterfaces[j - 1].sourceName;
+						}
+					} else {
+						int boundCount = typeVariable.superInterfaces == null ? 0 : typeVariable.superInterfaces.length;
+						typeParameterBoundNames[i] = new char[boundCount][];
+						for (int j = 0; j < boundCount; j++) {
+							typeParameterBoundNames[i][j] = typeVariables[i].superInterfaces[j].sourceName;
+						}
 					}
 				}
 
-				if(!isValuesOrValueOf && !methodBinding.isSynthetic()) {
-					TypeBinding[] parameterTypes = methodBinding.original().parameters;
-					int length = parameterTypes.length;
-					char[][] parameterPackageNames = new char[length][];
-					char[][] parameterTypeNames = new char[length][];
-					String[] parameterSignatures = new String[length];
-					for (int i = 0; i < length; i++) {
-						parameterPackageNames[i] = parameterTypes[i].qualifiedPackageName();
-						parameterTypeNames[i] = parameterTypes[i].qualifiedSourceName();
-						parameterSignatures[i] = new String(getSignature(parameterTypes[i])).replace('/', '.');
-					}
-
-					TypeVariableBinding[] typeVariables = methodBinding.original().typeVariables;
-					length = typeVariables == null ? 0 : typeVariables.length;
-					char[][] typeParameterNames = new char[length][];
-					char[][][] typeParameterBoundNames = new char[length][][];
-					for (int i = 0; i < length; i++) {
-						TypeVariableBinding typeVariable = typeVariables[i];
-						typeParameterNames[i] = typeVariable.sourceName;
-						if (typeVariable.firstBound == null) {
-							typeParameterBoundNames[i] = new char[0][];
-						} else if (typeVariable.firstBound == typeVariable.superclass) {
-							int boundCount = 1 + (typeVariable.superInterfaces == null ? 0 : typeVariable.superInterfaces.length);
-							typeParameterBoundNames[i] = new char[boundCount][];
-							typeParameterBoundNames[i][0] = typeVariable.superclass.sourceName;
-							for (int j = 1; j < boundCount; j++) {
-								typeParameterBoundNames[i][j] = typeVariables[i].superInterfaces[j - 1].sourceName;
-							}
+				ReferenceBinding declaringClass = methodBinding.declaringClass;
+				if (isLocal(declaringClass) && this.requestor instanceof SelectionRequestor) {
+					((SelectionRequestor)this.requestor).acceptLocalMethod(methodBinding);
+				} else {
+					this.requestor.acceptMethod(
+						declaringClass.qualifiedPackageName(),
+						declaringClass.qualifiedSourceName(),
+						declaringClass.enclosingType() == null ? null : new String(getSignature(declaringClass.enclosingType())),
+						methodBinding.isConstructor()
+							? declaringClass.sourceName()
+							: methodBinding.selector,
+						parameterPackageNames,
+						parameterTypeNames,
+						parameterSignatures,
+						typeParameterNames,
+						typeParameterBoundNames,
+						methodBinding.isConstructor(),
+						isDeclaration,
+						methodBinding.computeUniqueKey(),
+						this.actualSelectionStart,
+						this.actualSelectionEnd);
+				}
+			}
+			this.acceptedAnswer = true;
+		} else if (binding instanceof FieldBinding) {
+			FieldBinding fieldBinding = (FieldBinding) binding;
+			ReferenceBinding declaringClass = fieldBinding.declaringClass;
+			if (declaringClass != null) { // arraylength
+				this.noProposal = false;
+				if (isLocal(declaringClass) && this.requestor instanceof SelectionRequestor) {
+					((SelectionRequestor)this.requestor).acceptLocalField(fieldBinding);
+				} else {
+					// if the binding is a problem field binding, we want to make sure
+					// we can retrieve the closestMatch if the problem reason is NotVisible
+					FieldBinding currentFieldBinding = fieldBinding;
+					while (currentFieldBinding instanceof ProblemFieldBinding) {
+						ProblemFieldBinding problemFieldBinding = (ProblemFieldBinding) currentFieldBinding;
+						if (problemFieldBinding.problemId() == ProblemReasons.NotVisible) {
+							currentFieldBinding = problemFieldBinding.closestMatch;
 						} else {
-							int boundCount = typeVariable.superInterfaces == null ? 0 : typeVariable.superInterfaces.length;
-							typeParameterBoundNames[i] = new char[boundCount][];
-							for (int j = 0; j < boundCount; j++) {
-								typeParameterBoundNames[i][j] = typeVariables[i].superInterfaces[j].sourceName;
-							}
+							currentFieldBinding = null;
 						}
 					}
-
-					ReferenceBinding declaringClass = methodBinding.declaringClass;
-					if (isLocal(declaringClass) && this.requestor instanceof SelectionRequestor) {
-						((SelectionRequestor)this.requestor).acceptLocalMethod(methodBinding);
+					char[] fieldName = null;
+					char[] key = null;
+					if (currentFieldBinding != null) {
+						fieldName = currentFieldBinding.name;
+						key = currentFieldBinding.computeUniqueKey();
 					} else {
-						this.requestor.acceptMethod(
-							declaringClass.qualifiedPackageName(),
-							declaringClass.qualifiedSourceName(),
-							declaringClass.enclosingType() == null ? null : new String(getSignature(declaringClass.enclosingType())),
-							methodBinding.isConstructor()
-								? declaringClass.sourceName()
-								: methodBinding.selector,
-							parameterPackageNames,
-							parameterTypeNames,
-							parameterSignatures,
-							typeParameterNames,
-							typeParameterBoundNames,
-							methodBinding.isConstructor(),
-							isDeclaration,
-							methodBinding.computeUniqueKey(),
-							this.actualSelectionStart,
-							this.actualSelectionEnd);
+						fieldName = fieldBinding.name;
+						key = fieldBinding.computeUniqueKey();
 					}
+					this.requestor.acceptField(
+						declaringClass.qualifiedPackageName(),
+						declaringClass.qualifiedSourceName(),
+						fieldName,
+						false,
+						key,
+						this.actualSelectionStart,
+						this.actualSelectionEnd);
 				}
 				this.acceptedAnswer = true;
-			} else
-				if (binding instanceof FieldBinding) {
-					FieldBinding fieldBinding = (FieldBinding) binding;
-					ReferenceBinding declaringClass = fieldBinding.declaringClass;
-					if (declaringClass != null) { // arraylength
-						this.noProposal = false;
-						if (isLocal(declaringClass) && this.requestor instanceof SelectionRequestor) {
-							((SelectionRequestor)this.requestor).acceptLocalField(fieldBinding);
-						} else {
-							this.requestor.acceptField(
-								declaringClass.qualifiedPackageName(),
-								declaringClass.qualifiedSourceName(),
-								fieldBinding.name,
-								false,
-								fieldBinding.computeUniqueKey(),
-								this.actualSelectionStart,
-								this.actualSelectionEnd);
-						}
-						this.acceptedAnswer = true;
-					}
-				} else
-					if (binding instanceof LocalVariableBinding) {
-						if (this.requestor instanceof SelectionRequestor) {
-							((SelectionRequestor)this.requestor).acceptLocalVariable((LocalVariableBinding)binding);
-							this.acceptedAnswer = true;
-						} else {
-							// open on the type of the variable
-							selectFrom(((LocalVariableBinding) binding).type, parsedUnit, false);
-						}
-					} else
-						if (binding instanceof ArrayBinding) {
-							selectFrom(((ArrayBinding) binding).leafComponentType, parsedUnit, false);
-							// open on the type of the array
-						} else
-							if (binding instanceof PackageBinding) {
-								PackageBinding packageBinding = (PackageBinding) binding;
-								this.noProposal = false;
-								this.requestor.acceptPackage(packageBinding.readableName());
-								this.acceptedAnswer = true;
-							} else
-								if(binding instanceof BaseTypeBinding) {
-									this.acceptedAnswer = true;
-								}
+			}
+		} else if (binding instanceof LocalVariableBinding) {
+			if (this.requestor instanceof SelectionRequestor) {
+				((SelectionRequestor)this.requestor).acceptLocalVariable((LocalVariableBinding)binding);
+				this.acceptedAnswer = true;
+			} else {
+				// open on the type of the variable
+				selectFrom(((LocalVariableBinding) binding).type, parsedUnit, false);
+			}
+		} else if (binding instanceof ArrayBinding) {
+			selectFrom(((ArrayBinding) binding).leafComponentType, parsedUnit, false);
+			// open on the type of the array
+		} else if (binding instanceof PackageBinding) {
+			PackageBinding packageBinding = (PackageBinding) binding;
+			this.noProposal = false;
+			this.requestor.acceptPackage(packageBinding.readableName());
+			this.acceptedAnswer = true;
+		} else if(binding instanceof BaseTypeBinding) {
+			this.acceptedAnswer = true;
+		}
 	}
-
 	/*
 	 * Checks if a local declaration got selected in this method/initializer/field.
 	 */

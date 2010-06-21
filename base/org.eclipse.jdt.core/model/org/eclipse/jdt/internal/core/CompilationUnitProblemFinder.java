@@ -150,20 +150,24 @@ public class CompilationUnitProblemFinder extends Compiler {
 		};
 	}
 
+	/*
+	 * Can return null if the process was aborted or canceled 
+	 */
 	public static CompilationUnitDeclaration process(
-		CompilationUnit unitElement,
-		SourceElementParser parser,
-		WorkingCopyOwner workingCopyOwner,
-		HashMap problems,
-		boolean creatingAST,
-		int reconcileFlags,
-		IProgressMonitor monitor)
+			CompilationUnit unitElement,
+			SourceElementParser parser,
+			WorkingCopyOwner workingCopyOwner,
+			HashMap problems,
+			boolean creatingAST,
+			int reconcileFlags,
+			IProgressMonitor monitor)
 		throws JavaModelException {
 
 		JavaProject project = (JavaProject) unitElement.getJavaProject();
 		CancelableNameEnvironment environment = null;
 		CancelableProblemFactory problemFactory = null;
 		CompilationUnitProblemFinder problemFinder = null;
+		CompilationUnitDeclaration unit = null;
 		try {
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
@@ -184,10 +188,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 			if (ignoreMethodBodies) {
 				analyzeAndGenerateCode = false;
 			}
-			CompilationUnitDeclaration unit = null;
-			if (parser != null) {
-				problemFinder.parser = parser;
-				try {
+			try {
+				if (parser != null) {
+					problemFinder.parser = parser;
 					unit = parser.parseCompilationUnit(unitElement, true/*full parse*/, monitor);
 					problemFinder.resolve(
 						unit,
@@ -195,37 +198,38 @@ public class CompilationUnitProblemFinder extends Compiler {
 						true, // verify methods
 						analyzeAndGenerateCode, // analyze code
 						analyzeAndGenerateCode); // generate code
-				} catch (AbortCompilation e) {
-					problemFinder.handleInternalException(e, unit);
+				} else {
+					unit =
+						problemFinder.resolve(
+							unitElement,
+							true, // verify methods
+							analyzeAndGenerateCode, // analyze code
+							analyzeAndGenerateCode); // generate code
 				}
-			} else {
-				unit =
-					problemFinder.resolve(
-						unitElement,
-						true, // verify methods
-						analyzeAndGenerateCode, // analyze code
-						analyzeAndGenerateCode); // generate code
+			} catch (AbortCompilation e) {
+				problemFinder.handleInternalException(e, unit);
 			}
-			CompilationResult unitResult = unit.compilationResult;
-			CategorizedProblem[] unitProblems = unitResult.getProblems();
-			int length = unitProblems == null ? 0 : unitProblems.length;
-			if (length > 0) {
-				CategorizedProblem[] categorizedProblems = new CategorizedProblem[length];
-				System.arraycopy(unitProblems, 0, categorizedProblems, 0, length);
-				problems.put(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, categorizedProblems);
+			if (unit != null) {
+				CompilationResult unitResult = unit.compilationResult;
+				CategorizedProblem[] unitProblems = unitResult.getProblems();
+				int length = unitProblems == null ? 0 : unitProblems.length;
+				if (length > 0) {
+					CategorizedProblem[] categorizedProblems = new CategorizedProblem[length];
+					System.arraycopy(unitProblems, 0, categorizedProblems, 0, length);
+					problems.put(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, categorizedProblems);
+				}
+				unitProblems = unitResult.getTasks();
+				length = unitProblems == null ? 0 : unitProblems.length;
+				if (length > 0) {
+					CategorizedProblem[] categorizedProblems = new CategorizedProblem[length];
+					System.arraycopy(unitProblems, 0, categorizedProblems, 0, length);
+					problems.put(IJavaModelMarker.TASK_MARKER, categorizedProblems);
+				}
+				if (NameLookup.VERBOSE) {
+					System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInSourcePackage: " + environment.nameLookup.timeSpentInSeekTypesInSourcePackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+					System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInBinaryPackage: " + environment.nameLookup.timeSpentInSeekTypesInBinaryPackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
+				}
 			}
-			unitProblems = unitResult.getTasks();
-			length = unitProblems == null ? 0 : unitProblems.length;
-			if (length > 0) {
-				CategorizedProblem[] categorizedProblems = new CategorizedProblem[length];
-				System.arraycopy(unitProblems, 0, categorizedProblems, 0, length);
-				problems.put(IJavaModelMarker.TASK_MARKER, categorizedProblems);
-			}
-			if (NameLookup.VERBOSE) {
-				System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInSourcePackage: " + environment.nameLookup.timeSpentInSeekTypesInSourcePackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-				System.out.println(Thread.currentThread() + " TIME SPENT in NameLoopkup#seekTypesInBinaryPackage: " + environment.nameLookup.timeSpentInSeekTypesInBinaryPackage + "ms");  //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			return unit;
 		} catch (OperationCanceledException e) {
 			// catch this exception so as to not enter the catch(RuntimeException e) below
 			throw e;
@@ -250,16 +254,17 @@ public class CompilationUnitProblemFinder extends Compiler {
 			if (problemFinder != null && !creatingAST)
 				problemFinder.lookupEnvironment.reset();
 		}
+		return unit;
 	}
 
 	public static CompilationUnitDeclaration process(
-		CompilationUnit unitElement,
-		WorkingCopyOwner workingCopyOwner,
-		HashMap problems,
-		boolean creatingAST,
-		int reconcileFlags,
-		IProgressMonitor monitor)
-		throws JavaModelException {
+			CompilationUnit unitElement,
+			WorkingCopyOwner workingCopyOwner,
+			HashMap problems,
+			boolean creatingAST,
+			int reconcileFlags,
+			IProgressMonitor monitor)
+			throws JavaModelException {
 
 		return process(unitElement, null/*use default Parser*/, workingCopyOwner, problems, creatingAST, reconcileFlags, monitor);
 	}
@@ -270,9 +275,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 	 */
 	public void initializeParser() {
         // GROOVY start
-        // old
-        // this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
-        // new
+        /* old
+		this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
+        */// new
         this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 3 /*CommentRecorderParserVariant with no transforms */);
         // GROOVY end
 	}

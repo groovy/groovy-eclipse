@@ -71,7 +71,7 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 			ClasspathChange classpathChange = perProjectInfo.setRawClasspath(this.newRawClasspath, this.referencedEntries, this.newOutputLocation, JavaModelStatus.VERIFIED_OK/*format is ok*/);
 
 			// if needed, generate delta, update project ref, create markers, ...
-			classpathChanged(classpathChange);
+			classpathChanged(classpathChange, true/*refresh if external linked folder already exists*/);
 
 			// write .classpath file
 			if (this.canChangeResources && perProjectInfo.writeAndCacheClasspath(this.project, this.newRawClasspath, this.newOutputLocation))

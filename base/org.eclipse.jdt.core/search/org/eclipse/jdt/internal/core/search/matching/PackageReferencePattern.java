@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,7 +56,7 @@ public char[][] getIndexCategories() {
 }
 protected boolean hasNextQuery() {
 	// if package has at least 4 segments, don't look at the first 2 since they are mostly
-	// redundant (eg. in 'org.eclipse.jdt.core.*' 'org.eclipse' is used all the time)
+	// redundant (e.g. in 'org.eclipse.jdt.core.*' 'org.eclipse' is used all the time)
 	return --this.currentSegment >= (this.segments.length >= 4 ? 2 : 0);
 }
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {

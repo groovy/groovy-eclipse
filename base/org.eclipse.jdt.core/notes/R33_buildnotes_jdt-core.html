@@ -2156,7 +2156,7 @@ to create an instance of it:
 public static TypeNameMatch createTypeNameMatch(IType type, int modifiers)
 </pre>
 Early performance tests using added <code>searchAllTypeNames</code> method with <code>TypeNameMatchRequestor</code>
-requestor (ie. a la Open Type dialog) show interesting memory footprint reduction (around 30%). More precise measures of this
+requestor (i.e. a la Open Type dialog) show interesting memory footprint reduction (around 30%). More precise measures of this
 performance improvement will be done later...
 </li>
 <li>Added new <code>SearchEngine</code> API method for search all type names with multiple qualifications and type names
@@ -2605,7 +2605,7 @@ Eclipse SDK 3.3M2 - 15th September 2006 - 3.3 MILESTONE 2
 and <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=156491">bug 156491</a>).
 <br>
 When a search requestor (<code>SearchRequestor</code>) accepts this kind of match,
-it knows if a method reference match is a polymorphic method (ie. implemented in a super or sub type) or not.
+it knows if a method reference match is a polymorphic method (i.e. implemented in a super or sub type) or not.
 <p>
 For example, in example below:</p>
 <pre>
@@ -2995,7 +2995,7 @@ Eclipse SDK 3.3M1 - 27th June 2006
  *     . {@link IJavaSearchConstants#ANNOTATION_TYPE}: only look for annotation type
  *     . {@link IJavaSearchConstants#CLASS_AND_ENUM}: only look for classes and enumerations
  *     . {@link IJavaSearchConstants#CLASS_AND_INTERFACE}: only look for classes and interfaces
- *     . {@link IJavaSearchConstants#TYPE}: look for all types (ie. classes, interfaces, enum and annotation types)
+ *     . {@link IJavaSearchConstants#TYPE}: look for all types (i.e. classes, interfaces, enum and annotation types)
  * @param scope the scope to search in
  * @param nameRequestor the requestor that collects the results of the search
  * @param waitingPolicy one of

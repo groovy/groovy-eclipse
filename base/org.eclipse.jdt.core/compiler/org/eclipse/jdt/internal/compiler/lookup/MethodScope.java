@@ -295,7 +295,7 @@ public void computeLocalVariablePositions(int initOffset, CodeStream codeStream)
  * Error management:
  * 		keep null for all the errors that prevent the method to be created
  * 		otherwise return a correct method binding (but without the element
- *		that caused the problem) : ie : Incorrect thrown exception
+ *		that caused the problem) : i.e. Incorrect thrown exception
  */
 MethodBinding createMethod(AbstractMethodDeclaration method) {
 	// is necessary to ensure error reporting

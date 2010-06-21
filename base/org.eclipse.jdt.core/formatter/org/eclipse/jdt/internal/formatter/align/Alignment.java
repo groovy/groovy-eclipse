@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.formatter.align;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.internal.formatter.Location;
 import org.eclipse.jdt.internal.formatter.Scribe;
 
@@ -20,8 +21,62 @@ import org.eclipse.jdt.internal.formatter.Scribe;
  */
 public class Alignment {
 
+	// Kind of alignment
+	public int kind;
+	public static final int ALLOCATION = 1;
+	public static final int ANNOTATION_MEMBERS_VALUE_PAIRS = 2;
+	public static final int ARRAY_INITIALIZER = 3;
+	public static final int ASSIGNMENT = 4;
+	public static final int BINARY_EXPRESSION = 5;
+	public static final int CASCADING_MESSAGE_SEND = 6;
+	public static final int COMPACT_IF = 7;
+	public static final int COMPOUND_ASSIGNMENT = 8;
+	public static final int CONDITIONAL_EXPRESSION = 9;
+	public static final int ENUM_CONSTANTS = 10;
+	public static final int ENUM_CONSTANTS_ARGUMENTS = 11;
+	public static final int EXPLICIT_CONSTRUCTOR_CALL = 12;
+	public static final int FIELD_DECLARATION_ASSIGNMENT = 13;
+	public static final int LOCAL_DECLARATION_ASSIGNMENT = 14;
+	public static final int MESSAGE_ARGUMENTS = 15;
+	public static final int MESSAGE_SEND = 16;
+	public static final int METHOD_ARGUMENTS = 17;
+	public static final int METHOD_DECLARATION = 18;
+	public static final int MULTIPLE_FIELD = 19;
+	public static final int SUPER_CLASS = 20;
+	public static final int SUPER_INTERFACES = 21;
+	public static final int THROWS = 22;
+	public static final int TYPE_MEMBERS = 23;
+	public static final int STRING_CONCATENATION = 24;
+
 	// name of alignment
 	public String name;
+	public static final String[] NAMES = {
+		"", //$NON-NLS-1$
+		"allocation", //$NON-NLS-1$
+		"annotationMemberValuePairs", //$NON-NLS-1$
+		"array_initializer", //$NON-NLS-1$
+		"assignmentAlignment", //$NON-NLS-1$
+		"binaryExpressionAlignment", //$NON-NLS-1$
+		"cascadingMessageSendAlignment", //$NON-NLS-1$
+		"compactIf", //$NON-NLS-1$
+		"compoundAssignmentAlignment", //$NON-NLS-1$
+		"conditionalExpression", //$NON-NLS-1$
+		"enumConstants", //$NON-NLS-1$
+		"enumConstantArguments", //$NON-NLS-1$
+		"explicit_constructor_call", //$NON-NLS-1$
+		"fieldDeclarationAssignmentAlignment", //$NON-NLS-1$
+		"localDeclarationAssignmentAlignment", //$NON-NLS-1$
+		"messageArguments", //$NON-NLS-1$
+		"messageAlignment", //$NON-NLS-1$
+		"methodArguments", //$NON-NLS-1$
+		"methodDeclaration", //$NON-NLS-1$
+		"multiple_field", //$NON-NLS-1$
+		"superclass", //$NON-NLS-1$
+		"superInterfaces", //$NON-NLS-1$
+		"throws", //$NON-NLS-1$
+		"typeMembers", //$NON-NLS-1$
+		"stringConcatenation", //$NON-NLS-1$
+	};
 
 	// link to enclosing alignment
 	public Alignment enclosing;
@@ -45,8 +100,13 @@ public class Alignment {
 	public int shiftBreakIndentationLevel;
 	public int[] fragmentBreaks;
 	public boolean wasSplit;
+	public boolean blockAlign = false;
+	public boolean tooLong = false;
 
 	public Scribe scribe;
+
+	// reset
+	private boolean reset = false;
 
 	/*
 	 * Alignment modes
@@ -133,9 +193,11 @@ public class Alignment {
 	public static final int CHUNK_ENUM = 4;
 
 	// location to align and break on.
-	public Alignment(String name, int mode, int tieBreakRule, Scribe scribe, int fragmentCount, int sourceRestart, int continuationIndent){
+	public Alignment(int kind, int mode, int tieBreakRule, Scribe scribe, int fragmentCount, int sourceRestart, int continuationIndent){
 
-		this.name = name;
+		Assert.isTrue(kind >=ALLOCATION && kind <=STRING_CONCATENATION);
+		this.kind = kind;
+		this.name = NAMES[kind];
 		this.location = new Location(scribe, sourceRestart);
 		this.mode = mode;
 		this.tieBreakRule = tieBreakRule;
@@ -174,9 +236,9 @@ public class Alignment {
 		}
 	}
 
-	public boolean checkChunkStart(int kind, int startIndex, int sourceRestart) {
-		if (this.chunkKind != kind) {
-			this.chunkKind = kind;
+	public boolean checkChunkStart(int chunk, int startIndex, int sourceRestart) {
+		if (this.chunkKind != chunk) {
+			this.chunkKind = chunk;
 
 			// when redoing same chunk alignment, must not reset
 			if (startIndex != this.chunkStartIndex) {
@@ -231,6 +293,61 @@ public class Alignment {
 			current = current.enclosing;
 		}
 		return depth;
+	}
+	
+	/**
+	 * Returns whether the alignment can be aligned or not.
+	 * Only used for message send alignment, it currently blocks its alignment
+	 * when it's at the first nesting level of a message send. It allow to save
+	 * space on the argument broken line by reducing the number of indentations.
+	 */
+	public boolean canAlign() {
+		if (this.tooLong) {
+			return true;
+		}
+		boolean canAlign = true;
+		Alignment enclosingAlignment = this.enclosing;
+		while (enclosingAlignment != null) {
+			switch (enclosingAlignment.kind) {
+				case Alignment.ALLOCATION:
+				case Alignment.MESSAGE_ARGUMENTS:
+					// message send inside arguments, avoid to align
+					if (enclosingAlignment.isWrapped() && 
+							(enclosingAlignment.fragmentIndex > 0 || enclosingAlignment.fragmentCount < 2)) {
+						return !this.blockAlign;
+					}
+					if (enclosingAlignment.tooLong) {
+						return true;
+					}
+					canAlign = false;
+					break;
+				case Alignment.MESSAGE_SEND:
+					// multiple depth of message send, hence allow current to align
+					switch (this.kind) {
+						case Alignment.ALLOCATION:
+						case Alignment.MESSAGE_ARGUMENTS:
+						case Alignment.MESSAGE_SEND:
+							Alignment superEnclosingAlignment = enclosingAlignment.enclosing;
+							while (superEnclosingAlignment != null) {
+								switch (superEnclosingAlignment.kind) {
+									case Alignment.ALLOCATION:
+									case Alignment.MESSAGE_ARGUMENTS:
+									case Alignment.MESSAGE_SEND:
+										// block the alignment of the intermediate message send
+										if (this.scribe.nlsTagCounter == 0) {
+											enclosingAlignment.blockAlign = true;
+										}
+										return !this.blockAlign;
+								}
+								superEnclosingAlignment = superEnclosingAlignment.enclosing;
+							}
+							break;
+					}
+					return !this.blockAlign;
+			}
+			enclosingAlignment = enclosingAlignment.enclosing;
+		}
+		return canAlign && !this.blockAlign;
 	}
 
 	public boolean couldBreak(){
@@ -329,12 +446,17 @@ public class Alignment {
 		return false; // cannot split better
 	}
 
-	public Alignment getAlignment(String targetName) {
+	public boolean isWrapped() {
+		return this.fragmentBreaks[this.fragmentIndex] == BREAK;
+	}
 
-		if (targetName.equals(this.name)) return this;
-		if (this.enclosing == null) return null;
-
-		return this.enclosing.getAlignment(targetName);
+	public int wrappedIndex() {
+		for (int i = 0, max = this.fragmentCount; i < max; i++) {
+			if (this.fragmentBreaks[i] == BREAK) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	// perform alignment effect for current fragment
@@ -366,6 +488,7 @@ public class Alignment {
 	// reset fragment indentation/break status
 	public void reset() {
 
+		this.wasSplit = false;
 		if (this.fragmentCount > 0){
 			this.fragmentIndentations = new int[this.fragmentCount];
 			this.fragmentBreaks = new int[this.fragmentCount];
@@ -375,6 +498,7 @@ public class Alignment {
 		if ((this.mode & M_FORCE) != 0) {
 			couldBreak();
 		}
+		this.reset = true;
 	}
 
 	public void toFragmentsString(StringBuffer buffer){
@@ -396,6 +520,10 @@ public class Alignment {
 		
 		// First line is for class and name
 		buffer.append(indentation);
+		buffer
+			.append("<kind: ")	//$NON-NLS-1$
+			.append(this.kind)
+			.append("> ");	//$NON-NLS-1$
 		buffer
 			.append("<name: ")	//$NON-NLS-1$
 			.append(this.name)
@@ -463,12 +591,7 @@ public class Alignment {
 		}
 	}
 
-	public boolean isWrapped() {
-		for (int i = 0, max = this.fragmentCount; i < max; i++) {
-			if (this.fragmentBreaks[i] == BREAK) {
-				return true;
-			}
-		}
-		return false;
+	public boolean wasReset() {
+		return this.reset;
 	}
 }

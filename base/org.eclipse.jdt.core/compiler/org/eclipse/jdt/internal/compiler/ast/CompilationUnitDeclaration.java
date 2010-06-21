@@ -195,7 +195,7 @@ public void createPackageInfoType() {
  * Finds the matching type amoung this compilation unit types.
  * Returns null if no type with this name is found.
  * The type name is a compound name
- * eg. if we're looking for X.A.B then a type name would be {X, A, B}
+ * e.g. if we're looking for X.A.B then a type name would be {X, A, B}
  */
 public TypeDeclaration declarationOfType(char[][] typeName) {
 	for (int i = 0; i < this.types.length; i++) {
@@ -292,7 +292,7 @@ public void finalizeProblems() {
 											IrritantSet tokenIrritants = CompilerOptions.warningTokenToIrritants(cst.stringValue());
 											if (tokenIrritants != null
 													&& !tokenIrritants.areAllSet() // no complaint against @SuppressWarnings("all")
-													&& options.isAnyEnabled(tokenIrritants) // if irritant is effectevely enabled
+													&& options.isAnyEnabled(tokenIrritants) // if irritant is effectively enabled
 													&& (foundIrritants[iSuppress] == null || !foundIrritants[iSuppress].isAnySet(tokenIrritants))) { // if irritant had no matching problem
 												if (unusedWarningTokenIsWarning) {
 													int start = value.sourceStart, end = value.sourceEnd;
@@ -478,9 +478,18 @@ public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation,
 		System.arraycopy(this.suppressWarningAnnotations, 0,this.suppressWarningAnnotations = new Annotation[2*this.suppressWarningsCount], 0, this.suppressWarningsCount);
 		System.arraycopy(this.suppressWarningScopePositions, 0,this.suppressWarningScopePositions = new long[2*this.suppressWarningsCount], 0, this.suppressWarningsCount);
 	}
+	final long scopePositions = ((long)scopeStart<<32) + scopeEnd;
+	for (int i = 0, max = this.suppressWarningsCount; i < max; i++) {
+		if (this.suppressWarningAnnotations[i] == annotation
+				&& this.suppressWarningScopePositions[i] == scopePositions
+				&& this.suppressWarningIrritants[i].hasSameIrritants(irritants)) {
+			// annotation data already recorded
+			return;
+		}
+	}
 	this.suppressWarningIrritants[this.suppressWarningsCount] = irritants;
 	this.suppressWarningAnnotations[this.suppressWarningsCount] = annotation;
-	this.suppressWarningScopePositions[this.suppressWarningsCount++] = ((long)scopeStart<<32) + scopeEnd;
+	this.suppressWarningScopePositions[this.suppressWarningsCount++] = scopePositions;
 }
 
 /*

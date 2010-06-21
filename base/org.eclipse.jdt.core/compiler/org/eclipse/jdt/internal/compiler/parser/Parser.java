@@ -3272,13 +3272,6 @@ protected void consumeEnumConstantHeaderName() {
    enumConstant.modifiers = this.intStack[this.intPtr--];
    enumConstant.declarationSourceStart = enumConstant.modifiersSourceStart;
 
-	// Store secondary info
-	if ((enumConstant.bits & ASTNode.IsMemberType) == 0 && (enumConstant.bits & ASTNode.IsLocalType) == 0) {
-		if (this.compilationUnit != null && !CharOperation.equals(enumConstant.name, this.compilationUnit.getMainTypeName())) {
-			enumConstant.bits |= ASTNode.IsSecondaryType;
-		}
-	}
-
 	// consume annotations
    int length;
    if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
@@ -3408,6 +3401,14 @@ protected void consumeEnumHeaderName() {
 	if (enumDeclaration.modifiersSourceStart >= 0) {
 		enumDeclaration.declarationSourceStart = enumDeclaration.modifiersSourceStart;
 	}
+
+	// Store secondary info
+	if ((enumDeclaration.bits & ASTNode.IsMemberType) == 0 && (enumDeclaration.bits & ASTNode.IsLocalType) == 0) {
+		if (this.compilationUnit != null && !CharOperation.equals(enumDeclaration.name, this.compilationUnit.getMainTypeName())) {
+			enumDeclaration.bits |= ASTNode.IsSecondaryType;
+		}
+	}
+
 	// consume annotations
 	int length;
 	if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
@@ -3487,6 +3488,14 @@ protected void consumeEnumHeaderNameWithTypeParameters() {
 	if (enumDeclaration.modifiersSourceStart >= 0) {
 		enumDeclaration.declarationSourceStart = enumDeclaration.modifiersSourceStart;
 	}
+
+	// Store secondary info
+	if ((enumDeclaration.bits & ASTNode.IsMemberType) == 0 && (enumDeclaration.bits & ASTNode.IsLocalType) == 0) {
+		if (this.compilationUnit != null && !CharOperation.equals(enumDeclaration.name, this.compilationUnit.getMainTypeName())) {
+			enumDeclaration.bits |= ASTNode.IsSecondaryType;
+		}
+	}
+
 	// consume annotations
 	if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
 		System.arraycopy(
@@ -10326,10 +10335,13 @@ public void recoveryExitFromVariable() {
 			this.currentElement = this.currentElement.parent;
 		} else if(this.currentElement instanceof RecoveredField
 			&& !(this.currentElement instanceof RecoveredInitializer)) {
-
-			int end = ((RecoveredField)this.currentElement).fieldDeclaration.sourceEnd;
-			this.currentElement.updateSourceEndIfNecessary(end);
-			this.currentElement = this.currentElement.parent;
+			// Do not move focus to parent if we are still inside an array initializer
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=292087 
+			if (this.currentElement.bracketBalance <= 0) {
+				int end = ((RecoveredField)this.currentElement).fieldDeclaration.sourceEnd;
+				this.currentElement.updateSourceEndIfNecessary(end);
+				this.currentElement = this.currentElement.parent;
+			}
 		}
 	}
 }

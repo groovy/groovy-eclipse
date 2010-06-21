@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -152,12 +152,14 @@ public IOpenable getOwner();
  * Returns the given range of text in this buffer.
  * <p>
  * The returned value is undefined if the buffer is closed.
+ * </p>
  *
- * @param offset the  zero-based starting offset
+ * @param offset the zero-based starting offset
  * @param length the number of characters to retrieve
  * @return the given range of text in this buffer
+ * @exception IndexOutOfBoundsException when buffer is out of synch
  */
-public String getText(int offset, int length);
+public String getText(int offset, int length) throws IndexOutOfBoundsException;
 /**
  * Returns the underlying resource for which this buffer was opened,
  * or <code>null</code> if this buffer was not opened on a resource.

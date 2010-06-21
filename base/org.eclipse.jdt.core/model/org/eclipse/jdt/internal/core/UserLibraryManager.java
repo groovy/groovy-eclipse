@@ -152,34 +152,37 @@ public class UserLibraryManager {
 	}
 
 	public void removeUserLibrary(String libName)  {
-		IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
-		String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX+libName;
-		instancePreferences.remove(propertyName);
-		try {
-			instancePreferences.flush();
-		} catch (BackingStoreException e) {
-			Util.log(e, "Exception while removing user library " + libName); //$NON-NLS-1$
+		synchronized (this.userLibraries) {
+			IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
+			String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX+libName;
+			instancePreferences.remove(propertyName);
+			try {
+				instancePreferences.flush();
+			} catch (BackingStoreException e) {
+				Util.log(e, "Exception while removing user library " + libName); //$NON-NLS-1$
+			}
 		}
-		// No need to lock this.userLibraries since SetContainerOperation uses ISchedulingRule now.
+		// this.userLibraries was updated during the PreferenceChangeEvent (see preferenceChange(...))
 	}
 
-	public void setUserLibrary(String libName, IClasspathEntry[] entries, boolean isSystemLibrary) {
-		IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
-		String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX + libName;
-		try {
-			String propertyValue = UserLibrary.serialize(entries, isSystemLibrary);
-			instancePreferences.put(propertyName, propertyValue); // sends out a PreferenceChangeEvent (see
-																	// preferenceChange(...))
-		} catch (IOException e) {
-			Util.log(e, "Exception while serializing user library " + libName); //$NON-NLS-1$
-			return;
+	public void setUserLibrary(String libName, IClasspathEntry[] entries, boolean isSystemLibrary)  {
+		synchronized (this.userLibraries) {
+			IEclipsePreferences instancePreferences = JavaModelManager.getJavaModelManager().getInstancePreferences();
+			String propertyName = CP_USERLIBRARY_PREFERENCES_PREFIX+libName;
+			try {
+				String propertyValue = UserLibrary.serialize(entries, isSystemLibrary);
+				instancePreferences.put(propertyName, propertyValue); // sends out a PreferenceChangeEvent (see preferenceChange(...))
+			} catch (IOException e) {
+				Util.log(e, "Exception while serializing user library " + libName); //$NON-NLS-1$
+				return;
+			}
+			try {
+				instancePreferences.flush();
+			} catch (BackingStoreException e) {
+				Util.log(e, "Exception while saving user library " + libName); //$NON-NLS-1$
+			}
 		}
-		try {
-			instancePreferences.flush();
-		} catch (BackingStoreException e) {
-			Util.log(e, "Exception while saving user library " + libName); //$NON-NLS-1$
-		}
-		// No need to lock this.userLibraries since SetContainerOperation uses ISchedulingRule now.
+		// this.userLibraries was updated during the PreferenceChangeEvent (see preferenceChange(...))
 	}
 
 }

@@ -537,6 +537,52 @@ public SyntheticMethodBinding addSyntheticBridgeMethod(MethodBinding inheritedMe
 	}
 	return accessMethod;
 }
+/*
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=288658. Generate a bridge method if a public method is inherited
+ * from a non-public class into a public class (only in 1.6 or greater)
+ */
+public SyntheticMethodBinding addSyntheticBridgeMethod(MethodBinding inheritedMethodToBridge) {
+	if (this.scope.compilerOptions().complianceLevel <= ClassFileConstants.JDK1_5) {
+		return null;
+	}
+	if (isInterface()) return null;
+	if (inheritedMethodToBridge.isAbstract() || inheritedMethodToBridge.isFinal() || inheritedMethodToBridge.isStatic()) {
+		return null;
+	}
+	if (this.synthetics == null)
+		this.synthetics = new HashMap[MAX_SYNTHETICS];
+	if (this.synthetics[SourceTypeBinding.METHOD_EMUL] == null) {
+		this.synthetics[SourceTypeBinding.METHOD_EMUL] = new HashMap(5);
+	} else {
+		// check to see if there is another equivalent inheritedMethod already added
+		Iterator synthMethods = this.synthetics[SourceTypeBinding.METHOD_EMUL].keySet().iterator();
+		while (synthMethods.hasNext()) {
+			Object synthetic = synthMethods.next();
+			if (synthetic instanceof MethodBinding) {
+				MethodBinding method = (MethodBinding) synthetic;
+				if (CharOperation.equals(inheritedMethodToBridge.selector, method.selector)
+					&& inheritedMethodToBridge.returnType.erasure() == method.returnType.erasure()
+					&& inheritedMethodToBridge.areParameterErasuresEqual(method)) {
+						return null;
+				}
+			}
+		}
+	}
+
+	SyntheticMethodBinding accessMethod = null;
+	SyntheticMethodBinding[] accessors = (SyntheticMethodBinding[]) this.synthetics[SourceTypeBinding.METHOD_EMUL].get(inheritedMethodToBridge);
+	if (accessors == null) {
+		accessMethod = new SyntheticMethodBinding(inheritedMethodToBridge, this);
+		this.synthetics[SourceTypeBinding.METHOD_EMUL].put(inheritedMethodToBridge, accessors = new SyntheticMethodBinding[2]);
+		accessors[0] = accessMethod;
+	} else {
+		if ((accessMethod = accessors[0]) == null) {
+			accessMethod = new SyntheticMethodBinding(inheritedMethodToBridge, this);
+			accessors[0] = accessMethod;
+		}
+	}
+	return accessMethod;
+}
 boolean areFieldsInitialized() {
 	return this.fields != Binding.UNINITIALIZED_FIELDS;
 }

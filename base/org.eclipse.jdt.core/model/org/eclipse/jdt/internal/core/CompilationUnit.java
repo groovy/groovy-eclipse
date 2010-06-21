@@ -587,9 +587,9 @@ public IJavaElement findSharedWorkingCopy(IBufferFactory factory) {
  */
 public ICompilationUnit findWorkingCopy(WorkingCopyOwner workingCopyOwner) {
     // GROOVY start
-    // old
-    // CompilationUnit cu = new CompilationUnit((PackageFragment)this.parent, getElementName(), workingCopyOwner);
-    // new
+    /* old
+	CompilationUnit cu = new CompilationUnit((PackageFragment)this.parent, getElementName(), workingCopyOwner);
+    */// new
     CompilationUnit cu = LanguageSupportFactory.newCompilationUnit((PackageFragment)this.parent, getElementName(), workingCopyOwner);
     // GROOVY end
 	
@@ -892,9 +892,9 @@ public ICompilationUnit getPrimary() {
 public IJavaElement getPrimaryElement(boolean checkOwner) {
 	if (checkOwner && isPrimary()) return this;
     // GROOVY start
-    // old
-    // return new CompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY);
-    // new
+    /* old
+	return new CompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY);
+    */// new
 	return LanguageSupportFactory.newCompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY);
     // GROOVY end
 }
@@ -1142,9 +1142,9 @@ protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelE
 		// ensure that isOpen() is called outside the bufManager synchronized block
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=237772
 	    // GROOVY start
-	    // old
-	    // mustSetToOriginalContent = !isPrimary() && (original = new CompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY)).isOpen() ;
-	    // new
+	    /* old
+		mustSetToOriginalContent = !isPrimary() && (original = new CompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY)).isOpen() ;
+	    */// new
 	    mustSetToOriginalContent = !isPrimary() && (original = LanguageSupportFactory.newCompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY)).isOpen() ;
 	    // GROOVY end
 	}

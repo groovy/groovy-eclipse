@@ -860,15 +860,29 @@ public class DefaultCodeFormatterConstants {
 	public static final String FORMATTER_CONTINUATION_INDENTATION_FOR_ARRAY_INITIALIZER = JavaCore.PLUGIN_ID + ".formatter.continuation_indentation_for_array_initializer";	//$NON-NLS-1$
 	/**
 	 * <pre>
+	 * FORMATTER / Option to use the disabling and enabling tags defined respectively by the {@link #FORMATTER_DISABLING_TAG} and the {@link #FORMATTER_ENABLING_TAG} options.
+	 *     - option id:         "org.eclipse.jdt.core.formatter.use_on_off_tags"
+	 *     - possible values:   TRUE / FALSE
+	 *     - default:           FALSE
+	 * </pre>
+	 * @since 3.6
+	 */
+	public static final String FORMATTER_USE_ON_OFF_TAGS = JavaCore.PLUGIN_ID + ".formatter.use_on_off_tags";	//$NON-NLS-1$
+	/**
+	 * <pre>
 	 * FORMATTER / Option to define the tag to put in a comment to disable the formatting.
-	 * See the {@link #FORMATTER_ENABLING_TAG} option to re-enable it.
+	 *     - option id:         "org.eclipse.jdt.core.formatter.disabling_tag"
 	 *     - possible values:   String, with constraints mentioned below
-	 *     - default:           ""
+	 *     - default:           "@formatter:off"
+	 * 
+	 * See the {@link #FORMATTER_ENABLING_TAG} option to re-enable it.
 	 * </pre>
 	 * 
 	 * <p>
 	 * Note that:
 	 * <ol>
+	 * <li>This tag is used by the formatter only if the 
+	 * {@link #FORMATTER_USE_ON_OFF_TAGS} option is set to {@link #TRUE}.</li>
 	 * <li>The tag name will be trimmed. Hence if it does contain white spaces
 	 * at the beginning or at the end, they will not be taken into account while
 	 * searching for the tag in the comments</li>
@@ -887,14 +901,14 @@ public class DefaultCodeFormatterConstants {
 	 * format the code from the beginning of the comment including this tag. If it
 	 * was already disabled, the tag has no special effect.
 	 * <p>
-	 * For example, the second defined enabling tag &quot;<b>disable-formatter</b>&quot;
+	 * For example, the second default enabling tag &quot;<b>@formatter:off</b>&quot;
 	 * in the following snippet is not necessary as the formatter was already disabled
 	 * since the first one:
 	 * <pre>
 	 * class X {
-	 * // disable-formatter
+	 * // @formatter:off
 	 * void foo1() {}
-	 * // disable-formatter
+	 * // @formatter:off
 	 * void foo2() {}
 	 * void bar1() {}
 	 * void bar2() {}
@@ -906,7 +920,7 @@ public class DefaultCodeFormatterConstants {
 	 * For example, when a disabling tag is put at the beginning of the code, then
 	 * the entire content of a compilation unit is not formatted:
 	 * <pre>
-	 * // disable-formatter
+	 * // @formatter:off
 	 * class X {
 	 * void foo1() {}
 	 * void foo2() {}
@@ -924,9 +938,9 @@ public class DefaultCodeFormatterConstants {
 	 * class X {
 	 * &#47;&#42;
 	 * &nbsp;&#42; This is a comment with a mix of disabling and enabling tags:
-	 * &nbsp;&#42;  - <b>disable-formatter</b>
-	 * &nbsp;&#42;  - <b>enable-formatter</b>
-	 * &nbsp;&#42;  - <b>disable-formatter</b>
+	 * &nbsp;&#42;  - <b>@formatter:off</b>
+	 * &nbsp;&#42;  - <b>@formatter:on</b>
+	 * &nbsp;&#42;  - <b>@formatter:off</b>
 	 * &nbsp;&#42; The formatter will stop to format from the beginning of this comment...
 	 * &nbsp;&#42;&#47;
 	 * void foo() {}
@@ -945,16 +959,17 @@ public class DefaultCodeFormatterConstants {
 	public static final String FORMATTER_DISABLING_TAG = JavaCore.PLUGIN_ID + ".formatter.disabling_tag";	//$NON-NLS-1$
 	/**
 	 * <pre>
-	 * FORMATTER / Option to define the tag to put in a comment to re-enable the
-	 * formatting after it has been disabled (see {@link #FORMATTER_DISABLING_TAG})
+	 * FORMATTER / Option to define the tag to put in a comment to re-enable the formatting after it has been disabled (see {@link #FORMATTER_DISABLING_TAG})
 	 *     - option id:         "org.eclipse.jdt.core.formatter.enabling_tag"
 	 *     - possible values:   String, with constraints mentioned below
-	 *     - default:           ""
+	 *     - default:           "@formatter:on"
 	 * </pre>
 	 * 
 	 * <p>
 	 * Note that:
 	 * <ol>
+	 * <li>This tag is used by the formatter only if the 
+	 * {@link #FORMATTER_USE_ON_OFF_TAGS} option is set to {@link #TRUE}.</li>
 	 * <li>The tag name will be trimmed. Hence if it does contain white spaces
 	 * at the beginning or at the end, they will not be taken into account while
 	 * searching for the tag in the comments</li>
@@ -973,14 +988,14 @@ public class DefaultCodeFormatterConstants {
 	 * to format the code just after the comment including this tag. If it was already
 	 * active, i.e. already re-enabled or never disabled, the tag has no special effect.
 	 * <p>
-	 * For example, the defined enabling tag &quot;<b>enable-formatter</b>&quot;
+	 * For example, the default enabling tag &quot;<b>@formatter:on</b>&quot;
 	 * in the following snippet is not necessary as the formatter has never been
 	 * disabled:
 	 * <pre>
 	 * class X {
 	 * void foo1() {}
 	 * void foo2() {}
-	 * // enable-formatter
+	 * // @formatter:on
 	 * void bar1() {}
 	 * void bar2() {}
 	 * }
@@ -989,12 +1004,12 @@ public class DefaultCodeFormatterConstants {
 	 * the formatting will have been re-enabled by the first one:
 	 * <pre>
 	 * class X {
-	 * // disable-formatter
+	 * // @formatter:off
 	 * void foo1() {}
 	 * void foo2() {}
-	 * // enable-formatter
+	 * // @formatter:on
 	 * void bar1() {}
-	 * // enable-formatter
+	 * // @formatter:on
 	 * void bar2() {}
 	 * }
 	 * </pre>
@@ -1005,13 +1020,13 @@ public class DefaultCodeFormatterConstants {
 	 * <p>For example, in the following snippet, the formatter will be re-enabled after
 	 * the comment:</p>
 	 * <pre>
-	 * // disable-formatter
+	 * // @formatter:off
 	 * class X {
 	 * &#47;&#42;
 	 * &nbsp;&#42; This is a comment with a mix of disabling and enabling tags:
-	 * &nbsp;&#42;  - <b>enable-formatter</b>
-	 * &nbsp;&#42;  - <b>disable-formatter</b>
-	 * &nbsp;&#42;  - <b>enable-formatter</b>
+	 * &nbsp;&#42;  - <b>@formatter:on</b>
+	 * &nbsp;&#42;  - <b>@formatter:off</b>
+	 * &nbsp;&#42;  - <b>@formatter:on</b>
 	 * &nbsp;&#42; The formatter will restart to format after this comment...
 	 * &nbsp;&#42;&#47;
 	 * void foo() {}
@@ -3483,6 +3498,51 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.3
 	 */
 	public static final String FORMATTER_WRAP_BEFORE_BINARY_OPERATOR = JavaCore.PLUGIN_ID + ".formatter.wrap_before_binary_operator"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to wrap outer expressions in nested expressions
+	 *     - option id:         "org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           TRUE
+	 * </pre>
+	 * <p>
+	 * This option changes the formatter behavior when nested method calls are encountered.
+	 * Since 3.6, the formatter tries to wrap outermost method calls first to have a better output.</p>
+	 * <p>For example, let's say we are using the Eclipse built-in profile with a max line width=40+space for tab policy.
+	 * Then consider the following snippet:</p>
+	 * <pre>
+	 * public class X01 {
+	 *     void test() {
+	 *         foo(bar(1, 2, 3, 4), bar(5, 6, 7, 8));
+	 *     }
+	 * }
+	 * </pre>
+	 * <p>With this new strategy, the formatter will wrap the line earlier, between the arguments of the message call
+	 * for this example, and then it will allow to keep each nested call on a single line.</p>
+	 * <p>Hence, the output will be:</p>
+	 * <pre>
+	 * public class X01 {
+	 *     void test() {
+	 *         foo(bar(1, 2, 3, 4),
+	 *             bar(5, 6, 7, 8));
+	 *     }
+	 * }
+	 * </pre>
+	 * <p>
+	 * </p>
+	 * <p><b><u>Important notes</u></b>:</p>
+	 * <ol>
+	 * <li>This new behavior is automatically activated (i.e. the default value for this preference is {@link #TRUE}).
+	 * If the backward compatibility regarding previous versions' formatter behavior (i.e. before 3.6 version) is necessary,
+	 * then the preference needs to be set to {@link #FALSE} to retrieve the previous formatter behavior.</li>
+	 * <li>The new strategy currently only applies to nested method calls, but might be extended to other nested expressions in future versions</li>
+	 * </ol>
+	 * 
+	 * @see #TRUE
+	 * @see #FALSE
+	 * @since 3.6
+	 */
+	public static final String FORMATTER_WRAP_OUTER_EXPRESSIONS_WHEN_NESTED = JavaCore.PLUGIN_ID + ".formatter.wrap_outer_expressions_when_nested"; //$NON-NLS-1$
 	/**
 	 * <pre>
 	 * FORMATTER / The wrapping is done by indenting by one compare to the current indentation.

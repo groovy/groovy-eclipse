@@ -1362,20 +1362,36 @@ public void deprecatedMethod(MethodBinding method, ASTNode location) {
 	int severity = computeSeverity(isConstructor ? IProblem.UsingDeprecatedConstructor : IProblem.UsingDeprecatedMethod);
 	if (severity == ProblemSeverities.Ignore) return;
 	if (isConstructor) {
+		int start = -1;
+		if(location instanceof AllocationExpression) {
+			// omit the new keyword from the warning marker
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=300031
+			AllocationExpression allocationExpression = (AllocationExpression) location;
+			if (allocationExpression.enumConstant != null) {
+				start = allocationExpression.enumConstant.sourceStart;
+			}
+			start = allocationExpression.type.sourceStart;
+		}
 		this.handle(
 			IProblem.UsingDeprecatedConstructor,
 			new String[] {new String(method.declaringClass.readableName()), typesAsString(method.isVarargs(), method.parameters, false)},
 			new String[] {new String(method.declaringClass.shortReadableName()), typesAsString(method.isVarargs(), method.parameters, true)},
 			severity,
-			location.sourceStart,
+			(start == -1) ? location.sourceStart : start,
 			location.sourceEnd);
 	} else {
+		int start = -1;
+		if (location instanceof MessageSend) {
+			// start the warning marker from the location where the name of the method starts
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=300031
+			start = (int) (((MessageSend)location).nameSourcePosition >>> 32);
+		}
 		this.handle(
 			IProblem.UsingDeprecatedMethod,
 			new String[] {new String(method.declaringClass.readableName()), new String(method.selector), typesAsString(method.isVarargs(), method.parameters, false)},
 			new String[] {new String(method.declaringClass.shortReadableName()), new String(method.selector), typesAsString(method.isVarargs(), method.parameters, true)},
 			severity,
-			location.sourceStart,
+			(start == -1) ? location.sourceStart : start,
 			location.sourceEnd);
 	}
 }
@@ -1389,12 +1405,19 @@ public void deprecatedType(TypeBinding type, ASTNode location, int index) {
 	int severity = computeSeverity(IProblem.UsingDeprecatedType);
 	if (severity == ProblemSeverities.Ignore) return;
 	type = type.leafComponentType();
+	int sourceStart = -1;
+	if (location instanceof QualifiedTypeReference) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=300031
+		QualifiedTypeReference ref = (QualifiedTypeReference) location;
+		if (index < Integer.MAX_VALUE) {
+			sourceStart = (int) (ref.sourcePositions[index] >> 32);
+		}
+	}
 	this.handle(
 		IProblem.UsingDeprecatedType,
 		new String[] {new String(type.readableName())},
 		new String[] {new String(type.shortReadableName())},
 		severity,
-		location.sourceStart,
+		(sourceStart == -1) ? location.sourceStart : sourceStart,
 		nodeSourceEnd(null, location, index));
 }
 public void disallowedTargetForAnnotation(Annotation annotation) {
@@ -2124,7 +2147,12 @@ public void illegalGenericArray(TypeBinding leafComponentType, ASTNode location)
 public void illegalInstanceOfGenericType(TypeBinding checkedType, ASTNode location) {
 	TypeBinding erasedType = checkedType.leafComponentType().erasure();
 	StringBuffer recommendedFormBuffer = new StringBuffer(10);
-	recommendedFormBuffer.append(erasedType.sourceName());
+	if (erasedType instanceof ReferenceBinding) {
+		ReferenceBinding referenceBinding = (ReferenceBinding) erasedType;
+		recommendedFormBuffer.append(referenceBinding.qualifiedSourceName());
+	} else {
+		recommendedFormBuffer.append(erasedType.sourceName());
+	}
 	int count = erasedType.typeVariables().length;
 	if (count > 0) {
 		recommendedFormBuffer.append('<');
@@ -3213,8 +3241,14 @@ public void invalidField(NameReference nameRef, FieldBinding field) {
 						nameRef.sourceEnd);
 					return;
 			}
-			id = IProblem.UndefinedField;
-			break;
+			String[] arguments = new String[] {new String(field.readableName())};
+			this.handle(
+					id,
+					arguments,
+					arguments,
+					nodeSourceStart(field, nameRef),
+					nodeSourceEnd(field, nameRef));
+			return;
 		case ProblemReasons.NotVisible :
 			char[] name = field.readableName();
 			name = CharOperation.lastSegment(name, '.');

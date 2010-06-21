@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -49,7 +49,7 @@ public class JavaModel extends Openable implements IJavaModel {
 
 	/**
 	 * A set of external files ({@link #existingExternalFiles}) which have
-	 * been confirmed as file (ie. which returns true to {@link java.io.File#isFile()}.
+	 * been confirmed as file (i.e. which returns true to {@link java.io.File#isFile()}.
 	 * Note this cache is kept for the whole session.
 	 */
 	public static HashSet existingExternalConfirmedFiles = new HashSet();
@@ -366,14 +366,14 @@ private synchronized static boolean existingExternalFilesContains(File externalF
 }
 
 /**
- * Helper method - returns whether an object is afile (ie. which returns true to {@link java.io.File#isFile()}.
+ * Helper method - returns whether an object is afile (i.e. which returns true to {@link java.io.File#isFile()}.
  */
 public static boolean isFile(Object target) {
 	return getFile(target) != null;
 }
 
 /**
- * Helper method - returns the file item (ie. which returns true to {@link java.io.File#isFile()},
+ * Helper method - returns the file item (i.e. which returns true to {@link java.io.File#isFile()},
  * or null if unbound
  */
 public static synchronized File getFile(Object target) {

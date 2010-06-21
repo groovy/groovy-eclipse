@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -509,48 +509,48 @@ protected IJavaElement createHandle(AbstractMethodDeclaration method, IJavaEleme
 		// fall thru if its a constructor with a synthetic argument... find it the slower way
 		ClassFileReader reader = classFileReader(type);
 		if (reader != null) {
-			IBinaryMethod[] methods = reader.getMethods();
-			if (methods != null) {
-				// build arguments names
-				boolean firstIsSynthetic = false;
-				if (reader.isMember() && method.isConstructor() && !Flags.isStatic(reader.getModifiers())) { // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=48261
-					firstIsSynthetic = true;
-					argCount++;
-				}
-				char[][] argumentTypeNames = new char[argCount][];
-				for (int i = 0; i < argCount; i++) {
-					char[] typeName = null;
-					if (i == 0 && firstIsSynthetic) {
-						typeName = type.getDeclaringType().getFullyQualifiedName().toCharArray();
-					} else if (arguments != null) {
-						TypeReference typeRef = arguments[firstIsSynthetic ? i - 1 : i].type;
-						typeName = CharOperation.concatWith(typeRef.getTypeName(), '.');
-						for (int k = 0, dim = typeRef.dimensions(); k < dim; k++)
-							typeName = CharOperation.concat(typeName, new char[] {'[', ']'});
-					}
-					if (typeName == null) {
-						// invalid type name
-						return null;
-					}
-					argumentTypeNames[i] = typeName;
-				}
-
-				// return binary method
-				IMethod binaryMethod = createBinaryMethodHandle(type, method.selector, argumentTypeNames);
-				if (binaryMethod == null) {
-					// when first attempt fails, try with similar matches if any...
-					PossibleMatch similarMatch = this.currentPossibleMatch.getSimilarMatch();
-					while (similarMatch != null) {
-						type = ((ClassFile)similarMatch.openable).getType();
-						binaryMethod = createBinaryMethodHandle(type, method.selector, argumentTypeNames);
-						if (binaryMethod != null) {
-							return binaryMethod;
-						}
-						similarMatch = similarMatch.getSimilarMatch();
-					}
-				}
-				return binaryMethod;
+			// build arguments names
+			boolean firstIsSynthetic = false;
+			if (reader.isMember() && method.isConstructor() && !Flags.isStatic(reader.getModifiers())) { // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=48261
+				firstIsSynthetic = true;
+				argCount++;
 			}
+			char[][] argumentTypeNames = new char[argCount][];
+			for (int i = 0; i < argCount; i++) {
+				char[] typeName = null;
+				if (i == 0 && firstIsSynthetic) {
+					typeName = type.getDeclaringType().getFullyQualifiedName().toCharArray();
+				} else if (arguments != null) {
+					TypeReference typeRef = arguments[firstIsSynthetic ? i - 1 : i].type;
+					typeName = CharOperation.concatWith(typeRef.getTypeName(), '.');
+					for (int k = 0, dim = typeRef.dimensions(); k < dim; k++)
+						typeName = CharOperation.concat(typeName, new char[] {'[', ']'});
+				}
+				if (typeName == null) {
+					// invalid type name
+					return null;
+				}
+				argumentTypeNames[i] = typeName;
+			}
+			// return binary method
+			IMethod binaryMethod = createBinaryMethodHandle(type, method.selector, argumentTypeNames);
+			if (binaryMethod == null) {
+				// when first attempt fails, try with similar matches if any...
+				PossibleMatch similarMatch = this.currentPossibleMatch.getSimilarMatch();
+				while (similarMatch != null) {
+					type = ((ClassFile)similarMatch.openable).getType();
+					binaryMethod = createBinaryMethodHandle(type, method.selector, argumentTypeNames);
+					if (binaryMethod != null) {
+						return binaryMethod;
+					}
+					similarMatch = similarMatch.getSimilarMatch();
+				}
+			}
+			return binaryMethod;
+		}
+		if (BasicSearchEngine.VERBOSE) {
+			System.out.println("Not able to createHandle for the method " + //$NON-NLS-1$
+					CharOperation.charToString(method.selector) + " May miss some results");  //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -798,7 +798,13 @@ protected IType createTypeHandle(String simpleTypeName) {
 	return classFile.getType();
 }
 protected boolean encloses(IJavaElement element) {
-	return element != null && this.scope.encloses(element);
+	if (element != null) {
+		if (this.scope instanceof HierarchyScope)
+			return ((HierarchyScope)this.scope).encloses(element, this.progressMonitor);
+		else 
+			return this.scope.encloses(element);
+	}
+	return false;
 }
 /* (non-Javadoc)
  * Return info about last type argument of a parameterized type reference.
@@ -1246,7 +1252,7 @@ public void locateMatches(SearchDocument[] searchDocuments) throws CoreException
 			this.progressMonitor.beginTask("", searchDocuments.length); //$NON-NLS-1$
 		}
 
-		// initialize pattern for polymorphic search (ie. method reference pattern)
+		// initialize pattern for polymorphic search (i.e. method reference pattern)
 		this.patternLocator.initializePolymorphicSearch(this);
 
 		JavaProject previousJavaProject = null;
@@ -1947,7 +1953,7 @@ protected void reportAccurateParameterizedMethodReference(SearchMatch match, AST
 	if (match.getRule() == 0) return;
 	if (!encloses((IJavaElement)match.getElement())) return;
 
-	// If there's type arguments, look for end (ie. char '>') of last one.
+	// If there's type arguments, look for end (i.e. char '>') of last one.
 	int start = match.getOffset();
 	if (typeArguments != null && typeArguments.length > 0) {
 		boolean isErasureMatch= (this.pattern instanceof OrPattern) ? ((OrPattern)this.pattern).isErasureMatch() : ((JavaSearchPattern)this.pattern).isErasureMatch();
@@ -2003,7 +2009,7 @@ protected void reportAccurateParameterizedTypeReference(SearchMatch match, TypeR
 	if (match.getRule() == 0) return;
 	if (!encloses((IJavaElement)match.getElement())) return;
 
-	// If there's type arguments, look for end (ie. char '>') of last one.
+	// If there's type arguments, look for end (i.e. char '>') of last one.
 	int end = typeRef.sourceEnd;
 	if (typeArguments != null) {
 
@@ -2195,7 +2201,7 @@ protected void reportBinaryMemberDeclaration(IResource resource, IMember binaryM
 }
 /**
  * Visit the given method declaration and report the nodes that match exactly the
- * search pattern (ie. the ones in the matching nodes set)
+ * search pattern (i.e. the ones in the matching nodes set)
  * Note that the method declaration has already been checked.
  */
 protected void reportMatching(AbstractMethodDeclaration method, TypeDeclaration type, IJavaElement parent, int accuracy, boolean typeInHierarchy, MatchingNodeSet nodeSet) throws CoreException {
@@ -2265,7 +2271,9 @@ protected void reportMatching(AbstractMethodDeclaration method, TypeDeclaration 
 		if (enclosingElement == null) {
 			enclosingElement = createHandle(method, parent);
 		}
-		reportMatching(typeParameters, enclosingElement, parent, method.binding, nodeSet);
+		if (enclosingElement != null) {
+			reportMatching(typeParameters, enclosingElement, parent, method.binding, nodeSet);
+		}
 	}
 
 	// report annotations
@@ -2273,7 +2281,9 @@ protected void reportMatching(AbstractMethodDeclaration method, TypeDeclaration 
 		if (enclosingElement == null) {
 			enclosingElement = createHandle(method, parent);
 		}
-		reportMatching(method.annotations, enclosingElement, null, method.binding, nodeSet, true, true);
+		if (enclosingElement != null) {
+			reportMatching(method.annotations, enclosingElement, null, method.binding, nodeSet, true, true);
+		}
 	}
 
 	// references in this method
@@ -2506,7 +2516,7 @@ protected void reportMatching(CompilationUnitDeclaration unit, boolean mustResol
 }
 /**
  * Visit the given field declaration and report the nodes that match exactly the
- * search pattern (ie. the ones in the matching nodes set)
+ * search pattern (i.e. the ones in the matching nodes set)
  */
 protected void reportMatching(FieldDeclaration field, FieldDeclaration[] otherFields, TypeDeclaration type, IJavaElement parent, int accuracy, boolean typeInHierarchy, MatchingNodeSet nodeSet) throws CoreException {
 	IJavaElement enclosingElement = null;
@@ -2634,7 +2644,7 @@ protected void reportMatching(FieldDeclaration field, FieldDeclaration[] otherFi
 }
 /**
  * Visit the given type declaration and report the nodes that match exactly the
- * search pattern (ie. the ones in the matching nodes set)
+ * search pattern (i.e. the ones in the matching nodes set)
  */
 protected void reportMatching(TypeDeclaration type, IJavaElement parent, int accuracy, MatchingNodeSet nodeSet, int occurrenceCount) throws CoreException {
 	// create type handle

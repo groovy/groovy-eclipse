@@ -315,9 +315,9 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 		IContainer destFolder = (IContainer)dest.getResource(); // can be an IFolder or an IProject
 		IFile destFile = destFolder.getFile(new Path(destName));
 	    // GROOVY start
-	    // old
-	    // org.eclipse.jdt.internal.core.CompilationUnit destCU = new org.eclipse.jdt.internal.core.CompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
-	    // new
+	    /* old
+		org.eclipse.jdt.internal.core.CompilationUnit destCU = new org.eclipse.jdt.internal.core.CompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
+	    */// new
 		org.eclipse.jdt.internal.core.CompilationUnit destCU = LanguageSupportFactory.newCompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
 	    // GROOVY end
 		

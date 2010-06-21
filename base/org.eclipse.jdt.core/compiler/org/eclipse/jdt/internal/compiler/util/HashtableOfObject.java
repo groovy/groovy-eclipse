@@ -15,14 +15,14 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 /**
  * Hashtable of {char[] --> Object }
  */
-public class HashtableOfObject implements Cloneable {
+public final class HashtableOfObject implements Cloneable {
 
 	// to avoid using Enumerations, walk the individual tables skipping nulls
 	public char[] keyTable[];
 	public Object valueTable[];
 
 	public int elementSize; // number of elements in the table
-	protected int threshold;
+	int threshold;
 
 	public HashtableOfObject() {
 		this(13);
@@ -64,7 +64,7 @@ public class HashtableOfObject implements Cloneable {
 
 	public boolean containsKey(char[] key) {
 		int length = this.keyTable.length,
-			index = hashCode(key) % length;
+			index = CharOperation.hashCode(key) % length;
 		int keyLength = key.length;
 		char[] currentKey;
 		while ((currentKey = this.keyTable[index]) != null) {
@@ -79,7 +79,7 @@ public class HashtableOfObject implements Cloneable {
 
 	public Object get(char[] key) {
 		int length = this.keyTable.length,
-			index = hashCode(key) % length;
+			index = CharOperation.hashCode(key) % length;
 		int keyLength = key.length;
 		char[] currentKey;
 		while ((currentKey = this.keyTable[index]) != null) {
@@ -92,26 +92,9 @@ public class HashtableOfObject implements Cloneable {
 		return null;
 	}
 
-	/*
-	 * This method implementation is an inline of the {@link CharOperation#hashCode(char[])} method...
-	 */
-	protected int hashCode(char[] key) {
-		int length = key.length;
-		int hash = length == 0 ? 31 : key[0];
-		if (length < 8) {
-			for (int i = length; --i > 0;)
-				hash = (hash * 31) + key[i];
-		} else {
-			// 8 characters is enough to compute a decent hash code, don't waste time examining every character
-			for (int i = length - 1, last = i > 16 ? i - 16 : 0; i > last; i -= 2)
-				hash = (hash * 31) + key[i];
-		}
-		return hash & 0x7FFFFFFF;
-	}
-
 	public Object put(char[] key, Object value) {
 		int length = this.keyTable.length,
-			index = hashCode(key) % length;
+			index = CharOperation.hashCode(key) % length;
 		int keyLength = key.length;
 		char[] currentKey;
 		while ((currentKey = this.keyTable[index]) != null) {
@@ -141,7 +124,7 @@ public class HashtableOfObject implements Cloneable {
 	 */
 	public void putUnsafely(char[] key, Object value) {
 		int length = this.keyTable.length,
-			index = hashCode(key) % length;
+			index = CharOperation.hashCode(key) % length;
 		while (this.keyTable[index] != null) {
 			if (++index == length) {
 				index = 0;
@@ -158,7 +141,7 @@ public class HashtableOfObject implements Cloneable {
 
 	public Object removeKey(char[] key) {
 		int length = this.keyTable.length,
-			index = hashCode(key) % length;
+			index = CharOperation.hashCode(key) % length;
 		int keyLength = key.length;
 		char[] currentKey;
 		while ((currentKey = this.keyTable[index]) != null) {
@@ -177,7 +160,7 @@ public class HashtableOfObject implements Cloneable {
 		return null;
 	}
 
-	protected void rehash() {
+	private void rehash() {
 
 		HashtableOfObject newHashtable = new HashtableOfObject(this.elementSize * 2);		// double the number of expected elements
 		char[] currentKey;

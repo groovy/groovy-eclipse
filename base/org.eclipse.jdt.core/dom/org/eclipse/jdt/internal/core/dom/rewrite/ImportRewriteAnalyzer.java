@@ -631,13 +631,27 @@ public final class ImportRewriteAnalyzer {
 						if (!doStarImport || currDecl.isOnDemand() || (onDemandConflicts != null && onDemandConflicts.contains(currDecl.getSimpleName()))) {
 							String str= getNewImportString(currDecl.getElementName(), isStatic, lineDelim);
 							stringsToInsert.add(str);
+						} else if (doStarImport && !currDecl.isOnDemand()) {
+							String simpleName = currDecl.getTypeQualifiedName();
+							if (simpleName.indexOf('.') != -1) {
+								String str= getNewImportString(currDecl.getElementName(), isStatic, lineDelim);
+								if (stringsToInsert.indexOf(str) == -1) {
+									stringsToInsert.add(str);
+								}
+							}
 						}
-					} else {
-						if (!doStarImport || currDecl.isOnDemand() || onDemandConflicts == null || onDemandConflicts.contains(currDecl.getSimpleName())) {
-							int offset= region.getOffset();
-							removeAndInsertNew(buffer, currPos, offset, stringsToInsert, resEdit);
-							stringsToInsert.clear();
-							currPos= offset + region.getLength();
+					} else if (!doStarImport || currDecl.isOnDemand() || onDemandConflicts == null || onDemandConflicts.contains(currDecl.getSimpleName())) {
+						int offset= region.getOffset();
+						removeAndInsertNew(buffer, currPos, offset, stringsToInsert, resEdit);
+						stringsToInsert.clear();
+						currPos= offset + region.getLength();
+					} else if (doStarImport && !currDecl.isOnDemand()) {
+						String simpleName = currDecl.getTypeQualifiedName();
+						if (simpleName.indexOf('.') != -1) {
+							String str= getNewImportString(currDecl.getElementName(), isStatic, lineDelim);
+							if (stringsToInsert.indexOf(str) == -1) {
+								stringsToInsert.add(str);
+							}
 						}
 					}
 				}

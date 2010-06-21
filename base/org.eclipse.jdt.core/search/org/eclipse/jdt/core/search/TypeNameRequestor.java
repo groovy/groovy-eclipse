@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,12 +29,12 @@ public abstract class TypeNameRequestor {
 	 * </p>
 	 *
 	 * @param modifiers the modifier flags of the type. Note that for source type,
-	 *		these flags may slightly differ from thoses get after resolution.
+	 *		these flags may slightly differ from those get after resolution.
 	 *		For example an interface defined by <code>interface A {}</code>,
 	 *		although obviously public, will be returned false by <code>Flags.isPublic(modifiers)</code>
-	 *		due to the fact that its declaration does not explicitely define public flag.
+	 *		due to the fact that its declaration does not explicitly define public flag.
 	 *		@see org.eclipse.jdt.core.Flags
-	 * @param packageName the package name as specified in the package declaration (ie. a dot-separated name)
+	 * @param packageName the package name as specified in the package declaration (i.e. a dot-separated name)
 	 * @param simpleTypeName the simple name of the type
 	 * @param enclosingTypeNames if the type is a member type,
 	 *          the simple names of the enclosing types from the outer-most to the

@@ -587,19 +587,49 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 					case Binding.FIELD :
 						FieldBinding field = (FieldBinding) recipient;
 						field.tagBits = ((FieldBinding) annotationRecipient).tagBits;
+						if (annotations != null) {
+							// need to fill the instances array
+							for (int j = 0; j < length; j++) {
+								Annotation annot = sourceAnnotations[j];
+								annotations[j] = annot.getCompilerAnnotation();
+							}
+						}
 						break;
 					case Binding.LOCAL :
 						LocalVariableBinding local = (LocalVariableBinding) recipient;
-						local.tagBits = ((LocalVariableBinding) annotationRecipient).tagBits;
+						long otherLocalTagBits = ((LocalVariableBinding) annotationRecipient).tagBits;
+						local.tagBits = otherLocalTagBits;
+						if ((otherLocalTagBits & TagBits.AnnotationSuppressWarnings) == 0) {
+							// None of the annotations is a SuppressWarnings annotation
+							// need to fill the instances array
+							if (annotations != null) {
+								for (int j = 0; j < length; j++) {
+									Annotation annot = sourceAnnotations[j];
+									annotations[j] = annot.getCompilerAnnotation();
+								}
+							}
+						} else if (annotations != null) {
+							// One of the annotations at least is a SuppressWarnings annotation
+							LocalDeclaration localDeclaration = local.declaration;
+							int declarationSourceEnd = localDeclaration.declarationSourceEnd;
+							int declarationSourceStart = localDeclaration.declarationSourceStart;
+							for (int j = 0; j < length; j++) {
+								Annotation annot = sourceAnnotations[j];
+								/*
+								 * Annotations are shared between two locals, but we still need to record
+								 * the suppress annotation range for the second local
+								 */
+								AnnotationBinding annotationBinding = annot.getCompilerAnnotation();
+								annotations[j] = annotationBinding;
+								if (annotationBinding != null) {
+									final ReferenceBinding annotationType = annotationBinding.getAnnotationType();
+									if (annotationType != null && annotationType.id == TypeIds.T_JavaLangSuppressWarnings) {
+										annot.recordSuppressWarnings(scope, declarationSourceStart, declarationSourceEnd, scope.compilerOptions().suppressWarnings);
+									}
+								}
+							}
+						}
 						break;
-				}
-				if (annotations != null) {
-					// need to fill the instances array
-					annotations[0] = annotation.getCompilerAnnotation();
-					for (int j = 1; j < length; j++) {
-						Annotation annot = sourceAnnotations[j];
-						annotations[j] = annot.getCompilerAnnotation();
-					}
 				}
 				return;
 			} else {

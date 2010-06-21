@@ -931,6 +931,13 @@ public class ClasspathEntry implements IClasspathEntry {
 					}
 				} else {
 					IPath calledJar = directoryPath.append(new Path(calledFileName));
+					// Ignore if segment count is Zero (https://bugs.eclipse.org/bugs/show_bug.cgi?id=308150)
+					if (calledJar.segmentCount() == 0) {
+						if (JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
+							Util.verbose("Invalid Class-Path entry " + calledFileName + " in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$ //$NON-NLS-2$
+						}
+						continue;
+					}
 					resolvedChainedLibraries(calledJar, visited, result);
 					result.add(calledJar);
 				}

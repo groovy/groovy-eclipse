@@ -15,8 +15,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
@@ -36,11 +38,13 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -102,6 +106,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		public static final int EMACS = 2;
 		private static final String ERROR = "ERROR"; //$NON-NLS-1$
 		private static final String ERROR_TAG = "error"; //$NON-NLS-1$
+		private static final String WARNING_TAG = "warning"; //$NON-NLS-1$
 		private static final String EXCEPTION = "exception"; //$NON-NLS-1$
 		private static final String EXTRA_PROBLEM_TAG = "extra_problem"; //$NON-NLS-1$
 		private static final String EXTRA_PROBLEMS = "extra_problems"; //$NON-NLS-1$
@@ -148,7 +153,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		private static final String VALUE = "value"; //$NON-NLS-1$
 		private static final String WARNING = "WARNING"; //$NON-NLS-1$
 		public static final int XML = 1;
-		private static final String XML_DTD_DECLARATION = "<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.003 Compiler//EN\" \"http://www.eclipse.org/jdt/core/compiler_32_003.dtd\">"; //$NON-NLS-1$
+		private static final String XML_DTD_DECLARATION = "<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.004 Compiler//EN\" \"http://www.eclipse.org/jdt/core/compiler_32_004.dtd\">"; //$NON-NLS-1$
 		static {
 			try {
 				Class c = IProblem.class;
@@ -718,6 +723,17 @@ public class Main implements ProblemSeverities, SuffixConstants {
 				printTag(Logger.ERROR_TAG, this.parameters, true, true);
 			}
 			this.printlnErr(error);
+		}
+
+		/**
+		 * @param message the given message
+		 */
+		public void logWarning(String message) {
+			if ((this.tagBits & Logger.XML) != 0) {
+				this.parameters.put(Logger.MESSAGE, message);
+				printTag(Logger.WARNING_TAG, this.parameters, true, true);
+			}
+			this.printlnOut(message);
 		}
 
 		private void logProblem(CategorizedProblem problem, int localErrorCount,
@@ -1713,6 +1729,7 @@ public void configure(String[] argv) {
 	final int INSIDE_PROCESSOR_start = 18;
 	final int INSIDE_S_start = 19;
 	final int INSIDE_CLASS_NAMES = 20;
+	final int INSIDE_WARNINGS_PROPERTIES = 21;
 
 	final int DEFAULT = 0;
 	ArrayList bootclasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
@@ -1732,7 +1749,6 @@ public void configure(String[] argv) {
 	String usageSection = null;
 	boolean printVersionRequired = false;
 
-	boolean didSpecifyDefaultEncoding = false;
 	boolean didSpecifyDeprecation = false;
 	boolean didSpecifyCompliance = false;
 	boolean didSpecifyDisabledAnnotationProcessing = false;
@@ -1744,6 +1760,8 @@ public void configure(String[] argv) {
 	String customDestinationPath = null;
 	String currentSourceDirectory = null;
 	String currentArg = Util.EMPTY_STRING;
+	
+	Set specifiedEncodings = null;
 
 	// expand the command line if necessary
 	boolean needExpansion = false;
@@ -2111,7 +2129,7 @@ public void configure(String[] argv) {
 					continue;
 				}
 				if (currentArg.equals("-inlineJSR")) { //$NON-NLS-1$
-				    mode = DEFAULT;
+					mode = DEFAULT;
 					this.options.put(
 							CompilerOptions.OPTION_InlineJsr,
 							CompilerOptions.ENABLED);
@@ -2384,6 +2402,10 @@ public void configure(String[] argv) {
 					mode = INSIDE_CLASS_NAMES;
 					continue;
 				}
+				if (currentArg.equals("-properties")) { //$NON-NLS-1$
+					mode = INSIDE_WARNINGS_PROPERTIES;
+					continue;
+				}
 				break;
 			case INSIDE_TARGET :
 				if (this.didSpecifyTarget) {
@@ -2464,9 +2486,23 @@ public void configure(String[] argv) {
 				mode = DEFAULT;
 				continue;
 			case INSIDE_DEFAULT_ENCODING :
-				if (didSpecifyDefaultEncoding) {
-					throw new IllegalArgumentException(
-						this.bind("configure.duplicateDefaultEncoding", currentArg)); //$NON-NLS-1$
+				if (specifiedEncodings != null) {
+					// check already defined encoding
+					if (!specifiedEncodings.contains(currentArg)) {
+						if (specifiedEncodings.size() > 1) {
+							this.logger.logWarning(
+									this.bind("configure.differentencodings", //$NON-NLS-1$
+									currentArg,
+									getAllEncodings(specifiedEncodings)));
+						} else {
+							this.logger.logWarning(
+									this.bind("configure.differentencoding", //$NON-NLS-1$
+									currentArg,
+									getAllEncodings(specifiedEncodings)));
+						}
+					}
+				} else {
+					specifiedEncodings = new HashSet();
 				}
 				try { // ensure encoding is supported
 					new InputStreamReader(new ByteArrayInputStream(new byte[0]), currentArg);
@@ -2474,8 +2510,8 @@ public void configure(String[] argv) {
 					throw new IllegalArgumentException(
 						this.bind("configure.unsupportedEncoding", currentArg)); //$NON-NLS-1$
 				}
+				specifiedEncodings.add(currentArg);
 				this.options.put(CompilerOptions.OPTION_Encoding, currentArg);
-				didSpecifyDefaultEncoding = true;
 				mode = DEFAULT;
 				continue;
 			case INSIDE_DESTINATION_PATH :
@@ -2558,6 +2594,10 @@ public void configure(String[] argv) {
 					}
 					this.classNames[classCount++] = tokenizer.nextToken();
 				}
+				mode = DEFAULT;
+				continue;
+			case INSIDE_WARNINGS_PROPERTIES :
+				initializeWarnings(currentArg);
 				mode = DEFAULT;
 				continue;
 		}
@@ -2743,12 +2783,63 @@ public void configure(String[] argv) {
 			endorsedDirClasspaths,
 			customEncoding);
 
+	if (specifiedEncodings != null && specifiedEncodings.size() > 1) {
+		this.logger.logWarning(this.bind("configure.multipleencodings", //$NON-NLS-1$
+				(String) this.options.get(CompilerOptions.OPTION_Encoding),
+				getAllEncodings(specifiedEncodings)));
+	}
 	if (this.pendingErrors != null) {
 		for (Iterator iterator = this.pendingErrors.iterator(); iterator.hasNext(); ) {
 			String message = (String) iterator.next();
 			this.logger.logPendingError(message);
 		}
 		this.pendingErrors = null;
+	}
+}
+private static String getAllEncodings(Set encodings) {
+	int size = encodings.size();
+	String[] allEncodings = new String[size];
+	encodings.toArray(allEncodings);
+	Arrays.sort(allEncodings);
+	StringBuffer buffer = new StringBuffer();
+	for (int i = 0; i < size; i++) {
+		if (i > 0) {
+			buffer.append(", "); //$NON-NLS-1$
+		}
+		buffer.append(allEncodings[i]);
+	}
+	return String.valueOf(buffer);
+}
+
+private void initializeWarnings(String propertiesFile) {
+	File file = new File(propertiesFile);
+	if (!file.exists()) {
+		throw new IllegalArgumentException(this.bind("configure.missingwarningspropertiesfile", propertiesFile)); //$NON-NLS-1$
+	}
+	BufferedInputStream stream = null;
+	Properties properties = null;
+	try {
+		stream = new BufferedInputStream(new FileInputStream(propertiesFile));
+		properties = new Properties();
+		properties.load(stream);
+	} catch(IOException e) {
+		e.printStackTrace();
+		throw new IllegalArgumentException(this.bind("configure.ioexceptionwarningspropertiesfile", propertiesFile)); //$NON-NLS-1$
+	} finally {
+		if (stream != null) {
+			try {
+				stream.close();
+			} catch(IOException e) {
+				// ignore
+			}
+		}
+	}
+	for (Iterator iterator = properties.entrySet().iterator(); iterator.hasNext(); ) {
+		Map.Entry entry = (Map.Entry) iterator.next();
+		final String key = (String) entry.getKey();
+		if (key.startsWith("org.eclipse.jdt.core.compiler.problem")) { //$NON-NLS-1$
+			this.options.put(key, entry.getValue());
+		}
 	}
 }
 protected void disableWarnings() {

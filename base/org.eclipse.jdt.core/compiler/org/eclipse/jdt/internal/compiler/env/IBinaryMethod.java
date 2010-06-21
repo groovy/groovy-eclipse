@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@ package org.eclipse.jdt.internal.compiler.env;
 
 // clinit methods (synthetics too?) can be returned from IBinaryType>>getMethods()
 // BUT do not have to be... the compiler will ignore them when building the binding.
-// The synthetic argument of a member type's constructor (ie. the first arg of a non-static
+// The synthetic argument of a member type's constructor (i.e. the first arg of a non-static
 // member type) is also ignored by the compiler, BUT in this case it must be included
 // in the constructor's signature.
 

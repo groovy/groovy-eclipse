@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,11 +16,11 @@ package org.eclipse.jdt.internal.compiler.parser;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Statement;
@@ -207,8 +207,8 @@ public FieldDeclaration updatedFieldDeclaration(int depth, Set knownTypes){
 					TypeDeclaration anonymousType = recoveredType.updatedTypeDeclaration(depth + 1, knownTypes);
 					if (anonymousType != null) {
 						this.fieldDeclaration.initialization = anonymousType.allocation;
-						if(this.fieldDeclaration.declarationSourceEnd == 0) {
-							int end = anonymousType.declarationSourceEnd;
+						int end = anonymousType.declarationSourceEnd;
+						if (end > this.fieldDeclaration.declarationSourceEnd) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=307337
 							this.fieldDeclaration.declarationSourceEnd = end;
 							this.fieldDeclaration.declarationEnd = end;
 						}
@@ -247,7 +247,8 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 				updateSourceEndIfNecessary(braceEnd - 1);
 				return this.parent;
 			} else {
-				this.alreadyCompletedFieldInitialization = true;
+				if (this.fieldDeclaration.declarationSourceEnd > 0)
+					this.alreadyCompletedFieldInitialization = true;
 			}
 		}
 		return this;
@@ -265,11 +266,18 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
  * in which case the bodyStart is updated.
  */
 public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
-	if (this.fieldDeclaration.declarationSourceEnd == 0
-		&& (this.fieldDeclaration.type instanceof ArrayTypeReference || this.fieldDeclaration.type instanceof ArrayQualifiedTypeReference)
-		&& !this.alreadyCompletedFieldInitialization){
-		this.bracketBalance++;
-		return null; // no update is necessary	(array initializer)
+	if (this.fieldDeclaration.declarationSourceEnd == 0) {
+		if (this.fieldDeclaration.type instanceof ArrayTypeReference || this.fieldDeclaration.type instanceof ArrayQualifiedTypeReference) {
+			if (!this.alreadyCompletedFieldInitialization) {
+				this.bracketBalance++;
+				return null; // no update is necessary	(array initializer)
+			}
+		} else {  // https://bugs.eclipse.org/bugs/show_bug.cgi?id=308980
+			// in case an initializer bracket is opened in a non-array field
+			// e.g. int field = {..
+			this.bracketBalance++;
+			return null; // no update is necessary	(array initializer)
+		}
 	}
 	if (this.fieldDeclaration.declarationSourceEnd == 0
 		&& this.fieldDeclaration.getKind() == AbstractVariableDeclaration.ENUM_CONSTANT){

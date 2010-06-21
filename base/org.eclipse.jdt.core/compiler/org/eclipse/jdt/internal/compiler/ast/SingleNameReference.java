@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -161,7 +161,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			if (!flowInfo.isDefinitelyAssigned(localBinding = (LocalVariableBinding) this.binding)) {
 				currentScope.problemReporter().uninitializedLocalVariable(localBinding, this);
 			}
-			if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
+			if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
 				localBinding.useFlag = LocalVariableBinding.USED;
 			} else if (localBinding.useFlag == LocalVariableBinding.UNUSED) {
 				localBinding.useFlag = LocalVariableBinding.FAKE_USED;
@@ -719,12 +719,18 @@ public LocalVariableBinding localVariableBinding() {
 }
 
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
-		//If inlinable field, forget the access emulation, the code gen will directly target it
-		if (((this.bits & ASTNode.DepthMASK) == 0) || (this.constant != Constant.NotAConstant)) return;
-
-		if ((this.bits & ASTNode.RestrictiveFlagMASK) == Binding.LOCAL) {
-			currentScope.emulateOuterAccess((LocalVariableBinding) this.binding);
+	//If inlinable field, forget the access emulation, the code gen will directly target it
+	if (((this.bits & ASTNode.DepthMASK) == 0) || (this.constant != Constant.NotAConstant)) {
+		return;
+	}
+	if ((this.bits & ASTNode.RestrictiveFlagMASK) == Binding.LOCAL) {
+		LocalVariableBinding localVariableBinding = (LocalVariableBinding) this.binding;
+		if (localVariableBinding != null) {
+			switch(localVariableBinding.useFlag) {
+				case LocalVariableBinding.FAKE_USED :
+				case LocalVariableBinding.USED :
+					currentScope.emulateOuterAccess(localVariableBinding);
+			}
 		}
 	}
 }

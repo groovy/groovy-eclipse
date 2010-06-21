@@ -481,6 +481,12 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 		}
 		if ((binding = findMemberType(nextName, referenceBinding)) == null) {
 			if ((mask & Binding.FIELD) != 0) {
+				return new ProblemFieldBinding(
+						null,
+						referenceBinding,
+						nextName,
+						ProblemReasons.NotFound);
+			} else if ((mask & Binding.VARIABLE) != 0) {
 				return new ProblemBinding(
 					CharOperation.subarray(compoundName, 0, currentIndex),
 					referenceBinding,
