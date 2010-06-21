@@ -133,9 +133,14 @@ public class LanguageSupportFactory {
 		}
 		return instance;
 	}
-	
+
 	private static void log(Exception e) {
-	    Util.log(e, "Error creating Groovy language support"); //$NON-NLS-1$
+		if (JavaCore.getPlugin()==null || JavaCore.getPlugin().getLog()==null) {
+			System.err.println("Error creating Groovy language support:"); //$NON-NLS-1$
+			e.printStackTrace(System.err);
+		} else {
+			Util.log(e, "Error creating Groovy language support"); //$NON-NLS-1$
+		}
 	}
 
 	public static EventHandler getEventHandler() {
