@@ -61,12 +61,23 @@ public class CategoryTypeLookup implements ITypeLookup {
 				if (params != null && params.length > 0
 						&& isAssignableFrom(VariableScope.maybeConvertFromPrimitive(currentType), params[0].getType())) {
 					// found it! There may be more, but this is good enough
-					return new TypeLookupResult(methodNode.getReturnType(), methodNode.getDeclaringClass(), methodNode,
-							TypeConfidence.EXACT, scope);
+					ClassNode declaringClass = methodNode.getDeclaringClass();
+					return new TypeLookupResult(methodNode.getReturnType(), declaringClass, methodNode,
+							getConfidence(declaringClass), scope);
 				}
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * @param declaringClass
+	 * @return
+	 */
+	private TypeConfidence getConfidence(ClassNode declaringClass) {
+		return declaringClass.getName().equals(VariableScope.DGM_CLASS_NODE.getName())
+				|| declaringClass.getName().equals(VariableScope.DGSM_CLASS_NODE.getName()) ? TypeConfidence.LOOSELY_INFERRED
+				: TypeConfidence.INFERRED;
 	}
 
 	/**

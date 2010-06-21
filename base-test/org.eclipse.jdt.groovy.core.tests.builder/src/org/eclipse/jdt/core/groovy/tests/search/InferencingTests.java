@@ -26,6 +26,11 @@ import junit.framework.Test;
  */
 public class InferencingTests extends AbstractInferencingTest {
  
+    /**
+     * 
+     */
+    private static final String GET_AT = "getAt";
+
     public static Test suite() {
         return buildTestSuite(InferencingTests.class);
     }
@@ -47,11 +52,11 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     public void testInferNumber4() throws Exception {
-        assertType("10++", "java.lang.Number");
+        assertType("10++", "java.lang.Integer");
     }
     
     public void testInferNumber5() throws Exception {
-        assertType("++10", "java.lang.Number");
+        assertType("++10", "java.lang.Integer");
     }
     
     public void testInferString1() throws Exception {
@@ -215,6 +220,145 @@ public class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("FIRST");
         int end = start + "FIRST".length();
         assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    private final static String XXX = "xxx";
 
+    public void testAssignementInInnerBlock() throws Exception {
+        String contents = "def xxx\n if (true) { xxx = \"\" \n xxx} ";
+        int start = contents.lastIndexOf(XXX);
+        int end = start + XXX.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    public void testAssignementInInnerBlock2() throws Exception {
+        String contents = "def xxx\n if (true) { xxx = \"\" \n }\n xxx";
+        int start = contents.lastIndexOf(XXX);
+        int end = start + XXX.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    // GRECLIPSE-743
+    public void testOverrideCategory1() throws Exception {
+        String contents = "class A { }\n new A().getAt()";
+        int start = contents.lastIndexOf(GET_AT);
+        int end = start + GET_AT.length();
+        assertType(contents, start, end, "java.lang.Object");
+        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+    
+    public void testOverrideCategory2() throws Exception {
+        String contents = "class A {\n A getAt(prop) { \n new A() \n } }\n new A().getAt()";
+        int start = contents.lastIndexOf(GET_AT);
+        int end = start + GET_AT.length();
+        assertType(contents, start, end, "A");
+        assertDeclaringType(contents, start, end, "A");
+    }
+    
+    public void testOverrideCategory3() throws Exception {
+        String contents = "class A {\n A getAt(prop) { \n new A() \n } }\n class B extends A { }\n new B().getAt()";
+        int start = contents.lastIndexOf(GET_AT);
+        int end = start + GET_AT.length();
+        assertType(contents, start, end, "A");
+        assertDeclaringType(contents, start, end, "A");
+    }
+    
+    public void testGRECLIPSE731a() throws Exception {
+        String contents = "def foo() { } \nString xxx = foo()\nxxx";
+        int start = contents.lastIndexOf(XXX);
+        int end = start + XXX.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    public void testGRECLIPSE731b() throws Exception {
+        String contents = "def foo() { } \ndef xxx = foo()\nxxx";
+        int start = contents.lastIndexOf(XXX);
+        int end = start + XXX.length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+    public void testGRECLIPSE731c() throws Exception {
+        String contents = "String foo() { } \ndef xxx = foo()\nxxx";
+        int start = contents.lastIndexOf(XXX);
+        int end = start + XXX.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    public void testGRECLIPSE731d() throws Exception {
+        String contents = "int foo() { } \ndef xxx = foo()\nxxx";
+        int start = contents.lastIndexOf(XXX);
+        int end = start + XXX.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    // ignore assignments to object expressions
+    public void testGRECLIPSE731e() throws Exception {
+        String contents = "def foo() { } \nString xxx\nxxx = foo()\nxxx";
+        int start = contents.lastIndexOf(XXX);
+        int end = start + XXX.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    // ignore assignments to object expressions
+    public void testGRECLIPSE731f() throws Exception {
+        String contents = "class X { String xxx\ndef foo() { }\ndef meth() { xxx = foo()\nxxx} }";
+        int start = contents.lastIndexOf(XXX);
+        int end = start + XXX.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    
+    
+    private final static String catchString = "try {     } catch (NullPointerException e) { e}";
+    private final static String catchString2 = "try {     } catch (e) { e}";
+    private final static String npe = "NullPointerException";
+    public void testCatchBlock1() throws Exception {
+        int start = catchString.lastIndexOf(npe);
+        int end = start + npe.length();
+        assertType(catchString, start, end, "java.lang.NullPointerException");
+    }
+    public void testCatchBlock2() throws Exception {
+        int start = catchString.lastIndexOf("e");
+        int end = start + 1;
+        assertType(catchString, start, end, "java.lang.NullPointerException");
+    }
+    public void testCatchBlock3() throws Exception {
+        int start = catchString.indexOf(npe + " e");
+        int end = start + (npe + " e").length();
+        assertType(catchString, start, end, "java.lang.NullPointerException");
+    }
+    public void testCatchBlock4() throws Exception {
+        int start = catchString2.indexOf("e");
+        int end = start + 1;
+        assertType(catchString2, start, end, "java.lang.Exception");
+    }
+    public void testCatchBlock5() throws Exception {
+        int start = catchString2.lastIndexOf("e");
+        int end = start + 1;
+        assertType(catchString2, start, end, "java.lang.Exception");
+    }
+    
+    public void testAssignment1() throws Exception {
+        String contents = "String x = 7\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "java.lang.String");
+    }
+    public void testAssignment2() throws Exception {
+        String contents = "String x\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "java.lang.String");
+    }
+    public void testAssignment3() throws Exception {
+        String contents = "String x\nx = 7\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    public void testAssignment4() throws Exception {
+        String contents = "String x() { \ndef x = 9\n x}";
+        int start = contents.lastIndexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    public void testAssignment5() throws Exception {
+        String contents = "String x() { \ndef x\nx = 9\n x}";
+        int start = contents.lastIndexOf("x");
+        int end = start + 1;
+        assertType(contents, start, end, "java.lang.Integer");
     }
 }

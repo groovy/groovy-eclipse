@@ -21,6 +21,7 @@ import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementReq
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -427,7 +428,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		try {
 			manager.cacheZipFiles(this); // cache zip files for performance (see
-											// https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
 			op.runOperation(monitor);
 		} finally {
 			manager.flushZipFiles(this);
@@ -559,14 +560,37 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	public boolean isOnBuildPath() {
 		// fix for bug http://dev.eclipse.org/bugs/show_bug.cgi?id=20051
 		IJavaProject project = this.getJavaProject();
-		if (!project.isOnClasspath(this))
+		if (!project.isOnClasspath(this)) {
 			return false;
+		}
 		IProject resourceProject = project.getProject();
 		if (resourceProject == null || !resourceProject.isAccessible() || !GroovyNature.hasGroovyNature(resourceProject)) {
 			return false;
 		}
 
 		return true;
+	}
+
+	@Override
+	public IResource getUnderlyingResource() throws JavaModelException {
+		if (isOnBuildPath()) {
+			return super.getUnderlyingResource();
+		} else {
+			// Super class method appears to only work correctly when we are on the build
+			// path. Otherwise parent, which is a package, is seen as non-existent.
+			// This causes a JavaModel exception.
+			IResource rsrc = getResource();
+			// I think that getResource *should* just return a path to the .groovy file
+			// under these circumstances.
+			try {
+				// What we did is rather hacky, double check result with this assert:
+				Assert.isTrue(rsrc.getFullPath().toString().endsWith(name));
+			} catch (Throwable e) {
+				Util.log(e);
+				return super.getUnderlyingResource();
+			}
+			return rsrc;
+		}
 	}
 
 	@Override

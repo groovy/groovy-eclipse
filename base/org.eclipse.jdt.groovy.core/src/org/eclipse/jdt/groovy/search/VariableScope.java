@@ -236,9 +236,43 @@ public class VariableScope {
 		}
 	}
 
-	public boolean isVoid(ClassNode maybeVoid) {
+	public static boolean isVoidOrObject(ClassNode maybeVoid) {
 		return maybeVoid.getName().equals(VOID_CLASS_NODE.getName())
-				|| maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName());
+				|| maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName())
+				|| maybeVoid.getName().equals(OBJECT_CLASS_NODE.getName());
+	}
+
+	/**
+	 * Updates the type info of this variable if it already exists in scope, or just adds it if it doesn't
+	 * 
+	 * @param name
+	 * @param objectExpressionType
+	 * @param declaringType
+	 */
+	public void updateOrAddVariable(String name, ClassNode type, ClassNode declaringType) {
+		if (!internalUpdateVariable(name, type, declaringType)) {
+			addVariable(name, type, declaringType);
+		}
+	}
+
+	/**
+	 * Return true if the type has been udpated, false otherwise
+	 * 
+	 * @param name
+	 * @param objectExpressionType
+	 * @param declaringType
+	 * @return
+	 */
+	private boolean internalUpdateVariable(String name, ClassNode type, ClassNode declaringType) {
+		VariableInfo info = nameVariableMap.get(name);
+		if (info != null) {
+			nameVariableMap.put(name, new VariableInfo(type, declaringType == null ? info.declaringType : declaringType));
+			return true;
+		} else if (parent != null) {
+			return parent.internalUpdateVariable(name, type, declaringType);
+		} else {
+			return false;
+		}
 	}
 
 }

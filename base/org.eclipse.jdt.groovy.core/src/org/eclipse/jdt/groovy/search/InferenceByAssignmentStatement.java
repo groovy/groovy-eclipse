@@ -33,7 +33,18 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
- * Records types for variables in the scope based on assignment statements
+ * Records types for variables in the scope based on assignment statements.
+ * 
+ * There are several possibilities here:
+ * <ul>
+ * <li>
+ * If {@link DeclarationExpression}, and the declared type is not Object, use that type</li>
+ * <li>
+ * If {@link DeclarationExpression}, and the declared type is Object, and there is an objectExpression, use the type of the object
+ * expression. Add to the variable scope, don't replace</li>
+ * <li>
+ * If {@link BinaryExpression} (assignment), then use the type of the objectExpression. Replace in the VariableScope, don't add</li>
+ * </ul>
  * 
  * @author Andrew Eisenberg
  * @created Sep 25, 2009
@@ -42,34 +53,42 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 public class InferenceByAssignmentStatement implements ITypeLookup {
 
 	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-		if (node instanceof BinaryExpression) {
-			if (node instanceof DeclarationExpression) {
-				DeclarationExpression declExpr = (DeclarationExpression) node;
+		if (node instanceof DeclarationExpression) {
+			DeclarationExpression declExpr = (DeclarationExpression) node;
 
-				// we don't support multiple assignments yet
-				if (declExpr.isMultipleAssignmentDeclaration()) {
-					return null;
-				}
+			// we don't support multiple assignments yet
+			if (declExpr.isMultipleAssignmentDeclaration()) {
+				return null;
 			}
 
+			// use the declared type if not void and not object expression
+			ClassNode varType = declExpr.getVariableExpression().getType();
+			ClassNode typeToStore;
+			if (!VariableScope.isVoidOrObject(varType) && !varType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+				typeToStore = varType;
+			} else if (objectExpressionType != null) {
+				typeToStore = objectExpressionType;
+			} else {
+				typeToStore = VariableScope.OBJECT_CLASS_NODE;
+			}
+			// store the variable. declaring type is always null since the
+			// variable is being declared right here.
+			scope.addVariable(declExpr.getVariableExpression().getName(), typeToStore, null);
+
+		} else if (node instanceof BinaryExpression) {
 			BinaryExpression assign = (BinaryExpression) node;
-			if (assign.getOperation().getType() == Types.EQUALS) {
+			// only look at assignments and can't do much if objectExpressionType is null
+			// and only re-set if we have a real type for the object expression
+			if (isInterestingOperation(assign) && objectExpressionType != null
+					&& !VariableScope.isVoidOrObject(objectExpressionType)) {
+
 				if (assign.getLeftExpression() instanceof VariableExpression) {
 					VariableExpression var = (VariableExpression) assign.getLeftExpression();
-					ClassNode declaringType = var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var
-							.getAccessedVariable()).getDeclaringClass() : VariableScope.OBJECT_CLASS_NODE;
-					if (objectExpressionType != null && !scope.isVoid(objectExpressionType)) {
-						scope.addVariable(var.getName(), objectExpressionType, declaringType);
-						return new TypeLookupResult(objectExpressionType, declaringType, assign.getLeftExpression(),
-								TypeConfidence.INFERRED, scope);
-					} else {
-						// no object expression available probably a local var decl w/o any assignment
-						// add the type of the LHS to the scope, but only if not there already
-						if (scope.lookupName(var.getName()) == null) {
-							scope.addVariable(var);
-							return new TypeLookupResult(var.getType(), declaringType, null, TypeConfidence.INFERRED, scope);
-						}
-					}
+					ClassNode declaringType = findDeclaringType(var);
+
+					scope.updateOrAddVariable(var.getName(), objectExpressionType, declaringType);
+					return new TypeLookupResult(objectExpressionType, declaringType, assign.getLeftExpression(),
+							TypeConfidence.INFERRED, scope);
 				} else {
 					// FIXADE this is a property node, eg- 'foo.bar = somevalue' just do Object type
 				}
@@ -77,6 +96,39 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 
 		}
 		return null;
+	}
+
+	/**
+	 * This method is a placeholder for supporting more
+	 * than just assignments.
+	 */
+	private boolean isInterestingOperation(BinaryExpression assign) {
+		switch (assign.getOperation().getType()) {
+			case Types.EQUALS:
+				// case Types.PLUS_EQUAL:
+				// case Types.MINUS_EQUAL:
+				// case Types.LEFT_SHIFT:
+				// case Types.BITWISE_AND_EQUAL:
+				// case Types.BITWISE_OR_EQUAL:
+				// case Types.BITWISE_XOR_EQUAL:
+				// case Types.DIVIDE_EQUAL:
+				// case Types.LOGICAL_AND_EQUAL:
+				// case Types.LOGICAL_OR_EQUAL:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Finds the declaring type of the accessed variable. Will be null if this is a local variable
+	 * 
+	 * @param var
+	 * @return
+	 */
+	private ClassNode findDeclaringType(VariableExpression var) {
+		return var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var.getAccessedVariable()).getDeclaringClass()
+				: null;
 	}
 
 	public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {

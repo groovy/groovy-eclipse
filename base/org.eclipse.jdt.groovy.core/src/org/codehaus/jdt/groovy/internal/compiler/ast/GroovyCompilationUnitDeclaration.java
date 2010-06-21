@@ -220,6 +220,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	public void populateCompilationUnitDeclaration() {
 		ModuleNode moduleNode = groovySourceUnit.getAST();
+		// if (moduleNode.encounteredUnrecoverableError()) {
+		// String msg = "Groovy: Unrecoverable error during processing - source file contains invalid syntax";
+		// int sev = ProblemSeverities.Error;
+		// CategorizedProblem p = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[] { msg }, 0,
+		// new String[] { msg }, sev, 0, 1, 1, 0);
+		// this.problemReporter.record(p, compilationResult, this);
+		// }
 		createPackageDeclaration(moduleNode);
 		createImports(moduleNode);
 		createTypeDeclarations(moduleNode);
@@ -541,22 +548,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		char[] mainName = toMainName(compilationResult.getFileName());
 
-		// FIXASC the compiler ought to add them in the right order rather than requiring a sort here...
 		List<ClassNode> classNodes = null;
-		if (moduleClassNodes.size() == 1) {
-			classNodes = moduleClassNodes;
-		} else {
-			classNodes = new ArrayList<ClassNode>();
-			// will NPE later if outerclasses aren't first
-			int i = 0;
-			for (ClassNode cn : moduleClassNodes) {
-				if (cn instanceof InnerClassNode) {
-					classNodes.add(cn);
-				} else {
-					classNodes.add(i++, cn);
-				}
-			}
-		}
+		classNodes = moduleClassNodes;
+		Map<ClassNode, List<TypeDeclaration>> innersToRecord = new HashMap<ClassNode, List<TypeDeclaration>>();
 		for (ClassNode classNode : classNodes) {
 			if (!classNode.isPrimaryClassNode()) {
 				continue;
@@ -586,7 +580,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 			// FIXASC should this modifier be set?
 			// mods |= Opcodes.ACC_PUBLIC;
-			// FIXASC inner class support when it is in groovy 1.7
 			// FIXASC should not do this for inner classes, just for top level types
 			// FIXASC does this make things visible that shouldn't be?
 			mods = mods & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
@@ -632,24 +625,35 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			if (classNode instanceof InnerClassNode) {
 				InnerClassNode innerClassNode = (InnerClassNode) classNode;
 				ClassNode outerClass = innerClassNode.getOuterClass();
-				TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(outerClass);
 				String outername = outerClass.getNameWithoutPackage();
 				String newInner = innerClassNode.getNameWithoutPackage().substring(outername.length() + 1);
 				typeDeclaration.name = newInner.toCharArray();
-				if (outerTypeDeclaration.memberTypes == null) {
-					outerTypeDeclaration.memberTypes = new TypeDeclaration[1];
-					outerTypeDeclaration.memberTypes[0] = typeDeclaration;
-				} else {
-					TypeDeclaration[] newArray = new TypeDeclaration[outerTypeDeclaration.memberTypes.length + 1];
-					System.arraycopy(outerTypeDeclaration.memberTypes, 0, newArray, 0, outerTypeDeclaration.memberTypes.length);
-					newArray[outerTypeDeclaration.memberTypes.length] = typeDeclaration;
-					outerTypeDeclaration.memberTypes = newArray;
+
+				// Record that we need to set the parent of this inner type later
+				List<TypeDeclaration> inners = innersToRecord.get(outerClass);
+				if (inners == null) {
+					inners = new ArrayList<TypeDeclaration>();
+					innersToRecord.put(outerClass, inners);
 				}
+				inners.add(typeDeclaration);
 			} else {
 				typeDeclarations.add(typeDeclaration);
 			}
 			fromClassNodeToDecl.put(classNode, typeDeclaration);
 		}
+
+		// For inner types, now attach them to their parents. This was not done earlier as sometimes the types are processed in
+		// such an order that inners are dealt with before outers
+		for (Map.Entry<ClassNode, List<TypeDeclaration>> innersToRecordEntry : innersToRecord.entrySet()) {
+			TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(innersToRecordEntry.getKey());
+			// Check if there is a problem locating the parent for the inner
+			if (outerTypeDeclaration == null) {
+				throw new GroovyEclipseBug("Failed to find the type declaration for " + innersToRecordEntry.getKey().getName());
+			}
+			List<TypeDeclaration> newInnersList = innersToRecordEntry.getValue();
+			outerTypeDeclaration.memberTypes = newInnersList.toArray(new TypeDeclaration[newInnersList.size()]);
+		}
+
 		types = typeDeclarations.toArray(new TypeDeclaration[typeDeclarations.size()]);
 	}
 

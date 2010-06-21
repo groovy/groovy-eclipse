@@ -252,14 +252,21 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	@Override
 	protected void reportPackageIsNotExpectedPackage(CompilationUnitDeclaration compUnitDecl) {
 		// Code that could be used to police package declarations.
-		// I think a sensible rule is that if there is a package declaration it must match the
-		// location on disk. If there is no package declaration, let them get away with it
-		// // where we should be:
-		// String shouldBe = CharOperation.toString(compUnitDecl.compilationResult.compilationUnit.getPackageName());
-		// // where we are declared:
-		// String actuallyIs = compUnitDecl.currentPackage == null ? "" :
-		// CharOperation.toString(compUnitDecl.currentPackage.tokens);
-		// problemReporter().packageIsNotExpectedPackage(compUnitDecl);
+		// Rule: if there is a package declaration it must match the location on disk. If
+		// there is no package declaration, let them get away with it
+
+		// where we should be:
+		if (compUnitDecl != null && compUnitDecl.compilationResult != null
+				&& compUnitDecl.compilationResult.compilationUnit != null) {
+			char[][] packageName = compUnitDecl.compilationResult.compilationUnit.getPackageName();
+			String shouldBe = packageName == null ? "" : CharOperation.toString(packageName);
+			// where we are declared:
+			String actuallyIs = compUnitDecl.currentPackage == null ? "" : CharOperation
+					.toString(compUnitDecl.currentPackage.tokens);
+			if (actuallyIs.length() > 0 && !shouldBe.equals(actuallyIs)) {
+				problemReporter().packageIsNotExpectedPackage(compUnitDecl);
+			}
+		}
 	}
 
 	@Override

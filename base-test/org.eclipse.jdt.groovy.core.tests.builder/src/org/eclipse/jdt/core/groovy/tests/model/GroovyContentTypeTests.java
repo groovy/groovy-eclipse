@@ -136,11 +136,11 @@ public class GroovyContentTypeTests extends BuilderTests {
     // project will not have its groovy files compiled
     public void testJavaThenGroovyProject() throws Exception {
         final IProject proj = createProject();
-        env.removeGroovyNature(proj.getName());
-        env.fullBuild();
         Runnable runner = new Runnable() {
             public void run() {
                 try {
+                    env.removeGroovyNature(proj.getName());
+                    env.fullBuild();
                     checkJavaProject(proj);
                     
                     env.addGroovyNature(proj.getName());

@@ -14,10 +14,16 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.jdt.groovy.internal.compiler.ast.AliasImportReference;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
@@ -66,7 +72,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
 		groovyLevel=17;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.2.jar");
+    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.3.jar");
     	if (groovyJar==null) {
     		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
     		groovyLevel=16;
@@ -97,7 +103,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
         	groovyLevel=17;
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.2.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.3.jar");
         	if (groovyJar==null) {
         		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
         		groovyLevel=16;
@@ -206,6 +212,35 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"}",
 	    	},"abc");
     }
+    
+    public void testRecovery_GRE766() {
+	    	this.runNegativeTest(new String[]{
+	    			"A.groovy",	
+	    			"public class SwingIt {\n"+
+				"	def swingit() {\n"+
+				"		swing.actions() {\n"+
+				"			echoAction= swing.action(name: 'Echo back',\n"+
+				"			enabled: bind(source: model, sourceProperty: 'loggedin'),\n"+
+				"			closure: { controller.setEchoBack(it.source.selected) })\n"+
+				"		}\n"+
+				"	}\n" 
+	    	},
+	    	"----------\n" + 
+		"1. ERROR in A.groovy (at line 8)\n" + 
+		"	}\n" + 
+		"\n" + 
+		"	 ^\n" + 
+		"Groovy:unexpected token:  @ line 8, column 3.\n" + 
+		"----------\n");
+	    	// missing end curly, but that shouldn't cause us to discard what we successfully parsed
+		ModuleNode mn = getModuleNode("A.groovy");
+		assertNotNull(mn);
+		ClassNode cn = (ClassNode)mn.getClasses().get(0);
+		assertNotNull(cn);
+		assertTrue(cn.getName().equals("SwingIt")); // should be SwingIt
+		MethodNode methodNode = cn.getDeclaredMethod("swingit",Parameter.EMPTY_ARRAY);
+		assertNotNull(methodNode);
+  }
     
     public void testConstAnnotationValue_GRE629() {
 	    	this.runConformTest(new String[]{
@@ -605,6 +640,45 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"Groovy:Invalid package specification @ line 1, column 1.\n" + 
 				"----------\n");
 	}
+	
+	// can be uncommented when we have picked up the fix for GROOVY-4219
+//	public void testGRE637() {
+//		this.runConformTest(new String[]{
+//				"de/brazzy/nikki/Texts.java",
+//				"package de.brazzy.nikki;\n"+
+//				"\n"+
+//				"public final class Texts { \n"+
+//				"	public static class Image {\n"+
+//				"		public static final String ORDERED_BY_FILENAME = \"image.sortedby.filename\";\n"+
+//				"		public static final String ORDERED_BY_TIME = \"image.sortedby.time\";\n"+
+//				"}}\n",
+//				"de/brazzy/nikki/model/Image.groovy",
+//				"package de.brazzy.nikki.model;\n"+
+//				"\n"+
+//				"class Image implements Serializable{\n"+
+//				"    def fileName\n"+
+//				"    def time\n"+
+//				"}\n",
+//				"de/brazzy/nikki/model/ImageSortField.groovy",
+//				"package de.brazzy.nikki.model\n"+
+//				"\n"+
+//				"import de.brazzy.nikki.Texts\n"+
+//				"import de.brazzy.nikki.model.Image\n"+
+//				"\n"+
+//				"enum ImageSortField {\n"+
+//				"    FILENAME(field: Image.metaClass.fileName, name: Texts.Image.ORDERED_BY_FILENAME),\n"+
+//				"    TIME(field: Image.metaClass.time, name: Texts.Image.ORDERED_BY_TIME)\n"+
+//				"\n"+
+//				"    def field\n"+
+//				"    def name\n"+
+//				"\n"+
+//				"    public String toString(){\n"+
+//				"        name\n"+
+//				"    }\n"+
+//				"}\n"
+//		});
+//
+//	}
 	
 	
 	public void testParsingRecovery_GRE494() {
@@ -1023,6 +1097,39 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"}\n");
 	}
 	
+	public void testUnrecoverableErrors_GRE755() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"import\n"+
+			"\n"+
+			"class Wibble {}\n" 
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	import\n" + 
+		"	 ^\n" + 
+		"Groovy:unexpected token: import @ line 1, column 1.\n" + 
+		"----------\n");
+		ModuleNode mn = getModuleNode("XXX.groovy");
+		assertTrue(mn.encounteredUnrecoverableError());
+	}
+	
+	public void testUnrecoverableErrors_GRE755_2() {
+		this.runNegativeTest(new String[] {
+			"Bar.groovy",
+			"class Bar {\n"+
+			"  def x=\"\n"+
+			"}\n" 
+		},"----------\n" + 
+		"1. ERROR in Bar.groovy (at line 2)\n" + 
+		"	def x=\"\n" + 
+		"}\n" + 
+		"	       ^\n" + 
+		"Groovy:expecting anything but \'\'\\n\'\'; got it anyway @ line 2, column 10.\n" + 
+		"----------\n");
+		ModuleNode mn = getModuleNode("Bar.groovy");
+		assertTrue(mn.encounteredUnrecoverableError());
+	}
+		
 	// variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
 	/*
 	public void testParsingNewRecoveryImports1_GRE538() {
@@ -6031,6 +6138,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			},
 			"falsetrue");
 	}
+	
+	
 
 	public void testGroovyPropertyAccessorsGenerics() {
 		this.runConformTest(new String[] {
@@ -7646,7 +7755,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			}
 		}
 	}
-	/* for import recovery tests, if they get activated
+	
+	/* for import recovery tests, if they get activated */
 	private ModuleNode getModuleNode(String filename) {
 		GroovyCompilationUnitDeclaration decl = (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
 		if (decl!=null) {
@@ -7654,7 +7764,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		} else {
 			return null;
 		}
-	}*/
+	}
 	
 	private GroovyCompilationUnitDeclaration getDecl(String filename) {
 		return (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);

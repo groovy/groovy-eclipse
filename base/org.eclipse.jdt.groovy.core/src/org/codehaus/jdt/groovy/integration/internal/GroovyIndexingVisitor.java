@@ -35,6 +35,9 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -48,6 +51,9 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	private ISourceElementRequestor requestor;
+
+	// used for GRECLIPSE-741, remove when issue is solved
+	private ModuleNode module;
 
 	public GroovyIndexingVisitor(ISourceElementRequestor requestor) {
 		this.requestor = requestor;
@@ -64,6 +70,9 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 			// there is an unrecoverable compile problem.
 			return;
 		}
+
+		// used for GRECLIPSE-741, remove when issue is solved
+		module = node;
 		try {
 			this.visitImports(node);
 
@@ -217,6 +226,11 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
 	// may not be resolved
 	private void handleType(ClassNode node, boolean isAnnotation, boolean useQualifiedName) {
+		if (node == null) {
+			// GRECLIPSE-741
+			Util.log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, "GRECLIPSE-741: module: " + module.getDescription()));
+			return;
+		}
 		if (isAnnotation) {
 			requestor.acceptAnnotationTypeReference(splitName(node, useQualifiedName), node.getStart(), node.getEnd());
 		} else {

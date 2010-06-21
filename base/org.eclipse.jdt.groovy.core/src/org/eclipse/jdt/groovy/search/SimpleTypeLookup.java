@@ -20,7 +20,7 @@ import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXAC
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -250,8 +250,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
 			// FIXADE because of operator overloading, we should be looking at the type
-			// of the inner expression, but Number will be safe for most of the time.
-			return new TypeLookupResult(VariableScope.NUMBER_CLASS_NODE, null, null, confidence, scope);
+			// of the inner expression, but Integer will be safe for most of the time.
+			return new TypeLookupResult(VariableScope.INTEGER_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof BitwiseNegationExpression) {
 			ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
@@ -440,8 +440,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @return
 	 */
 	private ASTNode findDeclaration(String name, ClassNode declaringType) {
-		Set<ClassNode> allClasses = new HashSet<ClassNode>();
-		findAllClasses(declaringType, allClasses);
+		Set<ClassNode> allClasses = new LinkedHashSet<ClassNode>();
+		createTypeHierarchy(declaringType, allClasses);
 
 		AnnotatedNode maybe = findPropertyInClass(name, allClasses);
 		if (maybe != null) {
@@ -456,7 +456,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return maybeMethods.get(0);
 		}
 		if (declaringType.isInterface()) {
-			Set<ClassNode> allInterfaces = new HashSet<ClassNode>();
+			Set<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
 			findAllInterfaces(declaringType, allInterfaces);
 
 			// super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
@@ -535,11 +535,11 @@ public class SimpleTypeLookup implements ITypeLookup {
 		}
 	}
 
-	private void findAllClasses(ClassNode clazz, Set<ClassNode> allClasses) {
+	private void createTypeHierarchy(ClassNode clazz, Set<ClassNode> allClasses) {
 		if (!allClasses.contains(clazz)) {
 			allClasses.add(clazz);
 			if (clazz.getSuperClass() != null) {
-				findAllClasses(clazz.getSuperClass(), allClasses);
+				createTypeHierarchy(clazz.getSuperClass(), allClasses);
 			}
 			if (clazz.getInterfaces() != null) {
 				for (ClassNode superInterface : clazz.getInterfaces()) {

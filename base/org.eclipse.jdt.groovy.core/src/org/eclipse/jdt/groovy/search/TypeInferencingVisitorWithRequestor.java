@@ -73,6 +73,7 @@ import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
 import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -452,9 +453,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		TypeLookupResult result = null;
 		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scope);
-			if (result != null) {
-				break;
+			TypeLookupResult candidate = lookup.lookupType(node, scope);
+			if (candidate != null) {
+				if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+					result = candidate;
+				}
+				if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+					break;
+				}
 			}
 		}
 		VisitStatus status = handleRequestor(node, requestor, result);
@@ -488,9 +494,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		TypeLookupResult result = null;
 		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scope);
-			if (result != null) {
-				break;
+			TypeLookupResult candidate = lookup.lookupType(node, scope);
+			if (candidate != null) {
+				if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+					result = candidate;
+				}
+				if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+					break;
+				}
 			}
 		}
 
@@ -537,9 +548,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		TypeLookupResult result = null;
 		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scope);
-			if (result != null) {
-				break;
+			TypeLookupResult candidate = lookup.lookupType(node, scope);
+			if (candidate != null) {
+				if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+					result = candidate;
+				}
+				if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+					break;
+				}
 			}
 		}
 		VisitStatus status = handleRequestor(node, requestor, result);
@@ -604,9 +620,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 			VariableScope scope = scopes.peek();
 			for (ITypeLookup lookup : lookups) {
-				result = lookup.lookupType(imp, scope);
-				if (result != null) {
-					break;
+				TypeLookupResult candidate = lookup.lookupType(imp, scope);
+				if (candidate != null) {
+					if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+						result = candidate;
+					}
+					if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+						break;
+					}
 				}
 			}
 			VisitStatus status = handleRequestor(imp, requestor, result);
@@ -649,9 +670,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scope, objectExprType);
-			if (result != null) {
-				break;
+			TypeLookupResult candidate = lookup.lookupType(node, scope, objectExprType);
+			if (candidate != null) {
+				if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+					result = candidate;
+				}
+				if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+					break;
+				}
 			}
 		}
 		VisitStatus status = handleRequestor(node, requestor, result);
@@ -687,8 +713,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					// parameter in the sope
 					lookup.lookupType(node, scope);
 					result = lookup.lookupType(node.getType(), scope);
-					if (result != null) {
-						break;
+					TypeLookupResult candidate = lookup.lookupType(node.getType(), scope);
+					if (candidate != null) {
+						if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+							result = candidate;
+						}
+						if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+							break;
+						}
 					}
 				}
 				// visit the parameter itself
@@ -882,6 +914,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			handleParameterList(new Parameter[] { param });
 		}
 		super.visitForLoop(node);
+		scopes.pop();
+	}
+
+	@Override
+	public void visitCatchStatement(CatchStatement node) {
+		scopes.push(new VariableScope(scopes.peek(), node));
+		Parameter param = node.getVariable();
+		if (param != null) {
+			handleParameterList(new Parameter[] { param });
+		}
+		super.visitCatchStatement(node);
 		scopes.pop();
 	}
 
@@ -1192,10 +1235,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private void visitAnnotation(AnnotationNode node) {
 		TypeLookupResult result = null;
+		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
-			result = lookup.lookupType(node, scopes.peek());
-			if (result != null) {
-				break;
+			TypeLookupResult candidate = lookup.lookupType(node, scope);
+			if (candidate != null) {
+				if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+					result = candidate;
+				}
+				if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+					break;
+				}
 			}
 		}
 		VisitStatus status = handleRequestor(node, requestor, result);

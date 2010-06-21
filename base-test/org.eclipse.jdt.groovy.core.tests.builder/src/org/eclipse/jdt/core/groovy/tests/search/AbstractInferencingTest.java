@@ -44,9 +44,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
     protected void assertType(String contents, int exprStart, int exprEnd,
             String expectedType) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-        SearchRequestor requestor = new SearchRequestor(exprStart, exprEnd);
-        visitor.visitCompilationUnit(requestor);
+        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit);
         
         assertNotNull("Did not find expected ASTNode", requestor.node);
         if (! expectedType.equals(requestor.getTypeName())) {
@@ -61,7 +59,31 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         }
     }
 
-    
+    private SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit) {
+        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+        SearchRequestor requestor = new SearchRequestor(exprStart, exprEnd);
+        visitor.visitCompilationUnit(requestor);
+        return requestor;
+    }
+
+    protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
+            String expectedDeclaringType) {
+        GroovyCompilationUnit unit = createUnit("Search", contents);
+        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit);
+        
+        assertNotNull("Did not find expected ASTNode", requestor.node);
+        if (! expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Expected declaring type not found.\n");
+            sb.append("Expected: " + expectedDeclaringType + "\n");
+            sb.append("Found: " + requestor.getTypeName() + "\n");
+            sb.append("Declaring type: " + requestor.result.declaringType.getName() + "\n");
+            sb.append("ASTNode: " + requestor.node + "\n");
+            fail(sb.toString());
+            
+        }
+    }
+
     
     public class SearchRequestor implements ITypeRequestor {
 
@@ -96,6 +118,12 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         public String getTypeName() {
             return result.type.getName();
         }
+        
+        public String getDeclaringTypeName() {
+            return result.declaringType.getName();
+        }
+        
+        
     }
 
 

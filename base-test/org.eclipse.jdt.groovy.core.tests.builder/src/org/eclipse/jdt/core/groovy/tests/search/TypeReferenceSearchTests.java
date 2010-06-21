@@ -16,7 +16,6 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Test;
@@ -161,6 +160,8 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
     }
     private void doTestForTwoInClassUseWithDefaultMethod(String secondContents) throws JavaModelException {
         // capture the default method that is created instead of the original method
+        // it seems that the order of the method variants is switched depending on whether or not 
+        // concrete asts are requested.
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, false, 1);
     }
     private void doTestForTwoInClassWithImplements(String secondContents) throws JavaModelException {

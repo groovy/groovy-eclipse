@@ -44,7 +44,11 @@ public class TypeLookupResult {
 		 */
 		INFERRED(2),
 		/**
-		 * The type has been inferred using less precise means. E.g., by looking at the results of running JUnit tests
+		 * The type has been inferred using less precise means. E.g., from an extending ITypeLookup
+		 * All AbstractSimplifiedTypeLookups return this type confidence.
+		 * <p>
+		 * Furthermore, a type confidence of this will not cause the Inferencing engine to end its lookup. It will continue and try
+		 * to find a more confident type using other lookups.
 		 */
 		LOOSELY_INFERRED(3),
 		/**
@@ -60,6 +64,10 @@ public class TypeLookupResult {
 
 		static TypeConfidence findLessPrecise(TypeConfidence left, TypeConfidence right) {
 			return left.val > right.val ? left : right;
+		}
+
+		boolean isLessPreciseThan(TypeConfidence other) {
+			return this.val > other.val;
 		}
 	}
 

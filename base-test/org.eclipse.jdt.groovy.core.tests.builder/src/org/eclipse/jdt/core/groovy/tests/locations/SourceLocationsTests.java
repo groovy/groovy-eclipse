@@ -9,7 +9,7 @@
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.jdt.core.groovy.tests.compiler;
+package org.eclipse.jdt.core.groovy.tests.locations;
 
 import junit.framework.Test;
 
@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.builder.GroovierBuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.core.CompilationUnit;
 
 /**
  * Tests that source locations for groovy compilation units are computed properly
@@ -238,25 +239,26 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	private void assertUnitWithSingleType(String source, ICompilationUnit unit)
 			throws Exception, JavaModelException {
 		assertUnit(unit, source);
+		int maxLength = ((CompilationUnit) unit).getContents().length-1;
 		IType decl = unit.getTypes()[0];
-		assertDeclaration(decl, 0, source);
+		assertDeclaration(decl, 0, source, maxLength);
 		IMethod[] methods = decl.getMethods();
 		for (int i = 0, j= 0; i < methods.length; i++) {
 			// look for method variants that use default params
 			if (i > 0 && !methods[i].getElementName().equals(methods[i-1].getElementName())) {
 				j++;
 			}
-			assertDeclaration(methods[i], j, source);
+			assertDeclaration(methods[i], j, source, maxLength);
 		}
 		IField[] fields = decl.getFields();
 		for (int i = 0; i < fields.length; i++) {
-			assertDeclaration(fields[i], i, source);
+			assertDeclaration(fields[i], i, source, maxLength);
 		}
 	}
 
 
 
-	private void assertDeclaration(IMember decl, int occurrence, String source) throws Exception {
+	private void assertDeclaration(IMember decl, int occurrence, String source, int maxLength) throws Exception {
 		char astKind;
  		if (decl instanceof IMethod) {
 			astKind = 'm';
@@ -270,7 +272,7 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 		int start = source.indexOf(startTag) + startTag.length();
 		
 		String endTag = "/*" + astKind + occurrence + "e*/";
-		int end = source.indexOf(endTag) + endTag.length()+1;
+		int end = Math.min(source.indexOf(endTag) + endTag.length()+1, maxLength);
 
 		boolean ignore = false;
 		if (decl instanceof IField && (start == 6 || end == 7)) {
@@ -312,7 +314,7 @@ public class SourceLocationsTests extends GroovierBuilderTests {
         IType script = unit.getTypes()[0];
         IMethod runMethod = script.getMethod("run", new String[0]);
         int start = source.indexOf(startText);
-        int end = source.lastIndexOf(endText)+endText.length()+1;
+        int end = source.lastIndexOf(endText)+endText.length();
         assertEquals("Wrong start for script class.  Text:\n" + source, start, script.getSourceRange().getOffset());
         assertEquals("Wrong end for script class.  Text:\n" + source, end, script.getSourceRange().getOffset()+script.getSourceRange().getLength());
         assertEquals("Wrong start for run method.  Text:\n" + source, start, runMethod.getSourceRange().getOffset());

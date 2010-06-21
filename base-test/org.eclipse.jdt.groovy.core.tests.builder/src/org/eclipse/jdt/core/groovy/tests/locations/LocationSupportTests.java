@@ -9,7 +9,7 @@
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.jdt.core.groovy.tests.compiler;
+package org.eclipse.jdt.core.groovy.tests.locations;
 
 import groovy.lang.GroovyClassLoader;
 

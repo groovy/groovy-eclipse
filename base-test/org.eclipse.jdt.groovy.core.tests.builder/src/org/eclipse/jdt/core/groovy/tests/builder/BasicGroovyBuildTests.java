@@ -99,7 +99,76 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingNoProblems();
 		executeClass(projectPath, "Coroutine", "246", "");
 	}
+
+	public void testPackageNames_GRE342_1() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		// q.X declared in p.X
+		IPath path = env.addGroovyClass(root, "p", "X",
+				"package q\n"+
+				"class X {}"
+				);
+		
+		incrementalBuild(projectPath);
+
+		expectingOnlySpecificProblemFor(path, new Problem("p/X", "The declared package \"q\" does not match the expected package \"p\"", path, 8,9, 60, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$		
+	}
 	
+	public void testPackageNames_GRE342_2() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		// q.X declared in p.X
+		IPath path = env.addGroovyClass(root, "p.q.r", "X",
+				"package p.s.r.q\n"+
+				"class X {}"
+				);
+		
+		incrementalBuild(projectPath);
+
+		expectingOnlySpecificProblemFor(path, new Problem("p/q/r/X", "The declared package \"p.s.r.q\" does not match the expected package \"p.q.r\"", path, 8, 15, 60, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$		
+	}
+	
+	public void testPackageNames_GRE342_3() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		// in p.q.r.X but has no package decl - should be OK
+		env.addGroovyClass(root, "p.q.r", "X",
+				"print 'abc'"
+				);
+		
+		incrementalBuild(projectPath);
+
+		expectingNoProblems();
+		executeClass(projectPath, "X", "abc", "");
+	}
+
 	
 	public void testClosureIncremental() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -397,33 +466,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingNoProblems();
 		executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
 	}
-	
-	public void testBuildGroovyHelloWorld_BadPackage() throws Exception {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.addGroovyJars(projectPath);
-		fullBuild(projectPath);
-		
-		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-		env.addGroovyClass(root, "p1", "Hello",
-			"package p1.p2\n"+ // deliberately wrong
-			"class Hello {\n"+
-			"   static void main(String[] args) {\n"+
-			"      print \"Hello Groovy world\"\n"+
-			"   }\n"+
-			"}\n"
-			);
-		
-		incrementalBuild(projectPath);
-		expectingCompiledClassesV("p1.p2.Hello");
-		expectingNoProblems();
-		executeClass(projectPath, "p1.p2.Hello", "Hello Groovy world", null);
-	}
 
 	// use funky main method
 	public void testBuildGroovyHelloWorld2() throws Exception {
@@ -794,9 +837,13 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]"+rootProblems[i].getEnd());
 		}
 		// positions should be from the first character of the tag to the character after the last in the text
-		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing", pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		JavaCore.setOptions(options);
+	}
+	
+	private String toTask(String tasktag,String message) {
+		return tasktag+message;
 	}
 
 	public void testSimpleTaskMarkerInSingleLineCommentEndOfClass() throws Exception {
@@ -828,7 +875,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		fullBuild(projectPath);
 
 		Problem[] rootProblems = env.getProblemsFor(pathToA);
-		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo two", pathToA, 40, 48, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","two"), pathToA, 40, 48, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		JavaCore.setOptions(options);
 	}
@@ -866,7 +913,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		for (int i=0;i<rootProblems.length;i++) {
 			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]"+rootProblems[i].getEnd());
 		}
-		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing", pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		JavaCore.setOptions(options);
 	}
@@ -901,7 +948,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		for (int i=0;i<rootProblems.length;i++) {
 			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]");
 		}
-		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing", pathToA, 16, 29, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing"), pathToA, 16, 29, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		JavaCore.setOptions(options);
 	}
@@ -937,7 +984,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		for (int i=0;i<rootProblems.length;i++) {
 			System.out.println(i+"  "+rootProblems[i]+" ["+rootProblems[i].getMessage()+"]");
 		}
-		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo ", pathToA, 16, 20, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo",""), pathToA, 16, 20, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		JavaCore.setOptions(options);
 	}
@@ -974,7 +1021,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		for (int i=0;i<rootProblems.length;i++) {
 			System.out.println(i+"  "+rootProblems[i]+" ["+rootProblems[i].getMessage()+"]");
 		}
-		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing *", pathToA, 20, 34, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing *"), pathToA, 20, 34, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 
 		JavaCore.setOptions(options);
 	}
@@ -1012,7 +1059,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		for (int i=0;i<rootProblems.length;i++) {
 			System.out.println(i+"  "+rootProblems[i]);
 		}
-		expectingOnlySpecificProblemFor(pathToA, new Problem("A", "todo nothing *", pathToA, 40, 54, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing *"), pathToA, 40, 54, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 
 		JavaCore.setOptions(options);
 	}
@@ -1056,21 +1103,21 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			IMarker marker = markers[0];
 			Object priority = marker.getAttribute(IMarker.PRIORITY);
 			String message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertTrue("Wrong message", message.startsWith("TODO "));
+			assertTrue("Wrong message", message.startsWith("TODO"));
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
 
 			marker = markers[1];
 			priority = marker.getAttribute(IMarker.PRIORITY);
 			message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertTrue("Wrong message", message.startsWith("FIXME "));
+			assertTrue("Wrong message", message.startsWith("FIXME"));
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
 
 			marker = markers[2];
 			priority = marker.getAttribute(IMarker.PRIORITY);
 			message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertTrue("Wrong message", message.startsWith("XXX "));
+			assertTrue("Wrong message", message.startsWith("XXX"));
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_LOW), priority);
 		} catch (CoreException e) {
@@ -1110,21 +1157,21 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			IMarker marker = markers[2];
 			Object priority = marker.getAttribute(IMarker.PRIORITY);
 			String message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertEquals("Wrong message", "TODO should be done", message);
+			assertEquals("Wrong message", toTask("TODO","should be done"), message);
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
 
 			marker = markers[1];
 			priority = marker.getAttribute(IMarker.PRIORITY);
 			message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertEquals("Wrong message", "FIXME need to review the loop", message);
+			assertEquals("Wrong message", toTask("FIXME","need to review the loop"), message);
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
 
 			marker = markers[0];
 			priority = marker.getAttribute(IMarker.PRIORITY);
 			message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertEquals("Wrong message", "TODO need to review the loop", message);
+			assertEquals("Wrong message", toTask("TODO","need to review the loop"), message);
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {
@@ -1164,21 +1211,21 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			IMarker marker = markers[2];
 			Object priority = marker.getAttribute(IMarker.PRIORITY);
 			String message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertEquals("Wrong message", "TODO should be done", message);
+			assertEquals("Wrong message", toTask("TODO","should be done"), message);
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
 
 			marker = markers[1];
 			priority = marker.getAttribute(IMarker.PRIORITY);
 			message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertEquals("Wrong message", "FIXME need to review the loop", message);
+			assertEquals("Wrong message", toTask("FIXME","need to review the loop"), message);
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
 
 			marker = markers[0];
 			priority = marker.getAttribute(IMarker.PRIORITY);
 			message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertEquals("Wrong message", "TODO need to review the loop", message);
+			assertEquals("Wrong message", toTask("TODO","need to review the loop"), message);
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {
@@ -1219,14 +1266,14 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			IMarker marker = markers[1];
 			Object priority = marker.getAttribute(IMarker.PRIORITY);
 			String message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertEquals("Wrong message", "TODO need to review the loop", message);
+			assertEquals("Wrong message", toTask("TODO","need to review the loop"), message);
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
 
 			marker = markers[0];
 			priority = marker.getAttribute(IMarker.PRIORITY);
 			message = (String) marker.getAttribute(IMarker.MESSAGE);
-			assertEquals("Wrong message", "TODO need to review the loop", message);
+			assertEquals("Wrong message", toTask("TODO","need to review the loop"), message);
 			assertNotNull("No task priority", priority);
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {

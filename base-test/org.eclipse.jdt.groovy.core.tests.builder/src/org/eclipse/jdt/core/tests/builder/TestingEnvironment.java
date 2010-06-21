@@ -1209,9 +1209,9 @@ public void cleanBuild() {
         addExternalJar(projectPath, FileLocator.resolve(jar).getFile());
 	}
 
-	public void addGroovyJars(IPath projectPath) throws Exception {
+    public void addGroovyJars(IPath projectPath) throws Exception {
         addExternalJar(projectPath, GroovyActivator.GROOVY_JAR_URL.getFile());
         addExternalJar(projectPath, GroovyActivator.ASM_JAR_URL.getFile());
-	}	
+    }   
 
 }
