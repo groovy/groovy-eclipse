@@ -101,7 +101,7 @@ public class BytecodeHelper implements Opcodes {
 
     public void box(ClassNode type) {
         if (type.isPrimaryClassNode()) return;
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         if (type.isPrimitive()) 
         // end
         box(type.getTypeClass());
@@ -123,7 +123,7 @@ public class BytecodeHelper implements Opcodes {
 
     public void unbox(ClassNode type) {
         if (type.isPrimaryClassNode()) return;
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         if (type.isPrimitive()) 
         // end
         unbox(type.getTypeClass());
@@ -133,12 +133,13 @@ public class BytecodeHelper implements Opcodes {
         if (t.isPrimaryClassNode()) {
             return getClassInternalName(t.getName());
         }
-        // FIXASC (groovychange)
-        // oldcode
-//        return getClassInternalName(t.getTypeClass());
+        // GRECLIPSE: start
+        /*old{
+        return getClassInternalName(t.getTypeClass());
+        }*/
 		// newcode
 		// don't call getTypeClass() unless necessary
-        // FIXASC decide if this can ever get into trouble?  the second part of the if was added because of FindInSource.groovy which
+        // GRECLIPSE decide if this can ever get into trouble?  the second part of the if was added because of FindInSource.groovy which
         // refered to GroovyModel but that could not be found so we were left with an unresolved import and node in the code - crashed
         // whilst doing the code gen
         String name = t.getClassInternalName();

@@ -177,7 +177,7 @@ public class Java5 implements VMPlugin {
     private void configureAnnotationFromDefinition(AnnotationNode definition, AnnotationNode root) {
         ClassNode type = definition.getClassNode();
         if (!type.isResolved()) return;
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         if (type.hasClass()) {
         // end
         Class clazz = type.getTypeClass();
@@ -201,7 +201,7 @@ public class Java5 implements VMPlugin {
             }
             root.setAllowedTargets(bitmap);
         }
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         } else {
         	String typename = type.getName();
         	if (typename.equals("java.lang.annotation.Retention")) {

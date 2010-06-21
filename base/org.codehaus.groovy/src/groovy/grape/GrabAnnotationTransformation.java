@@ -112,10 +112,12 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
         ModuleNode mn = (ModuleNode) nodes[0];
 
-		if (mn==null) {
-        	// FIXASC (groovychange) able to stop this being called in the first place?
+            // GRECLIPSE: start
+            if (mn==null) {
+        	// able to stop this being called in the first place?
         	// assert: code has other errors == true
         	return;
+            // end
         }
         
         allowShortGrab = true;

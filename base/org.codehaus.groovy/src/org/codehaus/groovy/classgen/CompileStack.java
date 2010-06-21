@@ -328,7 +328,7 @@ public class CompileStack implements Opcodes {
                 String type = BytecodeHelper.getTypeDescription(v.getType());
                 Label start = v.getStartLabel();
                 Label end = v.getEndLabel();
-                // FIXASC (groovychange) guard for bad code
+                // GRECLIPSE: start: guard for bad code
                 if (start!=null && end!=null) 
                 mv.visitLocalVariable(v.getName(), type, null, start, end, v.getIndex());
             }

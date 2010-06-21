@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.ast;
 
-// FIXASC (groovychange)
+// GRECLIPSE: start
 // old code
 
 /**

@@ -72,7 +72,7 @@ import org.objectweb.asm.Opcodes;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 19727 $
+ * @version $Revision: 19951 $
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
@@ -124,10 +124,18 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     private FieldNode getMetaClassField(ClassNode node) {
         FieldNode ret = node.getDeclaredField("metaClass");
-        if (ret != null) return ret;
-        // FIXASC (groovychange)
-        // oldcode
-        /*ClassNode current = node;
+        if (ret != null) {
+        	ClassNode mcFieldType = ret.getType();
+        	if (!mcFieldType.equals(ClassHelper.METACLASS_TYPE)) {
+                throw new RuntimeParserException("The class " + node.getName() +
+                        " cannot declare field 'metaClass' of type " + mcFieldType.getName() + " as it needs to be of " +
+                        		"the type " + ClassHelper.METACLASS_TYPE.getName() + " for internal groovy purposes", ret);
+        	}
+        	return ret;
+        }
+        // GRECLIPSE: start
+        /*old{
+        ClassNode current = node;
         while (current != ClassHelper.OBJECT_TYPE) {
             current = current.getSuperClass();
             if (current == null) break;
@@ -204,15 +212,16 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (!node.getDeclaredConstructors().isEmpty()) return;
         
         BlockStatement empty = new BlockStatement();
-        // FIXASC (groovychange) We don't want source locations for synthetic default constructors
-        // oldcode
-/*        empty.setSourcePosition(node); 
+        // GRECLIPSE: start:We don't want source locations for synthetic default constructors
+        /*old{
+        empty.setSourcePosition(node); 
         ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, empty);
         constructor.setSourcePosition(node);
-        */
+        }*/
         // newcode
         ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, empty);
         // end
+        constructor.setHasNoRealSourcePosition(true);
         node.addConstructor(constructor);
     }
 
@@ -407,7 +416,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
 	protected void addTimeStamp(ClassNode node) {
         if(node.getDeclaredField(Verifier.__TIMESTAMP) == null) { // in case if verifier visited the call already
-        // FIXASC (groovychange) skip timestamp creation
+        // GRECLIPSE: start: skip timestamp creation
 //        FieldNode timeTagField = new FieldNode(
 //                Verifier.__TIMESTAMP,
 //                ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC,
@@ -987,10 +996,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private void collectSuperInterfaceMethods(ClassNode cn, Map allInterfaceMethods) {
     	List cnInterfaces = Arrays.asList(cn.getInterfaces());
     	ClassNode sn = cn.getSuperClass();
-    	/* FIXASC (groovychange) temp change - ought to ensure the JDTclassnodes fit expectations here and return Object at the top
-    	// was:
+    	/* GRECLIPSE: start: temp change - ought to ensure the JDTclassnodes fit expectations here and return Object at the top
+    	/*old{
     	while(!sn.equals(ClassHelper.OBJECT_TYPE)) {
-	// new */
+	}*/
+	// new:
     	while(sn!=null && !sn.equals(ClassHelper.OBJECT_TYPE)) {
     	// end
             ClassNode[] interfaces = sn.getInterfaces();

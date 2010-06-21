@@ -25,7 +25,7 @@ import java.util.List;
  * Represents a method declaration
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 18461 $
+ * @version $Revision: 20220 $
  */
 public class MethodNode extends AnnotatedNode implements Opcodes {
 
@@ -57,13 +57,15 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         setParameters(parameters);
         this.hasDefault = false;       
         this.exceptions = exceptions;
-        this.staticConstructor = (name != null && name.equals("<clinit>")) ? true : false;
+        this.staticConstructor = (name != null && name.equals("<clinit>"));
     }
 
     /**
      * The type descriptor for a method node is a string containing the name of the method, its return type,
      * and its parameter types in a canonical form. For simplicity, I'm using the format of a Java declaration
      * without parameter names.
+     *
+     * @return the type descriptor
      */
     public String getTypeDescriptor() {
         if (typeDescriptor==null) { 
@@ -123,8 +125,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         VariableScope scope = new VariableScope();
         this.parameters = parameters;
         if (parameters != null && parameters.length > 0) {
-            for (int i = 0; i < parameters.length; i++) {
-                Parameter para = parameters[i];
+            for (Parameter para : parameters) {
                 if (para.hasInitialExpression()) {
                     this.hasDefaultValue = true;
                 }

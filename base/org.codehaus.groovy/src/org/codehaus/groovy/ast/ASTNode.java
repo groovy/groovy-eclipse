@@ -28,7 +28,7 @@ public class ASTNode {
     private int columnNumber = -1;
     private int lastLineNumber = -1;
     private int lastColumnNumber = -1;
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     private int start = 0;
     private int end = 0;
     // end
@@ -72,7 +72,7 @@ public class ASTNode {
     public void setLastColumnNumber(int lastColumnNumber) {
         this.lastColumnNumber = lastColumnNumber;
     }
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     public int getStart() {
         return start;
     }
@@ -95,7 +95,7 @@ public class ASTNode {
      * The sourcePosition consists of a line/column pair for
      * the start and a line/column pair for the end of the
      * expression or statement 
-     // FIXASC (groovychange)
+     // GRECLIPSE: start
      * as well as the absolute start and end positions in the file
      // end
      * 
@@ -105,7 +105,7 @@ public class ASTNode {
         this.lastLineNumber = node.getLastLineNumber();
         this.lastColumnNumber = node.getLastColumnNumber();
         this.lineNumber = node.getLineNumber();
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         this.start = node.getStart();
         this.end = node.getEnd();
         // end

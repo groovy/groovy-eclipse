@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 the original author or authors.
+ * Copyright 2008-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,7 +140,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
             targetNodes = new LinkedList<ASTNode[]>();
 
-            // fist pass, collect nodes
+            // first pass, collect nodes
             super.visitClass(classNode);
 
             // second pass, call visit on all of the collected nodes
@@ -159,8 +159,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
      */
     public void visitAnnotations(AnnotatedNode node) {
         super.visitAnnotations(node);
-        //noinspection unchecked
-        for (AnnotationNode annotation : (Collection<AnnotationNode>) node.getAnnotations()) {
+        for (AnnotationNode annotation : node.getAnnotations()) {
             if (transforms.containsKey(annotation)) {
                 targetNodes.add(new ASTNode[]{annotation, node});
             }
@@ -217,7 +216,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 URL service = globalServices.nextElement();
                 String className;
                 
-                // FIXASC (groovychange) don't consume our own META-INF entries - bit of a hack...
+                // GRECLIPSE: start: don't consume our own META-INF entries - bit of a hack...
 //                try {
 //                	// this unfortunately also prevents the execution of transforms from project dependencies!
 //					String file = service.getFile().toString();
@@ -232,8 +231,8 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 //                } catch (Throwable t) {
 //                	t.printStackTrace();
 //                }
-                // FIXASC (groovychange) end
-                // FIXASC (groovychange)
+                // end
+                // GRECLIPSE start
                 // was
                 // BufferedReader svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
                 // now
@@ -241,7 +240,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 InputStream is = service.openStream();
                 BufferedReader svcIn = new BufferedReader(new InputStreamReader(is));
                
-                // FIXASC (groovychange)
+                // end
                 try {
                     className = svcIn.readLine();
                 } catch (IOException ioe) {
@@ -279,9 +278,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         continue;
                     }
                 }
-                // FIXASC (groovychange)
+                // GRECLIPSE: start
                 is.close();
-                // FIXASC (groovychange)
+                // end
             }
         } catch (IOException e) {
             //FIXME the warning message will NPE with what I have :(
@@ -347,16 +346,16 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 if (ASTTransformation.class.isAssignableFrom(gTransClass)) {
                     final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
                     CompilationUnit.SourceUnitOperation suOp = new CompilationUnit.SourceUnitOperation() {
-                		// FIXASC (groovychange)
+                		// GRECLIPSE: start
                     	private boolean isBuggered = false;
-                		// FIXASC (groovychange) end
+                		// end
                         public void call(SourceUnit source) throws CompilationFailedException {
-                    		// FIXASC (groovychange)
+                    		// // GRECLIPSE: start
                         	if (isBuggered) return;
                         	try { 
-                        		// FIXASC (groovychange) end
+                              // end
                             instance.visit(new ASTNode[] {source.getAST()}, source);
-                        		// FIXASC (groovychange)
+                        	// GRECLIPSE: start
                         	} catch (NoClassDefFoundError ncdfe) {
                         		// Suggests that the transform is written in Java but has dependencies on Groovy source
                         		// within the same project - as this has yet to be compiled, we can't find the class.
@@ -366,7 +365,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         		// disable this visitor because it is BUGGERED
                         		isBuggered = true;
                         	}
-                        	// FIXASC (groovychange) end
+                        	// end
                         }
                     }; 
                     if(isFirstScan) {

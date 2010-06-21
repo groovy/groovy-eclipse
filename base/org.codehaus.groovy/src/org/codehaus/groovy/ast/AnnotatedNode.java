@@ -21,16 +21,17 @@ import java.util.*;
  * Base class for any AST node which is capable of being annotated
  *
  * @author <a href="mailto:jstrachan@protique.com">James Strachan</a>
- * @version $Revision: 15807 $
+ * @version $Revision: 19865 $
  */
 public class AnnotatedNode extends ASTNode {
     private List<AnnotationNode> annotations = Collections.emptyList();
     private boolean synthetic;
     ClassNode declaringClass;
-    // FIXASC (groovychange)
-	private int nameEnd;
-	private int nameStart;
-	// end
+    private boolean hasNoRealSourcePositionFlag;
+    // GRECLIPSE: start
+    private int nameEnd;
+    private int nameStart;
+    // end
 
     public AnnotatedNode() {
     }
@@ -96,8 +97,17 @@ public class AnnotatedNode extends ASTNode {
     public void setDeclaringClass(ClassNode declaringClass) {
         this.declaringClass = declaringClass;
     }
+    
+    
+    public boolean hasNoRealSourcePosition() {
+        return hasNoRealSourcePositionFlag;
+    }
 
-    // FIXASC (groovychange)
+    public void setHasNoRealSourcePosition(boolean value) {
+        this.hasNoRealSourcePositionFlag = value;
+    }
+
+    // GRECLIPSE: start
 	public int getNameStart() {
 		return nameStart;
 	}
@@ -112,6 +122,16 @@ public class AnnotatedNode extends ASTNode {
 
 	public void setNameEnd(int nameEnd) {
 		this.nameEnd = nameEnd;
+	}
+	
+	@Override
+	public void setSourcePosition(ASTNode node) {
+	    super.setSourcePosition(node);
+	    if (node instanceof AnnotatedNode) {
+            AnnotatedNode aNode = (AnnotatedNode) node;
+            setNameStart(aNode.getNameStart());
+            setNameEnd(aNode.getNameEnd());
+        }
 	}
 	// end
 }

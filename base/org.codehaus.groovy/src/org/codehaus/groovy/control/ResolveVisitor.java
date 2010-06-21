@@ -51,11 +51,11 @@ import java.util.*;
  * @author Roshan Dawrani
  */
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
-// FIXASC (groovychange) private to public 
+    // GRECLIPSE: start: from private to public 
     public ClassNode currentClass;
     // note: BigInteger and BigDecimal are also imported by default
     public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.io.", "java.net.", "java.util.", "groovy.lang.", "groovy.util."};
-    // FIXASC (groovychange) protected (was private)
+    // GRECLIPSE: start: to protected (was private)
     protected CompilationUnit compilationUnit;
     private Map cachedClasses = new HashMap();
     private static final Object NO_CLASS = new Object();
@@ -238,12 +238,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         resolveOrFail(type, "", node);
     }
 
-    // FIXASC (groovychange) private to protected
+    // GRECLIPSE: from private to protected
     protected boolean resolve(ClassNode type) {
         return resolve(type, true, true, true);
     }
 
-    // FIXASC (groovychange) private to protected
+    // GRECLIPSE: from private to protected
     protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
         resolveGenericsTypes(type.getGenericsTypes());
         if (type.isResolved() || type.isPrimaryClassNode()) return true;
@@ -343,7 +343,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;   
     }
     
-    // FIXASC (groovychange) private to protected
+    // GRECLIPSE: from private to protected
     protected boolean resolveFromClassCache(ClassNode type) {
         String name = type.getName();
         Object val = cachedClasses.get(name);
@@ -384,7 +384,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
     }
 
-    // FIXASC (groovychange) private to protected
+    // GRECLIPSE: from private to protected
     protected boolean resolveToScript(ClassNode type) {
         String name = type.getName();
 
@@ -407,7 +407,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // try to find a script from classpath
         GroovyClassLoader gcl = compilationUnit.getClassLoader();
         URL url = null;
-        // FIXASC (groovychange) prevent classloader usage!
+        // GRECLIPSE: start: prevent classloader usage!
         // oldcode
         /* 
         try {
@@ -444,7 +444,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return name;
     }
 
-    // FIXASC (groovychange) private to protected
+    // GRECLIPSE: from private to protected
     protected boolean resolveFromStaticInnerClasses(ClassNode type, boolean testStaticInnerClasses) {
         // a class consisting of a vanilla name can never be
         // a static inner class, because at least one dot is
@@ -467,7 +467,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
                 tmp.className = name;
             }   else {
-            // FIXASC (groovychange) refactor extract method
+            // GRECLIPSE: start: refactor extract method
             // oldcode
             /*
                 String name = type.getName();
@@ -494,7 +494,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
     // end
 
-    // FIXASC (groovychange) private to protected
+    // GRECLIPSE: from private to protected
     protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
         // test default imports
         testDefaultImports &= !type.hasPackageName();
@@ -530,7 +530,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
-    // FIXASC (groovychange) to protected from private
+    // GRECLIPSE: from private to protected
     protected boolean resolveFromCompileUnit(ClassNode type) {
         // look into the compile unit if there is a class with that name
         CompileUnit compileUnit = currentClass.getCompileUnit();
@@ -611,7 +611,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
-// FIXASC (groovychange) private to protected
+    // GRECLIPSE: from private to protected
     protected boolean resolveFromModule(ClassNode type, boolean testModuleImports) {
         // we decided if we have a vanilla name starting with a lower case
         // letter that we will not try to resolve this name against .*
@@ -680,13 +680,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
     
-    // FIXASC (groovychange) used?
+    // GRECLIPSE: new method
         protected ClassNode resolveNewName(String fullname) {
 		return null;
 	}
 	// end
 
-// FIXASC (groovychange) private to protected
+    // GRECLIPSE: from private to protected
     protected boolean resolveToClass(ClassNode type) {
         String name = type.getName();
 
@@ -954,9 +954,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     protected Expression transformVariableExpression(VariableExpression ve) {
         // FIXADE force annotations on variables to be included in the transform 
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         visitAnnotations(ve);
-        // end (groovychange)
+        // end
         Variable v = ve.getAccessedVariable();
         
         if(!(v instanceof DynamicVariable) && !checkingVariableTypeInDeclaration) {
@@ -1082,6 +1082,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     	para.setInitialExpression(transform((Expression) initialVal));
                     }
                 }
+                visitAnnotations(para);
             }
         }
         Statement code = ce.getCode();
@@ -1111,11 +1112,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         Expression method = transform(mce.getMethod());
         Expression object = transform(mce.getObjectExpression());
 
+        resolveGenericsTypes(mce.getGenericsTypes());
+        
         MethodCallExpression result = new MethodCallExpression(object, method, args);
         result.setSafe(mce.isSafe());
         result.setImplicitThis(mce.isImplicitThis());
         result.setSpreadSafe(mce.isSpreadSafe());
         result.setSourcePosition(mce);
+        result.setGenericsTypes(mce.getGenericsTypes());
         return result;
     }
     
@@ -1162,7 +1166,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 member.setValue(newValue);
                 checkAnnotationMemberValue(newValue);
             }
-            // FIXASC (cant do this - typeclass access not allowed )
+            // GRECLIPSE: start: cant do this
             /*
             if(annType.isResolved()) {
             	Class annTypeClass = annType.getTypeClass();
@@ -1217,7 +1221,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return exp;
     }
     
-    // FIXASC (groovychange)
+    // GRECLIPSE: new methods
     protected void commencingResolution() {
     	// template method
     }
@@ -1243,7 +1247,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void visitClass(ClassNode node) {
         ClassNode oldNode = currentClass;
         currentClass = node;
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         commencingResolution();
         // end
         resolveGenericsHeader(node.getGenericsTypes());
@@ -1299,7 +1303,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         
         super.visitClass(node);
 
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         finishedResolution();
         // end
         currentClass = oldNode;

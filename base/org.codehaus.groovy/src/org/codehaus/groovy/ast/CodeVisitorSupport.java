@@ -273,7 +273,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
                 Expression spread = ((SpreadExpression) expression).getExpression();
                 spread.visit(this);
             } else {
-            	// FIXASC (groovychange) could be null for malformed code (GRE290)
+            	// GRECLIPSE: start: could be null for malformed code (GRE290)
             	if (expression!=null) 
             	// end
             		expression.visit(this);

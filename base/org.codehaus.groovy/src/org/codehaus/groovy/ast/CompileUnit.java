@@ -43,9 +43,9 @@ import org.codehaus.groovy.syntax.SyntaxException;
 public class CompileUnit {
 
     private final List<ModuleNode> modules = new ArrayList<ModuleNode>();
-    // FIXASC (groovychange) cached list of sort operation
+    // GRECLIPSE: start cached list of sort operation
     private List<ModuleNode> sortedModules;
-    // FIXASC (groovychange) end
+    // end
     private Map<String,ClassNode> classes = new HashMap<String, ClassNode>();
     private CompilerConfiguration config;
     private GroovyClassLoader classLoader;
@@ -72,7 +72,7 @@ public class CompileUnit {
         // groovy from building an ast
         if (node==null) return;
         modules.add(node);
-        // FIXASC (groovychange) invalidate sort
+        // GRECLIPSE: start: invalidate sort
         this.sortedModules= null; 
         node.setUnit(this);
         addClasses(node.getClasses());
@@ -181,7 +181,7 @@ public class CompileUnit {
         return classesToCompile.keySet().iterator();
     }
 
-    // FIXASC (groovychange) access sorted list
+    // GRECLIPSE: start: access sorted list
 	public List<ModuleNode> getSortedModules() {
 		return this.sortedModules;
 	}
@@ -189,6 +189,6 @@ public class CompileUnit {
 	public void setSortedModules(List<ModuleNode> sortedModules) {
 		this.sortedModules = sortedModules;
 	}
-	// FIXASC (groovychange) end
+	// end
 
 }

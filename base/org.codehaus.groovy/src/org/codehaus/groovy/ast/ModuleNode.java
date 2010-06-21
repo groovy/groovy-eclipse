@@ -90,13 +90,27 @@ public class ModuleNode extends ASTNode implements Opcodes {
         return classes;
     }
     
-    // FIXASC (groovychange) faster
+    // GRECLIPSE: start: faster
     // old
 	//    private boolean isPackageInfo() {
 	//    	return context != null && context.getName() != null && context.getName().endsWith("package-info.groovy");
 	//    }
     // new
     private int knowIfPackageInfo = 0; // 0=dontknow 1=yes 2=no
+    // GRECLIPSE:
+    private boolean encounteredUnrecoverableError;
+    
+    public void setEncounteredUnrecoverableError(boolean b) {
+	    encounteredUnrecoverableError= b;
+    }
+    
+    /**
+     * @return true if a syntax error was encountered that prevented correct construction of the AST
+     */
+    public boolean encounteredUnrecoverableError() {
+	    return encounteredUnrecoverableError;
+    }
+    // end
     
     private boolean isPackageInfo() {
     	if (knowIfPackageInfo==0) {
@@ -108,7 +122,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     	}
     	return knowIfPackageInfo==1;
     }
-    // FIXASC (groovychange) end
+    // end
 
 
     public List<ImportNode> getImports() {
@@ -154,7 +168,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
 
     public void addImport(String alias, ClassNode type, List<AnnotationNode> annotations) {
         ImportNode importNode = new ImportNode(type, alias);
-        // FIXASC (groovychange) configure sloc...approximate from the type's sloc
+        // GRECLIPSE: start: configure sloc...approximate from the type's sloc
         if (type != null) {
             importNode.setSourcePosition(type);
             importNode.setColumnNumber(1);  // assume beginning of line
@@ -209,7 +223,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     public String getPackageName() {
-    	// FIXASC (groovychange) was getName();
+    	// GRECLIPSE: start: was getName();
         return packageNode == null ? null : packageNode.getPackageName();
     }
 
@@ -228,7 +242,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     public boolean hasPackageName(){
-        return packageNode != null && packageNode.getPackageName()/* FIXASC (groovychange) was getName();*/ != null;
+        return packageNode != null && packageNode.getPackageName()/* GRECLIPSE: was getName();*/ != null;
     }
 
     public boolean hasPackage(){
@@ -268,7 +282,10 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     public ClassNode getScriptClassDummy() {
-        if (scriptDummy!=null) return scriptDummy;
+        if (scriptDummy!=null) {
+        	setScriptBaseClassFromConfig(scriptDummy);
+        	return scriptDummy;
+        }
         
         String name = getPackageName();
         if (name == null) {
@@ -280,26 +297,30 @@ public class ModuleNode extends ASTNode implements Opcodes {
         }
         name += extractClassFromFileDescription();
 
-        String baseClassName = null;
-        if (unit != null) baseClassName = unit.getConfig().getScriptBaseClass();
-        ClassNode baseClass = null;
-        if (baseClassName!=null) {
-            baseClass = ClassHelper.make(baseClassName);
-        }
-        if (baseClass == null) {
-            baseClass = ClassHelper.SCRIPT_TYPE;
-        }
         ClassNode classNode;
         if (isPackageInfo()) {
             classNode = new ClassNode(name, ACC_ABSTRACT | ACC_INTERFACE, ClassHelper.OBJECT_TYPE);
         } else {
-            classNode = new ClassNode(name, ACC_PUBLIC, baseClass);
+            classNode = new ClassNode(name, ACC_PUBLIC, ClassHelper.SCRIPT_TYPE);
+            setScriptBaseClassFromConfig(classNode);
             classNode.setScript(true);
             classNode.setScriptBody(true);
         }
 
         scriptDummy = classNode;
         return classNode;
+    }
+    
+    private void setScriptBaseClassFromConfig(ClassNode cn) {
+        if (unit != null) {
+            String baseClassName = null;
+        	baseClassName = unit.getConfig().getScriptBaseClass();
+        	if(baseClassName != null) {
+            	if(!cn.getSuperClass().getName().equals(baseClassName)) {
+            		cn.setSuperClass(ClassHelper.make(baseClassName));
+            	}
+        	}
+        }
     }
     
     protected ClassNode createStatementsClass() {

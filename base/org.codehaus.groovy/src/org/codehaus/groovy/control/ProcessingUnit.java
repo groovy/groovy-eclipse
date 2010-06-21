@@ -38,9 +38,9 @@ public abstract class ProcessingUnit {
     protected boolean phaseComplete;
 
 
-	// FIXASC (groovychange)
-	protected int erroredAtPhase = -1;
-    // end
+    // GRECLIPSE: new field
+    protected int erroredAtPhase = -1;
+
     /**
      * Configuration and other settings that control processing
      */
@@ -139,10 +139,11 @@ public abstract class ProcessingUnit {
      */
 
     public void completePhase() throws CompilationFailedException {    
-    // FIXASC (groovychange)
-    // oldcode   
-//        errorCollector.failIfErrors();
-// newcode
+    // GRECLIPSE: start
+    /*old{
+        errorCollector.failIfErrors();
+    }*/
+    // newcode
         if (errorCollector.hasErrors()) {
         	erroredAtPhase = phase;
         }

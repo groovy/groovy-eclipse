@@ -101,14 +101,14 @@ public class AnnotationVisitor {
 
                 try {
                     type.getFields();
-                    // FIXASC (groovychange)
+                    // GRECLIPSE: start
                     if (type.hasClass()) {
-                    // FIXASC (groovychange) end
+                    // end
 	                    Field field = type.getTypeClass().getField(pe.getPropertyAsString());
 	                    if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
 	                        return new ConstantExpression(field.get(null));
 	                    }
-	              // FIXASC (groovychange)
+	              // GRECLIPSE: start
                     } else {
                   	  FieldNode fieldNode = type.getField(pe.getPropertyAsString());
                   	  if (fieldNode!=null && Modifier.isStatic(fieldNode.getModifiers()) && Modifier.isFinal(fieldNode.getModifiers())) {
@@ -116,7 +116,7 @@ public class AnnotationVisitor {
                   		  return (ConstantExpression)e;
                   	  }
                     }
-                    // FIXASC (groovychange) end
+                    // end
                 } catch(Exception e) {
                     // ignore, leave property expression in place and we'll report later
                 }
@@ -139,7 +139,7 @@ public class AnnotationVisitor {
         for (MethodNode mn : classNode.getMethods()) {
             String methodName = mn.getName();
             // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
-            // FIXASC (groovychange) temp hack, cannot rely on getCode()
+            // GRECLIPSE: start: temp hack, cannot rely on getCode()
 //            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
 //                addError("No explicit/default value found for annotation attribute '" + methodName + "' in annotation " + classNode, node);
 //                ok = false;

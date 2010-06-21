@@ -106,7 +106,7 @@ import org.objectweb.asm.Opcodes;
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Jochen Theodorou
- * @version $Revision: 19496 $
+ * @version $Revision: 20163 $
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
     private static class MapOfLists {
@@ -165,10 +165,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // clazz!=null when resolved
     protected Class clazz;
     // only false when this classNode is constructed from a class
-    // FIXASC (groovychange) from private to protected
+    // GRECLIPSE: from private to protected
     protected boolean lazyInitDone=true;
     // not null if if the ClassNode is an array
-    // FIXASC (groovychange) from private to protected
+    // GRECLIPSE: from private to protected
     protected ClassNode componentType = null;
     // if not null this instance is handled as proxy
     // for the redirect
@@ -231,12 +231,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     	return redirect().isPrimaryNode || (componentType!= null && componentType.isPrimaryClassNode());
     }
 
-// FIXASC (groovychange) private to public
+// GRECLIPSE: from private to public
     /*
      * Constructor used by makeArray() if no real class is available
      */
     public ClassNode(ClassNode componentType) {
-    	// FIXASC (groovychange)
+    	// GRECLIPSE: start
     	// oldcode
 //        this(componentType.getName()+"[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         // newcode:
@@ -248,7 +248,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         isPrimaryNode=false;
     }
 
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     public static String getTheNameMightBeArray(ClassNode componentType) {
     	String n = componentType.getName();
     	if (componentType.isArray() || n.length()==1) { // TODO needs to cope with basic primitive names (char/etc)
@@ -292,7 +292,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         isPrimaryNode=false;
     }
 
-    // FIXASC (groovychange) from private to protected
+    // GRECLIPSE: from private to protected
     /**
      * The complete class structure will be initialized only when really
      * needed to avoid having too many objects during compilation
@@ -463,7 +463,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         // add in unimplemented abstract methods from the interfaces
         for (ClassNode iface : getInterfaces()) {
             Map<String, MethodNode> ifaceMethodsMap = iface.getDeclaredMethodsMap();
-            // FIXASC (optimize) should iterate using Map.Entry perhaps
+            // GRECLIPSE: fix should iterate using Map.Entry perhaps
             for (String methSig : ifaceMethodsMap.keySet()) {
                 if (!result.containsKey(methSig)) {
                     MethodNode methNode = ifaceMethodsMap.get(methSig);
@@ -500,16 +500,16 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         redirect().modifiers = modifiers;
     }
 
-    // FIXASC (groovychange) overridable method for JDTClassNode
+    // GRECLIPSE: start: overridable method for JDTClassNode
     protected void ensurePropertiesInitialized() {	
     }
-    // FIXASC (groovychange) end
+    // end
 
     public List<PropertyNode> getProperties() {
-        // FIXASC (groovychange)
-    	redirect().ensurePropertiesInitialized();
-        // FIXASC (groovychange) end
-		final ClassNode r = redirect();
+        // GRECLIPSE: start
+    	  redirect().ensurePropertiesInitialized();
+        // end
+	  final ClassNode r = redirect();
         if (r.properties == null)
             r.properties = new ArrayList<PropertyNode> ();
         return r.properties;    
@@ -695,11 +695,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void addInterface(ClassNode type) {
-        // lets check if it already implements an interface
+        // let's check if it already implements an interface
         boolean skip = false;
         ClassNode[] interfaces = redirect().interfaces;
-        for (int i = 0; i < interfaces.length; i++) {
-            if (type.equals(interfaces[i])) {
+        for (ClassNode existing : interfaces) {
+            if (type.equals(existing)) {
                 skip = true;
             }
         }
@@ -723,11 +723,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void addMixin(MixinNode mixin) {
-        // lets check if it already uses a mixin
+        // let's check if it already uses a mixin
         MixinNode[] mixins = redirect().mixins;
         boolean skip = false;
-        for (int i = 0; i < mixins.length; i++) {
-            if (mixin.equals(mixins[i])) {
+        for (MixinNode existing : mixins) {
+            if (mixin.equals(existing)) {
                 skip = true;
             }
         }
@@ -931,7 +931,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public boolean isDerivedFrom(ClassNode type) {
     	if(this.equals(ClassHelper.VOID_TYPE)) {
-    		return type.equals(ClassHelper.VOID_TYPE) ? true : false;
+            return type.equals(ClassHelper.VOID_TYPE);
     	}
         if (type.equals(ClassHelper.OBJECT_TYPE)) return true;
         ClassNode node = this;
@@ -1120,7 +1120,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     /**
-     * Is this class delcared in a static method (such as a closure / inner class declared in a static method)
+     * Is this class declared in a static method (such as a closure / inner class declared in a static method)
      */
     public boolean isStaticClass() {
         return redirect().staticClass;
@@ -1274,8 +1274,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 
                 // handle parameters with default values
                 int nonDefaultParameters = 0;
-                for(int i = 0; i < parameters.length; i++) {
-                	if(parameters[i].hasInitialExpression() == false) {
+                for (Parameter parameter : parameters) {
+                    if (!parameter.hasInitialExpression()) {
                 		nonDefaultParameters++;
                 	}
                 }
@@ -1292,7 +1292,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return (getModifiers() & Opcodes.ACC_INTERFACE) > 0;
     }
 
-    // FIXASC (groovychange) - dirty hack
+    // GRECLIPSE: start: dirty hack
     // oldcode:
 //    public boolean isResolved(){
 //        return redirect().clazz!=null || (componentType != null && componentType.isResolved());
@@ -1303,7 +1303,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         redirect().clazz!=null || (componentType != null && componentType.isResolved());
     }
     
-    // FIXASC hacky, rework (remove?) this if it behaves as an approach
+    // GRECLIPSE: hacky, rework (remove?) this if it behaves as an approach
     // enables the redirect to be a JDTClassNode and satisfy 'isResolved()'
     public boolean isReallyResolved() {
     	return false;
@@ -1319,7 +1319,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return componentType;
     }
 
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     public boolean hasClass() {
     	return redirect().clazz!=null;
     }
@@ -1427,6 +1427,15 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         index.put(newName, index.remove(oldName));
     }
     
+    public void removeField(String oldName) {
+        ClassNode r = redirect ();
+        if (r.fieldIndex == null)
+            r.fieldIndex = new HashMap<String,FieldNode> ();
+        final Map<String,FieldNode> index = r.fieldIndex;
+        r.fields.remove(index.get(oldName));
+        index.remove(oldName);
+    }
+
     public boolean isEnum() {
         return (getModifiers()&Opcodes.ACC_ENUM) != 0;
      }
@@ -1448,7 +1457,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return transformInstances;
     }
      
-     // FIXASC (groovychange)
+     // GRECLIPSE: start
 	public String getClassInternalName() {
 		if (redirect!=null) return redirect().getClassInternalName();
 		return null;

@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.stmt.*;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.groovy.runtime.InvokerHelper;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.util.HashCodeHelper;
@@ -35,7 +36,6 @@ import java.util.*;
 
 /**
  * Handles generation of code for the @Immutable annotation.
- * This is experimental, use at your own risk.
  *
  * @author Paul King
  */
@@ -49,21 +49,21 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
       Also, Color is not final so while not normally used with child
       classes, it isn't strictly immutable. Use at your own risk.
      */
-    private static Class[] immutableList = {
-            Boolean.class,
-            Byte.class,
-            Character.class,
-            Double.class,
-            Float.class,
-            Integer.class,
-            Long.class,
-            Short.class,
-            String.class,
-            java.math.BigInteger.class,
-            java.math.BigDecimal.class,
-            java.awt.Color.class,
-            java.net.URI.class,
-    };
+    private static List<String> immutableList = Arrays.asList(
+            "java.lang.Boolean",
+            "java.lang.Byte",
+            "java.lang.Character",
+            "java.lang.Double",
+            "java.lang.Float",
+            "java.lang.Integer",
+            "java.lang.Long",
+            "java.lang.Short",
+            "java.lang.String",
+            "java.math.BigInteger",
+            "java.math.BigDecimal",
+            "java.awt.Color",
+            "java.net.URI"
+    );
     private static final Class MY_CLASS = Immutable.class;
     private static final ClassNode MY_TYPE = new ClassNode(MY_CLASS);
     private static final String MY_TYPE_NAME = "@" + MY_TYPE.getNameWithoutPackage();
@@ -76,6 +76,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
     private static final ClassNode HASHUTIL_TYPE = new ClassNode(HashCodeHelper.class);
     private static final ClassNode STRINGBUFFER_TYPE = new ClassNode(StringBuffer.class);
     private static final ClassNode DGM_TYPE = new ClassNode(DefaultGroovyMethods.class);
+    private static final ClassNode INVOKER_TYPE = new ClassNode(InvokerHelper.class);
     private static final ClassNode SELF_TYPE = new ClassNode(ImmutableASTTransformation.class);
     private static final Token COMPARE_EQUAL = Token.newSymbol(Types.COMPARE_EQUAL, -1, -1);
     private static final Token COMPARE_NOT_EQUAL = Token.newSymbol(Types.COMPARE_NOT_EQUAL, -1, -1);
@@ -188,7 +189,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
                     new EmptyStatement()
             ));
             final FieldExpression fieldExpr = new FieldExpression(pNode.getField());
-            body.addStatement(append(result, new MethodCallExpression(fieldExpr, "toString", MethodCallExpression.NO_ARGUMENTS)));
+            body.addStatement(append(result, new StaticMethodCallExpression(INVOKER_TYPE, "toString", fieldExpr)));
         }
         body.addStatement(append(result, new ConstantExpression(")")));
         body.addStatement(new ReturnStatement(new MethodCallExpression(result, "toString", MethodCallExpression.NO_ARGUMENTS)));
@@ -379,11 +380,11 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         FieldNode fNode = pNode.getField();
         final ClassNode fieldType = fNode.getType();
         final Statement statement;
-        if (fieldType.isArray() || implementsInterface(fieldType, CLONEABLE_TYPE)) {
+        if (fieldType.isArray() || fieldType.implementsInterface(CLONEABLE_TYPE)) {
             statement = createConstructorStatementArrayOrCloneable(fNode);
         } else if (fieldType.isDerivedFrom(DATE_TYPE)) {
             statement = createConstructorStatementDate(fNode);
-        } else if (fieldType.isDerivedFrom(COLLECTION_TYPE) || fieldType.isDerivedFrom(MAP_TYPE)) {
+        } else if (isOrImplements(fieldType, COLLECTION_TYPE) || isOrImplements(fieldType, MAP_TYPE)) {
             statement = createConstructorStatementCollection(fNode);
         } else if (isKnownImmutable(fieldType)) {
             statement = createConstructorStatementDefault(fNode);
@@ -395,8 +396,8 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         return statement;
     }
 
-    private boolean implementsInterface(ClassNode fieldType, ClassNode interfaceType) {
-        return Arrays.asList(fieldType.getInterfaces()).contains(interfaceType);
+    private boolean isOrImplements(ClassNode fieldType, ClassNode interfaceType) {
+        return fieldType.equals(interfaceType) || fieldType.implementsInterface(interfaceType);
     }
 
     private Statement createConstructorStatementGuarded(ClassNode cNode, FieldNode fNode) {
@@ -460,30 +461,20 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
 
     private boolean isKnownImmutable(ClassNode fieldType) {
         if (!fieldType.isResolved()) return false;
-        // FIXASC (groovychange) cannot access typeclass for JDTClassNodes
-        // old
-//        Class typeClass = fieldType.getTypeClass();
-//        return typeClass.isEnum() ||
-//                typeClass.isPrimitive() ||
-//                inImmutableList(typeClass);
+        // GRECLIPSE: start
+        /*old{
+        return fieldType.isEnum() ||
+                ClassHelper.isPrimitiveType(fieldType) ||
+                inImmutableList(fieldType.getName());
+        }*/
+        // new
         String s= fieldType.getName();
         return fieldType.isPrimitive() || fieldType.isEnum() || inImmutableList(fieldType.getName());
-        // FIXASC (groovychange) end
+        // end
     }
 
-    // FIXASC (groovychange) 
-	private static boolean inImmutableList(String signature) {
-		for (int i=0;i<immutableList.length;i++) {
-			if (immutableList[i].getName().equals(signature)) { 
-				return true;
-			}
-		}
-		return false;
-	}
-    // FIXASC (groovychange) end 
-
-    private static boolean inImmutableList(Class typeClass) {
-        return Arrays.asList(immutableList).contains(typeClass);
+    private static boolean inImmutableList(String typeName) {
+        return immutableList.contains(typeName);
     }
 
     private Statement createConstructorStatementDefault(FieldNode fNode) {
@@ -592,7 +583,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         BlockStatement body = new BlockStatement();
         final ClassNode fieldType = fNode.getType();
         final Statement statement;
-        if (fieldType.isArray() || implementsInterface(fieldType, CLONEABLE_TYPE)) {
+        if (fieldType.isArray() || fieldType.implementsInterface(CLONEABLE_TYPE)) {
             statement = createGetterBodyArrayOrCloneable(fNode);
         } else if (fieldType.isDerivedFrom(DATE_TYPE)) {
             statement = createGetterBodyDate(fNode);
@@ -651,7 +642,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
     }
 
     public static Object checkImmutable(String className, String fieldName, Object field) {
-        if (field == null || field instanceof Enum || inImmutableList(field.getClass())) return field;
+        if (field == null || field instanceof Enum || inImmutableList(field.getClass().getName())) return field;
         if (field instanceof Collection) return DefaultGroovyMethods.asImmutable((Collection) field);
         if (field.getClass().getAnnotation(MY_CLASS) != null) return field;
         final String typeName = field.getClass().getName();

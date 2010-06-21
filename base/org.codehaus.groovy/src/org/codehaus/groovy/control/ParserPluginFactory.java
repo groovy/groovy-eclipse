@@ -26,7 +26,7 @@ public abstract class ParserPluginFactory {
     public static ParserPluginFactory newInstance(boolean useNewParser) {
         if (useNewParser) {
             Class type = null;
-            // FIXASC (groovychange)
+            // GRECLIPSE: start
             // oldcode
             //String name = "org.codehaus.groovy.antlr.AntlrParserPluginFactory";
             // newcode
@@ -58,7 +58,7 @@ public abstract class ParserPluginFactory {
                     return (ParserPluginFactory) type.newInstance();
                 }
                 catch (Exception e) {
-          	 // FIXASC (groovychange)
+          	 // GRECLIPSE: start
           	 // oldcode
 //                    throw new RuntimeException("Could not create AntlrParserPluginFactory: " + e, e);
                     // newcode

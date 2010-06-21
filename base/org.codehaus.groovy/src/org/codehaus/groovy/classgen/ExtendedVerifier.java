@@ -123,11 +123,12 @@ public class ExtendedVerifier implements GroovyClassVisitor {
         for (AnnotationNode unvisited : node.getAnnotations()) {
             AnnotationNode visited = visitAnnotation(unvisited);
             boolean isTargetAnnotation = visited.getClassNode().isResolved() &&
-            // FIXASC (groovychange)
-            // oldcode
-//            visited.getClassNode().getTypeClass() == Target.class;
+            // GRECLIPSE: start
+            /*old{
+            visited.getClassNode().getTypeClass() == Target.class;
+            }*/
             // newcode
-                    visited.getClassNode().getName().equals("java.lang.annotation.Target");
+            visited.getClassNode().getName().equals("java.lang.annotation.Target");
             // end
 
             // Check if the annotation target is correct, unless it's the target annotating an annotation definition
@@ -142,10 +143,11 @@ public class ExtendedVerifier implements GroovyClassVisitor {
     }
 
     private void visitDeprecation(AnnotatedNode node, AnnotationNode visited) {
-    	// FIXASC (groovychange)
-    	// oldcode
-//    	if (visited.getClassNode().isResolved() && visited.getClassNode().getTypeClass().getName().equals(Deprecated.class.getName())) {
-       	// newcode
+    	// GRECLIPSE: start
+    	/*old{
+   	if (visited.getClassNode().isResolved() && visited.getClassNode().getTypeClass().getName().equals(Deprecated.class.getName())) {
+      }*/
+      // newcode
         if (visited.getClassNode().isResolved() && visited.getClassNode().getName().equals("java.lang.Deprecated")) {
         // end
             if (node instanceof MethodNode) {
@@ -185,8 +187,8 @@ public class ExtendedVerifier implements GroovyClassVisitor {
     }
 
     protected void addError(String msg, ASTNode expr) {
-    	// FIXASC tidy this up
-    	// FIXASC (groovychange) use new form of error message that has an end column
+    	// GRECLIPSE: tidy this up
+    	// GRECLIPSE: start: use new form of error message that has an end column
     	if (expr instanceof AnnotationNode) {
     		AnnotationNode aNode = (AnnotationNode)expr;
     		this.source.getErrorCollector().addErrorAndContinue(
@@ -199,7 +201,7 @@ public class ExtendedVerifier implements GroovyClassVisitor {
                 new SyntaxErrorMessage(
                  new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber()), this.source)
         );
-        // FIXASC (groovychange)
+        // GRECLIPSE: start:
     	}
     	//end
     }

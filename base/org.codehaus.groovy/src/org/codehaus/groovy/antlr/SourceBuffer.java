@@ -28,14 +28,14 @@ import java.util.List;
 public class SourceBuffer {
     private final List lines;
     private StringBuffer current;
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     private final List<Integer> lineEndings;
     // end
 
     public SourceBuffer() {
         lines = new ArrayList();
         //lines.add(new StringBuffer()); // dummy row for position [0] in the List
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         lineEndings = new ArrayList<Integer>();
         lineEndings.add(0);
         // end
@@ -99,7 +99,7 @@ public class SourceBuffer {
         return snippet.toString();
     }
 
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     // oldcode:
 //    /**
 //     * Writes the specified character into the buffer

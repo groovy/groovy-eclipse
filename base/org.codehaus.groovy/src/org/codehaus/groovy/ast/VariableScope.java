@@ -51,11 +51,10 @@ public class VariableScope  {
         return declaredVariables.get(name);
     }
 
-    // FIXASC (groovychange)
+    // GRECLIPSE: new method
     public Iterator<Variable> getDeclaredVariablesIterator() {
         return declaredVariables.values().iterator();
     }
-    // end
 
     public boolean isReferencedLocalVariable(String name) {
         return referencedLocalVariables.containsKey(name);

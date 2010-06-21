@@ -18,7 +18,7 @@ import antlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
 import antlr.TokenStreamRecognitionException;
 import org.codehaus.groovy.ast.Comment;
-}
+} 
 
 /** JSR-241 Groovy Recognizer
  *
@@ -898,7 +898,7 @@ protected typeArgumentsOrParametersEnd
     |   BSR! {ltCounter-=3;}
     ;
 
-// Restriction on wildcard types based on super class or derrived class
+// Restriction on wildcard types based on super class or derived class
 typeArgumentBounds
     {Token first = LT(1);boolean isUpperBounds = false;}
     :
@@ -1242,6 +1242,9 @@ classBlock  {Token first = LT(1);}
 // general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
         exception
         catch [RecognitionException e] {  
+			if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
+        		classBlock_AST = (AST)currentAST.root;
+        	}
         	reportError(e);
             #classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);  	
         	currentAST.root = classBlock_AST;
@@ -1259,7 +1262,7 @@ interfaceBlock  {Token first = LT(1);}
     ;
 
 // This is the body of an annotation. You can have annotation fields and extra semicolons,
-// That's about it (until you see what an annoation field is...)
+// That's about it (until you see what an annotation field is...)
 annotationBlock  {Token first = LT(1);}
     :   LCURLY!
         ( annotationField )? ( sep! ( annotationField )? )*
@@ -1286,15 +1289,22 @@ enumBlock  {Token first = LT(1);}
 
 /** Guard for enumConstants.  */
 enumConstantsStart
-    :   enumConstant (COMMA | SEMI | NLS | RCURLY)
+    :   annotationsOpt IDENT (LCURLY | LPAREN | nls (SEMI | COMMA | modifiersOpt | RCURLY))
     ;
 
 /** Comma-separated list of one or more enum constant definitions.  */
 enumConstants
     :
         enumConstant
-        ( options{greedy=true;}: COMMA! nls! enumConstant )*
-        ( COMMA! nls! )?            // trailing extra comma is OK
+        (    options {generateAmbigWarnings=false;} :
+            (nls (RCURLY | classField)) => { break; /* leave ()* loop */ }
+        |   nls! COMMA!
+            (
+                (nls (RCURLY | classField)) => { break; /* leave ()* loop */ }
+            |
+                (nls annotationsOpt IDENT) => nls! enumConstant
+            )
+        )*
     ;
 
 // An annotation field
@@ -1349,7 +1359,7 @@ enumConstantBlock  {Token first = LT(1);}
     ;
 
 //An enum constant field is just like a class field but without
-//the posibility of a constructor definition or a static initializer
+//the possibility of a constructor definition or a static initializer
 
 // TODO - maybe allow 'declaration' production within this production,
 // but how to disallow constructors and static initializers...
@@ -1767,7 +1777,7 @@ parameterDeclaration!
         // RECOVERY:
       /*  exception
         catch [RecognitionException e] {
-        if (t_AST==null) { // possibly 'public void foo(XMLContant'
+        if (t_AST==null) { // possibly 'public void foo(XMLConstant'
 					// create the best thing we can... all we have is the type - no name
 					parameterDeclaration_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(PARAMETER_DEF,"PARAMETER_DEF",first,LT(1))).add(pm_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))));
 			}
@@ -1775,8 +1785,7 @@ parameterDeclaration!
 			//	throw e;
 			//}
         	reportError(e);
-        }
-        */
+        }*/
     ;
 
 /*OBS*
@@ -1835,7 +1844,7 @@ closableBlockParam!  {Token first = LT(1);}
 // Inside a class definition without "static":
 // it is an instance initializer
 // As the body of a method
-// As a completely indepdent braced block of code inside a method
+// As a completely independent braced block of code inside a method
 // it starts a new scope for variable definitions
 // In Groovy, this is called an "open block".  It cannot have closure arguments.
 
@@ -2357,7 +2366,7 @@ commandArgument
 //
 // the last two are not usually on a precedence chart; I put them in
 // to point out that new has a higher precedence than '.', so you
-// can validy use
+// can validly use
 //       new Frame().show()
 //
 // Note that the above precedence levels map to the rules below...
@@ -2843,7 +2852,7 @@ powerExpression[int lc_stmt]
 
 // math power operator (**) (level 3)
 // (without ++(prefix)/--(prefix)/+(unary)/-(unary))
-// The different rules are needed to avoid ambigous selection
+// The different rules are needed to avoid ambiguous selection
 // of alternatives.
 powerExpressionNotPlusMinus[int lc_stmt]
     :   unaryExpressionNotPlusMinus[lc_stmt] (STAR_STAR^ nls! unaryExpression[0])*
@@ -2947,7 +2956,7 @@ parenthesizedExpression
              {hasClosureList=true;}
              (sce=strictContextExpression[true] | { astFactory.addASTChild(currentAST,astFactory.create(EMPTY_STAT, "EMPTY_STAT")); })
            )*
-           // if the first exrpession contained a declaration,
+           // if the first expression contained a declaration,
            // but we are having only one expression at all, then
            // the first declaration is of the kind (def a=b)
            // which is invalid. Therefore if there was no closure
@@ -3017,6 +3026,7 @@ stringConstructorExpression  {Token first = LT(1);}
 stringConstructorValuePart
     :
     (   identifier
+    |   "this" |   "super"
     |   openOrClosableBlock
     )
     ;
@@ -3165,8 +3175,7 @@ newExpression {Token first = LT(1); int jumpBack = mark();}
                 cb:classBlock
             )?
 
-            {
-            #mca = #mca.getFirstChild();
+            {#mca = #mca.getFirstChild();
             #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#mca,#cb);}
 
             //java 1.1
@@ -3176,7 +3185,7 @@ newExpression {Token first = LT(1); int jumpBack = mark();}
             // to make sure:
             //   a) [ expr ] and [ ] are not mixed
             //   b) [ expr ] and an init are not used together
-        | (LBRACK!) =>  ad:newArrayDeclarator! //(arrayInitializer)?
+        |  ad:newArrayDeclarator! //(arrayInitializer)?
             // Groovy does not support Java syntax for initialized new arrays.
             // Use sequence constructors instead.
             {#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#ad);}
@@ -4139,7 +4148,7 @@ options {
 
 // an identifier. Note that testLiterals is set to true! This means
 // that after we match the rule, we look in the literals table to see
-// if it's a literal or really an identifer
+// if it's a literal or really an identifier
 IDENT
 options {
     paraphrase="an identifier";
@@ -4159,7 +4168,7 @@ options {
             }
             int ttype = testLiteralsTable(IDENT);
             // Java doesn't have the keywords 'as', 'in' or 'def so we make some allowances
-            // for them in package names for better integration with existng Java packages
+            // for them in package names for better integration with existing Java packages
             if ((ttype == LITERAL_as || ttype == LITERAL_def || ttype == LITERAL_in) &&
                 (LA(1) == '.' || lastSigTokenType == DOT || lastSigTokenType == LITERAL_package)) {
                 ttype = IDENT;

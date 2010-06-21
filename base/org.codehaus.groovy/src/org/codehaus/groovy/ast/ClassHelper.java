@@ -39,7 +39,7 @@ import java.lang.ref.SoftReference;
  */
 public class ClassHelper {
 
-    // FIXASC (groovychange) made public, was private
+    // GRECLIPSE: start: made public, was private
     public static final Class[] classes = new Class[] {
         Object.class, Boolean.TYPE, Character.TYPE, Byte.TYPE, Short.TYPE,
         Integer.TYPE, Long.TYPE, Double.TYPE, Float.TYPE, Void.TYPE,
@@ -232,10 +232,10 @@ public class ClassHelper {
      * class. The method will check the parameter for known 
      * references of ClassNode representing a primitive type. If
      * Reference is found, then a ClassNode will be contained that
-     * represents the wrapper class. For exmaple for boolean, the 
+     * represents the wrapper class. For example for boolean, the
      * wrapper class is java.lang.Boolean.
      * 
-     * If the parameter is no primitve type, the redirected 
+     * If the parameter is no primitive type, the redirected 
      * ClassNode will be returned 
      *   
      * @see #make(Class)
@@ -296,14 +296,14 @@ public class ClassHelper {
 
 
     /**
-     * Test to determine if a ClasNode is a primitve type. 
+     * Test to determine if a ClassNode is a primitive type.
      * Note: this only works for ClassNodes created using a
      * predefined ClassNode
      * 
      * @see #make(Class)
      * @see #make(String)
      * @param cn the ClassNode containing a possible primitive type
-     * @return true if the ClassNode is a primitve type
+     * @return true if the ClassNode is a primitive type
      */
     public static boolean isPrimitiveType(ClassNode cn) {
         return  cn == boolean_TYPE ||

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ import org.objectweb.asm.ClassWriter;
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href="mailto:roshandawrani@codehaus.org">Roshan Dawrani</a>
- * @version $Id: CompilationUnit.java 19419 2010-02-22 15:37:39Z roshandawrani $
+ * @version $Id: CompilationUnit.java 20222 2010-06-04 08:37:51Z paulk $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -76,12 +76,12 @@ public class CompilationUnit extends ProcessingUnit {
 
     private GroovyClassLoader transformLoader;  // Classloader for global and local transforms
 
-    protected Map sources;    // The SourceUnits from which this unit is built
+    protected Map<String, SourceUnit> sources;    // The SourceUnits from which this unit is built
     protected Map summariesBySourceName;      // Summary of each SourceUnit
     protected Map summariesByPublicClassName;       // Summary of each SourceUnit
     protected Map classSourcesByPublicClassName;    // Summary of each Class
-    protected List names;      // Names for each SourceUnit in sources.
-    protected LinkedList queuedSources;
+    protected List<String> names;      // Names for each SourceUnit in sources.
+    protected LinkedList<SourceUnit> queuedSources;
 
     protected CompileUnit ast;        // The overall AST for this CompilationUnit.
     protected List<GroovyClass> generatedClasses;  // The classes generated during classgen.
@@ -152,15 +152,15 @@ public class CompilationUnit extends ProcessingUnit {
     	
         super(configuration, loader, null);
         this.transformLoader = transformLoader;
-        this.names = new ArrayList();
-        this.queuedSources = new LinkedList();
-        this.sources = new HashMap();
+        this.names = new ArrayList<String>();
+        this.queuedSources = new LinkedList<SourceUnit>();
+        this.sources = new HashMap<String, SourceUnit>();
         this.summariesBySourceName = new HashMap();
         this.summariesByPublicClassName = new HashMap();
         this.classSourcesByPublicClassName = new HashMap();
 
         this.ast = new CompileUnit(this.classLoader, security, this.configuration);
-        this.generatedClasses = new ArrayList();
+        this.generatedClasses = new ArrayList<GroovyClass>();
 
 
         this.verifier = new Verifier();
@@ -199,23 +199,22 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
-        // FIXASC (groovychange) skip output phase
+        // GRECLIPSE: start: skip output phase
 	  // addPhaseOperation(output);
         
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         if (transformLoader!=null) {
-        // FIXASC (groovychange) end
+        // end
         	ASTTransformationVisitor.addPhaseOperations(this);
         }
 
         this.classgenCallback = null;
     }
     
-    // FIXASC (groovychange) force the phase on
+    // GRECLIPSE: new method: force the phase on
     public void ensureASTTransformVisitorAdded() {
     	ASTTransformationVisitor.addPhaseOperations(this);
     }
-    // FIXASC (groovychange)
 
     /**
      * Returns the class loader for loading AST transformations.
@@ -245,11 +244,10 @@ public class CompilationUnit extends ProcessingUnit {
         newPhaseOperations[phase].add(op);
     }
 
-    // FIXASC (groovychange) can be called to prevent classfile output (so only use if something else is taking charge of output)
+    // GRECLIPSE: new method: can be called to prevent classfile output (so only use if something else is taking charge of output)
     public boolean removeOutputPhaseOperation() {
         return phaseOperations[Phases.OUTPUT].remove(output);
     }
-    // FIXASC (groovychange)
 
     /**
      * Configures its debugging mode and classloader classpath from a given compiler configuration.
@@ -312,7 +310,7 @@ public class CompilationUnit extends ProcessingUnit {
      * when you are sure there is only one.
      */
     public ClassNode getFirstClassNode() {
-        return (ClassNode) ((ModuleNode) this.ast.getModules().get(0)).getClasses().get(0);
+        return this.ast.getModules().get(0).getClasses().get(0);
     }
 
 
@@ -345,9 +343,8 @@ public class CompilationUnit extends ProcessingUnit {
      * Adds a set of file paths to the unit.
      */
     public void addSources(String[] paths) {
-        for (int i = 0; i < paths.length; i++) {
-            File file = new File(paths[i]);
-            addSource(file);
+        for (String path : paths) {
+            addSource(new File(path));
         }
     }
 
@@ -356,8 +353,8 @@ public class CompilationUnit extends ProcessingUnit {
      * Adds a set of source files to the unit.
      */
     public void addSources(File[] files) {
-        for (int i = 0; i < files.length; i++) {
-            addSource(files[i]);
+        for (File file : files) {
+            addSource(file);
         }
     }
 
@@ -395,17 +392,16 @@ public class CompilationUnit extends ProcessingUnit {
     public SourceUnit addSource(SourceUnit source) {
         String name = source.getName();
         source.setClassLoader(this.classLoader);
-        for (Iterator iter = queuedSources.iterator(); iter.hasNext();) {
-            SourceUnit su = (SourceUnit) iter.next();
+        for (SourceUnit su : queuedSources) {
             if (name.equals(su.getName())) return su;
         }
-        // FIXASC (groovychange)
+        // GRECLIPSE: start
         if (iterating) {
         	GroovyBugError gbe = new GroovyBugError("Queuing new source whilst already iterating.  Queued source is '"+source.getName()+"'");
         	gbe.printStackTrace();
             throw gbe;
         }
-        // FIXASC (groovychange) end
+        // end
         queuedSources.add(source);
         return source;
     }
@@ -414,18 +410,16 @@ public class CompilationUnit extends ProcessingUnit {
     /**
      * Returns an iterator on the unit's SourceUnits.
      */
-    public Iterator iterator() {
-        return new Iterator() {
-            Iterator nameIterator = names.iterator();
-
+    public Iterator<SourceUnit> iterator() {
+        return new Iterator<SourceUnit>() {
+            Iterator<String> nameIterator = names.iterator();
 
             public boolean hasNext() {
                 return nameIterator.hasNext();
             }
 
-
-            public Object next() {
-                String name = (String) nameIterator.next();
+            public SourceUnit next() {
+                String name = nameIterator.next();
                 return sources.get(name);
             }
 
@@ -482,7 +476,7 @@ public class CompilationUnit extends ProcessingUnit {
         public abstract void call(ProcessingUnit context, int phase) throws CompilationFailedException;
     }
     
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     public interface ProgressListener {
 		void parseComplete(int phase, String sourceUnitName);
 		void generateComplete(int phase, ClassNode classNode);    
@@ -496,7 +490,7 @@ public class CompilationUnit extends ProcessingUnit {
     	this.listener = listener;
     }
     private ProgressListener listener;
-    // FIXASC (groovychange) end
+    // end
 
     /**
      * Sets a ProgressCallback.  You can have only one, and setting
@@ -593,7 +587,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
     }
 
-// FIXASC (groovychange) need this any more?
+// GRECLIPSE: start: need this any more?
     //  new method for continuing through phases
     public void continueThrough(int throughPhase) throws CompilationFailedException {
         throughPhase = Math.min(throughPhase, Phases.ALL);
@@ -629,9 +623,7 @@ public class CompilationUnit extends ProcessingUnit {
     // end
 
     private void sortClasses() throws CompilationFailedException {
-        Iterator modules = this.ast.getModules().iterator();
-        while (modules.hasNext()) {
-            ModuleNode module = (ModuleNode) modules.next();
+        for (ModuleNode module : this.ast.getModules()) {
             module.sortClasses();
 
         }
@@ -651,15 +643,15 @@ public class CompilationUnit extends ProcessingUnit {
     protected boolean dequeued() throws CompilationFailedException {
         boolean dequeue = !queuedSources.isEmpty();
         while (!queuedSources.isEmpty()) {
-            SourceUnit su = (SourceUnit) queuedSources.removeFirst();
+            SourceUnit su = queuedSources.removeFirst();
             String name = su.getName();
-                // FIXASC (groovychange)
+            // GRECLIPSE: start
             if (iterating) {
             	GroovyBugError gbe = new GroovyBugError("Damaging 'names' whilst already iterating.  Name getting added is '"+su.getName()+"'");
             	gbe.printStackTrace();
             	throw gbe;
             }
-    // FIXASC (groovychange) end
+            // end
             names.add(name);
             sources.put(name, su);
         }
@@ -674,9 +666,8 @@ public class CompilationUnit extends ProcessingUnit {
      */
     private final SourceUnitOperation resolve = new SourceUnitOperation() {
         public void call(SourceUnit source) throws CompilationFailedException {
-            List classes = source.ast.getClasses();
-            for (Iterator it = classes.iterator(); it.hasNext();) {
-                ClassNode node = (ClassNode) it.next();
+            List<ClassNode> classes = source.ast.getClasses();
+            for (ClassNode node : classes) {
 
 //                if (node instanceof InnerClassNode && ((InnerClassNode)node).getVariableScope() != null) {
 //                    // what we want to do is not to process anonymous here as they were processed already
@@ -756,14 +747,13 @@ public class CompilationUnit extends ProcessingUnit {
     /* checks if all needed classes are compiled before generating the bytecode */
     private SourceUnitOperation compileCompleteCheck = new SourceUnitOperation() {
         public void call(SourceUnit source) throws CompilationFailedException {
-            List classes = source.ast.getClasses();
-            for (Iterator it = classes.iterator(); it.hasNext();) {
-                ClassNode node = (ClassNode) it.next();
+            List<ClassNode> classes = source.ast.getClasses();
+            for (ClassNode node : classes) {
                 CompileUnit cu = node.getCompileUnit();
                 for (Iterator iter = cu.iterateClassNodeToCompile(); iter.hasNext();) {
                     String name = (String) iter.next();
                     SourceUnit su = ast.getScriptSourceLocation(name);
-                    List classesInSourceUnit = su.ast.getClasses();
+                    List<ClassNode> classesInSourceUnit = su.ast.getClasses();
                     StringBuffer message = new StringBuffer();
                     message
                             .append("Compilation incomplete: expected to find the class ")
@@ -775,9 +765,7 @@ public class CompilationUnit extends ProcessingUnit {
                     } else {
                         message.append(", but the file contains the classes: ");
                         boolean first = true;
-                        for (Iterator suClassesIter = classesInSourceUnit
-                                .iterator(); suClassesIter.hasNext();) {
-                            ClassNode cn = (ClassNode) suClassesIter.next();
+                        for (ClassNode cn : classesInSourceUnit) {
                             if (!first) {
                                 message.append(", ");
                             } else {
@@ -856,10 +844,11 @@ public class CompilationUnit extends ProcessingUnit {
 
 
             byte[] bytes = ((ClassWriter) visitor).toByteArray();
-            /* FIXASC (groovychange) added classNode, sourceUnit
-             was
+            /// GRECLIPSE: start: added classNode, sourceUnit
+            /*old{
             generatedClasses.add(new GroovyClass(classNode.getName(), bytes));
-             now*/
+            }*/
+            // newcode
             generatedClasses.add(new GroovyClass(classNode.getName(), bytes, classNode, source));
 		// end
 		
@@ -926,7 +915,7 @@ public class CompilationUnit extends ProcessingUnit {
     }
 
 
-    // FIXASC (groovychange)
+    // GRECLIPSE: new field
     private boolean iterating = false;
     
     /**
@@ -935,22 +924,20 @@ public class CompilationUnit extends ProcessingUnit {
      * through the current phase.
      */
     public void applyToSourceUnits(SourceUnitOperation body) throws CompilationFailedException {
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     	try {
     		iterating = true;
-    // FIXASC (groovychange) end
-	        Iterator keys = names.iterator();
-	        while (keys.hasNext()) {
-	            String name = (String) keys.next();
-	            SourceUnit source = (SourceUnit) sources.get(name);
+    // end
+	  for (String name : names) {
+            SourceUnit source = sources.get(name);
 	            if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
 	                try {
 	                    body.call(source);
-	                    // FIXASC (groovychange) start
+	                    // GRECLIPSE: start
 	                    if (phase==Phases.CONVERSION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {
 	                    	getProgressListener().parseComplete(phase,name);
 	                    }
-	                    // FIXASC (groovychange)
+	                    // end
 	                } catch (CompilationFailedException e) {
 	                    throw e;
 	                } catch (Exception e) {
@@ -963,11 +950,11 @@ public class CompilationUnit extends ProcessingUnit {
 	                }
 	            }
 	        }
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     	} finally {
     		iterating = false;
     	}
-    // FIXASC (groovychange) end
+    // end
 
 
         getErrorCollector().failIfErrors();
@@ -1004,8 +991,8 @@ public class CompilationUnit extends ProcessingUnit {
     private int getSuperInterfaceCount(ClassNode element) {
         int count = 1;
         ClassNode[] interfaces = element.getInterfaces();
-        for (int i=0; i<interfaces.length; i++) {
-            count = Math.max(count, getSuperInterfaceCount(interfaces[i])+1);
+        for (ClassNode anInterface : interfaces) {
+            count = Math.max(count, getSuperInterfaceCount(anInterface) + 1);
         }
         return count;
     }
@@ -1018,40 +1005,37 @@ public class CompilationUnit extends ProcessingUnit {
     		} 
     	}
     	// FIXASC (groovychange) rewritten
-    	// old
-//        List unsorted = new ArrayList();
-//        Iterator modules = this.ast.getModules().iterator();
-//        while (modules.hasNext()) {
-//            ModuleNode module = (ModuleNode) modules.next();
-//
-//            Iterator classNodes = module.getClasses().iterator();
-//            while (classNodes.hasNext()) {
-//                ClassNode classNode = (ClassNode) classNodes.next();
-//                unsorted.add(classNode);
-//            }
-//        }
-        // new
+    	/*old{
         List unsorted = new ArrayList();
         Iterator modules = this.ast.getModules().iterator();
         while (modules.hasNext()) {
             ModuleNode module = (ModuleNode) modules.next();
+
+            Iterator classNodes = module.getClasses().iterator();
+            while (classNodes.hasNext()) {
+                ClassNode classNode = (ClassNode) classNodes.next();
+                unsorted.add(classNode);
+            }
+        }
+        */
+        // new
+        List<ClassNode> unsorted = new ArrayList<ClassNode>();
+        for (ModuleNode module: this.ast.getModules()) {
             unsorted.addAll(module.getClasses());
         }
         // FIXASC (groovychange) end
         
-        if (sort == false) return unsorted;
+        if (!sort) return unsorted;
 
-// FIXASC (groovychange) rewritten sort algorithm
-// oldcode:
-/*
+// GRECLIPSE: start: rewritten sort algorithm
+/*old{
         int[] indexClass = new int[unsorted.size()];
         int[] indexInterface = new int[unsorted.size()];
         {
             int i = 0;
-            for (Iterator iter = unsorted.iterator(); iter.hasNext(); i++) {
-                ClassNode node = (ClassNode) iter.next();
-                ClassNode element = node;
-                if (node.isInterface()) {
+            for (Iterator<ClassNode> iter = unsorted.iterator(); iter.hasNext(); i++) {
+                ClassNode element = iter.next();
+                if (element.isInterface()) {
                     indexInterface[i] = getSuperInterfaceCount(element);
                     indexClass[i] = -1;
                 } else {
@@ -1061,7 +1045,7 @@ public class CompilationUnit extends ProcessingUnit {
             }
         }
 
-        List sorted = getSorted(indexInterface, unsorted);
+        List<ClassNode> sorted = getSorted(indexInterface, unsorted);
         sorted.addAll(getSorted(indexClass, unsorted));
 */ 
 // newcode: 
@@ -1095,13 +1079,12 @@ public class CompilationUnit extends ProcessingUnit {
         	sorted.add(unsorted.get(i&0xffff));
         }
         this.ast.setSortedModules(sorted);
-// FIXASC (groovychange) end
+// end
         return sorted;
     }
     
-    private List getSorted(int[] index, List unsorted) {
-        List sorted = new ArrayList(unsorted.size());
-        int start = 0;
+    private List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
+        List<ClassNode> sorted = new ArrayList<ClassNode>(unsorted.size());
         for (int i = 0; i < unsorted.size(); i++) {
             int min = -1;
             for (int j = 0; j < unsorted.size(); j++) {
@@ -1125,34 +1108,36 @@ public class CompilationUnit extends ProcessingUnit {
      * through the current phase.
      */
     public void applyToPrimaryClassNodes(PrimaryClassNodeOperation body) throws CompilationFailedException {
-        // FIXASC (groovychange)
-        // oldcode
-        // ...
+        // GRECLIPSE: start
+        /*old{
+        Iterator classNodes = getPrimaryClassNodes(body.needSortedInput()).iterator();
+        }*/
         // newcode
     	List primaryClassNodes = getPrimaryClassNodes(body.needSortedInput());
-		Iterator classNodes = primaryClassNodes.iterator();
+	Iterator classNodes = primaryClassNodes.iterator();
 		// end
         while (classNodes.hasNext()) {
             SourceUnit context = null;
             try {
                 ClassNode classNode = (ClassNode) classNodes.next();
                 context = classNode.getModule().getContext();
-                // FIXASC (groovychange)
-                // oldcode
-//                if (context == null || context.phase <= phase) {
+                // GRECLIPSE: start
+                /*old{
+                if (context == null || context.phase <= phase) {
+                }*/
                 // newcode
-                // FIXASC get to the bottom of this - why are operations running multiple times that should only run once?
+                // GRECLIPSE get to the bottom of this - why are operations running multiple times that should only run once?
                 if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {                
                 // end
                     body.call(context, new GeneratorContext(this.ast), classNode);
-                    // FIXASC (groovychange)
+                    // GRECLIPSE: start
                     if (phase==Phases.CLASS_GENERATION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {
                     	getProgressListener().generateComplete(phase,classNode);
                     }
                     // FIXASC (groovychange) end
                 }
             } catch (CompilationFailedException e) {
-                // fall through, getErrorReporter().failIfErrors() will triger
+                // fall through, getErrorReporter().failIfErrors() will trigger
             } catch (NullPointerException npe) {
                 throw npe;
             } catch (GroovyBugError e) {
@@ -1184,27 +1169,22 @@ public class CompilationUnit extends ProcessingUnit {
             throw new GroovyBugError("CompilationUnit not ready for output(). Current phase=" + getPhaseDescription());
         }
 
-        boolean failures = false;
-
-        Iterator iterator = this.generatedClasses.iterator();
-        while (iterator.hasNext()) {
+        for (GroovyClass gclass : this.generatedClasses) {
             //
             // Get the class and calculate its filesystem name
             //
-            GroovyClass gclass = (GroovyClass) iterator.next();
             try {
                 body.call(gclass);
                
             } catch (CompilationFailedException e) {
-                // fall thorugh, getErrorREporter().failIfErrors() will triger
+                // fall through, getErrorReporter().failIfErrors() will trigger
             } catch (NullPointerException npe) {
                 throw npe;
             } catch (GroovyBugError e) {
                 changeBugText(e, null);
                 throw e;
             } catch (Exception e) {
-                GroovyBugError gbe = new GroovyBugError(e);
-                throw gbe;
+                throw new GroovyBugError(e);
             }
         }
 
@@ -1214,7 +1194,7 @@ public class CompilationUnit extends ProcessingUnit {
     private void changeBugText(GroovyBugError e, SourceUnit context) {
         e.setBugText("exception in phase '" + getPhaseDescription() + "' in source unit '" + ((context != null) ? context.getName() : "?") + "' " + e.getBugText());
     }
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     public void setResolveVisitor(ResolveVisitor resolveVisitor2) {
 		this.resolveVisitor = resolveVisitor2; 
 	}

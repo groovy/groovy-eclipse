@@ -67,7 +67,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     private final static String[] NONE = new String[0];
     private final static Class[] NO_CLASSES = new Class[0];
 
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     /**
      * For the supplied classnode, this method will check if there is an annotation on it of kind 'GroovyASTTransformationClass'.  If there is then
      * the 'value' member of that annotation will be retrieved and the value considered to be the class name of a transformation.
@@ -152,7 +152,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     public void visitAnnotations(AnnotatedNode node) {
         super.visitAnnotations(node);
         for (AnnotationNode annotation : node.getAnnotations()) {
-        	// FIXASC (groovychange) under eclipse we may be asking a node that has no backing class
+        	// GRECLIPSE: start: under eclipse we may be asking a node that has no backing class
         	// oldcode:
 //            Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
 //            if (transformClassAnnotation == null) {
@@ -173,7 +173,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
     }
     
-    // FIXASC (groovychange) slight refactoring to provide a new method that can work with a real annotation
+    // GRECLIPSE: start: slight refactoring to provide a new method that can work with a real annotation
     private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
         String[] transformClassNames = getTransformClassNames(annotation.getClassNode()); 
         Class[] transformClasses = getTransformClasses(transformClassAnnotation);

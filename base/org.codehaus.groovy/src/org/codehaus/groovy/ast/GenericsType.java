@@ -30,7 +30,7 @@ public class GenericsType extends ASTNode {
 	 * but why does the first constructor take a set of parameters that wouldn't seem to make sense together?
 	 * 
 	 */
-	// FIXASC (groovychange) five from private to protected and first two non-final 
+	// GRECLIPSE: start: five from private to protected and first two non-final 
     protected ClassNode[] upperBounds;
     protected ClassNode lowerBound;
     protected ClassNode type;
@@ -47,7 +47,7 @@ public class GenericsType extends ASTNode {
         placeholder = type.isGenericsPlaceHolder();
         resolved = false;
     }
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     public GenericsType() {}
     // end
         
@@ -118,7 +118,7 @@ public class GenericsType extends ASTNode {
         return lowerBound;
     }
     
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
 	public void setUpperBounds(ClassNode[] bounds) {
 		this.upperBounds = bounds;		
 	}

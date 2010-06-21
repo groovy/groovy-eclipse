@@ -49,6 +49,10 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         visitPackage(node.getPackage());
         visitImports(node.getModule());
         node.visitContents(this);
+        visitObjectInitializerStatements(node);
+    }
+
+    protected void visitObjectInitializerStatements(ClassNode node) {
         for (Statement element : node.getObjectInitializerStatements()) {
             element.visit(this);
         }
@@ -139,9 +143,6 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     }
 
     protected void addError(String msg, ASTNode expr) {
-//    	if (expr instanceof ClassNode) {
-//    		new RuntimeException().printStackTrace();
-//    	}
         int line = expr.getLineNumber();
         int col = expr.getColumnNumber();
         SourceUnit source = getSourceUnit();
@@ -150,16 +151,18 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         );
     }
     
+    // GRECLIPSE: start
     protected void addTypeError(String msg, ClassNode expr ) {
         int line = expr.getLineNumber();
         int col = expr.getColumnNumber();
         SourceUnit source = getSourceUnit();
         source.getErrorCollector().addErrorAndContinue(
-        		// FIXASC (groovychange) use new SyntaxException with accurate offsets
+        		// GRECLIPSE: start
                 new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, expr.getNameStart(), expr.getNameEnd()), source)
                 // end
         );
     }
+    // end
 
     protected abstract SourceUnit getSourceUnit();
 

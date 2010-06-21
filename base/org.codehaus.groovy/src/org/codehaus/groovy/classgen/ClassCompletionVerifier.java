@@ -74,11 +74,10 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
 
     private void checkNoAbstractMethodsNonabstractClass(ClassNode node) {
         if (Modifier.isAbstract(node.getModifiers())) return;
-        List abstractMethods = node.getAbstractMethods();
+        List<MethodNode> abstractMethods = node.getAbstractMethods();
         if (abstractMethods == null) return;
-        for (Iterator iter = abstractMethods.iterator(); iter.hasNext();) {
-            MethodNode method = (MethodNode) iter.next();
-            // FIXASC (groovychange) record a type error
+        for (MethodNode method : abstractMethods) {
+            // GRECLIPSE: start: record a type error
             addTypeError("Can't have an abstract method in a non-abstract class." +
                     " The " + getDescription(node) + " must be declared abstract or" +
                     " the " + getDescription(method) + " must be implemented.", node);
@@ -151,14 +150,13 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     private void checkImplementsAndExtends(ClassNode node) {
         ClassNode cn = node.getSuperClass();
         if (cn.isInterface() && !node.isInterface()) {
-            // FIXASC (groovychange) record a type error
+            // GRECLIPSE: start: record a type error
             addTypeError("You are not allowed to extend the " + getDescription(cn) + ", use implements instead.", node);
         }
-        ClassNode[] interfaces = node.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            cn = interfaces[i];
+        for (ClassNode anInterface : node.getInterfaces()) {
+            cn = anInterface;
             if (!cn.isInterface()) {
-                // FIXASC (groovychange) record a type error
+                // GRECLIPSE: start: record a type error
                 addTypeError("You are not allowed to implement the " + getDescription(cn) + ", use extends instead.", node);
             }
         }
@@ -166,9 +164,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
 
     private void checkMethodsForIncorrectModifiers(ClassNode cn) {
         if (!cn.isInterface()) return;
-        List methods = cn.getMethods();
-        for (Iterator cnIter = methods.iterator(); cnIter.hasNext();) {
-            MethodNode method = (MethodNode) cnIter.next();
+        for (MethodNode method : cn.getMethods()) {
             if (Modifier.isFinal(method.getModifiers())) {
                 addError("The " + getDescription(method) + " from " + getDescription(cn) +
                         " must not be final. It is by definition abstract.", method);
@@ -185,13 +181,9 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     }
 
     private void checkMethodsForOverridingFinal(ClassNode cn) {
-        List methods = cn.getMethods();
-        for (Iterator cnIter = methods.iterator(); cnIter.hasNext();) {
-            MethodNode method = (MethodNode) cnIter.next();
+        for (MethodNode method : cn.getMethods()) {
             Parameter[] params = method.getParameters();
-            List superMethods = cn.getSuperClass().getMethods(method.getName());
-            for (Iterator iter = superMethods.iterator(); iter.hasNext();) {
-                MethodNode superMethod = (MethodNode) iter.next();
+            for (MethodNode superMethod : cn.getSuperClass().getMethods(method.getName())) {
                 Parameter[] superParams = superMethod.getParameters();
                 if (!hasEqualParameterTypes(params, superParams)) continue;
                 if (!Modifier.isFinal(superMethod.getModifiers())) break;
@@ -206,13 +198,13 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         msg.append("You are not allowed to override the final method ").append(method.getName());
         msg.append("(");
         boolean needsComma = false;
-        for (int i = 0; i < parameters.length; i++) {
+        for (Parameter parameter : parameters) {
             if (needsComma) {
                 msg.append(",");
             } else {
                 needsComma = true;
             }
-            msg.append(parameters[i].getType());
+            msg.append(parameter.getType());
         }
         msg.append(") from ").append(getDescription(superCN));
         msg.append(".");
@@ -256,14 +248,12 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
 
     private void checkOverloadingPrivateAndPublic(MethodNode node) {
         if (isConstructor(node)) return;
-        List methods = currentClass.getMethods(node.getName());
         boolean hasPrivate=false;
         boolean hasPublic=false;
-        for (Iterator iter = methods.iterator(); iter.hasNext();) {
-            MethodNode element = (MethodNode) iter.next();
-            if (element == node) continue;
-            if (!element.getDeclaringClass().equals(node.getDeclaringClass())) continue;
-            int modifiers = element.getModifiers();
+        for (MethodNode method : currentClass.getMethods(node.getName())) {
+            if (method == node) continue;
+            if (!method.getDeclaringClass().equals(node.getDeclaringClass())) continue;
+            int modifiers = method.getModifiers();
             if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)){
                 hasPublic=true;
             } else {
@@ -277,15 +267,13 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     
     private void checkRepetitiveMethod(MethodNode node) {
         if (isConstructor(node)) return;
-        List methods = currentClass.getMethods(node.getName());
-        for (Iterator iter = methods.iterator(); iter.hasNext();) {
-            MethodNode element = (MethodNode) iter.next();
-            if (element == node) continue;
-            if (!element.getDeclaringClass().equals(node.getDeclaringClass())) continue;
+        for (MethodNode method : currentClass.getMethods(node.getName())) {
+            if (method == node) continue;
+            if (!method.getDeclaringClass().equals(node.getDeclaringClass())) continue;
             Parameter[] p1 = node.getParameters();
-            Parameter[] p2 = element.getParameters();
+            Parameter[] p2 = method.getParameters();
             if (p1.length != p2.length) continue;
-            addErrorIfParamsAndReturnTypeEqual(p2, p1, node, element);
+            addErrorIfParamsAndReturnTypeEqual(p2, p1, node, method);
         }
     }
 
@@ -366,7 +354,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
 	        case Types.RIGHT_SHIFT_UNSIGNED_EQUAL:
 	            checkFinalFieldAccess(expression.getLeftExpression());
 	            break;
-	        default: break;
+            default:
+                break;
         }
     }
 
@@ -409,8 +398,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         Expression aexp = mce.getArguments();
         if (aexp instanceof TupleExpression) {
             TupleExpression arguments = (TupleExpression) aexp;
-            for (Iterator it=arguments.getExpressions().iterator();it. hasNext();) {
-                checkForInvalidDeclaration((Expression) it.next());
+            for (Expression e : arguments.getExpressions()) {
+                checkForInvalidDeclaration(e);
             }
         } else {
             checkForInvalidDeclaration(aexp);
@@ -419,7 +408,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     
     private void checkForInvalidDeclaration(Expression exp) {
         if (!(exp instanceof DeclarationExpression)) return;
-        addError("invalid use of declartion inside method call.",exp);
+        addError("Invalid use of declaration inside method call.", exp);
     }
     
     public void visitConstantExpression(ConstantExpression expression) {
@@ -429,8 +418,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     
     public void visitGStringExpression(GStringExpression expression) {
         super.visitGStringExpression(expression);
-        for (Iterator it = expression.getStrings().iterator(); it.hasNext();) {
-            checkStringExceedingMaximumLength((ConstantExpression) it.next());
+        for (ConstantExpression ce : expression.getStrings()) {
+            checkStringExceedingMaximumLength(ce);
         }
     }
     

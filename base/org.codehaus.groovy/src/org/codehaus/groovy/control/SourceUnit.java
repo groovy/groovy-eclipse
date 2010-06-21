@@ -59,10 +59,9 @@ import antlr.NoViableAltForCharException;
 public class SourceUnit extends ProcessingUnit {
 
 
-    // FIXASC (groovychange)
-	private List<Comment> comments;
-    // FIXASC (groovychange) end
-
+    // GRECLIPSE: new field
+    private List<Comment> comments;
+   
 	/**
      * The pluggable parser used to generate the AST - we allow
      * pluggability currently as we need to have Classic and JSR support
@@ -309,7 +308,7 @@ public class SourceUnit extends ProcessingUnit {
     }
 
     private void saveAsXML(String name, ModuleNode ast) {
-    	// FIXASC (groovychange) missing dependency
+    	// GRECLIPSE: start: missing dependency
 //        XStream xstream = new XStream();
 //        try {
 //            xstream.toXML(ast,new FileWriter(name + ".xml"));
@@ -359,7 +358,7 @@ public class SourceUnit extends ProcessingUnit {
         getErrorCollector().addError(se,this);
     }
 
-    // FIXASC (groovychange)
+    // GRECLIPSE: start
     public List<Comment> getComments() {
 		return comments;
 	}
@@ -367,5 +366,5 @@ public class SourceUnit extends ProcessingUnit {
 	public void setComments(List<Comment> comments) {
 		this.comments = comments;
 	}
-    // FIXASC (groovychange) end
+    // end
 }
