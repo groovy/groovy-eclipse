@@ -16,6 +16,9 @@
 		<attribute name="feature.id" />
 
 		<sequential>
+			<echo message="Installing: @{feature.id}" />
+			<echo message="into: @{eclipse.log}" />
+			<echo message="from update site: @{updatesite.url}" />
 			<java fork="true" failonerror="true"
 			  classname="org.eclipse.core.launcher.Main">
 
