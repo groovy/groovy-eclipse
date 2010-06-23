@@ -63,8 +63,8 @@ workspaceDirIdeTest=${workDir}/ide-test
 # R for release
 buildType=N
 
-buildTypePresentation=e36-xx
-buildTypePresentationPrefix=
+buildTypePresentation=e36
+buildTypePresentationPrefix=xx-
 
 # Specify publish location
 publishLocation=/opt/ci.repository.codehaus.org/greclipse/snapshot/e36
