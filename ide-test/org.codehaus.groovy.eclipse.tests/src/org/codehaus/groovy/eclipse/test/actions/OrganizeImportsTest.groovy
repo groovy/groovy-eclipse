@@ -292,12 +292,11 @@ public class OrganizeImportsTest extends EclipseTestCase {
     void testGRECLISPE643() {
         String contents = 
             """ 
-            num MyEnum {
+            enum MyEnum {
                 ONE_VALUE, ANOTHER_VALUE
             }
             """
-            def expectedImports = [ ]
-                                    doAddImportTest(contents, expectedImports)
+            doAddImportTest(contents, [ ])
     }
     
 	
@@ -332,6 +331,10 @@ public class OrganizeImportsTest extends EclipseTestCase {
         def unit = JavaCore.createCompilationUnitFrom(file)
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
+        if (expectedImports == null) {
+            assertNull "Expected null due to a compile error in the contents", edit
+        }
+        
         def children = edit.getChildren() as List
         def newChildren = []
         children.each {
