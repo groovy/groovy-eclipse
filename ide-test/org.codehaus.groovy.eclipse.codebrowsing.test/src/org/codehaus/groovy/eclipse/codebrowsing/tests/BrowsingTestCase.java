@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
@@ -40,7 +40,7 @@ public abstract class BrowsingTestCase extends BuilderTests {
     public BrowsingTestCase(String name) {
         super(name);
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
@@ -62,19 +62,24 @@ public abstract class BrowsingTestCase extends BuilderTests {
             }
         } while (wcs.length > 0);
     }
-    
 
-    
+
+
     protected IPath createGenericProject() throws Exception {
-        IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyNature("Project");
-        env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
-        env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+        IPath projectPath;
+        if (!ResourcesPlugin.getWorkspace().getRoot().getProject("Project").exists()) {
+            projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+            // remove old package fragment root so that names don't collide
+            env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+            env.addExternalJars(projectPath, Util.getJavaClassLibs());
+            env.addGroovyNature("Project");
+            env.addGroovyJars(projectPath);
+            fullBuild(projectPath);
+            env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+            env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+        } else {
+            projectPath = env.getJavaProject("Project").getPath();
+        }
         return projectPath;
     }
 
@@ -85,7 +90,7 @@ public abstract class BrowsingTestCase extends BuilderTests {
         return ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
     }
 
-    protected IFolder getolder(IPath projectPath, String folderName) {
+    protected IFolder getFolder(IPath projectPath, String folderName) {
         return ResourcesPlugin.getWorkspace().getRoot().getFolder(projectPath.append(folderName));
     }
 
@@ -113,6 +118,18 @@ public abstract class BrowsingTestCase extends BuilderTests {
         return unit;
     }
 
+    /**
+     * @param contents
+     * @throws Exception
+     */
+    protected GroovyCompilationUnit getCompilationUnitFor(String contents) throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addGroovyClass(root, "", "File", contents);
+        return getGroovyCompilationUnit(root, "File.groovy");
+    }
+
+
 	public static void waitUntilIndexesReady() {
 		// dummy query for waiting until the indexes are ready
 		SearchEngine engine = new SearchEngine();
@@ -124,9 +141,10 @@ public abstract class BrowsingTestCase extends BuilderTests {
 				"!@$#!@".toCharArray(),
 				SearchPattern.R_PATTERN_MATCH | SearchPattern.R_CASE_SENSITIVE,
 				IJavaSearchConstants.CLASS,
-				scope, 
+				scope,
 				new TypeNameRequestor() {
-					public void acceptType(
+					@Override
+                    public void acceptType(
 						int modifiers,
 						char[] packageName,
 						char[] simpleTypeName,

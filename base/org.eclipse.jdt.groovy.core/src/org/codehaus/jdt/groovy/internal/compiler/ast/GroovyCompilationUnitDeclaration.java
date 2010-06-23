@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -235,8 +236,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private void createImports(ModuleNode moduleNode) {
 		List<ImportNode> importNodes = moduleNode.getImports();
 		List<String> importPackages = moduleNode.getImportPackages();
-		Map<String, ImportNode> importStatics = moduleNode.getStaticImports();
-		Map<String, ImportNode> importStaticStars = moduleNode.getStaticStarImports();
+		Map<String, ImportNode> importStatics = ImportNodeCompatibilityWrapper.getStaticImports(moduleNode);
+		Map<String, ImportNode> importStaticStars = ImportNodeCompatibilityWrapper.getStaticStarImports(moduleNode);
 		if (importNodes.size() > 0 || importPackages.size() > 0 || importStatics.size() > 0 || importStaticStars.size() > 0) {
 			int importNum = 0;
 			imports = new ImportReference[importNodes.size() + importPackages.size() + importStatics.size()

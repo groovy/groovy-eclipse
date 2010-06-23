@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -22,13 +22,17 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.dialogs.PreferenceLinkArea;
+import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
 
 
-public class FormatterPreferencesPage 
-extends FieldEditorOverlayPage 
-implements IWorkbenchPreferencePage 
+public class FormatterPreferencesPage
+extends FieldEditorOverlayPage
+implements IWorkbenchPreferencePage
 {
 
 	public FormatterPreferencesPage() {
@@ -40,14 +44,6 @@ implements IWorkbenchPreferencePage
 	@Override
     public void createFieldEditors() {
 
-		addField(new RadioGroupFieldEditor(
-				PreferenceConstants.GROOVY_FORMATTER_INDENTATION,
-				"&Use Tabs or Spaces for indentation: ",2,new String[][] {{"Tab","tab"},{"Spaces","space"}}, getFieldEditorParent()));
-		
-		IntegerFieldEditor indsize = new IntegerFieldEditor(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,"&Tab size: ",getFieldEditorParent(),2);
-		indsize.setValidRange(0, 10);
-		addField(indsize);
-		
 		addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_FORMATTER_BRACES_START,
 				"Position of the opening braces {: ",2,
 				new String[][] {{"On the same line: ","same"},{"On the next line: ","next"}},
@@ -58,11 +54,19 @@ implements IWorkbenchPreferencePage
 				new String[][] {{"On the same line: ","same"},{"On the next line: ","next"}},
 				getFieldEditorParent()));
 
-		IntegerFieldEditor multiInd = new IntegerFieldEditor(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION,"Default indentation for wrapped lines: ",getFieldEditorParent(),2);
+        IntegerFieldEditor multiInd = new IntegerFieldEditor(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION,
+                "Default indentation for wrapped lines: ", getFieldEditorParent(), 2);
 		multiInd.setValidRange(0, 10);
 		addField(multiInd);
-		
-	}
+
+        PreferenceLinkArea area = new PreferenceLinkArea(getFieldEditorParent(), SWT.WRAP,
+                "org.eclipse.jdt.ui.preferences.CodeFormatterPreferencePage", "\n\nTab and space related preferences \n"
+                        + "are inherited from the <a>Java Formatter</a>", //$NON-NLS-1$
+                (IWorkbenchPreferenceContainer) getContainer(), null);
+        GridData data = new GridData(SWT.FILL, SWT.TOP, false, false);
+        data.horizontalSpan = 2;
+        area.getControl().setLayoutData(data);
+    }
 
 	@Override
 	protected String getPageId() {
@@ -70,7 +74,7 @@ implements IWorkbenchPreferencePage
 	}
 
 	public void init(IWorkbench workbench) {
-		
+
 	}
 
 

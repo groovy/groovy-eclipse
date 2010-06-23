@@ -1,9 +1,0 @@
-###src
-class Test {
-    private static transient final native volatile synchronized strictfp foo
-}
-###exp
-class Test {
-    private static transient final synchronized volatile native strictfp foo
-}
-###end

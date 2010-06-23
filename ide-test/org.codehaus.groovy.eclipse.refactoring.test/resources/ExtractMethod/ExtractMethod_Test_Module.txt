@@ -1,0 +1,22 @@
+###prop
+selectionType=points
+startLine=1
+startColumn=1
+endLine=1
+endColumn=15
+newMethodName=meth
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+println("Run")
+
+###exp
+meth()
+
+private meth() {
+    println("Run")
+}
+
+###end

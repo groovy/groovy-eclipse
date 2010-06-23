@@ -47,7 +47,8 @@ Require-Bundle: org.eclipse.core.resources,
  org.eclipse.jdt.core.manipulation;bundle-version="1.3.0",
  org.codehaus.groovy.eclipse.refactoring;bundle-version="2.0.2",
  org.eclipse.ui.browser;bundle-version="3.2.300",
- org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.0.2"
+ org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.0.2",
+ org.eclipse.jdt.junit.core
 Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.ui.decorators"
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Import-Package: org.apache.commons.lang

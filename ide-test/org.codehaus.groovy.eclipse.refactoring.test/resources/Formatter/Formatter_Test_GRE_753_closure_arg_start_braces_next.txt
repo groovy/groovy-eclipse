@@ -1,0 +1,24 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+public class Braces {
+def method() {
+"hello".each
+{
+print "Hello"
+println it
+}
+}
+}
+###exp
+public class Braces {
+	def method() {
+		"hello".each
+		{
+			print "Hello"
+			println it
+		}
+	}
+}
+###end

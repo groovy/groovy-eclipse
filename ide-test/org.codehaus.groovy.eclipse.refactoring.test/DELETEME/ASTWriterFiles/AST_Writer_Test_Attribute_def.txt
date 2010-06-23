@@ -1,9 +1,0 @@
-###src
-class HalloWelt {
-    def attribute
-}
-###exp
-class HalloWelt {
-    def attribute
-}
-###end

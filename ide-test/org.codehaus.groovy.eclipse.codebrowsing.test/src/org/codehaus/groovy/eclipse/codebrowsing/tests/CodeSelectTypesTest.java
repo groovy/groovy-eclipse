@@ -11,7 +11,6 @@
 
 package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
@@ -25,11 +24,6 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
 
     public CodeSelectTypesTest() {
         super(CodeSelectTypesTest.class.getName());
-    }
-    
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
     }
     
     public void testSelectSuperClass() throws Exception {

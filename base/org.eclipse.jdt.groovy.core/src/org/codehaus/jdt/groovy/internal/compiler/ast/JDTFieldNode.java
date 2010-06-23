@@ -44,7 +44,7 @@ public class JDTFieldNode extends FieldNode implements JDTNodes {
 	}
 
 	@Override
-	public void addAnnotations(List<AnnotationNode> annotations) {
+	public void addAnnotations(List annotations) {
 		throw new IllegalStateException("JDTFieldNode is immutable");
 	}
 

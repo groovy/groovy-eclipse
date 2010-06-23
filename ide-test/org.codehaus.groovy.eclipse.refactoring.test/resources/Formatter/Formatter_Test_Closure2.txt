@@ -1,0 +1,30 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+"hello".each {
+it.each {
+print it
+}
+}
+"hello".each
+{
+it.each
+{
+print it
+}
+}
+###exp
+"hello".each {
+	it.each {
+		print it
+	}
+}
+"hello".each
+{
+	it.each
+	{
+		print it
+	}
+}
+###end

@@ -1,5 +1,0 @@
-###src
-Integer intValue = Integer.parseInt("42")
-###exp
-Integer intValue = Integer.parseInt("42")
-###end

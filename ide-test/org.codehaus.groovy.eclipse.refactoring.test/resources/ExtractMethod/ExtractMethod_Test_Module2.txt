@@ -1,0 +1,26 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=1
+endLine=3
+endColumn=1
+newMethodName=extract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+private mine() {
+    println("a")
+}
+println("Run")
+###exp
+private mine() {
+    extract()
+}
+
+private extract() {
+    println("a")
+}
+println("Run")
+###end

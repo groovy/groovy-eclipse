@@ -1,9 +1,0 @@
-###src
-"Zorro".replaceAll(/o/, "0")
-string = 'And little lambs eat ivy'
-parts = string =~ /(.*)(l[^s]*s)(.*)/
-###exp
-"Zorro".replaceAll(/o/, "0")
-string = 'And little lambs eat ivy'
-parts = string =~ /(.*)(l[^s]*s)(.*)/
-###end

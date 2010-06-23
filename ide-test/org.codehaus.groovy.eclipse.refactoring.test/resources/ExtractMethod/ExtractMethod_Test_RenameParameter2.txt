@@ -1,0 +1,27 @@
+###prop
+selectionType=points
+startLine=3
+startColumn=3
+endLine=3
+endColumn=28
+newMethodName=newMethod
+modifier=private
+variableToRename=vari2:vari2NEW
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+private static mainMethod() {
+    def vari1, vari2
+    println (vari1 + vari2)
+}
+###exp
+private static mainMethod() {
+    def vari1, vari2
+    newMethod(vari1, vari2)
+}
+
+private static newMethod(vari1, vari2NEW) {
+    println (vari1 + vari2NEW)
+}
+###end

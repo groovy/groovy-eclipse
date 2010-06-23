@@ -16,6 +16,7 @@
 package org.codehaus.groovy.ast;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -60,5 +61,18 @@ public class ImportNodeCompatibilityWrapper {
         sortedImports.addAll(module.getStarImports());
         sortedImports.addAll(module.getStaticStarImports().values());
         sortedImports.addAll(module.getStaticImports().values());
+    }
+
+    // not available in 1.6 stream
+    public static String getFieldName(ImportNode node) {
+        return node.getFieldName();
+    }
+    // not available in 1.6 stream
+    public static Map<String, ImportNode> getStaticImports(ModuleNode node) {
+        return node.getStaticImports();
+    }
+    // not available in 1.6 stream
+    public static Map<String, ImportNode> getStaticStarImports(ModuleNode node) {
+        return node.getStaticStarImports();
     }
 }

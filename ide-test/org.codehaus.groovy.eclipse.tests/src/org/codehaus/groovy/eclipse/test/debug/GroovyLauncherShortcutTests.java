@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.test.debug;
 
+import java.io.File;
 import java.util.Map;
 
 import junit.framework.AssertionFailedError;
@@ -44,18 +45,18 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.text.IRegion;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Jan 4, 2010
  */
 public class GroovyLauncherShortcutTests extends EclipseTestCase {
-    
+
     class MockGroovyScriptLaunchShortcut extends GroovyScriptLaunchShortcut {
         @Override
-        protected Map<String, String> createLaunchProperties(IType runType) {
-            return super.createLaunchProperties(runType);
+        protected Map<String, String> createLaunchProperties(IType runType, IJavaProject javaProject) {
+            return super.createLaunchProperties(runType, javaProject);
         }
-        
+
         @Override
         protected String generateClasspath(IJavaProject javaProject) {
             return super.generateClasspath(javaProject);
@@ -68,12 +69,12 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
             return super.createConfiguration(type);
         }
     }
-    
+
     class ConsoleListener implements IConsoleLineTrackerExtension {
         private IConsole console;
         String text = null;
 
-        public void consoleClosed() { 
+        public void consoleClosed() {
             text = getText();
         }
         String getText() {
@@ -83,21 +84,21 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         public void dispose() {
             this.console = null;
         }
-        public void init(IConsole console) { 
+        public void init(IConsole console) {
             this.console = console;
         }
 
         public void lineAppended(IRegion line) { }
-        
+
         int getExitValue() throws DebugException {
             IProcess process = console.getProcess();
             return process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
         }
-        
+
         public IConsole getConsole() {
             return console;
         }
-        
+
         boolean isTerminated() {
             return console == null || console.getProcess().isTerminated();
         }
@@ -110,7 +111,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         DebugUIPlugin.getDefault().getPreferenceStore().setValue(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT, false);
         GroovyRuntime.addGroovyRuntime(testProject.getProject());
     }
-    
+
     public GroovyLauncherShortcutTests() {
         super(GroovyLauncherShortcutTests.class.getCanonicalName());
     }
@@ -129,7 +130,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         IType launchType = unit.getType("Launch");
         launchScriptAndAssertExitValue(launchType);
     }
-    
+
     // script references java
     public void testScriptLaunch3() throws Exception {
         createJavaCompilationUnit("Other.java", "class Other{ String foo() { return \"hi!\"; } }");
@@ -137,7 +138,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         IType launchType = unit.getType("Launch");
         launchScriptAndAssertExitValue(launchType);
     }
-    
+
     // script references script in other source folder
     public void testScriptLaunch4() throws Exception {
         IPackageFragmentRoot newRoot = createSourceFolder();
@@ -157,7 +158,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         IType launchType = unit.getType("Launch");
         launchScriptAndAssertExitValue(launchType);
     }
-    
+
     // script in non-default source folder
     public void testScriptLaunch6() throws Exception {
         IPackageFragmentRoot newRoot = createSourceFolder();
@@ -167,7 +168,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         IType launchType = unit.getType("Launch");
         launchScriptAndAssertExitValue(launchType);
     }
-   
+
     // script references script with non-default output folder
     public void testScriptLaunch7() throws Exception {
         IPackageFragmentRoot newRoot = createSourceFolder("otherOut");
@@ -177,7 +178,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         IType launchType = unit.getType("Launch");
         launchScriptAndAssertExitValue(launchType);
     }
-    
+
     // script references java with non-default output folder
     public void testScriptLaunch8() throws Exception {
         IPackageFragmentRoot newRoot = createSourceFolder("otherOut");
@@ -187,7 +188,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         IType launchType = unit.getType("Launch");
         launchScriptAndAssertExitValue(launchType);
     }
-    
+
     // script references script in other project
     public void testScriptLaunch9() throws Exception {
         TestProject otherProject = new TestProject("OtherProject");
@@ -202,7 +203,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
             otherProject.dispose();
         }
     }
-    
+
     // script references java in other project
     public void testScriptLaunch10() throws Exception {
         TestProject otherProject = new TestProject("OtherProject");
@@ -216,7 +217,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
             otherProject.dispose();
         }
     }
-    
+
     // test that the classpath generation occurs as expected
     public void testClasspathGeneration() throws Exception {
         TestProject p4 = new TestProject("P4");
@@ -225,7 +226,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         TestProject p3 = new TestProject("P3");
         p3.addProjectReference(p4.getJavaProject());
         p3.createSourceFolder("src2", "bin2");
-        
+
         TestProject p2 = new TestProject("P2");
         p2.addProjectReference(p4.getJavaProject());
         p2.addProjectReference(p3.getJavaProject());
@@ -234,14 +235,25 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         p1.addProjectReference(p4.getJavaProject());
         p1.addProjectReference(p3.getJavaProject());
         p1.addProjectReference(p2.getJavaProject());
-        
+
         String classpath = new MockGroovyScriptLaunchShortcut().generateClasspath(p1.getJavaProject());
-        assertEquals("Invalid classpath generated", "\"${workspace_loc:/P1}/src:${workspace_loc:/P2}/src:" +
-        		"${workspace_loc:/P3}/src:${workspace_loc:/P3}/src2:${workspace_loc:/P4}/src:${workspace_" +
-        		"loc:/P4}/src2:${workspace_loc:/P1}/bin:${workspace_loc:/P2}/bin:${workspace_loc:/P3}/bin" +
-        		":${workspace_loc:/P3}/bin2:${workspace_loc:/P4}/bin:${workspace_loc:/P4}/bin2\"", classpath);
+        assertEquals("Invalid classpath generated", createClassPathString(), classpath);
     }
-    
+
+    /**
+     * @return
+     */
+    private String createClassPathString() {
+        String classpath = "\"${workspace_loc:/P1}\\src:${workspace_loc:/P2}\\src:"
+                + "${workspace_loc:/P3}\\src:${workspace_loc:/P3}\\src2:${workspace_loc:/P4}\\src:${workspace_"
+                + "loc:/P4}\\src2:${workspace_loc:/P1}\\bin:${workspace_loc:/P2}\\bin:${workspace_loc:/P3}\\bin"
+                + ":${workspace_loc:/P3}\\bin2:${workspace_loc:/P4}\\bin:${workspace_loc:/P4}\\bin2\"";
+        if (File.separatorChar == '/') {
+            classpath = classpath.replace('\\', '/');
+        }
+        return classpath;
+    }
+
     /**
      * @param newRoot
      * @return
@@ -257,13 +269,13 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     private IPackageFragmentRoot createSourceFolder(String outFolder) throws Exception {
         return testProject.createOtherSourceFolder(outFolder);
     }
-    
+
     private ICompilationUnit createGroovyCompilationUnit(IPackageFragment frag, String unitName, String contents) throws CoreException {
         IFile file = testProject.createGroovyType(frag, unitName, contents);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         return unit;
     }
-    
+
     private ICompilationUnit createGroovyCompilationUnit(String unitName, String contents) throws CoreException {
         return createGroovyCompilationUnit("", unitName, contents);
     }
@@ -272,21 +284,21 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         return unit;
     }
-    
+
     private IType createJavaCompilationUnit(String unitName, String contents) throws CoreException {
         return testProject.createJavaTypeAndPackage("", unitName, contents);
     }
-    
+
     private IType createJavaCompilationUnit(IPackageFragment frag, String unitName, String contents) throws CoreException {
         return testProject.createJavaType(frag, unitName, contents);
     }
-    
-    
+
+
     protected void launchScriptAndAssertExitValue(IType launchType) throws InterruptedException, CoreException {
         launchScriptAndAssertExitValue(launchType, 20);
     }
     protected void launchScriptAndAssertExitValue(final IType launchType, final int timeoutSeconds) throws InterruptedException, CoreException {
-        
+
         String problems = testProject.getProblems();
         if (problems != null) {
             fail("Compile problems:\n" + problems);
@@ -296,7 +308,8 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
             public void run() {
                 try {
                     MockGroovyScriptLaunchShortcut shortcut = new MockGroovyScriptLaunchShortcut();
-                    ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType), launchType.getFullyQualifiedName());
+                    ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType,
+                            launchType.getJavaProject()), launchType.getFullyQualifiedName());
                     ConsoleListener listener = new ConsoleListener();
                     ConsoleLineTracker.setDelegate(listener);
                     assertTrue(launchType.exists());
@@ -309,7 +322,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                             listener.wait(1000);
                         }
                     }
-                    
+
                     assertTrue("Process not terminated after timeout has been reached", listener.isTerminated());
                     assertEquals("Expecting normal exit, but found invalid exit value", 0, listener.getExitValue());
                 } catch (Exception e) {
@@ -317,19 +330,19 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                 }
             }
         };
-        
+
         AssertionFailedError currentException = null;
         for (int attempt = 0; attempt < 4; attempt++) {
             try {
                 runner.run();
-                
+
                 // success
                 return;
             } catch (AssertionFailedError e) {
                 currentException = e;
-                System.out.println("Launch failed on attempt " + attempt + " retrying."); 
+                System.out.println("Launch failed on attempt " + attempt + " retrying.");
             }
-            
+
         }
         if (currentException != null) {
             throw currentException;

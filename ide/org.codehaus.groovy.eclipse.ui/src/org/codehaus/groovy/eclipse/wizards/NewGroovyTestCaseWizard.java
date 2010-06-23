@@ -15,9 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
+import greclipse.org.eclipse.jdt.internal.junit.wizards.NewTestCaseCreationWizard;
+
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.junit.wizards.NewTestCaseCreationWizard;
-import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
 
 /**
@@ -36,7 +36,7 @@ public class NewGroovyTestCaseWizard extends NewTestCaseCreationWizard {
 	@Override
 	public void addPages() {
 	    NewTestCaseWizardPageTwo fPage2= new NewTestCaseWizardPageTwo();
-	    NewTestCaseWizardPageOne fPage1= new NewGroovyTestTypeWizardPage(fPage2);
+	    NewGroovyTestTypeWizardPage fPage1= new NewGroovyTestTypeWizardPage(fPage2);
         addPage(fPage1);
         fPage1.init(getSelection());
         addPage(fPage2);
@@ -45,6 +45,4 @@ public class NewGroovyTestCaseWizard extends NewTestCaseCreationWizard {
         ReflectionUtils.setPrivateField(NewTestCaseCreationWizard.class, "fPage2", this, fPage2);
 	}
 
-	
-	
 }

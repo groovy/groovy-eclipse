@@ -1,7 +1,0 @@
-###src
-interface Test {
-}
-###exp
-interface Test {
-}
-###end

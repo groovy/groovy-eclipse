@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,15 +18,18 @@
  */
 package org.codehaus.groovy.eclipse.refactoring;
 
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
+
 /**
  * Constant definitions for plug-in preferences
  */
 public class PreferenceConstants {
 
 	public static final String P_PATH = "pathPreference";
-	
-	public static final String GROOVY_FORMATTER_INDENTATION = "groovy.formatter.indentation.type";
-	public static final String GROOVY_FORMATTER_INDENTATION_SIZE = "groovy.formatter.indentation.size";
+
+    public static final String GROOVY_FORMATTER_INDENTATION = DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR;
+
+    public static final String GROOVY_FORMATTER_INDENTATION_SIZE = DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE;
 	public static final String GROOVY_FORMATTER_MULTILINE_INDENTATION = "groovy.formatter.multiline.indentation";
 
 	public static final String GROOVY_FORMATTER_BRACES_START = "groovy.formatter.braces.start";

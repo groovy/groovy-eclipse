@@ -21,12 +21,15 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.util.History;
+import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.corext.util.QualifiedTypeNameHistory;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
 import org.eclipse.jdt.internal.ui.dialogs.MultiElementListSelectionDialog;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.util.TypeNameMatchLabelProvider;
+import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 import org.eclipse.jdt.ui.actions.OrganizeImportsAction;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelection;
@@ -40,7 +43,7 @@ import org.eclipse.jface.window.Window;
 public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
     private static final OrganizeImportComparator ORGANIZE_IMPORT_COMPARATOR= new OrganizeImportComparator();
 
-    private static final class OrganizeImportComparator implements Comparator {
+    private static final class OrganizeImportComparator implements Comparator<Object> {
 
         public int compare(Object o1, Object o2) {
             if (((String)o1).equals(o2))
@@ -63,9 +66,6 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
 
     }
 
-    
-    /** <code>true</code> if the query dialog is showing. */
-    private boolean fIsQueryShowing= false;
 
     private JavaEditor editor;
 
@@ -73,23 +73,33 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         super(editor);
         this.editor = editor;
     }
-    
+
     @Override
     public void run(ICompilationUnit cu) {
         if (cu instanceof GroovyCompilationUnit) {
             try {
-                new OrganizeGroovyImports((GroovyCompilationUnit) cu, createChooseImportQuery(editor))
+                boolean success = new OrganizeGroovyImports((GroovyCompilationUnit) cu, createChooseImportQuery(editor))
                     .calculateAndApplyMissingImports();
+
+                if (!success) {
+                    IStatusLineManager manager = getStatusLineManager();
+                    if (manager != null) {
+                        manager.setErrorMessage(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_parse,
+                                getLocationString(cu)));
+                    }
+                }
             } catch (JavaModelException e) {
                 GroovyCore.logException("Error with organizing imports for " + cu.getElementName(), e);
             }
         } else {
             super.run(cu);
         }
-        
     }
-    
-    
+
+    private static String getLocationString(final ICompilationUnit cu) {
+        return BasicElementLabels.getPathLabel(cu.getPath(), false);
+    }
+
     private IChooseImportQuery createChooseImportQuery(final JavaEditor editor) {
         return new IChooseImportQuery() {
             public TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges) {
@@ -105,13 +115,13 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         ILabelProvider labelProvider= new TypeNameMatchLabelProvider(TypeNameMatchLabelProvider.SHOW_FULLYQUALIFIED);
 
         MultiElementListSelectionDialog dialog= new MultiElementListSelectionDialog(getShell(), labelProvider) {
+            @Override
             protected void handleSelectionChanged() {
                 super.handleSelectionChanged();
                 // show choices in editor
                 doListSelectionChanged(getCurrentPage(), ranges, editor);
             }
         };
-        fIsQueryShowing= true;
         dialog.setTitle(ActionMessages.OrganizeImportsAction_selectiondialog_title);
         dialog.setMessage(ActionMessages.OrganizeImportsAction_selectiondialog_message);
         dialog.setElements(openChoices);
@@ -132,7 +142,6 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
             ITextSelection textSelection= (ITextSelection) sel;
             editor.selectAndReveal(textSelection.getOffset(), textSelection.getLength());
         }
-        fIsQueryShowing= false;
         return result;
     }
 
@@ -144,4 +153,14 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
     }
 
 
+    private IStatusLineManager getStatusLineManager() {
+        if (editor != null) {
+            try {
+                return editor.getEditorSite().getActionBars().getStatusLineManager();
+            } catch (NullPointerException e) {
+                // can ignore
+            }
+        }
+        return null;
+    }
 }

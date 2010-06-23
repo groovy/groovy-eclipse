@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,14 +18,11 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.Vector;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.codehaus.groovy.antlr.parser.GroovyLexer;
 import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -39,7 +36,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTNodeInfo
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.IncludesClosurePredicate;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.SourceCodePredicate;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -51,100 +47,63 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
 import antlr.Token;
-import antlr.TokenStream;
 
 /**
  * @author Mike Klenk mklenk@hsr.ch
- * 
+ *
  */
 public class DefaultGroovyFormatter extends GroovyFormatter {
 
-	protected FormatterPreferences pref;
+    private static final boolean DEGUG = false;
+
+    protected IFormatterPreferences pref;
 	private ModuleNode rootNode;
 	private Document formattedDocument;
 	private final boolean indentendOnly;
 	public int formatOffset, formatLength;
 
-	private Vector<Token> tokens;
-	private Vector<Vector<Token>> tokenLines;
+    private KlenkDocumentScanner tokens;
 	private int indentationLevel = 0;
 
-	/**
-	 * Default Formatter for the Groovy-Eclipse Plugin
-	 * @param sel The current selection of the Editor
-	 * @param doc The Document which should be formatted
-	 * @param preferences default Plugin preferences, or selfmade preferences
-	 * @param indentendOnly if true, the code will only be indentended not formatted
-	 */
-	public DefaultGroovyFormatter(ITextSelection sel, IDocument doc,
-			IPreferenceStore preferences, boolean indentendOnly) {
-		super(sel, doc);
-		this.indentendOnly = indentendOnly;
-		pref = new FormatterPreferences(preferences);
-		if (selection.getLength() != 0) {
-			formatOffset = selection.getOffset();
-			formatLength = selection.getLength();
+    /**
+     * Default Formatter for the Groovy-Eclipse Plugin
+     *
+     * @param sel The current selection of the Editor
+     * @param doc The Document which should be formatted
+     * @param map default Plugin preferences, or selfmade preferences
+     * @param indentendOnly if true, the code will only be indentended not
+     *            formatted
+     */
+    public DefaultGroovyFormatter(ITextSelection sel, IDocument doc, IFormatterPreferences prefs, boolean indentendOnly) {
+        super(sel, doc);
+        this.indentendOnly = indentendOnly;
+        pref = prefs;
+        if (selection.getLength() != 0) {
+            formatOffset = selection.getOffset();
+            formatLength = selection.getLength();
 
-		} else {
-			formatOffset = 0;
-			formatLength = document.getLength();
-		}
-	}
-	
-	public DefaultGroovyFormatter(IDocument doc,
-	        IPreferenceStore preferences, int indentationLevel) {
-		this(new TextSelection(0,0),doc,preferences,true);
-		this.indentationLevel = indentationLevel;
-	}
+        } else {
+            formatOffset = 0;
+            formatLength = document.getLength();
+        }
+    }
 
+    public DefaultGroovyFormatter(IDocument doc, IFormatterPreferences prefs, int indentationLevel) {
+        this(new TextSelection(0, 0), doc, prefs, true);
+        this.indentationLevel = indentationLevel;
+    }
 
 	private void initCodebase() throws Exception {
-		
+
 	    GroovyCore.trace(formattedDocument.get());
-		
-		tokens = new Vector<Token>();
-		tokenLines = new Vector<Vector<Token>>();
-		rootNode = ASTTools.getASTNodeFromSource(formattedDocument.get());
-		if(rootNode == null) {
-		    // caused by unparseable file  
-			throw new Exception("Problem parsing Compilation unit.  Fix all syntax errors and try.");
-		}
+        tokens = new KlenkDocumentScanner(formattedDocument);
+        rootNode = ASTTools.getASTNodeFromSource(formattedDocument.get());
+        if (rootNode == null) {
+            // caused by unparseable file
+            throw new Exception("Problem parsing Compilation unit.  Fix all syntax errors and try again.");
+        }
 
-		Reader input = new StringReader(formattedDocument.get());
-		GroovyLexer lexer = new GroovyLexer(input);	
-		lexer.setWhitespaceIncluded(true);
-		TokenStream stream = (TokenStream) lexer.plumb();
-
-		Token token = null;
-		Vector<Token> line = new Vector<Token>();
-		while ((token = stream.nextToken()).getType() != GroovyTokenTypes.EOF) {
-		    if (token.getType() != GroovyTokenTypes.WS) {
-		        // Ignore Tokens inside a String
-		        if(token.getType() == GroovyTokenTypes.STRING_CTOR_START) {
-		            tokens.add(token);
-		            Token prevToken = token;
-		            inner: while((token = stream.nextToken()).getType() != GroovyTokenTypes.STRING_CTOR_END) {
-		                if (equalTokens(prevToken, token)) {
-		                    break inner;
-		                }
-		                prevToken = token;
-		            }
-		        }
-		        tokens.add(token);
-		        line.add(token);
-		        if(token.getType() == GroovyTokenTypes.NLS) {
-		            tokenLines.add(line);
-		            line = new Vector<Token>();
-		        }
-		    }
-		}
-		// Adding last Line with EOF at End
-		tokens.add(token);
-		line.add(token);
-		tokenLines.add(line);
 	}
-	
-	
 
 	/**
      * @param prevToken
@@ -152,7 +111,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
      * @return
      */
     private boolean equalTokens(Token t1, Token t2) {
-        return t1.getType() == t2.getType() && t1.getColumn() == t2.getColumn() && t1.getLine() == t2.getLine() 
+        return t1.getType() == t2.getType() && t1.getColumn() == t2.getColumn() && t1.getLine() == t2.getLine()
                && nullEquals(t1.getFilename(), t2.getFilename()) && nullEquals(t1.getText(), t2.getText());
     }
 
@@ -182,13 +141,13 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 				int lengthAfter = formattedDocument.getLength();
 				formatLength += lengthAfter - lengthBefore;
 			}
-			
+
 			initCodebase();
 			GroovyIndentation indent = new GroovyIndentation(this, pref, indentationLevel );
 			UndoEdit undo2 = indent.getIndentationEdits().apply(formattedDocument);
 			formatLength += undo2.getLength();
 
-			
+
 //			if (!indentendOnly) {
 //				initCodebase();
 //				GroovyLineWrapper linewrap = new GroovyLineWrapper(this, pref, indent.getLineIndentations());
@@ -209,7 +168,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	/**
 	 * Searches in the corresponding AST if the given Token is a multiline
 	 * statement. Trailling linefeeds and spaces will be ignored.
-	 * 
+	 *
 	 * @param t
 	 *            Token to search for
 	 * @return returns true if the statement has more than one line in the
@@ -218,6 +177,13 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	public boolean isMultilineStatement(Token t) {
 		if (t != null) {
 			ASTNode node = findCorrespondingNode(t);
+
+			if (DEGUG) {
+                System.out.println("Searching for: " + t);
+                System.out.println(">>>NODE");
+                System.out.println(ASTTools.getTextofNode(node, formattedDocument));
+                System.out.println("<<<NODE");
+			}
 			if (isMultilineNodeType(node)) {
 				boolean closureTest = false;
 				IncludesClosurePredicate cltest = new IncludesClosurePredicate(
@@ -237,7 +203,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
 	/**
 	 * Returns a string without spaces / line feeds at the end
-	 * 
+	 *
 	 * @param s
 	 * @return
 	 */
@@ -279,7 +245,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	/**
 	 * Finding a AST Node corresponding to a Token ! Warning ! there can be
 	 * found the wrong node if two nodes have the same line / col infos
-	 * 
+	 *
 	 * @param t
 	 *            Token for which the AST Node should be found.
 	 * @return the Node with the start position of the token and the longest
@@ -307,7 +273,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
 	/**
 	 * Return a token after many () if there is no opening {
-	 * 
+	 *
 	 * @param i
 	 *            position of the current token
 	 * @return the token after the last closing )
@@ -339,7 +305,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
 	/**
 	 * Returns a Sting of spaces / tabs accordung to the configuration
-	 * 
+	 *
 	 * @param intentation
 	 *            the actual indentation level
 	 * @return
@@ -348,10 +314,10 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	    int indentation = indent;
 		StringBuilder gap = new StringBuilder();
 		while (indentation > 0) {
-			if (pref.useTabs)
+			if (pref.isUseTabs())
 				gap.append("\t");
 			else {
-				for (int i = 0; i < pref.tabSize; i++) {
+				for (int i = 0; i < pref.getTabSize(); i++) {
 					gap.append(" ");
 				}
 			}
@@ -370,12 +336,12 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
 	/**
 	 * Returns the position of the next token in the collection of parsed tokens
-	 * 
+	 *
 	 * @param currentPos
 	 *            position of the actual cursor
 	 * @param includingNLS
 	 *            including newline tokens
-	 * @return returns the next position in the collection of tokens 
+	 * @return returns the next position in the collection of tokens
 	 * or the current position if it is the last token
 	 */
 	public int getPositionOfNextToken(int cPos, boolean includingNLS) {
@@ -402,7 +368,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	/**
 	 * Returns the position of the previous token in the collection of parsed
 	 * tokens
-	 * 
+	 *
 	 * @param currentPos
 	 *            position of the actual cursor
 	 * @param includingNLS
@@ -451,7 +417,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 				offsetNextToken - offsetToken);
 		return offsetToken + trimEnd(tokenWithGap).length();
 	}
-	
+
 	/**
 	 * Counts the length of a Token
 	 * @param token
@@ -461,15 +427,15 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	public int getTokenLength(Token token) throws BadLocationException {
 		return getOffsetOfTokenEnd(token) - getOffsetOfToken(token);
 	}
-	
+
 	public Vector<Vector<Token>> getLineTokens() {
-		return tokenLines;
+        return tokens.getLineTokensVector();
 	}
 
-	public int getPosOfToken(Token token) {
+    public int getPosOfToken(Token token) throws BadLocationException {
 		return tokens.indexOf(token);
 	}
-	
+
 	public int getPosOfToken(int tokenType, int line, int column, String tokenText) {
 		for(int p = 0; p < tokens.size(); p++) {
 			Token a = tokens.get(p);
@@ -481,7 +447,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 		}
 		return -1;
 	}
-	
+
 	public int getPosOfToken(int lineNumber, int columnNumber) {
 		for(int p = 0; p < tokens.size(); p++) {
 			Token a = tokens.get(p);
@@ -499,15 +465,15 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	public IDocument getProgressDocument() {
 		return formattedDocument;
 	}
-	
+
 	public ModuleNode getProgressRootNode() {
 		return rootNode;
 	}
 
-	public Vector<Token> getTokens() {
+    public KlenkDocumentScanner getTokens() {
 		return tokens;
 	}
-	
+
 	/**
      * @param indentationLevel the indentationLevel to set
      */
@@ -544,7 +510,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	            accumulatedSpaces = 0;
 	        } else if (c == ' ') {
 	            accumulatedSpaces++;
-	            if (accumulatedSpaces == pref.tabSize) {
+	            if (accumulatedSpaces == pref.getTabSize()) {
 	                indentsFound++;
 	                accumulatedSpaces = 0;
 	            }

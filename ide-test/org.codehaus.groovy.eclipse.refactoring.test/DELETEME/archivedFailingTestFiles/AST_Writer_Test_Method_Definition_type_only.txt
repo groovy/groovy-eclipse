@@ -1,7 +1,0 @@
-###src
-Object mustBeImplemented() {
-}
-###exp
-Object mustBeImplemented() {
-}
-###end

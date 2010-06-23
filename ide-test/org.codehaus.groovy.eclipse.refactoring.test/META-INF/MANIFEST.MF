@@ -13,14 +13,16 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jface,
  org.codehaus.groovy.eclipse.refactoring,
  org.eclipse.jdt.core;bundle-version="3.5.0",
- org.junit,
+ org.junit;bundle-version="3.8.2",
  org.codehaus.groovy,
  org.codehaus.groovy.eclipse.tests;bundle-version="2.0.2",
  org.eclipse.ui;bundle-version="3.5.0",
  org.eclipse.jdt.core.manipulation,
  org.eclipse.ui.editors;bundle-version="3.5.0",
  org.eclipse.jdt.groovy.core;bundle-version="1.0.0",
- org.codehaus.groovy.eclipse.core.test;bundle-version="2.0.2"
+ org.codehaus.groovy.eclipse.core.test;bundle-version="2.0.2",
+ org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.0.2",
+ org.codehaus.groovy.eclipse.codebrowsing.test;bundle-version="2.0.2"
 Import-Package: org.codehaus.groovy.eclipse.core.compiler,
  org.eclipse.jdt.core.refactoring.descriptors
 Bundle-ActivationPolicy: lazy

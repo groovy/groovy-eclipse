@@ -85,6 +85,21 @@ public class ModuleNode extends ASTNode implements Opcodes {
         return classes;
     }
 
+    // GRECLIPSE:
+    private boolean encounteredUnrecoverableError;
+    
+    public void setEncounteredUnrecoverableError(boolean b) {
+        encounteredUnrecoverableError= b;
+    }
+    
+    /**
+     * @return true if a syntax error was encountered that prevented correct construction of the AST
+     */
+    public boolean encounteredUnrecoverableError() {
+        return encounteredUnrecoverableError;
+    }
+    // end
+
     public List getImports() {
         return imports;
     }

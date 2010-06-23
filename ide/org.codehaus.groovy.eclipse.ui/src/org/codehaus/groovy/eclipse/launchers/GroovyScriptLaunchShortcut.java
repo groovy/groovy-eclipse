@@ -20,21 +20,21 @@ import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.ui.ILaunchShortcut;
 
 /**
- * This class is reponsible for creating a launching Groovy script files.  If an 
+ * This class is reponsible for creating a launching Groovy script files.  If an
  * existing launch configuration exists it will use that, if not it will
  * create a new launch configuration and launch it.
- * 
+ *
  * @see ILaunchShortcut
  */
 public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
 
-	public static final String GROOVY_SCRIPT_LAUNCH_CONFIG_ID = "org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration" ; 
-	
+	public static final String GROOVY_SCRIPT_LAUNCH_CONFIG_ID = "org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration" ;
+
+    @Override
     public ILaunchConfigurationType getGroovyLaunchConfigType() {
         return getLaunchManager().getLaunchConfigurationType(GROOVY_SCRIPT_LAUNCH_CONFIG_ID) ;
     }
-    
-    
+
     @Override
     protected String applicationOrConsole() {
         return "script";
@@ -46,6 +46,9 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         return "groovy.ui.GroovyMain";
     }
 
- 
 
+    @Override
+    protected boolean canLaunchWithNoType() {
+        return false;
+    }
 }

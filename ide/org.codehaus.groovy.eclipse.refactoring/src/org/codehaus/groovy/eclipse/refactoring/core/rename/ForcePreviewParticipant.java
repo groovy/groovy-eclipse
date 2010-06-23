@@ -49,7 +49,7 @@ public class ForcePreviewParticipant extends RenameParticipant {
 
     @Override
     public String getName() {
-        return "Force previeew when performing Groovy changes";
+        return "Force preview when performing Groovy changes";
     }
 
     @Override

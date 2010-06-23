@@ -1,9 +1,0 @@
-###src
-class Test {
-    String property = "property"
-}
-###exp
-class Test {
-    String property = "property"
-}
-###end

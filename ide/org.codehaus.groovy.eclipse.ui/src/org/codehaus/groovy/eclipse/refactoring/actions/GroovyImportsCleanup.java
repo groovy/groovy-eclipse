@@ -44,10 +44,10 @@ import org.eclipse.text.edits.TextEdit;
 /**
  * @author Andrew Eisenberg
  * @created Aug 17, 2009
- * 
+ *
  */
 public class GroovyImportsCleanup extends AbstractCleanUp {
-    
+
     private RefactoringStatus fStatus;
 
     public GroovyImportsCleanup(Map options) {
@@ -61,21 +61,23 @@ public class GroovyImportsCleanup extends AbstractCleanUp {
     /**
      * {@inheritDoc}
      */
+    @Override
     public CleanUpRequirements getRequirements() {
         return new CleanUpRequirements(false, false, false, null);
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public ICleanUpFix createFix(CleanUpContext context) throws CoreException {
-        
+
         ICompilationUnit unit = context.getCompilationUnit();
         if (! (unit instanceof GroovyCompilationUnit)) {
             return null;
         }
-        
+
         final boolean hasAmbiguity[]= new boolean[] { false };
         IChooseImportQuery query= new IChooseImportQuery() {
             public TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges) {
@@ -83,27 +85,27 @@ public class GroovyImportsCleanup extends AbstractCleanUp {
                 return new TypeNameMatch[0];
             }
         };
-        
+
         OrganizeGroovyImports op= new OrganizeGroovyImports((GroovyCompilationUnit) unit, query);
         final TextEdit edit= op.calculateMissingImports();
         if (hasAmbiguity[0]) {
             fStatus.addInfo(Messages.format(
-                    ActionMessages.OrganizeImportsAction_multi_error_unresolvable, 
+                    ActionMessages.OrganizeImportsAction_multi_error_unresolvable,
                     getLocationString(unit)));
+        } else if (edit == null) {
+            fStatus.addInfo(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_parse, getLocationString(unit)));
         }
 
         if (edit == null || (edit instanceof MultiTextEdit && edit.getChildrenSize() == 0)) {
             return null;
         }
-        
         return new ImportsFix(edit, unit, FixMessages.ImportsFix_OrganizeImports_Description);
-
     }
-    
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits, IProgressMonitor monitor) throws CoreException {
 
         if (isEnabled(CleanUpConstants.ORGANIZE_IMPORTS)) {
@@ -116,6 +118,7 @@ public class GroovyImportsCleanup extends AbstractCleanUp {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {
         try {
             if (fStatus == null || fStatus.isOK()) {
@@ -131,13 +134,14 @@ public class GroovyImportsCleanup extends AbstractCleanUp {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String[] getStepDescriptions() {
         if (isEnabled(CleanUpConstants.ORGANIZE_IMPORTS))
             return new String[] {MultiFixMessages.ImportsCleanUp_OrganizeImports_Description};
 
         return null;
     }
-    
+
     private static String getLocationString(final ICompilationUnit cu) {
         return BasicElementLabels.getPathLabel(cu.getPath(), false);
     }

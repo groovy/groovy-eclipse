@@ -1,5 +1,0 @@
-###src
-public static transient final native synchronized strictfp foo() {}
-###exp
-def static transient final synchronized native strictfp foo() {}
-###end

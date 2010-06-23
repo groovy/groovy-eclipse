@@ -1,5 +1,0 @@
-###src
-println "${attribute}  ${attribute}"
-###exp
-println("${attribute}  ${attribute}")
-###end

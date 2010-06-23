@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
@@ -24,10 +24,10 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
-import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
@@ -44,9 +44,9 @@ import org.objectweb.asm.Opcodes;
  * The module node is not resolved
  */
 public class GroovySnippetParser {
-    
+
     private static class MockCompilationUnit implements ICompilationUnit {
-        
+
         private char[] contents;
         private char[] fileName;
 
@@ -54,7 +54,7 @@ public class GroovySnippetParser {
             this.contents = contents;
             this.fileName = fileName;
         }
-        
+
         public char[] getContents() {
             return contents;
         }
@@ -70,32 +70,21 @@ public class GroovySnippetParser {
         public char[] getFileName() {
             return fileName;
         }
-        
-    }
-    
-    /**
-     * 
-     * @author Andrew Eisenberg
-     * @created Aug 11, 2009
-     * Provide an empty requestor, no compilation results required
-     */
-    private static class Requestor implements ICompilerRequestor {
-        public void acceptResult(CompilationResult result) {
-        }
-    }
-    
 
-    
-    
+    }
+
+    private CategorizedProblem[] problems;
+
+
     /**
-     * Compiles source code into a ModuleNode.  Source code 
+     * Compiles source code into a ModuleNode.  Source code
      * must be a complete file including package declaration
      * and import statements.
-     * 
+     *
      * @param source the groovy source code to compile
      */
     public ModuleNode parse(String source) {
-        
+
         Hashtable table = JavaCore.getOptions();
         table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
         CompilerOptions options = new CompilerOptions(table);
@@ -106,7 +95,7 @@ public class GroovySnippetParser {
         ICompilationUnit unit = new MockCompilationUnit(source.toCharArray(), "Hello.groovy".toCharArray());
         CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
 
-        
+
         GroovyCompilationUnitDeclaration decl =
             (GroovyCompilationUnitDeclaration)
             parser.dietParse(unit, compilationResult);
@@ -124,13 +113,19 @@ public class GroovySnippetParser {
                 }
             }
         }
+
+        problems = compilationResult.getErrors();
         return node;
     }
-    
-    
-    
+
+    public CategorizedProblem[] getProblems() {
+        return problems;
+    }
+
+
+    @SuppressWarnings("unchecked")
     public GroovySourceAST parseForCST(String source) {
-        Hashtable table = JavaCore.getOptions();
+        Hashtable<String, String> table = JavaCore.getOptions();
         table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
         CompilerOptions options = new CompilerOptions(table);
         ProblemReporter reporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
@@ -140,7 +135,7 @@ public class GroovySnippetParser {
         ICompilationUnit unit = new MockCompilationUnit(source.toCharArray(), "Hello.groovy".toCharArray());
         CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
 
-        
+
         GroovyCompilationUnitDeclaration decl =
             (GroovyCompilationUnitDeclaration)
             parser.dietParse(unit, compilationResult);

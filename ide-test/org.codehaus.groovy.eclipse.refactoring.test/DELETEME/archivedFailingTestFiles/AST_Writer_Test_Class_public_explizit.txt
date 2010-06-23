@@ -1,9 +1,0 @@
-###prop
-modifier=public
-###src
-public class HalloWelt {
-}
-###exp
-public class HalloWelt {
-}
-###end

@@ -113,9 +113,7 @@
                            property="org.eclipse.debug.ui.projectNature"
                            value="org.eclipse.jdt.groovy.core.groovyNature">
                      </test>
-                     <test
-                           property="org.codehaus.groovy.eclipse.ui.isScript">
-                     </test>
+                     <test property="org.codehaus.groovy.eclipse.ui.isScript"/>
                   </iterate>
                </with>
             </enablement>
@@ -148,7 +146,12 @@
                         <test
                               property="org.eclipse.debug.ui.projectNature"
                               value="org.eclipse.jdt.groovy.core.groovyNature">
-                        </test> </iterate>
+                        </test>
+                        <or>
+                        		<adapt type="org.eclipse.core.resources.IProject"/>
+		                        <test property="org.codehaus.groovy.eclipse.ui.isScript"/>
+                        </or> 
+                     </iterate>
                   </with>
                </or>
             </enablement>

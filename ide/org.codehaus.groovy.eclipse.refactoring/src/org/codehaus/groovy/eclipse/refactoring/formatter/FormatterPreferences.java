@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,56 +18,54 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.eclipse.ui.texteditor.ChainedPreferenceStore;
 
 /**
  * @author Mike Klenk mklenk@hsr.ch
- *
+ * @author Kris De Volder <kris.de.volder@gmail.com>
  */
-public class FormatterPreferences {
-	
-	public static final int SAME_LINE = 0;
-	public static final int NEXT_LINE = 1;
-	
-	
-	public boolean useTabs = true;
-	public int tabSize = 4;
-	public int indentationMultiline = 2;
-	
-	public int bracesStart = SAME_LINE;
-	public int bracesEnd = NEXT_LINE;
-	
-	public int maxLineLength = 80;
+public class FormatterPreferences extends FormatterPreferencesOnStore implements IFormatterPreferences {
 
-	
-	public FormatterPreferences(IPreferenceStore preferences) {
-		
-		if(preferences != null) {
-		String pTab = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_INDENTATION);
-		int pTabSize = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE);
-		int pIndeMulti = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION);
-		
-		String pBracesStart = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_BRACES_START);
-		String pBracesEnd = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_BRACES_END);		
+    /**
+     * Create Formatter Preferences for a given GroovyCompilationUnit. This will
+     * only take a "snapshot" of the current preferences for the project.
+     * FormatterPreferences is not updated automatically after preferences are
+     * changed (e.g. by edits on Preferences page).
+     */
+    public FormatterPreferences(ICompilationUnit gunit) {
+        super(preferencesFor(gunit));
+    }
 
-		int pMaxLine = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH);
+    public FormatterPreferences(IJavaProject project) {
+        super(preferencesFor(project));
+    }
 
-		if(pBracesStart != null && pBracesStart.equals("next"))
-			bracesStart = NEXT_LINE;
-		if(pBracesEnd != null && pBracesEnd.equals("same"))
-			bracesEnd = SAME_LINE;
-		
-		if (pTab != null && pTab.equals("space"))
-			useTabs = false;
-		if(pTabSize != 0)
-			tabSize = pTabSize;
-		if(pIndeMulti != 0)
-			indentationMultiline = pIndeMulti;
-		
-		if(pMaxLine != 0)
-			maxLineLength = pMaxLine;
-		}
-	}
+    private static IPreferenceStore preferencesFor(ICompilationUnit gunit) {
+        return preferencesFor(gunit.getJavaProject());
+    }
+
+    private static IPreferenceStore preferencesFor(IJavaProject javaProject) {
+        IPreferenceStore javaPrefs = new JavaProjectPreferences(javaProject);
+        // FIXKDV: the groovyPrefs are "global". The more logical thing to do
+        // would be to have project specific prefs that can "override" global
+        // settings just as in JDT.
+
+        // FIXKDV: We want to write the folllwing:
+        // IPreferenceStore groovyPrefs =
+        // GroovyPlugin.getDefault().getPreferenceStore();
+        // But unfortunately, we can't get the GroovyPlugin here because that
+        // creates
+        // a circular build dependency. So we do the following instead:
+        IPreferenceStore groovyPrefs = new ScopedPreferenceStore(new InstanceScope(), "org.codehaus.groovy.eclipse.ui");
+        IPreferenceStore javaUIprefs = JavaPlugin.getDefault().getCombinedPreferenceStore();
+
+        return new ChainedPreferenceStore(new IPreferenceStore[] { groovyPrefs, javaPrefs, javaUIprefs });
+    }
 
 }

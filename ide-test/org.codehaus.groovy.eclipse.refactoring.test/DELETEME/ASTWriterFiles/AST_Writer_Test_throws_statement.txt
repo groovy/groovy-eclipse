@@ -1,7 +1,0 @@
-###src
-def method() throws FileNotFoundException {
-}
-###exp
-def method() throws FileNotFoundException {
-}
-###end

@@ -1,0 +1,21 @@
+###prop
+setPreferences=true
+bracesEnd=next
+###src
+class EmailCommand {
+	def foo () {
+		return 1
+		
+		
+	}
+	
+	
+	
+}
+###exp
+class EmailCommand {
+	def foo () {
+		return 1
+	}
+}
+###end

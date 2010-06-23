@@ -16,21 +16,13 @@
 package org.codehaus.groovy.eclipse.test.debug;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
-import org.codehaus.groovy.eclipse.debug.ui.ValidBreakpointLocationFinder;
 import org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker;
 import org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker.AmbiguousFileLink;
-import org.codehaus.groovy.eclipse.test.Activator;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.debug.core.model.IProcess;
@@ -39,7 +31,6 @@ import org.eclipse.debug.core.model.IStreamsProxy;
 import org.eclipse.debug.ui.console.FileLink;
 import org.eclipse.debug.ui.console.IConsole;
 import org.eclipse.debug.ui.console.IConsoleHyperlink;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;

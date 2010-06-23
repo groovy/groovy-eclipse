@@ -37,26 +37,26 @@ import org.eclipse.swt.graphics.Image;
 /**
  * Adds a list of new field proposals.  All field proposals
  * are dynamically typed static fields with an initializer of a closure.
- * Contributors should extend the   
- * 
- * 
+ * Contributors should extend the
+ *
+ *
  * @author Andrew Eisenberg
  * @created Nov 10, 2009
  */
 public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcessor {
     static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
-        
+
         NewGroovyFieldCompletionProposal(String fieldName,
                 int replacementOffset, int replacementLength, int relevance) {
             super(createReplacementString(fieldName), replacementOffset, replacementLength, createImage(),
                     createDisplayString(fieldName), relevance);
         }
-        
+
         // can we do better with the initializer?
         static String createReplacementString(String fieldName) {
-            return "static " + fieldName + " = null"; 
+            return "static " + fieldName + " = null";
         }
-        
+
         static Image createImage() {
             CompletionProposal dummy = CompletionProposal.create(CompletionProposal.FIELD_REF, -1);
             dummy.setFlags(Flags.AccStatic);
@@ -73,7 +73,7 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
     public NewFieldCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
-    
+
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         List<String> unimplementedFieldNames = getAllSuggestedFieldNames(getContext());
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
@@ -103,15 +103,15 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
         } catch (CoreException e) {
             GroovyCore.logException("Exception looking for proposal providers in " + context.unit.getElementName(), e);
         }
-        
+
         return allNewFieldNames;
     }
 
     private ICompletionProposal createProposal(String fieldName,
             ContentAssistContext context, IType enclosingType) {
-        int relevance= 5;
+        int relevance = 5000;
         return new NewGroovyFieldCompletionProposal(fieldName, context.completionLocation, context.completionExpression.length(), relevance);
     }
-    
-    
+
+
 }

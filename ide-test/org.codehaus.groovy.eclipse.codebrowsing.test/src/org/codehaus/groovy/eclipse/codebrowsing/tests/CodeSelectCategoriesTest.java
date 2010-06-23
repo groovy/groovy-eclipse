@@ -27,13 +27,6 @@ public class CodeSelectCategoriesTest extends BrowsingTestCase {
         super(CodeSelectCategoriesTest.class.getName());
     }
     
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-    
-    
-    
     public void testDGM() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");

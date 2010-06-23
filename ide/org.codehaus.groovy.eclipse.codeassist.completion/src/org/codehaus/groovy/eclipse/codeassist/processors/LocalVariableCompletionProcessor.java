@@ -63,9 +63,6 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         return proposals;
     }
     
-    /**
-     * Java search works on Groovy types too, and since only the type names are required, Java search will do.
-     */
     private Map<String,ClassNode> findLocalNames(String prefix) {
          Map<String,ClassNode> nameTypeMap = new HashMap<String,ClassNode>();
 

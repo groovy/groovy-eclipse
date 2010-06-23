@@ -1,0 +1,33 @@
+###prop
+selectionType=points
+startLine=4
+startColumn=1
+endLine=5
+endColumn=1
+newMethodName=myMethod
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+static loop() {
+    def list = []
+    for(pos in list) {
+        println(pos++)
+        pos = 3
+    }
+}
+###exp
+static loop() {
+    def list = []
+    for(pos in list) {
+        pos = myMethod(pos)
+        pos = 3
+    }
+}
+
+private static int myMethod(int pos) {
+    println(pos++)
+    return pos
+}
+###end

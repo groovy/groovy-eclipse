@@ -91,7 +91,8 @@ public abstract class RefactoringTest extends TestCase {
 		super(name);
 	}
 
-	protected void setUp() throws Exception {
+	@Override
+    protected void setUp() throws Exception {
 		fRoot= RefactoringTestSetup.getDefaultSourceFolder();
 		fPackageP= RefactoringTestSetup.getPackageP();
 		fIsPreDeltaTest= false;
@@ -109,19 +110,20 @@ public abstract class RefactoringTest extends TestCase {
 	/**
 	 * Removes contents of {@link #getPackageP()}, of {@link #getRoot()} (except for p) and of the
 	 * Java project (except for src and the JRE library).
-	 * 
+	 *
 	 * @throws Exception in case of errors
 	 */
-	protected void tearDown() throws Exception {
+	@Override
+    protected void tearDown() throws Exception {
 	    try {
     		refreshFromLocal();
     		performDummySearch();
-    
+
     		if (getPackageP().exists()){
     			tryDeletingAllJavaChildren(getPackageP());
     			tryDeletingAllNonJavaChildResources(getPackageP());
     		}
-    
+
     		if (getRoot().exists()){
     			IJavaElement[] packages= getRoot().getChildren();
     			for (int i= 0; i < packages.length; i++){
@@ -133,8 +135,8 @@ public abstract class RefactoringTest extends TestCase {
     						JavaProjectHelper.delete(pack.getResource()); // also delete packages with subpackages
     			}
     		}
-    		
-    
+
+
     		restoreTestProject();
 	    } finally {
     		TestRenameParticipantShared.reset();
@@ -220,6 +222,10 @@ public abstract class RefactoringTest extends TestCase {
 		return fPackageP;
 	}
 
+    protected IJavaProject getProject() {
+        return fRoot.getJavaProject();
+    }
+
 	protected final RefactoringStatus performRefactoring(RefactoringDescriptor descriptor) throws Exception {
 		return performRefactoring(descriptor, true);
 	}
@@ -271,10 +277,6 @@ public abstract class RefactoringTest extends TestCase {
 					if (refactoringStatus.hasError() && !performOnFail)
 						return refactoringStatus;
 					TestRenameParticipantSingle.reset();
-			        // GROOVY not required
-//					TestCreateParticipantSingle.reset();
-//					TestMoveParticipantSingle.reset();
-//					TestDeleteParticipantSingle.reset();
 				}
 			}
 		}
@@ -284,26 +286,7 @@ public abstract class RefactoringTest extends TestCase {
 		final PerformChangeOperation perform= new PerformChangeOperation(create);
 		perform.setUndoManager(undoManager, ref.getName());
 		IWorkspace workspace= ResourcesPlugin.getWorkspace();
-		// GROOVY not required
-//		if (fIsPreDeltaTest) {
-//			IResourceChangeListener listener= new IResourceChangeListener() {
-//				public void resourceChanged(IResourceChangeEvent event) {
-//					if (create.getConditionCheckingStatus().isOK() &&  perform.changeExecuted()) {
-//						TestModelProvider.assertTrue(event.getDelta());
-//					}
-//				}
-//			};
-//			try {
-//				TestModelProvider.clearDelta();
-//				workspace.checkpoint(false);
-//				workspace.addResourceChangeListener(listener);
-//				executePerformOperation(perform, workspace);
-//			} finally {
-//				workspace.removeResourceChangeListener(listener);
-//			}
-//		} else {
-			executePerformOperation(perform, workspace);
-//		}
+        executePerformOperation(perform, workspace);
 		RefactoringStatus status= create.getConditionCheckingStatus();
 		if (!status.hasError() && !performOnFail)
 			return status;

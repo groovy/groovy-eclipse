@@ -32,12 +32,12 @@ import org.eclipse.text.edits.TextEdit;
 public class GroovyLineWrapper {
 	
 	public DefaultGroovyFormatter formatter;
-	private final FormatterPreferences preferences;
+	private final IFormatterPreferences preferences;
 	private final LineIndentations lineIndentation;
 	MultiTextEdit lineWraps;
 
 	public GroovyLineWrapper(DefaultGroovyFormatter defaultGroovyFormatter,
-			FormatterPreferences pref, LineIndentations lineIndentations) {
+			IFormatterPreferences pref, LineIndentations lineIndentations) {
 		this.formatter = defaultGroovyFormatter;
 		this.preferences = pref;
 		this.lineIndentation = lineIndentations;
@@ -50,7 +50,7 @@ public class GroovyLineWrapper {
 		
 		for(int line = 0; line < tokenLines.size(); line ++) {
 			Token lastTokenOnLine = tokenLines.get(line).get(tokenLines.get(line).size() -1);
-			if(lastTokenOnLine.getColumn() >= preferences.maxLineLength) {
+			if(lastTokenOnLine.getColumn() >= preferences.getMaxLineLength()) {
 				
 				int offsetInLine = 0;
 				
@@ -62,7 +62,7 @@ public class GroovyLineWrapper {
 						String insert = formatter.getNewLine();
 						int indentationLevel = lineIndentation.getLineIndentation(lastTokenOnLine.getLine());
 						if(!lineIndentation.isMultilineIndentation(lastTokenOnLine.getLine()))
-							indentationLevel += preferences.indentationMultiline;
+							indentationLevel += preferences.getIndentationMultiline();
 						String leadingGap = formatter.getLeadingGap(indentationLevel);
 						lineWraps.addChild(new ReplaceEdit(replOffset,replLength,insert + leadingGap));
 						offsetInLine = tokenLines.get(line).get(lastToken + 1).getColumn() - leadingGap.length();
@@ -77,7 +77,7 @@ public class GroovyLineWrapper {
 	private int getLastTokenPositionUnderMaximum(Vector<Token> vector, int offsetInLine) throws BadLocationException {
 		for(int i = vector.size() -2; i >= 0; i--) {
 			Token token = vector.get(i);
-			if(token.getColumn() - offsetInLine + formatter.getTokenLength(token) <= preferences.maxLineLength) {
+			if(token.getColumn() - offsetInLine + formatter.getTokenLength(token) <= preferences.getMaxLineLength()) {
 				return i;
 			}
 		}

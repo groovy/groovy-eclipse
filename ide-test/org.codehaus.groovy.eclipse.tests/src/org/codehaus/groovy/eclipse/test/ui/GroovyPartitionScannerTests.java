@@ -30,9 +30,9 @@ import org.eclipse.jface.text.rules.IToken;
  * Tests for the GroovyTagScanner
  */
 public class GroovyPartitionScannerTests extends TestCase {
-    
+
     GroovyPartitionScanner scanner;
-    
+
     @Override
     protected void setUp() throws Exception {
         System.out.println("------------------------------");
@@ -40,8 +40,8 @@ public class GroovyPartitionScannerTests extends TestCase {
         super.setUp();
         scanner = new GroovyPartitionScanner();
     }
-    
-    
+
+
     public void testSingleQuotes() throws Exception {
         tryString("''''''", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
@@ -62,22 +62,33 @@ public class GroovyPartitionScannerTests extends TestCase {
     public void testDoubleQuotes3() throws Exception {
         tryString("\"\"\"dsafasdfasdds\n\"\"\"", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
-    
+
     public void testNone() throws Exception {
         tryString("\"\n\"\"\"", 0, IJavaPartitions.JAVA_STRING);
     }
     public void testNone2() throws Exception {
         tryString("''\n'''", 0, IJavaPartitions.JAVA_STRING);
     }
+
+    public void testComment() throws Exception {
+        tryString("/* blah\n" + 
+                  " * blah\n" + 
+                  " */", 
+                  0, IJavaPartitions.JAVA_MULTI_LINE_COMMENT);
+    }
     
-    
-    
-    
+    public void testJavaDoc() throws Exception {
+        tryString("/** blah\n" + 
+                  " * blah\n" + 
+                  " */", 
+                0, IJavaPartitions.JAVA_DOC);
+    }
+
     private void tryString(String string, int start, String expectedContentType) {
         IDocument doc = new Document(string);
         scanner.setRange(doc, start, string.length());
         IToken token = scanner.nextToken();
         assertEquals("Incorrect content type for '" + string + "'", expectedContentType, token.getData());
-        
+
     }
 }

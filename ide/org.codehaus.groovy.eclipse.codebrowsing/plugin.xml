@@ -17,20 +17,9 @@
 
 <plugin>
    <extension
-         point="org.eclipse.core.runtime.adapters">
-      <factory
-            adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
-            class="org.codehaus.groovy.eclipse.codebrowsing.adapter.CodebrowsingEditorAdapterFactory">
-         <adapter
-               type="org.eclipse.jdt.core.IJavaElement">
-         </adapter>
-      </factory>
-   </extension>
-   <extension
          point="org.eclipse.jdt.groovy.core.codeSelectHelper">
       <helper
             class="org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper">
       </helper>
    </extension>
-  
 </plugin>

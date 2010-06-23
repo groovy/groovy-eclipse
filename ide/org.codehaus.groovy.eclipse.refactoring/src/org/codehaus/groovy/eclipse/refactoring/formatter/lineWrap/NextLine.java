@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,7 +18,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap;
 
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyBeautifier;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.text.edits.ReplaceEdit;
@@ -44,12 +43,10 @@ public class NextLine extends CorrectLineWrap {
 	@Override
 	public ReplaceEdit correctLineWrap(int pos, Token token) throws BadLocationException {
 		ReplaceEdit correctEdit = null;
-		if(beautifier.formatter.getPreviousTokenIncludingNLS(pos).getType() != GroovyTokenTypes.NLS) {
-			Token lastNotNLSToken = beautifier.formatter.getPreviousToken(pos);
-			int replaceStart = beautifier.formatter.getOffsetOfTokenEnd(lastNotNLSToken) ;
-			int replaceEnd = beautifier.formatter.getOffsetOfToken(token);
-			correctEdit = new ReplaceEdit(replaceStart,replaceEnd-replaceStart,beautifier.formatter.getNewLine());
-		}
+        Token lastNotNLSToken = beautifier.formatter.getPreviousToken(pos);
+        int replaceStart = beautifier.formatter.getOffsetOfTokenEnd(lastNotNLSToken);
+        int replaceEnd = beautifier.formatter.getOffsetOfToken(token);
+        correctEdit = new ReplaceEdit(replaceStart, replaceEnd - replaceStart, beautifier.formatter.getNewLine());
 		return correctEdit;
 	}
 

@@ -45,7 +45,7 @@ public class JDTMethodNode extends MethodNode implements JDTNodes {
 	}
 
 	@Override
-	public void addAnnotations(List<AnnotationNode> annotations) {
+	public void addAnnotations(List annotations) {
 		throwImmutableException();
 	}
 

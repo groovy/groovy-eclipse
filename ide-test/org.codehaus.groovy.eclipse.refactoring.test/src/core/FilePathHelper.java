@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -32,15 +32,16 @@ import org.eclipse.core.runtime.Platform;
  *
  */
 public class FilePathHelper {
-	
+
     private static String getPluginDirectoryPath() {
         try {
-            URL platformURL = Platform.getBundle("org.codehaus.groovy.eclipse.refactoring.test").getEntry("/src"); //$NON-NLS-1$ //$NON-NLS-2$
-            if (platformURL == null) {
-            	// we are doing a build from an installed bundle, not from a workspace bundle
-            	// so there is no 'src' folder
-            	platformURL = Platform.getBundle("org.codehaus.groovy.eclipse.refactoring.test").getEntry("/"); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+            URL platformURL = Platform.getBundle("org.codehaus.groovy.eclipse.refactoring.test").getEntry("/"); //$NON-NLS-1$ //$NON-NLS-2$
+            // if (platformURL == null) {
+            // // we are doing a build from an installed bundle, not from a
+            // workspace bundle
+            // // so there is no 'src' folder
+            //            	platformURL = Platform.getBundle("org.codehaus.groovy.eclipse.refactoring.test").getEntry("/"); //$NON-NLS-1$ //$NON-NLS-2$
+            // }
             return new File(FileLocator.toFileURL(platformURL).getFile()).getAbsolutePath();
         } catch (IOException e) {
             e.printStackTrace();
@@ -48,14 +49,14 @@ public class FilePathHelper {
         return null;
     }
 
-	
+
 	public static String getPathToTestFiles() {
 		final String systemSeparator = String.valueOf(IPath.SEPARATOR);
-		String folders = "/tests/TestCodeFiles/";
+        String folders = "/resources";
 		folders = folders.replaceAll("/", systemSeparator);
-		
+
 		return getPluginDirectoryPath() + folders;
-		
+
 	}
-	
+
 }

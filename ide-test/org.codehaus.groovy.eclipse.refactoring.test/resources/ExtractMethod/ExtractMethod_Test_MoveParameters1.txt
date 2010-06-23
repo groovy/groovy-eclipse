@@ -1,0 +1,31 @@
+###prop
+selectionType=points
+startLine=4
+startColumn=1
+endLine=4
+endColumn=31
+newMethodName=m2
+modifier=private
+moveVariable=c-1
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class closureTest {
+    def m1(){
+        def a, b, c, d
+        println(a + b + c + d)
+    }
+}
+###exp
+class closureTest {
+    def m1(){
+        def a, b, c, d
+        m2(a, c, b, d)
+    }
+    
+    private m2(a, c, b, d) {
+        println(a + b + c + d)
+    }
+}
+###end

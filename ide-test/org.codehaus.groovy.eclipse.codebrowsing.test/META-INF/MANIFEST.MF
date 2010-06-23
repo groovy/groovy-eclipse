@@ -11,7 +11,7 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.4.0",
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.0.2",
  org.eclipse.jdt.core;bundle-version="3.5.0",
  org.eclipse.jdt.groovy.core;bundle-version="2.0.2",
- org.junit,
+ org.junit;bundle-version="3.8.2",
  org.codehaus.groovy;bundle-version="1.6.6",
  org.codehaus.groovy.eclipse;bundle-version="2.0.2"
 Export-Package: org.codehaus.groovy.eclipse.codebrowsing.tests

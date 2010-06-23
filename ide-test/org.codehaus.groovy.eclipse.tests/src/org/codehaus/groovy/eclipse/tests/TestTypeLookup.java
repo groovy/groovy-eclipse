@@ -3,6 +3,7 @@ package org.codehaus.groovy.eclipse.tests;
 import javax.swing.text.html.HTML;
 
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -23,7 +24,8 @@ public class TestTypeLookup implements ITypeLookup {
 
     public TypeLookupResult lookupType(Expression node, VariableScope scope,
             ClassNode objectExpressionType) {
-        return new TypeLookupResult(new ClassNode(HTML.class), VariableScope.VOID_CLASS_NODE, VariableScope.STRING_CLASS_NODE.getMethod("toString", new Parameter[0]), TypeConfidence.LOOSELY_INFERRED, scope);
+        return new TypeLookupResult(ClassHelper.make(HTML.class), VariableScope.VOID_CLASS_NODE, VariableScope.STRING_CLASS_NODE
+                .getMethod("toString", new Parameter[0]), TypeConfidence.LOOSELY_INFERRED, scope);
     }
 
     public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {

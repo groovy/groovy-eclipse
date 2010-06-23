@@ -1,0 +1,26 @@
+###prop
+selectionType=points
+startLine=3
+startColumn=3
+endLine=3
+endColumn=13
+newMethodName=myMethod
+modifier=def
+indentation=tab
+###src
+def extract() {
+	4.times {
+		println it
+	}
+}
+###exp
+def extract() {
+	4.times {
+		myMethod(it)
+	}
+}
+
+def myMethod(it) {
+	println it
+}
+###end

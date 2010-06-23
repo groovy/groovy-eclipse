@@ -1,5 +1,0 @@
-###src
-def newList = []
-###exp
-def newList = []
-###end

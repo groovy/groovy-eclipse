@@ -42,9 +42,6 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
         filteredList = computeFilteredList();
     }
 	
-	/**
-     * @return
-     */
     private String[] computeFilteredList() {
         String filter = preferenceStore.getString(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST);
         if (filter != null) {
@@ -54,6 +51,7 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
         }
     }
 
+    @Override
     protected void retrieveLabel(ILabelUpdate update) throws CoreException {
 	    super.retrieveLabel(update);
 		if (isEnabled && !update.isCanceled()) {

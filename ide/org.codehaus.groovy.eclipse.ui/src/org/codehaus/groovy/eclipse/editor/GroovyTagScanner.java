@@ -32,7 +32,6 @@ import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.IWordDetector;
 import org.eclipse.jface.text.rules.NumberRule;
-import org.eclipse.jface.text.rules.SingleLineRule;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
 import org.eclipse.jface.text.rules.WordRule;
@@ -54,8 +53,8 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 		"short",
 		"void"
 	};
-	private static String[] keywords = 
-	{   
+	private static String[] keywords =
+	{
 		"abstract",
 		"break",
 		"case",
@@ -106,7 +105,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 		"assert",
 		"in",
 	};
-	
+
 	private static String[] gjdkWords = {
 		"abs",
 		"any",
@@ -184,15 +183,15 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 		"write",
 		"writeLine",
 	};
-	
-	
+
+
 	public static Set<String> gjdkSet = new HashSet<String>();
 	static {
 	    for (String gjdk : gjdkWords) {
             gjdkSet.add(gjdk);
         }
 	}
-	
+
 	private final IColorManager manager;
 	private final List<IRule> additionalRules;
 	private final List<String> additionalGroovyKeywords;
@@ -201,19 +200,21 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 	/**
 	 * @deprecated
 	 */
-	public GroovyTagScanner(IColorManager manager) {
+	@Deprecated
+    public GroovyTagScanner(IColorManager manager) {
 	    this(manager, null, null, null);
 	}
-	
-	
+
+
 	/**
 	 * @param manager the color manager
 	 * @param additionalRules Additional scanner rules for sub-types to add new kinds of partitioning
 	 * @param additionalGroovyKeywords Additional keywords for sub-types to add new kinds of syntax highlighting
-     * @deprecated use the syntaxHighlightingExtender extension point instead.  This gets all of the additional keyword 
+     * @deprecated use the syntaxHighlightingExtender extension point instead.  This gets all of the additional keyword
      * highlighting into editors of files in a project with a particular nature.
 	 */
-	public GroovyTagScanner(IColorManager manager, List<IRule> additionalRules, List<String> additionalGroovyKeywords) {
+	@Deprecated
+    public GroovyTagScanner(IColorManager manager, List<IRule> additionalRules, List<String> additionalGroovyKeywords) {
 	    this(manager, additionalRules, additionalGroovyKeywords, null);
 	}
     /**
@@ -236,9 +237,9 @@ public class GroovyTagScanner extends AbstractJavaScanner {
     protected List<IRule> createRules() {
         return createGroovyRules(manager, additionalRules, additionalGJDKKeywords, additionalGroovyKeywords);
     }
-    
+
     public static List<IRule> createGroovyRules(IColorManager manager, List<IRule> additionalRules, List<String> additionalGJDKKeywords, List<String> additionalGroovyKeywords) {
-        
+
         List<IRule> rules = new ArrayList<IRule>();
 
         // Add generic whitespace rule.
@@ -250,9 +251,9 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         IToken plainCode =
             new Token(
                     new TextAttribute(manager.getColor(rgb)));
-        
+
         WordRule keywordsRule = new WordRule(new IWordDetector(){
-            
+
             public boolean isWordStart(char c) {
                 return c == '@' || Character.isJavaIdentifierStart(c);
             }
@@ -260,8 +261,8 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             public boolean isWordPart(char c) {
                 return Character.isJavaIdentifierPart(c);
             }
-        
-        },plainCode); 
+
+        },plainCode);
         // add gjdk to the java keyword rule
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED)) {
             RGB gjdkRGB = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
@@ -276,8 +277,8 @@ public class GroovyTagScanner extends AbstractJavaScanner {
                 }
             }
         }
-        
-        
+
+
         if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED)) {
             rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
             IToken token = new Token(new TextAttribute(manager.getColor(rgb), null, SWT.BOLD));
@@ -316,19 +317,24 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             rules.add( new EndOfLineRule("//", token));
             rules.add( new EndOfLineRule("#!", token));
         }
-        
-        if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED)) {
-            rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-            IToken token = new Token(new TextAttribute(manager.getColor(rgb), null, SWT.ITALIC));
-            rules.add( new SingleLineRule("/", "/", token, '\\'));
-        }
-        rules.add(keywordsRule); 
-        
+
+
+        // if
+        // (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED))
+        // {
+        // rgb =
+        // PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
+        // IToken token = new Token(new TextAttribute(manager.getColor(rgb),
+        // null, SWT.ITALIC));
+        // rules.add( new SingleLineRule("/", "/", token, '\\'));
+        // }
+        rules.add(keywordsRule);
+
         // additional rules
         if (additionalRules != null) {
             rules.addAll(additionalRules);
         }
-        
+
         return rules;
     }
 

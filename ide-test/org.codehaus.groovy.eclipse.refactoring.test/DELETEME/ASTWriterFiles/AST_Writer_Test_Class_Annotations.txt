@@ -1,9 +1,0 @@
-###src
-@Deprecated
-class HalloWelt {
-}
-###exp
-@Deprecated
-class HalloWelt {
-}
-###end

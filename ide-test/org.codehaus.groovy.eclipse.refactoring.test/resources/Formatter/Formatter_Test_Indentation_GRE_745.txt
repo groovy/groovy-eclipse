@@ -1,0 +1,26 @@
+###prop
+setPreferences=true
+indentation=space
+tabsize=4
+indentendOnly=true
+###src
+public class SwingIt 
+{
+def swingit() {
+swing.actions() {
+    echoAction= swing.action(name: 'Echo back',
+     enabled: bind(source: model, sourceProperty: 'loggedin'),
+              closure: { controller.setEchoBack(it.source.selected) })
+}
+}
+###exp
+public class SwingIt 
+{
+    def swingit() {
+        swing.actions() {
+            echoAction= swing.action(name: 'Echo back',
+                    enabled: bind(source: model, sourceProperty: 'loggedin'),
+                    closure: { controller.setEchoBack(it.source.selected) })
+        }
+    }
+###end

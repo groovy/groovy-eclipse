@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,9 +18,9 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import antlr.Token;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -31,25 +31,30 @@ import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.CorrectLineWra
 import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.NextLine;
 import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.SameLine;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 
+import antlr.Token;
+
 /**
  * @author Mike Klenk mklenk@hsr.ch
  *
  */
 public class GroovyBeautifier {
-	
-	public DefaultGroovyFormatter formatter;
-	private final FormatterPreferences preferences;
+
+    private static final boolean DEBUG_EDITS = false;
+
+    public DefaultGroovyFormatter formatter;
+	private final IFormatterPreferences preferences;
 	private final Set<Token> ignoreToken;
 
 
 	public GroovyBeautifier(DefaultGroovyFormatter defaultGroovyFormatter,
-			FormatterPreferences pref) {
+			IFormatterPreferences pref) {
 		this.formatter = defaultGroovyFormatter;
 		this.preferences = pref;
 		ignoreToken = new HashSet<Token>();
@@ -57,10 +62,10 @@ public class GroovyBeautifier {
 
 	public TextEdit getBeautifiEdits() throws MalformedTreeException, BadLocationException {
 		MultiTextEdit edits = new MultiTextEdit();
-		
-		combineClosures(edits);
+
+        combineClosures(edits);
 		correctBraces(edits);
-	
+
 		return edits;
 	}
 
@@ -85,7 +90,7 @@ public class GroovyBeautifier {
 				ignoreToken.add(formatter.getTokens().get(posCLEnd));
 				continue;
 			}
-			
+
 			if (clExp.getCode() instanceof BlockStatement) {
 				BlockStatement codeblock = (BlockStatement) clExp.getCode();
 				int posParamDelim = posClStart;
@@ -96,58 +101,92 @@ public class GroovyBeautifier {
 				}
 				// combine closure with only one statments with less than 5 tokens to one line
 				if(codeblock.getStatements().size() == 1 && (posCLEnd - posClStart) < 10) {
-					replaceNLSWithSpace(edits, posParamDelim, posCLEnd);
-					ignoreToken.add(formatter.getTokens().get(posCLEnd));
+                    replaceNLSWithSpace(edits, posParamDelim, posCLEnd);
+                    ignoreToken.add(formatter.getTokens().get(posCLEnd));
 				} else {
-					// check if there is a linebreak after the parameters
-					if(posParamDelim > 0 && formatter.getNextTokenIncludingNLS(posParamDelim).getType() != GroovyTokenTypes.NLS) {
-						addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posParamDelim)), formatter.getNewLine()),edits);
-					} else { 
-						// If there are no parameters check if the first statement is on the next line
-						if(posParamDelim == 0 && formatter.getNextTokenIncludingNLS(posClStart).getType() != GroovyTokenTypes.NLS) {
-							addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posClStart)), formatter.getNewLine()),edits);
-						}
-					}
-				}
+                    // check if there is a linebreak after the parameters
+                    if (posParamDelim > 0 && formatter.getNextTokenIncludingNLS(posParamDelim).getType() != GroovyTokenTypes.NLS) {
+                        addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posParamDelim)), formatter
+                                .getNewLine()), edits);
+                    } else {
+                        // If there are no parameters check if the first
+                        // statement
+                        // is on the next line
+                        if (posParamDelim == 0 && formatter.getNextTokenIncludingNLS(posClStart).getType() != GroovyTokenTypes.NLS) {
+                            addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posClStart)), formatter
+                                    .getNewLine()), edits);
+                        }
+                    }
+                }
 			}
 		}
 	}
 
 	private void replaceNLSWithSpace(MultiTextEdit container, int startPos,
 			int endPos) throws BadLocationException {
-		boolean skipNextNLS = false;
-		for(int p = startPos + 1; p < endPos; p++) {
-			Token token = formatter.getTokens().get(p);
-			if(token.getType() == GroovyTokenTypes.SL_COMMENT) {
-				skipNextNLS = true;
-			}
-			if(token.getType() == GroovyTokenTypes.NLS) {
-				if(skipNextNLS) {
-					skipNextNLS = false;
-				} else {
-					int offset = formatter.getOffsetOfToken(token);
-					int lenght = formatter.getOffsetOfToken(formatter.getNextToken(p)) - offset;	
-					addEdit(new ReplaceEdit(offset,lenght," "), container);
-				}
-			}
+        ReplaceEdit edit = null;
+        Token fromToken = null; // remember first NLS token in a string of NLS
+                                // tokens
+        int p = startPos + 1;
+        while (p < endPos) {
+            Token token = formatter.getTokens().get(p);
+            switch (token.getType()) {
+                case GroovyTokenTypes.NLS:
+                    if (fromToken == null)
+                        fromToken = token;
+                    break;
+                case GroovyTokenTypes.SL_COMMENT:
+                    ++p; // next token will be skipped whether it is a NLS or
+                         // not!
+                default:
+                    if (fromToken != null) {
+                        // replace NLS tokens from fromToken up to current token
+                        replaceFromTo(fromToken, token, " ", container);
+                        fromToken = null;
+                    }
+                    break;
+            }
+            ++p;
 		}
+        // don't forget to replace nls tokens at the end.
+        if (fromToken != null) {
+            Token token = formatter.getTokens().get(p);
+            replaceFromTo(fromToken, token, " ", container);
+        }
 	}
 
-	private void correctBraces(MultiTextEdit edits) throws BadLocationException {
+    /**
+     * Create an edit that replaces text from the start of fromToken to the
+     * start of toToken.
+     * The edit is added to container.
+     *
+     * @param fromToken Where to start replacing text.
+     * @param toToken Where to end replacing text.
+     * @param with The text to replace the original text with.
+     * @param container The container to which the textedit is to be added.
+     * @throws BadLocationException
+     */
+    private void replaceFromTo(Token fromToken, Token toToken, String with, MultiTextEdit container) throws BadLocationException {
+        int startEdit = formatter.getOffsetOfToken(fromToken);
+        int endEdit = formatter.getOffsetOfToken(toToken);
+        addEdit(new ReplaceEdit(startEdit, endEdit - startEdit, with), container);
+    }
+
+    private void correctBraces(MultiTextEdit edits) throws BadLocationException {
 		CorrectLineWrap lCurlyCorrector = null;
 		CorrectLineWrap rCurlyCorrector = null;
-		if(preferences.bracesStart == FormatterPreferences.SAME_LINE)
+		if(preferences.getBracesStart() == FormatterPreferences.SAME_LINE)
 			lCurlyCorrector = new SameLine(this);
-		if(preferences.bracesStart == FormatterPreferences.NEXT_LINE)
+		if(preferences.getBracesStart() == FormatterPreferences.NEXT_LINE)
 			lCurlyCorrector = new NextLine(this);
-		if(preferences.bracesEnd == FormatterPreferences.SAME_LINE)
+		if(preferences.getBracesEnd() == FormatterPreferences.SAME_LINE)
 			rCurlyCorrector = new SameLine(this);
-		if(preferences.bracesEnd == FormatterPreferences.NEXT_LINE)
+		if(preferences.getBracesEnd() == FormatterPreferences.NEXT_LINE)
 			rCurlyCorrector = new NextLine(this);
-		
+
 		assert lCurlyCorrector != null;
 		assert rCurlyCorrector != null;
-		
+
 		Token token;
 		boolean skipNextNLS = false;
 		for (int i = 0; i < formatter.getTokens().size(); i++) {
@@ -172,10 +211,33 @@ public class GroovyBeautifier {
 			}
 		}
 	}
-	
+
 	private void addEdit(TextEdit edit,TextEdit container) {
 		if(edit != null && edit.getOffset() >= formatter.formatOffset &&
 				edit.getOffset() + edit.getLength() <= formatter.formatOffset + formatter.formatLength) {
+            if (DEBUG_EDITS) {
+                // print out where this edit is taking place
+                try {
+                    IDocument doc = formatter.getProgressDocument();
+                    System.out.println(">>> edit: " + edit);
+                    int startLine = doc.getLineOfOffset(edit.getOffset());
+                    int endLine = doc.getLineOfOffset(edit.getOffset() + edit.getLength());
+                    for (int line = startLine - 1; line < endLine + 1; line++) {
+                        if (line >= 0 && line < doc.getNumberOfLines()) {
+                            for (int i = doc.getLineOffset(line); i < doc.getLineOffset(line) + doc.getLineLength(line); i++) {
+                                if (i == edit.getOffset())
+                                    System.out.print("|>");
+                                if (i == edit.getOffset() + edit.getLength())
+                                    System.out.print("<|");
+                                System.out.print(doc.getChar(i));
+                            }
+                        }
+                    }
+                    System.out.println("<<< edit: " + edit);
+                } catch (BadLocationException e) {
+                    e.printStackTrace();
+                }
+            } // Debug -- end
 			container.addChild(edit);
 		}
 	}

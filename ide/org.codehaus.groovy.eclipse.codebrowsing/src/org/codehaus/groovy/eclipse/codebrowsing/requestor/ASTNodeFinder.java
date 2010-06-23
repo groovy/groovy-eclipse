@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -56,21 +57,25 @@ import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 public class ASTNodeFinder extends ClassCodeVisitorSupport {
-    
+
     protected ASTNode nodeFound;
     private Region r;
-    
+
     private boolean inGString = false;
-    
+
     public ASTNodeFinder(Region r) {
         this.r = r;
+    }
+
+    public Region getRegion() {
+        return r;
     }
 
     @Override
     protected SourceUnit getSourceUnit() {
         return null;
     }
-    
+
     @Override
     public void visitReturnStatement(ReturnStatement ret) {
         // special case: AnnotationConstantExpressions do not visit their type.
@@ -79,7 +84,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (ret.getExpression() instanceof AnnotationConstantExpression) {
             check(((AnnotationConstantExpression) ret.getExpression()).getType());
         }
-       
+
         super.visitReturnStatement(ret);
     }
 
@@ -93,19 +98,19 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         check(expression);
         super.visitVariableExpression(expression);
     }
-    
+
     @Override
     public void visitFieldExpression(FieldExpression expression) {
         check(expression);
         super.visitFieldExpression(expression);
     }
-    
+
     @Override
     public void visitClassExpression(ClassExpression expression) {
         check(expression);
         super.visitClassExpression(expression);
     }
-    
+
     @Override
     public void visitClosureExpression(ClosureExpression expression) {
         checkParameters(expression.getParameters());
@@ -128,19 +133,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             }
             checkParameters(node.getParameters());
         }
-        
-        super.visitConstructorOrMethod(node, isConstructor);
-        if (!isRunMethod(node)) {
-            check(node);
-        }
-    }
 
-    private boolean isRunMethod(MethodNode node) {
-        if (node.getName().equals("run") && node.getParameters().length == 0) {
-            ClassNode declaring = node.getDeclaringClass();
-            return (node.getStart() == declaring.getStart() && node.getEnd() == declaring.getEnd());
-        }
-        return false;
+        super.visitConstructorOrMethod(node, isConstructor);
+
+        // maybe selecting the method name itself
+        checkNameRange(node);
     }
 
     /**
@@ -166,7 +163,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
            check(p);
         }
     }
-    
+
     @Override
     public void visitField(FieldNode node) {
         if (node.getName().contains("$")) {
@@ -175,21 +172,22 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         }
         check(node.getType());
         super.visitField(node);
-        check(node);
+        // maybe selecting the field name itself
+        checkNameRange(node);
     }
-    
+
     @Override
     public void visitCastExpression(CastExpression node) {
         check(node.getType());
         super.visitCastExpression(node);
     }
-    
+
     @Override
     public void visitConstantExpression(ConstantExpression expression) {
         check(expression);
         super.visitConstantExpression(expression);
     }
-    
+
     @Override
     public void visitDeclarationExpression(DeclarationExpression expression) {
         // DeclarationExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
@@ -200,14 +198,14 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         check(expression.getLeftExpression().getType());
         super.visitDeclarationExpression(expression);
     }
-    
+
     @Override
     public void visitConstructorCallExpression(
             ConstructorCallExpression call) {
         check(call.getType());
         super.visitConstructorCallExpression(call);
     }
-    
+
     @Override
     public void visitCatchStatement(CatchStatement statement) {
         checkParameter(statement.getVariable());
@@ -220,12 +218,13 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         super.visitForLoop(forLoop);
     }
 
+    @Override
     public void visitArrayExpression(ArrayExpression expression) {
         ClassNode arrayClass = expression.getElementType();
         if (arrayClass != arrayClass.redirect()) {
             check(arrayClass);
         } else {
-            // this is a synthetic ArrayExpression used for when 
+            // this is a synthetic ArrayExpression used for when
             // referencing enum fields
         }
         super.visitArrayExpression(expression);
@@ -241,10 +240,10 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     	if(call.getOwnerType().getNameEnd() == 0) {
     	    check(call.getOwnerType());
     	}
-    	
-    	
+
+
     	super.visitStaticMethodCallExpression(call);
-    	
+
     	// the method itself is not an expression, but only a string
         // so this check call will test for open declaration on the method
         check(call);
@@ -253,17 +252,18 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     @Override
     public void visitClass(ClassNode node) {
         // special case...could be selecting the class name itself
-        if (node.getNameEnd() > 0 && node.getNameStart() <= r.getOffset() && node.getNameEnd()+1 >= r.getOffset()+r.getLength()) {
-            nodeFound = node;
-            throw new VisitCompleteException();
-        }
-        
-        if (node.getUnresolvedSuperClass() != null) {
-            check(node.getUnresolvedSuperClass());  // use unresolved to maintain source locations 
+        checkNameRange(node);
+
+        ClassNode unresolvedSuperClass = node.getUnresolvedSuperClass();
+        if (unresolvedSuperClass != null && unresolvedSuperClass.getEnd() > 0) {
+            check(unresolvedSuperClass); // use unresolved to maintain source
+                                         // locations
         }
         if (node.getInterfaces() != null) {
             for (ClassNode inter : node.getInterfaces()) {
-                check(inter);
+                if (inter.getEnd() > 0) {
+                    check(inter);
+                }
             }
         }
         if (node.getObjectInitializerStatements() != null) {
@@ -271,12 +271,12 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                 element.visit(this);
             }
         }
-        
+
         // visit inner classes
         // getInnerClasses() does not exist in the 1.6 stream, so must access reflectively
         Iterator<ClassNode> innerClasses;
         try {
-            innerClasses = (Iterator<ClassNode>) 
+            innerClasses = (Iterator<ClassNode>)
                     ReflectionUtils.throwableExecutePrivateMethod(ClassNode.class, "getInnerClasses", new Class<?>[0], node, new Object[0]);
         } catch (Exception e) {
             // can ignore.
@@ -286,7 +286,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             while (innerClasses.hasNext()) {
                 ClassNode inner = innerClasses.next();
                 // do not look into closure classes.  A closure class
-                // looks like ParentClass$_name_closure#, where 
+                // looks like ParentClass$_name_closure#, where
                 // ParentClass is the name of the containing class.
                 // name is a name for the closure, and # is a number
                 if (!inner.isSynthetic() || inner instanceof GeneratedClosure) {
@@ -294,19 +294,34 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                 }
             }
         }
-        
-        
+
         // visit <clinit> body because this is where static field initializers are placed
-        MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
-        if (clinit != null && clinit.getCode() instanceof BlockStatement) {
-            for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {
-                element.visit(this);
+        // However, there is a problem in that Constants are defined here as
+        // well.
+        // If a match is found here, keep it for later because there may be a
+        // more appropriate
+        // match in the class body
+        VisitCompleteException candidate = null;
+        try {
+            MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
+            if (clinit != null && clinit.getCode() instanceof BlockStatement) {
+                for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {
+                    element.visit(this);
+                }
             }
+        } catch (VisitCompleteException e) {
+            candidate = e;
         }
         visitAnnotations(node);
         node.visitContents(this);
+
+        // if we have gotten here, then we have not found a more appropriate
+        // candidate
+        if (candidate != null) {
+            throw candidate;
+        }
     }
-    
+
     /**
      * Super implementation doesn't visit the annotation type itself
      */
@@ -317,9 +332,9 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         for (AnnotationNode an : annotations) {
             // skip built-in properties
             if (an.isBuiltIn()) continue;
-            
+
             check(an.getClassNode());
-            
+
             for (Map.Entry<String, Expression> member : (Iterable<Map.Entry<String, Expression>>)an.getMembers().entrySet()) {
                 Expression value = member.getValue();
                 if (value instanceof AnnotationConstantExpression) {
@@ -329,7 +344,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             }
         }
     }
-    
+
     @Override
     public void visitGStringExpression(GStringExpression expression) {
         inGString = true;
@@ -337,9 +352,29 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         inGString = false;
     }
 
+    // method does not exist in 1.6 stream
+    // @Override
+    public void visitPackage(PackageNode node) {
+        visitAnnotations(node);
+        if (node != null) {
+            check(node);
+        }
+    }
+
+    // method does not exist in 1.6 stream
+    // @Override
+    public void visitImports(ModuleNode module) {
+        for (ImportNode importNode : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
+            if (importNode.getType() != null) {
+                check(importNode.getType());
+            }
+        }
+    }
 
     /**
-     * @param node
+     * Check if the body of the node covers the selection
+     *
+     * @throw {@link VisitCompleteException} if a match is found
      */
     protected void check(ASTNode node) {
         if (doTest(node)) {
@@ -353,7 +388,24 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     }
 
     /**
-     * forces the checking of generics for class nodes 
+     * Check if the name of the node covers the selection
+     *
+     * @throw {@link VisitCompleteException} if a match is found
+     */
+    protected void checkNameRange(AnnotatedNode node) {
+        if (doNameRangeTest(node)) {
+            nodeFound = node;
+            inGString = false;
+            throw new VisitCompleteException();
+        }
+        if (node instanceof ClassNode) {
+            checkGenerics((ClassNode) node);
+        }
+    }
+
+    /**
+     * forces the checking of generics for class nodes
+     *
      * @param node
      */
     private void checkGenerics(ClassNode node) {
@@ -361,7 +413,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             for (GenericsType gen : node.getGenericsTypes()) {
                 if (gen.getLowerBound() != null) {
                     check(gen.getLowerBound());
-                } 
+                }
                 if (gen.getUpperBounds() != null) {
                     for (ClassNode upper : gen.getUpperBounds()) {
                         // handle enums where the upper bound is the same as the type
@@ -378,30 +430,39 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     }
 
     /**
-     * @param node
-     * @return
+     * Return true if the visit should be ended and the node is found.
+     *
+     * @param node node to compare against the interesting region
+     * @return true iff this node covers the interesting region
      */
     protected boolean doTest(ASTNode node) {
         if (inGString && node instanceof VariableExpression) {
-            // variable expression start locations include the '$' in the groovy code,
-            // but not in the java model, so subtract 1 from the starting node
-            return (node.getStart()-1) <= r.getOffset() && node.getEnd() >= r.getOffset()+r.getLength();
+            return r.regionIsGStringCoveredByNode(node);
         } else {
-            return node.getStart() <= r.getOffset() && node.getEnd() >= r.getOffset()+r.getLength();
+            return r.regionIsCoveredByNode(node);
         }
     }
 
     /**
-     * @param module
-     * @return
+     * Return true if the visit should be ended and the node is found.
+     * Tests the name range of the node (assumes that this is a
+     * declaration node).
+     *
+     * @param node node to compare against the interesting region
+     * @return true iff this node covers the interesting region
      */
+    protected boolean doNameRangeTest(AnnotatedNode node) {
+        return r.regionIsCoveredByNameRange(node);
+    }
+
     public ASTNode doVisit(ModuleNode module) {
         try {
-            for (ImportNode importNode : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
-                if (importNode.getType() != null) {
-                    check(importNode.getType());
-                }
+            PackageNode pack = module.getPackage();
+            if (pack != null) {
+                visitPackage(pack);
             }
+
+            visitImports(module);
             for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
                 this.visitClass(clazz);
             }
@@ -409,5 +470,5 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         }
         return nodeFound;
     }
-    
+
 }

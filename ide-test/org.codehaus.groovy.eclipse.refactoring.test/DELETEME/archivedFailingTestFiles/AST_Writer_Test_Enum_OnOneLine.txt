@@ -1,5 +1,0 @@
-###src
-enum colors {red, green, blue}
-###exp
-enum colors {red, green, blue}
-###end

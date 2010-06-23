@@ -122,5 +122,17 @@
                class="org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal.RenameLocalGroovyVariableContribution"
                id="org.codehaus.groovy.eclipse.refactoring.renameLocal">
          </contribution>
+         <contribution
+               class="org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyConstantRefactoringContribution"
+               id="org.codehaus.groovy.eclipse.refactoring.extractConstant">
+         </contribution>
+         <contribution
+               class="org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyLocalRefactoringContribution"
+               id="org.codehaus.groovy.eclipse.refactoring.extractLocal">
+         </contribution>
+         <contribution
+               class="org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoringContribution"
+               id="org.codehaus.groovy.eclipse.refactoring.extractMethod">
+         </contribution>
       </extension>
 </plugin>

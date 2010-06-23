@@ -1,3 +1,18 @@
+/*
+ * Copyright 2003-2010 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.editor;
 
 import java.util.ArrayList;
@@ -10,15 +25,20 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory;
 import org.eclipse.jdt.internal.ui.text.java.ContentAssistProcessor;
+import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProcessor;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
+import org.eclipse.jface.text.information.IInformationPresenter;
+import org.eclipse.jface.text.information.IInformationProvider;
+import org.eclipse.jface.text.information.InformationPresenter;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.quickassist.IQuickAssistAssistant;
@@ -35,8 +55,8 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
 //	private ITextDoubleClickStrategy doubleClickStrategy;
 	private GroovyStringScanner stringScanner;
-	
-	
+
+
 	/**
 	 * Single token scanner.
 	 */
@@ -51,7 +71,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 	    this.stringScanner = new GroovyStringScanner(colorManager);
 	    HighlightingExtenderRegistry registry = highlightingExtender();
 	    IProject project = getProject();
-	    GroovyTagScanner tagScanner = new GroovyTagScanner(colorManager, 
+	    GroovyTagScanner tagScanner = new GroovyTagScanner(colorManager,
 	            registry.getAdditionalRulesForProject(project),
 	            registry.getExtraGroovyKeywordsForProject(project),
 	            registry.getExtraGJDKKeywordsForProject(project));
@@ -61,7 +81,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     private HighlightingExtenderRegistry highlightingExtender() {
         return GroovyPlugin.getDefault().getTextTools().getHighlightingExtenderRegistry();
     }
-    
+
     private IProject getProject() {
         ITextEditor editor = getEditor();
         if (editor != null && editor instanceof GroovyEditor) {
@@ -86,7 +106,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         reconciler
             .setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
 
-        
+
         DefaultDamagerRepairer dr = new DefaultDamagerRepairer(getStringScanner());
         reconciler.setDamager(dr,
                 GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
@@ -94,7 +114,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                 GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
         return reconciler;
     }
-    
+
     @Override
     public String[] getConfiguredContentTypes(ISourceViewer sourceViewer) {
         return new String[] {
@@ -107,7 +127,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                 GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS
             };
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
@@ -128,18 +148,39 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                 newCategories.add(category);
             }
         }
-        
-        
+
+
         ReflectionUtils.setPrivateField(ContentAssistProcessor.class, "fCategories", processor, newCategories);
         return assistant;
     }
-    
+
+    @Override
+    public IInformationPresenter getOutlinePresenter(ISourceViewer sourceViewer, boolean doCodeResolve) {
+        IInformationPresenter presenter = super.getOutlinePresenter(sourceViewer, doCodeResolve);
+        if (presenter instanceof InformationPresenter) {
+            IInformationProvider provider = presenter.getInformationProvider(IDocument.DEFAULT_CONTENT_TYPE);
+            ((InformationPresenter) presenter).setInformationProvider(provider, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
+        }
+        return presenter;
+    }
+
     @Override
     public IQuickAssistAssistant getQuickAssistAssistant(
             ISourceViewer sourceViewer) {
         // disable quick assist
         return null;
     }
-    
-    
+
+    @Override
+    public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer, String contentType) {
+        if (GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(contentType))
+            return new IAutoEditStrategy[] { new GroovyMultilineStringAutoEditStrategy() };
+        IAutoEditStrategy[] strats = super.getAutoEditStrategies(sourceViewer, contentType);
+        for (int i = 0; i < strats.length; i++) {
+            if (strats[i] instanceof JavaAutoIndentStrategy) {
+                strats[i] = new GroovyAutoIndentStrategy(contentType, (JavaAutoIndentStrategy) strats[i]);
+            }
+        }
+        return strats;
+    }
 }

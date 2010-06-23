@@ -5,12 +5,14 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.codebrowsing; singleton:=true
 Bundle-Version: 2.0.2.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.codebrowsing.GroovyBrowsingPlugin
 Require-Bundle: org.eclipse.core.runtime.compatibility,
- org.codehaus.groovy.eclipse.core;bundle-version="2.0.2",
+ org.codehaus.groovy.eclipse.core;bundle-version="2.0.2";visibility:=reexport,
  org.eclipse.jdt.core,
  org.eclipse.jdt.groovy.core;bundle-version="1.0.0",
  org.codehaus.groovy;bundle-version="1.6.7"
 Bundle-ActivationPolicy: lazy
 Export-Package: org.codehaus.groovy.eclipse.codebrowsing,
- org.codehaus.groovy.eclipse.codebrowsing.requestor
+ org.codehaus.groovy.eclipse.codebrowsing.fragments,
+ org.codehaus.groovy.eclipse.codebrowsing.requestor,
+ org.codehaus.groovy.eclipse.codebrowsing.selection
 Bundle-Vendor: The Codehaus
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

@@ -83,7 +83,7 @@ public class TestProject {
         javaProject.setRawClasspath(new IClasspathEntry[0], null);
 
         createOutputFolder(binFolder);
-        createSourceFolder();
+        sourceFolder = createSourceFolder();
         addSystemLibraries();
     }
     
@@ -308,6 +308,7 @@ public class TestProject {
         javaProject.setRawClasspath(newEntries, null);
         return root;
     }
+    
     public IPackageFragmentRoot createOtherSourceFolder() throws CoreException {
         return createOtherSourceFolder(null);
     }
@@ -425,4 +426,8 @@ public class TestProject {
         file.create(stream, true, null);
         return file;
     }
+
+	public IPackageFragmentRoot getSourceFolder() {
+		return sourceFolder;
+	}
 }

@@ -19,22 +19,19 @@ import junit.framework.TestCase;
 
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.internal.jobs.JobManager;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IPackageFragment;
 
 /**
  * Base test case for all Groovy eclipse plugin test cases.
- * 
+ *
  * Not used
- * 
+ *
  * @author MelamedZ
  */
 public abstract class EclipseTestCase extends TestCase {
@@ -47,6 +44,7 @@ public abstract class EclipseTestCase extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
+        super.setUp();
         System.out.println("------------------------------");
         System.out.println("Starting: " + getName());
         testProject = new TestProject();
@@ -60,13 +58,13 @@ public abstract class EclipseTestCase extends TestCase {
     public EclipseTestCase() {
         super();
     }
-    
+
     public EclipseTestCase(String name) {
         super(name);
     }
     /**
      * Will test to see if the TestProject instance has Groovy nature.
-     * 
+     *
      * @return Returns true if the project has the Groovy nature.
      * @throws CoreException
      */
@@ -76,18 +74,18 @@ public abstract class EclipseTestCase extends TestCase {
 
     /**
      * Does a full build on files in the test project.
-     * 
+     *
      * @throws Exception
      */
     protected void fullProjectBuild() throws Exception {
         ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, null);
     }
 
-    
+
     protected void waitForIndexes() {
     	SynchronizationUtils.waitForIndexingToComplete();
     }
-    
+
     protected IMarker[] getFailureMarkers() throws CoreException {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         return root.findMarkers("org.codehaus.groovy.eclipse.groovyFailure",

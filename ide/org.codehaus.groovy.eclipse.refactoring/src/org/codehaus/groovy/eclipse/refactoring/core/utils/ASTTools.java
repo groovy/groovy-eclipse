@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -41,7 +42,7 @@ import org.eclipse.text.edits.ReplaceEdit;
 /**
  * Various AST related helpers
  * @author mike klenk
- * 
+ *
  */
 
 public class ASTTools {
@@ -49,17 +50,17 @@ public class ASTTools {
 	public static final int SPACE = 1;
 	public static final int TAB = 2;
 
-	/**
-	 * Returns a selection which includes the whole block statement
-	 * 
-	 * @param block
-	 * @param doc
-	 * @return
-	 */
-	public static TextSelection getPositionOfBlockStatements(
-			BlockStatement block, IDocument doc) {
+    /**
+     * Returns a selection from the start of the first statement
+     * to the end of the last statement in the block statement
+     *
+     * @param block
+     * @param doc
+     * @return
+     */
+    public static Region getPositionOfBlockStatements(BlockStatement block) {
 		int startPosition, endPosition;
-		TextSelection methodStatements = new TextSelection(0, 0);
+        Region methodStatements = new Region(0, 0);
 
 		if (block.getStatements().size() > 0) {
 			// Set relative position of the new statement block
@@ -83,55 +84,26 @@ public class ASTTools {
 			} else {
 				endPosition = lastStmt.getEnd();
 			}
-			methodStatements = new TextSelection(doc, startPosition, endPosition-startPosition);
+            methodStatements = new Region(startPosition, endPosition - startPosition);
 
 		}
 		return methodStatements;
 	}
 
-	/**
-	 * Return a selection which includes e possible leading gap in front of the
-	 * given ast node
-	 * 
-	 * @param node
-	 * @param doc
-	 * @return
-	 */
-	public static TextSelection includeLeedingGap(ASTNode node, IDocument doc) {
-		if (ASTTools.hasValidPosition(node)) {
-			try {
-				String firstLine = doc.get(	doc.getLineOffset(node.getLineNumber() - 1), 
-											doc.getLineLength(node.getLineNumber() - 1));
-				
-				String prefix = firstLine.substring(0, node.getColumnNumber() - 1);
-
-				if (trimLeadingGap(prefix).length() == 0) {
-				    IRegion r = doc.getLineInformation(node.getLineNumber()-1);
-					return new TextSelection(doc, r.getOffset(), r.getLength());
-				}
-			} catch (BadLocationException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return new TextSelection(doc, 0, doc.getLength());
-	}
-
-	/**
-	 * Return true if all positions of an ast node are not -1
-	 * 
-	 * @param node
-	 * @return
-	 */
+    /**
+     * Return true if the source location has been set to a
+     * valid value
+     *
+     * @param node
+     * @return
+     */
 	public static boolean hasValidPosition(ASTNode node) {
-		return (	node.getLineNumber() > 0 && 
-					node.getColumnNumber() > 0 && 
-					node.getLastLineNumber() > 0 && 
-					node.getLastColumnNumber() > 0);
+        return node.getEnd() > 0;
 	}
 
 	/**
 	 * Remove the leading space (tabs/spaces) in front of the first character
-	 * 
+	 *
 	 * @param text
 	 * @return
 	 */
@@ -141,7 +113,7 @@ public class ASTTools {
 
 	/**
 	 * Returns the leading gap in front of the first character
-	 * 
+	 *
 	 * @param text
 	 * @return
 	 */
@@ -152,7 +124,7 @@ public class ASTTools {
 	/**
 	 * Returns the given String with a changed intentation. Existing intentation
 	 * is replaced with space with the given modus.
-	 * 
+	 *
 	 * @param text
 	 * @param intentation
 	 *            given in "Tabs" <0 results in a movement on the left 0 has no
@@ -197,7 +169,7 @@ public class ASTTools {
 
 	/**
 	 * Return the current Intentation of this string measured in "Tabs"
-	 * 
+	 *
 	 * @param line
 	 * @return
 	 */
@@ -225,14 +197,14 @@ public class ASTTools {
 		Document document = new Document();
 		String linebreak = document.getDefaultLineDelimiter();
 		document.set(text);
-		
+
 		try {
 			int lineCount = document.getNumberOfLines();
 			MultiTextEdit multiEdit = new MultiTextEdit();
 			for (int i = 0; i < lineCount; i++) {
 				final String delimiter = document.getLineDelimiter(i);
-				if (	delimiter != null && 
-						delimiter.length() > 0 && 
+				if (	delimiter != null &&
+						delimiter.length() > 0 &&
 						!delimiter.equals(linebreak)) {
 					IRegion region = document.getLineInformation(i);
 					multiEdit.addChild(new ReplaceEdit(region.getOffset()
@@ -245,31 +217,31 @@ public class ASTTools {
 		}
 		return document;
 	}
-	
+
 	public static ModuleNode getASTNodeFromSource(String source) {
 		GroovySnippetParser parser = new GroovySnippetParser();
 		ModuleNode node = parser.parse(source);
 		return node;
 	}
-	
+
 	public static boolean hasMultipleReturnStatements(Statement statement) {
 		List<ReturnStatement> returns = new ArrayList<ReturnStatement>();
 		statement.visit(new FindReturns(returns));
 		return returns.size() > 1;
 	}
-	
+
 	private static class FindReturns extends ASTVisitorDecorator<List<ReturnStatement>> {
 
 		public FindReturns(List<ReturnStatement> container) {
 			super(container);
 		}
-		
+
 		@Override
         public void visitReturnStatement(ReturnStatement statement) {
 			container.add(statement);
 			super.visitReturnStatement(statement);
 		}
-		
+
 	}
 
 	public static String getTextofNode(ASTNode node, IDocument document) {

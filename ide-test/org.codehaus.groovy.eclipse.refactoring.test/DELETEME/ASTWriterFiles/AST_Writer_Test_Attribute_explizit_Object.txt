@@ -1,9 +1,0 @@
-###src
-class HalloWelt {
-    private Object attribute
-}
-###exp
-class HalloWelt {
-    private Object attribute
-}
-###end

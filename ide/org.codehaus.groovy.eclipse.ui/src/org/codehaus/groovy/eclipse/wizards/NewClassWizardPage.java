@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,22 +37,24 @@ import org.eclipse.text.edits.TextEdit;
  * @author MelamedZ
  * @author Thorsten Kamann <thorsten.kamann@googlemail.com>
  */
-public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizardPage {	
-	
+public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizardPage {
+
+	private IStatus fStatus;
+
 	/**
 	 * Creates a new <code>NewClassWizardPage</code>
 	 */
 	public NewClassWizardPage() {
 		super();
-		setTitle("Groovy Class"); 
-		setDescription("Create a new Groovy class"); 
+		setTitle("Groovy Class");
+		setDescription("Create a new Groovy class");
 	}
 
 	@Override
 	protected String getCompilationUnitName(String typeName) {
 	    return typeName + ".groovy";
 	}
-	
+
 	@Override
 	protected void createTypeMembers(IType type, ImportsManager imports,
 	        IProgressMonitor monitor) throws CoreException {
@@ -62,7 +64,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 	        IMethod main = type.getMethod("main", new String[] {"[QString;"} );
 	        if (main != null && main.exists()) {
 	            main.delete(true, monitor);
-	            type.createMethod("static main(args) {\n\n}", null, true, monitor); 
+	            type.createMethod("static main(args) {\n\n}", null, true, monitor);
 	        }
 	    }
 	}
@@ -74,7 +76,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         if (pack == null) {
             return status;
         }
-        
+
         IJavaProject project = pack.getJavaProject();
         try {
             if (!project.getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
@@ -83,7 +85,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         } catch (CoreException e) {
             status.setError("Exception when accessing project natures for " + project.getElementName());
         }
-        
+
         // must not exist as a .groovy file
         if (!isEnclosingTypeSelected()
                 && (status.getSeverity() < IStatus.ERROR)) {
@@ -102,7 +104,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         }
         return status;
 	}
-	
+
 	@Override
 	public void createType(IProgressMonitor monitor) throws CoreException,
 	        InterruptedException {
@@ -132,8 +134,8 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
             monitor.done();
         }
 	}
-	
-	
+
+
    private String getTypeNameWithoutParameters() {
         String typeNameWithParameters= getTypeName();
         int angleBracketOffset= typeNameWithParameters.indexOf('<');
@@ -152,4 +154,16 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
        modifiers &= ~F_PROTECTED;
        return modifiers;
    }
+
+    /**
+     * Retrieve the current status, as last set by updateStatus.
+     */
+    public IStatus getStatus() {
+        return fStatus;
+    }
+
+    @Override
+    protected void updateStatus(IStatus status) {
+        fStatus = status;
+    }
 }

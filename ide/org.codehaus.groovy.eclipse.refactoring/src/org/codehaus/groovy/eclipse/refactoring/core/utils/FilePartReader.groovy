@@ -41,7 +41,7 @@ class FilePartReader {
 	
 	public static String readBackwardsFromCoordinate(IDocument doc, LineColumn coord){
 		//make sure that no one reads from a file with impossible coordinates
-		if(coord.getLine() > 0 && coord.getColumn() > 0) {
+		if(doc != null && coord.getLine() > 0 && coord.getColumn() > 0) {
 			int lineLength = doc.getLineLength(coord.getLine()-1)
 			int offset = doc.getLineOffset(coord.getLine()-1)
 			String line = doc.get(offset, lineLength)
@@ -53,7 +53,7 @@ class FilePartReader {
 	
 	public static String readForwardFromCoordinate(IDocument doc, LineColumn coord){
 		//make sure that no one reads from a file with impossible coordinates
-		if(coord.getLine() > 0 && coord.getColumn() > 0) {
+		if(doc != null && coord.getLine() > 0 && coord.getColumn() > 0) {
 			int lineLength = doc.getLineLength(coord.getLine()-1)
 			int offset = doc.getLineOffset(coord.getLine()-1)
 			String line = doc.get(offset, lineLength)

@@ -1,0 +1,27 @@
+###prop
+selectionType=points
+startLine=3
+startColumn=1
+endLine=4
+endColumn=1
+newMethodName=meth
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+List l = [1,2,3]
+def sum = 0
+sum = l[1]
+print sum
+###exp
+List l = [1,2,3]
+def sum = 0
+sum = meth(sum, l)
+print sum
+
+private List meth(List sum, List l) {
+    sum = l[1]
+    return sum
+}
+###end

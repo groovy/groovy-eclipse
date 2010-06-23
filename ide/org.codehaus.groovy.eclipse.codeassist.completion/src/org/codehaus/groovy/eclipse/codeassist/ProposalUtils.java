@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
@@ -40,11 +41,14 @@ public class ProposalUtils {
 
     private static final ImageDescriptorRegistry registry= JavaPlugin.getImageDescriptorRegistry();
     private static final CompletionProposalLabelProvider labelProvider = new CompletionProposalLabelProvider();
-    
+
     public static char[] createTypeSignature(ClassNode node) {
         return createTypeSignatureStr(node).toCharArray();
     }
     public static String createTypeSignatureStr(ClassNode node) {
+        if (node == null) {
+            node = VariableScope.OBJECT_CLASS_NODE;
+        }
         String name = node.getName();
         if (name.startsWith("[")) {
             return name;
@@ -52,7 +56,7 @@ public class ProposalUtils {
             return Signature.createTypeSignature(name, true);
         }
     }
-    
+
     public static String createUnresolvedTypeSignatureStr(ClassNode node) {
         String name = node.getNameWithoutPackage();
         if (name.startsWith("[")) {
@@ -61,14 +65,14 @@ public class ProposalUtils {
             return Signature.createTypeSignature(name, false);
         }
     }
-    
+
     public static char[] createMethodSignature(MethodNode node) {
         return createMethodSignatureStr(node, 0).toCharArray();
     }
     public static String createMethodSignatureStr(MethodNode node) {
         return createMethodSignatureStr(node, 0);
     }
-    
+
     public static char[] createMethodSignature(MethodNode node, int ignoreParameters) {
         return createMethodSignatureStr(node, ignoreParameters).toCharArray();
     }
@@ -80,7 +84,7 @@ public class ProposalUtils {
         }
         return Signature.createMethodSignature(parameterTypes, returnType);
     }
-    
+
     public static char[] createSimpleTypeName(ClassNode node) {
         String name = node.getName();
         if (name.startsWith("[")) {
@@ -97,15 +101,15 @@ public class ProposalUtils {
             return node.getNameWithoutPackage().toCharArray();
         }
     }
-    
+
     public static Image getImage(CompletionProposal proposal) {
         return registry.get(labelProvider.createImageDescriptor(proposal));
     }
-    
+
     public static StyledString createDisplayString(CompletionProposal proposal) {
         return labelProvider.createStyledLabel(proposal);
     }
-    
+
     /**
      * Match ignoring case and checking camel case.
      * @param prefix
@@ -117,39 +121,39 @@ public class ProposalUtils {
         if (prefix.length() == 0) {
             return true;
         }
-        
+
         // Exclude a bunch right away
         if (prefix.charAt(0) != target.charAt(0)) {
             return false;
         }
-        
+
         if (target.startsWith(prefix)) {
             return true;
         }
-        
+
         String lowerCase = target.toLowerCase();
         if (lowerCase.startsWith(prefix)) {
             return true;
         }
-        
+
         // Test for camel characters in the prefix.
         if (prefix.equals(prefix.toLowerCase())) {
             return false;
         }
-        
+
         String[] prefixParts = toCamelCaseParts(prefix);
         String[] targetParts = toCamelCaseParts(target);
-        
+
         if (prefixParts.length > targetParts.length) {
             return false;
         }
-        
+
         for (int i = 0; i < prefixParts.length; ++i) {
             if (!targetParts[i].startsWith(prefixParts[i])) {
                 return false;
             }
         }
-        
+
         return true;
     }
 

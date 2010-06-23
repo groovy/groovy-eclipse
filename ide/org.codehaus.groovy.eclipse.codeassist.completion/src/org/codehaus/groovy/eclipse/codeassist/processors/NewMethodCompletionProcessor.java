@@ -53,17 +53,17 @@ import org.objectweb.asm.Opcodes;
  *
  */
 public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProcessor {
-    
+
     class GroovyOverrideCompletionProposal extends OverrideCompletionProposal {
-        
+
         public GroovyOverrideCompletionProposal(IJavaProject jproject,
                 ICompilationUnit cu, String methodName, String[] paramTypes,
                 int start, int length, StyledString displayName,
                 String completionProposal) {
             super(jproject, cu, methodName, paramTypes, start, length, displayName,
                     completionProposal);
-            
-            String repl = completionProposal + 
+
+            String repl = completionProposal +
                     " {\n\t\t// TODO Groovy Auto-generated method stub\n" +
                     "\t\t// Only partially implemented. Perform organize imports\n" +
                     "\t\t// to properly import parameter and return types\n\t}";
@@ -71,11 +71,11 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         }
     }
 
-    
+
     public NewMethodCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
-    
+
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         List<MethodNode> unimplementedMethods = getAllUnimplementedMethods(getClassNode());
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
@@ -100,7 +100,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         } catch (CoreException e) {
             GroovyCore.logException("Exception looking for proposal providers in " + context.unit.getElementName(), e);
         }
-        
+
         return proposals;
     }
 
@@ -110,13 +110,13 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
     private ClassNode getClassNode() {
         // if the current completion is inside a script, then the containing code block will be a Block object, not a ClassNode
         // Must get class node in a different way.
-        return getContext().containingCodeBlock instanceof ClassNode ? 
-                (ClassNode) getContext().containingCodeBlock : 
+        return getContext().containingCodeBlock instanceof ClassNode ?
+                (ClassNode) getContext().containingCodeBlock :
                     getScript();
     }
 
     /**
-     * 
+     *
      */
     private ClassNode getScript() {
         ModuleNode module = getContext().unit.getModuleNode();
@@ -130,8 +130,8 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
     private ICompletionProposal createProposal(MethodNode method,
             ContentAssistContext context, IType enclosingType) {
-        int relevance= 5;
-        
+        int relevance = 5000;
+
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.METHOD_DECLARATION, context.completionLocation);
         String methodSignature = createMethodSignatureStr(method);
         proposal.setSignature(methodSignature.toCharArray());
@@ -145,16 +145,19 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         createMethod(method, completion);
         proposal.setCompletion(completion.toString().toCharArray());
         proposal.setDeclarationKey(method.getDeclaringClass().getName().toCharArray());
+        proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionLocation);
         // don't think these are necessary
 //        proposal.setParameterPackageNames(parameterPackageNames);
 //        proposal.setPackageName(method.getReturnType().qualifiedPackageName());
         proposal.setFlags(method.getModifiers());
-        proposal.setRelevance(relevance);
-        
-        OverrideCompletionProposal override = new GroovyOverrideCompletionProposal(context.unit.getJavaProject(), 
-                context.unit, method.getName(), Signature.getParameterTypes(methodSignature), context.completionLocation, 
+
+        OverrideCompletionProposal override = new GroovyOverrideCompletionProposal(context.unit.getJavaProject(),
+                context.unit, method.getName(), Signature.getParameterTypes(methodSignature), context.completionLocation,
                 context.completionExpression.length(), createDisplayString(proposal), String.valueOf(proposal.getCompletion()));
         override.setImage(getImage(proposal));
+        override.setRelevance(relevance);
+        override.setReplacementOffset(context.completionLocation - context.completionExpression.length());
+        override.setReplacementLength(context.completionExpression.length());
         return override;
     }
 
@@ -189,13 +192,13 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         List<MethodNode> allMethods = declaring.getAllDeclaredMethods();
         List<MethodNode> thisClassMethods = declaring.getMethods();
         List<MethodNode> unimplementedMethods = new ArrayList<MethodNode>(allMethods.size()-thisClassMethods.size());
-        
+
         // uggh n^2 loop.  Can be made more efficient by doing declaring.getMethods(allMethodNode.getName())
         for (MethodNode allMethodNode : allMethods) {
-            
+
             if (allMethodNode.getName().startsWith(getContext().completionExpression)) {
                 if (isOverridableMethod(allMethodNode)) {
-            
+
                     boolean found = false;
                     inner:
                     for (MethodNode thisClassMethod : thisClassMethods) {
@@ -229,13 +232,13 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
      */
     private boolean isOverridableMethod(MethodNode methodNode) {
         String name = methodNode.getName();
-        return !name.contains("$") && !name.contains("<") && 
-            !methodNode.isPrivate() && 
-            !methodNode.isStatic() && 
+        return !name.contains("$") && !name.contains("<") &&
+            !methodNode.isPrivate() &&
+            !methodNode.isStatic() &&
             (methodNode.getModifiers() & Opcodes.ACC_FINAL) == 0 ;
     }
-    
-    
+
+
     private void createMethod(MethodNode method, StringBuffer completion) {
         //// Modifiers
         // flush uninteresting modifiers
@@ -312,7 +315,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 //                completion.append("extends");
 //                completion.append(' ');
 //                createType(typeVariable.getUpperBounds()[0], completion);
-//                
+//
 //            }
 //        }
 //        if (typeVariable.get != null && typeVariable.superInterfaces != Binding.NO_SUPERINTERFACES) {

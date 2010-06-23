@@ -1,7 +1,0 @@
-###src
-def map = [a:1, b:2]
-[c:3, *:map]
-###exp
-def map = [a:1, b:2]
-[c:3, *:map]
-###end

@@ -1,5 +1,0 @@
-###src
-Integer[] intArray = new Integer[3]
-###exp
-Integer[] intArray = new Integer[3]
-###end

@@ -1,0 +1,25 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=1
+endLine=2
+endColumn=19
+newMethodName=myExtract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+String second
+def first = second
+print first
+###exp
+String second
+def first = myExtract(second)
+print first
+
+private String myExtract(String second) {
+    def first = second
+    return first
+}
+###end

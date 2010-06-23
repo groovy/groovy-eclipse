@@ -16,10 +16,11 @@
 
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -46,14 +47,14 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Oct 27, 2009
  *
  * This type requestor searches for groovy type content assist proposals in the current
  * scope.  This class is largely copied from {@link CompletionEngine}.  Method
  * names used here are the same as the method names used in the original code
- * Method parts are omitted or commented out when they are not relevant for 
+ * Method parts are omitted or commented out when they are not relevant for
  * or not supported by groovy completion.
  */
 class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
@@ -88,6 +89,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             this.accessibility = accessibility;
         }
 
+        @Override
         public String toString() {
             StringBuffer buffer = new StringBuffer();
             buffer.append('{');
@@ -101,8 +103,8 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return buffer.toString();
         }
     }
-    
-    
+
+
     private final static int CHECK_CANCEL_FREQUENCY = 50;
 
     private int foundTypesCount = 0;
@@ -110,14 +112,15 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private final IProgressMonitor monitor;
 
     private ObjectVector acceptedTypes;
-    private List<char[]> acceptedPackages;
+
+    private Set<String> acceptedPackages;
 
     private boolean importCachesInitialized;
 
     private final int offset;
 
     private final int replaceLength;
-    
+
     private final int actualCompletionPosition;
 
     private char[][][] imports; // list of imports. simple name, qualified
@@ -125,12 +128,12 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     private char[][] onDemandimports; // list of imports. qualified package
                                       // name
-    
+
     private final boolean isImport;
 
     private final JavaContentAssistInvocationContext javaContext;
     private final ModuleNode module;
-    
+
     private final NameLookup nameLookup;
 
     public GroovyProposalTypeSearchRequestor(ContentAssistContext context,
@@ -156,9 +159,9 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     public void acceptPackage(char[] packageName) {
         this.checkCancel();
         if (acceptedPackages == null) {
-            acceptedPackages = new ArrayList<char[]>();
+            acceptedPackages = new HashSet<String>();
         }
-        acceptedPackages.add(packageName);
+        acceptedPackages.add(String.valueOf(packageName));
     }
 
     public void acceptType(char[] packageName, char[] simpleTypeName,
@@ -169,7 +172,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         if ((this.foundTypesCount % CHECK_CANCEL_FREQUENCY) == 0)
             checkCancel();
         this.foundTypesCount++;
-        
+
         // ignore synthetic
         if (CharOperation.contains('$', simpleTypeName)) {
             return;
@@ -203,9 +206,9 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     /**
-     * This method is called after all types have been accepted by 
+     * This method is called after all types have been accepted by
      * this requestor.  Converts each type into an {@link ICompletionProposal}
-     * @return list of all {@link ICompletionProposal}s applicable for this 
+     * @return list of all {@link ICompletionProposal}s applicable for this
      * content assist request.
      */
     List<ICompletionProposal> processAcceptedTypes() {
@@ -358,7 +361,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
         return proposals;
     }
-    
+
     private ICompletionProposal proposeNoImportType(char[] packageName,
             char[] simpleTypeName, int modifiers, int accessibility,
             char[] qualifiedTypeName, char[] fullyQualifiedName,
@@ -369,11 +372,11 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         } else {
             completionName = simpleTypeName;
         }
-        
+
         int relevance = 1;
         relevance += accessibility == IAccessRule.K_ACCESSIBLE ? 5 : 0;
-        relevance += (modifiers & Flags.AccDefault) != 0 ? 0 : 2; 
-        relevance += (modifiers & Flags.AccPrivate) != 0 ? 0 : 3; 
+        relevance += (modifiers & Flags.AccDefault) != 0 ? 0 : 2;
+        relevance += (modifiers & Flags.AccPrivate) != 0 ? 0 : 3;
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition - this.offset);
         proposal.setDeclarationSignature(packageName);
@@ -390,18 +393,18 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         String completionString = new String(completionName);
         JavaTypeCompletionProposal javaCompletionProposal = new JavaTypeCompletionProposal(
                 completionString, null, this.offset, this.replaceLength,
-                ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal), 
+                ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal),
                 5, completionString, javaContext);
-        
+
         return javaCompletionProposal;
     }
-    
-    
+
+
     private ICompletionProposal proposeType(char[] packageName,
             char[] simpleTypeName, int modifiers, int accessibility,
             char[] qualifiedTypeName, char[] fullyQualifiedName,
             boolean isQualified) {
-        return isImport ? 
+        return isImport ?
                 proposeNoImportType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified) :
                 proposeImportableType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified);
     }
@@ -416,11 +419,11 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         } else {
             completionName = simpleTypeName;
         }
-        
+
         int relevance = 1;
         relevance += accessibility == IAccessRule.K_ACCESSIBLE ? 5 : 0;
-        relevance += (modifiers & Flags.AccDefault) != 0 ? 0 : 2; 
-        relevance += (modifiers & Flags.AccPrivate) != 0 ? 0 : 3; 
+        relevance += (modifiers & Flags.AccDefault) != 0 ? 0 : 2;
+        relevance += (modifiers & Flags.AccPrivate) != 0 ? 0 : 3;
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition - this.offset);
         proposal.setDeclarationSignature(packageName);
@@ -434,9 +437,9 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
         proposal.setPackageName(packageName);
-        
+
         LazyGenericTypeProposal javaCompletionProposal = new LazyGenericTypeProposal(proposal, javaContext);
-        
+
         return javaCompletionProposal;
     }
 
@@ -472,12 +475,13 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             i++;
         }
     }
-    
+
     List<ICompletionProposal> processAcceptedPackages() {
         this.checkCancel();
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
         if (acceptedPackages != null && acceptedPackages.size() > 0) {
-            for (char[] packageName : acceptedPackages) {
+            for (String packageNameStr : acceptedPackages) {
+                char[] packageName = packageNameStr.toCharArray();
                 GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, this.actualCompletionPosition);
                 proposal.setDeclarationSignature(packageName);
                 proposal.setPackageName(packageName);
@@ -491,7 +495,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
         return proposals;
     }
-    
+
     protected final GroovyCompletionProposal createProposal(int kind, int completionOffset) {
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, completionOffset);
         proposal.setNameLookup(nameLookup);

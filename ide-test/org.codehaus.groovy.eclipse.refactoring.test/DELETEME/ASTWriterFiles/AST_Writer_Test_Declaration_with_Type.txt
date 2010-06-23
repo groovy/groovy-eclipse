@@ -1,5 +1,0 @@
-###src
-String declaration
-###exp
-String declaration
-###end

@@ -38,8 +38,6 @@ public class FormatterPreferenceInitializer extends AbstractPreferenceInitialize
 		IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();	
 		
 		// Formatter Prefs
-		store.setDefault(PreferenceConstants.GROOVY_FORMATTER_INDENTATION, "tab");
-		store.setDefault(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, 4);
 		store.setDefault(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION, 2);
 
 		store.setDefault(PreferenceConstants.GROOVY_FORMATTER_BRACES_START, "same");

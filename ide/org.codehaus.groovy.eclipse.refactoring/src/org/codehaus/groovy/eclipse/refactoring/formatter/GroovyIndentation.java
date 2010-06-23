@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,30 +18,32 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import antlr.Token;
 import java.util.List;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CaseStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.stmt.SwitchStatement;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 
+import antlr.Token;
+
 /**
  * @author Mike Klenk mklenk@hsr.ch
- * 
+ * @author kdvolder
  */
 public class GroovyIndentation {
 
 	private final DefaultGroovyFormatter formatter;
-	private final FormatterPreferences pref;
+	private final IFormatterPreferences pref;
 
 	private int indentation = 0;
 	private final int[] tempIndentation;
@@ -50,10 +52,10 @@ public class GroovyIndentation {
 
 	TextEdit indentationEdits;
 
-	private final Vector<Token> tokens;
+    private final KlenkDocumentScanner tokens;
 
 	public GroovyIndentation(DefaultGroovyFormatter formatter,
-			FormatterPreferences pref, int indentationLevel) {
+			IFormatterPreferences pref, int indentationLevel) {
 		this.formatter = formatter;
 		tempIndentation = new int[formatter.getProgressDocument().getNumberOfLines()];
 		lineInd = new LineIndentations(formatter.getProgressDocument().getNumberOfLines());
@@ -70,7 +72,7 @@ public class GroovyIndentation {
 
 			if (formatter.isMultilineStatement(tokens.get(0))) {
 				setAdditionalIndentation(tokens.get(0),
-						pref.indentationMultiline, false);
+						pref.getIndentationMultiline(), false);
 				lineInd.setMultilineToken(tokens.get(0).getLine(), tokens.get(0));
 			}
 
@@ -81,7 +83,7 @@ public class GroovyIndentation {
 				int offsetNextToken = formatter.getOffsetOfToken(formatter
 						.getNextTokenIncludingNLS(i));
 
-				
+
 				switch (token.getType()) {
 					case GroovyTokenTypes.LITERAL_if:
 						setAdditionalIndentation(formatter
@@ -128,7 +130,7 @@ public class GroovyIndentation {
 						// check if the next token is a multiline Statement
 						Token nextMultiToken = formatter.getNextTokenIncludingNLS(i);
 						if (formatter.isMultilineStatement(nextMultiToken)) {
-							setAdditionalIndentation(nextMultiToken,pref.indentationMultiline, false);
+							setAdditionalIndentation(nextMultiToken,pref.getIndentationMultiline(), false);
 							lineInd.setMultilineToken(token.getLine(), token);
 						}
 
@@ -140,7 +142,7 @@ public class GroovyIndentation {
 														formatter.getProgressDocument().get(offsetToken,
 																		(offsetNextToken - offsetToken)),
 														indentation)));
-						break;		
+						break;
 				}
 			}
 		} catch (BadLocationException e) {
@@ -168,7 +170,7 @@ public class GroovyIndentation {
 					indentendBlockStatement(switchstmt.getDefaultStatement(),def.getLine());
 				}
 			}
-		}		
+		}
 	}
 
 	private void indentendBlockStatement(Statement stmt, int currentLine) {
@@ -180,10 +182,10 @@ public class GroovyIndentation {
 						tempIndentation[i - 1] += 1;
 					}
 				}
-			}					
+			}
 		}
 	}
-	
+
 	private void addEdit(ReplaceEdit edit) {
 		if(edit != null && edit.getOffset() >= formatter.formatOffset &&
 				edit.getOffset() + edit.getLength() <= formatter.formatOffset + formatter.formatLength) {
@@ -202,24 +204,50 @@ public class GroovyIndentation {
 					r++;
 				}
 				for (; r <= node.getLastLineNumber(); r++) {
-					tempIndentation[r - 1] += i;
-					lineInd.setMultilineIndentation(r, true);
+                        if (isLastClosureArg(r - 1, node))
+                            break;
+                        tempIndentation[r - 1] += i;
+                        lineInd.setMultilineIndentation(r, true);
 				}
 			}
 			}
 		}
 	}
 
-	private void setAdditionalIndentation(Token t) {
+    /**
+     * Tests whether a given line (0-base index) is the start of a
+     * "last closure" argument.
+     *
+     * @param line
+     * @param node The parent node of which this might be a last closure
+     *            argument.
+     */
+    private boolean isLastClosureArg(int line, ASTNode node) {
+        try {
+            Token token = tokens.getTokenFrom(tokens.getDocument().getLineOffset(line));
+            if (token == null)
+                return false;
+            else if ("{".equals(token.getText())) {
+                ASTNode nestedNode = formatter.findCorrespondingNode(token);
+                return node.getEnd() == nestedNode.getEnd();
+            }
+            return false;
+        } catch (Throwable e) {
+            GroovyCore.logException("internal error", e);
+            return false;
+        }
+    }
+
+    private void setAdditionalIndentation(Token t) {
 		setAdditionalIndentation(t, 1, true);
 	}
-	
+
 	public LineIndentations getLineIndentations() {
 		return lineInd;
 	}
 	/**
 	 * Format a multi line Comment
-	 * 
+	 *
 	 * @param string
 	 *            the Coment to format
 	 * @param ind

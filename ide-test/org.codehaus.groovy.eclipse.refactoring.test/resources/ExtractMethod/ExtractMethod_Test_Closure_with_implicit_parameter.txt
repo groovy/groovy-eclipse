@@ -1,0 +1,30 @@
+###prop
+selectionType=points
+startLine=2
+startColumn=1
+endLine=6
+endColumn=1
+newMethodName=called
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+def static Method() {
+    "bla".each {
+        println (it)
+        println (it)
+    }
+}
+###exp
+def static Method() {
+    called()
+}
+
+private static called() {
+    "bla".each {
+        println (it)
+        println (it)
+    }
+}
+###end

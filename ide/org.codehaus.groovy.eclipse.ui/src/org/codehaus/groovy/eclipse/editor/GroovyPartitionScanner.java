@@ -15,10 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import static org.eclipse.jdt.ui.text.IJavaPartitions.JAVA_CHARACTER;
+import static org.eclipse.jdt.ui.text.IJavaPartitions.JAVA_DOC;
+import static org.eclipse.jdt.ui.text.IJavaPartitions.JAVA_MULTI_LINE_COMMENT;
+import static org.eclipse.jdt.ui.text.IJavaPartitions.JAVA_SINGLE_LINE_COMMENT;
+import static org.eclipse.jdt.ui.text.IJavaPartitions.JAVA_STRING;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.eclipse.jdt.ui.text.IJavaPartitions.*;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -69,17 +73,17 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 			return (c == '*' || c == '/');
 		}
 	}
-	
+
 	static class WordPredicateRule extends WordRule implements IPredicateRule {
-		
+
 		private final IToken fSuccessToken;
-		
+
 		public WordPredicateRule(IToken successToken) {
 			super(new EmptyCommentDetector());
 			fSuccessToken= successToken;
 			addWord("/**/", fSuccessToken); //$NON-NLS-1$
 		}
-		
+
 		/*
 		 * @see org.eclipse.jface.text.rules.IPredicateRule#evaluate(ICharacterScanner, boolean)
 		 */
@@ -102,8 +106,8 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 		super();
 
 		List<IRule> rules = createRules(false);
-		
-		
+
+
 		IPredicateRule[] result= new IPredicateRule[rules.size()];
 		rules.toArray(result);
 		setPredicateRules(result);
@@ -116,23 +120,27 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 
         Object objComment;
+        Object objdComment;
         Object objmString;
         Object objsString;
         Object objsComment;
         if (withColor && store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED)) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-            objComment = objmString = objsString = objsComment = new TextAttribute(new Color(null,rgb), null, SWT.ITALIC);
+            objComment = objmString = objsString = objsComment = objdComment = new TextAttribute(new Color(null, rgb), null,
+                    SWT.ITALIC);
         } else {
             objComment = JAVA_MULTI_LINE_COMMENT;
             objmString = GROOVY_MULTILINE_STRINGS;
             objsString = JAVA_STRING;
             objsComment = JAVA_SINGLE_LINE_COMMENT;
+            objdComment = JAVA_DOC;
         }
 
         IToken comment= new Token(objComment);
 		IToken mString = new Token(objmString);
         IToken sString = new Token(objsString);
         IToken sComment= new Token(objsComment);
+        IToken jdoc = new Token(objdComment);
 
 		List<IRule> rules= new ArrayList<IRule>();
 
@@ -150,8 +158,12 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 		// Add special case word rule.
 		rules.add(new WordPredicateRule(comment));
 
-		// Add rules for multi-line comments 
+        // Add rule for JavaDoc
+        rules.add(new MultiLineRule("/**", "*/", jdoc, (char) 0, true)); //$NON-NLS-1$ //$NON-NLS-2$
+
+		// Add rules for multi-line comments
 		rules.add(new MultiLineRule("/*", "*/", comment, (char) 0, true)); //$NON-NLS-1$ //$NON-NLS-2$
+
         return rules;
     }
 }

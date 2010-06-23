@@ -1,0 +1,35 @@
+###prop
+selectionType=points
+startLine=5
+startColumn=13
+endLine=5
+endColumn=27
+newMethodName=m2
+modifier=private
+variableToRename=vari:variNEW
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+def m1(){
+    def vari = "x"
+    [1,2,3].each{
+        it.times(){
+            println (vari)
+        }
+    }
+}
+###exp
+def m1(){
+    def vari = "x"
+    [1,2,3].each{
+        it.times(){
+            m2(vari)
+        }
+    }
+}
+
+private m2(String variNEW) {
+    println (variNEW)
+}
+###end

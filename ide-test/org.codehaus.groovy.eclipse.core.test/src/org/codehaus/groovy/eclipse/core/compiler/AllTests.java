@@ -24,6 +24,7 @@ public class AllTests {
                 + AllTests.class.getPackage().getName());
         // $JUnit-BEGIN$
         suite.addTestSuite(ErrorRecoveryTests.class);
+        suite.addTestSuite(AstPositionTests.class);
         // $JUnit-END$
         return suite;
     }

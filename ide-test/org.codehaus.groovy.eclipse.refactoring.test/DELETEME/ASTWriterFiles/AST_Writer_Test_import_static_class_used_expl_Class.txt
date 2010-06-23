@@ -1,9 +1,0 @@
-###src
-import static java.lang.Math.*
-
-def math = Math.PI
-###exp
-import static java.lang.Math.*
-
-def math = PI
-###end

@@ -1,0 +1,50 @@
+###prop
+setPreferences=true
+bracesStart=next
+###src
+public class Braces {
+public method(){
+if (true) {
+print "true"
+}
+for(;;){
+print "for"
+}
+while(false){
+print "false"
+}
+switch (3){
+case 3:
+print 3}
+"hello".each{
+print it
+}
+}
+}
+###exp
+public class Braces
+{
+	public method()
+	{
+		if (true)
+		{
+			print "true"
+		}
+		for(;;)
+		{
+			print "for"
+		}
+		while(false)
+		{
+			print "false"
+		}
+		switch (3)
+		{
+			case 3:
+				print 3
+		}
+		"hello".each
+		{ print it }
+	}
+}
+###end

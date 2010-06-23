@@ -18,15 +18,22 @@ package org.codehaus.groovy.eclipse.refactoring.test;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.eclipse.codebrowsing.tests.FindAllOccurrencesVisitorTests;
+import org.codehaus.groovy.eclipse.codebrowsing.tests.IsSameExpressionTests;
+import org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractConstantTests;
+import org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractLocalTests;
+import org.codehaus.groovy.eclipse.refactoring.test.extract.StaticExpressionCheckerTests;
+import org.codehaus.groovy.eclipse.refactoring.test.extract.StaticFragmentCheckerTests;
+import org.codehaus.groovy.eclipse.refactoring.test.extractMethod.ExtractMethodTestSuite;
+import org.codehaus.groovy.eclipse.refactoring.test.formatter.FormatterTestSuite;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameFieldTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameLocalTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests;
 
-import formatter.FormatterTestSuite;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Mar 27, 2010
  */
@@ -34,10 +41,23 @@ public class AllRefactoringTests {
     public static Test suite() {
         final TestSuite suite = new TestSuite("Test for "
                 + AllRefactoringTests.class.getPackage().getName());
+
+        // rename
         suite.addTest(RenameTypeTests.suite());
         suite.addTest(RenameMethodTests.suite());
         suite.addTest(RenameFieldTests.suite());
         suite.addTest(RenameLocalTests.suite());
+
+        // extract various
+        suite.addTest(new TestSuite(StaticExpressionCheckerTests.class));
+        suite.addTest(new TestSuite(StaticFragmentCheckerTests.class));
+        suite.addTest(new TestSuite(IsSameExpressionTests.class));
+        suite.addTest(new TestSuite(FindAllOccurrencesVisitorTests.class));
+        suite.addTest(ExtractConstantTests.suite());
+        suite.addTest(ExtractLocalTests.suite());
+        suite.addTest(ExtractMethodTestSuite.suite());
+
+        // formatting and indenting
         suite.addTest(FormatterTestSuite.suite());
         return suite;
     }

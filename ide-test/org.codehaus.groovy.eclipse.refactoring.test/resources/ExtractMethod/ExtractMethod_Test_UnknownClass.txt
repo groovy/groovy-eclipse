@@ -1,0 +1,32 @@
+###prop
+selectionType=points
+startLine=4
+startColumn=5
+endLine=4
+endColumn=26
+newMethodName=m2
+modifier=private
+variableToRename=a:aNEW
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class MyClass{}
+def m1(){
+    def a
+    a = new MyClass(a)
+    a.meth()
+}
+###exp
+class MyClass{}
+def m1(){
+    def a
+    a = m2(a)
+    a.meth()
+}
+
+private MyClass m2(MyClass aNEW) {
+    aNEW = new MyClass(aNEW)
+    return aNEW
+}
+###end

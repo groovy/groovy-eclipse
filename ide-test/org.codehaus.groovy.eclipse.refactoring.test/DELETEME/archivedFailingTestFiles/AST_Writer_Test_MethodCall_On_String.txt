@@ -1,5 +1,0 @@
-###src
-println("aaa".length())
-###exp
-println("aaa".length())
-###end

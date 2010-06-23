@@ -4,6 +4,7 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction.FormatKind;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
+import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -27,16 +28,17 @@ import org.eclipse.text.edits.TextEdit;
  *
  */
 public class GroovyCodeFormatCleanUp extends AbstractCleanUp {
-    
+
     private final FormatKind kind;
     public GroovyCodeFormatCleanUp(FormatKind kind) {
         this.kind = kind;
     }
-    
+
+    @Override
     public RefactoringStatus checkPreConditions(IJavaProject project,
             ICompilationUnit[] compilationUnits, IProgressMonitor monitor)
             throws CoreException {
-        
+
         RefactoringStatus status = new RefactoringStatus();
         try {
             for (ICompilationUnit unit : compilationUnits) {
@@ -46,7 +48,7 @@ public class GroovyCodeFormatCleanUp extends AbstractCleanUp {
                     status.addError("Cannot find module node for compilation unit: " + unit.getElementName());
                 }
             }
-            
+
         } catch (Exception e) {
             GroovyCore.logException("Cannot perform code format.", e);
             status.addFatalError("Cannot perform code format. See error log. " + e.getMessage());
@@ -54,35 +56,32 @@ public class GroovyCodeFormatCleanUp extends AbstractCleanUp {
         return new RefactoringStatus();
     }
 
-    public ICleanUpFix createFix(CleanUpContext context)
-            throws CoreException {
+    @Override
+    public ICleanUpFix createFix(CleanUpContext context) throws CoreException {
         ICompilationUnit unit = context.getCompilationUnit();
         if (unit instanceof GroovyCompilationUnit) {
             GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
-            
+
             char[] contents = gunit.getContents();
             Document doc = new Document(new String(contents));
-            DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(
-                    new TextSelection(0, contents.length), doc, getPreferences(), kind == FormatKind.INDENT_ONLY);
+            DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(new TextSelection(0, contents.length), doc,
+                    new FormatterPreferences(gunit), kind == FormatKind.INDENT_ONLY);
             TextEdit edit = formatter.format();
             return new TextEditFix(edit, gunit, "Formatting groovy file");
         }
         return null;
     }
 
-    private IPreferenceStore getPreferences() {
-        IPreferenceStore preferences = GroovyPlugin.getDefault()
-            .getPreferenceStore();
-        return preferences;
-    }
-
+    @Override
     public CleanUpRequirements getRequirements() {
-        return new CleanUpRequirements(false, false, false, null);        
+        return new CleanUpRequirements(false, false, false, null);
     }
 
+    @Override
     public String[] getStepDescriptions() {
         return new String[] { "Format groovy source code." };
     }
+    @Override
     public void setOptions(CleanUpOptions options) { }
-    
+
 }

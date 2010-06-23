@@ -18,9 +18,6 @@
 <!-- Set customBuildCallbacks=<path/to/this/file> in your build.properties.-->
 <!-- ===================================================================== -->
 
-<!-- Modified by Reto Kleeb, 3. 10. 2007, moved post task to pre task (earliery
-compiling of the groovy files -->
-	
 <project name="Build specific targets and properties" default="noDefault">
 
 	<!-- ===================================================================== -->

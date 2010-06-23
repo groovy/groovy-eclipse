@@ -22,6 +22,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.0.2"
 Bundle-ActivationPolicy: lazy
 Export-Package: org.codehaus.groovy.eclipse.refactoring;uses:="org.eclipse.jface.resource,org.eclipse.ui.plugin,org.osgi.framework",
+ org.codehaus.groovy.eclipse.refactoring.core.extract,
  org.codehaus.groovy.eclipse.refactoring.core.rename,
  org.codehaus.groovy.eclipse.refactoring.core.utils;
   uses:="org.eclipse.jface.text,
@@ -42,6 +43,7 @@ Export-Package: org.codehaus.groovy.eclipse.refactoring;uses:="org.eclipse.jface
    org.eclipse.jface.preference,
    org.eclipse.text.edits,
    antlr,
-   org.codehaus.groovy.ast"
+   org.codehaus.groovy.ast",
+ org.codehaus.groovy.eclipse.refactoring.ui.extract
 Bundle-ClassPath: .
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

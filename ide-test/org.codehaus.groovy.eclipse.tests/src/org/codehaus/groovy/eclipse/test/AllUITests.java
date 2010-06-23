@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,12 @@ import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
 import org.codehaus.groovy.eclipse.test.debug.GroovyLauncherShortcutTests;
 import org.codehaus.groovy.eclipse.test.ui.BracketInserterTests;
 import org.codehaus.groovy.eclipse.test.ui.ErrorLogTest;
+import org.codehaus.groovy.eclipse.test.ui.GroovyAutoIndenterTests;
+import org.codehaus.groovy.eclipse.test.ui.GroovyAutoIndenterTests2;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
 import org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests;
+import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestCaseWizardTest;
+import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTest;
 
 /**
  * Suite needs to be run as eclipse plugin test
@@ -41,6 +45,8 @@ import org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests;
 public class AllUITests {
 	public static Test suite() throws Exception {
 		final TestSuite suite = new TestSuite(AllUITests.class.getName());
+        suite.addTestSuite(GroovyAutoIndenterTests.class);
+        suite.addTestSuite(GroovyAutoIndenterTests2.class);
 		suite.addTestSuite(ErrorLogTest.class);
 		suite.addTestSuite(GroovyLauncherShortcutTests.class);
 		suite.addTestSuite(GroovyNatureActionTestCase.class);
@@ -57,6 +63,8 @@ public class AllUITests {
 		suite.addTestSuite(ConsoleLineTrackerTests.class);
 		suite.addTestSuite(HighlightingExtenderTests.class);
 		suite.addTestSuite(BracketInserterTests.class);
+		suite.addTestSuite(NewGroovyTypeWizardTest.class);
+        suite.addTestSuite(NewGroovyTestCaseWizardTest.class);
 		return suite;
 	}
 }

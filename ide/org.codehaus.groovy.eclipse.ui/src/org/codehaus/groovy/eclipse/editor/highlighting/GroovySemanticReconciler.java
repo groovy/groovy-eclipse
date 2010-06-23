@@ -16,6 +16,11 @@
 
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
+
+import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightedPosition;
+import greclipse.org.eclipse.jdt.internal.ui.javaeditor.Highlighting;
+import greclipse.org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -30,15 +35,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
-import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager;
 import org.eclipse.jdt.internal.ui.text.JavaPresentationReconciler;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
 import org.eclipse.jface.preference.PreferenceConverter;
-import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
@@ -47,215 +49,48 @@ import org.eclipse.ui.IWorkbenchPartSite;
 
 /**
  * Simplest reconciling that we can do
- * 
+ *
  * @author Andrew Eisenberg
  * @created Oct 13, 2009
  *
  */
 public class GroovySemanticReconciler implements IJavaReconcilingListener {
-    
-    /**
-     * Borrowed from {@link SemanticHighlightingManager#Highlighting}
-     * Highlighting.
-     */
-    static class HighlightingStyle {
-
-        /** Text attribute */
-        private TextAttribute fTextAttribute;
-        /** Enabled state */
-        private boolean fIsEnabled;
-
-        /**
-         * Initialize with the given text attribute.
-         * @param textAttribute The text attribute
-         * @param isEnabled the enabled state
-         */
-        public HighlightingStyle(TextAttribute textAttribute, boolean isEnabled) {
-            setTextAttribute(textAttribute);
-            setEnabled(isEnabled);
-        }
-
-        /**
-         * @return Returns the text attribute.
-         */
-        public TextAttribute getTextAttribute() {
-            return fTextAttribute;
-        }
-
-        /**
-         * @param textAttribute The background to set.
-         */
-        public void setTextAttribute(TextAttribute textAttribute) {
-            fTextAttribute= textAttribute;
-        }
-
-        /**
-         * @return the enabled state
-         */
-        public boolean isEnabled() {
-            return fIsEnabled;
-        }
-
-        /**
-         * @param isEnabled the new enabled state
-         */
-        public void setEnabled(boolean isEnabled) {
-            fIsEnabled= isEnabled;
-        }
-    }
-
-    /**
-     * Borrowed from {@link SemanticHighlightingManager#HighlightedPosition}
-     * Highlighted Positions.
-     */
-    static class HighlightedPosition extends Position {
-
-        /** Highlighting of the position */
-        private HighlightingStyle fStyle;
-
-        /** Lock object */
-        private Object fLock;
-
-        /**
-         * Initialize the styled positions with the given offset, length and foreground color.
-         *
-         * @param offset The position offset
-         * @param length The position length
-         * @param highlighting The position's highlighting
-         * @param lock The lock object
-         */
-        public HighlightedPosition(int offset, int length, HighlightingStyle highlighting, Object lock) {
-            super(offset, length);
-            fStyle= highlighting;
-            fLock= lock;
-        }
-
-        /**
-         * @return Returns a corresponding style range.
-         */
-        public StyleRange createStyleRange() {
-            int len= 0;
-            if (fStyle.isEnabled())
-                len= getLength();
-
-            TextAttribute textAttribute= fStyle.getTextAttribute();
-            int style= textAttribute.getStyle();
-            int fontStyle= style & (SWT.ITALIC | SWT.BOLD | SWT.NORMAL);
-            StyleRange styleRange= new StyleRange(getOffset(), len, textAttribute.getForeground(), textAttribute.getBackground(), fontStyle);
-            styleRange.strikeout= (style & TextAttribute.STRIKETHROUGH) != 0;
-            styleRange.underline= (style & TextAttribute.UNDERLINE) != 0;
-
-            return styleRange;
-        }
-
-        /**
-         * Uses reference equality for the highlighting.
-         *
-         * @param off The offset
-         * @param len The length
-         * @param highlighting The highlighting
-         * @return <code>true</code> iff the given offset, length and highlighting are equal to the internal ones.
-         */
-        public boolean isEqual(int off, int len, HighlightingStyle highlighting) {
-            synchronized (fLock) {
-                return !isDeleted() && getOffset() == off && getLength() == len && fStyle == highlighting;
-            }
-        }
-
-        /**
-         * Is this position contained in the given range (inclusive)? Synchronizes on position updater.
-         *
-         * @param off The range offset
-         * @param len The range length
-         * @return <code>true</code> iff this position is not delete and contained in the given range.
-         */
-        public boolean isContained(int off, int len) {
-            synchronized (fLock) {
-                return !isDeleted() && off <= getOffset() && off + len >= getOffset() + getLength();
-            }
-        }
-
-        public void update(int off, int len) {
-            synchronized (fLock) {
-                super.setOffset(off);
-                super.setLength(len);
-            }
-        }
-
-        /*
-         * @see org.eclipse.jface.text.Position#setLength(int)
-         */
-        public void setLength(int length) {
-            synchronized (fLock) {
-                super.setLength(length);
-            }
-        }
-
-        /*
-         * @see org.eclipse.jface.text.Position#setOffset(int)
-         */
-        public void setOffset(int offset) {
-            synchronized (fLock) {
-                super.setOffset(offset);
-            }
-        }
-
-        /*
-         * @see org.eclipse.jface.text.Position#delete()
-         */
-        public void delete() {
-            synchronized (fLock) {
-                super.delete();
-            }
-        }
-
-        /*
-         * @see org.eclipse.jface.text.Position#undelete()
-         */
-        public void undelete() {
-            synchronized (fLock) {
-                super.undelete();
-            }
-        }
-
-        /**
-         * @return Returns the highlighting.
-         */
-        public HighlightingStyle getHighlighting() {
-            return fStyle;
-        }
-    }
-
 
     private final Object fReconcileLock= new Object();
     private GroovyEditor editor;
-    
+
     // make these configurable
-    private HighlightingStyle undefinedRefHighlighting;
-    
+    private Highlighting undefinedRefHighlighting;
+
+    private Highlighting regexRefHighlighting;
+
     private SemanticHighlightingPresenter presenter;
-    
+
     /**
      * <code>true</code> if any thread is executing
      * <code>reconcile</code>, <code>false</code> otherwise.
      */
     private boolean fIsReconciling= false;
 
-    
-    public GroovySemanticReconciler() { 
-        RGB colorRGB = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
+
+    public GroovySemanticReconciler() {
+        RGB rgbDefault = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
                 PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
+        RGB rgbString = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
         GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
-        Color color = colorManager.getColor(colorRGB);
-        undefinedRefHighlighting = new HighlightingStyle(new TextAttribute(color, null, TextAttribute.UNDERLINE), true);
+        Color colorDefault = colorManager.getColor(rgbDefault);
+        Color colorRegex = colorManager.getColor(rgbString);
+        undefinedRefHighlighting = new Highlighting(new TextAttribute(colorDefault, null, TextAttribute.UNDERLINE), true);
+        regexRefHighlighting = new Highlighting(new TextAttribute(colorRegex, null, SWT.ITALIC), true);
     }
-    
+
     public void install(GroovyEditor editor, JavaSourceViewer viewer) {
         this.editor = editor;
         this.presenter = new SemanticHighlightingPresenter();
         presenter.install(viewer, (JavaPresentationReconciler) editor.createJavaSourceViewerConfiguration().getPresentationReconciler(viewer));
     }
-    
+
     public void uninstall() {
         presenter.uninstall();
         presenter = null;
@@ -267,7 +102,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     @SuppressWarnings("unchecked")
     public void reconciled(CompilationUnit ast, boolean forced,
             IProgressMonitor progressMonitor) {
-        
+
         // ensure that only one thread can enter here at a time
         synchronized (fReconcileLock) {
             if (fIsReconciling)
@@ -278,36 +113,36 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
         try {
             progressMonitor.beginTask("Groovy semantic highlighting", 100);
-            
+
             GroovyCompilationUnit unit = editor.getGroovyCompilationUnit();
             if (unit != null) {
                 presenter.setCanceled(progressMonitor.isCanceled());
                 GatherSemanticReferences finder = new GatherSemanticReferences(unit);
-                List<Position> unknownReferences = finder.findStaticlyUnkownReferences();
+                List<HighlightedTypedPosition> semanticReferences = finder.findSemanticHighlightingReferences();
                 progressMonitor.worked(50);
 
                 List<HighlightedPosition> newPositions = new LinkedList<HighlightedPosition>();
                 List<HighlightedPosition> removedPositions = new LinkedList<HighlightedPosition>();
-                
+
                 for (HighlightedPosition oldPosition : (Iterable<HighlightedPosition>) presenter.fPositions) {
                     if (oldPosition != null) {
                         removedPositions.add(oldPosition);
                     }
                 }
                 progressMonitor.worked(20);
-                List<HighlightedPosition> unknownReferencesHighlighted = new ArrayList<HighlightedPosition>(unknownReferences.size()); 
-                for (Position pos : unknownReferences) {
-                    HighlightedPosition range = createHighlightedUnknownPosition(pos);
+                List<HighlightedPosition> semanticReferencesHighlighted = new ArrayList<HighlightedPosition>(semanticReferences.size());
+                for (HighlightedTypedPosition pos : semanticReferences) {
+                    HighlightedPosition range = createHighlightedPosition(pos);
                     maybeAddPosition(newPositions, removedPositions, range);
-                    unknownReferencesHighlighted.add(range);
+                    semanticReferencesHighlighted.add(range);
                 }
                 progressMonitor.worked(20);
-                
+
                 TextPresentation textPresentation = null;
                 if (!presenter.isCanceled()) {
                     textPresentation= presenter.createPresentation(newPositions, removedPositions);
                 }
-                
+
                 if (!presenter.isCanceled()) {
                     updatePresentation(textPresentation, newPositions, removedPositions);
                 }
@@ -326,15 +161,22 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
      * @param unkownNode
      * @return
      */
-    private HighlightedPosition createHighlightedUnknownPosition(Position pos) {
-        return new HighlightedPosition(pos.offset, pos.length, undefinedRefHighlighting, this);
+    private HighlightedPosition createHighlightedPosition(HighlightedTypedPosition pos) {
+        switch (pos.kind) {
+            case UNKNOWN:
+                return new HighlightedPosition(pos.offset, pos.length, undefinedRefHighlighting, this);
+            case REGEX:
+                return new HighlightedPosition(pos.offset, pos.length, regexRefHighlighting, this);
+        }
+        // won't get here
+        return null;
     }
 
     /**
      * @param newPositions
      * @param range
      */
-    private void maybeAddPosition(List<HighlightedPosition> newPositions, List<HighlightedPosition> oldPositionsCopy, 
+    private void maybeAddPosition(List<HighlightedPosition> newPositions, List<HighlightedPosition> oldPositionsCopy,
             HighlightedPosition maybePosition) {
         boolean found = false;
         for (Iterator<HighlightedPosition> positionIter = oldPositionsCopy.iterator(); positionIter.hasNext();) {
@@ -349,8 +191,8 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             newPositions.add(maybePosition);
         }
     }
-    
-    
+
+
     /**
      * Update the presentation.
      *

@@ -19,7 +19,7 @@ import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 
 /**
- * Tests that the compiler can successfully be switched back and 
+ * Tests that the compiler can successfully be switched back and
  * forth between versions
  * @author Andrew Eisenberg
  * @created Oct 11, 2009
@@ -27,37 +27,44 @@ import org.codehaus.groovy.eclipse.test.EclipseTestCase;
  */
 public class CompilerSwitchTests extends EclipseTestCase {
     public void testClassPathContainerContents() throws Exception {
+        // we no longer have any ui for compiler switching,
+        // so this test is useless
+        System.out.println("This test is disabled.");
+        if (true) {
+            return;
+        }
+
         String current = CompilerUtils.getGroovyVersion();
-        assertTrue("Compiler version should default to 1.7, but is instead" + current, 
+        assertTrue("Compiler version should default to 1.7, but is instead" + current,
                 current.contains("1.7"));
         String other = CompilerUtils.getOtherVersion();
-        assertTrue("Other compiler version should be 1.6, but is instead" + other, 
+        assertTrue("Other compiler version should be 1.6, but is instead" + other,
                 other.contains("1.6"));
-        
+
         // switch to 1.6
         CompilerUtils.switchVersions(false);
-        
+
         current = CompilerUtils.getGroovyVersion();
-         
-        assertTrue("Compiler version should be 1.6, but is instead" + current, 
+
+        assertTrue("Compiler version should be 1.6, but is instead" + current,
                 current.contains("1.6"));
-        
+
         other = CompilerUtils.getOtherVersion();
-        assertTrue("Other compiler version should be 1.7, but is instead" + other, 
+        assertTrue("Other compiler version should be 1.7, but is instead" + other,
                 other.contains("1.7"));
-        
+
         // switch back to 1.7
         CompilerUtils.switchVersions(true);
-        
+
         current = CompilerUtils.getGroovyVersion();
-        assertTrue("Compiler version should be 1.7, but is instead" + current, 
+        assertTrue("Compiler version should be 1.7, but is instead" + current,
                 current.contains("1.7"));
-        
+
         other = CompilerUtils.getOtherVersion();
-        assertTrue("Other compiler version should be 1.6, but is instead" + other, 
+        assertTrue("Other compiler version should be 1.6, but is instead" + other,
                 other.contains("1.6"));
-        
-        
-        
+
+
+
     }
 }

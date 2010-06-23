@@ -1,5 +1,0 @@
-###src
-import static java.lang.Math.PI
-###exp
-import static java.lang.Math.PI
-###end

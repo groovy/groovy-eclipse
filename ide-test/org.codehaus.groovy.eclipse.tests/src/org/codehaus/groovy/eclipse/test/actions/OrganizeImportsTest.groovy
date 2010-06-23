@@ -19,9 +19,9 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
  *
  */
 public class OrganizeImportsTest extends EclipseTestCase {
-
-    final static String CONTENTS_SUPPORTING = 
-        """
+	
+	final static String CONTENTS_SUPPORTING = 
+	"""
         class FirstClass { }
         class SecondClass { }
         class ThirdClass { }

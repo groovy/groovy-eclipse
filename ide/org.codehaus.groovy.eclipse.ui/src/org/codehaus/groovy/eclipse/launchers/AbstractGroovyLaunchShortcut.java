@@ -36,6 +36,7 @@ import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IAdaptable;
@@ -75,7 +76,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      * matching Launch configurations
      */
     public static final String SELECT_CONFIG_DIALOG_TITLE = "Select Groovy {0} to launch";
-    
+
     /**
      * Used for dialog presentation if the user needs to choose from
      * matching Launch configurations
@@ -83,32 +84,56 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     public static final String SELECT_CONFIG_DIALOG_TEXT = "Select the Groovy {0} to launch";
 
     /**
-     * This is the string that will show if the groovy file the user is trying to run 
+     * This is the string that will show if the groovy file the user is trying to run
      * doesn't meet the criteria to be run.
      */
     public static final String GROOVY_FILE_NOT_RUNNABLE_MESSAGE = "Groovy {0} not found in current selection";
 
-    
+
     private final String title;
     private final String text;
     private final String msg;
-    
+
     public AbstractGroovyLaunchShortcut() {
         title = SELECT_CONFIG_DIALOG_TITLE.replace("{0}", applicationOrConsole());
         text = SELECT_CONFIG_DIALOG_TEXT.replace("{0}", applicationOrConsole());
         msg = GROOVY_FILE_NOT_RUNNABLE_MESSAGE.replace("{0}", applicationOrConsole());
     }
-    
+
     /**
      * Launches from the package explorer.
-     * 
+     *
      * @see ILaunchShortcut#launch
      */
     public void launch(ISelection selection, String mode) {
         ICompilationUnit unit = extractCompilationUnit(selection);
-    	if (unit != null) {
-    		launchGroovy(unit, mode);
+        IJavaProject javaProject = extractJavaProject(selection);
+        if (unit != null || canLaunchWithNoType()) {
+            launchGroovy(unit, javaProject, mode);
     	}
+    }
+
+    /**
+     * @param selection
+     * @return
+     */
+    private IJavaProject extractJavaProject(ISelection selection) {
+        if (selection instanceof IStructuredSelection) {
+            IStructuredSelection struct = (IStructuredSelection) selection;
+            Object obj = struct.getFirstElement();
+            IJavaProject javaProject;
+            if (obj instanceof IAdaptable) {
+                javaProject = (IJavaProject) ((IAdaptable) obj).getAdapter(IJavaProject.class);
+                if (javaProject != null) {
+                    return javaProject;
+                }
+                IProject project = (IProject) ((IAdaptable) obj).getAdapter(IProject.class);
+                if (project != null) {
+                    return JavaCore.create(project);
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -135,76 +160,81 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     }
 
     /**
-     * Finds or creates a launch configuration for the given file then 
+     * Finds or creates a launch configuration for the given file then
      * launches it.
-     * 
+     *
      * @param file The file to launch.
      * @param mode The mode to launch in.
      */
-    protected void launchGroovy(ICompilationUnit unit, String mode) {
-        IType[] types = null;
-        try {
-            types = unit.getAllTypes();
-        } catch (JavaModelException e) {
-            GroovyCore.errorRunningGroovy(e);
-            return;
+    protected void launchGroovy(ICompilationUnit unit, IJavaProject javaProject, String mode) {
+        IType runType = null;
+
+        // if unit is null, then we are not looking for a run type
+        if (unit != null) {
+            IType[] types = null;
+            try {
+                types = unit.getAllTypes();
+            } catch (JavaModelException e) {
+                GroovyCore.errorRunningGroovy(e);
+                return;
+            }
+            runType = findClassToRun(types);
+            if (runType == null) {
+                GroovyCore.errorRunningGroovy(new Exception(msg));
+                return;
+            }
         }
-        IType runType = findClassToRun(types);
-        if (runType == null) {
-            GroovyCore.errorRunningGroovy(
-                    new Exception(msg));
-            return;     
-        }
-        IJavaProject javaProject = unit.getJavaProject();
-        
-        Map<String, String> launchConfigProperties = createLaunchProperties(runType);
+        Map<String, String> launchConfigProperties = createLaunchProperties(runType, javaProject);
 
         try {
-            ILaunchConfigurationWorkingCopy workingConfig = findOrCreateLaunchConfig(launchConfigProperties, 
-                    runType.getElementName());
+            ILaunchConfigurationWorkingCopy workingConfig = findOrCreateLaunchConfig(launchConfigProperties,
+                    runType != null ? runType.getElementName() : javaProject.getElementName());
             workingConfig.setAttribute(
                     IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, Arrays.asList(
                             JavaRuntime.computeDefaultRuntimeClassPath(javaProject)));
             ILaunchConfiguration config = workingConfig.doSave();
-            DebugUITools.launch(config, mode);  
+            DebugUITools.launch(config, mode);
         } catch (CoreException e) {
             GroovyCore.errorRunningGroovyFile((IFile) unit.getResource(), e);
-        } 
+        }
 
     }
 
-    
+
     protected abstract String classToRun();
-    
-    protected Map<String, String> createLaunchProperties(IType runType) {
+
+    protected Map<String, String> createLaunchProperties(IType runType, IJavaProject javaProject) {
         Map<String, String> launchConfigProperties = new HashMap<String, String>();
         String pathToClass;
-        try {
-            pathToClass = runType.getResource().getLocation().toOSString();
-        } catch (NullPointerException e) {
+
+        if (runType != null) {
+            try {
+                pathToClass = " \"" + runType.getResource().getLocation().toOSString() + " \"";
+            } catch (NullPointerException e) {
+                pathToClass = "";
+                GroovyCore.errorRunningGroovy(new IllegalArgumentException("Could not find file to run for " + runType));
+            }
+        } else {
             pathToClass = "";
-            GroovyCore.errorRunningGroovy(new IllegalArgumentException("Could not find file to run for " + runType));
         }
         launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, 
+                IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME,
                 "org.codehaus.groovy.tools.GroovyStarter");
-        IJavaProject javaProject = runType.getJavaProject();
         launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, 
+                IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,
                 javaProject.getElementName());
         launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, 
-                "-Dgroovy.starter.conf="+getGroovyConf() + 
+                IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS,
+                "-Dgroovy.starter.conf="+getGroovyConf() +
                 " -Dgroovy.home="+getGroovyHome()
                 );
-        launchConfigProperties.put(
-                IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
-                "--classpath " + generateClasspath(javaProject) +
-                " --main " + classToRun() + " \"" + pathToClass + "\"");
+        launchConfigProperties.put(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "--classpath "
+                + generateClasspath(javaProject) + " --main " + classToRun() + pathToClass);
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY,
-                getWorkingDirectory(runType));
-     
+ getWorkingDirectory(runType,
+                javaProject));
+
         return launchConfigProperties;
     }
     @SuppressWarnings("unchecked")
@@ -224,11 +254,11 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         // should throw an exception here
         return null;
     }
-    
+
     private String getGroovyHome() {
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         try {
-            return "\"" + 
+            return "\"" +
             FileLocator.getBundleFile(groovyBundle).toString() + "\"";
         } catch (IOException e) {
             GroovyCore.logException("Error finding Groovy Home", e);
@@ -236,29 +266,31 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             return null;
         }
     }
-    
-    private String getWorkingDirectory(IType runType) {
+
+    private String getWorkingDirectory(IType runType, IJavaProject javaProject) {
         String workingDirSetting = GroovyPlugin.getDefault().getPreferenceStore().getString(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY);
-        if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME)) {
-            return getProjectLocation(runType);
-        } else if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME)) {
+        if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME)) {
             return "${eclipse_home}";
-        } else {
+        } else if (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC) && runType != null) {
             try {
                 return runType.getResource().getParent().getLocation().toOSString();
             } catch (Exception e) {
                 GroovyCore.logException("Exception trying to find the location of " + runType.getElementName(), e);
                 return getProjectLocation(runType);
             }
+        } else {
+            // (workingDirSetting.equals(PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME))
+            // default here if there is no type
+            return getProjectLocation(javaProject);
         }
     }
 
-    
+
     private String getProjectLocation(IJavaElement elt) {
         return "${workspace_loc:/" + elt.getJavaProject().getProject().getName() + "}";
     }
 
-    
+
     /* make protected for testing purposes */
     protected String generateClasspath(IJavaProject javaProject) {
         SortedSet<String> sourceEntries = new TreeSet<String>();
@@ -274,17 +306,17 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             sb.append(entry);
             sb.append(File.pathSeparator);
         }
-        
+
         if (sb.length() > 0) {
             sb.replace(sb.length()-1, sb.length(), "\"");
         }
         return sb.toString();
     }
-    
+
     /**
      * Need to recursively walk the classpath and visit all dependent projects
      * Not looking at classpath containers yet.
-     * 
+     *
      * @param javaProject
      * @param entries
      */
@@ -301,7 +333,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                         if (libPath.isAbsolute()) {
                             sourceEntries.add(libPath.toOSString());
                             break;
-                        } 
+                        }
                         //$FALL-THROUGH$
                     case IClasspathEntry.CPE_SOURCE:
                         IPath srcPath = entry.getPath();
@@ -310,7 +342,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                             sloc += File.separator + srcPath.removeFirstSegments(1).toOSString();
                         }
                         sourceEntries.add(sloc);
-                        
+
                         IPath outPath = entry.getOutputLocation();
                         if (outPath != null) {
                             String bloc = getProjectLocation(javaProject);
@@ -320,8 +352,8 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                             binEntries.add(bloc);
                         }
                         break;
-                        
-                        
+
+
                     case IClasspathEntry.CPE_PROJECT:
                         dependingProjects.add(javaProject.getJavaModel().getJavaProject(entry.getPath().lastSegment()));
                         break;
@@ -347,10 +379,10 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     }
 
 
-    
+
     /**
      * Launches from the source file.
-     * 
+     *
      * @see ILaunchShortcut#launch
      */
     public void launch(IEditorPart editor, String mode) {
@@ -359,13 +391,15 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     	IEditorInput input = editor.getEditorInput();
     	IFile file = (IFile) input.getAdapter(IFile.class);
     	ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
-    	launchGroovy(unit, mode);
+        if (unit != null) {
+            launchGroovy(unit, unit.getJavaProject(), mode);
+        }
     }
 
     /**
-     * Finds the runnable classnode in an array.  If more than one possible node is found, 
-     * will prompt the user to select one.  
-     * 
+     * Finds the runnable classnode in an array.  If more than one possible node is found,
+     * will prompt the user to select one.
+     *
      * @param classNodes
      * @return Returns a classnode if found, or null if no classNode can be run.
      * @throws OperationCanceledException If the user selects cancel
@@ -378,20 +412,20 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                 candidates.add(types[i]);
             }
         }
-        
+
         if (candidates.size() == 1) {
             returnValue = candidates.get(0);
         } else {
             returnValue = LaunchShortcutHelper.chooseClassNode(candidates);
         }
-        
+
         return returnValue;
     }
 
     /**
      * This method will find a Launch configration that matches the passed
      * properties of if one is not found will create one.
-     * 
+     *
      * @param configProperties A <String, String> Map of launch configuration
      * properties.
      * @param classUnderTest The name of the class (without package) that is
@@ -414,9 +448,9 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     }
 
     /**
-     * This method creates a new launch configuration working copy for the 
+     * This method creates a new launch configuration working copy for the
      * classUnderTest with the properties defined in configProperites.
-     * 
+     *
      * @param configProperties A <String, String> Map of launch configuration
      * properties.
      * @param classUnderTest The name of the class (without package) that is
@@ -427,23 +461,23 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     public ILaunchConfigurationWorkingCopy createLaunchConfig(Map<String, String> configProperties, String classUnderTest)
             throws CoreException {
             	String launchName = getLaunchManager().generateUniqueLaunchConfigurationNameFrom( classUnderTest ) ;
-            	ILaunchConfigurationWorkingCopy returnConfig = 
+            	ILaunchConfigurationWorkingCopy returnConfig =
             		getGroovyLaunchConfigType().newInstance(null, launchName);
-            
+
             	for (Iterator<String> it = configProperties.keySet().iterator(); it.hasNext();) {
             		String key = it.next();
             		String value = configProperties.get(key);
             		returnConfig.setAttribute(key, value);
             	}
-            
-            	return returnConfig; 
+
+            	return returnConfig;
             }
 
     /**
      * This class finds any launch configrations that match the defined
      * properties.  If more that one match is found the user is prompted
      * to select one.
-     * 
+     *
      * @param configProperties A <String, String> Map of properties to check
      * when searching for a matching launch configuration.
      * @return Returns a launch configuration that matches the given properties
@@ -475,7 +509,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                 candidateConfigs.add(config);
             }
         }
-    
+
     	int candidateCount = candidateConfigs.size();
     	if (candidateCount == 1) {
     		returnValue = candidateConfigs.get(0);
@@ -487,8 +521,8 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
     /**
      * Prompts the user to select a launch configuration from configList.
-     * 
-     * @param configList A List of ILaunchConfigrations for the user to 
+     *
+     * @param configList A List of ILaunchConfigrations for the user to
      * pick from.
      * @return Returns the ILaunchConfiguration that the user selected.
      */
@@ -500,21 +534,23 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     /**
      * This is a convenience method for getting the Groovy launch configuration
      * type from the Launch Manager.
-     * 
+     *
      * @return Returns the ILaunchConfigurationType for running Groovy classes.
      */
     protected abstract ILaunchConfigurationType getGroovyLaunchConfigType();
 
     /**
-     * This is a convenince method for getting the Launch Manager from 
+     * This is a convenince method for getting the Launch Manager from
      * the Debug plugin.
-     * 
+     *
      * @return Returns the default Eclipse launch manager.
      */
     public static ILaunchManager getLaunchManager() {
     	return DebugPlugin.getDefault().getLaunchManager() ;
     }
 
-    
+
     protected abstract String applicationOrConsole();
+
+    protected abstract boolean canLaunchWithNoType();
 }

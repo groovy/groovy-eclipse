@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,22 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
+import greclipse.org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne;
+
+import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.junit.util.JUnitStatus;
-import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
 
 /**
@@ -36,20 +42,13 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
 
     private static final String DOT_GROOVY = ".groovy";
     private static final String GROOVY_TEST_CASE = "groovy.util.GroovyTestCase";
-    
+
+    protected static final String GROOVY_NATURE_ERROR_MSG = "Project is not a Groovy Project. Please select a Groovy project.";
+
     private IType maybeCreatedType;
 
     public NewGroovyTestTypeWizardPage(NewTestCaseWizardPageTwo page2) {
         super(page2);
-    }
-    
-    /**
-     * The default type should be groovy test case
-     */
-    @Override
-    protected void initTypePage(IJavaElement elem) {
-        super.initTypePage(elem);
-        setSuperClass(GROOVY_TEST_CASE, true);
     }
 
     @Override
@@ -58,22 +57,45 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
     }
 
     @Override
-    public void setJUnit4(boolean isJUnit4, boolean isEnabled) {
-        super.setJUnit4(isJUnit4, isEnabled);
-        if (!isJUnit4) {
-            setSuperClass(GROOVY_TEST_CASE, true);
-        }
+    protected String getJUnit3TestSuperclassName() {
+    	return GROOVY_TEST_CASE;
     }
-    
-
 
     @Override
     public IType getCreatedType() {
         return maybeCreatedType != null ? maybeCreatedType : super.getCreatedType();
     }
-    
+
     /**
-     * Ensure that GroovyTestCase is seen as OK 
+     * Checks if the selected project where the test cases will be created
+     * contains Groovy nature. True if yes, false otherwise
+     *
+     * @return true if project has a Groovy nature. False otherwise.
+     */
+    protected boolean hasGroovyNature() {
+        IProject project = getProject();
+        if (project != null) {
+            return GroovyNature.hasGroovyNature(project);
+        }
+        return false;
+    }
+
+    /**
+     * Gets the workspace project where the test case will be added.
+     * May be null.
+     *
+     * @return workspace project if it exists, or null
+     */
+    protected IProject getProject() {
+        IJavaProject javaProject = getJavaProject();
+        if (javaProject == null) {
+            return null;
+        }
+        return javaProject.getProject();
+    }
+
+    /**
+     * Ensure that GroovyTestCase is seen as OK
      * to have in the super class field even if
      * JUnit 3 is not yet on the classpath
      */
@@ -91,7 +113,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
 
         return super.superClassChanged();
     }
-    
+
     /**
      * Groovy classes do not need public/private/protected modifiers
      */
@@ -105,8 +127,23 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
     }
 
     @Override
-    public void createType(IProgressMonitor monitor) throws CoreException,
-    InterruptedException {
+    protected void updateStatus(IStatus status) {
+        // bug GRECLIPSE-728
+        if (!hasGroovyNature()) {
+            super.updateStatus(new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, GROOVY_NATURE_ERROR_MSG));
+            return;
+        }
+        super.updateStatus(status);
+    }
+
+    @Override
+    public void createType(IProgressMonitor monitor) throws CoreException, InterruptedException {
+
+        // bug GRECLIPSE-728
+        if (!hasGroovyNature()) {
+            GroovyCore.logWarning(GROOVY_NATURE_ERROR_MSG);
+            return;
+        }
 
         // bug GRECLIPSE-322
         // if JUnit 3 and default package, calling super will be an error.
@@ -133,7 +170,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
         if (superClass != null && !superClass.equals(GROOVY_TEST_CASE)) {
             if (splits.length > 1) {
                 sb.append("import " + superClass + "\n\n");
-            } 
+            }
 
             sb.append("class ").append(typeName)
             .append(" extends ")

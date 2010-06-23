@@ -1,0 +1,30 @@
+###prop
+selectionType=points
+startLine=4
+startColumn=5
+endLine=4
+endColumn=21
+newMethodName=m2
+modifier=private
+variableToRename=hammer:NEWHAMMER
+moveVariable=hammer+1
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+def getObj() {
+    String hammer = "Groovy"
+    int k = 42
+    method(hammer,k)
+}
+###exp
+def getObj() {
+    String hammer = "Groovy"
+    int k = 42
+    m2(k, hammer)
+}
+
+private m2(int k, String NEWHAMMER) {
+    method(NEWHAMMER,k)
+}
+###end

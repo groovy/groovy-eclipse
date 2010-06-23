@@ -1,5 +1,0 @@
-###src
-import groovy.lang.Closure
-###exp
-import groovy.lang.Closure
-###end

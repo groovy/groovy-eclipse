@@ -1,9 +1,0 @@
-###src
-class HalloWelt {
-    private String attribute
-}
-###exp
-class HalloWelt {
-    private String attribute
-}
-###end

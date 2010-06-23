@@ -1,8 +1,0 @@
-###src
-def escape = """do
-not \\n \n escape"""
-###exp
-def escape = """do
-not \n 
- escape"""
-###end

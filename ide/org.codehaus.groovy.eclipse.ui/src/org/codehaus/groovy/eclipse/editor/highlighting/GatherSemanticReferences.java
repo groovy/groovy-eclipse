@@ -24,31 +24,37 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.text.Position;
 
-class GatherSemanticReferences {
-    
+public class GatherSemanticReferences {
+
     private final GroovyCompilationUnit unit;
     private final IPreferenceStore preferences;
     public GatherSemanticReferences(GroovyCompilationUnit unit) {
         this.unit = unit;
         preferences = GroovyPlugin.getDefault().getPreferenceStore();
     }
-    
-    List<Position> findStaticlyUnkownReferences() {
+
+    public List<HighlightedTypedPosition> findSemanticHighlightingReferences() {
         if (preferences.getBoolean(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING) && unit.isOnBuildPath()) {
-            
+
             try {
-                StaticlyUnknownReferenceRequestor typeRequestor = new StaticlyUnknownReferenceRequestor();
+                SemanticHighlightingReferenceRequestor typeRequestor = new SemanticHighlightingReferenceRequestor(unit.getContents());
                 TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
                 visitor.visitCompilationUnit(typeRequestor);
-                List<Position> positions = new ArrayList<Position>(typeRequestor.unknownNodes.size());
+                List<HighlightedTypedPosition> positions = new ArrayList<HighlightedTypedPosition>(typeRequestor.unknownNodes
+                        .size());
                 for (ASTNode node : typeRequestor.unknownNodes) {
-                    positions.add(new Position(node.getStart(), node.getEnd()-node.getStart()));
+                    positions.add(new HighlightedTypedPosition(node.getStart(), node.getEnd() - node.getStart(),
+                            HighlightKind.UNKNOWN));
+                }
+                for (ASTNode node : typeRequestor.regexNodes) {
+                    positions.add(new HighlightedTypedPosition(node.getStart(), node.getEnd() - node.getStart(),
+                            HighlightKind.REGEX));
                 }
                 return positions;
             } catch (Exception e) {

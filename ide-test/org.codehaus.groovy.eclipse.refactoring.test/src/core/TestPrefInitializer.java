@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -26,31 +26,30 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 
 /**
- * 
+ *
  * Class to initialize Eclipse preferences in file based tests
  */
 public class TestPrefInitializer {
-	
+
 	public static IPreferenceStore initializePreferences(HashMap<String, String> properties) {
 	    IPreferenceStore pref = new PreferenceStore();
-		
+
 		String ind = properties.get("indentation");
-		if(ind != null)
-		pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION,
-				ind);
+        if (ind != null)
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION, ind);
 
 		String tabsize = properties.get("tabsize");
 		if(tabsize != null)
 		pref.setValue(
 				PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
 				Integer.parseInt(tabsize));
-		
+
 		String multiInd = properties.get("multilineIndentation");
 		if(multiInd != null)
 		pref.setValue(
 				PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION,
 				Integer.parseInt(multiInd));
-		
+
 		String bracesStart = properties.get("bracesStart");
 		if(bracesStart != null)
 		pref.setValue(PreferenceConstants.GROOVY_FORMATTER_BRACES_START, bracesStart);
@@ -66,7 +65,7 @@ public class TestPrefInitializer {
 		pref.setValue(
 				PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH,
 				Integer.parseInt(maxLineLength));
-		
+
 		return pref;
 	}
 
