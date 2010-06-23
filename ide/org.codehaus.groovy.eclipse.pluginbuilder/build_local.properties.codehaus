@@ -14,16 +14,15 @@
 # limitations under the License.
 ###############################################################################
 
-workDir=/opt/j2ee/domains/ci.codehaus.org/bamboo/webapps/atlassian-bamboo/BambooHome/xml-data/build-dir/GRECLIPSE-V2E36
+workDir=${user.dir}/../GRECLIPSE-V2E36
 
-
-# The location of this pluginbuilder project. It provides the base directory for the build scripts.
+# The location of this project. It provides the base directory for the build scripts.
 buildHome=${workDir}/ide/org.codehaus.groovy.eclipse.pluginbuilder
 
 # The directory where the build takes place. This directory WILL BE DELETED before every build.
 buildDirectory=${workDir}/build
 
-# The eclipse that launches the build.  Must be an eclipse that contains groovy-eclipse installed.
+# The eclipse build host. Must be an Eclipse 3.4 SDK installation with JDT and PDE. And in the case of RCP builds the RCP Delta Pack must be included, too.
 eclipseDir=/opt/eclipse/eclipse-rcp-ganymede-SR2-linux-gtk-x86_64
 
 # Environment for the build host.  Do not change these.
@@ -58,7 +57,6 @@ workspaceDirIde=${workDir}/ide
 workspaceDirIdeTest=${workDir}/ide-test
 
 
-
 # N for nightly
 # I for integration
 # M for milestone
@@ -66,7 +64,7 @@ workspaceDirIdeTest=${workDir}/ide-test
 buildType=N
 
 buildTypePresentation=e36
-buildTypePresentationPrefix=xx-
+buildTypePresentationPrefix=
 
 # Specify publish location
 publishLocation=/opt/ci.repository.codehaus.org/greclipse/snapshot/e36

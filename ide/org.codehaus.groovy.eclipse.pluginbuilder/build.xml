@@ -80,7 +80,12 @@
 		<echo message="=============================================="/>
 		<echo message="forceContextQualifier=${forceContextQualifier}"/>
 		<echo message="=============================================="/>
-
+		<echo message="=============================================="/>
+ 		<echo message="basedir=${basedir}"/>
+		<echo message="=============================================="/>
+		<echo message="=============================================="/>
+ 		<echo message="projectBaseDir=${projectBaseDir}"/>
+		<echo message="=============================================="/>
 		<property name="version.full" value="${forceContextQualifier}"/>
 
 		        

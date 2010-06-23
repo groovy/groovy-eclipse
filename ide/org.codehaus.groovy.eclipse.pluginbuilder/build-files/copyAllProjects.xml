@@ -120,6 +120,11 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.astviews">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.cstviewer">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.refactoring">
 			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.refactoring">
 					<exclude name="**/bin"/>
