@@ -121,7 +121,7 @@
 			</fileset>
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.astviews">
-			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.cstviewer">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.astviews">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
