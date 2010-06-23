@@ -28,6 +28,7 @@
   			<arg value="-f"/>
   			<arg value="${eclipseDir}/plugins/org.eclipse.pde.build_3.4.1.R34x_v20081217/scripts/build.xml"/>
   			<!--<arg value="-verbose"/>-->
+  			<jvmarg value="-DworkDir=${workDir}"/>
   			<jvmarg value="-DbuildHome=${buildHome}"/>
   			<jvmarg value="-Dbuilder=${buildHome}/build-files"/>
   			<jvmarg value="-DbuildDirectory=${buildDirectory}"/>
