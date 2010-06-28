@@ -514,13 +514,15 @@ public class JDTClassNode extends ClassNode {
 
 	@Override
 	public void addProperty(PropertyNode node) {
-		throw new IllegalAccessError("JDTClassNode instances are immutable");
+		new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + node.getName())
+				.printStackTrace();
 	}
 
 	@Override
 	public PropertyNode addProperty(String name, int modifiers, ClassNode type, Expression initialValueExpression,
 			Statement getterBlock, Statement setterBlock) {
-		throw new IllegalAccessError("JDTClassNode instances are immutable");
+		new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + name).printStackTrace();
+		return null;
 	}
 
 }
