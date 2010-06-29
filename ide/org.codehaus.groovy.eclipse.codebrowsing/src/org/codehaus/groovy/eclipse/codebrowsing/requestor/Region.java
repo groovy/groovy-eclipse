@@ -83,7 +83,7 @@ public class Region {
      * @return true iff the node's name range covers the region
      */
     public boolean regionIsCoveredByNameRange(AnnotatedNode node) {
-        return this.start >= node.getNameStart() && this.getEnd() <= node.getNameEnd();
+        return this.start >= node.getNameStart() && this.getEnd() <= node.getNameEnd()+1;  // FIXADE why +1?
     }
 
     /**
