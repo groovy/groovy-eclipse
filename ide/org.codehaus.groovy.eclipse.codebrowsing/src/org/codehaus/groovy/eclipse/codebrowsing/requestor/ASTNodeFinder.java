@@ -137,7 +137,9 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         super.visitConstructorOrMethod(node, isConstructor);
 
         // maybe selecting the method name itself
-        checkNameRange(node);
+        if (node.getNameEnd() > 0) {
+            checkNameRange(node);
+        }
     }
 
     /**
@@ -173,7 +175,9 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         check(node.getType());
         super.visitField(node);
         // maybe selecting the field name itself
-        checkNameRange(node);
+        if (node.getNameEnd() > 0) {
+            checkNameRange(node);
+        }
     }
 
     @Override
@@ -252,7 +256,9 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     @Override
     public void visitClass(ClassNode node) {
         // special case...could be selecting the class name itself
-        checkNameRange(node);
+        if (node.getNameEnd() > 0) {
+            checkNameRange(node);
+        }
 
         ClassNode unresolvedSuperClass = node.getUnresolvedSuperClass();
         if (unresolvedSuperClass != null && unresolvedSuperClass.getEnd() > 0) {
@@ -354,6 +360,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     // method does not exist in 1.6 stream
     // @Override
+    @Override
     public void visitPackage(PackageNode node) {
         visitAnnotations(node);
         if (node != null) {
@@ -363,6 +370,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     // method does not exist in 1.6 stream
     // @Override
+    @Override
     public void visitImports(ModuleNode module) {
         for (ImportNode importNode : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
             if (importNode.getType() != null) {
