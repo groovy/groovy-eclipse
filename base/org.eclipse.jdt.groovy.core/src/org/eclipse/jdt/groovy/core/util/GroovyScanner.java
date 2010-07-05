@@ -17,13 +17,9 @@ package org.eclipse.jdt.groovy.core.util;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
-import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 
 import antlr.Token;
 import antlr.TokenStream;
@@ -37,13 +33,20 @@ import antlr.TokenStreamException;
 public class GroovyScanner {
 
 	private TokenStream stream;
+	private GroovyLexer lexer;
+	private boolean whiteSpaceIncluded;
 
 	public GroovyScanner(Reader input) {
 		this(input, false);
 	}
 
 	public GroovyScanner(Reader input, boolean whiteSpaceIncluded) {
-		GroovyLexer lexer = new GroovyLexer(input);
+		init(input, whiteSpaceIncluded);
+	}
+
+	private void init(Reader input, boolean whiteSpaceIncluded) {
+		this.whiteSpaceIncluded = whiteSpaceIncluded;
+		lexer = new GroovyLexer(input);
 		lexer.setWhitespaceIncluded(whiteSpaceIncluded);
 		this.stream = (TokenStream) lexer.plumb();
 	}
@@ -57,47 +60,36 @@ public class GroovyScanner {
 	}
 
 	/**
-	 * Read all remaining tokens in the inputstream until end of file.
+	 * Attempt to recover after a scanning error. We will recreate the Antlr lexer one character past the place where we got an
+	 * error and try to continue scanning from there.
 	 * 
-	 * @return A list of all the tokens, excluding the EOF token.
+	 * @throws BadLocationException
 	 */
-	public List<Token> getTokens() {
-		List<Token> result = new LinkedList<Token>();
-		try {
-			Token t = nextToken();
-			while (t.getType() != GroovyTokenTypes.EOF) {
-				result.add(t);
-				t = nextToken();
-			}
-		} catch (TokenStreamException e) {
-			Util.log(e);
-		}
-		return result;
+	public void recover(IDocument document) throws BadLocationException {
+		int line = lexer.getInputState().getLine(); // Line and
+		int col = lexer.getInputState().getColumn(); // column where error happened.
+		int offset = getOffset(document, line, col) + 1; // +1 to skip one character.
+		line = document.getLineOfOffset(offset);
+		int lineStart = document.getLineOffset(line);
+		line = line + 1; // antlr lines start at 1
+		col = offset - lineStart + 1; // antlr cols start at 1
+		String remainingInput = document.get(offset, document.getLength() - offset);
+		init(new StringReader(remainingInput), whiteSpaceIncluded); // Reinitialize with remaining input
+		lexer.setLine(line); // Fix antlr line and
+		lexer.setColumn(col);// column infos because we are not starting at the start
 	}
 
 	/**
-	 * Read all remaining tokens in the inputstream until end of file.
+	 * Convert antlr line / col position into a IDocument offset.
 	 * 
-	 * @return A list of all the tokens, including the EOF token.
+	 * @param document The reference document
+	 * @param line antlr style line number (starts at 1)
+	 * @param col antlr style col number (starts at 1)
+	 * @return
+	 * @throws BadLocationException
 	 */
-	public List<Token> getTokensIncludingEOF() {
-		List<Token> result = new ArrayList<Token>();
-		try {
-			Token t = nextToken();
-			while (t.getType() != GroovyTokenTypes.EOF) {
-				result.add(t);
-				t = nextToken();
-			}
-			result.add(t);
-		} catch (TokenStreamException e) {
-			Util.log(e);
-		}
-		return result;
-	}
-
-	public static List<Token> getTokens(String text) {
-		List<Token> tokens = new GroovyScanner(new StringReader(text)).getTokens();
-		return tokens;
+	public static int getOffset(IDocument document, int line, int col) throws BadLocationException {
+		return document.getLineOffset(line - 1) + col - 1;
 	}
 
 }

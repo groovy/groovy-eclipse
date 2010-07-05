@@ -22,12 +22,14 @@ import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.groovy.core.util.GroovyScanner;
+import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentListener;
 
 import antlr.Token;
+import antlr.TokenStreamException;
 
 /**
  * This class provides methods to retrieve tokens for a given IDocument
@@ -42,7 +44,7 @@ import antlr.Token;
  */
 public class GroovyDocumentScanner implements IDocumentListener {
 
-    private static boolean TOKEN_POSITION_ASSERTS = true;
+    private static final boolean TOKEN_POSITION_ASSERTS = true;
 
     /**
      * This is the document that we are chopping into tokens. This may not be
@@ -57,6 +59,11 @@ public class GroovyDocumentScanner implements IDocumentListener {
      * This may be null before we have started reading tokens.
      */
     protected List<Token> tokens;
+
+    private GroovyScanner tokenScanner;
+
+    private static int logLimit = 4; // At most this number scanner errors will
+                                     // be reported
 
     public GroovyDocumentScanner(IDocument d) {
         this.document = d;
@@ -84,9 +91,39 @@ public class GroovyDocumentScanner implements IDocumentListener {
         if (tokens == null) {
             // We haven't started scanning yet. Initialise the scanner and token
             // list.
-            GroovyScanner tokenScanner = new GroovyScanner(document.get());
-            tokens = tokenScanner.getTokensIncludingEOF();
+            tokenScanner = new GroovyScanner(document.get());
+            tokens = getTokensIncludingEOF();
         }
+    }
+
+    private List<Token> getTokensIncludingEOF() {
+        List<Token> result = new ArrayList<Token>();
+        Token t;
+        try {
+            do {
+                t = nextToken();
+                result.add(t);
+            } while (t.getType() != GroovyTokenTypes.EOF);
+        } catch (Exception e) {
+            if (logLimit-- > 0) {
+                Util.log(e);
+            }
+        }
+        return result;
+    }
+
+    private Token nextToken() throws TokenStreamException, BadLocationException {
+        Token t;
+        try {
+            t = tokenScanner.nextToken();
+        } catch (TokenStreamException e) {
+            //Try to recover
+            tokenScanner.recover(document);
+            // No try catch:
+            // If it fails again we give up:
+            t = tokenScanner.nextToken();
+        }
+        return t;
     }
 
     /**
@@ -106,9 +143,7 @@ public class GroovyDocumentScanner implements IDocumentListener {
      * @throws BadLocationException
      */
     public int getOffset(Token token) throws BadLocationException {
-        int line = token.getLine() - 1;
-        int col = token.getColumn() - 1;
-        int offset = document.getLineOffset(line) + col;
+        int offset = GroovyScanner.getOffset(document, token.getLine(), token.getColumn());
         if (TOKEN_POSITION_ASSERTS) {
             // These asserts should give some confidence we compute
             // positions correctly.
@@ -117,6 +152,8 @@ public class GroovyDocumentScanner implements IDocumentListener {
                 // document so its position info doesn't seem to obey these
                 // assumptions.
             } else {
+                int col = token.getColumn() - 1;
+                int line = token.getLine() - 1;
                 Assert.isTrue(col >= 0);
                 Assert.isTrue(col < document.getLineLength(line), "Token: " + token);
                 Assert.isTrue(offset < document.getLength());
