@@ -59,10 +59,12 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
 
 /**
@@ -107,10 +109,24 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      */
     public void launch(ISelection selection, String mode) {
         ICompilationUnit unit = extractCompilationUnit(selection);
-        IJavaProject javaProject = extractJavaProject(selection);
+        IJavaProject javaProject;
+        if (unit != null) {
+            javaProject = unit.getJavaProject();
+        } else {
+            javaProject = extractJavaProject(selection);
+        }
+        if (javaProject==null && unit==null) {
+            MessageDialog.openError(PlatformUI.getWorkbench().
+                getActiveWorkbenchWindow().getShell(), "Can't run script", "No script or project selected!");
+            return;
+        }
         if (unit != null || canLaunchWithNoType()) {
             launchGroovy(unit, javaProject, mode);
     	}
+        else {
+            MessageDialog.openError(PlatformUI.getWorkbench().
+                    getActiveWorkbenchWindow().getShell(), "Can't run script", "No script selected!");
+        }
     }
 
     /**
