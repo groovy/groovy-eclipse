@@ -31,10 +31,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @seeorg.eclipse.core.runtime.preferences.AbstractPreferenceInitializer#
      * initializeDefaultPreferences()
      */
+    @Override
     public void initializeDefaultPreferences() {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 
@@ -101,22 +102,22 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         PreferenceConverter.setDefault(store,
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
                 new RGB(0, 0, 0));
-        
+
         // JUnit Monospace font
         store.setDefault(
                 PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
                 false);
-        
+
         // Ask to convert Legacy Projects at startup
         store.setDefault(
                 PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS,
                 true);
-        
+
         // Semantic highlighting
         store.setDefault(
                 PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
                 true);
-        
+
         // Groovier Content assist
         store.setDefault(
                 PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS,
@@ -126,26 +127,26 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 true);
 
         store.setDefault(
-                PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
+                PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
                 "proj_home");
-        
+
 
         // Debug
         store.setDefault(
-                PreferenceConstants.GROOVY_DEBUG_FILTER_STACK, 
+                PreferenceConstants.GROOVY_DEBUG_FILTER_STACK,
                 true);
         store.setDefault(
-                PreferenceConstants.GROOVY_DEBUG_FILTER_LIST, 
-                "org.codehaus.groovy,groovy.lang,java.lang.reflect,sun.reflect");
-        
+                PreferenceConstants.GROOVY_DEBUG_FILTER_LIST,
+                "org.codehaus.groovy,groovy.lang,java.lang.reflect,sun.reflect,groovy.ui,sun.misc");
+
         store = Activator.getDefault().getPreferenceStore();
         // Refactoring enable/disable.  Temporary...I hope
         store.setDefault(
-                PreferenceConstants.GROOVY_REFACTORING_ENABLED, 
+                PreferenceConstants.GROOVY_REFACTORING_ENABLED,
                 true);
-        
+
     }
-    
+
     public void reset() {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 
@@ -207,7 +208,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         PreferenceConverter.setValue(store,
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
                 new RGB(205, 50, 0));
-        
+
         // default color
         PreferenceConverter.setDefault(store,
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
@@ -217,13 +218,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(
                 PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
                 false);
-        
+
         // Ask to convert Legacy Projects at startup
         store.setValue(
                 PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS,
                 true);
 
-        
+
         // Semantic highlighting
         store.setValue(
                 PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
@@ -238,14 +239,14 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 true);
 
         store.setValue(
-                PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
+                PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
                 "proj_home");
 
-        
+
         store = Activator.getDefault().getPreferenceStore();
         // Refactoring
         store.setValue(
-                PreferenceConstants.GROOVY_REFACTORING_ENABLED, 
+                PreferenceConstants.GROOVY_REFACTORING_ENABLED,
                 true);
 
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);

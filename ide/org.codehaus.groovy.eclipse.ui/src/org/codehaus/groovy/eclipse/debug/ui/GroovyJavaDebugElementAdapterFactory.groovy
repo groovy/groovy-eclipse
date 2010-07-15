@@ -17,26 +17,14 @@ package org.codehaus.groovy.eclipse.debug.ui;
 
 import java.util.List;
 
-import org.eclipse.debug.core.DebugException;
-import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.model.IDebugTarget;
-import org.eclipse.debug.core.model.IRegisterGroup;
-import org.eclipse.debug.core.model.IThread;
-import org.eclipse.debug.core.model.IVariable;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.debug.internal.ui.viewers.model.provisional.IElementLabelProvider;
 import org.eclipse.jdt.internal.debug.ui.variables.JavaDebugElementAdapterFactory 
-import org.eclipse.jdt.internal.debug.ui.variables.JavaStackFrameLabelProvider;
-import org.eclipse.core.internal.runtime.AdapterManager;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.internal.ui.viewers.model.provisional.IElementContentProvider;
 import org.eclipse.debug.ui.actions.IWatchExpressionFactoryAdapter;
-import org.eclipse.jdt.debug.core.IJavaClassType;
-import org.eclipse.jdt.debug.core.IJavaObject;
-import org.eclipse.jdt.debug.core.IJavaReferenceType;
 import org.eclipse.jdt.debug.core.IJavaStackFrame;
-import org.eclipse.jdt.debug.core.IJavaValue;
-import org.eclipse.jdt.debug.core.IJavaVariable;
 
 /**
  * An adapterfactory that overrides {@link JavaDebugElementAdapterFactory}.
@@ -48,31 +36,45 @@ import org.eclipse.jdt.debug.core.IJavaVariable;
  * @created Jan 27, 2010
  */
 class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
-	
-	JavaDebugElementAdapterFactory containedFactory = new JavaDebugElementAdapterFactory()
-	
-	static final GroovyJavaStackFrameLabelProvider fgLPFrame = new GroovyJavaStackFrameLabelProvider();
-
+    
+    JavaDebugElementAdapterFactory containedFactory = new JavaDebugElementAdapterFactory()
+    
+    static final GroovyJavaStackFrameLabelProvider fgLPFrame = new GroovyJavaStackFrameLabelProvider();
+    
     Object getAdapter(Object adaptableObject, Class adapterType) {
-		if (IElementLabelProvider.class.equals(adapterType)) {
-			if (adaptableObject instanceof IJavaStackFrame) { 
-				return fgLPFrame;
-			}
-		}
-		return containedFactory.getAdapter(adaptableObject, adapterType)
+        if (IElementLabelProvider.class.equals(adapterType)) {
+            if (adaptableObject instanceof IJavaStackFrame) { 
+                return fgLPFrame;
+            }
+        }
+        return containedFactory.getAdapter(adaptableObject, adapterType)
     }
-
+    
     Class[] getAdapterList() {
         return [ IElementLabelProvider.class, IElementContentProvider.class, IWatchExpressionFactoryAdapter.class ] as Class[]
     }
-	
-	static connect() {
-		// race condition...need to ensure that this is called before jdt.debug.ui is loaded
-		Platform.adapterManager.registerAdapters new GroovyJavaDebugElementAdapterFactory(), IJavaStackFrame
-		fgLPFrame.connect()
-	}
-	
-	static disconnect() {
-		fgLPFrame.disconnect()
-	}
+    
+    static connect() {
+        // first remove the JDI adapter if one exists.
+        removeJDIAdapter()
+        Platform.adapterManager.registerAdapters new GroovyJavaDebugElementAdapterFactory(), IJavaStackFrame
+        fgLPFrame.connect()
+    }
+    
+    static removeJDIAdapter() {
+        // a little dicey, so wrap in try/catch
+        try {
+            List factories = Platform.adapterManager.factories["org.eclipse.jdt.debug.core.IJavaStackFrame"]
+            int adapterIndex = factories.findIndexOf { it.class.name == "org.eclipse.core.internal.adapter.AdapterFactoryProxy" }
+            if (adapterIndex >= 0) {
+                factories.remove adapterIndex
+            }
+        } catch (e) {
+            GroovyCore.logException "Exception removing JDI Adapter", e
+        }
+    }
+    
+    static disconnect() {
+        fgLPFrame.disconnect()
+    }
 }
