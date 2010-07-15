@@ -96,7 +96,11 @@ public class GroovyProjectConfigurator extends AbstractProjectConfigurator
     }
 
     private Plugin getGMavenPlugin(MavenProject mavenProject) {
-        return mavenProject.getPlugin("org.codehaus.groovy.maven:gmaven-plugin"); //$NON-NLS-1$
+        Plugin p = mavenProject.getPlugin("org.codehaus.gmaven:gmaven-plugin"); //$NON-NLS-1$
+        if (p == null) {
+            // try the old (pre-1.1) version of the plugin
+            p = mavenProject.getPlugin("org.codehaus.groovy.maven:gmaven-plugin"); //$NON-NLS-1$
+        }
+        return p;
     }
-
 }
