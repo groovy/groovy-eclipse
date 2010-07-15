@@ -83,6 +83,7 @@ public class GroovySnippetParser {
      *
      * @param source the groovy source code to compile
      */
+    @SuppressWarnings("unchecked")
     public ModuleNode parse(String source) {
 
         Hashtable table = JavaCore.getOptions();

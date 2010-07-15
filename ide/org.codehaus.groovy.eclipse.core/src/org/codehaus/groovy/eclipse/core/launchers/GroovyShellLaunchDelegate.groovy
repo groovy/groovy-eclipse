@@ -36,36 +36,28 @@ import org.osgi.framework.Bundle;
  *
  */
 public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
-
+    
     public static final String JLINE_JAR = "jline-*.jar";
-
+    
     
     @Override
     public String[] getClasspath(ILaunchConfiguration configuration)
-            throws CoreException {
+    throws CoreException {
         
         String[] classpath = super.getClasspath(configuration)
         def newClasspath = ListUtil.array(classpath)
         newClasspath.add(getPathTo("jline-*.jar"));
         
-        return newClasspath.toArray(new String[0])
-    }
+        return newClasspath.toArray(new String[0]) }
     
     static String getPathTo(String jarName) throws CoreException, IOException {
         Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy")
         Enumeration<URL> enu = groovyBundle.findEntries("lib", jarName, false)
         if (enu != null && enu.hasMoreElements()) {
             URL jar = resolve(enu.nextElement())
-            return jar.getFile()
-        } else {
-            throw new CoreException(new Status(Status.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find $jarName on the class path.  Please add it manually"))
-        }
-    }
-
+            return jar.getFile() } else {
+            throw new CoreException(new Status(Status.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find $jarName on the class path.  Please add it manually")) } }
+    
     
     static List<String> getExtraClasspathElements() {
-        [ GroovyShellLaunchDelegate.getPathTo(GroovyShellLaunchDelegate.JLINE_JAR) ]
-    }
-    
-    
-}
+        [ GroovyShellLaunchDelegate.getPathTo(GroovyShellLaunchDelegate.JLINE_JAR) ] } }
