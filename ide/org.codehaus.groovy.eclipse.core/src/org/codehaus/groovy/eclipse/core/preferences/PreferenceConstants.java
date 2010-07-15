@@ -19,12 +19,10 @@ package org.codehaus.groovy.eclipse.core.preferences;
  * Constant definitions for plug-in preferences
  */
 public class PreferenceConstants {
-    
+
     private PreferenceConstants() {
         // uninstantiable
     }
-
-	public static final String P_PATH = "pathPreference"; //$NON-NLS-1$
 
 	public static final String GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED = "groovy.editor.highlight.gjdk.enabled"; //$NON-NLS-1$
 	public static final String GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR = "groovy.editor.highlight.gjdk.color"; //$NON-NLS-1$
@@ -63,18 +61,18 @@ public class PreferenceConstants {
 	public static final String GROOVY_EDITOR_GROOVYDOC_LINK_COLOR = "groovy.editor.groovyDoc.link.color"; //$NON-NLS-1$
 
 	public static final String GROOVY_EDITOR_FOLDING_ENABLED = "groovy.editor.folding.enabled"; //$NON-NLS-1$
-	
-	// toggles whether an individual project should add the groovy lib folder to the classpath 
+
+	// toggles whether an individual project should add the groovy lib folder to the classpath
     public static final String GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL = "groovy.classpath.use.groovy.lib.global";
 
-    // toggles whether the global default is to add the groovy lib folder to the classpath 
+    // toggles whether the global default is to add the groovy lib folder to the classpath
 	public static final String GROOVY_CLASSPATH_USE_GROOVY_LIB = "groovy.classpath.use.groovy,lib";
-	
+
 	public static final String GROOVY_JUNIT_MONOSPACE_FONT = "groovy.junit.monospace.font";
-	
-	
+
+
 	public static final String GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS = "groovy.plugin.ask.to.convert";
-	
+
 	public static final String GROOVY_SEMANTIC_HIGHLIGHTING = "groovy.semantic.highlighting";
 
 	// if true do not use parens around methods
@@ -82,19 +80,20 @@ public class PreferenceConstants {
 
 	// if true use brackets for closure args
 	public static final String GROOVY_CONTENT_ASSIST_BRACKETS = "groovy.contentassist.brackets";
-	
+
 	// if true, then groovy internal stack frames are de-emphasized
 	public static final String GROOVY_DEBUG_FILTER_STACK = "groovy.debug.filter.stack";
-	// comman separated list of packages to filter
+
+    // separated list of packages to filter
 	public static final String GROOVY_DEBUG_FILTER_LIST = "groovy.debug.filter.list";
-	
-	// default location for running scripts
-	// can be: proj_home, script_loc, eclipse_home 
+
+    // should the user be prompted to force Groovy-specific debug options?
+    public static final String GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP = "groovy.debug.force_options";
+
+    // default location for running scripts
+	// can be: proj_home, script_loc, eclipse_home
 	public static final String GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY = "groovy.scripts.workingdir";
 	public static final String GROOVY_SCRIPT_PROJECT_HOME = "proj_home";
 	public static final String GROOVY_SCRIPT_SCRIPT_LOC = "script_loc";
 	public static final String GROOVY_SCRIPT_ECLIPSE_HOME = "eclipse_home";
-	
-	// temporary measure to disable groovy refactoring support
-	public static final String GROOVY_REFACTORING_ENABLED = "groovy.refactoring.enabled";
 }
