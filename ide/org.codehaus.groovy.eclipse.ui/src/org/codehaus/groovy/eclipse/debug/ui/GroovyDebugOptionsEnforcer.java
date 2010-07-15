@@ -15,17 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.debug.ui;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.jdt.internal.debug.ui.IJDIPreferencesConstants;
 import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
 import org.eclipse.jdt.internal.debug.ui.JavaDebugOptionsManager;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 /**
  * Checks that the enhanced Groovy debug options are all enabled.
@@ -55,9 +54,13 @@ public class GroovyDebugOptionsEnforcer {
         forceStepThroughFilters();
         forceUseStepFilters();
         forceGroovyStepFilters();
-        try {
-            ((ScopedPreferenceStore) preferenceStore).save();
-        } catch (IOException e) {}
+        forceDetailFormatter();
+    }
+
+    private void forceDetailFormatter() {
+        // ensure that Reference objects in closures are formatted nicely in the
+        // variables view
+        new ForceDetailFormatter().forceReferenceFormatter();
     }
 
     private void forceLogicalStructure() {
@@ -99,5 +102,12 @@ public class GroovyDebugOptionsEnforcer {
 
         String newInactive = JavaDebugOptionsManager.serializeList(inactiveList.toArray(new String[0]));
         preferenceStore.setValue(IJDIPreferencesConstants.PREF_INACTIVE_FILTERS_LIST, newInactive);
+    }
+
+    public void maybeForce(IPreferenceStore store) {
+        if (store.getBoolean(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP)) {
+            force();
+            store.setValue(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP, false);
+        }
     }
 }

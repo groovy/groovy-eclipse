@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
-import org.codehaus.groovy.eclipse.debug.ui.ForceDetailFormatter;
+import org.codehaus.groovy.eclipse.debug.ui.GroovyDebugOptionsEnforcer;
 import org.codehaus.groovy.eclipse.debug.ui.GroovyJavaDebugElementAdapterFactory;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.preferences.AskToConvertLegacyProjects;
@@ -46,7 +46,7 @@ import org.osgi.framework.BundleContext;
  * The main plugin class to be used in the desktop.
  */
 public class GroovyPlugin extends AbstractUIPlugin {
-	
+
     private final class JUnitPageListener implements IPageListener {
         public void pageOpened(IWorkbenchPage page) {
             IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
@@ -70,7 +70,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	 * The single plugin instance
 	 */
 	private static GroovyPlugin plugin;
-	
+
 	static boolean trace;
 
 	private GroovyTextTools textTools;
@@ -78,17 +78,17 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.ui";
 
 	public static final String GROOVY_TEMPLATE_CTX = "org.codehaus.groovy.eclipse.templates";
-	
+
 	private ContributionContextTypeRegistry fContextTypeRegistry;
-	    
+
 	private ContributionTemplateStore fTemplateStore;
 
     private EnsureJUnitFont ensure;
 
     private IPageListener junitListener;
-    
+
     private boolean oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT;
-	
+
 	static {
 		String value = Platform
 				.getDebugOption("org.codehaus.groovy.eclipse/trace"); //$NON-NLS-1$
@@ -125,7 +125,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
 	/**
 	 * Returns the active workbench window
-	 * 
+	 *
 	 * @return the active workbench window
 	 */
 	public static IWorkbenchWindow getActiveWorkbenchWindow() {
@@ -138,35 +138,35 @@ public class GroovyPlugin extends AbstractUIPlugin {
 		}
 		return workBench.getActiveWorkbenchWindow();
 	}
-	
+
 	/**
 	 * Logs an exception
-	 * 
+	 *
 	 * @param message The message to save.
 	 * @param exception The exception to be logged.
 	 */
 	public void logException(String message, Exception exception) {
 		log(IStatus.ERROR, message, exception);
 	}
-	
+
     /**
      * Logs a warning.
-     * 
+     *
      * @param message The warning to log.
      */
     public void logWarning( final String message ){
     	log(IStatus.WARNING, message, null);
     }
-    
+
 	/**
 	 * Logs an information message.
-	 * 
+	 *
 	 * @param message The message to log.
 	 */
 	public void logTraceMessage(String message) {
 		log(IStatus.INFO, message, null);
 	}
-	
+
 	private void log(int severity, String message, Exception exception) {
 		final IStatus status = new Status( severity, getBundle().getSymbolicName(), 0, message, exception );
         getLog().log( status );
@@ -178,7 +178,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
 		}
 	}
 
-	public void start(BundleContext context) throws Exception {
+	@Override
+    public void start(BundleContext context) throws Exception {
 		super.start(context);
 		textTools = new GroovyTextTools();
 		addMonospaceFontListener();
@@ -189,13 +190,14 @@ public class GroovyPlugin extends AbstractUIPlugin {
 		IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
 		oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT = preferenceStore.getBoolean(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
         preferenceStore.setValue(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT, false);
-        
-        // register our own stack frame label provider so that groovy stack frames are 
+
+        // register our own stack frame label provider so that groovy stack frames are
         // shown differently
         GroovyJavaDebugElementAdapterFactory.connect();
-        
-        // ensure that Reference objects in closures are formatted nicely in the variables view
-        new ForceDetailFormatter().forceReferenceFormatter();
+
+        if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP)) {
+            new GroovyDebugOptionsEnforcer().maybeForce(getPreferenceStore());
+        }
 	}
 
     private void addMonospaceFontListener() {
@@ -207,13 +209,13 @@ public class GroovyPlugin extends AbstractUIPlugin {
         } catch (NullPointerException e) {
             // ignore, UI has not been initialized yet
         }
-        
+
         getPreferenceStore().addPropertyChangeListener(ensure);
         PrefUtil.getInternalPreferenceStore().addPropertyChangeListener(ensure);
-        
+
         maybeAskToConvertLegacyProjects();
     }
-    
+
     private void removeMonospaceFontListener() {
         try {
             // listen for activations of the JUnit view and ensure monospace font if requested.
@@ -228,9 +230,9 @@ public class GroovyPlugin extends AbstractUIPlugin {
         getPreferenceStore().removePropertyChangeListener(ensure);
         PrefUtil.getInternalPreferenceStore().removePropertyChangeListener(ensure);
     }
-	
+
 	/**
-     * 
+     *
      */
     private void maybeAskToConvertLegacyProjects() {
         AskToConvertLegacyProjects ask = new AskToConvertLegacyProjects();
@@ -253,7 +255,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     }
 
-	
+
     public GroovyTextTools getTextTools() {
         return textTools;
     }
