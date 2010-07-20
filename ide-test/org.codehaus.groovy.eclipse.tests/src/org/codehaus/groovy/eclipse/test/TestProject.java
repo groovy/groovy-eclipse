@@ -370,6 +370,8 @@ public class TestProject {
         System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
         newEntries[oldEntries.length] = JavaRuntime
                 .getDefaultJREContainerEntry();
+//        newEntries[oldEntries.length] = JavaRuntime
+//                .getJREVariableEntry();
         javaProject.setRawClasspath(newEntries, null);
     }
 

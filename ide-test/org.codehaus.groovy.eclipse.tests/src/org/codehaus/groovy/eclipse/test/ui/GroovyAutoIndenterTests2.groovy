@@ -591,5 +591,105 @@ public class Blah {
     <***>}
 """
     }
-		
+	void testAutoCloseBracesInString() {
+        makeEditor("""
+public class Blah {
+
+    void echo(msg) {
+        println "Echoing: <***>"
+    }
+}
+""")
+        send('${')
+        assertEditorContents '''
+public class Blah {
+
+    void echo(msg) {
+        println "Echoing: ${<***>}"
+    }
+}
+'''
+    }
+	
+	void testAutoCloseBracesInMultiString() {
+        makeEditor('''
+public class Blah {
+
+    void echo(msg) {
+        println """Echoing: 
+        <***>
+        """
+    }
+}
+''')
+        send('${')
+        assertEditorContents '''
+public class Blah {
+
+    void echo(msg) {
+        println """Echoing: 
+        ${<***>}
+        """
+    }
+}
+'''
+    }
+	void testAutoCloseBracesInString2() {
+		makeEditor("""
+public class Blah {
+
+	void echo(msg) {
+		println "Echoing: <***>}"
+	}
+}
+""")
+		send('${')
+		assertEditorContents '''
+public class Blah {
+
+	void echo(msg) {
+		println "Echoing: ${<***>}"
+	}
+}
+'''
+	}
+
+	void testAutoCloseBracesInString3() {
+		makeEditor("""
+public class Blah {
+
+	void echo(msg) {
+		println "Echoing: <***>boohoo}"
+	}
+}
+""")
+		send('${')
+		assertEditorContents '''
+public class Blah {
+
+	void echo(msg) {
+		println "Echoing: ${<***>boohoo}"
+	}
+}
+'''
+	}
+	void testAutoCloseBracesInString4() {
+		makeEditor("""
+public class Blah {
+
+	void echo(msg) {
+		println "Echoing: <***>"
+	}
+}
+""")
+		send('{')
+		assertEditorContents '''
+public class Blah {
+
+	void echo(msg) {
+		println "Echoing: {"
+	}
+}
+'''
+	}
 }
