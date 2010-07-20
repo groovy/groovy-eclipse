@@ -173,8 +173,9 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
     @Override
     public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer, String contentType) {
-        if (GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(contentType))
-            return new IAutoEditStrategy[] { new GroovyMultilineStringAutoEditStrategy() };
+        if (GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(contentType) || IJavaPartitions.JAVA_STRING.equals(contentType)) {
+            return new IAutoEditStrategy[] { new GroovyMultilineStringAutoEditStrategy(contentType) };
+        }
         IAutoEditStrategy[] strats = super.getAutoEditStrategies(sourceViewer, contentType);
         for (int i = 0; i < strats.length; i++) {
             if (strats[i] instanceof JavaAutoIndentStrategy) {
