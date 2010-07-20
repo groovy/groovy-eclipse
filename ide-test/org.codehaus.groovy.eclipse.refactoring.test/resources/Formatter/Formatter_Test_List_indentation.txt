@@ -1,0 +1,44 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+def aClosure = {
+println it
+}
+
+def aList = [
+1,
+2,
+3
+]
+
+def nestedList = [
+1,
+2,
+[
+3,
+4,
+],
+5
+]
+###exp
+def aClosure = {
+	println it
+}
+
+def aList = [
+	1,
+	2,
+	3
+]
+
+def nestedList = [
+	1,
+	2,
+	[
+		3,
+		4,
+	],
+	5
+]
+###end

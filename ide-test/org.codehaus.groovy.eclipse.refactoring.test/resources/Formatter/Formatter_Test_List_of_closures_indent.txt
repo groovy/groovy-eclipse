@@ -1,0 +1,14 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+def all_prints = [
+{ println "A" },
+{ println "B" }
+]
+###exp
+def all_prints = [
+	{ println "A" },
+	{ println "B" }
+]
+###end

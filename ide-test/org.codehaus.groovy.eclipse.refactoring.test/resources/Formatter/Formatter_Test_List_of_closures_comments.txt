@@ -1,0 +1,27 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+def shortList = [//co
+1,
+2,//me
+3 //nt 
+]
+
+def emptyList = [/*empty*/]
+
+def alsoEmpty = [
+//empty
+]
+###exp
+def shortList = [//co
+	1, 2, //me
+	3 //nt 
+]
+
+def emptyList = [/*empty*/]
+
+def alsoEmpty = [
+	//empty
+]
+###end
