@@ -373,4 +373,24 @@ public class GroovyDocumentScanner implements IDocumentListener {
         return tokens.get(index);
     }
 
+    public Token getNextToken(Token token) throws BadLocationException {
+        return getTokenFrom(getOffset(token) + 1);
+    }
+
+    public Token getLastNonWhitespaceTokenBefore(int offset) throws BadLocationException {
+        Token result = getLastTokenBefore(offset);
+        while (result != null && isWhitespace(result))
+            result = getLastTokenBefore(result);
+        return result;
+    }
+
+    /**
+     * @param result
+     * @return
+     */
+    private boolean isWhitespace(Token result) {
+        int type = result.getType();
+        return type == GroovyTokenTypes.WS || type == GroovyTokenTypes.NLS;
+    }
+
 }

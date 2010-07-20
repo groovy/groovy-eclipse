@@ -19,17 +19,21 @@
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.ClosuresInCodePredicate;
 import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.CorrectLineWrap;
 import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.NextLine;
 import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.SameLine;
+import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.InsertEdit;
@@ -64,12 +68,109 @@ public class GroovyBeautifier {
 		MultiTextEdit edits = new MultiTextEdit();
 
         combineClosures(edits);
+        formatLists(edits);
 		correctBraces(edits);
 
 		return edits;
 	}
 
-	private void combineClosures(MultiTextEdit edits) throws BadLocationException {
+    private void formatLists(MultiTextEdit edits) {
+        ASTScanner scanner = new ASTScanner(formatter.getProgressRootNode(), new ListInCodePredicate(),
+                formatter.getProgressDocument());
+        scanner.startASTscan();
+        for(ASTNode _node : scanner.getMatchedNodes().keySet()) {
+            ListExpression node = ((ListExpression)_node);
+            int nodeStart = node.getStart();
+            int nodeEnd = node.getEnd();
+            int nodeLen = nodeEnd - nodeStart;
+            boolean isLong = nodeLen > 25;
+            List<Expression> exps = node.getExpressions();
+            if (isLong || (hasClosureElement(node) && node.getExpressions().size() > 1)) {
+                //Split the list
+                GroovyDocumentScanner tokens = formatter.getTokens();
+                for (int i = 0; i < exps.size(); i++) {
+                    Expression exp = exps.get(i);
+                    Token before = tokens.getLastTokenBefore(exp.getStart());
+                    try {
+                        while (before.getType() != GroovyTokenTypes.LBRACK && before.getType() != GroovyTokenTypes.COMMA) {
+                            before = tokens.getLastTokenBefore(before);
+                        }
+                        replaceWhiteSpaceAfter(edits, before, formatter.getNewLine());
+                    } catch (BadLocationException e) {
+                        Util.log(e);
+                    }
+                }
+                Token lastToken;
+                try {
+                    lastToken = tokens.getLastNonWhitespaceTokenBefore(node.getEnd() - 1);
+                    replaceWhiteSpaceAfter(edits, lastToken, formatter.getNewLine());
+                } catch (BadLocationException e) {
+                    Util.log(e);
+                }
+            }
+            else {
+                //Compact the list
+                GroovyDocumentScanner tokens = formatter.getTokens();
+                for (int i = 0; i < exps.size(); i++) {
+                    Expression exp = exps.get(i);
+                    Token before = tokens.getLastTokenBefore(exp.getStart());
+                    try {
+                        while (before.getType() != GroovyTokenTypes.LBRACK && before.getType() != GroovyTokenTypes.COMMA) {
+                            before = tokens.getLastTokenBefore(before);
+                        }
+                        replaceWhiteSpaceAfter(edits, before, before.getType() == GroovyTokenTypes.LBRACK ? "" : " ");
+                    } catch (BadLocationException e) {
+                        Util.log(e);
+                    }
+                }
+                Token lastToken;
+                try {
+                    lastToken = tokens.getLastNonWhitespaceTokenBefore(node.getEnd() - 1);
+                    replaceWhiteSpaceAfter(edits, lastToken,
+                            lastToken.getType() == GroovyTokenTypes.SL_COMMENT ? formatter.getNewLine() : "");
+                } catch (BadLocationException e) {
+                    Util.log(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Create an edit that replaces whitespace tokens immediately after given
+     * token with a String.
+     */
+    private void replaceWhiteSpaceAfter(MultiTextEdit edits, Token token, String replaceWith) {
+        GroovyDocumentScanner tokens = formatter.getTokens();
+        try {
+            int editStart = tokens.getOffset(token)+token.getText().length(); // Warning only works for certain token types!
+            Token first = tokens.getNextToken(token); // First whitespace token (if any)
+            Token last = first; // First non-whitespace token
+            // If no white space tokens where found then first and last will be
+            // the same token
+            // (i.e. token just after the given token
+            while (isWhiteSpace(last.getType())) {
+                last = tokens.getNextToken(last);
+            }
+            replaceFromTo(editStart, tokens.getOffset(last), replaceWith, edits);
+        } catch (BadLocationException e) {
+            Util.log(e);
+        }
+    }
+
+    private boolean isWhiteSpace(int type) {
+        return type == GroovyTokenTypes.WS || type == GroovyTokenTypes.NLS;
+    }
+
+    private boolean hasClosureElement(ListExpression node) {
+        List<Expression> list = node.getExpressions();
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i) instanceof ClosureExpression)
+                return true;
+        }
+        return false;
+    }
+
+    private void combineClosures(MultiTextEdit edits) throws BadLocationException {
 		ASTScanner scanner = new ASTScanner(formatter.getProgressRootNode(),new ClosuresInCodePredicate(),formatter.getProgressDocument());
 		scanner.startASTscan();
 		for(ASTNode node : scanner.getMatchedNodes().keySet()) {
@@ -172,6 +273,10 @@ public class GroovyBeautifier {
         addEdit(new ReplaceEdit(startEdit, endEdit - startEdit, with), container);
     }
 
+    private void replaceFromTo(int startEdit, int endEdit, String with, MultiTextEdit container) {
+        addEdit(new ReplaceEdit(startEdit, endEdit - startEdit, with), container);
+    }
+
     private void correctBraces(MultiTextEdit edits) throws BadLocationException {
 		CorrectLineWrap lCurlyCorrector = null;
 		CorrectLineWrap rCurlyCorrector = null;
@@ -238,7 +343,17 @@ public class GroovyBeautifier {
                     e.printStackTrace();
                 }
             } // Debug -- end
-			container.addChild(edit);
+            try {
+                container.addChild(edit);
+            }
+            catch (MalformedTreeException e) {
+                //Swallow:
+                // This will cause later edits that conflict with earlier ones to be ignored.
+                // Can use this to "prioritise" edits generated by different formatting components.
+                // Put the formatting components you want to have priority earlier in the call sequence.
+                if (DEBUG_EDITS)
+                    System.out.println("Last edit was ignored: "+e.getMessage());
+            }
 		}
 	}
 

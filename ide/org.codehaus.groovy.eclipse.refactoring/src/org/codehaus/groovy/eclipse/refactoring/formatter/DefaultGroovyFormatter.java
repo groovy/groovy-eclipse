@@ -18,8 +18,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import java.util.Vector;
 import java.util.Map.Entry;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +34,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTNodeInfo;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.IncludesClosurePredicate;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.IncludesClosureOrListPredicate;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.SourceCodePredicate;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -186,7 +186,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 			}
 			if (isMultilineNodeType(node)) {
 				boolean closureTest = false;
-				IncludesClosurePredicate cltest = new IncludesClosurePredicate(
+                IncludesClosureOrListPredicate cltest = new IncludesClosureOrListPredicate(
 						closureTest, t.getLine());
 				node.visit(cltest);
 				if (!cltest.getContainer()) {

@@ -98,12 +98,14 @@ public class GroovyIndentation {
 								.getTokenAfterParenthesis(i));
 						break;
 					case GroovyTokenTypes.LCURLY:
+                    case GroovyTokenTypes.LBRACK:
 						indentation++;
 						break;
 					case GroovyTokenTypes.LITERAL_switch:
 						indentendSwitchStatement(token);
 						break;
 					case GroovyTokenTypes.RCURLY:
+                    case GroovyTokenTypes.RBRACK:
 						indentation--;
 						break;
 					case GroovyTokenTypes.LITERAL_else:
@@ -117,7 +119,8 @@ public class GroovyIndentation {
 						break;
 
 					case GroovyTokenTypes.NLS:
-						if (formatter.getNextTokenIncludingNLS(i).getType() == GroovyTokenTypes.RCURLY)
+                        int nextTokenType = formatter.getNextTokenIncludingNLS(i).getType();
+                        if (nextTokenType == GroovyTokenTypes.RCURLY || nextTokenType == GroovyTokenTypes.RBRACK)
 							tempIndentation[token.getLine()]--;
 						int offsetAfterNLS = offsetToken + formatter.getProgressDocument().getLineDelimiter(
 								token.getLine()-1).length();
