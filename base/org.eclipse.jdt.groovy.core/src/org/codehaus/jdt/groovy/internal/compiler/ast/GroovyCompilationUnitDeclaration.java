@@ -188,12 +188,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				System.err.println("Ignoring GroovyBugError since it is likely caused by earlier issues.  Ignored problem is '"
 						+ gbr.getMessage() + "'");
 			} else {
-				System.err.println("Groovy Bug --- " + gbr.getBugText());
-				gbr.printStackTrace();
-				// The groovy compiler threw an exception
-				// FIXASC (M3) Should record these errors as a problem on the project
-				// should *not* throw these because of bad syntax in the file
-				Util.log(gbr, "Groovy bug when compiling.");
+				boolean reportit = true;
+				if (gbr.getCause() instanceof AbortCompilation) {
+					// might be nothing to log - AbortCompilations can occur 'normally' during processing
+					// when jobs are stopped due to any results they produce being stale.
+					AbortCompilation abort = (AbortCompilation) gbr.getCause();
+					if (abort.isSilent) {
+						reportit = false;
+					}
+				}
+				if (reportit) {
+					System.err.println("Groovy Bug --- " + gbr.getBugText());
+					gbr.printStackTrace();
+					// The groovy compiler threw an exception
+					// FIXASC (M3) Should record these errors as a problem on the project
+					// should *not* throw these because of bad syntax in the file
+					Util.log(gbr, "Groovy bug when compiling.");
+				}
 			}
 		}
 		return false;
@@ -369,8 +380,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 								TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 								annotationReference.sourceStart = annotationNode.getStart();
 								annotationReference.sourceEnd = annotationNode.getEnd();
-								SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
-										.getStart());
+								SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference,
+										annotationNode.getStart());
 								annotation.memberValue = new ClassLiteralAccess(value.getEnd(),
 										classLiteralToTypeReference((PropertyExpression) value));
 								annotation.declarationSourceEnd = annotation.sourceStart
@@ -384,8 +395,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 							annotationReference.sourceStart = annotationNode.getStart();
 							annotationReference.sourceEnd = annotationNode.getEnd();
-							SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
-									.getStart());
+							SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference,
+									annotationNode.getStart());
 							String v = ((VariableExpression) value).getName();
 							TypeReference ref = null;
 							int start = annotationReference.sourceStart;
@@ -410,8 +421,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 								TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
 								annotationReference.sourceStart = annotationNode.getStart();
 								annotationReference.sourceEnd = annotationNode.getEnd() - 1;
-								SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode
-										.getStart());
+								SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference,
+										annotationNode.getStart());
 
 								ArrayInitializer arrayInitializer = new ArrayInitializer();
 								arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
@@ -1251,8 +1262,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// FIXASC determine when array dimension used in this case,
 				// is it 'A<T[]> or some silliness?
 				long l = toPos(start, end - 1);
-				return new ParameterizedSingleTypeReference(name.toCharArray(), typeArguments
-						.toArray(new TypeReference[typeArguments.size()]), 0, l);
+				return new ParameterizedSingleTypeReference(name.toCharArray(),
+						typeArguments.toArray(new TypeReference[typeArguments.size()]), 0, l);
 			}
 		} else {
 			char[][] compoundName = CharOperation.splitOn('.', name.toCharArray());
@@ -1352,9 +1363,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						}
 					}
 					if (binding == null) {
-						RuntimeException rEx = new RuntimeException("Missing binding");
+						RuntimeException rEx = new RuntimeException("Couldn't find binding for '" + classname
+								+ "': do you maybe have a duplicate type around?");
 						rEx.printStackTrace();
-						Util.log(rEx, "Couldn't find binding for '" + classname + "'");
+						Util.log(rEx, "Couldn't find binding for '" + classname + "': do you maybe have a duplicate type around?");
 					} else {
 						byte[] classbytes = clazz.getBytes();
 						String path = clazz.getName().replace('.', '/');

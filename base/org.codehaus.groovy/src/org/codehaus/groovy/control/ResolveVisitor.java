@@ -1222,8 +1222,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
     
     // GRECLIPSE: new methods
-    protected void commencingResolution() {
+    /**
+     * @return true if resolution should continue, false otherwise (because, for example, it previously succeeded for this unit)
+     */
+    protected boolean commencingResolution() {
     	// template method
+    	return true;
     }
     protected void finishedResolution() {
     	// template method
@@ -1248,7 +1252,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         ClassNode oldNode = currentClass;
         currentClass = node;
         // GRECLIPSE: start
-        commencingResolution();
+        if (!commencingResolution()) {
+        	return;
+        }
         // end
         resolveGenericsHeader(node.getGenericsTypes());
 

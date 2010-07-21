@@ -64,7 +64,63 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "p1.Hello", "Hello world", "");
 
 	}
-	
+
+	public void testTypeDuplication_GRE796_1() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "Foo",
+				""
+			);
+
+		IPath root2 = env.addPackageFragmentRoot(projectPath, "src2"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToSecond = env.addGroovyClass(root2, "p", "Foo",
+			"package p;\n"+
+			"class Foo {}\n"
+			);
+
+		incrementalBuild(projectPath);
+		expectingOnlySpecificProblemFor(pathToSecond, new Problem("/Project/src2/p/Foo.groovy", "The type Foo is already defined", pathToSecond, 17,20, 40, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	public void testTypeDuplication_GRE796_2() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "Foo",
+			"package p;\n"+
+			"class Foo {}\n"
+			);
+
+		IPath root2 = env.addPackageFragmentRoot(projectPath, "src2"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToSecond = env.addGroovyClass(root2, "p", "Foo",
+				""
+			);
+
+		incrementalBuild(projectPath);
+		expectingOnlySpecificProblemFor(pathToSecond, new Problem("/Project/src2/p/Foo.groovy", "The type Foo is already defined", pathToSecond, 0, 0, 40, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
 	
 	public void testClosureBasics() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

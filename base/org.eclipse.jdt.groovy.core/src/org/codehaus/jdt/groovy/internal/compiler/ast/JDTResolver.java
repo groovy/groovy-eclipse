@@ -13,7 +13,9 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import groovy.lang.GroovyClassLoader;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -97,12 +99,9 @@ public class JDTResolver extends ResolveVisitor {
 	private GroovyCompilationUnitScope activeScope = null;
 
 	// map of scopes in which resolution can happen
-	// FIXADE use the class name instead of the class because the mapping from
-	// class node to groovy type declaration is many to one when using multiple
-	// resovlers while requesting the concrete AST.
-	// And besides, equality testing and hashcode makes use of the fully qualified name
-	// anyway.
-	private Map<String, GroovyTypeDeclaration> scopes = new HashMap<String, GroovyTypeDeclaration>();
+	private Map<ClassNode, GroovyTypeDeclaration> scopes = new HashMap<ClassNode, GroovyTypeDeclaration>();
+
+	private List<ClassNode> haveBeenResolved = new ArrayList<ClassNode>();
 
 	// Cache from bindings to JDTClassNodes to avoid unnecessary JDTClassNode creation
 	private Map<Binding, JDTClassNode> nodeCache = new HashMap<Binding, JDTClassNode>();
@@ -508,10 +507,14 @@ public class JDTResolver extends ResolveVisitor {
 	 * scope for resolutionification. If not able to find a scope, that is a serious problem!
 	 */
 	@Override
-	protected void commencingResolution() {
-		GroovyTypeDeclaration gtDeclaration = scopes.get(this.currentClass.getName());
+	protected boolean commencingResolution() {
+		GroovyTypeDeclaration gtDeclaration = scopes.get(this.currentClass);
 		activeScope = null;
 		if (gtDeclaration == null) {
+			if (haveBeenResolved.contains(currentClass)) {
+				// already resolved!
+				return false;
+			}
 			GroovyEclipseBug geb = new GroovyEclipseBug("commencingResolution failed: no declaration found for class "
 					+ currentClass);
 			geb.printStackTrace();
@@ -520,8 +523,9 @@ public class JDTResolver extends ResolveVisitor {
 		if (gtDeclaration.scope == null) {
 			// The scope may be null if there were errors in the code - let's not freak out the user here
 			if (gtDeclaration.hasErrors()) {
-				throw new GroovyEclipseBug("commencingResolution failed: aborting resolution, type " + currentClass.getName()
-						+ " had earlier problems");
+				return false;
+				// throw new GroovyEclipseBug("commencingResolution failed: aborting resolution, type " + currentClass.getName()
+				// + " had earlier problems");
 			}
 			GroovyEclipseBug geb = new GroovyEclipseBug(
 					"commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
@@ -532,11 +536,13 @@ public class JDTResolver extends ResolveVisitor {
 		if (debug) {
 			System.err.println("Resolver: commencing resolution for " + this.currentClass.getName());
 		}
+		return true;
 	}
 
 	@Override
 	protected void finishedResolution() {
-		scopes.remove(this.currentClass.getName());
+		scopes.remove(this.currentClass);
+		haveBeenResolved.add(currentClass);
 	}
 
 	private GroovyCompilationUnitScope getScope() {
@@ -553,7 +559,7 @@ public class JDTResolver extends ResolveVisitor {
 	 * used.
 	 */
 	public void record(GroovyTypeDeclaration gtDeclaration) {
-		scopes.put(gtDeclaration.getClassNode().getName(), gtDeclaration);
+		scopes.put(gtDeclaration.getClassNode(), gtDeclaration);
 		if (gtDeclaration.memberTypes != null) {
 			TypeDeclaration[] members = gtDeclaration.memberTypes;
 			for (int m = 0; m < members.length; m++) {

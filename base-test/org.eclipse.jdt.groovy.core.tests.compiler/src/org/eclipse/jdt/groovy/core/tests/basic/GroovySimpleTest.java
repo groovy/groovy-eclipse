@@ -199,6 +199,58 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n");
     }
     
+
+    /**
+     * This test is looking at what happens when a valid type is compiled ahead of two problem types (problematic
+     * since they both declare the same class).  Although the first file gets through resolution OK, re-resolution
+     * is attempted because the SourceUnit isn't tagged as having succeeded that phase - the exception thrown
+     * for the real problem jumps over the tagging process. 
+     */
+    public void testDuplicateClassesUnnecessaryExceptions_GRE796() {
+    	this.runNegativeTest(new String[]{
+    			"spring/resources.groovy",
+    			"foo = {}\n",
+    			"A.groovy",
+    			"class Foo {}\n",
+    			"Foo.groovy",
+    			"class Foo {}",
+    			},
+    			"----------\n" + 
+    			"1. ERROR in Foo.groovy (at line 1)\n" + 
+    			"	class Foo {}\n" + 
+    			"	 ^\n" + 
+    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy are containing both a class of the name Foo.\n" + 
+    			"----------\n" + 
+    			"2. ERROR in Foo.groovy (at line 1)\n" + 
+    			"	class Foo {}\n" + 
+    			"	      ^^^\n" + 
+    			"The type Foo is already defined\n" + 
+    			"----------\n");
+    }
+    
+    public void testDuplicateClassesUnnecessaryExceptions_GRE796_2() {
+    	this.runNegativeTest(new String[]{
+    			"spring/resources.groovy",
+    			"foo = {}\n",
+    			"a/Foo.groovy",
+    			"//package a\n"+
+    			"//class Foo {}\n",
+    			"a/Foo.groovy",
+    			"package a\n"+
+    			"class Foo {}",
+    			},
+    			"----------\n" + 
+    			"1. ERROR in a\\Foo.groovy\n" + 
+    			"Groovy:Found unexpected MOP methods in the class node for Foo(super$3$getProperty)\n" + 
+    			"----------\n" + 
+    			"----------\n" + 
+    			"1. ERROR in a\\Foo.groovy (at line 2)\n" + 
+    			"	class Foo {}\n" + 
+    			"	^\n" + 
+    			"Groovy:Invalid duplicate class definition of class a.Foo : The source a\\Foo.groovy contains at least two definitions of the class a.Foo.\n" + 
+    			"----------\n");
+    }
+    
     public void testAnnos_GRE697() {
 	    	this.runConformTest(new String[]{
 	    			"A.groovy",
