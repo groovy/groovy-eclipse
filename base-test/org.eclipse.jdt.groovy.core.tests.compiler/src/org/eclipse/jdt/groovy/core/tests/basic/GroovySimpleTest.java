@@ -247,7 +247,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"1. ERROR in a\\Foo.groovy (at line 2)\n" + 
     			"	class Foo {}\n" + 
     			"	^\n" + 
-    			"Groovy:Invalid duplicate class definition of class a.Foo : The source a\\Foo.groovy contains at least two definitions of the class a.Foo.\n" + 
+    			"Groovy:Invalid duplicate class definition of class a.Foo : The source a"+File.separator+"Foo.groovy contains at least two definitions of the class a.Foo.\n" + 
     			"----------\n");
     }
     
