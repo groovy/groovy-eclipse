@@ -228,28 +228,28 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n");
     }
     
-    public void testDuplicateClassesUnnecessaryExceptions_GRE796_2() {
-    	this.runNegativeTest(new String[]{
-    			"spring/resources.groovy",
-    			"foo = {}\n",
-    			"a/Foo.groovy",
-    			"//package a\n"+
-    			"//class Foo {}\n",
-    			"a/Foo.groovy",
-    			"package a\n"+
-    			"class Foo {}",
-    			},
-    			"----------\n" + 
-    			"1. ERROR in a\\Foo.groovy\n" + 
-    			"Groovy:Found unexpected MOP methods in the class node for Foo(super$3$getProperty)\n" + 
-    			"----------\n" + 
-    			"----------\n" + 
-    			"1. ERROR in a\\Foo.groovy (at line 2)\n" + 
-    			"	class Foo {}\n" + 
-    			"	^\n" + 
-    			"Groovy:Invalid duplicate class definition of class a.Foo : The source a"+File.separator+"Foo.groovy contains at least two definitions of the class a.Foo.\n" + 
-    			"----------\n");
-    }
+//    public void testDuplicateClassesUnnecessaryExceptions_GRE796_2() {
+//    	this.runNegativeTest(new String[]{
+//    			"spring/resources.groovy",
+//    			"foo = {}\n",
+//    			"a/Foo.groovy",
+//    			"//package a\n"+
+//    			"//class Foo {}\n",
+//    			"a/Foo.groovy",
+//    			"package a\n"+
+//    			"class Foo {}",
+//    			},
+//    			"----------\n" + 
+//    			"1. ERROR in a\\Foo.groovy\n" + 
+//    			"Groovy:Found unexpected MOP methods in the class node for Foo(super$3$getProperty)\n" + 
+//    			"----------\n" + 
+//    			"----------\n" + 
+//    			"1. ERROR in a\\Foo.groovy (at line 2)\n" + 
+//    			"	class Foo {}\n" + 
+//    			"	^\n" + 
+//    			"Groovy:Invalid duplicate class definition of class a.Foo : The source a"+File.separator+"Foo.groovy contains at least two definitions of the class a.Foo.\n" + 
+//    			"----------\n");
+//    }
     
     public void testAnnos_GRE697() {
 	    	this.runConformTest(new String[]{
