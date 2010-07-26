@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -49,7 +48,7 @@ import org.eclipse.jdt.internal.core.SourceType;
 /**
  * @author Andrew Eisenberg
  * @created May 29, 2009
- * 
+ *
  * This class provides some useful methods for accessing Groovy state
  */
 public class GroovyProjectFacade {
@@ -62,24 +61,24 @@ public class GroovyProjectFacade {
             return false;
         }
      }
-     
+
 
     private IJavaProject project;
-     
+
      public GroovyProjectFacade(IJavaProject project) {
          this.project = project;
      }
-     
+
      public GroovyProjectFacade(IJavaElement elt) {
          this.project = elt.getJavaProject();
      }
-    
+
      /**
       * best effort to map a groovy node to a JavaElement
       * If the groovy element is not a declaration (eg- an expression or statement)
       * returns instead the closest enclosing element that can be converted
       * to an IJavaElement
-      * 
+      *
       * If node is a local variable declaration, then returns a LocalVariable
       */
      public IJavaElement groovyNodeToJavaElement(ASTNode node, IFile file) {
@@ -89,16 +88,16 @@ public class GroovyProjectFacade {
              GroovyCore.logWarning("Trying to get a groovy element from a non-groovy file: " + file.getName());
              return unit;
          }
-         
+
          try {
              int start = node.getStart();
              IJavaElement elt = unit.getElementAt(start);
-             
+
              if (node instanceof DeclarationExpression) {
                  int end = node.getEnd();
                  return new LocalVariable(
                          (JavaElement) elt, ((DeclarationExpression) node).getVariableExpression().getName(),
-                         start, end, start, end, 
+                         start, end, start, end,
                          Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType().getName(), false),
                          new org.eclipse.jdt.internal.compiler.ast.Annotation[0]);
              } else {
@@ -109,24 +108,18 @@ public class GroovyProjectFacade {
          }
          return null;
      }
-     
+
      public IType groovyClassToJavaType(ClassNode node) {
          try {
-             String name;
-             // don't replace $ for groovy inner classes since
-             // the $ exists in the source name
-             if (node.redirect() instanceof InnerClassNode) {
-                 name = node.getName();
-             } else {
-                 name = node.getName().replace('$','.');
-             }
+            // GRECLIPSE-800 Ensure that inner class nodes are handled properly
+            String name = node.getName().replace('$', '.');
              return project.findType(name, new NullProgressMonitor());
         } catch (JavaModelException e) {
             GroovyCore.logException("Error converting from Groovy Element to Java Element: " + node.getName(), e);
             return null;
         }
      }
-     
+
      GroovyCompilationUnit groovyModuleToCompilationUnit(ModuleNode node) {
     	 List classes = node.getClasses();
          ClassNode classNode = classes.size() > 0 ? (ClassNode) classes.get(0) : null;
@@ -139,11 +132,11 @@ public class GroovyProjectFacade {
          GroovyCore.logWarning("Trying to get GroovyCompilationUnit for non-groovy module: " + node.getDescription());
          return null;
      }
-     
+
      public ClassNode getClassNodeForName(String name) {
          try {
             IType type = project.findType(name, new NullProgressMonitor());
-             if (type instanceof SourceType) { 
+             if (type instanceof SourceType) {
                  return javaTypeToGroovyClass(type);
              }
         } catch (JavaModelException e) {
@@ -171,7 +164,7 @@ public class GroovyProjectFacade {
          return null;
     }
 
-    
+
     public List<IType> findAllRunnableTypes() throws JavaModelException {
         final List<IType> results = newList();
         IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
@@ -207,7 +200,7 @@ public class GroovyProjectFacade {
             IMethod[] allMethods = type.getMethods();
             for (IMethod method : allMethods) {
                 if (method.getElementName().equals("main") &&
-                        Flags.isStatic(method.getFlags()) && 
+                        Flags.isStatic(method.getFlags()) &&
                         // void or Object are valid return types
                         (method.getReturnType().equals("V") ||
                                 method.getReturnType().endsWith("java.lang.Object;")) &&
@@ -220,7 +213,7 @@ public class GroovyProjectFacade {
         }
         return false;
     }
-    
+
     private static boolean hasAppropriateArrayArgsForMain(
             final String[] params) {
         if (params == null || params.length != 1) {
@@ -235,7 +228,7 @@ public class GroovyProjectFacade {
         } else {
             return false;
         }
-        
+
         String sigNoArray = Signature.getElementType(params[0]);
         String name = Signature.getSignatureSimpleName(sigNoArray);
         String qual = Signature.getSignatureQualifier(sigNoArray);
@@ -261,7 +254,7 @@ public class GroovyProjectFacade {
 
     /**
      * @return
-     * @throws JavaModelException 
+     * @throws JavaModelException
      */
     public List<IType> findAllScripts() throws JavaModelException {
         final List<IType> results = newList();
