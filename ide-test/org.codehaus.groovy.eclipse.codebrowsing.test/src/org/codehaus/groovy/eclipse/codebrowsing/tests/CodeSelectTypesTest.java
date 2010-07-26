@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
@@ -25,7 +25,7 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
     public CodeSelectTypesTest() {
         super(CodeSelectTypesTest.class.getName());
     }
-    
+
     public void testSelectSuperClass() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -52,104 +52,79 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
         assertEquals("Should have found super type 'Super'", "Super", elt[0].getElementName());
         assertTrue("Java Element for type 'Super' should exist", elt[0].exists());
     }
-    
+
     public void testSelectThisClass() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
         String contents = "class This { }";
-        env.addGroovyClass(root, "", "This", contents);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "This.groovy");
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
         IJavaElement[] elt = unit.codeSelect(contents.indexOf("This"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found super type 'This'", "This", elt[0].getElementName());
         assertTrue("Java Element for type 'This' should exist", elt[0].exists());
     }
-    
-    
+
+
     public void testSelectFieldType() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
-        String contentsSub = "class Type { List x }";
-        env.addGroovyClass(root, "", "Sub2", contentsSub);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
-        IJavaElement[] elt = unit.codeSelect(contentsSub.indexOf("List"), 1);
+        String contents = "class Type { List x }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("List"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found super type 'List'", "List", elt[0].getElementName());
         assertTrue("Java Element for type 'List' should exist", elt[0].exists());
     }
-    
+
     public void testSelectMethodType() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
-        String contentsSub = "class Type { List x() { new ArrayList() } }";
-        env.addGroovyClass(root, "", "Sub2", contentsSub);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
-        IJavaElement[] elt = unit.codeSelect(contentsSub.indexOf("List"), 1);
+        String contents = "class Type { List x() { new ArrayList() } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("List"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found super type 'List'", "List", elt[0].getElementName());
         assertTrue("Java Element for type 'List' should exist", elt[0].exists());
     }
     public void testSelectMethodParamType() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
-        String contentsSub = "class Type { def x(List y) {} }";
-        env.addGroovyClass(root, "", "Sub2", contentsSub);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
-        IJavaElement[] elt = unit.codeSelect(contentsSub.indexOf("List"), 1);
+        String contents = "class Type { def x(List y) {} }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("List"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found super type 'List'", "List", elt[0].getElementName());
         assertTrue("Java Element for type 'List' should exist", elt[0].exists());
     }
-    
+
     public void testSelectLocalVarType() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
-        String contentsSub = "class Type { def x() { List y } }";
-        env.addGroovyClass(root, "", "Sub2", contentsSub);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
-        IJavaElement[] elt = unit.codeSelect(contentsSub.indexOf("List"), 1);
+        String contents = "class Type { def x() { List y } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("List"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found super type 'List'", "List", elt[0].getElementName());
         assertTrue("Java Element for type 'List' should exist", elt[0].exists());
     }
     public void testSelectLocalVarTypeInClosure() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
-        String contentsSub = "class Type { def x() { def foo = {\n   List y } } }";
-        env.addGroovyClass(root, "", "Sub2", contentsSub);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
-        IJavaElement[] elt = unit.codeSelect(contentsSub.indexOf("List"), 1);
+        String contents = "class Type { def x() { def foo = {\n   List y } } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("List"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found super type 'List'", "List", elt[0].getElementName());
         assertTrue("Java Element for type 'List' should exist", elt[0].exists());
     }
     public void testSelectLocalVarTypeInScript() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
-        String contentsSub = "List y";
-        env.addGroovyClass(root, "", "Sub2", contentsSub);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
-        IJavaElement[] elt = unit.codeSelect(contentsSub.indexOf("List"), 1);
+        String contents = "List y";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("List"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found super type 'List'", "List", elt[0].getElementName());
         assertTrue("Java Element for type 'List' should exist", elt[0].exists());
     }
-    
+
     public void testSelectTypeInAnnotation1() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
-        String contents = "@RunWith(ATest)\n" + 
-            "class ATest { }\n" +
-            "@interface RunWith {\n" +
-            "Class value()\n}";
-        env.addGroovyClass(root, "", "Sub2", contents);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Sub2.groovy");
+        String contents = "@RunWith(ATest)\n" +
+ "class ATest { }\n"
+                + "@interface RunWith {\n" + "Class value()\n}";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
         IJavaElement[] elt = unit.codeSelect(contents.indexOf("ATest"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found super type 'ATest'", "ATest", elt[0].getElementName());
         assertTrue("Java Element for type 'ATest' should exist", elt[0].exists());
     }
-    
+
     public void testSelectTypeInAnnotation2() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -160,7 +135,7 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
             "Foo value();\n" +
         "}";
         env.addClass(root, "Foo", javaContents);
-        String contents = "@RunWith(Foo.FOO1)\n" + 
+        String contents = "@RunWith(Foo.FOO1)\n" +
             "class ATest { }\n" +
             "@interface RunWith {\n" +
             "Class value()\n}";
@@ -181,7 +156,7 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
             "Foo value();\n" +
         "}";
         env.addClass(root, "Foo", javaContents);
-        String contents = "@RunWith(Foo.FOO1)\n" + 
+        String contents = "@RunWith(Foo.FOO1)\n" +
             "class ATest { }\n" +
             "@interface RunWith {\n" +
             "Class value()\n}";
@@ -197,64 +172,117 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
      * GRECLIPSE-548
      */
     public void testSelectThis1() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
         String contents = "class AClass { " +
-        		"def x() { this } }";
-        env.addGroovyClass(root, "", "Clazz", contents);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Clazz.groovy");
+ "def x() { this } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
         IJavaElement[] elt = unit.codeSelect(contents.indexOf("this"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found class 'AClass'", "AClass", elt[0].getElementName());
         assertTrue("Java Element for type 'AClass' should exist", elt[0].exists());
     }
-    
+
     /**
      * GRECLIPSE-548
      */
     public void testSelectThis2() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
         String contents = "class AClass { " +
         "def x() { this.toString() } }";
-        env.addGroovyClass(root, "", "Clazz", contents);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Clazz.groovy");
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
         IJavaElement[] elt = unit.codeSelect(contents.indexOf("this"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found class 'AClass'", "AClass", elt[0].getElementName());
         assertTrue("Java Element for type 'AClass' should exist", elt[0].exists());
     }
-    
+
     /**
      * GRECLIPSE-548
      */
     public void testSelectSuper1() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
         String contents = "class Super { } \n class AClass extends Super { " +
         "def x() { super } }";
-        env.addGroovyClass(root, "", "Clazz", contents);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Clazz.groovy");
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
         IJavaElement[] elt = unit.codeSelect(contents.indexOf("super"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found class 'Super'", "Super", elt[0].getElementName());
         assertTrue("Java Element for type 'Super' should exist", elt[0].exists());
     }
-    
+
     /**
      * GRECLIPSE-548
      */
     public void testSelectSuper2() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath root = projectPath.append("src");
         String contents = "class Super { } \n class AClass extends Super { " +
-        "def x() { super.toString() } }";
-        env.addGroovyClass(root, "", "Clazz", contents);
-        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Clazz.groovy");
+ "def x() { super.toString() } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
         IJavaElement[] elt = unit.codeSelect(contents.indexOf("super"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found class 'Super'", "Super", elt[0].getElementName());
         assertTrue("Java Element for type 'Super' should exist", elt[0].exists());
     }
-    
+
+    /**
+     * GRECLIPSE-800
+     */
+    public void testSelectInnerType() throws Exception {
+        String contents = "class Outer { \n def m() { Inner x = new Inner() } \n class Inner { } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("Inner"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found class 'Inner'", "Inner",
+                elt[0].getElementName());
+        assertTrue("Java Element for type 'Inner' should exist",
+                elt[0].exists());
+    }
+
+    /**
+     * GRECLIPSE-800
+     */
+    public void testSelectInnerType2() throws Exception {
+        String contents = "class Outer { \n def m() { new Inner() } \n class Inner { } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("Inner"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found class 'Inner'", "Inner",
+                elt[0].getElementName());
+        assertTrue("Java Element for type 'Inner' should exist",
+                elt[0].exists());
+    }
+
+    /**
+     * GRECLIPSE-800
+     */
+    public void testSelectInnerType3() throws Exception {
+        String contents = "class Outer { \n def m() { new Inner() } \n class Inner { } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("Inner"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found class 'Inner'", "Inner",
+                elt[0].getElementName());
+        assertTrue("Java Element for type 'Inner' should exist",
+                elt[0].exists());
+    }
+
+    /**
+     * GRECLIPSE-800
+     */
+    public void testSelectInnerType4() throws Exception {
+        String contents = "class Outer { \n def m() { Inner } \n class Inner { } }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("Inner"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found class 'Inner'", "Inner",
+                elt[0].getElementName());
+        assertTrue("Java Element for type 'Inner' should exist",
+                elt[0].exists());
+    }
+
+    private GroovyCompilationUnit createCompilationUnit(String contents)
+            throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addGroovyClass(root, "", "Clazz", contents);
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root,
+                "Clazz.groovy");
+        return unit;
+    }
 }
