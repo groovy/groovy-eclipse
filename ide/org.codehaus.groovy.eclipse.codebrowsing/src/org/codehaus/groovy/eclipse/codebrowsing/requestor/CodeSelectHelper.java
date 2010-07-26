@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ICodeSelectHelper;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 
@@ -58,7 +59,18 @@ public class CodeSelectHelper implements ICodeSelectHelper {
      */
     private IJavaElement[] returnThisNode(GroovyCompilationUnit unit,
             ASTNode nodeToLookFor) {
-        return new IJavaElement[] { unit.getType(((ClassNode) nodeToLookFor).getNameWithoutPackage()) };
+        // GRECLIPSE-803 ensure inner classes are handled correctly
+        String rawName = ((ClassNode) nodeToLookFor).getNameWithoutPackage();
+        String[] enclosingTypes = rawName.split("\\$");
+        IType candidate = null;
+        for (int i = 0; i < enclosingTypes.length; i++) {
+            if (i == 0) {
+                candidate = unit.getType(enclosingTypes[i]);
+            } else {
+                candidate = candidate.getType(enclosingTypes[i]);
+            }
+        }
+        return new IJavaElement[] { candidate };
     }
 
     /**
