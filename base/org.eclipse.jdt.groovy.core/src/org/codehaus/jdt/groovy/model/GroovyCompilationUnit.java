@@ -154,8 +154,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		super(parent, name, owner);
 	}
 
-	private Object moduleNodeLock = new Object();
-
 	/**
 	 * Returns the module node for this GroovyCompilationUnit creates one if one doesn't exist.
 	 * 
@@ -164,7 +162,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * 
 	 */
 	public ModuleNode getModuleNode() {
-		synchronized (moduleNodeLock) {
+		synchronized (ModuleNodeMapper.getInstance()) {
 			try {
 				// discard the working copy after finishing
 				// if there was no working copy to begin with
@@ -210,15 +208,18 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 	@Override
 	public void discardWorkingCopy() throws JavaModelException {
-		PerWorkingCopyInfo info = getPerWorkingCopyInfo();
-		if (workingCopyInfoWillBeDiscarded(info)) {
-			ModuleNodeMapper.getInstance().remove(info);
+		// GRECLIPSE-804 must synchronize
+		synchronized (ModuleNodeMapper.getInstance()) {
+			PerWorkingCopyInfo info = getPerWorkingCopyInfo();
+			if (workingCopyInfoWillBeDiscarded(info)) {
+				ModuleNodeMapper.getInstance().remove(info);
+			}
+			super.discardWorkingCopy();
 		}
-		super.discardWorkingCopy();
 	}
 
 	/**
-	 * working copy info is about to be discared if
+	 * working copy info is about to be discared if useCount <= 1
 	 */
 	private boolean workingCopyInfoWillBeDiscarded(PerWorkingCopyInfo info) {
 		return info != null
@@ -368,7 +369,10 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 				// Store it for later
 				if (module != null) {
-					ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module);
+					// GRECLIPSE-804 must synchronize
+					synchronized (ModuleNodeMapper.getInstance()) {
+						ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module);
+					}
 				}
 			}
 

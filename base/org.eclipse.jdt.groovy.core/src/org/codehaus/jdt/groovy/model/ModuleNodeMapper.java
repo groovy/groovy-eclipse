@@ -58,6 +58,8 @@ public class ModuleNodeMapper {
 		return INSTANCE.infoToModuleMap.isEmpty();
 	}
 
+	// GRECLIPSE-804 check to see that the stored nodes are correct
+	// provide info to stdout if not and purge any stale elements
 	synchronized void sweepAndPurgeModuleNodes() {
 		if (System.getProperty("groovy.eclipse.model.purge") == null) {
 			return;
@@ -66,11 +68,14 @@ public class ModuleNodeMapper {
 		System.out.println("ModuleNodeMap.size(): " + infoToModuleMap.size());
 		List<PerWorkingCopyInfo> toPurge = new ArrayList<PerWorkingCopyInfo>();
 		for (PerWorkingCopyInfo info : infoToModuleMap.keySet()) {
-			if (((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue() == 0) {
+			int useCount = ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue();
+			if (useCount <= 0) {
 				String message = "Bad module node map entry: " + info.getWorkingCopy().getElementName();
 				System.out.println(message);
 				Util.log(new RuntimeException(message), message);
 				toPurge.add(info);
+			} else if (useCount > 1) {
+				System.out.println(info.getWorkingCopy().getElementName() + " : useCount : " + useCount);
 			}
 		}
 
