@@ -67,8 +67,9 @@ public class ModuleNodeMapper {
 		List<PerWorkingCopyInfo> toPurge = new ArrayList<PerWorkingCopyInfo>();
 		for (PerWorkingCopyInfo info : infoToModuleMap.keySet()) {
 			if (((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue() == 0) {
-				System.out.println("Bad module node map entry: " + info.getWorkingCopy().getElementName());
-				Util.log(new RuntimeException("Bad module node map entry: " + info.getWorkingCopy().getElementName()));
+				String message = "Bad module node map entry: " + info.getWorkingCopy().getElementName();
+				System.out.println(message);
+				Util.log(new RuntimeException(message), message);
 				toPurge.add(info);
 			}
 		}
