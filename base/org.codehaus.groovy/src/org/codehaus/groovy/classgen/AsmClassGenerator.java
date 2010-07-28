@@ -4467,7 +4467,7 @@ public class AsmClassGenerator extends ClassGenerator {
         
         @Override
         public void visitLineNumber(int line, Label start) {
-            System.out.println("Visit line number: " + line + ", " + start);
+//            System.out.println("Visit line number: " + line + ", " + start);
             super.visitLineNumber(line, start);
         }
     }
