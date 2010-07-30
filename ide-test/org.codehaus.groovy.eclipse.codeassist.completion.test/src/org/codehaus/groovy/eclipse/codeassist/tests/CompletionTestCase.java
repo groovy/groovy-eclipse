@@ -38,6 +38,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.UIPlugin;
@@ -150,6 +151,35 @@ public abstract class CompletionTestCase extends BuilderTests {
             fail("Expected to find proposal '" + name + "' " + expectedCount + " times, but found it " + foundCount + " times.\nAll Proposals:" + sb);
         }
     }
+    
+    /**
+     * Returns the first proposal that matches the criteria passed in
+     */
+    protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType) {
+        for (ICompletionProposal proposal : proposals) {
+            
+            // if a field
+            String propName = proposal.getDisplayString();
+            if (propName.startsWith(name + " ")) {
+                return proposal;
+            } else
+            // if a method
+            if (propName.startsWith(name + "(")) {
+                return proposal;
+            } else
+            // if a type
+            if (isType && propName.startsWith(name)) {
+                return proposal;
+            }
+        }
+        return null;
+    }
+    
+    protected void applyProposalAndCheck(IDocument document, ICompletionProposal proposal, String expected) {
+        proposal.apply(document);
+        assertEquals("Completion proposal applied but different results found.", expected, document.get());
+    }
+    
     
     protected void checkReplacementString(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0;
