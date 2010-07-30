@@ -21,12 +21,17 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -34,6 +39,11 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
@@ -43,6 +53,7 @@ import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -134,7 +145,15 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private final JavaContentAssistInvocationContext javaContext;
     private final ModuleNode module;
 
+    private final GroovyCompilationUnit unit;
+
     private final NameLookup nameLookup;
+
+    // will be non-null if there is an unrevoverable error in the module node
+    private ImportRewrite rewrite;
+
+    // set to true if there is a problem creating the rewrite
+    private boolean cantCreateRewrite = false;
 
     public GroovyProposalTypeSearchRequestor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, int exprStart, NameLookup nameLookup, IProgressMonitor monitor) {
@@ -142,6 +161,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         this.offset = exprStart;
         this.javaContext = javaContext;
         this.module = context.unit.getModuleNode();
+        this.unit = context.unit;
         this.replaceLength = context.completionExpression.length();
         this.actualCompletionPosition = context.completionLocation;
         this.monitor = monitor;
@@ -439,7 +459,12 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setPackageName(packageName);
 
         LazyGenericTypeProposal javaCompletionProposal = new LazyGenericTypeProposal(proposal, javaContext);
-
+        ImportRewrite r = forceImportRewrite();
+        if (r != null) {
+            ReflectionUtils.setPrivateField(
+                    LazyJavaTypeCompletionProposal.class, "fImportRewrite",
+                    javaCompletionProposal, r);
+        }
         return javaCompletionProposal;
     }
 
@@ -500,5 +525,160 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, completionOffset);
         proposal.setNameLookup(nameLookup);
         return proposal;
+    }
+
+    /**
+     * Returns an import rewrite for the module node only if
+     * ModuleNode.encounteredUnrecoverableError()
+     *
+     * Tries to find the start and end locations of the import statements. Makes
+     * a best guess using regular expression. This method ensures that even if
+     * the ComplationUnit is unparseable, the imports are still placed in the
+     * correct location.
+     *
+     * @return an {@link ImportRewrite} for the ModuleNode if it encountered an
+     *         unrecoverable error, or null if no problems.
+     */
+    private ImportRewrite forceImportRewrite() {
+
+        if (!module.encounteredUnrecoverableError()) {
+            return null;
+        }
+
+        if (rewrite == null && !cantCreateRewrite) {
+
+            // find a reasonable substring that contains
+            // what looks to be the import dependencies
+            CharArraySequence contents = new CharArraySequence(
+                    unit.getContents());
+            CharArraySequence imports = findImportsRegion(contents);
+
+            // Now send this to a parser
+            // need to be very careful here that if we can't parse, then
+            // don't send to rewriter
+            ASTParser parser = ASTParser.newParser(AST.JLS3);
+            parser.setSource(unit.cloneCachingContents(CharOperation.concat(
+                    imports.chars(), "\nclass X { }".toCharArray())));
+            parser.setKind(ASTParser.K_COMPILATION_UNIT);
+            ASTNode result = null;
+            try {
+                result = parser.createAST(monitor);
+            } catch (IllegalStateException e) {
+                GroovyCore.logException("Can't create ImportRewrite for:\n"
+                        + imports, e);
+            }
+            if (result instanceof CompilationUnit) {
+                rewrite = ImportRewrite.create((CompilationUnit) result, true);
+            } else {
+                // something wierd happened.
+                // ensure we don't try again
+                cantCreateRewrite = true;
+            }
+        }
+
+        return rewrite;
+    }
+
+    /**
+     * Convenience methpd for
+     * {@link GroovyProposalTypeSearchRequestor#findImportsRegion(CharArraySequence)}
+     */
+    static CharArraySequence findImportsRegion(String contents) {
+        return findImportsRegion(new CharArraySequence(contents));
+    }
+
+    private static final Pattern IMPORTS_PATTERN = Pattern
+            .compile("(\\A|[\\n\\r])import\\s");
+
+    private static final Pattern PACKAGE_PATTERN = Pattern
+            .compile("(\\A|[\\n\\r])package\\s");
+
+    private static final Pattern EOL_PATTERN = Pattern.compile("($|[\\n\\r])");
+
+    /**
+     * Finds a region of text that kind of looks like where the imports should
+     * be placed. Uses regular expressions.
+     *
+     * @param contents
+     *            the contents of a compilation unit
+     * @return a presumed region
+     */
+    private static CharArraySequence findImportsRegion(
+            CharArraySequence contents) {
+        // heuristics:
+        // look for last index of ^import
+        // if that returns -1, then look for ^package
+        Matcher matcher = IMPORTS_PATTERN.matcher(contents);
+        int importsEnd = 0;
+        while (matcher.find(importsEnd)) {
+            importsEnd = matcher.end();
+        }
+
+        if (importsEnd == 0) {
+            // no imports found, look for package declaration
+            matcher = PACKAGE_PATTERN.matcher(contents);
+            if (matcher.find()) {
+                importsEnd = matcher.end();
+            }
+
+        }
+
+        if (importsEnd > 0) {
+            // look for end of line
+            matcher = EOL_PATTERN.matcher(contents);
+            if (matcher.find(importsEnd)) {
+                importsEnd = matcher.end() + 1;
+            }
+        }
+
+        return contents.subSequence(0, importsEnd);
+    }
+
+    /**
+     * Made public for testing
+     */
+    public static class CharArraySequence implements CharSequence {
+
+        private final char[] chars;
+
+        public CharArraySequence(char[] chars) {
+            this.chars = chars;
+        }
+
+        public CharArraySequence(String contents) {
+            this.chars = contents.toCharArray();
+        }
+
+        /**
+         * @return
+         */
+        public char[] chars() {
+            return chars;
+        }
+
+        public int length() {
+            return chars.length;
+        }
+
+        /**
+         * may throw {@link IndexOutOfBoundsException}
+         */
+        public char charAt(int index) {
+            return chars[index];
+        }
+
+        public CharArraySequence subSequence(int start, int end) {
+            return new CharArraySequence(CharOperation.subarray(chars, start,
+                    end));
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < chars.length; i++) {
+                sb.append(chars[i]);
+            }
+            return sb.toString();
+        }
     }
 }
