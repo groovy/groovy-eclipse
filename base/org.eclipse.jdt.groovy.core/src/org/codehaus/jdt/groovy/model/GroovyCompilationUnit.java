@@ -486,31 +486,47 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		return super.getAdapter(adapter);
 	}
 
+	class CompilationUnitClone extends GroovyCompilationUnit {
+		private char[] cachedContents;
+
+		public CompilationUnitClone(char[] cachedContents) {
+			this();
+			this.cachedContents = cachedContents;
+		}
+
+		public CompilationUnitClone() {
+			super((PackageFragment) GroovyCompilationUnit.this.parent, GroovyCompilationUnit.this.name,
+					GroovyCompilationUnit.this.owner);
+		}
+
+		@Override
+		public char[] getContents() {
+			if (this.cachedContents == null)
+				this.cachedContents = GroovyCompilationUnit.this.getContents();
+			return this.cachedContents;
+		}
+
+		@Override
+		public CompilationUnit originalFromClone() {
+			return GroovyCompilationUnit.this;
+		}
+
+		@Override
+		public char[] getFileName() {
+			return GroovyCompilationUnit.this.getFileName();
+		}
+	}
+
+	public GroovyCompilationUnit cloneCachingContents(char[] newContents) {
+		return new CompilationUnitClone(newContents);
+	}
+
 	/*
 	 * Clone this handle so that it caches its contents in memory. DO NOT PASS TO CLIENTS
 	 */
 	@Override
 	public GroovyCompilationUnit cloneCachingContents() {
-		return new GroovyCompilationUnit((PackageFragment) this.parent, this.name, this.owner) {
-			private char[] cachedContents;
-
-			@Override
-			public char[] getContents() {
-				if (this.cachedContents == null)
-					this.cachedContents = GroovyCompilationUnit.this.getContents();
-				return this.cachedContents;
-			}
-
-			@Override
-			public CompilationUnit originalFromClone() {
-				return GroovyCompilationUnit.this;
-			}
-
-			@Override
-			public char[] getFileName() {
-				return GroovyCompilationUnit.this.getFileName();
-			}
-		};
+		return new CompilationUnitClone();
 	}
 
 	@Override
