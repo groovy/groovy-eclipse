@@ -1181,6 +1181,22 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		ModuleNode mn = getModuleNode("Bar.groovy");
 		assertTrue(mn.encounteredUnrecoverableError());
 	}
+	
+	public void testUnrecoverableErrors_GRE755_3() {
+		this.runNegativeTest(new String[] {
+			"Bar.groovy",
+			"package a\n"+
+			"\n"+
+			"def foo(Nuthin\n" 
+		},"----------\n" + 
+		"1. ERROR in Bar.groovy (at line 3)\n" + 
+		"	def foo(Nuthin\n" + 
+		"	        ^\n" + 
+		"Groovy:unexpected token: Nuthin @ line 3, column 9.\n" + 
+		"----------\n");
+		ModuleNode mn = getModuleNode("Bar.groovy");
+		assertTrue(mn.encounteredUnrecoverableError());
+	}
 		
 	// variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
 	/*

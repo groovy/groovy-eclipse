@@ -307,6 +307,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // end
 
             convertGroovy(ast);
+        	// GRECLIPSE: start
+            // does it look broken? (ie. have we built a script for it containing rubbish)
+            if (output.getMethods().isEmpty() && sourceUnit.getErrorCollector().hasErrors() && looksBroken(output)) {
+            		output.setEncounteredUnrecoverableError(true);
+            }
+        	// end
             if(output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
             	// GRECLIPSE: start
             	if (ast==null && sourceUnit.getErrorCollector().hasErrors()) {
@@ -327,8 +333,36 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
 
-    
-    /**
+    // GRECLIPSE: start
+    private boolean looksBroken(ModuleNode moduleNode) {
+    	List<ClassNode> classes = moduleNode.getClasses();
+    	if (classes.size()!=1 || !classes.get(0).isScript()) {
+    		return false;
+    	}
+    	BlockStatement statementBlock = moduleNode.getStatementBlock();
+    	if (statementBlock.isEmpty()) {
+    		return true;
+    	}
+    	// Is it just a constant expression containing the word error? 
+    	// do we need to change it from ERROR to something more unlikely?
+    	List<Statement> statements = statementBlock.getStatements();
+    	if (statements!=null && statements.size()==1) {
+    		Statement statement = statements.get(0);
+    		if (statement instanceof ExpressionStatement) {
+    			Expression expression = ((ExpressionStatement)statement).getExpression();
+    			if (expression instanceof ConstantExpression) {
+    				// ERROR node set at unknownAST
+    				if (expression.toString().equals("ConstantExpression[ERROR]")) {
+    					return true;
+    				}
+    			}
+    		}
+    	}    	
+		return false;
+	}
+    // GRECLIPSE end
+
+	/**
      * Converts the Antlr AST to the Groovy AST
      */
     protected void convertGroovy(AST node) {
