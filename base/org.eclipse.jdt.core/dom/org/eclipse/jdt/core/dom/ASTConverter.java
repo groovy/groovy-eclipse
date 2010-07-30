@@ -76,7 +76,7 @@ class ASTConverter {
 	private DefaultCommentMapper commentMapper;
 	
 	// GROOVY start
-	private boolean scannerUsable;
+	private boolean scannerUsable = true;
 	// GROOVY end
 
 	public ASTConverter(Map options, boolean resolveBindings, IProgressMonitor monitor) {
