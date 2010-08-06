@@ -1138,8 +1138,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     // FIXASC (groovychange)
-    protected void commencingResolution() {
+    protected boolean commencingResolution() {
     	// template method
+    	return true;
     }
     
     protected void finishedResolution() {
