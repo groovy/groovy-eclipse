@@ -665,6 +665,13 @@
             locale="de_CH"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+G J"/>
+      <!-- Reenable commands using M1+M3+G for Swiss German -->      
+      <key
+            commandId="org.codehaus.groovy.eclipse.ui.convertToJava"
+            contextId="org.eclipse.ui.contexts.window"
+            locale="de_CH"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M3+G J"/>
    </extension>
    <extension point="org.eclipse.debug.ui.consoleLineTrackers">
 		<consoleLineTracker
