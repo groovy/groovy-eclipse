@@ -229,15 +229,16 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 	private void handleType(ClassNode node, boolean isAnnotation, boolean useQualifiedName) {
 		if (node == null) {
 			// GRECLIPSE-741
-			Util.log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, "GRECLIPSE-741: module: " + module.getDescription()));
+			Util.log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, "GRECLIPSE-741: module: " + module.getDescription(),
+					new RuntimeException()));
 			return;
 		}
 		if (isAnnotation) {
 			requestor.acceptAnnotationTypeReference(splitName(node, useQualifiedName), node.getStart(), node.getEnd());
 		} else {
 			ClassNode componentType = node.getComponentType();
-			requestor.acceptTypeReference(splitName(componentType != null ? componentType : node, useQualifiedName), node
-					.getStart(), node.getEnd());
+			requestor.acceptTypeReference(splitName(componentType != null ? componentType : node, useQualifiedName),
+					node.getStart(), node.getEnd());
 		}
 		if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
 			for (GenericsType gen : node.getGenericsTypes()) {

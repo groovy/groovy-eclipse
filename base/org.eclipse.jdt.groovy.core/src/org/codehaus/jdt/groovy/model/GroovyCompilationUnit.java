@@ -363,18 +363,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 			// GROOVY
 			// if this is a working copy, then we have more work to do
-			if (perWorkingCopyInfo != null && compilationUnitDeclaration != null) {
-				ModuleNode module = compilationUnitDeclaration.getModuleNode();
-				// finish off with the ModuleNode and complete its bindings
-
-				// Store it for later
-				if (module != null) {
-					// GRECLIPSE-804 must synchronize
-					synchronized (ModuleNodeMapper.getInstance()) {
-						ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module);
-					}
-				}
-			}
+			maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
 
 			// create the DOM AST from the compiler AST
 			if (createAST) {
@@ -410,6 +399,27 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			}
 		}
 		return unitInfo.isStructureKnown();
+	}
+
+	/**
+	 * Cache the module node if this is a working copy
+	 * 
+	 * @param perWorkingCopyInfo
+	 * @param compilationUnitDeclaration
+	 */
+	protected void maybeCacheModuleNode(JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo,
+			GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
+		if (perWorkingCopyInfo != null && compilationUnitDeclaration != null) {
+			ModuleNode module = compilationUnitDeclaration.getModuleNode();
+
+			// Store it for later
+			if (module != null) {
+				// GRECLIPSE-804 must synchronize
+				synchronized (ModuleNodeMapper.getInstance()) {
+					ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module);
+				}
+			}
+		}
 	}
 
 	/*
