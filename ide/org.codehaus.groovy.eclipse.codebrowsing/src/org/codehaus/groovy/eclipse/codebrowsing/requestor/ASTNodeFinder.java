@@ -157,7 +157,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      * @param p
      */
     private void checkParameter(Parameter p) {
-        if (p != null) {
+        if (p != null && p.getEnd() > 0) {
             check(p.getType());
            if (p.getInitialExpression() != null) {
                p.getInitialExpression().visit(this);
