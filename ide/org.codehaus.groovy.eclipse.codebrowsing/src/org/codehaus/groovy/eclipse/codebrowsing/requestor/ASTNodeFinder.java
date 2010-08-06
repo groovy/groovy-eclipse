@@ -360,7 +360,6 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     // method does not exist in 1.6 stream
     // @Override
-    @Override
     public void visitPackage(PackageNode node) {
         visitAnnotations(node);
         if (node != null) {
@@ -370,7 +369,6 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     // method does not exist in 1.6 stream
     // @Override
-    @Override
     public void visitImports(ModuleNode module) {
         for (ImportNode importNode : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
             if (importNode.getType() != null) {
