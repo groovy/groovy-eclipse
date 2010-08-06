@@ -370,7 +370,6 @@ public class FindSurroundingNode extends ASTNodeFinder {
 
     // Method doesn't exist in 1.6 stream
     // @Override
-    @Override
     protected void visitEmptyStatement(EmptyStatement node) {
         nodeStack.push(factory.createFragment(node));
         check(node);
