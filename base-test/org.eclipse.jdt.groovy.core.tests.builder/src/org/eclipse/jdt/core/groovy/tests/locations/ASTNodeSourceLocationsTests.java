@@ -213,7 +213,7 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
 
 		
 		void doTest(ModuleNode module, StartAndEnd...sae) {
-			for (ClassNode c : module.getClasses()) {
+			for (ClassNode c : (Iterable<ClassNode>) module.getClasses()) {
 				this.visitClass(c);
 			}
 			

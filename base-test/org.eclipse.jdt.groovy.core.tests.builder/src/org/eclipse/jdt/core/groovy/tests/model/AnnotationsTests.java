@@ -20,6 +20,7 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -104,7 +105,7 @@ public class AnnotationsTests extends BuilderTests {
 
     private void assertAnnotation(String aName, AnnotatedNode node) {
         assertEquals("Expecting @" + aName + " but no annotations found.", 1, node.getAnnotations().size());
-        assertEquals(aName, node.getAnnotations().get(0).getClassNode().getName());
+        assertEquals(aName, ((AnnotationNode) node.getAnnotations().get(0)).getClassNode().getName());
     }
 
     private FieldNode getMeField(GroovyCompilationUnit unit) {
