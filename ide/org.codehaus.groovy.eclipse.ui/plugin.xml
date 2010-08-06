@@ -658,6 +658,13 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+J G"/>
+            
+      <!-- Now disable all of the M3+G commands for Swiss German since that conflicts with '@' -->      
+      <key
+            contextId="org.eclipse.ui.contexts.window"
+            locale="de_CH"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M3+G J"/>
    </extension>
    <extension point="org.eclipse.debug.ui.consoleLineTrackers">
 		<consoleLineTracker
