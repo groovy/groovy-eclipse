@@ -627,7 +627,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             // look for end of line
             matcher = EOL_PATTERN.matcher(contents);
             if (matcher.find(importsEnd)) {
-                importsEnd = matcher.end() + 1;
+                importsEnd = matcher.end();
             }
         }
 
