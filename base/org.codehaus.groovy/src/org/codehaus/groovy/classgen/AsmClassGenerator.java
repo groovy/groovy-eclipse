@@ -690,7 +690,7 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     public void visitBlockStatement(BlockStatement block) {
-//        onLineNumber(block, "visitBlockStatement");
+        onLineNumber(block, "visitBlockStatement");
         visitStatement(block);
 
         compileStack.pushVariableScope(block.getVariableScope());
@@ -4463,12 +4463,6 @@ public class AsmClassGenerator extends ClassGenerator {
         public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
             dropBoxing ();
             super.visitTryCatchBlock(start, end, handler, type);
-        }
-        
-        @Override
-        public void visitLineNumber(int line, Label start) {
-//            System.out.println("Visit line number: " + line + ", " + start);
-            super.visitLineNumber(line, start);
         }
     }
 }
