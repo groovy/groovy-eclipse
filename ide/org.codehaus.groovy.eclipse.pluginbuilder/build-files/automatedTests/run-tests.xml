@@ -38,7 +38,6 @@
 			eclipse.loc="${test.eclipse.base}/eclipse" 
 			updatesite.url="${updateSiteURL}" 
 			feature.id="org.codehaus.groovy.alltests.feature" />
-
 	</target>
 
 	<target name="-runTestSuite">

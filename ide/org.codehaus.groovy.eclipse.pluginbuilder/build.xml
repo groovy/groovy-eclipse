@@ -13,7 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
  -->
-<project name="Build Facade" default="groovy-main">
+<project name="Build Facade" default="groovy-main" basedir=".">
 	<property file="build_local.properties" />
 	<import file="build-files/build_shared.xml"/>
   
@@ -54,8 +54,6 @@
     	    </fileset>
     	  </classpath>
 			</java>
-	  	
-	  	
 	  	
 	  	<fail message="Failed because of: ${is.build.error}">
 	      <condition>
