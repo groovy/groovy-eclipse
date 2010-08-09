@@ -29,7 +29,6 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 /**
  * @author Andrew Eisenberg
  * @created Nov 13, 2009
- *
  */
 public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
 
@@ -80,11 +79,9 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             sb.append("Declaring type: " + requestor.result.declaringType.getName() + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
             fail(sb.toString());
-            
         }
     }
 
-    
     public class SearchRequestor implements ITypeRequestor {
 
         private final int start;
@@ -98,8 +95,6 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             this.start = start;
             this.end = end;
         }
-
-
 
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
@@ -122,9 +117,5 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         public String getDeclaringTypeName() {
             return result.declaringType.getName();
         }
-        
-        
     }
-
-
 }
