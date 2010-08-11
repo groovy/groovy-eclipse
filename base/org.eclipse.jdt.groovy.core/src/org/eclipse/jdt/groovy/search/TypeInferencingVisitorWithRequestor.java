@@ -393,9 +393,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	private void visitClassInternal(ClassNode node) {
 		visitAnnotations(node);
+		VariableScope scope = scopes.peek();
 
 		TypeLookupResult result = null;
-		VariableScope scope = scopes.peek();
 		result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scope);
 		VisitStatus status = handleRequestor(node, requestor, result);
 		switch (status) {
