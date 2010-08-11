@@ -117,6 +117,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private CompilerOptions compilerOptions;
 	private boolean checkGenerics;
 	public static boolean defaultCheckGenerics = false;
+	public static boolean earlyTransforms = true;
 
 	private static final boolean DEBUG_TASK_TAGS = false;
 
@@ -777,6 +778,51 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 		}
 
+		if (earlyTransforms) {
+			executeEarlyTransforms_ConstructorRelated(ctorName, classNode, accumulatedMethodDeclarations);
+		}
+
+	}
+
+	/**
+	 * Augment set of constructors based on annotations. If the annotations are going to trigger additional constructors later, add
+	 * them here.
+	 */
+	private void executeEarlyTransforms_ConstructorRelated(char[] ctorName, ClassNode classNode,
+			List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
+		List<AnnotationNode> annos = classNode.getAnnotations();
+		boolean hasImmutableAnnotation = false;
+		if (annos != null) {
+			for (AnnotationNode anno : annos) {
+				if (anno.getClassNode() != null && anno.getClassNode().getName().equals("Immutable")) {
+					hasImmutableAnnotation = true;
+				}
+			}
+		}
+		// TODO probably ought to check if clashing import rather than assuming it is groovy-eclipse Immutable (even though that is
+		// very likely)
+		if (hasImmutableAnnotation) {
+			// @Immutable action: new constructor
+
+			// TODO Should check against existing ones before creating a duplicate but quite ugly, and
+			// groovy will be checking anyway...
+			List<FieldNode> fields = classNode.getFields();
+			Argument[] arguments = new Argument[fields.size()];
+			for (int i = 0; i < fields.size(); i++) {
+				FieldNode field = fields.get(i);
+				TypeReference parameterTypeReference = createTypeReferenceForClassNode(field.getType());
+				// TODO should set type reference position
+				arguments[i] = new Argument(fields.get(i).getName().toCharArray(), toPos(field.getStart(), field.getEnd() - 1),
+						parameterTypeReference, ClassFileConstants.AccPublic);
+				arguments[i].declarationSourceStart = fields.get(i).getStart();
+			}
+
+			ConstructorDeclaration constructor = new ConstructorDeclaration(compilationResult);
+			constructor.selector = ctorName;
+			constructor.modifiers = ClassFileConstants.AccPublic;
+			constructor.arguments = arguments;
+			accumulatedMethodDeclarations.add(constructor);
+		}
 	}
 
 	/**
@@ -1079,6 +1125,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		nameToPrimitiveTypeId.put("char", TypeIds.T_char);
 		nameToPrimitiveTypeId.put("short", TypeIds.T_short);
 		nameToPrimitiveTypeId.put("void", TypeIds.T_void);
+		try {
+			String value = System.getProperty("	earlyTransforms");
+			if (value != null) {
+				if (value.equalsIgnoreCase("true")) {
+					System.out.println("groovyeclipse.earlyTransforms = true");
+					earlyTransforms = true;
+				} else if (value.equalsIgnoreCase("false")) {
+					System.out.println("groovyeclipse.earlyTransforms = false");
+					earlyTransforms = false;
+				}
+			}
+		} catch (Throwable t) {
+			// --
+		}
 	}
 
 	/**
