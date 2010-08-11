@@ -124,8 +124,6 @@ public class GroovyCompletionProposalComputer implements
                     proposals.addAll(processor.generateProposals(monitor));
                 }
             }        
-            
-            // filter or sort proposals???
         }
         return proposals;
     }

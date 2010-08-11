@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.CoreException;
@@ -130,7 +131,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
     private ICompletionProposal createProposal(MethodNode method,
             ContentAssistContext context, IType enclosingType) {
-        int relevance = 5000;
+        int relevance = Relevance.VERY_HIGH.getRelavance();
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.METHOD_DECLARATION, context.completionLocation);
         String methodSignature = createMethodSignatureStr(method);
@@ -146,10 +147,8 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         proposal.setCompletion(completion.toString().toCharArray());
         proposal.setDeclarationKey(method.getDeclaringClass().getName().toCharArray());
         proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionLocation);
-        // don't think these are necessary
-//        proposal.setParameterPackageNames(parameterPackageNames);
-//        proposal.setPackageName(method.getReturnType().qualifiedPackageName());
         proposal.setFlags(method.getModifiers());
+        proposal.setRelevance(relevance);
 
         OverrideCompletionProposal override = new GroovyOverrideCompletionProposal(context.unit.getJavaProject(),
                 context.unit, method.getName(), Signature.getParameterTypes(methodSignature), context.completionLocation,
@@ -158,6 +157,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         override.setRelevance(relevance);
         override.setReplacementOffset(context.completionLocation - context.completionExpression.length());
         override.setReplacementLength(context.completionExpression.length());
+        override.setRelevance(proposal.getRelevance());
         return override;
     }
 

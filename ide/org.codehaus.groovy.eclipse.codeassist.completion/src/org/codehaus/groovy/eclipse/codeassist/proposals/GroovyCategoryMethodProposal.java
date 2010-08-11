@@ -27,9 +27,7 @@ import org.objectweb.asm.Opcodes;
  *
  */
 public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
-    
-    
-    
+
     public GroovyCategoryMethodProposal(MethodNode method) {
         super(method);
     }
@@ -64,5 +62,4 @@ public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
             return array;
         }
     }
-
 }

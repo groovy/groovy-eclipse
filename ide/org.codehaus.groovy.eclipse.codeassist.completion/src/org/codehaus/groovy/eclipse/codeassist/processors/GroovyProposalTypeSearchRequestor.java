@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -393,10 +394,10 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             completionName = simpleTypeName;
         }
 
-        int relevance = 1;
-        relevance += accessibility == IAccessRule.K_ACCESSIBLE ? 5 : 0;
-        relevance += (modifiers & Flags.AccDefault) != 0 ? 0 : 2;
-        relevance += (modifiers & Flags.AccPrivate) != 0 ? 0 : 3;
+        int relMultiplier = 1;
+        relMultiplier += accessibility == IAccessRule.K_ACCESSIBLE ? 3 : 0;
+        relMultiplier += (modifiers & Flags.AccDefault) != 0 ? 0 : 1;
+        relMultiplier += (modifiers & Flags.AccPrivate) != 0 ? 0 : 1;
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition - this.offset);
         proposal.setDeclarationSignature(packageName);
@@ -405,7 +406,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setFlags(modifiers);
         proposal.setReplaceRange(this.offset, this.offset + this.replaceLength);
         proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-        proposal.setRelevance(relevance);
+        proposal.setRelevance(Relevance.LOWEST.getRelavance(relMultiplier));
         proposal.setNameLookup(nameLookup);
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
@@ -415,6 +416,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 completionString, null, this.offset, this.replaceLength,
                 ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal),
                 5, completionString, javaContext);
+        javaCompletionProposal.setRelevance(proposal.getRelevance());
 
         return javaCompletionProposal;
     }
@@ -440,10 +442,10 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             completionName = simpleTypeName;
         }
 
-        int relevance = 1;
-        relevance += accessibility == IAccessRule.K_ACCESSIBLE ? 5 : 0;
-        relevance += (modifiers & Flags.AccDefault) != 0 ? 0 : 2;
-        relevance += (modifiers & Flags.AccPrivate) != 0 ? 0 : 3;
+        int relMultiplier = 1;
+        relMultiplier += accessibility == IAccessRule.K_ACCESSIBLE ? 3 : 0;
+        relMultiplier += (modifiers & Flags.AccDefault) != 0 ? 0 : 1;
+        relMultiplier += (modifiers & Flags.AccPrivate) != 0 ? 0 : 1;
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition - this.offset);
         proposal.setDeclarationSignature(packageName);
@@ -452,13 +454,14 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setFlags(modifiers);
         proposal.setReplaceRange(this.offset, this.offset + this.replaceLength);
         proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-        proposal.setRelevance(relevance);
+        proposal.setRelevance(Relevance.LOWEST.getRelavance(relMultiplier));
         proposal.setNameLookup(nameLookup);
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
         proposal.setPackageName(packageName);
 
         LazyGenericTypeProposal javaCompletionProposal = new LazyGenericTypeProposal(proposal, javaContext);
+        javaCompletionProposal.setRelevance(proposal.getRelevance());
         ImportRewrite r = forceImportRewrite();
         if (r != null) {
             ReflectionUtils.setPrivateField(
@@ -513,9 +516,10 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 proposal.setCompletion(packageName);
                 proposal.setReplaceRange(this.offset, this.actualCompletionPosition);
                 proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-                proposal.setRelevance(9);
+                proposal.setRelevance(Relevance.LOWEST.getRelavance());
                 LazyJavaCompletionProposal javaProposal = new LazyJavaCompletionProposal(proposal, javaContext);
                 proposals.add(javaProposal);
+                javaProposal.setRelevance(proposal.getRelevance());
             }
         }
         return proposals;

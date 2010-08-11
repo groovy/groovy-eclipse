@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,14 +33,14 @@ import org.objectweb.asm.Opcodes;
 /**
  * @author Andrew Eisenberg
  * @created Nov 12, 2009
- * 
- * GRECLIPSE-512: most fields have properties created for them, so we want to 
+ *
+ * GRECLIPSE-512: most fields have properties created for them, so we want to
  * avoid duplicate proposals.
  * Constants are an exception, so return them here.
  * I may have missed something, so be prepared to add more kinds of fields here.
  */
 public class FieldProposalCreator extends AbstractProposalCreator implements IProposalCreator {
-    
+
     private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
 
     private static GroovyFieldProposal createClassProposal() {
@@ -48,7 +48,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         field.setDeclaringClass(VariableScope.OBJECT_CLASS_NODE);
         return new GroovyFieldProposal(field);
     }
-    
+
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
         Collection<FieldNode> allFields = getAllFields(type);
@@ -60,14 +60,14 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                 groovyProposals.add(new GroovyFieldProposal(field));
             }
         }
-        
+
         if (isStatic && "class".startsWith(prefix)) {
             groovyProposals.add(CLASS_PROPOSAL);
         }
-        
+
         return groovyProposals;
     }
-    
+
     /**
      * returns all fields, even those that are converted into properties
      * @param thisType
@@ -75,12 +75,13 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
      * @see http://docs.codehaus.org/display/GROOVY/Groovy+Beans
      */
     private Collection<FieldNode> getAllFields(ClassNode thisType) {
-        Set<ClassNode> types = new HashSet<ClassNode>();
+        // use a LinkedHashSet to preserve order
+        Set<ClassNode> types = new LinkedHashSet<ClassNode>();
         getAllSupers(thisType, types);
         Map<String, FieldNode> nameFieldMap = new HashMap<String, FieldNode>();
         for (ClassNode type : types) {
             for (FieldNode field : type.getFields()) {
-                if (checkName(field.getName()) /* && checkModifiers(field) */) {
+                if (checkName(field.getName())) {
                     // only add new field if the new field is more accessible than the existing one
                     FieldNode existing = nameFieldMap.get(field.getName());
                     if (existing == null || leftIsMoreAccessible(field, existing)) {
@@ -111,7 +112,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                 leftAcc = 2;
                 break;
         }
-        
+
         int rightAcc;
         switch (existing.getModifiers() & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) {
             case Opcodes.ACC_PUBLIC:
@@ -129,5 +130,4 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         }
         return leftAcc < rightAcc;
     }
-
 }

@@ -28,6 +28,4 @@ import org.codehaus.groovy.ast.ClassNode;
  */
 public interface IProposalCreator {
     List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic);
-    
-    public static int HHH = 9;
 }

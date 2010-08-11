@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -32,52 +33,46 @@ import org.eclipse.jface.viewers.StyledString;
  */
 public class GroovyFieldProposal extends AbstractGroovyProposal {
 
-    
+
     private final FieldNode field;
-    private final int relevance;
+    private final int multiplier;
     private final String contributor;
     public GroovyFieldProposal(FieldNode field) {
         this.field = field;
-        this.relevance = -1;
+        this.multiplier = 1;
         this.contributor = "Groovy";
     }
     public GroovyFieldProposal(FieldNode field, String contributor) {
         this.field = field;
-        this.relevance = -1;
+        this.multiplier = 1;
         this.contributor = contributor;
     }
     public GroovyFieldProposal(FieldNode field, int relevance) {
         this.field = field;
-        this.relevance = relevance;
+        this.multiplier = relevance;
         this.contributor = "Groovy";
     }
     public GroovyFieldProposal(FieldNode field, int relevance, String contributor) {
         this.field = field;
-        this.relevance = relevance;
+        this.multiplier = relevance;
         this.contributor = contributor;
     }
 
     public IJavaCompletionProposal createJavaProposal(
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
-        
+
         return new GroovyJavaFieldCompletionProposal(createProposal(context), getImageFor(field), createDisplayString(field));
     }
 
     @Override
-    protected int getRelevance(char[] name) {
-        if (relevance >= 0) return relevance;
-        
-        int rel = super.getRelevance(name);
-        if (field.isStatic()) {
-            rel *=5;
-        }
-        return rel;
+    protected AnnotatedNode getAssociatedNode() {
+        return field;
     }
-    
+
     protected StyledString createDisplayString(FieldNode field) {
         StyledString ss = new StyledString();
-        
+
         ss.append(field.getName())
           .append(" : ")
           .append(ProposalUtils.createSimpleTypeName(field.getType()))
@@ -94,7 +89,7 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         proposal.setCompletion(proposal.getName());
         proposal.setSignature(ProposalUtils.createTypeSignature(field.getType()));
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(field.getDeclaringClass()));
-        proposal.setRelevance(getRelevance(proposal.getName()));
+        proposal.setRelevance(computeRelevance(multiplier));
         int startIndex = context.completionLocation-context.completionExpression.length();
         proposal.setReplaceRange(startIndex, context.completionLocation);
         return proposal;

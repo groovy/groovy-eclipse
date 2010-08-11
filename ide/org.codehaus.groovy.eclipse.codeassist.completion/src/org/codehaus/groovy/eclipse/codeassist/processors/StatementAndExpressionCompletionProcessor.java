@@ -57,7 +57,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class StatementAndExpressionCompletionProcessor extends
         AbstractGroovyCompletionProcessor {
-    
+
     class ExpressionCompletionRequestor implements ITypeRequestor {
 
         boolean visitSuccessful = false;
@@ -66,13 +66,27 @@ public class StatementAndExpressionCompletionProcessor extends
         Set<ClassNode> categories;
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
-            
+
+            if (node instanceof ClassNode) {
+                ClassNode clazz = (ClassNode) node;
+                if (clazz.redirect() == clazz && clazz.isScript()) {
+                    return VisitStatus.CONTINUE;
+                }
+            } else if (node instanceof MethodNode) {
+                MethodNode run = (MethodNode) node;
+                if (run.getName().equals("run")
+                        && run.getDeclaringClass().isScript()
+                        && (run.getParameters() == null || run.getParameters().length == 0)) {
+                    return VisitStatus.CONTINUE;
+                }
+            }
+
             if (doTest(node)) {
                 resultingType = result.type;
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
                 isStatic = node instanceof StaticMethodCallExpression ||
-                    (node instanceof ClassExpression && 
+                    (node instanceof ClassExpression &&
                      // if we are completing on '.class' then never static context
                      resultingType != VariableScope.CLASS_CLASS_NODE);
                 return VisitStatus.STOP_VISIT;
@@ -91,7 +105,7 @@ public class StatementAndExpressionCompletionProcessor extends
             }
             return isNotExpressionAndStatement(completionNode, node) && completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd();
         }
-        
+
         private boolean isNotExpressionAndStatement(ASTNode thisNode, ASTNode otherNode) {
             if (thisNode instanceof Expression) {
                 return !(otherNode instanceof Statement);
@@ -101,19 +115,19 @@ public class StatementAndExpressionCompletionProcessor extends
                 return true;
             }
         }
-        
+
         public ClassNode getResultingType() {
             return resultingType;
         }
         public Set<ClassNode> getCategories() {
             return categories;
         }
-        
+
         public boolean isVisitSuccessful() {
             return visitSuccessful;
         }
     }
-    
+
     final ASTNode completionNode;
 
     public StatementAndExpressionCompletionProcessor(ContentAssistContext context,
@@ -128,7 +142,7 @@ public class StatementAndExpressionCompletionProcessor extends
         ContentAssistContext context = getContext();
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(context.unit);
         ExpressionCompletionRequestor requestor = new ExpressionCompletionRequestor();
-        
+
         // if completion node is null, then it is likely because of a syntax error
         if (completionNode != null) {
             visitor.visitCompilationUnit(requestor);
@@ -142,7 +156,7 @@ public class StatementAndExpressionCompletionProcessor extends
             IProposalCreator[] creators = getAllProposalCreators();
             completionType = getCompletionType(requestor);
             for (IProposalCreator creator : creators) {
-                groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories, 
+                groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
                         context.completionExpression, isStatic));
             }
         } else {
@@ -158,13 +172,13 @@ public class StatementAndExpressionCompletionProcessor extends
                 containingClass = null;
             }
             if (containingClass != null) {
-                groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass, 
+                groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass,
                         Collections.singleton(VariableScope.DGM_CLASS_NODE), context.completionExpression, false));
             }
             completionType = null;
             isStatic = false;
         }
-        
+
         // get proposals from providers
         try {
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
@@ -177,7 +191,7 @@ public class StatementAndExpressionCompletionProcessor extends
         } catch (CoreException e) {
             GroovyCore.logException("Exception accessing proposal provider registry", e);
         }
-        
+
         // filter??? sort???
         List<ICompletionProposal> javaProposals = new ArrayList<ICompletionProposal>(groovyProposals.size());
         JavaContentAssistInvocationContext javaContext = getJavaContext();
@@ -190,12 +204,12 @@ public class StatementAndExpressionCompletionProcessor extends
 
     /**
      * When completing an expression, use the completion type found by the requestor.
-     * Otherwise, use the current type 
+     * Otherwise, use the current type
      * @param requestor
      * @return
      */
     private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
-         return getContext().location == ContentAssistLocation.EXPRESSION ? requestor.resultingType : 
+         return getContext().location == ContentAssistLocation.EXPRESSION ? requestor.resultingType :
              getContext().getEnclosingGroovyType();
     }
 

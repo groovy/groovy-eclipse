@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -42,20 +43,19 @@ import org.eclipse.jface.preference.IPreferenceStore;
  *
  */
 public class GroovyMethodProposal extends AbstractGroovyProposal {
-    
-    
+
     protected final MethodNode method;
     private final ProposalOptions groovyFormatterPrefs;
     private String contributor;
-    
+
     public GroovyMethodProposal(MethodNode method) {
         super();
         this.method = method;
         IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
-        groovyFormatterPrefs = 
+        groovyFormatterPrefs =
             new ProposalOptions(
                     prefs.getBoolean(
-                            PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS), 
+                            PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
                     prefs.getBoolean(
                             PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS));
         contributor = "Groovy";
@@ -66,12 +66,17 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
 
+    @Override
+    protected AnnotatedNode getAssociatedNode() {
+        return method;
+    }
+
     public IJavaCompletionProposal createJavaProposal(
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(
                 CompletionProposal.METHOD_REF, context.completionLocation);
-        
+
         proposal.setCompletion(completionName());
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
         proposal.setName(method.getName().toCharArray());
@@ -83,15 +88,15 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         char[] methodSignature = createMethodSignature();
         proposal.setKey(methodSignature);
         proposal.setSignature(methodSignature);
-        proposal.setRelevance(getRelevance(proposal.getName()));
+        proposal.setRelevance(computeRelevance());
 
-        // maybe some point in the distant future, we can look at 
+        // maybe some point in the distant future, we can look at
         // FilledArgumentNamesMethodProposal, but this will be difficult
         return new GroovyJavaMethodCompletionProposal(proposal,
                     javaContext, groovyFormatterPrefs, contributor);
 
     }
-    
+
     protected char[] createMethodSignature() {
         return ProposalUtils.createMethodSignature(method);
     }
@@ -116,19 +121,31 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         return (name + "()").toCharArray();
     }
-    
+
     protected char[][] createParameterNames(ICompilationUnit unit) {
-        
-        char[][] paramNames = getParameterNames(unit, method);
-        if (paramNames != null) {
-            return paramNames;
-        }
-        
+
         Parameter[] params = method.getParameters();
-        paramNames = new char[params.length][];
-        for (int i = 0; i < params.length; i++) {
-            paramNames[i] = params[i].getName().toCharArray();
+        int numParams = params == null ? 0 : params.length;
+
+        // short circuit
+        if (numParams == 0) {
+            return new char[0][];
         }
+
+        char[][] paramNames = null;
+        // if the MethodNode has param names filled in, then use that
+        if (params[0].getName().equals("arg0")
+                || params[0].getName().equals("param0")) {
+            paramNames = getParameterNames(unit, method);
+        }
+
+        if (paramNames == null) {
+            paramNames = new char[params.length][];
+            for (int i = 0; i < params.length; i++) {
+                paramNames[i] = params[i].getName().toCharArray();
+            }
+        }
+
         return paramNames;
     }
 
@@ -145,15 +162,20 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     /**
      * FIXADE I am concerned that this takes a long time since we are doing a lookup for each method
      * any way to cache?
-     * FIXADE cannot find parameters names with type parameters.
-     * @throws JavaModelException 
+     * @throws JavaModelException
      */
     protected char[][] getParameterNames(ICompilationUnit unit, MethodNode method) {
         try {
             IType type = unit.getJavaProject().findType(method.getDeclaringClass().getName(), new NullProgressMonitor());
             if (type != null && type.exists()) {
                 Parameter[] params = method.getParameters();
-                String[] parameterTypeSignatures = new String[params == null ? 0 : params.length];
+                int numParams = params == null ? 0 : params.length;
+
+                if (numParams == 0) {
+                    return new char[0][];
+                }
+
+                String[] parameterTypeSignatures = new String[numParams];
                 boolean doResolved = type.isBinary();
                 for (int i = 0; i < parameterTypeSignatures.length; i++) {
                     if (doResolved) {
@@ -162,8 +184,29 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                         parameterTypeSignatures[i] = ProposalUtils.createUnresolvedTypeSignatureStr(params[i].getType());
                     }
                 }
-                IMethod jdtMethod = type.getMethod(method.getName(), parameterTypeSignatures);
-                if (jdtMethod != null && jdtMethod.exists()) {
+                IMethod jdtMethod = null;
+
+                // try to find the precise method
+                IMethod maybeMethod = type.getMethod(method.getName(),
+                        parameterTypeSignatures);
+                if (maybeMethod != null && maybeMethod.exists()) {
+                    jdtMethod = maybeMethod;
+                } else {
+                    // try something else and be a little more lenient
+                    // look for any methods with the same name and number of
+                    // arguments
+                    IMethod[] methods = type.getMethods();
+                    for (IMethod maybeMethod2 : methods) {
+                        if (maybeMethod2.getElementName().equals(
+                                method.getName())
+                                && maybeMethod2.getNumberOfParameters() == numParams) {
+                            jdtMethod = maybeMethod2;
+                        }
+                    }
+                }
+
+                // method was found somehow...return it.
+                if (jdtMethod != null) {
                     String[] paramNames = jdtMethod.getParameterNames();
                     char[][] paramNamesChar = new char[paramNames.length][];
                     for (int i = 0; i < paramNames.length; i++) {

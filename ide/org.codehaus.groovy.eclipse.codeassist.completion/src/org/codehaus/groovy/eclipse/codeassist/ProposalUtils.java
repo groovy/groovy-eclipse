@@ -117,6 +117,10 @@ public class ProposalUtils {
      * @return
      */
     public static boolean looselyMatches(String prefix, String target) {
+        if (target == null || prefix == null) {
+            return false;
+        }
+
         // Zero length string matches everything.
         if (prefix.length() == 0) {
             return true;

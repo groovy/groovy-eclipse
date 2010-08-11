@@ -17,6 +17,7 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -33,9 +34,9 @@ import org.objectweb.asm.Opcodes;
  *
  */
 public abstract class AbstractGroovyProposal implements IGroovyProposal {
-    
+
     private final static ImageDescriptorRegistry registry= JavaPlugin.getImageDescriptorRegistry();
-    
+
 
     protected Image getImage(CompletionProposal proposal, CompletionProposalLabelProvider labelProvider) {
         return registry.get(labelProvider.createImageDescriptor(proposal));
@@ -53,7 +54,7 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
             }
             return JavaPluginImages.get(JavaPluginImages.IMG_FIELD_DEFAULT);
         } else if (node instanceof PropertyNode) {
-            // TODO: need compound icon with 'r' and 'w' on it to indicate property and access.
+            // property nodes are not really used any more.
             int mods = ((PropertyNode) node).getModifiers();
             if (test(mods, Opcodes.ACC_PUBLIC)) {
                 return JavaPluginImages.get(JavaPluginImages.IMG_FIELD_PUBLIC);
@@ -69,19 +70,37 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
     private boolean test(int flags, int mask) {
         return (flags & mask) != 0;
     }
-    
+
     /**
-     * Very simple way to calculate relevance based on name
+     * Very simple way to calculate relevance based on name. Now deprecated. Use
+     * {@link #computeRelevance()} or {@link #computeRelevance(float)} instead
      */
+    @Deprecated
     protected int getRelevance(char[] name) {
         switch(name[0]) {
             case '$':
                 return 1;
             case '_':
-                return 50;
+                return 5;
             default:
                 return 1000;
         }
+    }
+
+    /**
+     * @return the AST node associated with this proposal, or null if there is
+     *         none.
+     */
+    protected AnnotatedNode getAssociatedNode() {
+        return null;
+    }
+
+    protected int computeRelevance() {
+        return Relevance.calculateRelevance(this, 1);
+    }
+
+    protected int computeRelevance(float multiplier) {
+        return Relevance.calculateRelevance(this, multiplier);
     }
 
 }

@@ -21,7 +21,7 @@ import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Dec 8, 2009
  */
@@ -29,10 +29,11 @@ public class GroovyJavaFieldCompletionProposal extends JavaCompletionProposal {
 
     private final CompletionProposal proposal;
     public GroovyJavaFieldCompletionProposal(CompletionProposal proposal, Image image, StyledString displayString) {
-        super(String.valueOf(proposal.getName()), proposal.getReplaceStart(), 
-                proposal.getReplaceEnd()-proposal.getReplaceStart(), 
+        super(String.valueOf(proposal.getName()), proposal.getReplaceStart(),
+                proposal.getReplaceEnd()-proposal.getReplaceStart(),
                 image, displayString, proposal.getRelevance());
         this.proposal = proposal;
+        this.setRelevance(proposal.getRelevance());
     }
 
     public CompletionProposal getProposal() {

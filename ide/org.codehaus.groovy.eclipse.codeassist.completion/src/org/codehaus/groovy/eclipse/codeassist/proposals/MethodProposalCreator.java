@@ -32,7 +32,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * @created Nov 12, 2009
  * Generates all of the method proposals for a given location
  * Also will add the non-getter form of getter methods if appropriate
- * 
+ *
  */
 public class MethodProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
@@ -41,22 +41,27 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         List<MethodNode> allMethods = type.getAllDeclaredMethods();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         Set<String> alreadySeenFields = new HashSet<String>();
-        
+
         for (MethodNode method : allMethods) {
             String methodName = method.getName();
-            String mockFieldName = createMockFieldName(methodName);
             if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) &&
                     checkName(methodName)) {
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
                     groovyProposals.add(new GroovyMethodProposal(method));
-                    
-                } else if (ProposalUtils.looselyMatches(prefix, mockFieldName) && 
-                        !alreadySeenFields.contains(mockFieldName)) {
-                    
-                    // be careful not to add fields twice
-                    alreadySeenFields.add(mockFieldName);
-                    if (hasNoField(method)) {
-                        groovyProposals.add(new GroovyFieldProposal(createMockField(method)));
+                }
+
+                if (looselyMatchesGetterName(prefix, methodName)) {
+                    // if there is a getter or setter, then add a field proposal
+                    // with the name being gotten
+                    String mockFieldName = createMockFieldName(methodName);
+                    if (!alreadySeenFields.contains(mockFieldName)) {
+
+                        // be careful not to add fields twice
+                        alreadySeenFields.add(mockFieldName);
+                        if (hasNoField(method)) {
+                            groovyProposals.add(new GroovyFieldProposal(
+                                    createMockField(method)));
+                        }
                     }
                 }
             }
@@ -65,7 +70,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
     }
 
     /**
-     * Check to ensure that there is no field with that name before creating 
+     * Check to ensure that there is no field with that name before creating
      * the mock field
      */
     private boolean hasNoField(MethodNode method) {
@@ -88,12 +93,16 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
      * @return
      */
     private boolean looselyMatchesGetterName(String prefix, String methodName) {
+        // fail fast if name is < 4 chars, it doesn't start with get or set, or
+        // its 4th char is lower case
         if (methodName.length() < 4) {
             return false;
-        } else if (!methodName.startsWith("get") || Character.isLowerCase(methodName.charAt(3))) {
+        } else if (!(methodName.startsWith("get") || methodName
+                .startsWith("set"))
+                || Character.isLowerCase(methodName.charAt(3))) {
             return false;
         }
-        
+
         String newName = createMockFieldName(methodName);
         return ProposalUtils.looselyMatches(prefix, newName);
     }

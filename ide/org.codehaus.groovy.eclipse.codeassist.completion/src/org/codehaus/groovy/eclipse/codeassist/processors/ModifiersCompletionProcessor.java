@@ -16,9 +16,13 @@
 
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createDisplayString;
+import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.getImage;
+
 import java.util.LinkedList;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -28,7 +32,6 @@ import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
-import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.*;
 
 /**
  * @author Andrew Eisenberg
@@ -46,10 +49,10 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
         "throws",
 
      */
-    
+
     // just the keywords that may be available in a class body
-    private static String[] keywords = 
-    {   
+    private static String[] keywords =
+    {
         "abstract",
         "def",
         "final",
@@ -64,11 +67,11 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
         "volatile",
         "void"
     };
-    
+
     public ModifiersCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
-    
+
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         String completionExpression = getContext().completionExpression;
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
@@ -90,14 +93,14 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
         InternalCompletionProposal proposal =  createProposal(CompletionProposal.KEYWORD, context.completionLocation);
         proposal.setName(keyword.toCharArray());
         proposal.setCompletion(keyword.toCharArray());
-        proposal.setReplaceRange(context.completionLocation, 
+        proposal.setReplaceRange(context.completionLocation,
                 context.completionLocation+context.completionExpression.length());
-        
+
         String completion= String.valueOf(proposal.getCompletion());
         int start= proposal.getReplaceStart();
         int length= context.completionExpression.length();
         StyledString label= createDisplayString(proposal);
-        int relevance= 5;
+        int relevance = Relevance.MEDIUM.getRelavance();
         JavaCompletionProposal jcp = new JavaCompletionProposal(completion, start, length, null, label, relevance);
         jcp.setImage(getImage(proposal));
         return jcp;

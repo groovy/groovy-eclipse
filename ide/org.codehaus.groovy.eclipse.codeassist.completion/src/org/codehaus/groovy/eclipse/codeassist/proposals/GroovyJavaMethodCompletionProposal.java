@@ -41,7 +41,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         public final boolean noParensAroundArgs;
         public final boolean useBracketsForClosures;
     }
-    
+
     private int[] fArgumentOffsets;
     private int[] fArgumentLengths;
     private IRegion fSelectedRegion; // initialized by apply()
@@ -53,22 +53,23 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         super(proposal, context);
         this.groovyFormatterPrefs = groovyFormatterPrefs;
         this.contributor = "Groovy";
+        this.setRelevance(proposal.getRelevance());
     }
     public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
             JavaContentAssistInvocationContext context, ProposalOptions groovyFormatterPrefs, String contributor) {
         this(proposal, context, groovyFormatterPrefs);
         this.contributor = contributor;
     }
-    
-    
+
+
     @Override
     protected StyledString computeDisplayString() {
         return super.computeDisplayString().append(getStyledGroovy());
     }
-    
+
     @Override
     protected IContextInformation computeContextInformation() {
-        if ((fProposal.getKind() == CompletionProposal.METHOD_REF || 
+        if ((fProposal.getKind() == CompletionProposal.METHOD_REF ||
                 fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION) && hasParameters()) {
             ProposalContextInformation contextInformation= new ProposalContextInformation(fProposal);
             if (fContextInformationPosition != 0 && fProposal.getCompletion().length == 0)
@@ -78,14 +79,15 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return super.computeContextInformation();
     }
 
-    
+
     private StyledString getStyledGroovy() {
         return new StyledString(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
     }
-    
+
     /*
      * @see ICompletionProposalExtension#apply(IDocument, char)
      */
+    @Override
     public void apply(IDocument document, char trigger, int offset) {
         super.apply(document, trigger, offset);
         int baseOffset= getReplacementOffset();
@@ -136,7 +138,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         if (!hasArgumentList()) {
             return super.computeReplacementString();
         }
-        
+
         // we're inserting a method plus the argument list - respect formatter preferences
         StringBuffer buffer= new StringBuffer();
         char[] proposalName = fProposal.getName();
@@ -169,7 +171,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     buffer.append(SPACE);
                 }
             }
-            
+
             // now add the parameters
             char[][] parameterNames= fProposal.findParameterNames(null);
             char[][] parameterTypes = Signature.getParameterTypes(fProposal.getSignature());
@@ -189,7 +191,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 }
 
                 fArgumentOffsets[i]= buffer.length();
-                
+
                 if (groovyFormatterPrefs.useBracketsForClosures &&
                         new String(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {
                     buffer.append("{ }");
@@ -197,7 +199,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     if (i == 0) {
                         setCursorPosition(buffer.length()-2);
                     }
-                    
+
                 } else {
                     if (i == 0) {
                         setCursorPosition(buffer.length());
@@ -210,26 +212,27 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             if (!groovyFormatterPrefs.noParensAroundArgs) {
                 buffer.append(RPAREN);
             }
-            
+
         } else {
             if (prefs.inEmptyList) {
                 buffer.append(SPACE);
             }
             buffer.append(RPAREN);
         }
-        
+
         return buffer.toString();
     }
-    
+
     /*
      * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#needsLinkedMode()
      */
+    @Override
     protected boolean needsLinkedMode() {
         return false; // we handle it ourselves
     }
 
 
-    
+
     /**
      * Returns the currently active java editor, or <code>null</code> if it
      * cannot be determined.
@@ -245,10 +248,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
 
-    
+
     /*
      * @see ICompletionProposal#getSelection(IDocument)
      */
+    @Override
     public Point getSelection(IDocument document) {
         if (fSelectedRegion == null)
             return new Point(getReplacementOffset(), 0);

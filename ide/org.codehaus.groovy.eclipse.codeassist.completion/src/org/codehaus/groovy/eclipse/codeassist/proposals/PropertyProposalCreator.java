@@ -17,7 +17,7 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -27,31 +27,29 @@ import org.codehaus.groovy.ast.PropertyNode;
 
 /**
  * Consider deleting this class.  As of GRECLIPSE-611, properties are no
- * longer used for content assist proposals, but rather fields are. 
+ * longer used for content assist proposals, but rather fields are.
  * @author Andrew Eisenberg
  * @created Nov 12, 2009
  */
 public class PropertyProposalCreator extends AbstractProposalCreator implements IProposalCreator {
-    
+
 
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
-//        Collection<PropertyNode> allProperties = getAllProperties(type);
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
-        
-        
+
 //        for (PropertyNode property : allProperties) {
 //            if ((!isStatic || property.isStatic()) &&
 //                    ProposalUtils.looselyMatches(prefix, property.getName())) {
 //                groovyProposals.add(new GroovyPropertyProposal(property));
 //            }
 //        }
-        
+
         return groovyProposals;
     }
-    
+
     private Collection<PropertyNode> getAllProperties(ClassNode thisType) {
-        Set<ClassNode> types = new HashSet<ClassNode>();
+        Set<ClassNode> types = new LinkedHashSet<ClassNode>();
         getAllSupers(thisType, types);
         List<PropertyNode> allProperties = new LinkedList<PropertyNode>();
         for (ClassNode type : types) {

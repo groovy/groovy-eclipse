@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -56,13 +57,13 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         this.replaceLength = context.completionExpression.length();
         this.offset = context.completionLocation;
     }
-    
+
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         Map<String,ClassNode> localNames = findLocalNames(getContext().completionExpression);
         List<ICompletionProposal> proposals = createProposals(localNames);
         return proposals;
     }
-    
+
     private Map<String,ClassNode> findLocalNames(String prefix) {
          Map<String,ClassNode> nameTypeMap = new HashMap<String,ClassNode>();
 
@@ -78,19 +79,19 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
                  } else {
                      inBounds = true;
                  }
-                 
+
                 if (inBounds && ProposalUtils.looselyMatches(prefix, var.getName())) {
                     nameTypeMap.put(var.getName(), var.getType());
                 }
              }
              scope = scope.getParent();
          }
-         
+
          return nameTypeMap;
     }
 
 
-    
+
     private VariableScope getVariableScope(ASTNode astNode) {
         if (astNode instanceof BlockStatement) {
             return ((BlockStatement) astNode).getVariableScope();
@@ -104,7 +105,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         }
         return null;
     }
-    
+
     private List<ICompletionProposal> createProposals(Map<String,ClassNode> nameTypes) {
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         for (Entry<String,ClassNode> nameType : nameTypes.entrySet()) {
@@ -125,8 +126,11 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         proposal.setCompletion(replaceName.toCharArray());
         proposal.setReplaceRange(offset - replaceLength, offset - replaceLength);
         proposal.setSignature(ProposalUtils.createTypeSignature(type));
-        proposal.setRelevance(25);
-        return new LazyJavaCompletionProposal(proposal, javaContext);
+
+        proposal.setRelevance(Relevance.HIGH.getRelavance());
+        LazyJavaCompletionProposal completion = new LazyJavaCompletionProposal(proposal, javaContext);
+        completion.setRelevance(proposal.getRelevance());
+        return completion;
     }
 
 }

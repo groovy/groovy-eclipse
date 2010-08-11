@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.CoreException;
@@ -109,7 +110,7 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
 
     private ICompletionProposal createProposal(String fieldName,
             ContentAssistContext context, IType enclosingType) {
-        int relevance = 5000;
+        int relevance = Relevance.VERY_HIGH.getRelavance();
         return new NewGroovyFieldCompletionProposal(fieldName, context.completionLocation, context.completionExpression.length(), relevance);
     }
 
