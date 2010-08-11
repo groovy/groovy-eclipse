@@ -11,7 +11,15 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import java.util.AbstractQueue;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
@@ -31,11 +39,13 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.util.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.IDocument;
@@ -153,6 +163,39 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
     
     /**
+     * Finds the next proposal that matches the passed in name
+     * @param proposals all proposals
+     * @param name name to match
+     * @param isType true if looking for a type proposal
+     * @param startFrom index to start from
+     * @return the index of the proposal that matches, or -1 if no match
+     */
+    protected int findProposal(ICompletionProposal[] proposals, String name, boolean isType, int startFrom) {
+        for (int i = startFrom; i < proposals.length; i++) {
+            ICompletionProposal proposal = proposals[i];
+            
+            // if a field
+            String propName = proposal.getDisplayString();
+            if (propName.startsWith(name + " ")) {
+                return i;
+            } else
+            // if a method
+            if (propName.startsWith(name + "(")) {
+                return i;
+            } else
+            // if a type
+            if (isType && propName.startsWith(name)) {
+                return i;
+            } else
+            // if a keyword
+            if (propName.equals(proposal.getDisplayString())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    /**
      * Returns the first proposal that matches the criteria passed in
      */
     protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType) {
@@ -250,6 +293,25 @@ public abstract class CompletionTestCase extends BuilderTests {
         return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
         
     }
+    
+    protected ICompletionProposal[] orderByRelevance(ICompletionProposal[] proposals) {
+        
+        Arrays.sort(proposals, 0, proposals.length, 
+                new Comparator<ICompletionProposal>() {
+                    public int compare(ICompletionProposal left,
+                            ICompletionProposal right) {
+                        int initial = ((IJavaCompletionProposal) right).getRelevance() - ((IJavaCompletionProposal) left).getRelevance();
+                        if (initial != 0 ) {
+                            return initial;
+                        } else {
+                            // sort lexically
+                            return left.toString().compareTo(right.toString());
+                        }
+                    }
+                });
+        return proposals;
+    }
+    
     
     protected ICompilationUnit create(String contents) throws Exception {
         return create(contents, "GroovyClass");

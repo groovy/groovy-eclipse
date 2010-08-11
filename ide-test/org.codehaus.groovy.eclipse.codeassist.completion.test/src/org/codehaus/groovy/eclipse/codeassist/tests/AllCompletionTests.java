@@ -35,6 +35,7 @@ public class AllCompletionTests {
         suite.addTestSuite(StandardASTTransformCompletionTests.class);
         suite.addTestSuite(OtherCompletionTests.class);
         suite.addTestSuite(FindImportsRegionTests.class);
+        suite.addTestSuite(RelevanceTests.class);
         
         return suite;
     }
