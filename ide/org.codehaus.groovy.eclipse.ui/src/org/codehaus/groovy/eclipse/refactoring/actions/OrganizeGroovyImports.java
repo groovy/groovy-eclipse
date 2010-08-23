@@ -150,6 +150,12 @@ public class OrganizeGroovyImports {
                 for (Parameter param : node.getParameters()) {
                     handleType(param.getType(), false);
                 }
+                ClassNode[] thrownExceptions = node.getExceptions();
+                if (thrownExceptions != null) {
+                    for (ClassNode thrownException : thrownExceptions) {
+                        handleType(thrownException, false);
+                    }
+                }
             }
             super.visitMethod(node);
         }
