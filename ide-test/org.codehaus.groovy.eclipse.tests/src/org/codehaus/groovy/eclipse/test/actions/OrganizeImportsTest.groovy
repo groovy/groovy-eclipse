@@ -325,6 +325,21 @@ public class OrganizeImportsTest extends EclipseTestCase {
 		def expectedImports = [ 'java.text.DateFormat' ] 
 		doAddImportTest(contents, expectedImports)
 	}
+    
+    // Test GRECLISPE-823
+    void testThrownExceptions() {
+        String contents = 
+            """ 
+            import java.util.zip.ZipException
+            
+            def x() throws BadLocationException {
+            }
+            def y() throws ZipException {
+            }
+            """
+        def expectedImports = [ 'javax.swing.text.BadLocationException' ] 
+        doAddImportTest(contents, expectedImports)
+    }
 	
     void doAddImportTest(contents, expectedImports) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
