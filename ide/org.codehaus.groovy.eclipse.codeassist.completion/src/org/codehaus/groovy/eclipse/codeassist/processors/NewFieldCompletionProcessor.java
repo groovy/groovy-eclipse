@@ -111,7 +111,10 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
     private ICompletionProposal createProposal(String fieldName,
             ContentAssistContext context, IType enclosingType) {
         int relevance = Relevance.VERY_HIGH.getRelavance();
-        return new NewGroovyFieldCompletionProposal(fieldName, context.completionLocation, context.completionExpression.length(), relevance);
+        return new NewGroovyFieldCompletionProposal(fieldName,
+                context.completionLocation
+                        - context.completionExpression.length(),
+                context.completionExpression.length(), relevance);
     }
 
 

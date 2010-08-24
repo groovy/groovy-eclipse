@@ -34,7 +34,7 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
 
     private final PropertyNode property;
     private final String contributor;
-    
+
     public GroovyPropertyProposal(PropertyNode property) {
         this.property = property;
         this.contributor = "Groovy";
@@ -44,12 +44,14 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         this.property = property;
         this.contributor = contributor;
     }
-    
+
     public IJavaCompletionProposal createJavaProposal(
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
-        
-        return new GroovyJavaFieldCompletionProposal(createProposal(context), getImageFor(property), createDisplayString(property));
+
+        CompletionProposal proposal = createProposal(context);
+        return new GroovyJavaFieldCompletionProposal(proposal,
+                ProposalUtils.getImage(proposal), createDisplayString(property));
 //        return new JavaCompletionProposal(property.getName(), context.completionLocation-context.completionExpression.length(),
 //                property.getName().length(), getImageFor(property),
 //                createDisplayString(property), 2000);
@@ -57,7 +59,7 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
 
     protected StyledString createDisplayString(PropertyNode property) {
         StyledString ss = new StyledString();
-        
+
         ss.append(property.getName())
           .append(" : ")
           .append(ProposalUtils.createSimpleTypeName(property.getType()))
@@ -67,7 +69,7 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         return ss;
     }
 
-    
+
     private CompletionProposal createProposal(ContentAssistContext context) {
         InternalCompletionProposal proposal = (InternalCompletionProposal) CompletionProposal.create(CompletionProposal.FIELD_REF, context.completionLocation);
         proposal.setFlags(property.getModifiers());

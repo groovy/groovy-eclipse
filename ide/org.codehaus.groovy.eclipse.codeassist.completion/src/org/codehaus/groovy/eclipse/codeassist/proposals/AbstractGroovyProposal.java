@@ -20,6 +20,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
@@ -42,6 +43,13 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
         return registry.get(labelProvider.createImageDescriptor(proposal));
     }
 
+    /**
+     * Use {@link ProposalUtils#getImage(CompletionProposal)} instead
+     * 
+     * @param node
+     * @return
+     */
+    @Deprecated
     protected Image getImageFor(ASTNode node) {
         if (node instanceof FieldNode) {
             int mods = ((FieldNode) node).getModifiers();

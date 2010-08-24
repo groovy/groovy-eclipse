@@ -62,7 +62,9 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
 
-        return new GroovyJavaFieldCompletionProposal(createProposal(context), getImageFor(field), createDisplayString(field));
+        CompletionProposal proposal = createProposal(context);
+        return new GroovyJavaFieldCompletionProposal(proposal,
+                ProposalUtils.getImage(proposal), createDisplayString(field));
     }
 
     @Override
