@@ -21,12 +21,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedSet;
 
 import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
@@ -36,7 +39,6 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.core.groovy.tests.builder.GroovierBuilderTests;
-
 /**
  * Test the source locations of ASTNodes to ensure they are correct, especially 
  * look into the changes that we force into them.
@@ -183,6 +185,18 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
 				new CastExpressionSLocTester(), "foo as Set");
 	}
 	
+	public void testImportStatement1() throws Exception {
+        checkBinaryExprSLocs(
+                "import javax.swing.*\n" +
+                "import javax.swing.JFrame\n" +
+                "import javax.applet.*;\n" +
+                "import javax.applet.Applet;\n", 
+                new ImportStatementSLocTester(), 
+                "import javax.swing.*",
+                "import javax.swing.JFrame",
+                "import javax.applet.*",
+                "import javax.applet.Applet");
+    }
 	
 	
 	class StartAndEnd {
@@ -239,13 +253,25 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
 				StringBuilder sb = new StringBuilder();
 				for (Integer integer : problemIndices) {
 					int val = integer.intValue();
-					sb.append("Expectd slocs at " + sae[val] + " for expression " + bexprs[val] + 
+					sb.append("Expected slocs at " + sae[val] + " for expression " + bexprs[val] + 
 							"but instead found: " + new StartAndEnd(bexprs[val]) + "\n");
 				}
 				fail(sb.toString());
 			}
 		}
 	}
+	
+	class ImportStatementSLocTester extends AbstractSLocTester {
+        @Override
+        public void visitImports(ModuleNode module) {
+            ImportNodeCompatibilityWrapper wrapper = new ImportNodeCompatibilityWrapper(module);
+            SortedSet<ImportNode> nodes = wrapper.getAllImportNodes();
+            for (ImportNode node : nodes) {
+                allCollectedNodes.add(node);
+            }
+        }
+    }
+    
 	
 	class BinaryExpressionSLocTester extends AbstractSLocTester {
 		@Override
