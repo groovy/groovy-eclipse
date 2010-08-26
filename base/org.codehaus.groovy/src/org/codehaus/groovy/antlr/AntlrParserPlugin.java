@@ -48,6 +48,7 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.EnumConstantClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.MixinNode;
@@ -481,6 +482,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             } else {
                 // import is like "import foo.*"
                 addStarImport(packageName, annotations);
+                // GRECLIPSE: start: must configure sloc for import node
+                // new
+                ASTNode imp = (ASTNode) output.getStarImports().get(output.getStarImports().size()-1);
+                configureAST(imp, importNode);
+                // end
             }
 
             if (alias!=null) throw new GroovyBugError(
