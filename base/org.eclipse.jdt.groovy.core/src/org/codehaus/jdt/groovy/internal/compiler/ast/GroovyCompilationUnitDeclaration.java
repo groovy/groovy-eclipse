@@ -247,7 +247,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	private void createImports(ModuleNode moduleNode) {
 		List<ImportNode> importNodes = moduleNode.getImports();
-		List<String> importPackages = moduleNode.getImportPackages();
+		List<ImportNode> importPackages = ImportNodeCompatibilityWrapper.getStarImports(moduleNode);
 		Map<String, ImportNode> importStatics = ImportNodeCompatibilityWrapper.getStaticImports(moduleNode);
 		Map<String, ImportNode> importStaticStars = ImportNodeCompatibilityWrapper.getStaticStarImports(moduleNode);
 		if (importNodes.size() > 0 || importPackages.size() > 0 || importStatics.size() > 0 || importStaticStars.size() > 0) {
@@ -274,9 +274,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				ref.declarationEnd = ref.sourceEnd;
 				imports[importNum++] = ref;
 			}
-			for (String importPackage : importPackages) {
-				char[][] splits = CharOperation.splitOn('.', importPackage.substring(0, importPackage.length() - 1).toCharArray());
-				imports[importNum++] = new ImportReference(splits, getPositionsFor(splits), true, ClassFileConstants.AccDefault);
+			for (ImportNode importPackage : importPackages) {
+				String importText = importPackage.getText();
+
+				// when calculating these offsets, assume no extraneous whitespace
+				int packageStartOffset = importPackage.getStart() - "import ".length();
+				int packageEndOffset = packageStartOffset + importText.length() - "import ".length() - ".*".length();
+
+				char[][] splits = CharOperation.splitOn('.',
+						importPackage.getPackageName().substring(0, importPackage.getPackageName().length() - 1).toCharArray());
+				ImportReference ref = new ImportReference(splits, positionsFor(splits, packageStartOffset, packageEndOffset), true,
+						ClassFileConstants.AccDefault);
+				// import * style only have slocs for the entire ImportNode and not for the embedded type
+				ref.sourceEnd = packageEndOffset;
+				ref.declarationSourceStart = importPackage.getStart();
+				ref.declarationSourceEnd = importPackage.getEnd();
+				ref.declarationEnd = ref.sourceEnd;
+				imports[importNum++] = ref;
 			}
 			for (Map.Entry<String, ImportNode> importStatic : importStatics.entrySet()) {
 				ImportNode importNode = importStatic.getValue();
