@@ -15,8 +15,10 @@
  */
 package org.codehaus.groovy.ast;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -76,5 +78,20 @@ public class ImportNodeCompatibilityWrapper {
     // not available in 1.6 stream
     public static Map<String, ImportNode> getStaticStarImports(ModuleNode node) {
         return Collections.emptyMap();
+    }
+    // mock this up for the 1.6 stream
+    public static List<ImportNode> getStarImports(ModuleNode node) {
+        List<String> importPackages = node.getImportPackages();
+        if (importPackages != null) {
+            List<ImportNode> importPackageNodes = new ArrayList<ImportNode>(importPackages.size()); 
+            for (String importPackage : importPackages) {
+                ImportNode newImport = new ImportNode(null, null);
+                newImport.setPackageName(importPackage);
+                importPackageNodes.add(newImport);
+            }
+            return importPackageNodes;
+        } else {
+            return Collections.emptyList();
+        }
     }
 }
