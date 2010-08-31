@@ -1,0 +1,22 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+def method() {
+def gender = ["unknown",
+"female",
+"male"]
+def longList = ["melon", "banana","organge","maple syrup", "strawberry delux icecream"]
+}
+###exp
+def method() {
+	def gender = ["unknown", "female", "male"]
+	def longList = [
+		"melon",
+		"banana",
+		"organge",
+		"maple syrup",
+		"strawberry delux icecream"
+	]
+}
+###end
