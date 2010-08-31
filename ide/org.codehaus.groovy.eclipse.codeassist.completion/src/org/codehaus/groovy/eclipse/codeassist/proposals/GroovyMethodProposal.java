@@ -220,4 +220,11 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         return null;
     }
+
+    /**
+	 * @return the method
+	 */
+	public MethodNode getMethod() {
+		return method;
+	}
 }

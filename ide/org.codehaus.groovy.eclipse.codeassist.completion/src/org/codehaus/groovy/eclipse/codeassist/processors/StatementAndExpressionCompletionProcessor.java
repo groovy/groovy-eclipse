@@ -183,20 +183,59 @@ public class StatementAndExpressionCompletionProcessor extends
         try {
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
             for (IProposalProvider provider : providers) {
-                List<IGroovyProposal> otherProposals = provider.getStatementAndExpressionProposals(context, completionType, isStatic, requestor.categories);
-                if (otherProposals != null) {
-                    groovyProposals.addAll(otherProposals);
+                try {
+                    List<IGroovyProposal> otherProposals = provider
+                            .getStatementAndExpressionProposals(context,
+                                    completionType, isStatic,
+                                    requestor.categories);
+                    if (otherProposals != null) {
+                        groovyProposals.addAll(otherProposals);
+                    }
+                } catch (Exception e) {
+                    GroovyCore
+                            .logException(
+                                    "Exception when using third party proposal provider: "
+                                            + provider.getClass()
+                                                    .getCanonicalName(), e);
                 }
             }
         } catch (CoreException e) {
             GroovyCore.logException("Exception accessing proposal provider registry", e);
         }
 
-        // filter??? sort???
+        // extra filtering and sorting provided by third parties
+        try {
+            List<IProposalFilter> filters = ProposalProviderRegistry
+                    .getRegistry().getFiltersFor(context.unit);
+            for (IProposalFilter filter : filters) {
+                try {
+                    List<IGroovyProposal> newProposals = filter
+                            .filterProposals(groovyProposals);
+                    groovyProposals = newProposals == null ? groovyProposals
+                            : newProposals;
+                } catch (Exception e) {
+                    GroovyCore.logException(
+                            "Exception when using third party proposal filter: "
+                                    + filter.getClass().getCanonicalName(), e);
+                }
+            }
+        } catch (CoreException e) {
+            GroovyCore.logException(
+                    "Exception accessing proposal provider registry", e);
+        }
+
         List<ICompletionProposal> javaProposals = new ArrayList<ICompletionProposal>(groovyProposals.size());
         JavaContentAssistInvocationContext javaContext = getJavaContext();
         for (IGroovyProposal groovyProposal : groovyProposals) {
-            javaProposals.add(groovyProposal.createJavaProposal(context, javaContext));
+            try {
+                javaProposals.add(groovyProposal.createJavaProposal(context,
+                        javaContext));
+            } catch (Exception e) {
+                GroovyCore
+                        .logException(
+                                "Exception when creating groovy completion proposal",
+                                e);
+            }
         }
 
         return javaProposals;

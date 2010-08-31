@@ -43,7 +43,11 @@ public class ProposalProviderRegistry {
 
     private static final String PROVIDER = "proposalProvider"; //$NON-NLS-1$
 
+	private static final String FILTER = "proposalFilter"; //$NON-NLS-1$
+
     private static final String PROPOSAL_PROVIDER_EXTENSION = "org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider"; //$NON-NLS-1$
+
+	private static final String PROPOSAL_FILTER_EXTENSION = "org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter"; //$NON-NLS-1$
 
     private final static ProposalProviderRegistry DEFAULT = new ProposalProviderRegistry();
 
@@ -51,8 +55,15 @@ public class ProposalProviderRegistry {
         return DEFAULT;
     }
 
-    // maps from project nature to lists of type lookup classes
+    /**
+     * maps from project nature to lists of type lookup classes
+     */
     private Map<String, List<IConfigurationElement>> natureLookupMap = new HashMap<String, List<IConfigurationElement>>();
+
+    /**
+     * maps from project nature to lists of filter classes
+     */
+    private Map<String, List<IConfigurationElement>> filterLookupMap = new HashMap<String, List<IConfigurationElement>>();
 
     List<IProposalProvider> getProvidersFor(IProject project) throws CoreException {
         String[] natures = project.getDescription().getNatureIds();
@@ -72,11 +83,43 @@ public class ProposalProviderRegistry {
         return lookups;
     }
 
+    List<IProposalProvider> getProvidersFor(GroovyCompilationUnit unit)
+            throws CoreException {
+        return getProvidersFor(unit.getResource().getProject());
+    }
+
+    List<IProposalFilter> getFiltersFor(IProject project) throws CoreException {
+        String[] natures = project.getDescription().getNatureIds();
+        List<IProposalFilter> filters = new ArrayList<IProposalFilter>();
+        for (String nature : natures) {
+            List<IConfigurationElement> configs = filterLookupMap.get(nature);
+            if (configs != null) {
+                for (IConfigurationElement config : configs) {
+                    try {
+                        filters.add((IProposalFilter) config
+                                .createExecutableExtension(FILTER));
+                    } catch (CoreException e) {
+                        Util.log(e,
+                                "Problem creating completion provider for type "
+                                        + config.getAttribute(PROVIDER));
+                    }
+                }
+            }
+        }
+        return filters;
+    }
+
+    List<IProposalFilter> getFiltersFor(GroovyCompilationUnit unit)
+            throws CoreException {
+        return getFiltersFor(unit.getResource().getProject());
+    }
+
     private ProposalProviderRegistry() {
         initialize();
     }
 
     private void initialize() {
+        // proposal provider
         IExtensionPoint extPoint = Platform.getExtensionRegistry().getExtensionPoint(PROPOSAL_PROVIDER_EXTENSION);
         IExtension[] exts = extPoint.getExtensions();
         for (IExtension ext : exts) {
@@ -85,11 +128,18 @@ public class ProposalProviderRegistry {
                 createLookup(config);
             }
         }
+
+        // proposal filter
+        extPoint = Platform.getExtensionRegistry().getExtensionPoint(PROPOSAL_FILTER_EXTENSION);
+		exts = extPoint.getExtensions();
+		for (IExtension ext : exts) {
+			IConfigurationElement[] configs = ext.getConfigurationElements();
+			for (IConfigurationElement config : configs) {
+                createFilter(config);
+			}
+		}
     }
 
-    /**
-     * @param config
-     */
     private void createLookup(IConfigurationElement config) {
         try {
             if (config.getName().equals(PROVIDER)) {
@@ -115,7 +165,30 @@ public class ProposalProviderRegistry {
         }
     }
 
-    List<IProposalProvider> getProvidersFor(GroovyCompilationUnit unit) throws CoreException {
-        return getProvidersFor(unit.getResource().getProject());
+    private void createFilter(IConfigurationElement config) {
+        try {
+            if (config.getName().equals(FILTER)) {
+                if (config.getAttribute(FILTER) != null) {
+                    IConfigurationElement[] appliesTos = config
+                            .getChildren(APPLIES_TO);
+                    for (IConfigurationElement appliesTo : appliesTos) {
+                        String nature = appliesTo.getAttribute(NATURE);
+                        List<IConfigurationElement> elts;
+                        if (filterLookupMap.containsKey(nature)) {
+                            elts = filterLookupMap.get(nature);
+                        } else {
+                            elts = new ArrayList<IConfigurationElement>(3);
+                            filterLookupMap.put(nature, elts);
+                        }
+                        elts.add(config);
+                    }
+                } else {
+                    Util.log(new RuntimeException(),
+                            "Filter lookup registry extension found with no type lookup class.");
+                }
+            }
+        } catch (Exception e) {
+            Util.log(e, "Problem registering type lookups");
+        }
     }
 }

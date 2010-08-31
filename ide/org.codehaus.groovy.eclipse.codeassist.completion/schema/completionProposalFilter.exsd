@@ -3,10 +3,10 @@
 <schema targetNamespace="org.codehaus.groovy.eclipse.codeassist.completion" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
-         <meta.schema plugin="org.codehaus.groovy.eclipse.codeassist.completion" id="completionProposalProvider" name="Groovy Completion Proposals Provider"/>
+         <meta.schema plugin="org.codehaus.groovy.eclipse.codeassist.completion" id="completionProposalFilter" name="Groovy Completion Proposals Filter"/>
       </appInfo>
       <documentation>
-         Plugs into the Groovy content assist engine and allows clients to propose their own proposals.
+         Plugs into the Groovy content assist engine and allows clients to filter groovy proposals.
       </documentation>
    </annotation>
 
@@ -17,8 +17,8 @@
          </appInfo>
       </annotation>
       <complexType>
-         <sequence>
-            <element ref="proposalProvider" minOccurs="1" maxOccurs="unbounded"/>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="proposalFilter"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -47,33 +47,10 @@
       </complexType>
    </element>
 
-   <element name="proposalProvider">
-      <annotation>
-         <documentation>
-            List of proposal providers
-         </documentation>
-      </annotation>
-      <complexType>
-         <sequence minOccurs="1" maxOccurs="unbounded">
-            <element ref="appliesTo"/>
-         </sequence>
-         <attribute name="proposalProvider" type="string" use="required">
-            <annotation>
-               <documentation>
-                  Class that implements &lt;tt&gt;org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider&lt;/tt&gt;.  This class provides content assist proposals in a given content assist context.
-               </documentation>
-               <appInfo>
-                  <meta.attribute kind="java" basedOn=":org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider"/>
-               </appInfo>
-            </annotation>
-         </attribute>
-      </complexType>
-   </element>
-
    <element name="appliesTo">
       <annotation>
          <documentation>
-            Project nature that this provider applies to.
+            Project nature that this filter applies to.
          </documentation>
       </annotation>
       <complexType>
@@ -90,12 +67,35 @@
       </complexType>
    </element>
 
+   <element name="proposalFilter">
+      <annotation>
+         <documentation>
+            List of proposal providers
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="appliesTo"/>
+         </sequence>
+         <attribute name="proposalFilter" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Class that implements &lt;tt&gt;org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilter&lt;/tt&gt;.  This class provides content assist proposals in a given content assist context.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilter"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
    <annotation>
       <appInfo>
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         2.0.0M2
+         2.1.0M1
       </documentation>
    </annotation>
 
@@ -107,10 +107,19 @@
          <meta.section type="copyright"/>
       </appInfo>
       <documentation>
-         Copyright (c) 2009 Codehaus.org, SpringSource, and others.
-&lt;br/&gt;
-Contributors:&lt;br/&gt;
-Andrew Eisenberg - Initial API and implementation
+         Copyright 2010 the original author or authors.
+
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
       </documentation>
    </annotation>
 

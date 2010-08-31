@@ -155,6 +155,7 @@ public enum Relevance {
         }
     }
 
+    // these are fields that we don't really want to see
     private static final Set<String> IGNORED_FIELD_NAMES = new HashSet<String>();
     static {
         IGNORED_FIELD_NAMES.add("metaClass");
@@ -162,6 +163,7 @@ public enum Relevance {
         IGNORED_FIELD_NAMES.add("class");
     }
 
+    // these are methods that we don't really want to see
     private static final Set<String> IGNORED_METHOD_NAMES = new HashSet<String>();
     static {
         IGNORED_METHOD_NAMES.add("getMetaClass");

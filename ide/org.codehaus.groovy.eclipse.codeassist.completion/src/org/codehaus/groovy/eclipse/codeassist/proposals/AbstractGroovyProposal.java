@@ -38,6 +38,7 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
 
     private final static ImageDescriptorRegistry registry= JavaPlugin.getImageDescriptorRegistry();
 
+    private float relevanceMultiplier = 1;
 
     protected Image getImage(CompletionProposal proposal, CompletionProposalLabelProvider labelProvider) {
         return registry.get(labelProvider.createImageDescriptor(proposal));
@@ -45,7 +46,7 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
 
     /**
      * Use {@link ProposalUtils#getImage(CompletionProposal)} instead
-     * 
+     *
      * @param node
      * @return
      */
@@ -104,11 +105,11 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
     }
 
     protected int computeRelevance() {
-        return Relevance.calculateRelevance(this, 1);
+        return Relevance.calculateRelevance(this, relevanceMultiplier);
     }
 
-    protected int computeRelevance(float multiplier) {
-        return Relevance.calculateRelevance(this, multiplier);
+    public void setRelevanceMultiplier(float relevanceMultiplier) {
+        this.relevanceMultiplier = relevanceMultiplier;
     }
 
 }

@@ -35,26 +35,26 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
 
 
     private final FieldNode field;
-    private final int multiplier;
     private final String contributor;
     public GroovyFieldProposal(FieldNode field) {
         this.field = field;
-        this.multiplier = 1;
         this.contributor = "Groovy";
     }
     public GroovyFieldProposal(FieldNode field, String contributor) {
         this.field = field;
-        this.multiplier = 1;
         this.contributor = contributor;
     }
-    public GroovyFieldProposal(FieldNode field, int relevance) {
+
+    public GroovyFieldProposal(FieldNode field, int relevanceMultiplier) {
         this.field = field;
-        this.multiplier = relevance;
+        setRelevanceMultiplier(relevanceMultiplier);
         this.contributor = "Groovy";
     }
-    public GroovyFieldProposal(FieldNode field, int relevance, String contributor) {
+
+    public GroovyFieldProposal(FieldNode field, int relevanceMultiplier,
+            String contributor) {
         this.field = field;
-        this.multiplier = relevance;
+        setRelevanceMultiplier(relevanceMultiplier);
         this.contributor = contributor;
     }
 
@@ -91,9 +91,13 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         proposal.setCompletion(proposal.getName());
         proposal.setSignature(ProposalUtils.createTypeSignature(field.getType()));
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(field.getDeclaringClass()));
-        proposal.setRelevance(computeRelevance(multiplier));
+        proposal.setRelevance(computeRelevance());
         int startIndex = context.completionLocation-context.completionExpression.length();
         proposal.setReplaceRange(startIndex, context.completionLocation);
         return proposal;
+    }
+
+    public FieldNode getField() {
+        return field;
     }
 }
