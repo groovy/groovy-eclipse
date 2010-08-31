@@ -57,7 +57,7 @@ import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.JavaProject;
 
 public class TestingEnvironment {
-	
+
 	private boolean fIsOpen = false;
 
 	private IWorkspace fWorkspace = null;
@@ -87,7 +87,7 @@ public class TestingEnvironment {
 		createFile(classPath, contents);
 		return classPath;
 	}
-	
+
 	/** Adds a binary class with the given contents to the
 	 * given package in the workspace.  The package is created
 	 * if necessary.  If a class with the same name already
@@ -103,9 +103,9 @@ public class TestingEnvironment {
 			return addBinaryClass(packagePath, className, contents);
 		}
 		return addBinaryClass(packageFragmentRootPath, className, contents);
-			
+
 	}
-	
+
 	/** Adds a class with the given contents to the given
 	 * package in the workspace.  The package is created
 	 * if necessary.  If a class with the same name already
@@ -124,7 +124,7 @@ public class TestingEnvironment {
 		}
 		return classPath;
 	}
-	
+
 	/** Adds a groovy class with the given contents to the given
 	 * package in the workspace.  The package is created
 	 * if necessary.  If a class with the same name already
@@ -143,7 +143,7 @@ public class TestingEnvironment {
 		}
 		return classPath;
 	}
-	
+
 	/** Adds a class with the given contents to the given
 	 * package in the workspace.  The package is created
 	 * if necessary.  If a class with the same name already
@@ -178,13 +178,13 @@ public class TestingEnvironment {
 		return addGroovyClass(packageFragmentRootPath, className, contents);
 	}
 
-/** 
+/**
  * Add a class folder to the classpath of a project.
  */
 public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isExported) throws JavaModelException {
 	addEntry(projectPath, JavaCore.newLibraryEntry(classFolderPath, null, null, isExported));
 }
-	
+
 	/** Adds a package to the given package fragment root
 	 * in the workspace.  The package fragment root is created
 	 * if necessary.  If a package with the same name already
@@ -211,7 +211,7 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	public IPath addPackageFragmentRoot(IPath projectPath, String sourceFolderName, IPath[] exclusionPatterns, String specificOutputLocation) throws JavaModelException {
 		return addPackageFragmentRoot(projectPath, sourceFolderName, null, exclusionPatterns, specificOutputLocation);
 	}
-	
+
 	/** Adds a package fragment root to the workspace.  If
 	 * a package fragment root with the same name already
 	 * exists, it is not replaced.  A workspace must be open.
@@ -279,7 +279,7 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	public void addRequiredProject(IPath projectPath, IPath requiredProjectPath) throws JavaModelException {
 		addRequiredProject(projectPath, requiredProjectPath, new IPath[]{}/*include all*/, new IPath[]{}/*exclude none*/, false);
 	}
-	
+
 	/** Adds a project to the classpath of a project.
 	 */
 	public void addRequiredProject(IPath projectPath, IPath requiredProjectPath, IPath[] accessibleFiles, IPath[] nonAccessibleFiles, boolean isExported) throws JavaModelException {
@@ -287,7 +287,7 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 		IAccessRule[] accessRules = ClasspathEntry.getAccessRules(accessibleFiles, nonAccessibleFiles);
 		addEntry(projectPath, JavaCore.newProjectEntry(requiredProjectPath, accessRules, true, new IClasspathAttribute[0], isExported));
 	}
-	
+
 	public void addRequiredProject(IPath projectPath, IPath requiredProjectPath, IPath rule, int ruleKind) throws JavaModelException {
 		checkAssertion("required project must not be in project", !projectPath.isPrefixOf(requiredProjectPath)); //$NON-NLS-1$
 		IAccessRule accessRule = JavaCore.newAccessRule(rule, ruleKind);
@@ -319,7 +319,7 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	public void addExternalJar(IPath projectPath, String jar) throws JavaModelException {
 		addExternalJar(projectPath, jar, false);
 	}
-	
+
 	/** Adds an external jar to the classpath of a project.
 	 */
 	public void addExternalJars(IPath projectPath, String[] jars, boolean isExported) throws JavaModelException {
@@ -334,10 +334,10 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	public void addExternalJar(IPath projectPath, String jar, boolean isExported) throws JavaModelException {
 		addEntry(projectPath, JavaCore.newLibraryEntry(new Path(jar), null, null, isExported));
 	}
-	
-public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath) 
+
+public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath)
 		throws JavaModelException {
-	addEntry(projectPath, 		
+	addEntry(projectPath,
 		JavaCore.newLibraryEntry(libraryPath, sourceAttachmentPath,	sourceAttachmentRootPath));
 }
 	public void addEntry(IPath projectPath, IClasspathEntry entryPath) throws JavaModelException {
@@ -347,7 +347,7 @@ public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachm
 		newClaspath[classpath.length] = entryPath;
 		setClasspath(projectPath, newClaspath);
 	}
-	
+
 	/** Adds a file.
 	 */
 	public IPath addFile(IPath root, String fileName, String contents){
@@ -361,7 +361,7 @@ public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachm
 		}
 		return filePath;
 	}
-	
+
 	/** Adds a folder.
 	 */
 	public IPath addFolder(IPath root, String folderName){
@@ -383,7 +383,7 @@ public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachm
 	public IPath addInternalJar(IPath projectPath, String zipName, byte[] contents, boolean isExported) throws JavaModelException {
 		checkAssertion("a workspace must be open", fIsOpen); //$NON-NLS-1$
 		IPath path = projectPath.append(zipName);
-		
+
 		/* remove any existing zip from the java model */
 		removeInternalJar(projectPath, zipName);
 
@@ -404,7 +404,7 @@ public void cleanBuild() {
 		handle(e);
 	}
 }
-	
+
 	/** Closes the testing environment and frees up any
 	 * resources.  Once the testing environment is closed,
 	 * it shouldn't be used any more.
@@ -425,7 +425,7 @@ public void cleanBuild() {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/** Close a project from the workspace.
 	 */
 	public void closeProject(IPath projectPath){
@@ -436,7 +436,7 @@ public void cleanBuild() {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void closeWorkspace() {
 		fIsOpen = false;
 	}
@@ -528,7 +528,7 @@ public void cleanBuild() {
 			handle(e);
 		}
 	}
-	
+
 	/**
 	* Returns the class path.
 	*/
@@ -547,7 +547,7 @@ public void cleanBuild() {
 			return null; // not reachable
 		}
 	}
-	
+
 	/**
 	* Returns the Java Model element for the project.
 	*/
@@ -556,7 +556,7 @@ public void cleanBuild() {
 		Assert.isNotNull(javaProject);
 		return javaProject;
 	}
-	
+
 	/**
 	* Returns the Java Model element for the project.
 	*/
@@ -565,7 +565,7 @@ public void cleanBuild() {
 		Assert.isNotNull(javaProject);
 		return javaProject;
 	}
-	
+
 	/**
 	 * Return output location for a project.
 	 */
@@ -578,14 +578,14 @@ public void cleanBuild() {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Return all problems with workspace.
 	 */
 	public Problem[] getProblems(){
 		return getProblemsFor(getWorkspaceRootPath());
 	}
-	
+
 	/**
 	 * Return all problems with the specified element.
 	 */
@@ -595,7 +595,7 @@ public void cleanBuild() {
 	/**
 	 * Return all problems with the specified element.
 	 */
-	public Problem[] getProblemsFor(IPath path, String additionalMarkerType){	
+	public Problem[] getProblemsFor(IPath path, String additionalMarkerType){
 		IResource resource;
 		if(path.equals(getWorkspaceRootPath())){
 			resource = getWorkspace().getRoot();
@@ -618,11 +618,11 @@ public void cleanBuild() {
 			markers = resource.findMarkers(IJavaModelMarker.BUILDPATH_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE);
 			for (int i = 0; i < markers.length; i++)
 				problems.add(new Problem(markers[i]));
-			
+
 			markers = resource.findMarkers(IJavaModelMarker.TASK_MARKER, true, IResource.DEPTH_INFINITE);
 			for (int i = 0; i < markers.length; i++)
 				problems.add(new Problem(markers[i]));
-			
+
 			if (additionalMarkerType != null) {
 				markers = resource.findMarkers(additionalMarkerType, true, IResource.DEPTH_INFINITE);
 				for (int i = 0; i < markers.length; i++)
@@ -637,8 +637,8 @@ public void cleanBuild() {
 		}
 		return new Problem[0];
 	}
-	
-	
+
+
 	/**
 	 * Return all problems with the specified element.
 	 */
@@ -681,7 +681,7 @@ public void cleanBuild() {
 		}
 		return new IMarker[0];
 	}
-	
+
 	/** Return the path of the package
 	 * with the given name.  A workspace must be open, and
 	 * the package must exist.
@@ -705,14 +705,14 @@ public void cleanBuild() {
 		}
 		return projectPath.append(name);
 	}
-	
+
 	/**
 	* Returns the core project.
 	*/
 	public IProject getProject(String projectName) {
 		return (IProject)fProjects.get(projectName);
 	}
-	
+
 	/**
 	* Returns the core project.
 	*/
@@ -723,7 +723,7 @@ public void cleanBuild() {
 	private File tmpDirectory;
 	File getTmpDirectory() {
 		if (this.tmpDirectory == null) {
-			this.tmpDirectory = new File(System.getProperty("java.io.tmpdir") + 
+			this.tmpDirectory = new File(System.getProperty("java.io.tmpdir") +
 					File.separator + "org.eclipse.jdt.core.builder.tests.tmp");
 			if (this.tmpDirectory.exists() && !this.tmpDirectory.isDirectory()) {
 				Util.delete(this.tmpDirectory);
@@ -745,7 +745,7 @@ public void cleanBuild() {
 	public IWorkspace getWorkspace() {
 		return fWorkspace;
 	}
-	
+
 	/**
 	* Returns the path of workspace root.
 	*/
@@ -807,7 +807,7 @@ public void cleanBuild() {
 			handle(e);
 		}
 	}
-	
+
 	/** Incrementally builds a project.  A workspace must be
 	 * open.
 	 */
@@ -821,7 +821,7 @@ public void cleanBuild() {
 			e.printStackTrace();
 	}
 	}
-	
+
 	public boolean isAutoBuilding() {
 		IWorkspace w = getWorkspace();
 		IWorkspaceDescription d = w.getDescription();
@@ -836,7 +836,7 @@ public void cleanBuild() {
 		fProjects = new Hashtable(10);
 		setup();
 	}
-	
+
 	/** Close a project from the workspace.
 	 */
 	public void openProject(IPath projectPath){
@@ -939,7 +939,7 @@ public void cleanBuild() {
 		IPath rootPath = getPackageFragmentRootPath(projectPath, packageFragmentRootName);
 		removeEntry(projectPath, rootPath);
 	}
-	
+
 	/** Remove a project from the workspace.
 	 */
 	public void removeProject(IPath projectPath){
@@ -955,15 +955,15 @@ public void cleanBuild() {
 		} catch (CoreException e) {
 			handle(e);
 		}
-		
+
 	}
-	
+
 	/** Remove a required project from the classpath
 	 */
 	public void removeRequiredProject(IPath projectPath, IPath requiredProject) throws JavaModelException {
 		removeEntry(projectPath, requiredProject);
 	}
-	
+
 	/** Remove all elements in the workspace.
 	 */
 	public void resetWorkspace(){
@@ -1001,7 +1001,7 @@ public void cleanBuild() {
 			handle(e);
 		}
 	}
-	
+
 	/**
 	 * Remove an external jar from the classpath.
 	 */
@@ -1009,7 +1009,7 @@ public void cleanBuild() {
 		checkAssertion("a workspace must be open", fIsOpen); //$NON-NLS-1$
 		removeEntry(projectPath, jarPath);
 	}
-	
+
 	private void removeEntry(IPath projectPath, IPath entryPath) throws JavaModelException {
 		checkAssertion("a workspace must be open", fIsOpen); //$NON-NLS-1$
 		IClasspathEntry[] oldEntries = getClasspath(projectPath);
@@ -1033,7 +1033,7 @@ public void cleanBuild() {
 			handle(e);
 		}
 	}
-	
+
 	/** Remove a folder
 	 */
 	public void removeFolder(IPath folderPath) {
@@ -1045,7 +1045,7 @@ public void cleanBuild() {
 			handle(e);
 		}
 	}
-	
+
 	/** Sets the classpath to the given package fragment
 	 * roots.  The builder searches the classpath to
 	 * find the java files it needs during a build.
@@ -1073,7 +1073,7 @@ public void cleanBuild() {
 //			checkAssertion("JavaModelException", false); //$NON-NLS-1$
 //		}
 //	}
-	
+
 	public void setAutoBuilding(boolean value) {
 		try {
 			IWorkspace w = getWorkspace();
@@ -1103,7 +1103,7 @@ public void cleanBuild() {
 		IJavaProject javaProject = JavaCore.create(getProject(projectPath));
 		javaProject.setRawClasspath(entries, null);
 	}
-	
+
 	public IPath setExternalOutputFolder(IPath projectPath, String name, IPath externalOutputLocation){
 		IPath result = null;
 		try {
@@ -1121,7 +1121,7 @@ public void cleanBuild() {
 		}
 		return result;
 	}
-	
+
 	public IPath setOutputFolder(IPath projectPath, String outputFolder){
 		IPath outputPath = null;
 		try {
@@ -1139,7 +1139,7 @@ public void cleanBuild() {
 	private void setup() {
 		fIsOpen = true;
 	}
-	
+
 	/**
 	 * Wait for autobuild notification to occur
 	 */
@@ -1156,8 +1156,8 @@ public void cleanBuild() {
 				wasInterrupted = true;
 			}
 		} while (wasInterrupted);
-	}	
-	
+	}
+
 	public void waitForManualRefresh() {
 		checkAssertion("a workspace must be open", fIsOpen); //$NON-NLS-1$
 		boolean wasInterrupted = false;
@@ -1176,13 +1176,13 @@ public void cleanBuild() {
     public void addGroovyJars(IPath projectPath) throws Exception {
         addExternalJar(projectPath, GroovyActivator.GROOVY_JAR_URL.getFile());
         addExternalJar(projectPath, GroovyActivator.ASM_JAR_URL.getFile());
-    }   
+    }
     public void addJUnitJar(IPath projectPath) throws Exception {
         addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.codehaus.groovy.eclipse.core.test").getEntry("lib/junit-4.3.1.jar")).getFile());
     }
 
     /**
-     * Removes groovy nature from project and keeps only the JavaNature
+     * Adds the groovy and Java natures to a project
      */
     public void addGroovyNature(String projectName) {
         try {
@@ -1194,4 +1194,20 @@ public void cleanBuild() {
             handleCoreException(e);
         }
     }
+
+    public void addNature(String projectName, String natureId) {
+        try {
+            IProject project = getProject(projectName);
+            IProjectDescription description = project.getDescription();
+            String[] existingNatures = description.getNatureIds();
+            String[] newNatures = new String[existingNatures.length + 1];
+            System.arraycopy(existingNatures, 0, newNatures, 0, existingNatures.length);
+            newNatures[existingNatures.length] = natureId;
+            description.setNatureIds(newNatures);
+            project.setDescription(description, null);
+        } catch (CoreException e) {
+            handleCoreException(e);
+        }
+    }
+
 }
