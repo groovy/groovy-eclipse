@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter">
+      <proposalFilter
+            proposalFilter="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter1">
+         <appliesTo
+               projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
+         </appliesTo>
+      </proposalFilter>
+      <proposalFilter
+            proposalFilter="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter2">
+         <appliesTo
+               projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
+         </appliesTo>
+         <appliesTo
+               projectNature="org.codehaus.groovy.eclipse.tests.testNature2">
+         </appliesTo>
+      </proposalFilter>
+   </extension>
+   <extension
+         point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
+      <proposalProvider
+            proposalProvider="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider1">
+         <appliesTo
+               projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
+         </appliesTo>
+      </proposalProvider>
+      <proposalProvider
+            proposalProvider="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider2">
+         <appliesTo
+               projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
+         </appliesTo>
+         <appliesTo
+               projectNature="org.codehaus.groovy.eclipse.tests.testNature2">
+         </appliesTo>
+      </proposalProvider>
+   </extension>
+
+</plugin>
