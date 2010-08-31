@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.refactoring.formatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.groovy.antlr.GroovySourceToken;
 import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Assert;
@@ -171,6 +172,17 @@ public class GroovyDocumentScanner implements IDocumentListener {
             }
         }
         return offset;
+    }
+
+    /**
+     * Translate antlr line/column position of the end of the token into
+     * Eclipse document offset.
+     *
+     * @throws BadLocationException
+     */
+    public int getEnd(Token token) throws BadLocationException {
+        GroovySourceToken gToken = ((GroovySourceToken) token);
+        return GroovyScanner.getOffset(document, gToken.getLineLast(), gToken.getColumnLast());
     }
 
     /**

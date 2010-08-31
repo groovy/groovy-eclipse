@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -96,11 +96,11 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 	public RefactoringCodeVisitorSupport(ModuleNode rootNode) {
 		this.rootNode = rootNode;
 	}
-	
+
 	@Override
     public void visitClassImport(ClassImport classImport) {
 	}
-	
+
 	protected void analyzeNode(ASTNode node) {
 	}
 
@@ -120,7 +120,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 		analyseClassImports();
 		analyseStaticClassImport();
 		analyseStaticFieldImport();
-		
+
 		if (!rootNode.getStatementBlock().isEmpty()) {
 			for (Statement statement : (Iterable<Statement>) rootNode.getStatementBlock().getStatements()) {
 				statement.visit(this);
@@ -133,7 +133,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 			} else {
 				List<MethodNode> methods = rootNode.getMethods();
 				for ( MethodNode method : methods) {
-					visitMethod(method);	
+					visitMethod(method);
 				}
 			}
 		}
@@ -141,31 +141,31 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 
 	private void analyseStaticFieldImport() {
 		//visit static imports like import java.lang.Math.cos
-		
+
 		Collection<String> staticImportAliases = rootNode.getStaticImportAliases().keySet();
 		for(String aliasOrField : staticImportAliases) {
 			ClassNode type = (ClassNode)rootNode.getStaticImportAliases().get(aliasOrField);
 			String fieldName = rootNode.getStaticImportFields().get(aliasOrField).toString();
 			StaticFieldImport staticAliasImport = new StaticFieldImport(type,aliasOrField,fieldName);
 			staticAliasImport.setSourcePosition(type);
-			visitStaticFieldImport(staticAliasImport);			
+			visitStaticFieldImport(staticAliasImport);
 		}
 	}
 
 	private void analyseStaticClassImport() {
 		//visit static imports like import java.lang.Math.*
 		Collection<ClassNode> staticImportClasses = rootNode.getStaticImportClasses().values();
-		
+
 		for(ClassNode staticClass : staticImportClasses) {
 			StaticClassImport staticClassImport = new StaticClassImport(staticClass);
 			staticClassImport.setSourcePosition(staticClass);
-			visitStaticClassImport(staticClassImport);			
+			visitStaticClassImport(staticClassImport);
 		}
 	}
 
 	private void analyseClassImports() {
 		//visit imports like import java.io.File and import java.io.File as MyFile
-		
+
 		List<ImportNode> imports = rootNode.getImports();
 		for(ImportNode importNode : imports) {
 			ClassImport classImport = new ClassImport(importNode);
@@ -173,7 +173,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 			visitClassImport(classImport);
 		}
 	}
-	
+
 	protected void analyzeNodes(ASTNode[] nodes) {
         if (nodes != null) {
         	for(int i = 0; i < nodes.length; i++){
@@ -182,7 +182,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
         	}
         }
 	}
-	
+
 	protected void analyzeTypes(ClassNode[] classNodes) {
         if (classNodes != null) {
         	for(int i = 0; i < classNodes.length; i++){
@@ -203,23 +203,23 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
     	analyzeNode(node);
     	analyzeGenerics(node);
 	}
-	
+
 	@Override
     public void analyzeType(ClassNode node) {
 		analyzeTypeInternal(node);
 	}
-	
+
 	@Override
     public void analyzeParameter(Parameter parameter) {
 		analyzeNode(parameter);
 	}
-	
+
 	protected void analyzeGenerics(ClassNode node) {
 		if (node.getGenericsTypes() != null) {
 			GenericsType[] generics = node.getGenericsTypes();
 			for (int i = 0; i < generics.length; i++) {
 				GenericsType genericType = generics[i];
-				
+
 				// bottoms out recursion when a type parameter refers to itself, eg- java.lang.Enum
 				if (! node.getName().equals(genericType.getType().getName())) {
     				analyzeType(genericType.getType());
@@ -228,7 +228,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
     					analyzeType(genericType.getLowerBound());
     					clear(genericType.getLowerBound());
     				}
-    				if (genericType.getUpperBounds() != null) { 
+    				if (genericType.getUpperBounds() != null) {
         				ClassNode[] upperBounds = genericType.getUpperBounds().clone();
         				// prevent recursion by nulling out duplicates
         				for (int j = 0; j < upperBounds.length; j++) {
@@ -242,7 +242,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 			}
 		}
 	}
-	
+
 	protected void analyseParameters(Parameter[] parameters) {
 		if(parameters != null) {
 			for(Parameter parameter : parameters) {
@@ -253,7 +253,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 	            	parameter.getInitialExpression().visit(this);
 	            }
 	            clear(parameter);
-				
+
 			}
 		}
 	}
@@ -261,18 +261,18 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotionMap = node.getAnnotations();
         if (annotionMap.isEmpty()) return;
-        
-        Iterator<AnnotationNode> it = annotionMap.iterator(); 
+
+        Iterator<AnnotationNode> it = annotionMap.iterator();
         while (it.hasNext()) {
             AnnotationNode an = (AnnotationNode) it.next();
             //skip builtin properties
             if (an.isBuiltIn()) continue;
             for (Entry<String, Expression> element : (Iterable<Entry<String, Expression>>) an.getMembers().entrySet()) {
                 element.getValue().visit(this);
-            }  
+            }
         }
     }
-	
+
 	public void visitClass(ClassNode node) {
 		analyzeTypeInternal(node);
 		analyzeType(node.getUnresolvedSuperClass());
@@ -285,19 +285,24 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 	public void visitField(FieldNode node) {
 		analyzeNode(node);
 		analyzeType(node.getOriginType());
-		clear(node.getOriginType());
+        clear(node.getOriginType());
+        Expression initExp = node.getInitialValueExpression();
+        if (initExp != null) {
+            analyzeNode(initExp);
+            clear(initExp);
+        }
 		clear(node);
 	}
-	
+
     protected void visitClassCodeContainer(Statement code) {
         if (code != null) code.visit(this);
     }
-	
+
     protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
         visitAnnotations(node);
         analyseMethodHead(node);
         Statement code = node.getCode();
-        
+
         visitClassCodeContainer(code);
     }
 
@@ -312,7 +317,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 		visitConstructorOrMethod(node, false);
 	    clear(node);
 	}
-	
+
 	private void analyseMethodHead(MethodNode node) {
 		analyzeType(node.getReturnType());
 		clear(node.getReturnType());
@@ -321,7 +326,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 	}
 
 	public void visitProperty(PropertyNode node) {
-	
+
 	}
 
 	@Override
@@ -677,7 +682,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 	@Override
 	public void visitTupleExpression(TupleExpression expression) {
 //		do nothing here, TupleExpression is visited in ArgumentListExpression
-		
+
 //		analyzeNode(expression);
 		super.visitTupleExpression(expression);
 //		clear(expression);

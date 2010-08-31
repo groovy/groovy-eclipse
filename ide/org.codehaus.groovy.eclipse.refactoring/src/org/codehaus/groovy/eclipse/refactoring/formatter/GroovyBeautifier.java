@@ -83,7 +83,7 @@ public class GroovyBeautifier {
             int nodeStart = node.getStart();
             int nodeEnd = node.getEnd();
             int nodeLen = nodeEnd - nodeStart;
-            boolean isLong = nodeLen > 25;
+            boolean isLong = nodeLen > 30;
             List<Expression> exps = node.getExpressions();
             if (isLong || (hasClosureElement(node) && node.getExpressions().size() > 1)) {
                 //Split the list
@@ -142,7 +142,7 @@ public class GroovyBeautifier {
     private void replaceWhiteSpaceAfter(MultiTextEdit edits, Token token, String replaceWith) {
         GroovyDocumentScanner tokens = formatter.getTokens();
         try {
-            int editStart = tokens.getOffset(token)+token.getText().length(); // Warning only works for certain token types!
+            int editStart = tokens.getEnd(token);
             Token first = tokens.getNextToken(token); // First whitespace token (if any)
             Token last = first; // First non-whitespace token
             // If no white space tokens where found then first and last will be
