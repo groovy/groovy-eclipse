@@ -172,6 +172,25 @@ public class LocationSupportTests extends TestCase {
         // use index of 1 because zero index is of Foo
         assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\n".length(), ((ASTNode) module.getClasses().get(1)).getStart());
         assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n }".length(), ((ASTNode) module.getClasses().get(1)).getEnd());
-
+    }
+    
+    // GRECLIPSE-805
+    // not working yet
+    public void _testUnicodeEscapes1() throws Exception {
+        String escapeSequence = "/*\\u00E9*/ ";
+        String content = escapeSequence + "def x = 7";
+        
+        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        sourceUnit.parse();
+        sourceUnit.completePhase();
+        sourceUnit.convert();
+        ModuleNode module = sourceUnit.getAST();
+        
+        // now check locations
+        assertEquals(0, module.getStart());
+        assertEquals(content.length(), module.getEnd());
+        assertEquals(escapeSequence.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
+        assertEquals(content.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
+        
     }
 }
