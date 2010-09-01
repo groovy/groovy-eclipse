@@ -12,7 +12,6 @@
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 

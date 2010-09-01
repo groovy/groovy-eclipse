@@ -4,12 +4,14 @@
    <extension
          point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter">
       <proposalFilter
+            name="Mock Filter 1"
             proposalFilter="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter1">
          <appliesTo
                projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
          </appliesTo>
       </proposalFilter>
       <proposalFilter
+            name="Mock Filter 2"
             proposalFilter="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter2">
          <appliesTo
                projectNature="org.codehaus.groovy.eclipse.tests.testNature1">

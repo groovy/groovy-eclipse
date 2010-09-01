@@ -25,7 +25,6 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposal
 import org.codehaus.groovy.eclipse.test.ui.Extender1;
 import org.codehaus.groovy.eclipse.test.ui.Extender2;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
  * Tests for {@link IProposalFilter} and {@link IProposalProvider}

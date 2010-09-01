@@ -24,7 +24,6 @@ public class InnerTypeCompletionTests extends CompletionTestCase {
 
     
     private static final String XXX = "xxx";
-    private static final String INNER = "Inner";
     private static final String HTML = "HTML";
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html";
     public InnerTypeCompletionTests(String name) {
