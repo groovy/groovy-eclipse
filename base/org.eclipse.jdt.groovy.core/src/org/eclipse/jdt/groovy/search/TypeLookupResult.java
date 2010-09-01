@@ -19,6 +19,7 @@ package org.eclipse.jdt.groovy.search;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 
 /**
  * @author Andrew Eisenberg
@@ -44,8 +45,8 @@ public class TypeLookupResult {
 		 */
 		INFERRED(2),
 		/**
-		 * The type has been inferred using less precise means. E.g., from an extending ITypeLookup
-		 * All AbstractSimplifiedTypeLookups return this type confidence.
+		 * The type has been inferred using less precise means. E.g., from an extending ITypeLookup All
+		 * AbstractSimplifiedTypeLookups return this type confidence.
 		 * <p>
 		 * Furthermore, a type confidence of this will not cause the Inferencing engine to end its lookup. It will continue and try
 		 * to find a more confident type using other lookups.
@@ -74,9 +75,16 @@ public class TypeLookupResult {
 	public final TypeConfidence confidence;
 	public final ClassNode type;
 	public final ClassNode declaringType;
-	public final/* AnnotatedNode */ASTNode declaration; // the type should be AnnotatedNode, but in Groovy 1.6.5, this type is not
-	// compatible with expression nodes
+	/**
+	 * the type should be AnnotatedNode, but in Groovy 1.6.5, this type is not compatible with expression nodes
+	 */
+	public final/* AnnotatedNode */ASTNode declaration;
 	public final VariableScope scope;
+
+	/**
+	 * The assignment statement that encloses this expression, or null if there is none
+	 */
+	BinaryExpression enclosingAssignment;
 
 	/**
 	 * create a TypeLookupResult with a class node.
@@ -94,5 +102,9 @@ public class TypeLookupResult {
 		this.declaringType = declaringType;
 		this.declaration = declaration;
 		this.scope = scope;
+	}
+
+	public BinaryExpression getEnclosingAssignment() {
+		return enclosingAssignment;
 	}
 }

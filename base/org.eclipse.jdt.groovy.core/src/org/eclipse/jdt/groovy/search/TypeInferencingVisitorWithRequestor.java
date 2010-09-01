@@ -118,6 +118,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private ITypeRequestor requestor;
 	private IJavaElement enclosingElement;
 	private ASTNode enclosingDeclarationNode;
+	private BinaryExpression enclosingAssignment;
 
 	private boolean rethrowVisitComplete = false;
 
@@ -680,6 +681,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
+		result.enclosingAssignment = enclosingAssignment;
 		VisitStatus status = handleRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
@@ -795,14 +797,25 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBinaryExpression(BinaryExpression node) {
+
 		// BinaryExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
 		Object maybeAnnotatedNode = node;
 		if (maybeAnnotatedNode instanceof AnnotatedNode) {
 			visitAnnotations((AnnotatedNode) maybeAnnotatedNode);
 		}
 
+		// keep track of the enclosing assignment statement when visiting the RHS.
+		boolean isAssignment = node.getOperation().getText().equals("=");
+		BinaryExpression oldEnclosingAssignment = enclosingAssignment;
+		if (isAssignment) {
+			enclosingAssignment = node;
+		}
+
 		propertyExpression.push(node);
 		node.getRightExpression().visit(this);
+
+		enclosingAssignment = oldEnclosingAssignment;
+
 		boolean shouldContinue = handleExpression(node);
 
 		// the declaration itself is the property node
