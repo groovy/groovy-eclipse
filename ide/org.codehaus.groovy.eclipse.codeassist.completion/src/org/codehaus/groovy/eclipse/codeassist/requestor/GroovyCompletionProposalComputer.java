@@ -30,13 +30,14 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 
 public class GroovyCompletionProposalComputer implements
         IJavaCompletionProposalComputer {
-    
+
     private static Map<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>> locationFactoryMap;
     static {
         locationFactoryMap = new HashMap<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>>();
@@ -48,7 +49,7 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new PackageCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.CLASS_BODY, factories);
-        
+
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new PackageCompletionProcessorFactory());
@@ -81,8 +82,8 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new PackageCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.SCRIPT, factories);
     }
-    
-    
+
+
     public GroovyCompletionProposalComputer() {
     }
 
@@ -91,41 +92,82 @@ public class GroovyCompletionProposalComputer implements
         if (! (context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
         }
-        
+
         JavaContentAssistInvocationContext javaContext = (JavaContentAssistInvocationContext) context;
         ICompilationUnit unit = javaContext.getCompilationUnit();
         if (! (unit instanceof GroovyCompilationUnit)) {
             return Collections.EMPTY_LIST;
         }
-        
+
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
-        
+
         ModuleNode module = gunit.getModuleNode();
         if (module == null) {
             return Collections.EMPTY_LIST;
         }
-        
+
         String fullCompletionText = findCompletionText(context.getDocument(), context.getInvocationOffset());
         String[] completionExpressions = findCompletionExpression(fullCompletionText);
         if (completionExpressions == null) {
             completionExpressions = new String[] { "", "" };
         }
+        String completionExpression = completionExpressions[1] == null ? completionExpressions[0]
+                : completionExpressions[1];
         int supportingNodeEnd = findSupportingNodeEnd(context.getInvocationOffset(), fullCompletionText);
-        CompletionNodeFinder finder = new CompletionNodeFinder(context.getInvocationOffset(), supportingNodeEnd, completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1], fullCompletionText);
+        boolean atStartOfLine = isAtStartOfLine(context.getInvocationOffset()
+                        - completionExpression.length(),
+                context.getDocument());
+        CompletionNodeFinder finder = new CompletionNodeFinder(
+                context.getInvocationOffset(), supportingNodeEnd,
+                completionExpression, fullCompletionText,
+                atStartOfLine);
         ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         if (assistContext != null) {
             List<IGroovyCompletionProcessorFactory> factories = locationFactoryMap.get(assistContext.location);
             if (factories != null) {
                 SearchableEnvironment nameEnvironment = createSearchableEnvironment(javaContext);
-                
+
                 for (IGroovyCompletionProcessorFactory factory : factories) {
                     IGroovyCompletionProcessor processor = factory.createProcessor(assistContext, javaContext, nameEnvironment);
                     proposals.addAll(processor.generateProposals(monitor));
                 }
-            }        
+            }
         }
         return proposals;
+    }
+
+    /**
+     * determine if the offset is the start of the first expression on the line.
+     * note that the algorithm here only checks whitespace and will not return
+     * true if there is a comment before the offset.
+     *
+     * @param invocationOffset
+     * @param document
+     * @return
+     */
+    private boolean isAtStartOfLine(int invocationOffset, IDocument document) {
+        int offset = invocationOffset - 1;
+        while (offset >= 0) {
+            char c = '\0';
+            try {
+                c = document.getChar(offset--);
+            } catch (BadLocationException e) {
+                GroovyCore.logException("Exception during content assist", e);
+                return false;
+            }
+            if (!Character.isWhitespace(c)) {
+                // something's here
+                return false;
+            }
+            switch (c) {
+                case '\n':
+                case '\r':
+                    return true;
+            }
+        }
+        // reached start of document...
+        return true;
     }
 
     /**
@@ -138,11 +180,11 @@ public class GroovyCompletionProposalComputer implements
             String fullCompletionText) {
         String[] completionExpressions = new ExpressionFinder().splitForCompletionNoTrim(fullCompletionText);
         // if second part of completion expression is null, then there is no supporting node (ie- no '.')
-        return completionExpressions[1] == null ? -1 : 
+        return completionExpressions[1] == null ? -1 :
             invocationOffset - fullCompletionText.length() + completionExpressions[0].length();
     }
 
-    
+
     /**
      * @param assistContext
      * @return
@@ -180,7 +222,7 @@ public class GroovyCompletionProposalComputer implements
         return "";
     }
 
-    
+
     private static final List<IContextInformation> NO_CONTEXTS= Collections.emptyList();
     public List<IContextInformation> computeContextInformation(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {

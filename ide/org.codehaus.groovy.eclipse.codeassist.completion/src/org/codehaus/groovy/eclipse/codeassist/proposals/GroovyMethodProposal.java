@@ -45,26 +45,24 @@ import org.eclipse.jface.preference.IPreferenceStore;
 public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     protected final MethodNode method;
-    private final ProposalOptions groovyFormatterPrefs;
     private String contributor;
+
+    private boolean useNamedArguments;
 
     public GroovyMethodProposal(MethodNode method) {
         super();
         this.method = method;
-        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
-        groovyFormatterPrefs =
-            new ProposalOptions(
-                    prefs.getBoolean(
-                            PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
-                    prefs.getBoolean(
-                            PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS));
         contributor = "Groovy";
+        useNamedArguments = false;
     }
     public GroovyMethodProposal(MethodNode method, String contributor) {
         this(method);
         this.contributor = contributor;
     }
 
+    public void setUseNamedArguments(boolean useNamedArguments) {
+        this.useNamedArguments = useNamedArguments;
+    }
 
     @Override
     protected AnnotatedNode getAssociatedNode() {
@@ -90,10 +88,26 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setSignature(methodSignature);
         proposal.setRelevance(computeRelevance());
 
-        // maybe some point in the distant future, we can look at
-        // FilledArgumentNamesMethodProposal, but this will be difficult
-        return new GroovyJavaMethodCompletionProposal(proposal,
-                    javaContext, groovyFormatterPrefs, contributor);
+        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
+        ProposalOptions groovyFormatterPrefs = new ProposalOptions(
+                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
+                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
+                useNamedArguments);
+
+        // would be nice to use a ParameterGuessingProposal, but that requires
+        // setting the extended data of the coreContext. We don't really have
+        // access to all that information
+        // LazyJavaCompletionProposal lazyProposal = null;
+        // lazyProposal = ParameterGuessingProposal.createProposal(proposal,
+        // javaContext, true);
+        // if (lazyProposal == null) {
+        // lazyProposal = new FilledArgumentNamesMethodProposal(proposal,
+        // javaContext);
+        // }
+        // return lazyProposal;
+
+        return new GroovyJavaMethodCompletionProposal(proposal, javaContext,
+                groovyFormatterPrefs, contributor);
 
     }
 

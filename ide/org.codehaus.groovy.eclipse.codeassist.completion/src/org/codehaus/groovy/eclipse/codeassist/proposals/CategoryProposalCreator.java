@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,16 +40,11 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         Set<String> set = new HashSet<String>();
         getAllSupersAsStrings(candidate, set);
         set.add("java.lang.Object");
-        List<IGroovyProposal> groovyProposals = 
+        List<IGroovyProposal> groovyProposals =
             findAllProposals(set, categories, prefix);
         return groovyProposals;
     }
 
-    /**
-     * @param set
-     * @param categories
-     * @return
-     */
     private List<IGroovyProposal> findAllProposals(
             Set<String> set, Set<ClassNode> categories, String prefix) {
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
@@ -59,7 +54,12 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                 if (method.isStatic() && method.isPublic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
                     Parameter[] params = method.getParameters();
                     if (params != null && params.length > 0 && set.contains(params[0].getType().getName())) {
-                        groovyProposals.add(new GroovyCategoryMethodProposal(method));
+                        GroovyCategoryMethodProposal methodProposal = new GroovyCategoryMethodProposal(method);
+                        methodProposal
+                                .setRelevanceMultiplier(isInterestingType(method
+                                        .getReturnType()) ? 101
+                                        : 1);
+                        groovyProposals.add(methodProposal);
                     }
                 }
             }

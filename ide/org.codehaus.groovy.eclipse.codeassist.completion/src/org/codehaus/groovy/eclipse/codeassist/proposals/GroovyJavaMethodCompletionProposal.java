@@ -34,12 +34,15 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     public static class ProposalOptions {
         public ProposalOptions(boolean noParensAroundArgs,
-                boolean useBracketsForClosures) {
+                boolean useBracketsForClosures, boolean useNamedArguments) {
             this.noParensAroundArgs = noParensAroundArgs;
             this.useBracketsForClosures = useBracketsForClosures;
+            this.useNamedArguments = useNamedArguments;
         }
         public final boolean noParensAroundArgs;
         public final boolean useBracketsForClosures;
+
+        public final boolean useNamedArguments;
     }
 
     private int[] fArgumentOffsets;
@@ -191,6 +194,10 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 }
 
                 fArgumentOffsets[i]= buffer.length();
+
+                if (groovyFormatterPrefs.useNamedArguments) {
+                    buffer.append(parameterNames[i]).append(": ");
+                }
 
                 if (groovyFormatterPrefs.useBracketsForClosures &&
                         new String(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {

@@ -19,6 +19,7 @@ package org.codehaus.groovy.eclipse.codeassist.requestor;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -32,18 +33,59 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class ContentAssistContext {
 
-    public final int completionLocation;  // the caret location where completion occurs
-    public final String completionExpression; // the phrase that is being completed.  not null, but might be empty.  
-    public final String fullCompletionExpression; // the full phrase of the entire statement being completed.  ie- if the full phrase is foo.bar.baz.someTh^, the completion expression will be someTh 
-    public final ASTNode completionNode;  // the ast node that provides the type being completed.  might be null if there is none
-    public final ASTNode containingCodeBlock;  // the import, method, field, class, or code block that contains this completion request
-    public final ContentAssistLocation location; // the location of this content assist
+    /**
+     * the caret location where completion occurs
+     */
+    public final int completionLocation;
+
+    /**
+     * the phrase that is being completed. not null, but might be empty.
+     */
+    public final String completionExpression;
+
+    /**
+     * the full phrase of the entire statement being completed. ie- if the full
+     * phrase is foo.bar.baz.someTh^, the completion expression will be someTh
+     */
+    public final String fullCompletionExpression;
+
+    /**
+     * the ast node that provides the type being completed. might be null if
+     * there is none
+     */
+    public final ASTNode completionNode;
+
+    /**
+     * the import, method, field, class, or code block that contains this
+     * completion request
+     */
+    public final ASTNode containingCodeBlock;
+
+    /**
+     * the left hand side of the assignment statement containing the completion
+     * node, or null if there is none
+     */
+    public final Expression lhsNode;
+
+    /**
+     * the location kind of this content assist invocation
+     */
+    public final ContentAssistLocation location;
+
+    /**
+     * The JDT compilation unit that contains this assist invocation
+     */
     public final GroovyCompilationUnit unit;
-    public final AnnotatedNode containingDeclaration;  // the class, method or field containing the completion location
+
+    /**
+     * the class, method or field containing the completion location
+     */
+    public final AnnotatedNode containingDeclaration;
 
     public ContentAssistContext(int completionLocation,
     		String completionExpression, String fullCompletionExpression, ASTNode completionNode,
-            ASTNode containingCodeBlock, ContentAssistLocation location,
+ ASTNode containingCodeBlock,
+            Expression lhsNode, ContentAssistLocation location,
             GroovyCompilationUnit unit, AnnotatedNode containingDeclaration) {
         super();
         this.completionLocation = completionLocation;
@@ -51,11 +93,12 @@ public class ContentAssistContext {
         this.fullCompletionExpression = fullCompletionExpression;
         this.completionNode = completionNode;
         this.containingCodeBlock = containingCodeBlock;
+        this.lhsNode = lhsNode;
         this.location = location;
         this.unit = unit;
         this.containingDeclaration = containingDeclaration;
     }
-    
+
     public IType getEnclosingType() {
         try {
             IJavaElement element = unit.getElementAt(completionLocation);
@@ -75,5 +118,5 @@ public class ContentAssistContext {
             return containingDeclaration.getDeclaringClass();
         }
     }
-    
+
 }

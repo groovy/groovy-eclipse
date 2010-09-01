@@ -46,8 +46,13 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
             String methodName = method.getName();
             if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) &&
                     checkName(methodName)) {
+                boolean isInterestingType = isInterestingType(method
+                                .getReturnType());
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
-                    groovyProposals.add(new GroovyMethodProposal(method));
+                    GroovyMethodProposal methodProposal = new GroovyMethodProposal(method);
+                    methodProposal
+                            .setRelevanceMultiplier(isInterestingType ? 101 : 1);
+                    groovyProposals.add(methodProposal);
                 }
 
                 if (looselyMatchesGetterName(prefix, methodName)) {
@@ -59,8 +64,12 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                         // be careful not to add fields twice
                         alreadySeenFields.add(mockFieldName);
                         if (hasNoField(method)) {
-                            groovyProposals.add(new GroovyFieldProposal(
-                                    createMockField(method)));
+                            GroovyFieldProposal fieldProposal = new GroovyFieldProposal(
+                                    createMockField(method));
+                            fieldProposal
+                                    .setRelevanceMultiplier(isInterestingType ? 11
+                                            : 1);
+                            groovyProposals.add(fieldProposal);
                         }
                     }
                 }

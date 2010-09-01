@@ -70,7 +70,7 @@
    <element name="proposalFilter">
       <annotation>
          <documentation>
-            List of proposal providers
+            A proposal filter
          </documentation>
       </annotation>
       <complexType>
@@ -84,6 +84,16 @@
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilter"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  A human readable name for this filter
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
                </appInfo>
             </annotation>
          </attribute>

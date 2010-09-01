@@ -100,7 +100,7 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
         int start= proposal.getReplaceStart();
         int length= context.completionExpression.length();
         StyledString label= createDisplayString(proposal);
-        int relevance = Relevance.MEDIUM.getRelavance();
+        int relevance = Relevance.LOWEST.getRelavance(5);
         JavaCompletionProposal jcp = new JavaCompletionProposal(completion, start, length, null, label, relevance);
         jcp.setImage(getImage(proposal));
         return jcp;

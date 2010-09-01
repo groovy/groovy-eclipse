@@ -24,14 +24,18 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IProposalCreator;
@@ -46,6 +50,7 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -63,6 +68,8 @@ public class StatementAndExpressionCompletionProcessor extends
         boolean visitSuccessful = false;
         boolean isStatic = false;
         ClassNode resultingType;
+
+        ClassNode lhsType;
         Set<ClassNode> categories;
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
@@ -82,6 +89,22 @@ public class StatementAndExpressionCompletionProcessor extends
             }
 
             if (doTest(node)) {
+                if (isAssignmentOfLhs(result.getEnclosingAssignment())) {
+                    if (lhsNode instanceof Variable) {
+                        Variable variable = (Variable) lhsNode;
+                        VariableInfo info = result.scope
+                                .lookupName(variable.getName());
+                        ClassNode maybeType;
+                        if (info != null) {
+                            maybeType = info.type;
+                        } else {
+                            maybeType = variable.getType();
+                        }
+                        if (maybeType != null && !maybeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+                            lhsType = ClassHelper.getUnwrapper(maybeType);
+                        }
+                    }
+                }
                 resultingType = result.type;
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
@@ -92,6 +115,10 @@ public class StatementAndExpressionCompletionProcessor extends
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
+        }
+
+        private boolean isAssignmentOfLhs(BinaryExpression node) {
+            return node != null && node.getLeftExpression() == lhsNode;
         }
 
         /**
@@ -128,13 +155,23 @@ public class StatementAndExpressionCompletionProcessor extends
         }
     }
 
+    /**
+     * the ASTNode being completed.
+     */
     final ASTNode completionNode;
+
+    /**
+     * the LHS of the assignment statement associated with this content assist
+     * invocation, or null if there is none.
+     */
+    final Expression lhsNode;
 
     public StatementAndExpressionCompletionProcessor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext,
             SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
         this.completionNode = context.completionNode;
+        this.lhsNode = context.lhsNode;
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
@@ -156,6 +193,10 @@ public class StatementAndExpressionCompletionProcessor extends
             IProposalCreator[] creators = getAllProposalCreators();
             completionType = getCompletionType(requestor);
             for (IProposalCreator creator : creators) {
+                if (creator instanceof AbstractProposalCreator) {
+                    ((AbstractProposalCreator) creator)
+                            .setLhsType(requestor.lhsType);
+                }
                 groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
                         context.completionExpression, isStatic));
             }
@@ -210,7 +251,8 @@ public class StatementAndExpressionCompletionProcessor extends
             for (IProposalFilter filter : filters) {
                 try {
                     List<IGroovyProposal> newProposals = filter
-                            .filterProposals(groovyProposals);
+                            .filterProposals(groovyProposals, context,
+                                    getJavaContext());
                     groovyProposals = newProposals == null ? groovyProposals
                             : newProposals;
                 } catch (Exception e) {

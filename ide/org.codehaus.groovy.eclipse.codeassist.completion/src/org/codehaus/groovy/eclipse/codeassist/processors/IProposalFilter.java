@@ -21,6 +21,8 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
 /**
  * @author Romain Bioteau
@@ -35,15 +37,17 @@ public interface IProposalFilter {
      * - Remove undesired (duplicate) entries <br>
      * - Augment the relevance of certain proposals <br>
      * - Supplement existing entries with additional information<br>
-     * 
+     *
      * Note that if you want to augment the relevance of a given proposal, you
      * must cast the proposal to {@link AbstractGroovyProposal} and call the
      * method {@link AbstractGroovyProposal#setRelevanceMultiplier(float)}. Look
      * at the {@link Relevance} enumeration for how relevance is calculated.
-     * 
+     *
      * @param proposals
      *            The List of proposals
      * @return The filtered list of proposals as List
      */
-	public List<IGroovyProposal> filterProposals(List<IGroovyProposal> proposals) ;
+    public List<IGroovyProposal> filterProposals(
+            List<IGroovyProposal> proposals, ContentAssistContext context,
+            JavaContentAssistInvocationContext javaContext);
 }

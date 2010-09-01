@@ -57,7 +57,10 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
             // in static context, only allow static fields
             if ((!isStatic || field.isStatic()) &&
                     ProposalUtils.looselyMatches(prefix, field.getName())) {
-                groovyProposals.add(new GroovyFieldProposal(field));
+                GroovyFieldProposal fieldProposal = new GroovyFieldProposal(field);
+                fieldProposal.setRelevanceMultiplier(isInterestingType(field
+                        .getType()) ? 11 : 1);
+                groovyProposals.add(fieldProposal);
             }
         }
 

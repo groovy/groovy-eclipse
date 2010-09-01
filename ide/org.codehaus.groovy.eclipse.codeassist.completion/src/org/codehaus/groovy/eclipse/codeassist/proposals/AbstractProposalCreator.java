@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import java.util.Set;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 
 /**
@@ -26,6 +27,12 @@ import org.codehaus.groovy.ast.ClassNode;
  *
  */
 public abstract class AbstractProposalCreator implements IProposalCreator {
+
+    /**
+     * The type of the LHS of the assignment statement associated with this
+     * invocation or null if there is none
+     */
+    protected ClassNode lhsType;
 
     public AbstractProposalCreator() {
         super();
@@ -48,11 +55,11 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         }
     }
 
-    
-    /**
-     * @param type
-     * @param set
-     */
+    protected boolean isInterestingType(ClassNode type) {
+        return lhsType != null
+                && ClassHelper.getUnwrapper(type).equals(lhsType);
+    }
+
     protected void getAllSupersAsStrings(ClassNode type, Set<String> set) {
         if (type == null) {
             return;
@@ -64,6 +71,10 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
                 getAllSupersAsStrings(inter, set);
             }
         }
+    }
+
+    public void setLhsType(ClassNode lhsType) {
+        this.lhsType = lhsType;
     }
 
 }
