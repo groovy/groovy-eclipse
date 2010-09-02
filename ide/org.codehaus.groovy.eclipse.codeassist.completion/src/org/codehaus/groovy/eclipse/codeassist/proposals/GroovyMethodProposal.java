@@ -92,7 +92,8 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         ProposalOptions groovyFormatterPrefs = new ProposalOptions(
                 prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
                 prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
-                useNamedArguments);
+                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS)
+                        || useNamedArguments);
 
         // would be nice to use a ParameterGuessingProposal, but that requires
         // setting the extended data of the coreContext. We don't really have

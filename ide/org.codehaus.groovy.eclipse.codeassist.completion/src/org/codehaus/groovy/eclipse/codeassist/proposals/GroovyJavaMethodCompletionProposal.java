@@ -193,12 +193,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     }
                 }
 
-                fArgumentOffsets[i]= buffer.length();
-
                 if (groovyFormatterPrefs.useNamedArguments) {
-                    buffer.append(parameterNames[i]).append(": ");
+                    buffer.append(parameterNames[i]).append(":");
                 }
 
+                fArgumentOffsets[i] = buffer.length();
                 if (groovyFormatterPrefs.useBracketsForClosures &&
                         new String(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {
                     buffer.append("{ }");

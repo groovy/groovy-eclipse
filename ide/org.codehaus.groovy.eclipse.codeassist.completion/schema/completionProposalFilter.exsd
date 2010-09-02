@@ -90,7 +90,17 @@
          <attribute name="name" type="string">
             <annotation>
                <documentation>
-                  A human readable name for this filter
+                  A human readable name for this filter.
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="description" type="string">
+            <annotation>
+               <documentation>
+                  A human readable description of how this filter works.
                </documentation>
                <appInfo>
                   <meta.attribute translatable="true"/>
