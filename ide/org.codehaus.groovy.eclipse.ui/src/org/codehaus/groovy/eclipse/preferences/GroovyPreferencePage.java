@@ -49,7 +49,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         Label myLabel;
 
         private MonospaceFieldEditor() {
-            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit", 
+            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit",
                     getFieldEditorParent());
         }
 
@@ -86,11 +86,12 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         super(GRID);
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
     }
-    
+
 
 
     public void init(IWorkbench workbench) {}
 
+    @Override
     protected String getPageId() {
         return "org.codehaus.groovy.eclipse.preferences";
     }
@@ -107,26 +108,28 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         monoLabel.setText(
                     "This option is particularly useful for testing frameworks\n" +
                     "that use a formatted output such as Spock\n\n");
-        
+
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, "Underline staticly unknown references", getFieldEditorParent()));
-        
+
         Label contentAssistLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
         contentAssistLabel.setText("\n\nGroovy Content assist options to make your content assist Groovier.");
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, 
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS,
                 "Do not use parens around methods with arguments", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, 
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
                 "Use brackets for closure arguments", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, "Use named arguments for method calls",
+                getFieldEditorParent()));
 
-        
+
         // default launch location for scripts
-        addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, 
+        addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
                     "\nDefault working directory for running Groovy scripts \n(will not change the working directory of existing scripts," +
-                    "\nonly new ones).", 1, 
+                    "\nonly new ones).", 1,
                     new String[][] {{ "Project home", PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME },
-                                    { "Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC }, 
-                                    { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME } }, 
+                                    { "Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC },
+                                    { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME } },
                     getFieldEditorParent()));
-        
+
         // legacy projects
         ConvertLegacyProject convert = new ConvertLegacyProject();
         final IProject[] oldProjects = convert.getAllOldProjects();
@@ -135,15 +138,16 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
             l.setText("The following legacy groovy projects exist in the workspace:\n");
             final List oldProjectsList = new List(getFieldEditorParent(), SWT.MULTI | SWT.V_SCROLL);
             populateProjectsList(oldProjectsList, oldProjects);
-            
+
             l = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
             l.setText("Select the projects to convert.");
-            
+
             Button convertButton = new Button(getFieldEditorParent(), SWT.PUSH);
             convertButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
                     false));
             convertButton.setText("Convert");
             convertButton.addSelectionListener(new SelectionAdapter() {
+                @Override
                 public void widgetSelected(SelectionEvent e) {
                     convertSelectedProjects(oldProjectsList.getSelection());
                     populateProjectsList(oldProjectsList, new ConvertLegacyProject().getAllOldProjects());
@@ -187,7 +191,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
             MessageDialog.openError(getShell(), "Error converting projects", "There has been an error converting the projects.  See the error log.");
         }
     }
-    
+
     @Override
     protected void performDefaults() {
         super.performDefaults();

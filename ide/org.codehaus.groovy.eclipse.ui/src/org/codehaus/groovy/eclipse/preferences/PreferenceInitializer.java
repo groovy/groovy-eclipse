@@ -124,6 +124,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(
                 PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
                 true);
+        store.setDefault(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
 
         store.setDefault(
                 PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
@@ -144,97 +145,56 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     public void reset() {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 
-        store.setValue(PreferenceConstants.GROOVY_LOG_TRACE_MESSAGES_ENABLED,
-                false);
+        store.setValue(PreferenceConstants.GROOVY_LOG_TRACE_MESSAGES_ENABLED, false);
 
         // GJDK Prefs
-        store.setValue(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED, true);
-        PreferenceConverter.setValue(store,
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
-                new RGB(102, 204, 255));
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED, true);
+        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, new RGB(102, 204, 255));
 
         // Multiline Comment Prefs
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED,
-                         true);
+        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED, true);
         PreferenceConverter
-                .setValue(
-                        store,
-                        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR,
-                        new RGB(204, 0, 0));
+                .setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR, new RGB(204, 0, 0));
 
         // Java Keyword Prefs
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED,
-                         true);
-        PreferenceConverter.setValue(store,
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
-                new RGB(151, 44, 120));
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED, true);
+        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, new RGB(151, 44, 120));
 
         // Groovy Keyword Prefs
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED,
-                         true);
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED, true);
         PreferenceConverter
-                .setValue(
-                        store,
-                        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
-                        new RGB(151, 44, 120));
+                .setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR, new RGB(151, 44, 120));
 
         // Java Types Prefs
-        store.setValue(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_ENABLED,
-                true);
-        PreferenceConverter.setValue(store,
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
-                new RGB(151, 44, 120));
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_ENABLED, true);
+        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, new RGB(151, 44, 120));
 
         // String Prefs
-        store.setValue(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED,
-                true);
-        PreferenceConverter.setValue(store,
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
-                new RGB(255, 0, 204));
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED, true);
+        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, new RGB(255, 0, 204));
 
         // Number Prefs
-        store.setValue(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED,
-                true);
-        PreferenceConverter.setValue(store,
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
-                new RGB(205, 50, 0));
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED, true);
+        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR, new RGB(205, 50, 0));
 
         // default color
-        PreferenceConverter.setDefault(store,
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
-                new RGB(0, 0, 0));
+        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR, new RGB(0, 0, 0));
 
         // JUnit Monospace font
-        store.setValue(
-                PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
-                false);
+        store.setValue(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, false);
 
         // Ask to convert Legacy Projects at startup
-        store.setValue(
-                PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS,
-                true);
-
+        store.setValue(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS, true);
 
         // Semantic highlighting
-        store.setValue(
-                PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
-                true);
+        store.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true);
 
         // Groovier Content assist
-        store.setValue(
-                PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS,
-                true);
-        store.setValue(
-                PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
-                true);
+        store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
+        store.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
 
-        store.setValue(
-                PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
-                "proj_home");
+        store.setValue(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, "proj_home");
 
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
     }
