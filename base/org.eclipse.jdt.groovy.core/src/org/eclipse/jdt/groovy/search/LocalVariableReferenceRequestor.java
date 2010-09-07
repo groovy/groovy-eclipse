@@ -21,7 +21,6 @@ import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.search.LocalVariableReferenceMatch;
@@ -42,7 +41,6 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
 	private List<IRegion> references;
 	private SearchRequestor requestor;
 	private IJavaElement enclosingElement = null;
-	private char[] contents;
 	private boolean foundEnclosingElement = false;
 	private String variableName;
 	private int declStart;
@@ -56,8 +54,6 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
 			SearchParticipant participant, int declStart) {
 		references = new ArrayList<IRegion>();
 		this.enclosingElement = enclosingElement;
-		GroovyCompilationUnit enclosingUnit = (GroovyCompilationUnit) enclosingElement.getAncestor(IJavaElement.COMPILATION_UNIT);
-		contents = enclosingUnit.getContents();
 		variableName = name;
 
 		this.declStart = declStart;
@@ -91,6 +87,8 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
 	}
 
 	/**
+	 * Different behavior if selecting a parameter definition
+	 * 
 	 * @param node
 	 * @return
 	 */
@@ -99,12 +97,7 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
 			Parameter parameter = (Parameter) node;
 			return new Region(parameter.getNameStart(), parameter.getNameEnd() - parameter.getNameStart());
 		}
-		int start = node.getStart();
-		// the start location for elements in GStrings includes the opening bracket
-		if (contents[node.getStart()] == '{') {
-			start++;
-		}
-		return new Region(start, variableName.length());
+		return new Region(node.getStart(), variableName.length());
 	}
 
 	public List<IRegion> getReferences() {
