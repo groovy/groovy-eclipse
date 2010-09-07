@@ -87,6 +87,9 @@ public class Region {
     }
 
     /**
+     * FIXADE with the fix for GRECLIPSE-829, I don't think this method is necessary any more
+     * slocs in the ast are now correct for VarExprs inside of gstrings.  Consider deleting
+     *  
      * variable expression start locations include the '$' in the groovy code,
      * but not in the java model, so subtract 1 from the starting node
      *
@@ -95,7 +98,7 @@ public class Region {
      */
     public boolean regionIsGStringCoveredByNode(ASTNode node) {
         if (node instanceof VariableExpression) {
-            return this.start >= node.getStart()-1 && this.getEnd() == node.getEnd();
+            return this.start >= node.getStart()-1 && this.getEnd() <= node.getEnd();
         } else {
             return regionIsCoveredByNode(node);
         }

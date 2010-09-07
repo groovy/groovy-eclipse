@@ -61,8 +61,6 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     protected ASTNode nodeFound;
     private Region r;
 
-    private boolean inGString = false;
-
     public ASTNodeFinder(Region r) {
         this.r = r;
     }
@@ -188,6 +186,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitConstantExpression(ConstantExpression expression) {
+        if (expression == ConstantExpression.NULL) {
+            // the sloc of this global variable is inexplicably set to something
+            // so, we may erroneously find matches here
+            return;
+        }
         check(expression);
         super.visitConstantExpression(expression);
     }
@@ -353,9 +356,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitGStringExpression(GStringExpression expression) {
-        inGString = true;
         super.visitGStringExpression(expression);
-        inGString = false;
     }
 
     // method does not exist in 1.6 stream
@@ -385,7 +386,6 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     protected void check(ASTNode node) {
         if (doTest(node)) {
             nodeFound = node;
-            inGString = false;
             throw new VisitCompleteException();
         }
         if (node instanceof ClassNode) {
@@ -401,7 +401,6 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     protected void checkNameRange(AnnotatedNode node) {
         if (doNameRangeTest(node)) {
             nodeFound = node;
-            inGString = false;
             throw new VisitCompleteException();
         }
         if (node instanceof ClassNode) {
@@ -442,11 +441,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      * @return true iff this node covers the interesting region
      */
     protected boolean doTest(ASTNode node) {
-        if (inGString && node instanceof VariableExpression) {
-            return r.regionIsGStringCoveredByNode(node);
-        } else {
-            return r.regionIsCoveredByNode(node);
-        }
+        return r.regionIsCoveredByNode(node);
     }
 
     /**
