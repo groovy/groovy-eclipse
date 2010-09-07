@@ -107,6 +107,25 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
         "}");
     }
     
+    public void testFieldReferenceInGString1() throws Exception {
+        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${xxx}\"\n\"${xxx.toString()}\" }");
+    }
+    public void testFieldReferenceInGString2() throws Exception {
+        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${ xxx }\"\n\"${ xxx .toString()}\" }");
+    }
+    public void testFieldReferenceInGString3() throws Exception {
+        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${xxx} ${xxx.toString()}\" }");
+    }
+    public void testFieldReferenceInGString4() throws Exception {
+        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${foo(xxx)} ${super.xxx}\" }");
+    }
+    
+    protected void doTestForTwoFieldReferencesInGString(
+            String secondContents) throws JavaModelException {
+        super.doTestForTwoFieldReferencesInGString(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents,
+                "xxx");
+    }
+    
     private void doTestForTwoFieldReferencesInScript(String secondContents) throws JavaModelException {
         doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx");
     }

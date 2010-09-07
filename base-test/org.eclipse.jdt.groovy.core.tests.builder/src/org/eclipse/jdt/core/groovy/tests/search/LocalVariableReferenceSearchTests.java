@@ -100,6 +100,36 @@ public class LocalVariableReferenceSearchTests extends AbstractGroovySearchTest 
         int nameStart2 = contents.indexOf(XXX, nameStart+1);
         doTestForReferences(contents, 1, createRegions(nameStart, nameStart2));
     }
+    public void testvarReferenceInGString1() throws Exception {
+        String contents = "def xxx\n\"${xxx}\"";
+        int nameStart = contents.indexOf(XXX);
+        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
+    }
+    public void testvarReferenceInGString2() throws Exception {
+        String contents = "def xxx\n\"${xxx.toString()}\"";
+        int nameStart = contents.indexOf(XXX);
+        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
+    }
+    public void testvarReferenceInGString3() throws Exception {
+        String contents = "def xxx\n\"${blah(xxx)}\"";
+        int nameStart = contents.indexOf(XXX);
+        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
+    }
+    public void testvarReferenceInGString4() throws Exception {
+        String contents = "def xxx\n\"${xxx} \"";
+        int nameStart = contents.indexOf(XXX);
+        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
+    }
+    public void testvarReferenceInGString5() throws Exception {
+        String contents = "def xxx\n\"${xxx }\"";
+        int nameStart = contents.indexOf(XXX);
+        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
+    }
     
     private MatchRegion[] createRegions(int...nameStarts) {
         MatchRegion[] regions = new MatchRegion[nameStarts.length];

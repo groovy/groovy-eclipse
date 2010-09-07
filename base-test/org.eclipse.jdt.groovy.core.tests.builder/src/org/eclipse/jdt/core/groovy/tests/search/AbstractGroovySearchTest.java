@@ -180,7 +180,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
         IField firstField = first.getType(firstClassName).getField(matchedFieldName);
         SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
-
+        
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
         IJavaElement firstMatchEnclosingElement;
         IJavaElement secondMatchEnclosingElement;
@@ -192,6 +192,23 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
             secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent+2];
         }
         // match is enclosed in run method (for script), or x method for class
+        
+        checkMatches(secondContents, matchName, pattern, second,
+                firstMatchEnclosingElement, secondMatchEnclosingElement);
+    }
+    
+    // as above, but enclosing element is always the first child of the enclosing type
+    protected void doTestForTwoFieldReferencesInGString(String firstContents, String secondContents, String matchName) throws JavaModelException {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        String matchedFieldName = "xxx";
+        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
+        IField firstField = first.getType(firstClassName).getField(matchedFieldName);
+        SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
+
+        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+        IJavaElement firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[0];
+        IJavaElement secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[0];
 
         checkMatches(secondContents, matchName, pattern, second,
                 firstMatchEnclosingElement, secondMatchEnclosingElement);
