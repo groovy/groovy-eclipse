@@ -48,7 +48,6 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.EnumConstantClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.MixinNode;
@@ -3337,6 +3336,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             	return;
             }
 
+            // GRECLIPSE-829 VariableExpressions inside of GStrings contain the
+            // openning '{', but shouldn't.  If the new sloc is larger than the 
+            // one being set, then ignore it and don't reset
+            if (node instanceof VariableExpression &&
+                    (startoffset <= node.getStart()  && endoffset >= node.getEnd())) {
+                return;
+            }
+            
             node.setLastColumnNumber(lastcol);
             node.setLastLineNumber(lastline);
             node.setEnd(endoffset);
