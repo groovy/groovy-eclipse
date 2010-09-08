@@ -81,8 +81,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     private String completionExpression;
     private String fullCompletionExpression;
 
-    private boolean isAtStartOfLine;
-
     private GroovyCompilationUnit unit;
     private ContentAssistContext context;
 
@@ -92,14 +90,12 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     private Expression lhsNode;
 
     public CompletionNodeFinder(int completionOffset, int supportingNodeEnd,
-            String completionExpression, String fullCompletionExpression,
-            boolean isAtStartOfLine) {
+            String completionExpression, String fullCompletionExpression) {
         this.completionOffset = completionOffset;
         this.supportingNodeEnd = supportingNodeEnd;
         this.completionExpression = completionExpression;
         this.fullCompletionExpression = fullCompletionExpression;
         this.blockStack = new Stack<ASTNode>();
-        this.isAtStartOfLine = isAtStartOfLine;
     }
 
     public ContentAssistContext findContentAssistContext(GroovyCompilationUnit unit) {
@@ -473,12 +469,13 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
                 doTest(call.getOwnerType())) {
             createContext(call.getOwnerType(), blockStack.peek(), expressionOrStatement());
         }
+        super.visitStaticMethodCallExpression(call);
+
         // the method itself is not an expression, but only a string
         // so this check call will test for open declaration on the method
         if (doTest(call)) {
             createContext(call, blockStack.peek(), expressionOrStatement());
         }
-        super.visitStaticMethodCallExpression(call);
     }
 
 

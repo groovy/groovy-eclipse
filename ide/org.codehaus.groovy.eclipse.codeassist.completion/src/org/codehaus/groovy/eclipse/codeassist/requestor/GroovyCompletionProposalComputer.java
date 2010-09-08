@@ -114,13 +114,9 @@ public class GroovyCompletionProposalComputer implements
         String completionExpression = completionExpressions[1] == null ? completionExpressions[0]
                 : completionExpressions[1];
         int supportingNodeEnd = findSupportingNodeEnd(context.getInvocationOffset(), fullCompletionText);
-        boolean atStartOfLine = isAtStartOfLine(context.getInvocationOffset()
-                        - completionExpression.length(),
-                context.getDocument());
         CompletionNodeFinder finder = new CompletionNodeFinder(
                 context.getInvocationOffset(), supportingNodeEnd,
-                completionExpression, fullCompletionText,
-                atStartOfLine);
+                completionExpression, fullCompletionText);
         ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         if (assistContext != null) {
