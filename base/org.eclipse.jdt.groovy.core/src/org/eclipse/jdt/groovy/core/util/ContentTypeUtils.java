@@ -117,7 +117,7 @@ public class ContentTypeUtils {
 			IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
 			if (contentTypeManager == null) {
 				// batch
-				GROOVY_LIKE_EXTENSIONS = new char[][] { "java".toCharArray(), "groovy".toCharArray() };
+				GROOVY_LIKE_EXTENSIONS = new char[][] { "groovy".toCharArray() };
 				return GROOVY_LIKE_EXTENSIONS;
 			}
 			IContentType groovyContentType = contentTypeManager.getContentType(GROOVY_SOURCE_CONTENT_TYPE);
