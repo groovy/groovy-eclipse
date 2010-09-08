@@ -146,7 +146,7 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
 	// has extra whitespace at end, but should not
 	public void testMapEntryExpression3() throws Exception {
 		checkBinaryExprSLocs("[a : b  ]", 
-				new MapEntryExpressionSLocTester(), "a : b  ");
+				new MapEntryExpressionSLocTester(), "a : b");
 	}
 	
 	public void testMapEntryExpression4() throws Exception {
