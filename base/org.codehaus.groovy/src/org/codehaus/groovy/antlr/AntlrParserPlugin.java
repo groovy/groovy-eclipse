@@ -3339,7 +3339,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // GRECLIPSE-829 VariableExpressions inside of GStrings contain the
             // openning '{', but shouldn't.  If the new sloc is larger than the 
             // one being set, then ignore it and don't reset
-            if (node instanceof VariableExpression &&
+            if (node instanceof VariableExpression && node.getEnd() > 0 &&
                     (startoffset <= node.getStart()  && endoffset >= node.getEnd())) {
                 return;
             }
