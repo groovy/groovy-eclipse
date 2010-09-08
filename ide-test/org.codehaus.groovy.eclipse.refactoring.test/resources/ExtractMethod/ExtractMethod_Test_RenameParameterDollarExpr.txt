@@ -30,6 +30,6 @@ def m1(){
 }
 
 private m2(GString variNEW) {
-    println ("$variNEW")
+    println ("${variNEW}")
 }
 ###end
