@@ -160,6 +160,17 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "{ fff"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "fff()", 1);
     }
+    
+    // STS-1165 content assist after a static method call was broken
+    public void testAfterStaticCall() throws Exception {
+        String groovyClass = 
+            "class A { static xxx(x) { }\n def something() {\nxxx oth }\ndef other}";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "oth"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "other", 1);
+    }
+    
 
     
     // not working in multiline strings yet
