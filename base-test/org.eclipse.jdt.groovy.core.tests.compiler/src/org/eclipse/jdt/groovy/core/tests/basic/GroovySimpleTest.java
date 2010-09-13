@@ -265,6 +265,59 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    	},"abc");
     }
     
+
+    public void testGRE830() {
+	    	this.runNegativeTest(new String[]{
+	    			"AnnotationDouble.groovy",
+	    			"import static java.lang.annotation.ElementType.FIELD;\n"+
+	    			"import static java.lang.annotation.RetentionPolicy.RUNTIME;\n"+
+	    			"import java.lang.annotation.Retention;\n"+
+	    			"import java.lang.annotation.Target;\n"+
+	    			"\n"+
+	    			"@Target(FIELD)\n"+
+	    			"@Retention(RUNTIME)\n"+
+	    			"public @interface AnnotationDouble { String value(); double width() default 5.0d; }\n",
+	    			"AnnotationDoubleTest.groovy",
+	    			"class AnnotationDoubleTest {\n"+
+	    			"\n"+
+	    			"class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n"+
+	    			"\n"+
+	    			"def test = new AnnotationDoubleTest()\n"+
+	    			"}\n"
+	    	},"----------\n" + 
+			"1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" + 
+			"	class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" + 
+			"	                                                                ^\n" + 
+			"Groovy:Attribute \'width\' should have type \'java.lang.Double\'; but found type \'java.math.BigDecimal\' in @AnnotationDouble\n" + 
+			"----------\n");
+    }
+
+    public void testGRE830_2() {
+    	this.runNegativeTest(new String[]{
+    			"AnnotationDouble.groovy",
+    			"import static java.lang.annotation.ElementType.FIELD;\n"+
+    			"import static java.lang.annotation.RetentionPolicy.RUNTIME;\n"+
+    			"import java.lang.annotation.Retention;\n"+
+    			"import java.lang.annotation.Target;\n"+
+    			"\n"+
+    			"@Target(FIELD)\n"+
+    			"@Retention(RUNTIME)\n"+
+    			"public @interface AnnotationDouble { String value(); double width() default 5.0d; }\n",
+    			"AnnotationDoubleTest.groovy",
+    			"class AnnotationDoubleTest {\n"+
+    			"\n"+
+    			"class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n"+
+    			"\n"+
+    			"def test = new AnnotationDoubleTest()\n"+
+    			"}\n"
+    	},"----------\n" + 
+		"1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" + 
+		"	class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" + 
+		"	                                                                ^\n" + 
+		"Groovy:Attribute \'width\' should have type \'java.lang.Double\'; but found type \'java.math.BigDecimal\' in @AnnotationDouble\n" + 
+		"----------\n");
+    }
+    
     public void testRecovery_GRE766() {
 	    	this.runNegativeTest(new String[]{
 	    			"A.groovy",	
@@ -2652,16 +2705,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"	break words\n" + 
 		"	^\n" + 
 		"Groovy:the break statement with named label is only allowed inside loops\n" + 
-		"----------\n" + 
-		"2. ERROR in p\\X.groovy (at line 2)\n" + 
-		"	break words\n" + 
-		"	^\n" + 
-		"Groovy:the break statement with named label is only allowed inside loops\n" + 
-		"----------\n" + 
-		"3. ERROR in p\\X.groovy (at line 2)\n" + 
-		"	break words\n" + 
-		"	^\n" + 
-		"Groovy:break to missing label\n" + 
 		"----------\n");		
 	}
 	

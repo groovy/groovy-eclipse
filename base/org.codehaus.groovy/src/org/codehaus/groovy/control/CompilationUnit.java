@@ -840,32 +840,39 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Run the generation and create the class (if required)
             //
-            generator.visitClass(classNode);
-
-
-            byte[] bytes = ((ClassWriter) visitor).toByteArray();
-            /// GRECLIPSE: start: added classNode, sourceUnit
-            /*old{
-            generatedClasses.add(new GroovyClass(classNode.getName(), bytes));
-            }*/
-            // newcode
-            generatedClasses.add(new GroovyClass(classNode.getName(), bytes, classNode, source));
-		// end
-		
-            //
-            // Handle any callback that's been set
-            //
-            if (CompilationUnit.this.classgenCallback != null) {
-                classgenCallback.call(visitor, classNode);
+            // GRECLIPSE: if there are errors, don't generate code. 
+            // code gen can fail unexpectedly if there was an earlier error.
+            if (!source.getErrorCollector().hasErrors()) {
+            // end
+	            generator.visitClass(classNode);
+	
+	
+	            byte[] bytes = ((ClassWriter) visitor).toByteArray();
+	            /// GRECLIPSE: start: added classNode, sourceUnit
+	            /*old{
+	            generatedClasses.add(new GroovyClass(classNode.getName(), bytes));
+	            }*/
+	            // newcode
+	            generatedClasses.add(new GroovyClass(classNode.getName(), bytes, classNode, source));
+			// end
+			
+	            //
+	            // Handle any callback that's been set
+	            //
+	            if (CompilationUnit.this.classgenCallback != null) {
+	                classgenCallback.call(visitor, classNode);
+	            }
+	
+	            //
+	            // Recurse for inner classes
+	            //
+	            LinkedList innerClasses = generator.getInnerClasses();
+	            while (!innerClasses.isEmpty()) {
+	                classgen.call(source, context, (ClassNode) innerClasses.removeFirst());
+	            }
+	        // GRECLIPSE: if there are errors, don't generate code
             }
-
-            //
-            // Recurse for inner classes
-            //
-            LinkedList innerClasses = generator.getInnerClasses();
-            while (!innerClasses.isEmpty()) {
-                classgen.call(source, context, (ClassNode) innerClasses.removeFirst());
-            }
+            // end
         }
     };
 
