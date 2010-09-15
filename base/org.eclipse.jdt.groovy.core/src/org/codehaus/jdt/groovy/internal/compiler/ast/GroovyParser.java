@@ -28,6 +28,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -36,6 +37,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
+import org.eclipse.jdt.internal.core.builder.SourceFile;
 
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates with the groovy parser and translates results
@@ -219,6 +221,14 @@ public class GroovyParser {
 			sourceCode = CharOperation.NO_CHAR; // pretend empty from thereon
 		}
 
+		// FIXADE checking for script folder.
+		if (sourceUnit instanceof SourceFile) {
+			SourceFile file = (SourceFile) sourceUnit;
+			char[] projRelPath = file.resource.getProjectRelativePath().toPortableString().toCharArray();
+			boolean isScript = new ScriptFolderSelector().isScript(projRelPath);
+			System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
+		}
+
 		// FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
 		CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
 		// groovyCompilerConfig.setPluginFactory(new ErrorRecoveredCSTParserPluginFactory(null));
@@ -235,8 +245,8 @@ public class GroovyParser {
 			filepath = new String(sourceUnit.getFileName());
 		}
 
-		SourceUnit groovySourceUnit = new SourceUnit(filepath, new String(sourceCode), groovyCompilerConfig, groovyCompilationUnit
-				.getClassLoader(), errorCollector);
+		SourceUnit groovySourceUnit = new SourceUnit(filepath, new String(sourceCode), groovyCompilerConfig,
+				groovyCompilationUnit.getClassLoader(), errorCollector);
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
 				sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);
 		// FIXASC get this from the Antlr parser

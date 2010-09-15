@@ -9,10 +9,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.osgi.util.NLS;
@@ -49,7 +46,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
     private static final String PROP_VMARGS = "eclipse.vmargs"; //$NON-NLS-1$
 
     private static final String PROP_REFRESH_BUNDLES = "-Declipse.refreshBundles=true";
-    
+
     private static final String PROP_COMMANDS = "eclipse.commands"; //$NON-NLS-1$
 
     private static final String PROP_EXIT_CODE = "eclipse.exitcode"; //$NON-NLS-1$
@@ -61,38 +58,58 @@ public class CompilerPreferencesPage extends PreferencePage implements
     private static final String NEW_LINE = "\n"; //$NON-NLS-1$
 
     protected final boolean isGroovy17Disabled;
-    
+
     private Button groovyLibButt;
-    
+
+    private ScriptFolderSelector scriptFolderSelector;
+
     public CompilerPreferencesPage() {
         super("Compiler");
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
         isGroovy17Disabled = CompilerUtils.isGroovy17DisabledOrMissing();
     }
 
-    
+
     @Override
     protected Control createContents(Composite parent) {
-        final Composite page = new Composite(parent, SWT.NULL);
+        Composite page = new Composite(parent, SWT.NONE);
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         layout.marginHeight = 0;
         layout.marginWidth = 0;
         page.setLayout(layout);
         page.setFont(parent.getFont());
-        
-    
-        groovyLibButt = new Button(page, SWT.CHECK);
+
+
+        // section on Groovy classpath container
+        Label gccLabel = new Label(page, SWT.WRAP);
+        gccLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+        gccLabel.setText("Groovy Classpath Container:");
+
+        Composite gccPage = new Composite(page, SWT.NONE | SWT.BORDER);
+        layout = new GridLayout();
+        layout.numColumns = 1;
+        layout.marginHeight = 3;
+        layout.marginWidth = 3;
+        gccPage.setLayout(layout);
+        gccPage.setFont(parent.getFont());
+        gccPage.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+        groovyLibButt = new Button(gccPage, SWT.CHECK);
         groovyLibButt.setText("Include all jars in ~/.groovy/lib on the classpath.");
         groovyLibButt.setSelection(GroovyCoreActivator.getDefault().getPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true));
-        
-        Label groovyLibLabel = new Label(page, SWT.WRAP);
-        groovyLibLabel.setText("This is the defualt setting and individual projects can be configured\n" +
-                "by clicking on the properties page of the Groovy Support classpath container.");
-        
-        Label classpathLabel = new Label(page, SWT.WRAP);
-        classpathLabel.setText("\n\nReset the Groovy Classpath Containers.");
-        Button updateGCC = new Button(page, SWT.PUSH);
+
+        GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+        gd.widthHint = 500;
+
+        Label groovyLibLabel = new Label(gccPage, SWT.WRAP);
+        groovyLibLabel.setText("This is the default setting and individual projects can be configured "
+                + "by clicking on the properties page of the Groovy Support classpath container.");
+        groovyLibLabel.setLayoutData(gd);
+
+        Label classpathLabel = new Label(gccPage, SWT.WRAP);
+        classpathLabel.setText("\nReset the Groovy Classpath Containers.");
+        Button updateGCC = new Button(gccPage, SWT.PUSH);
         updateGCC.setText("Update all Groovy Classpath Containers");
         updateGCC.addSelectionListener(new SelectionListener() {
             public void widgetSelected(SelectionEvent e) {
@@ -102,52 +119,69 @@ public class CompilerPreferencesPage extends PreferencePage implements
                 updateClasspathContainers();
             }
         });
-        Label classpathLabel2 = new Label(page, SWT.WRAP);
-        classpathLabel2.setText("Perform this action if there are changes to ~/.groovy/lib\n" +
-        "that should be reflected in your projects' classpaths.\n\n");
+        Label classpathLabel2 = new Label(gccPage, SWT.WRAP);
+        classpathLabel2.setText("Perform this action if there are changes to ~/.groovy/lib "
+                + "that should be reflected in your projects' classpaths.");
+        classpathLabel2.setLayoutData(gd);
 
-        
+        scriptFolderSelector = new ScriptFolderSelector(page);
+        scriptFolderSelector.createListContents();
+
         Label compilerVersion = new Label(page, SWT.LEFT | SWT.WRAP);
-        compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + 
-                "\nClick to change to using version " + CompilerUtils.getOtherVersion() + ". Requires restart."); 
-        
-        Button switchTo = new Button(page, SWT.PUSH);
-        switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
-        switchTo.addSelectionListener(new SelectionListener() {
-            
-        public void widgetSelected(SelectionEvent e) {
-            Shell shell = page.getShell();
-            boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?", 
-                    "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
-                    " the compiler will be changed and Eclipse will be restarted.\n\n" +
-                    "Make sure all your work is saved before clicking \"Yes\".");
-                    
-                if (result) {
-                    // change compiler
-                    IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
-                    if (status == Status.OK_STATUS) {
-                        restart(shell);
-                    } else {
-                        ErrorDialog error = new ErrorDialog(shell, 
-                                "Error occurred", "Error occurred when trying to enable Groovy " + CompilerUtils.getOtherVersion(), 
-                                status, IStatus.ERROR);
-                        error.open();
-                    }
-                }
+        compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
 
-            }
-            
-            public void widgetDefaultSelected(SelectionEvent e) {
-            
-            }
-        });
-        Label moreInfo = new Label(page, SWT.LEFT | SWT.WRAP);
-        moreInfo.setText("This feature is currently experimental.  If the UI for switching\n" +
-        		"compiler levels does not work, there are more instructions on the wiki.");
+        // no longer supporting compiler switching from the UI
+        /*
+         * compilerVersion.setText(
+         * "You are currently using Groovy Compiler version " +
+         * CompilerUtils.getGroovyVersion() +
+         * "\nClick to change to using version " +
+         * CompilerUtils.getOtherVersion() + ". Requires restart.");
+         * Button switchTo = new Button(page, SWT.PUSH);
+         * switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
+         * switchTo.addSelectionListener(new SelectionListener() {
+         *
+         * public void widgetSelected(SelectionEvent e) {
+         * Shell shell = page.getShell();
+         * boolean result = MessageDialog.openQuestion(shell,
+         * "Change compiler and restart?",
+         * "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
+         * " the compiler will be changed and Eclipse will be restarted.\n\n" +
+         * "Make sure all your work is saved before clicking \"Yes\".");
+         *
+         * if (result) {
+         * // change compiler
+         * IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
+         * if (status == Status.OK_STATUS) {
+         * restart(shell);
+         * } else {
+         * ErrorDialog error = new ErrorDialog(shell,
+         * "Error occurred", "Error occurred when trying to enable Groovy " +
+         * CompilerUtils.getOtherVersion(),
+         * status, IStatus.ERROR);
+         * error.open();
+         * }
+         * }
+         *
+         * }
+         *
+         * public void widgetDefaultSelected(SelectionEvent e) {
+         *
+         * }
+         * });
+         * Label moreInfo = new Label(page, SWT.LEFT | SWT.WRAP);
+         * moreInfo.setText(
+         * "This feature is currently experimental.  If the UI for switching\n"
+         * +
+         * "compiler levels does not work, there are more instructions on the wiki."
+         * );
+         */
         Link moreInfoLink = new Link(page, SWT.BORDER);
         moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
                 false));
-        moreInfoLink.setText("<a href=\"http://docs.codehaus.org/display/GROOVY/Compiler+Switching+within+Groovy-Eclipse\">More information...</a>");
+        moreInfoLink
+                .setText("<a href=\"http://docs.codehaus.org/display/GROOVY/Compiler+Switching+within+Groovy-Eclipse\">Information on how to switch to "
+                        + CompilerUtils.getOtherVersion() + "...</a>");
         moreInfoLink.addListener (SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
                 openUrl(event.text);
@@ -170,14 +204,14 @@ public class CompilerPreferencesPage extends PreferencePage implements
         System.out.println("Restart command line begin:\n " + command_line);
         System.out.println("Restart command line end");
         Workbench.getInstance().restart();
-        
+
     }
-    
+
     /**
      * Create and return a string with command line options for eclipse.exe that
      * will launch a new workbench that is the same as the currently running
      * one, but using the argument directory as its workspace.
-     * 
+     *
      * @param workspace
      *            the directory to use as the new workspace
      * @return a string of command line options or null on error
@@ -200,8 +234,8 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
         // append the vmargs and commands. Assume that these already end in \n
         String vmargs = System.getProperty(PROP_VMARGS);
-        vmargs = vmargs == null ? 
-                PROP_REFRESH_BUNDLES + NEW_LINE : 
+        vmargs = vmargs == null ?
+                PROP_REFRESH_BUNDLES + NEW_LINE :
                     vmargs + NEW_LINE + PROP_REFRESH_BUNDLES + NEW_LINE;
         result.append(vmargs);
 
@@ -224,9 +258,9 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
 
     public void init(IWorkbench workbench) {
-        
+
     }
-    
+
     public static void openUrl(String location) {
         try {
             URL url = null;
@@ -271,16 +305,16 @@ public class CompilerPreferencesPage extends PreferencePage implements
                     location);
         }
     }
-    
+
     private void updateClasspathContainers() {
         try {
             GroovyClasspathContainerInitializer.updateAllGroovyClasspathContainers();
         } catch (JavaModelException e) {
-            GroovyCore.logException("Problem updating Groovy classpath contianers", e);        
+            GroovyCore.logException("Problem updating Groovy classpath contianers", e);
         }
-        
+
     }
-    
+
     @Override
     public boolean performOk() {
         applyPreferences();
@@ -296,11 +330,13 @@ public class CompilerPreferencesPage extends PreferencePage implements
     protected void performDefaults() {
         super.performDefaults();
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
+        scriptFolderSelector.restoreDefaultsPressed();
     }
-    
+
     private void applyPreferences() {
-        GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, groovyLibButt.getSelection());        
+        GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, groovyLibButt.getSelection());
+        scriptFolderSelector.applyPreferences();
     }
-    
-    
+
+
 }

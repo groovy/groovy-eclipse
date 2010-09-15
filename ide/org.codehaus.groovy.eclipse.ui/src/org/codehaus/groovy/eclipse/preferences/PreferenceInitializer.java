@@ -19,6 +19,7 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
+import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.RGB;
@@ -128,7 +129,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(
                 PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
-                "proj_home");
+                PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME);
 
 
         // Debug
@@ -140,6 +141,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 "org.codehaus.groovy,groovy.lang,java.lang.reflect,sun.reflect,groovy.ui,sun.misc");
 
         store.setDefault(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP, true);
+
+        // Compile
+        store.setDefault(Activator.GROOVY_SCRIPT_FILTER,
+                "scripts/**/*.groovy,src/main/resources/**/*.groovy,src/test/resources/**/*.groovy");
     }
 
     public void reset() {
@@ -195,6 +200,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
 
         store.setValue(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, "proj_home");
+
+        // Compile
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTER,
+                Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
 
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
     }

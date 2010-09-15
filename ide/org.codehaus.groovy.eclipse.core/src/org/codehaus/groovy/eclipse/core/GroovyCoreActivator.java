@@ -20,7 +20,6 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -34,9 +33,6 @@ public class GroovyCoreActivator extends Plugin {
 
     // The shared instance
     private static GroovyCoreActivator plugin;
-
-    private ServiceTracker tracker = null;
-
 
     private IEclipsePreferences instanceScope;
 
@@ -78,5 +74,4 @@ public class GroovyCoreActivator extends Plugin {
     public void setPreference(String key, boolean val) {
         getPreferences().putBoolean(key, val);
     }
-    
 }

@@ -27,12 +27,12 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.RGB;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Jan 27, 2010
  */
 class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider implements IPropertyChangeListener {
-    
+
     private boolean isEnabled;
     private String[] filteredList;
     private IPreferenceStore preferenceStore;
@@ -41,7 +41,7 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
         isEnabled = preferenceStore.getBoolean(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK);
         filteredList = computeFilteredList();
     }
-	
+
     private String[] computeFilteredList() {
         String filter = preferenceStore.getString(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST);
         if (filter != null) {
@@ -58,6 +58,17 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
 		    Object element = update.getElement();
 			if (element instanceof IJavaStackFrame) {
 			    IJavaStackFrame frame = (IJavaStackFrame) element;
+
+                // IThread thread = frame.getThread();
+                // if (thread != null) {
+                // IJavaStackFrame topFrame = (IJavaStackFrame)
+                // thread.getTopStackFrame();
+                // if (isFiltered(topFrame.getDeclaringTypeName())) {
+                // // thread.stepInto();
+                // // return;
+                // }
+                // }
+
 			    if (isFiltered(frame.getDeclaringTypeName())) {
 			        try {
 			            update.setForeground(new RGB(200, 200, 200), 0);
@@ -70,7 +81,7 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
 			}
 		}
 	}
-    
+
     private boolean isFiltered(String qualifiedName) {
         for (String filter : filteredList) {
             if (qualifiedName.startsWith(filter)) {
@@ -87,12 +98,12 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
             filteredList = computeFilteredList();
         }
     }
-	
-    
+
+
     void connect() {
         GroovyPlugin.getDefault().getPreferenceStore().addPropertyChangeListener(this);
     }
-    
+
     void disconnect() {
         GroovyPlugin.getDefault().getPreferenceStore().removePropertyChangeListener(this);
     }

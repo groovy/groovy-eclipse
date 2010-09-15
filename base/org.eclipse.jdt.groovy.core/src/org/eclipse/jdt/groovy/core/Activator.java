@@ -11,7 +11,14 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.core;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
 import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -25,39 +32,71 @@ public class Activator extends Plugin {
 	// The shared instance
 	private static Activator plugin;
 
-	/**
-	 * The constructor
-	 */
-	public Activator() {
-	}
+	private IEclipsePreferences instanceScope;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
-	 */
+	// comma-separated list of regex filters that specify groovy scripts.
+	public static final String GROOVY_SCRIPT_FILTER = "groovy.script.filter";
+
+	// default list of regex filters to specify groovy scripts
+	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "scripts/**/*.groovy,src/main/resources/**/*.groovy,src/test/resources/**/*.groovy";
+
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
-	 */
 	public void stop(BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 * 
-	 * @return the shared instance
-	 */
 	public static Activator getDefault() {
 		return plugin;
 	}
 
+	public void setPreference(String key, List<String> vals) {
+		String concat;
+		if (vals == null) {
+			concat = "";
+		} else {
+			// we should escape all ',' that happen to exist in the string, but
+			// these should not be here since the strings were validated on entry
+			StringBuilder sb = new StringBuilder();
+			for (Iterator<String> valIter = vals.iterator(); valIter.hasNext();) {
+				sb.append(valIter.next());
+				if (valIter.hasNext()) {
+					sb.append(",");
+				}
+			}
+			concat = sb.toString();
+		}
+		getPreferences().put(key, concat);
+	}
+
+	public void setPreference(String key, String val) {
+		if (val == null) {
+			val = "";
+		}
+		getPreferences().put(key, val);
+	}
+
+	public List<String> getListStringPreference(String key, String def) {
+		String result = getPreferences().get(key, def);
+		if (result == null) {
+			result = "";
+		}
+		String[] splits = result.split(",");
+		return Arrays.asList(splits);
+	}
+
+	public String getStringPreference(String key, String def) {
+		return getPreferences().get(key, def);
+	}
+
+	private IEclipsePreferences getPreferences() {
+		if (instanceScope == null) {
+			instanceScope = ((IScopeContext) new InstanceScope()).getNode(Activator.PLUGIN_ID);
+		}
+		return instanceScope;
+	}
 }

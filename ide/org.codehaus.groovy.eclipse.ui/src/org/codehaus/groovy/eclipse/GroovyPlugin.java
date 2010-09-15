@@ -35,8 +35,6 @@ import org.eclipse.ui.IPartService;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry;
-import org.eclipse.ui.editors.text.templates.ContributionTemplateStore;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.internal.util.PrefUtil;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -78,10 +76,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.ui";
 
 	public static final String GROOVY_TEMPLATE_CTX = "org.codehaus.groovy.eclipse.templates";
-
-	private ContributionContextTypeRegistry fContextTypeRegistry;
-
-	private ContributionTemplateStore fTemplateStore;
 
     private EnsureJUnitFont ensure;
 

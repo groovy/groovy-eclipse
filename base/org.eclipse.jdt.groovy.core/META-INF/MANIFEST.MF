@@ -14,5 +14,6 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Eclipse-RegisterBuddy: org.eclipse.jdt.core
 Export-Package: org.codehaus.jdt.groovy.internal.compiler.ast,
  org.codehaus.jdt.groovy.model,
+ org.eclipse.jdt.groovy.core,
  org.eclipse.jdt.groovy.core.util,
  org.eclipse.jdt.groovy.search
