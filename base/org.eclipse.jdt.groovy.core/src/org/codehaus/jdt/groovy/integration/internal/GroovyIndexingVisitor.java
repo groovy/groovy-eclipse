@@ -91,7 +91,6 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 			for (ImportNode importNode : allImports) {
 				visitAnnotations(importNode);
 				if (importNode.getType() != null) {
-					visitClass(importNode.getType());
 					handleType(importNode.getType(), false, true);
 				}
 				String importFieldName = ImportNodeCompatibilityWrapper.getFieldName(importNode);
