@@ -103,9 +103,15 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
     }
 
     class AssociatedExpressionMatcher extends FragmentVisitor {
+        boolean ignoreNext = false;
+        
         @Override
         public boolean previsit(IASTFragment fragment) {
-            fragment.getAssociatedExpression().visit(FindAllOccurrencesVisitor.this);
+            if (! ignoreNext) {
+                fragment.getAssociatedExpression().visit(FindAllOccurrencesVisitor.this);
+            } else {
+                ignoreNext = false;
+            }
             return true;
         }
 
@@ -232,6 +238,8 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         fragment.accept(fragmentMatcher);
         // don't visit children directly because that may result in
         // unanticipated double matches
+        // ignore the first fragment since that was visited above
+        associatedExpressionMatcher.ignoreNext = true;
         fragment.accept(associatedExpressionMatcher);
     }
 
@@ -369,6 +377,8 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         fragment.accept(fragmentMatcher);
         // don't visit children directly because that may result in
         // unanticipated double matches
+        // ignore the first fragment since that was visited above
+        associatedExpressionMatcher.ignoreNext = true;
         fragment.accept(associatedExpressionMatcher);
     }
 
@@ -378,6 +388,8 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         fragment.accept(fragmentMatcher);
         // don't visit children directly because that may result in
         // unanticipated double matches
+        // ignore the first fragment since that was visited above
+        associatedExpressionMatcher.ignoreNext = true;
         fragment.accept(associatedExpressionMatcher);
     }
 
@@ -411,6 +423,8 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         fragment.accept(fragmentMatcher);
         // don't visit children directly because that may result in
         // unanticipated double matches
+        // ignore the first fragment since that was visited above
+        associatedExpressionMatcher.ignoreNext = true;
         fragment.accept(associatedExpressionMatcher);
     }
 
