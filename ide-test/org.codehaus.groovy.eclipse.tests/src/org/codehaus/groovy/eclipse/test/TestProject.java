@@ -57,6 +57,8 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.launching.JavaRuntime;
@@ -85,6 +87,10 @@ public class TestProject {
         createOutputFolder(binFolder);
         sourceFolder = createSourceFolder();
         addSystemLibraries();
+        
+        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.5");
+        javaProject.setOption(CompilerOptions.OPTION_Source, "1.5");
+        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.5");
     }
     
     public TestProject() throws CoreException {
