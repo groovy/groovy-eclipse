@@ -26,9 +26,6 @@ import junit.framework.Test;
  */
 public class InferencingTests extends AbstractInferencingTest {
  
-    /**
-     * 
-     */
     private static final String GET_AT = "getAt";
 
     public static Test suite() {
@@ -41,6 +38,11 @@ public class InferencingTests extends AbstractInferencingTest {
 
     public void testInferNumber1() throws Exception {
         assertType("10", "java.lang.Integer");
+    }
+    
+    // same as above, but test that whitespace is not included
+    public void testInferNumber1a() throws Exception {
+        assertType("10 ", 0, 2, "java.lang.Integer");
     }
 
     public void testInferNumber2() throws Exception {
@@ -115,7 +117,7 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     public void testSuperFieldReference() throws Exception {
         String contents = "class B extends A {\n def other() { \n myOther } } \n class A { String myOther } ";
-        String expr = "myOther"; // extra space b/c variable expression end offset is wrong
+        String expr = "myOther"; 
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
     
@@ -131,12 +133,12 @@ public class InferencingTests extends AbstractInferencingTest {
     
     public void testRangeExpression1() throws Exception {
         String contents = "0 .. 5";
-        assertType(contents, "java.util.List");
+        assertType(contents, "java.util.List<java.lang.Integer>");
     }
     
     public void testRangeExpression2() throws Exception {
         String contents = "0 ..< 5";
-        assertType(contents, "java.util.List");
+        assertType(contents, "java.util.List<java.lang.Integer>");
     }
     
     public void testClassReference1() throws Exception {
@@ -167,14 +169,14 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     public void testInnerClass1() throws Exception {
-        String contents = "class Outer { class Inner { } \nInner x }\nnew Outer().x";
+        String contents = "class Outer { class Inner { } \nInner x }\nnew Outer().x ";
         int start = contents.lastIndexOf("x");
         int end = start + 1;
         assertType(contents, start, end, "Outer$Inner");
     }
     
     public void testInnerClass2() throws Exception {
-        String contents = "class Outer { class Inner { class InnerInner{ } }\n Outer.Inner.InnerInner x }\nnew Outer().x";
+        String contents = "class Outer { class Inner { class InnerInner{ } }\n Outer.Inner.InnerInner x }\nnew Outer().x ";
         int start = contents.lastIndexOf("x");
         int end = start + 1;
         assertType(contents, start, end, "Outer$Inner$InnerInner");
@@ -239,7 +241,7 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     // GRECLIPSE-743
     public void testOverrideCategory1() throws Exception {
-        String contents = "class A { }\n new A().getAt()";
+        String contents = "class A { }\n new A().getAt() ";
         int start = contents.lastIndexOf(GET_AT);
         int end = start + GET_AT.length();
         assertType(contents, start, end, "java.lang.Object");
@@ -295,15 +297,15 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     // ignore assignments to object expressions
     public void testGRECLIPSE731f() throws Exception {
-        String contents = "class X { String xxx\ndef foo() { }\ndef meth() { xxx = foo()\nxxx} }";
+        String contents = "class X { String xxx\ndef foo() { }\ndef meth() { xxx = foo()\nxxx } }";
         int start = contents.lastIndexOf(XXX);
         int end = start + XXX.length();
         assertType(contents, start, end, "java.lang.String");
     }
     
     
-    private final static String catchString = "try {     } catch (NullPointerException e) { e}";
-    private final static String catchString2 = "try {     } catch (e) { e}";
+    private final static String catchString = "try {     } catch (NullPointerException e) { e }";
+    private final static String catchString2 = "try {     } catch (e) { e }";
     private final static String npe = "NullPointerException";
     public void testCatchBlock1() throws Exception {
         int start = catchString.lastIndexOf(npe);

@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
@@ -43,6 +44,7 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -111,7 +113,12 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
         env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
         env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-        return env.getProject("Project");
+        IProject proj = env.getProject("Project");
+        IJavaProject javaProject = JavaCore.create(proj);
+        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.5");
+        javaProject.setOption(CompilerOptions.OPTION_Source, "1.5");
+        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.5");
+        return proj;
     }
 
     protected GroovyCompilationUnit createUnit(String name, String contents) {

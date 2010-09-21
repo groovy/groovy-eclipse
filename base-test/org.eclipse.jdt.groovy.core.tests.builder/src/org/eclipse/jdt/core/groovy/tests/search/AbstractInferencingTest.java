@@ -18,6 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -36,6 +37,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         super(name);
     }
 
+    
     protected void assertType(String contents, String expectedType) {
         assertType(contents, 0, contents.length(), expectedType);
     }
@@ -46,12 +48,12 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit);
         
         assertNotNull("Did not find expected ASTNode", requestor.node);
-        if (! expectedType.equals(requestor.getTypeName())) {
+        if (! expectedType.equals(printTypeName(requestor.result.type))) {
             StringBuilder sb = new StringBuilder();
             sb.append("Expected type not found.\n");
             sb.append("Expected: " + expectedType + "\n");
-            sb.append("Found: " + requestor.getTypeName() + "\n");
-            sb.append("Declaring type: " + requestor.result.declaringType.getName() + "\n");
+            sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
+            sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
             fail(sb.toString());
             
@@ -75,11 +77,32 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             StringBuilder sb = new StringBuilder();
             sb.append("Expected declaring type not found.\n");
             sb.append("Expected: " + expectedDeclaringType + "\n");
-            sb.append("Found: " + requestor.getTypeName() + "\n");
-            sb.append("Declaring type: " + requestor.result.declaringType.getName() + "\n");
+            sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
+            sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
             fail(sb.toString());
         }
+    }
+
+    private String printTypeName(ClassNode type) {
+        return type != null ? type.getName() + printGenerics(type) : "null";
+    }
+
+    private String printGenerics(ClassNode type) {
+        if (type.getGenericsTypes() == null || type.getGenericsTypes().length == 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append('<');
+        for (int i = 0; i < type.getGenericsTypes().length; i++) {
+            GenericsType gt = type.getGenericsTypes()[i];
+            sb.append(printTypeName(gt.getType()));
+            if (i < type.getGenericsTypes().length-1) {
+                sb.append(',');
+            }
+        }
+        sb.append('>');
+        return sb.toString();
     }
 
     public class SearchRequestor implements ITypeRequestor {
@@ -110,12 +133,12 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             return VisitStatus.CONTINUE;
         }
         
-        public String getTypeName() {
-            return result.type.getName();
-        }
-        
         public String getDeclaringTypeName() {
             return result.declaringType.getName();
+        }
+        
+        public String getTypeName() {
+            return result.type.getName();
         }
     }
 }
