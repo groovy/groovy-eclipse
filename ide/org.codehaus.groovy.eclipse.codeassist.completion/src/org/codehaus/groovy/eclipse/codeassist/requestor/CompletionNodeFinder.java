@@ -499,6 +499,12 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
         super.visitBinaryExpression(expression);
         lhsNode = null;
+        if (expression.getOperation().getText().equals("[")
+                && doTest(expression)) {
+            // after an array access
+            createContext(expression, blockStack.peek(),
+                    expressionOrStatement());
+        }
     }
 
     @Override

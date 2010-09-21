@@ -71,6 +71,16 @@ public class StatementAndExpressionCompletionProcessor extends
 
         ClassNode lhsType;
         Set<ClassNode> categories;
+
+        private Expression arrayAccessLHS;
+
+        public ExpressionCompletionRequestor() {
+            if (getContext().completionNode instanceof BinaryExpression) {
+                arrayAccessLHS = ((BinaryExpression) getContext().completionNode)
+                        .getLeftExpression();
+            }
+        }
+
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
 
@@ -88,24 +98,18 @@ public class StatementAndExpressionCompletionProcessor extends
                 }
             }
 
-            if (doTest(node)) {
-                if (isAssignmentOfLhs(result.getEnclosingAssignment())) {
-                    if (lhsNode instanceof Variable) {
-                        Variable variable = (Variable) lhsNode;
-                        VariableInfo info = result.scope
-                                .lookupName(variable.getName());
-                        ClassNode maybeType;
-                        if (info != null) {
-                            maybeType = info.type;
-                        } else {
-                            maybeType = variable.getType();
-                        }
-                        if (maybeType != null && !maybeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
-                            lhsType = ClassHelper.getUnwrapper(maybeType);
-                        }
-                    }
-                }
-                resultingType = result.type;
+            boolean success = doTest(node);
+            boolean derefList = false; // if true use the parameterized type of
+                                       // the list
+            if (!success) {
+                // maybe this is content assist after array access
+                // ie- foo[0].<_>
+                derefList = success = doTestForAfterArrayAccess(node);
+            }
+            if (success) {
+                maybeRememberLHSType(result);
+                resultingType = derefList ? VariableScope.deref(result.type)
+                        : result.type;
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
                 isStatic = node instanceof StaticMethodCallExpression ||
@@ -115,6 +119,38 @@ public class StatementAndExpressionCompletionProcessor extends
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
+        }
+
+        /**
+         * see if this is the lhs of an array access, eg the 'foo' of 'foo[0]'
+         */
+        private boolean doTestForAfterArrayAccess(ASTNode node) {
+            return node == arrayAccessLHS;
+        }
+
+        /**
+         * @param result
+         */
+        private void maybeRememberLHSType(TypeLookupResult result) {
+            if (isAssignmentOfLhs(result.getEnclosingAssignment())) {
+                // check to see if this is the rhs of an assignment.
+                // if so, then attempt to use the type of the lhs for
+                // ordering of the proposals
+                if (lhsNode instanceof Variable) {
+                    Variable variable = (Variable) lhsNode;
+                    VariableInfo info = result.scope
+                            .lookupName(variable.getName());
+                    ClassNode maybeType;
+                    if (info != null) {
+                        maybeType = info.type;
+                    } else {
+                        maybeType = variable.getType();
+                    }
+                    if (maybeType != null && !maybeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+                        lhsType = ClassHelper.getUnwrapper(maybeType);
+                    }
+                }
+            }
         }
 
         private boolean isAssignmentOfLhs(BinaryExpression node) {
@@ -129,6 +165,15 @@ public class StatementAndExpressionCompletionProcessor extends
             if (node instanceof ArgumentListExpression) {
                 // we never complete on a list of arguments, but rather one of the arguments itself
                 return false;
+            } else if (node instanceof BinaryExpression) {
+                BinaryExpression bin = (BinaryExpression) node;
+                if (bin.getLeftExpression() == arrayAccessLHS) {
+                    // don't return true here, but rather wait for the LHS to
+                    // come through
+                    // this way we can use the derefed value as the completion
+                    // type
+                    return false;
+                }
             }
             return isNotExpressionAndStatement(completionNode, node) && completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd();
         }
