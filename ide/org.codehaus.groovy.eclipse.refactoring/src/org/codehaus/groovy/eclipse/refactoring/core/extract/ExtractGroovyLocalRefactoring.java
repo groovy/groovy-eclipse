@@ -761,7 +761,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
             // always capitalize
             // the first character will be made lower case later
-            if (name.length() > 0) {
+            if (name != null && name.length() > 0) {
                 name = "" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
             }
 			return name;
