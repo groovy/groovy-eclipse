@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
@@ -275,4 +276,70 @@ public class VariableScope {
 		}
 	}
 
+	/**
+	 * Create a copy of this class, taking into account generics and redirects
+	 * 
+	 * @param type type to copy
+	 * @return a copy of this type
+	 */
+	public static ClassNode clone(ClassNode type) {
+		if (type == null) {
+			return null;
+		}
+		ClassNode newType;
+		newType = type.getPlainNodeReference();
+		newType.setRedirect(type.redirect());
+		newType.setInterfaces(type.getInterfaces());
+		newType.setSourcePosition(type);
+		GenericsType[] origgts = type.getGenericsTypes();
+		if (origgts != null) {
+			GenericsType[] newgts = new GenericsType[origgts.length];
+			for (int i = 0; i < origgts.length; i++) {
+				newgts[i] = clone(origgts[i]);
+			}
+			newType.setGenericsTypes(newgts);
+		}
+		return newType;
+	}
+
+	/**
+	 * Create a copy of this {@link GenericsType}
+	 * 
+	 * @param origgt
+	 * @return a copy
+	 */
+	public static GenericsType clone(GenericsType origgt) {
+		GenericsType newgt = new GenericsType();
+		newgt.setType(clone(origgt.getType()));
+		newgt.setLowerBound(clone(origgt.getLowerBound()));
+		ClassNode[] oldUpperBounds = origgt.getUpperBounds();
+		if (oldUpperBounds != null) {
+			ClassNode[] newUpperBounds = new ClassNode[oldUpperBounds.length];
+			for (int i = 0; i < newUpperBounds.length; i++) {
+				newUpperBounds[i] = clone(oldUpperBounds[i]);
+			}
+			newgt.setUpperBounds(newUpperBounds);
+		}
+		newgt.setName(origgt.getName());
+		newgt.setPlaceholder(origgt.isPlaceholder());
+		newgt.setWildcard(origgt.isWildcard());
+		newgt.setResolved(origgt.isResolved());
+		newgt.setSourcePosition(origgt);
+		return newgt;
+	}
+
+	/**
+	 * attempt to get the component type of rhs
+	 * 
+	 * @param c
+	 * @return component type, generic type of collection, or c
+	 */
+	public static ClassNode deref(ClassNode c) {
+		if (c.isArray()) {
+			return c.getComponentType();
+		} else if (c.getGenericsTypes() != null && c.getGenericsTypes().length > 0) {
+			return c.getGenericsTypes()[0].getType();
+		}
+		return c;
+	}
 }

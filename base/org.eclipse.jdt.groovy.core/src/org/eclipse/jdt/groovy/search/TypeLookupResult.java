@@ -98,7 +98,7 @@ public class TypeLookupResult {
 	public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeConfidence confidence,
 			VariableScope scope) {
 		this.confidence = confidence;
-		this.type = ClassHelper.getWrapper(type);
+		this.type = ClassHelper.isPrimitiveType(type) ? ClassHelper.getWrapper(type) : type;
 		this.declaringType = declaringType;
 		this.declaration = declaration;
 		this.scope = scope;

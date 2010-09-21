@@ -20,8 +20,10 @@ import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXAC
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -30,12 +32,12 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
@@ -64,6 +66,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
+import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg
@@ -71,7 +74,31 @@ import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
  * 
  *          Looks at the type associated with the ASTNode for the type <br>
  */
+@SuppressWarnings("nls")
 public class SimpleTypeLookup implements ITypeLookup {
+
+	// FIXADE this can be deleted if augmentGenerics is deleted
+	// Groovy is not good about keeping type parameters, especially nested type parameters.
+	// here, we keep track of well-known classes and interfaces that take generic arguments.
+	// if we come across a type of this kind and it doesn't have generic arguments, then
+	// we fill it in.
+	private static final Map<String, String[]> CLASSES_TO_GENERICS = new HashMap<String, String[]>();
+	static {
+		CLASSES_TO_GENERICS.put("java.util.List", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.util.Stack", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.util.Map", new String[] { "K", "V" });
+		CLASSES_TO_GENERICS.put("java.util.Map$Entry", new String[] { "K", "V" });
+		CLASSES_TO_GENERICS.put("java.util.Set", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.util.HashSet", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.util.Collection", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.util.ArrayList", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.util.LinkedList", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.util.Iterator", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.util.Vector", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.lang.Iterable", new String[] { "E" });
+		CLASSES_TO_GENERICS.put("java.lang.Comparable", new String[] { "T" });
+		CLASSES_TO_GENERICS.put("java.lang.Class", new String[] { "T" });
+	}
 
 	private GroovyCompilationUnit unit;
 
@@ -232,11 +259,15 @@ public class SimpleTypeLookup implements ITypeLookup {
 				return new TypeLookupResult(node.getType(), null, null, confidence, scope);
 			}
 
-		} else if (node instanceof ArgumentListExpression || node instanceof ListExpression || node instanceof RangeExpression) {
-			return new TypeLookupResult(VariableScope.LIST_CLASS_NODE, null, null, confidence, scope);
+		} else if (node instanceof TupleExpression || node instanceof ListExpression || node instanceof RangeExpression) {
+			// some variant of List. Try to find the parameterization by peeking at the first element.
+			ClassNode parameterized = parameterizeThisList(node);
+			return new TypeLookupResult(parameterized, null, null, confidence, scope);
 
 		} else if (node instanceof BinaryExpression) {
 			// Object expression was null, so go for the left expression.
+			// The final type of this BinaryExpression could be more complicated. Have to look at the operation and
+			// the left and right sides. This happens in the TypeInferencingVisitorWithRequestor
 			return new TypeLookupResult(((BinaryExpression) node).getLeftExpression().getType(), null, null, confidence, scope);
 
 		} else if (node instanceof BooleanExpression || node instanceof NotExpression) {
@@ -246,7 +277,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return new TypeLookupResult(VariableScope.GSTRING_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof MapExpression) {
-			return new TypeLookupResult(VariableScope.MAP_CLASS_NODE, null, null, confidence, scope);
+			ClassNode parameterized = parameterizeThisMap((MapExpression) node);
+			return new TypeLookupResult(parameterized, null, null, confidence, scope);
 
 		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
 			// FIXADE because of operator overloading, we should be looking at the type
@@ -289,6 +321,63 @@ public class SimpleTypeLookup implements ITypeLookup {
 	}
 
 	/**
+	 * A simple approach to parameterizing a map. Look at the first entry and if the types are statically known, use those to
+	 * parameterize the map
+	 * 
+	 * @param node
+	 * @return a parameterized map
+	 */
+	private ClassNode parameterizeThisMap(MapExpression node) {
+		if (node.getMapEntryExpressions().size() > 0) {
+			MapEntryExpression entry = node.getMapEntryExpressions().get(0);
+			ClassNode map = VariableScope.clone(VariableScope.MAP_CLASS_NODE);
+			map.getGenericsTypes()[0].setType(entry.getKeyExpression().getType());
+			map.getGenericsTypes()[0].setName(entry.getKeyExpression().getType().getName());
+			map.getGenericsTypes()[1].setType(entry.getValueExpression().getType());
+			map.getGenericsTypes()[1].setName(entry.getValueExpression().getType().getName());
+			return map;
+		}
+		return VariableScope.clone(VariableScope.MAP_CLASS_NODE);
+	}
+
+	/**
+	 * A simple approach to parameterizing a list. Look at the first entry and if the type is statically known, use that to
+	 * parameterize the map
+	 * 
+	 * @param node
+	 * @return a parameterized list
+	 */
+	private ClassNode parameterizeThisList(Expression node) {
+		if (node instanceof TupleExpression) {
+			TupleExpression tuple = (TupleExpression) node;
+			if (tuple.getExpressions().size() > 0) {
+				ClassNode list = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
+				list.getGenericsTypes()[0].setType(tuple.getExpression(0).getType());
+				list.getGenericsTypes()[0].setName(tuple.getExpression(0).getType().getName());
+				return list;
+			}
+		} else if (node instanceof ListExpression) {
+			ListExpression listExpr = (ListExpression) node;
+			if (listExpr.getExpressions().size() > 0) {
+				ClassNode list = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
+				list.getGenericsTypes()[0].setType(listExpr.getExpression(0).getType());
+				list.getGenericsTypes()[0].setName(listExpr.getExpression(0).getType().getName());
+				return list;
+			}
+		} else if (node instanceof RangeExpression) {
+			RangeExpression rangeExpr = (RangeExpression) node;
+			Expression expr = rangeExpr.getFrom() != null ? rangeExpr.getFrom() : rangeExpr.getTo();
+			if (expr != null) {
+				ClassNode list = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
+				list.getGenericsTypes()[0].setType(expr.getType());
+				list.getGenericsTypes()[0].setName(expr.getType().getName());
+				return list;
+			}
+		}
+		return VariableScope.LIST_CLASS_NODE;
+	}
+
+	/**
 	 * a little crude because will not find if there are spaces between '.' and 'class'
 	 * 
 	 * @param node
@@ -318,7 +407,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 		VariableInfo varInfo;
 		ASTNode declaration = findDeclaration(name, declaringType);
 		if (declaration != null) {
-			type = typeFromDeclaration(declaration);
+			type = typeFromDeclaration(declaration, realDeclaringType, realDeclaringType.redirect());
 			realDeclaringType = declaringTypeFromDeclaration(declaration);
 		} else if (declaringType.equals(scope.getEnclosingTypeDeclaration()) && (varInfo = scope.lookupName(name)) != null) {
 			type = varInfo.type;
@@ -367,7 +456,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			// we have a variable expression, but it is not
 			// declared anywhere in the scope. It is probably a DynamicVariable
 			if (accessedVar instanceof DynamicVariable) {
-				type = typeFromDeclaration(declaration);
+				type = typeFromDeclaration(declaration, declaringType, declaringType.redirect());
 			} else {
 				type = var.getType();
 			}
@@ -413,10 +502,12 @@ public class SimpleTypeLookup implements ITypeLookup {
 	}
 
 	/**
-	 * @param declaration
+	 * @param declaration the declaration to look up
+	 * @param resolvedGenerics any resolved type parameters available
+	 * @param unresolvedGenerics the unresolved variants of the generic parameters
 	 * @return
 	 */
-	private ClassNode typeFromDeclaration(ASTNode declaration) {
+	private ClassNode typeFromDeclaration(ASTNode declaration, ClassNode resolvedType, ClassNode unresolvedType) {
 		ClassNode type;
 		if (declaration instanceof FieldNode) {
 			type = ((FieldNode) declaration).getType();
@@ -429,7 +520,171 @@ public class SimpleTypeLookup implements ITypeLookup {
 		} else {
 			type = VariableScope.OBJECT_CLASS_NODE;
 		}
+
+		ClassNode resolved;
+		// only try to resolve if generics are involved
+		// if (false) {
+		if (quickGenericsTest(resolvedType, unresolvedType)) {
+			GenericsType[] resolvedGenerics = resolvedType.getGenericsTypes();
+			GenericsType[] unresolvedGenerics = unresolvedType.getGenericsTypes();
+			resolved = resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, VariableScope.clone(type));
+		} else {
+			resolved = null;
+		}
+		return resolved != null ? resolved : type;
+	}
+
+	/**
+	 * @param resolvedGenerics
+	 * @param unresolvedGenerics
+	 * @param type
+	 * @return the resolved class node, or null if there was nothing to resolve
+	 */
+	private ClassNode resolveTypeParameterization(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics, ClassNode type) {
+
+		if (isValidGenerics(resolvedGenerics, unresolvedGenerics, type)) {
+			GenericsType[] typesToParameterize = type.getGenericsTypes();
+
+			// try to match
+			outer: for (int i = 0; i < typesToParameterize.length; i++) {
+				GenericsType typeToParameterize = typesToParameterize[i];
+
+				// recur down the type parameter
+				resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, typeToParameterize.getType());
+
+				String toParameterizeName = typeToParameterize.getName();
+				for (int j = 0; j < unresolvedGenerics.length; j++) {
+					if (toParameterizeName.equals(unresolvedGenerics[j].getName())) {
+						// we have a match, two possibilities, this type is the resolved type parameter of a generic type (eg-
+						// Iterator<E> --> Iterator<String>)
+						// or it is the resolution of a type parameter itself (eg- E --> String)
+						// if this parameter exists in the redirect, then it is the former, if not, then the latter.
+						if (typeParameterExistsInRedirected(type, toParameterizeName)) {
+							// we have: Iterator<E> --> Iterator<String>
+							type.getGenericsTypes()[i].setType(resolvedGenerics[j].getType());
+							typeToParameterize.setName(typeToParameterize.getType().getName());
+							typeToParameterize.setUpperBounds(null);
+							typeToParameterize.setLowerBound(null);
+						} else {
+							// E --> String
+							// no need to recur since this is the resolution of a type parameter
+							type = resolvedGenerics[j].getType();
+
+							// I *think* this means we are done.
+							// I *think* this can only be reached when typesToParameterize.length == 1
+							break outer;
+						}
+					}
+				}
+			}
+		}
 		return type;
+	}
+
+	/**
+	 * @param type
+	 * @param toParameterizeName
+	 * @return
+	 */
+	private boolean typeParameterExistsInRedirected(ClassNode type, String toParameterizeName) {
+		ClassNode redirect = type.redirect();
+		GenericsType[] genericsTypes = redirect.getGenericsTypes();
+		if (genericsTypes != null) {
+			for (GenericsType gt : genericsTypes) {
+				if (gt.getName().equals(toParameterizeName)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * A quick check to see if the resolved/unresolved type has generics. This method has the side effect of adding generics to a
+	 * well known unresolved type that groovy has dropped generic information for.
+	 * 
+	 * @param resolvedType
+	 * @param unresolvedType
+	 * @return
+	 */
+	private boolean quickGenericsTest(ClassNode resolvedType, ClassNode unresolvedType) {
+		if (resolvedType.getGenericsTypes() != null) {
+			if (unresolvedType.getGenericsTypes() != null) {
+				return true;
+			} else {
+				// it looks like groovy is not throwing generics info away.
+				// we can probably delete this part.
+				// return augmentGenerics(unresolvedType);
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * FIXADE Likely able to delete. It looks like all generics information is being appropriately kept.
+	 * 
+	 * Adds generics information to well-known types that are missing it.
+	 * 
+	 * @param type type to augment for
+	 * @return true iff type has been augmented
+	 */
+	private boolean augmentGenerics(ClassNode type) {
+		String[] cachedTypeParameterNames = CLASSES_TO_GENERICS.get(type.getName());
+		if (cachedTypeParameterNames == null) {
+			// also look at direct interfaces, but don't travel up the hierarchy...takes too long
+			ClassNode[] interfaces = type.getInterfaces();
+			if (interfaces != null) {
+				for (ClassNode iface : interfaces) {
+					cachedTypeParameterNames = CLASSES_TO_GENERICS.get(iface.getName());
+					if (cachedTypeParameterNames != null) {
+						break;
+					}
+				}
+			}
+		}
+		if (cachedTypeParameterNames != null) {
+			// fill
+			GenericsType[] newGenerics = new GenericsType[cachedTypeParameterNames.length];
+			for (int i = 0; i < cachedTypeParameterNames.length; i++) {
+				newGenerics[i] = new GenericsType();
+				newGenerics[i].setName(cachedTypeParameterNames[i]);
+				newGenerics[i].setType(VariableScope.OBJECT_CLASS_NODE);
+			}
+			type.setGenericsTypes(newGenerics);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * This class checks to see if there are type parameters on the type, and if the generics to resolve against are valid.
+	 * 
+	 * Note that this method has a side effect. Since Groovy is not very good at keeping generics on types nested inside generics,
+	 * they need to be added in order for inferencing to work. The side effect is that the type parameter may have its genericsTypes
+	 * field populated
+	 * 
+	 * @param resolvedGenerics
+	 * @param unresolvedGenerics
+	 * @param type
+	 * @return
+	 */
+	private boolean isValidGenerics(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics, ClassNode type) {
+		// first check to see if the type doesn't have generics, but should
+		GenericsType[] thisTypeGenerics = type.getGenericsTypes();
+		if (thisTypeGenerics == null || thisTypeGenerics.length == 0) {
+			// no longer augmenting
+			// boolean augmented = augmentGenerics(type);
+			// if (!augmented) {
+			// // no use going further
+			// return false;
+			// }
+			return false;
+		}
+
+		// now check for validity
+		return resolvedGenerics != null && unresolvedGenerics != null && unresolvedGenerics.length == resolvedGenerics.length
+				&& resolvedGenerics.length > 0;
 	}
 
 	/**
@@ -440,6 +695,16 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @return
 	 */
 	private ASTNode findDeclaration(String name, ClassNode declaringType) {
+		if (declaringType.isArray()) {
+			// only length exists on array type
+			if (name.equals("length")) {
+				return createLengthField(declaringType);
+			} else {
+				// otherwise search on object
+				return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE);
+			}
+		}
+
 		Set<ClassNode> allClasses = new LinkedHashSet<ClassNode>();
 		createTypeHierarchy(declaringType, allClasses);
 
@@ -447,13 +712,17 @@ public class SimpleTypeLookup implements ITypeLookup {
 		if (maybe != null) {
 			return maybe;
 		}
-		maybe = declaringType.getField(name);
-		if (maybe != null) {
-			return maybe;
-		}
+
+		// look at methods first because it is more likely people would
+		// want to call the method than a field of the same name.
 		List<MethodNode> maybeMethods = declaringType.getMethods(name);
 		if (maybeMethods != null && maybeMethods.size() > 0) {
 			return maybeMethods.get(0);
+		}
+
+		maybe = declaringType.getField(name);
+		if (maybe != null) {
+			return maybe;
 		}
 		if (declaringType.isInterface()) {
 			Set<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
@@ -479,6 +748,17 @@ public class SimpleTypeLookup implements ITypeLookup {
 		}
 
 		return null;
+	}
+
+	/**
+	 * @param declaringType
+	 * @return
+	 */
+	private ASTNode createLengthField(ClassNode declaringType) {
+		FieldNode lengthField = new FieldNode("length", Opcodes.ACC_PUBLIC, VariableScope.INTEGER_CLASS_NODE, declaringType, null);
+		lengthField.setType(VariableScope.INTEGER_CLASS_NODE);
+		lengthField.setDeclaringClass(declaringType);
+		return lengthField;
 	}
 
 	/**

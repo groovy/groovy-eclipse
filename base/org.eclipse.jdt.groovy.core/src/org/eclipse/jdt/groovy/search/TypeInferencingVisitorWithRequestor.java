@@ -138,6 +138,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private Stack<ClassNode> propertyExpressionType;
 
 	/**
+	 * keep track of the most recent LHS of a binary expression seen.
+	 * 
+	 * Doesn't need to be a stack since this will be consumed immediately after placed.
+	 */
+	private ClassNode lhsType;
+
+	/**
 	 * Use factory to instantiate
 	 */
 	TypeInferencingVisitorWithRequestor(GroovyCompilationUnit unit, ITypeLookup[] lookups) {
@@ -689,6 +696,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					objectExpressionType.push(result.type);
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
+				} else if (isLHSExpression(node)) {
+					lhsType = result.type;
 				}
 				return true;
 			case CANCEL_BRANCH:
@@ -820,14 +829,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		// the declaration itself is the property node
 		ClassNode propType = propertyExpressionType.pop();
-		propertyExpression.pop();
 
 		if (shouldContinue) {
 			node.getLeftExpression().visit(this);
+			propertyExpression.pop();
 
+			// returns true if this binary expression is the property part of another property expression
 			if (isObjectExpression(node)) {
-				// returns true if this declaration expression is the property field of another property expression
-				objectExpressionType.push(propType);
+				objectExpressionType.push(findTypeOfBinaryExpression(node.getOperation().getText(), lhsType, propType));
+				lhsType = null;
 			}
 		} else {
 			propertyExpression.pop();
@@ -1040,41 +1050,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// not popped earlier because the method field of the expression was not examined
 			objectExpressionType.pop();
 		}
-	}
-
-	/**
-	 * @param node
-	 */
-	private void addCategoryToBeDeclared(ClassNode catNode) {
-		scopes.peek().setCategoryBeingDeclared(catNode);
-	}
-
-	/**
-	 * @param node
-	 * @return
-	 */
-	private ClassNode isCategoryDeclaration(MethodCallExpression node) {
-		String methodAsString = node.getMethodAsString();
-		if (methodAsString != null && methodAsString.equals("use")) {
-			Expression exprs = node.getArguments();
-			if (exprs instanceof ArgumentListExpression) {
-				ArgumentListExpression args = (ArgumentListExpression) exprs;
-				if (args.getExpressions().size() >= 2 && args.getExpressions().get(1) instanceof ClosureExpression) {
-					// really, should be doing inference on the first expression and seeing if it
-					// is a class node, but looking up in scope is good enough for now
-					Expression expr = ((List<Expression>) args.getExpressions()).get(0);
-					if (expr instanceof ClassExpression) {
-						return expr.getType();
-					} else if (expr instanceof VariableExpression && expr.getText() != null) {
-						VariableInfo info = scopes.peek().lookupName(expr.getText());
-						if (info != null) {
-							return info.type;
-						}
-					}
-				}
-			}
-		}
-		return null;
 	}
 
 	@Override
@@ -1433,6 +1408,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
+	// return true iff node is the LHS of a binary expression
+	private boolean isLHSExpression(Expression node) {
+		if (!propertyExpression.isEmpty()) {
+			Expression maybeProperty = propertyExpression.peek();
+			if (maybeProperty instanceof BinaryExpression) {
+				BinaryExpression prop = (BinaryExpression) maybeProperty;
+				return prop.getLeftExpression() == node;
+			}
+		}
+		return false;
+	}
+
 	private boolean isProperty(Expression node) {
 		if (!propertyExpression.isEmpty()) {
 			Expression maybeProperty = propertyExpression.peek();
@@ -1456,6 +1443,116 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * @param operation the operation of this binary expression
+	 * @param lhs the type of the lhs of the binary expression
+	 * @param rhs the type of the rhs of the binary expression
+	 * @return the determined type of the binary expression
+	 */
+	private ClassNode findTypeOfBinaryExpression(String operation, ClassNode lhs, ClassNode rhs) {
+		char op = operation.charAt(0);
+		switch (op) {
+
+			case '[':
+				// deref...get component type of lhs
+				return VariableScope.deref(lhs);
+			case '-':
+			case '/':
+			case '*':
+			case '%':
+				// arithmetic operation
+				// lhs, if number type, else rhs if number type, else number
+				return isNumeric(lhs) ? lhs : (isNumeric(rhs) ? rhs : VariableScope.NUMBER_CLASS_NODE);
+
+			case '+':
+				// lhs
+				return lhs;
+
+			case '~':
+				// regex pattern
+				return VariableScope.STRING_CLASS_NODE;
+
+			case '!':
+				// includes != and !== and !!
+			case '<':
+			case '>':
+			case '&':
+			case '^':
+				if (operation.length() > 1) {
+					if (operation.equals("<<")) {
+						// list of rhs type
+						ClassNode listType = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
+						listType.getGenericsTypes()[0].setType(rhs);
+						listType.getGenericsTypes()[0].setName(rhs.getName());
+					}
+					// all booleans
+					return VariableScope.BOOLEAN_CLASS_NODE;
+				}
+				// bitwse operations, return lhs
+				return lhs;
+
+			case '=':
+				if (operation.length() > 1) {
+					if (operation.charAt(1) == '=') {
+						return VariableScope.BOOLEAN_CLASS_NODE;
+					} else if (operation.charAt(1) == '~') {
+						// consider regex to be string
+						return VariableScope.STRING_CLASS_NODE;
+					}
+				}
+				// drop through
+			default:
+				// rhs by default
+				return rhs;
+		}
+	}
+
+	private boolean isNumeric(ClassNode c) {
+		if (c == null || c.isInterface() || c == VariableScope.OBJECT_CLASS_NODE) {
+			return false;
+		}
+		if (c.equals(VariableScope.NUMBER_CLASS_NODE)) {
+			return true;
+		} else {
+			return isNumeric(c.getSuperClass());
+		}
+	}
+
+	/**
+	 * @param node
+	 */
+	private void addCategoryToBeDeclared(ClassNode catNode) {
+		scopes.peek().setCategoryBeingDeclared(catNode);
+	}
+
+	/**
+	 * @param node
+	 * @return
+	 */
+	private ClassNode isCategoryDeclaration(MethodCallExpression node) {
+		String methodAsString = node.getMethodAsString();
+		if (methodAsString != null && methodAsString.equals("use")) {
+			Expression exprs = node.getArguments();
+			if (exprs instanceof ArgumentListExpression) {
+				ArgumentListExpression args = (ArgumentListExpression) exprs;
+				if (args.getExpressions().size() >= 2 && args.getExpressions().get(1) instanceof ClosureExpression) {
+					// really, should be doing inference on the first expression and seeing if it
+					// is a class node, but looking up in scope is good enough for now
+					Expression expr = ((List<Expression>) args.getExpressions()).get(0);
+					if (expr instanceof ClassExpression) {
+						return expr.getType();
+					} else if (expr instanceof VariableExpression && expr.getText() != null) {
+						VariableInfo info = scopes.peek().lookupName(expr.getText());
+						if (info != null) {
+							return info.type;
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 }
