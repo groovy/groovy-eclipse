@@ -80,15 +80,15 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     public void testInferList1() throws Exception {
-        assertType("[]", "java.util.List");
+        assertType("[]", "java.util.List<java.lang.Object<T>>");
     }
     
     public void testInferList2() throws Exception {
-        assertType("[] << \"\"", "java.util.List");
+        assertType("[] << \"\"", "java.util.List<java.lang.Object<T>>");
     }
     
     public void testInferMap1() throws Exception {
-        assertType("[:]", "java.util.Map");
+        assertType("[:]", "java.util.Map<java.lang.Object<K>,java.lang.Object<V>>");
     }
     
     public void testInferBoolean1() throws Exception {
@@ -147,13 +147,13 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     public void testClassReference2() throws Exception {
         String contents = "String.class";
-        assertType(contents, "java.lang.Class");
+        assertType(contents, "java.lang.Class<java.lang.Object<T>>");  // should be String, not object
     }
     public void testClassReference3() throws Exception {
         String contents = "String.getClass()";
         int start = contents.indexOf("getClass");
         int end = start + "getClass".length();
-        assertType(contents, start, end, "java.lang.Class");
+        assertType(contents, start, end, "java.lang.Class<java.lang.Object<T>>");  // should be String, not object
     }
     public void testClassReference4() throws Exception {
         String contents = "String.class.getCanonicalName()";

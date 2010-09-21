@@ -188,4 +188,12 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.Iterator<java.lang.String>");
     }
+    
+    /* Not passing yet
+     * def x = [1: [1]]
+     * x.entrySet().iterator().next().getKey().abs()
+     * x.entrySet().iterator().next().getValue().iterator().next()
+     */
+    
+    // also not passing are generic arrays
 }
