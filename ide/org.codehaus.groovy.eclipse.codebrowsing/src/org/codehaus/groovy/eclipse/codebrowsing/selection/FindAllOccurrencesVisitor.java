@@ -89,8 +89,8 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
 
             // only continue for binary fragments since there may be multiple
             // matches inside of them
-            // FIXADE problem with expression a + a when it matches against a +
-            // a + a
+            // FIXADE problem with expression a + a when it matches against
+            // a + a + a
             // should skip some fragments here.
             return fragment.kind() == ASTFragmentKind.BINARY;
         }
@@ -238,8 +238,8 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         fragment.accept(fragmentMatcher);
         // don't visit children directly because that may result in
         // unanticipated double matches
-        // ignore the first fragment since that was visited above
-        associatedExpressionMatcher.ignoreNext = true;
+        // Don't ignore the first fragment
+        associatedExpressionMatcher.ignoreNext = false;
         fragment.accept(associatedExpressionMatcher);
     }
 
