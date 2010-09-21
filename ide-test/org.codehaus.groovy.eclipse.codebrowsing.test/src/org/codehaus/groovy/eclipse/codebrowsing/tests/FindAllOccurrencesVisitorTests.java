@@ -177,6 +177,13 @@ public class FindAllOccurrencesVisitorTests extends AbstractCheckerTests {
         String moduleText = "FOO?.BAR.baz(FOO.BAR)";
         String exprText = "FOO?.BAR";
         int first = moduleText.indexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences22() throws Exception {
+        String moduleText = "FOO?.BAR.baz(FOO?.BAR)";
+        String exprText = "FOO?.BAR";
+        int first = moduleText.indexOf(exprText);
         int second = moduleText.lastIndexOf(exprText);
         assertOccurrences(exprText, moduleText, first, second);
     }
