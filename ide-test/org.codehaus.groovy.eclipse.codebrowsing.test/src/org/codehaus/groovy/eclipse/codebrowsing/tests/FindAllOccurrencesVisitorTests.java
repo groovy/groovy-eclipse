@@ -152,6 +152,35 @@ public class FindAllOccurrencesVisitorTests extends AbstractCheckerTests {
 		assertOccurrences(exprText, moduleText, first, second);
 	}
 
+    public void testFindAllOccurrences18() throws Exception {
+        String moduleText = "FOO.BAR";
+        String exprText = "FOO";
+        int first = moduleText.lastIndexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences19() throws Exception {
+        String moduleText = "FOO.BAR()";
+        String exprText = "FOO";
+        int first = moduleText.lastIndexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences20() throws Exception {
+        String moduleText = "FOO.BAR()";
+        String exprText = "FOO";
+        int first = moduleText.lastIndexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences21() throws Exception {
+        String moduleText = "FOO?.BAR.baz(FOO.BAR)";
+        String exprText = "FOO?.BAR";
+        int first = moduleText.indexOf(exprText);
+        int second = moduleText.lastIndexOf(exprText);
+        assertOccurrences(exprText, moduleText, first, second);
+    }
+
     private void assertOccurrences(String exprToFindText, String moduleText, int... startLocations) throws CoreException {
         IASTFragment exprToFind = getLastFragment(createModuleFromText(exprToFindText));
         ModuleNode module = createModuleFromText(moduleText);
