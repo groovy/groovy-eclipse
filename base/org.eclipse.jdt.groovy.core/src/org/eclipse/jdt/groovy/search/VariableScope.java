@@ -277,6 +277,97 @@ public class VariableScope {
 	}
 
 	/**
+	 * @param resolvedGenerics
+	 * @param unresolvedGenerics
+	 * @param type
+	 * @return the resolved class node, or null if there was nothing to resolve
+	 */
+	public static ClassNode resolveTypeParameterization(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics,
+			ClassNode type) {
+
+		if (isValidGenerics(resolvedGenerics, unresolvedGenerics, type)) {
+			GenericsType[] typesToParameterize = type.getGenericsTypes();
+
+			// try to match
+			outer: for (int i = 0; i < typesToParameterize.length; i++) {
+				GenericsType typeToParameterize = typesToParameterize[i];
+
+				// recur down the type parameter
+				resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, typeToParameterize.getType());
+
+				String toParameterizeName = typeToParameterize.getName();
+				for (int j = 0; j < unresolvedGenerics.length; j++) {
+					if (toParameterizeName.equals(unresolvedGenerics[j].getName())) {
+						// we have a match, three possibilities, this type is the resolved type parameter of a generic type (eg-
+						// Iterator<E> --> Iterator<String>)
+						// or it is the resolution of a type parameter itself (eg- E --> String)
+						// or it is a substitution of one type parameter for another (eg- List<T> --> List<E>, where T comes from
+						// the declaring type)
+						// if this parameter exists in the redirect, then it is the former, if not, then check the redirect for type
+						// parameters
+						if (typeParameterExistsInRedirected(type, toParameterizeName)) {
+							// we have: Iterator<E> --> Iterator<String>
+							type.getGenericsTypes()[i].setType(resolvedGenerics[j].getType());
+							typeToParameterize.setName(typeToParameterize.getType().getName());
+							typeToParameterize.setUpperBounds(null);
+							typeToParameterize.setLowerBound(null);
+						} else {
+							// E --> String
+							// no need to recur since this is the resolution of a type parameter
+							type = resolvedGenerics[j].getType();
+
+							// I *think* this means we are done.
+							// I *think* this can only be reached when typesToParameterize.length == 1
+							break outer;
+						}
+					}
+				}
+			}
+		}
+		return type;
+	}
+
+	/**
+	 * @param type
+	 * @param toParameterizeName
+	 * @return
+	 */
+	private static boolean typeParameterExistsInRedirected(ClassNode type, String toParameterizeName) {
+		ClassNode redirect = type.redirect();
+		GenericsType[] genericsTypes = redirect.getGenericsTypes();
+		if (genericsTypes != null) {
+			// I don't *think* we need to check here. if any type parameter exists in the redirect, then we are parameterizing
+			return true;
+			// for (GenericsType gt : genericsTypes) {
+			// if (gt.getName().equals(toParameterizeName)) {
+			// return true;
+			// }
+			// }
+		}
+		return false;
+	}
+
+	/**
+	 * This class checks to see if there are type parameters on the type, and if the generics to resolve against are valid.
+	 * 
+	 * @param resolvedGenerics bound type parameters
+	 * @param unresolvedGenerics unbound type parameters
+	 * @param type type to resolve
+	 * @return
+	 */
+	private static boolean isValidGenerics(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics, ClassNode type) {
+		// first a quick check
+		GenericsType[] thisTypeGenerics = type.getGenericsTypes();
+		if (thisTypeGenerics == null || thisTypeGenerics.length == 0) {
+			return false;
+		}
+
+		// now a more detailed check
+		return resolvedGenerics != null && unresolvedGenerics != null && unresolvedGenerics.length == resolvedGenerics.length
+				&& resolvedGenerics.length > 0;
+	}
+
+	/**
 	 * Create a copy of this class, taking into account generics and redirects
 	 * 
 	 * @param type type to copy

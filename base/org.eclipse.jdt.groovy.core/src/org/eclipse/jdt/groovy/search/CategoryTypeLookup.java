@@ -71,6 +71,8 @@ public class CategoryTypeLookup implements ITypeLookup {
 	}
 
 	/**
+	 * DGM and DGSM classes are loosely inferred so that other lookups can provide better solutions
+	 * 
 	 * @param declaringClass
 	 * @return
 	 */

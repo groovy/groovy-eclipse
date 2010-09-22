@@ -20,10 +20,8 @@ import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXAC
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -76,29 +74,6 @@ import org.objectweb.asm.Opcodes;
  */
 @SuppressWarnings("nls")
 public class SimpleTypeLookup implements ITypeLookup {
-
-	// FIXADE this can be deleted if augmentGenerics is deleted
-	// Groovy is not good about keeping type parameters, especially nested type parameters.
-	// here, we keep track of well-known classes and interfaces that take generic arguments.
-	// if we come across a type of this kind and it doesn't have generic arguments, then
-	// we fill it in.
-	private static final Map<String, String[]> CLASSES_TO_GENERICS = new HashMap<String, String[]>();
-	static {
-		CLASSES_TO_GENERICS.put("java.util.List", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.util.Stack", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.util.Map", new String[] { "K", "V" });
-		CLASSES_TO_GENERICS.put("java.util.Map$Entry", new String[] { "K", "V" });
-		CLASSES_TO_GENERICS.put("java.util.Set", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.util.HashSet", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.util.Collection", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.util.ArrayList", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.util.LinkedList", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.util.Iterator", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.util.Vector", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.lang.Iterable", new String[] { "E" });
-		CLASSES_TO_GENERICS.put("java.lang.Comparable", new String[] { "T" });
-		CLASSES_TO_GENERICS.put("java.lang.Class", new String[] { "T" });
-	}
 
 	private GroovyCompilationUnit unit;
 
@@ -175,8 +150,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			if (var instanceof DynamicVariable) {
 				// search type hierarchy for declaration
 				ASTNode declaration = findDeclaration(var.getName(), scope.getEnclosingTypeDeclaration());
-				ClassNode type = declaringTypeFromDeclaration(declaration);
-				type = type == null ? var.getType() : type;
+				ClassNode type = declaringTypeFromDeclaration(declaration, var.getType());
 				confidence[0] = TypeConfidence.findLessPrecise(confidence[0], INFERRED);
 				return type;
 			} else if (var instanceof FieldNode) {
@@ -403,17 +377,18 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 */
 	private TypeLookupResult findTypeForNameWithKnownObjectExpression(String name, ClassNode type, ClassNode declaringType,
 			VariableScope scope, TypeConfidence confidence) {
-		ClassNode realDeclaringType = declaringType;
+		ClassNode realDeclaringType;
 		VariableInfo varInfo;
 		ASTNode declaration = findDeclaration(name, declaringType);
 		if (declaration != null) {
-			type = typeFromDeclaration(declaration, realDeclaringType, realDeclaringType.redirect());
-			realDeclaringType = declaringTypeFromDeclaration(declaration);
+			type = typeFromDeclaration(declaration, declaringType);
+			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
 		} else if (declaringType.equals(scope.getEnclosingTypeDeclaration()) && (varInfo = scope.lookupName(name)) != null) {
 			type = varInfo.type;
 			realDeclaringType = varInfo.declaringType;
 			declaration = varInfo.declaringType;
 		} else {
+			realDeclaringType = declaringType;
 			confidence = UNKNOWN;
 		}
 		return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
@@ -437,7 +412,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			if (maybeDeclaration != null) {
 				declaration = maybeDeclaration;
 				// declaring type may have changed
-				declaringType = declaringTypeFromDeclaration(declaration);
+				declaringType = declaringTypeFromDeclaration(declaration, info.declaringType);
 			} else {
 				confidence = UNKNOWN;
 			}
@@ -456,7 +431,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			// we have a variable expression, but it is not
 			// declared anywhere in the scope. It is probably a DynamicVariable
 			if (accessedVar instanceof DynamicVariable) {
-				type = typeFromDeclaration(declaration, declaringType, declaringType.redirect());
+				type = typeFromDeclaration(declaration, declaringType);
 			} else {
 				type = var.getType();
 			}
@@ -482,23 +457,24 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @param declaration
 	 * @return
 	 */
-	private ClassNode declaringTypeFromDeclaration(ASTNode declaration) {
-		ClassNode type;
+	private ClassNode declaringTypeFromDeclaration(ASTNode declaration, ClassNode resolvedTypeOfDeclaration) {
+		ClassNode typeOfDeclaration;
 		if (declaration instanceof FieldNode) {
-			type = ((FieldNode) declaration).getDeclaringClass();
+			typeOfDeclaration = ((FieldNode) declaration).getDeclaringClass();
 		} else if (declaration instanceof MethodNode) {
-			type = ((MethodNode) declaration).getDeclaringClass();
+			typeOfDeclaration = ((MethodNode) declaration).getDeclaringClass();
 		} else if (declaration instanceof PropertyNode) {
-			type = ((PropertyNode) declaration).getDeclaringClass();
-
-			// this code is broken under 1.6.x, and will likely return Object anyway, so ignore
-			// } else if (declaration instanceof Expression) {
-			// // probably object
-			// type = ((Expression) declaration).getDeclaringClass();
+			typeOfDeclaration = ((PropertyNode) declaration).getDeclaringClass();
 		} else {
-			type = VariableScope.OBJECT_CLASS_NODE;
+			typeOfDeclaration = VariableScope.OBJECT_CLASS_NODE;
 		}
-		return type;
+		// don't necessarily use the typeOfDeclaration. the resolvedTypeOfDeclaration includes the types of generics
+		// so if the names are the same, then used the resolved version
+		if (typeOfDeclaration.getName().equals(resolvedTypeOfDeclaration.getName())) {
+			return resolvedTypeOfDeclaration;
+		} else {
+			return typeOfDeclaration;
+		}
 	}
 
 	/**
@@ -507,184 +483,32 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @param unresolvedGenerics the unresolved variants of the generic parameters
 	 * @return
 	 */
-	private ClassNode typeFromDeclaration(ASTNode declaration, ClassNode resolvedType, ClassNode unresolvedType) {
-		ClassNode type;
+	private ClassNode typeFromDeclaration(ASTNode declaration, ClassNode resolvedType) {
+		ClassNode typeOfDeclaration;
 		if (declaration instanceof FieldNode) {
-			type = ((FieldNode) declaration).getType();
+			typeOfDeclaration = ((FieldNode) declaration).getType();
 		} else if (declaration instanceof MethodNode) {
-			type = ((MethodNode) declaration).getReturnType();
+			typeOfDeclaration = ((MethodNode) declaration).getReturnType();
 		} else if (declaration instanceof PropertyNode) {
-			type = ((PropertyNode) declaration).getType();
+			typeOfDeclaration = ((PropertyNode) declaration).getType();
 		} else if (declaration instanceof Expression) {
-			type = ((Expression) declaration).getType();
+			typeOfDeclaration = ((Expression) declaration).getType();
 		} else {
-			type = VariableScope.OBJECT_CLASS_NODE;
+			typeOfDeclaration = VariableScope.OBJECT_CLASS_NODE;
 		}
 
-		ClassNode resolved;
-		// only try to resolve if generics are involved
-		// if (false) {
-		if (quickGenericsTest(resolvedType, unresolvedType)) {
-			GenericsType[] resolvedGenerics = resolvedType.getGenericsTypes();
-			GenericsType[] unresolvedGenerics = unresolvedType.getGenericsTypes();
-			resolved = resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, VariableScope.clone(type));
+		// now try to resolve generics
+		ClassNode unresolvedType = resolvedType.redirect();
+		ClassNode resolvedTypeOfDeclaration;
+		GenericsType[] resolvedGenerics = resolvedType.getGenericsTypes();
+		GenericsType[] unresolvedGenerics = unresolvedType.getGenericsTypes();
+		if (resolvedGenerics != null && unresolvedGenerics != null) {
+			resolvedTypeOfDeclaration = VariableScope.resolveTypeParameterization(resolvedGenerics, unresolvedGenerics,
+					VariableScope.clone(typeOfDeclaration));
 		} else {
-			resolved = null;
+			resolvedTypeOfDeclaration = null;
 		}
-		return resolved != null ? resolved : type;
-	}
-
-	/**
-	 * @param resolvedGenerics
-	 * @param unresolvedGenerics
-	 * @param type
-	 * @return the resolved class node, or null if there was nothing to resolve
-	 */
-	private ClassNode resolveTypeParameterization(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics, ClassNode type) {
-
-		if (isValidGenerics(resolvedGenerics, unresolvedGenerics, type)) {
-			GenericsType[] typesToParameterize = type.getGenericsTypes();
-
-			// try to match
-			outer: for (int i = 0; i < typesToParameterize.length; i++) {
-				GenericsType typeToParameterize = typesToParameterize[i];
-
-				// recur down the type parameter
-				resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, typeToParameterize.getType());
-
-				String toParameterizeName = typeToParameterize.getName();
-				for (int j = 0; j < unresolvedGenerics.length; j++) {
-					if (toParameterizeName.equals(unresolvedGenerics[j].getName())) {
-						// we have a match, two possibilities, this type is the resolved type parameter of a generic type (eg-
-						// Iterator<E> --> Iterator<String>)
-						// or it is the resolution of a type parameter itself (eg- E --> String)
-						// if this parameter exists in the redirect, then it is the former, if not, then the latter.
-						if (typeParameterExistsInRedirected(type, toParameterizeName)) {
-							// we have: Iterator<E> --> Iterator<String>
-							type.getGenericsTypes()[i].setType(resolvedGenerics[j].getType());
-							typeToParameterize.setName(typeToParameterize.getType().getName());
-							typeToParameterize.setUpperBounds(null);
-							typeToParameterize.setLowerBound(null);
-						} else {
-							// E --> String
-							// no need to recur since this is the resolution of a type parameter
-							type = resolvedGenerics[j].getType();
-
-							// I *think* this means we are done.
-							// I *think* this can only be reached when typesToParameterize.length == 1
-							break outer;
-						}
-					}
-				}
-			}
-		}
-		return type;
-	}
-
-	/**
-	 * @param type
-	 * @param toParameterizeName
-	 * @return
-	 */
-	private boolean typeParameterExistsInRedirected(ClassNode type, String toParameterizeName) {
-		ClassNode redirect = type.redirect();
-		GenericsType[] genericsTypes = redirect.getGenericsTypes();
-		if (genericsTypes != null) {
-			for (GenericsType gt : genericsTypes) {
-				if (gt.getName().equals(toParameterizeName)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * A quick check to see if the resolved/unresolved type has generics. This method has the side effect of adding generics to a
-	 * well known unresolved type that groovy has dropped generic information for.
-	 * 
-	 * @param resolvedType
-	 * @param unresolvedType
-	 * @return
-	 */
-	private boolean quickGenericsTest(ClassNode resolvedType, ClassNode unresolvedType) {
-		if (resolvedType.getGenericsTypes() != null) {
-			if (unresolvedType.getGenericsTypes() != null) {
-				return true;
-			} else {
-				// it looks like groovy is not throwing generics info away.
-				// we can probably delete this part.
-				// return augmentGenerics(unresolvedType);
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * FIXADE Likely able to delete. It looks like all generics information is being appropriately kept.
-	 * 
-	 * Adds generics information to well-known types that are missing it.
-	 * 
-	 * @param type type to augment for
-	 * @return true iff type has been augmented
-	 */
-	private boolean augmentGenerics(ClassNode type) {
-		String[] cachedTypeParameterNames = CLASSES_TO_GENERICS.get(type.getName());
-		if (cachedTypeParameterNames == null) {
-			// also look at direct interfaces, but don't travel up the hierarchy...takes too long
-			ClassNode[] interfaces = type.getInterfaces();
-			if (interfaces != null) {
-				for (ClassNode iface : interfaces) {
-					cachedTypeParameterNames = CLASSES_TO_GENERICS.get(iface.getName());
-					if (cachedTypeParameterNames != null) {
-						break;
-					}
-				}
-			}
-		}
-		if (cachedTypeParameterNames != null) {
-			// fill
-			GenericsType[] newGenerics = new GenericsType[cachedTypeParameterNames.length];
-			for (int i = 0; i < cachedTypeParameterNames.length; i++) {
-				newGenerics[i] = new GenericsType();
-				newGenerics[i].setName(cachedTypeParameterNames[i]);
-				newGenerics[i].setType(VariableScope.OBJECT_CLASS_NODE);
-			}
-			type.setGenericsTypes(newGenerics);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	/**
-	 * This class checks to see if there are type parameters on the type, and if the generics to resolve against are valid.
-	 * 
-	 * Note that this method has a side effect. Since Groovy is not very good at keeping generics on types nested inside generics,
-	 * they need to be added in order for inferencing to work. The side effect is that the type parameter may have its genericsTypes
-	 * field populated
-	 * 
-	 * @param resolvedGenerics
-	 * @param unresolvedGenerics
-	 * @param type
-	 * @return
-	 */
-	private boolean isValidGenerics(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics, ClassNode type) {
-		// first check to see if the type doesn't have generics, but should
-		GenericsType[] thisTypeGenerics = type.getGenericsTypes();
-		if (thisTypeGenerics == null || thisTypeGenerics.length == 0) {
-			// no longer augmenting
-			// boolean augmented = augmentGenerics(type);
-			// if (!augmented) {
-			// // no use going further
-			// return false;
-			// }
-			return false;
-		}
-
-		// now check for validity
-		return resolvedGenerics != null && unresolvedGenerics != null && unresolvedGenerics.length == resolvedGenerics.length
-				&& resolvedGenerics.length > 0;
+		return resolvedTypeOfDeclaration != null ? resolvedTypeOfDeclaration : typeOfDeclaration;
 	}
 
 	/**
