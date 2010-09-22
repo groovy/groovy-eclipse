@@ -24,11 +24,13 @@ import org.codehaus.groovy.eclipse.codebrowsing.selection.FindAllOccurrencesVisi
 import org.eclipse.core.runtime.CoreException;
 
 /**
- * Tests that the {@link FindAllOccurrencesVisitor} finder
- * is working properly.
+ * Tests that the {@link FindAllOccurrencesVisitor} finder is working properly.
  *
  * Note that there is a limitation in how {@link FindAllOccurrencesVisitor}
  * works. This is described in the comments of the class under test.
+ * 
+ * Not entirely happy with the test coverage here. We really should be testing
+ * more
  *
  * @author andrew
  * @created May 12, 2010
@@ -174,6 +176,13 @@ public class FindAllOccurrencesVisitorTests extends AbstractCheckerTests {
     }
 
     public void testFindAllOccurrences21() throws Exception {
+        String moduleText = "FOO.BAR.baz(FOO?.BAR)";
+        String exprText = "FOO.BAR";
+        int first = moduleText.indexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences21a() throws Exception {
         String moduleText = "FOO?.BAR.baz(FOO.BAR)";
         String exprText = "FOO?.BAR";
         int first = moduleText.indexOf(exprText);

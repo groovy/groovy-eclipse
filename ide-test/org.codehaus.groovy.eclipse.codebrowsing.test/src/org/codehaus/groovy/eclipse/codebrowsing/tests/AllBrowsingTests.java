@@ -26,6 +26,8 @@ public class AllBrowsingTests {
         suite.addTestSuite(CodeSelectMethodsTest.class);
         suite.addTestSuite(CodeSelectFieldsTest.class);
         suite.addTestSuite(CodeSelectTypesTest.class);
+        suite.addTestSuite(CodeSelectCategoriesTest.class);
+        suite.addTestSuite(CodeSelectGenericsTest.class);
         suite.addTestSuite(FindSurroundingNodeTests.class);
         suite.addTestSuite(FindAllOccurrencesVisitorTests.class);
         suite.addTestSuite(ASTFragmentTests.class);
