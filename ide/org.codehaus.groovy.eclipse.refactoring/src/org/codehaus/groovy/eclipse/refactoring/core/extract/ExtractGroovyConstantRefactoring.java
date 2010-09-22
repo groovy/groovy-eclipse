@@ -659,6 +659,8 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         IASTFragment next;
         switch (assignedFragment.kind()) {
             case PROPERTY:
+            case SAFE_PROPERTY:
+            case SPREAD_SAFE_PROPERTY:
             case METHOD_POINTER:
                 next = ((PropertyExpressionFragment) assignedFragment).getNext();
                 break;
