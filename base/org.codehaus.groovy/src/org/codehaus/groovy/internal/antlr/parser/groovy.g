@@ -102,7 +102,7 @@ import org.codehaus.groovy.ast.Comment;
  *              o  add an examples directory with some nasty 1.3 cases
  *              o  made Main.java use buffered IO and a Reader for Unicode support
  *              o  supports UNICODE?
- *                 Using Unicode charVocabulay makes code file big, but only
+ *                 Using Unicode charVocabulary makes code file big, but only
  *                 in the bitsets at the end. I need to make ANTLR generate
  *                 unicode bitsets more efficiently.
  * Version 1.19 (April 25, 2002)
@@ -142,7 +142,7 @@ import org.codehaus.groovy.ast.Comment;
  *        Changes by Matt Quail to support generics (as per JDK1.5/JSR14)
  *        Notes:
  *        o We only allow the "extends" keyword and not the "implements"
- *              keyword, since thats what JSR14 seems to imply.
+ *              keyword, since that's what JSR14 seems to imply.
  *        o Thanks to Monty Zukowski for his help on the antlr-interest
  *              mail list.
  *        o Thanks to Alan Eliasen for testing the grammar over his
@@ -196,7 +196,7 @@ import org.codehaus.groovy.ast.Comment;
  *      back onto the new root (1.22.4) - Jeremy Rayner (Jan 2005)
  *    o for a map of the task see...
  *      http://groovy.javanicus.com/java-g.png
- * 
+ *
  * Version 1.22.4.g.2
  *    o mkempf, rkleeb, Dec 2007
  *    o fixed various rules so that they call the correct Create Method
@@ -309,7 +309,7 @@ tokens {
     }
     
     private AST attachLast(AST t, Object last) {
-    	if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
+        if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) last;
             GroovySourceAST node = (GroovySourceAST)t;
             node.setColumnLast(lastInfo.getColumn());
@@ -319,15 +319,15 @@ tokens {
         }
         return t;
     }
-     
+
     public AST create(int type, String txt, Token first, Token last) {
         return attachLast(create(type, txt, astFactory.create(first)), last);
     }
-    
+
     public AST create(int type, String txt, AST first, Token last) {
         return attachLast(create(type, txt, first), last);
     }
-    
+
     public AST create(int type, String txt, AST first, AST last) {
         return attachLast(create(type, txt, first), last);
     }
@@ -382,7 +382,7 @@ tokens {
         // TODO: Needs more work.
         Token lt = null;
         int lineNum = Token.badToken.getLine(), colNum = Token.badToken.getColumn();
-        try { 
+        try {
             lt = LT(1);
             if(lt != null) {
                 lineNum = lt.getLine();
@@ -486,8 +486,8 @@ tokens {
     public void matchGenericTypeBracketsFailed(String problem, String solution) throws SemanticException {
         Token lt = null;
         int lineNum = Token.badToken.getLine(), colNum = Token.badToken.getColumn();
-        
-        try { 
+
+        try {
             lt = LT(1);
             if(lt != null) {
                 lineNum = lt.getLine();
@@ -500,7 +500,7 @@ tokens {
                 colNum = ((TokenStreamRecognitionException) ee).recog.getColumn();
             }
         }
-        
+
         throw new SemanticException(problem + ";\n   solution: " + solution,
                                     getFilename(), lineNum, colNum);
    }
@@ -615,7 +615,7 @@ importStatement
         //TODO? options {defaultErrorHandler = true;}
         { Token first = LT(1); boolean isStatic = false; }
     :   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? is:identifierStar!
-        {if (isStatic) 
+        {if (isStatic)
             #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
          else
             #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);}
@@ -666,7 +666,7 @@ declaration!
         v2:variableDefinitions[null,#t2]
         {#declaration = #v2;}
     ;
-    
+
 genericMethod!
     :
         // method using a 'def' or a modifier; type is optional
@@ -734,7 +734,7 @@ singleDeclaration
  *  just put a TODO comment in.
  */
 declarationStart!
-    :   (     ("def" nls) 
+    :   (     ("def" nls)
             | modifier nls
             | annotation nls
             | (   upperCaseIdent
@@ -828,11 +828,11 @@ classTypeSpec[boolean addImagNode]  {Token first = LT(1);}
 // A non-built in type name, with possible type parameters
 classOrInterfaceType[boolean addImagNode]  {Token first = LT(1);}
     :   i1:IDENT^ (typeArguments)?
-        
+
         (   options{greedy=true;}: // match as many as possible
             d:DOT!
             i2:IDENT! (ta:typeArguments!)?
-            {#i1 = #(create(DOT,".",first,LT(1)),i1,i2,ta);}            
+            {#i1 = #(create(DOT,".",first,LT(1)),i1,i2,ta);}
         )*
         {
             #classOrInterfaceType = #i1;
@@ -969,7 +969,7 @@ builtInType
 identifier {Token first = LT(1);}
     :   i1:IDENT!
         (   options { greedy = true; } :
-            d:DOT! nls! i2:IDENT! 
+            d:DOT! nls! i2:IDENT!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,i2);}
         )*
         {#identifier = #i1;}
@@ -978,13 +978,13 @@ identifier {Token first = LT(1);}
 identifierStar {Token first = LT(1);}
     :   i1:IDENT!
         (   options { greedy = true; } :
-            d1:DOT! nls! i2:IDENT! 
+            d1:DOT! nls! i2:IDENT!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,i2);}
         )*
-        (   d2:DOT!  nls! s:STAR! 
+        (   d2:DOT!  nls! s:STAR!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,s);}
         |   "as"! nls! alias:IDENT!
-        	{#i1 = #(create(LITERAL_as,"as",first,LT(1)),i1,alias);}
+            {#i1 = #(create(LITERAL_as,"as",first,LT(1)),i1,alias);}
         )?
         {#identifierStar = #i1;}
     ;
@@ -1008,7 +1008,7 @@ modifiersInternal
         |
             {break; /* go out of the ()+ loop*/}
             AT "interface"
-        |    
+        |
             annotation nls!
         )+
     ;
@@ -1133,14 +1133,14 @@ superClassClause!
 
 // Definition of a Java class
 classDefinition![AST modifiers]
-{Token first = cloneToken(LT(1));AST prevCurrentClass = currentClass; 
+{Token first = cloneToken(LT(1));AST prevCurrentClass = currentClass;
 if (modifiers != null) {
      first.setLine(modifiers.getLine());
      first.setColumn(modifiers.getColumn());
 }}
     :   "class" IDENT nls!
        { currentClass = #IDENT; }
-        // it _might_ have type paramaters
+        // it _might_ have type parameters
         (tp:typeParameters nls!)?
         // it _might_ have a superclass...
         sc:superClassClause
@@ -1162,7 +1162,7 @@ interfaceDefinition![AST modifiers]  {Token first = cloneToken(LT(1));
                                           first.setColumn(modifiers.getColumn());
                                       }}
     :   "interface" IDENT nls!
-        // it _might_ have type paramaters
+        // it _might_ have type parameters
         (tp:typeParameters nls!)?
         // it might extend some other interfaces
         ie:interfaceExtends
@@ -1238,7 +1238,7 @@ classBlock  {Token first = LT(1);}
     :   LCURLY!
         ( classField )? ( sep! ( classField )? )*
         RCURLY!
-        {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);  }
+        {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);}
 // general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
         exception
         catch [RecognitionException e] {  
@@ -1279,7 +1279,7 @@ enumBlock  {Token first = LT(1);}
             // can start with foo() as well as classField.
             // (It's a true ambiguity, visible in the specification.
             // To resolve in practice, use "def" before a real method.)
-            (enumConstantsStart)=> enumConstants
+            (enumConstantsStart) => enumConstants
         |   (classField)?
         )
         ( sep! (classField)? )*
@@ -1289,7 +1289,7 @@ enumBlock  {Token first = LT(1);}
 
 /** Guard for enumConstants.  */
 enumConstantsStart
-    :   annotationsOpt IDENT (LCURLY | LPAREN | nls (SEMI | COMMA | modifiersOpt | RCURLY))
+    :   annotationsOpt IDENT (LCURLY | LPAREN | nls (SEMI | COMMA | declarationStart | RCURLY))
     ;
 
 /** Comma-separated list of one or more enum constant definitions.  */
@@ -1435,15 +1435,15 @@ classField!  {Token first = LT(1);}
         (constructorStart)=>
         mc:modifiersOpt! ctor:constructorDefinition[#mc]
         {#classField = #ctor;}
-    | 
+    |
         (genericMethodStart)=>
         dg:genericMethod
         {#classField = #dg;}
     |
-        (multipleAssignmentDeclarationStart)=> 
+        (multipleAssignmentDeclarationStart)=>
         mad:multipleAssignmentDeclaration
         {#classField = #mad;}
-    |    
+    |
         (declarationStart)=>
         dd:declaration
         {#classField = #dd;}
@@ -1491,13 +1491,13 @@ interfaceField!
     ;
 
 constructorBody  {Token first = LT(1);}
-     :   LCURLY! nls!         
+     :   LCURLY! nls!
          (   (explicitConstructorInvocation) =>   // Java compatibility hack
                  eci:explicitConstructorInvocation! (sep! bb1:blockBody[sepToken]!)?
              |   bb2:blockBody[EOF]!
          )
          RCURLY!
-         {if (#eci != null) 
+         {if (#eci != null)
               #constructorBody = #(create(SLIST,"{",first,LT(1)),eci,bb1);
           else
               #constructorBody = #(create(SLIST,"{",first,LT(1)),bb2);}
@@ -1524,12 +1524,12 @@ listOfVariables[AST mods, AST t, Token first]
                                getASTFactory().dupTree(t),first]
         )*
     ;
-    
-multipleAssignmentDeclarationStart 
+
+multipleAssignmentDeclarationStart
     :
         (modifier nls | annotation nls)* "def" nls LPAREN
     ;
-    
+
 typeNamePairs[AST mods, Token first]
     :
         (t:typeSpec[false]!)?
@@ -1539,17 +1539,17 @@ typeNamePairs[AST mods, Token first]
             (tn:typeSpec[false]!)?
             singleVariable[getASTFactory().dupTree(mods),#tn]
         )*
-    ;    
-    
+    ;
+
 multipleAssignmentDeclaration {Token first = cloneToken(LT(1));}
-    :  
+    :
         mods:modifiers!
         (t:typeSpec[false]!)?
         LPAREN^ nls! typeNamePairs[#mods,first] RPAREN!
         ASSIGN^ nls!
         assignmentExpression[0]
         {#multipleAssignmentDeclaration=#(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)), #mods, #(create(TYPE,"TYPE",first,LT(1)),#t), #multipleAssignmentDeclaration);}
-    ;    
+    ;
 
 /** The tail of a declaration.
   * Either v1, v2, ... (with possible initializers) or else m(args){body}.
@@ -1585,7 +1585,7 @@ variableDefinitions[AST mods, AST t] {Token first = cloneToken(LT(1));
         // declared to throw
         ((nls "throws") =>  tc:throwsClause!  )?
 
-        // the method body is an open block 
+        // the method body is an open block
         // but, it may have an optional constructor call (for constructors only)
         // this constructor clause is only used for constructors using 'def'
         // which look like method declarations
@@ -1634,7 +1634,7 @@ constructorDefinition[AST mods]  {Token first = cloneToken(LT(1));
  *  or a local variable in a method
  *  It can also include possible initialization.
  */
-variableDeclarator![AST mods, AST t,Token first]  
+variableDeclarator![AST mods, AST t,Token first]
     :
         id:variableName
         /*OBS*d:declaratorBrackets[t]*/
@@ -1854,12 +1854,12 @@ compoundStatement
 
 /** An open block is not allowed to have closure arguments. */
 openBlock  {Token first = LT(1);}
-    :   LCURLY! nls! 
+    :   LCURLY! nls!
         // AST type of SLIST means "never gonna be a closure"
         bb:blockBody[EOF]!
         RCURLY!
         {#openBlock = #(create(SLIST,"{",first,LT(1)),bb);}
-        
+
     ;
 
 /** A block body is a parade of zero or more statements or expressions. */
@@ -1915,9 +1915,9 @@ statement[int prevToken]
     :  (genericMethodStart)=>
         genericMethod
 
-    |  (multipleAssignmentDeclarationStart)=> 
+    |  (multipleAssignmentDeclarationStart)=>
         multipleAssignmentDeclaration
-        
+
     // declarations are ambiguous with "ID DOT" relative to expression
     // statements. Must backtrack to be sure. Could use a semantic
     // predicate to test symbol table to see what the type was coming
@@ -1984,7 +1984,7 @@ statement[int prevToken]
 
     // switch/case statement
     |   "switch"! LPAREN! sce=switchSce:strictContextExpression[false]! RPAREN! nlsWarn! LCURLY! nls!
-        ( cg:casesGroup! 
+        ( cg:casesGroup!
           //expand the list of nodes for each catch statement
               {casesGroup_AST = #(null,casesGroup_AST,cg);})*
         RCURLY!
@@ -2032,7 +2032,7 @@ forStatement {Token first = LT(1);}
                     #forStatement = #(create(LITERAL_for,"for",first,LT(1)),fic,forCbs);
             }
         }
-        
+
     ;
 
 closureList
@@ -2101,15 +2101,15 @@ branchStatement {Token first = LT(1);}
         "return"!
         ( returnE:expression[0]! )?
         // GRE292
-        {#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
-        
+		{#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
+
 
     // break:  get out of a loop, or switch, or method call
     // continue:  do next iteration of a loop, or leave a closure
     |   "break"!
         ( breakI:IDENT! )?
         {#branchStatement = #(create(LITERAL_break,"break",first,LT(1)),breakI);}
-    
+
     | "continue"!
         ( contI:IDENT! )?
         {#branchStatement = #(create(LITERAL_continue,"continue",first,LT(1)),contI);}
@@ -2127,8 +2127,8 @@ branchStatement {Token first = LT(1);}
     // groovy assertion...
     |   "assert"! assertAle: assignmentLessExpression!
         (   options {greedy=true;} :
-            (   COMMA!  // TODO:  gratuitous change caused failures
-            |   COLON!  // standard Java syntax, but looks funny in Groovy
+            (   COMMA! nls! // TODO:  gratuitous change caused failures
+            |   COLON! nls! // standard Java syntax, but looks funny in Groovy
             )
             assertE:expression[0]!
         )?
@@ -2281,11 +2281,11 @@ forIter  {Token first = LT(1);}
 tryBlock {Token first = LT(1);List catchNodes = new ArrayList();AST newHandler_AST = null;}
     :   "try"! nlsWarn! tryCs:compoundStatement!
             ( options {greedy=true;} : {!(LA(1) == NLS && LA(2) == LPAREN)}? nls! h:handler!
-            
+
               //expand the list of nodes for each catch statement
               {newHandler_AST = #(null,newHandler_AST,h);}   )*
             ( options {greedy=true;} :  nls! fc:finallyClause!)?
-        
+
         {#tryBlock = #(create(LITERAL_try,"try",first,LT(1)),tryCs,newHandler_AST,fc);}
     ;
 
@@ -2344,25 +2344,26 @@ commandArgument
 //                 (OPERATOR nextHigherPrecedenceExpression)*
 // which is a standard recursive definition for a parsing an expression.
 // The operators in java have the following precedences:
-//      lowest  (15)  = **= *= /= %= += -= <<= >>= >>>= &= ^= |=
-//                      (14)  ?:
-//                      (13)  ||
-//                      (12)  &&
-//                      (11)  |
-//                      (10)  ^
-//                      ( 9)  &
-//                      ( 8)  == != <=>
-//                      ( 7)  < <= > >= instanceof as
-//                      ( 6)  << >> .. ...
-//                      ( 5)  +(binary) -(binary)
-//                      ( 4)  * / %
-//                      ( 3)  ++(pre/post) --(pre/post) +(unary) -(unary)
-//                      ( 2)  **(power)
-//                      ( 1)  ~  ! $ (type)
-//                            . ?. *. (dot -- identifier qualification)
-//                            []   () (method call)  {} (closableBlock)  [] (list/map)
-//                            new  () (explicit parenthesis)
-//                            $x (scope escape)
+//      lowest  ( 15)  = **= *= /= %= += -= <<= >>= >>>= &= ^= |=
+//              ( 14)  ?: (conditional expression and elvis)
+//              ( 13)  ||
+//              ( 12)  &&
+//              ( 11)  |
+//              ( 10)  ^
+//              (  9)  &
+//              (8.5)  =~ ==~
+//              (  8)  == != <=> === !==
+//              (  7)  < <= > >= instanceof as in
+//              (  6)  << >> .. ..<
+//              (  5)  +(binary) -(binary)
+//              (  4)  * / %
+//              (  3)  **(power)
+//              (  2)  ++(pre) --(pre) +(unary) -(unary)
+//              (  1)  ~  ! $ (type) ++(post) --(post)
+//                     . ?. *. (dot -- identifier qualification)
+//                     []   () (method call)  {} (closableBlock)  [] (list/map)
+//                     new  () (explicit parenthesis)
+//                     $x (scope escape)
 //
 // the last two are not usually on a precedence chart; I put them in
 // to point out that new has a higher precedence than '.', so you
@@ -2371,7 +2372,7 @@ commandArgument
 //
 // Note that the above precedence levels map to the rules below...
 // Once you have a precedence chart, writing the appropriate rules as below
-//   is usually very straightfoward
+// is usually very straightforward
 
 
 // the mother of all expressions
@@ -2379,11 +2380,11 @@ commandArgument
 // due to possible ambiguities with other kinds of statements.  This nonterminal is used only
 // in contexts where we know we have an expression.  It allows general Java-type expressions.
 expression[int lc_stmt]
-    :   
+    :
         (LPAREN typeSpec[true] RPAREN expression[lc_stmt])=>
             lp:LPAREN^ {#lp.setType(TYPECAST);} typeSpec[true] RPAREN!
             expression[lc_stmt]
-    |        
+    |
        (LPAREN nls IDENT (COMMA nls IDENT)* RPAREN ASSIGN) =>
         m:multipleAssignment[lc_stmt] {#expression=#m;}
     |   assignmentExpression[lc_stmt]
@@ -2469,9 +2470,9 @@ pathElement[AST prefix] {Token operator = LT(1);}
         |   // Member pointer operator: foo.&y == foo.metaClass.getMethodPointer(foo, "y")
             MEMBER_POINTER!
         |   // The all-powerful dot.
-            (nls! DOT!) 
+            (nls! DOT!)
         ) nls!
-        (ta:typeArguments!)?   
+        (ta:typeArguments!)?
         np:namePart!
         { #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)),prefix,ta,np); }
         // RECOVERY: a.{
@@ -2543,10 +2544,10 @@ namePart  {Token first = LT(1);}
             // Definition:  a.{foo} === {with(a) {foo}}
             // May cover some path expression use-cases previously handled by dynamic scoping (closure delegates).
 
-                                                                    // lets allow common keywords as property names
+            // let's allow common keywords as property names
         |   keywordPropertyNames
 
-/* lets allow some common keywords for properties like 'in', 'class', 'def' etc
+/* let's allow some common keywords for properties like 'in', 'class', 'def' etc
  * TODO: Reinstate this logic if we change or remove keywordPropertyNames.
  * See also LITERAL_in logic in the lexer.
         // Recover with a good diagnostic from a common error:
@@ -2663,7 +2664,7 @@ methodCallArgs[AST callee]
         RPAREN!
         { if (callee != null && callee.getFirstChild() != null) {
               //method call like obj.method()
-              #methodCallArgs = #(create(METHOD_CALL, "(",callee.getFirstChild(),LT(1)), callee, al); 
+              #methodCallArgs = #(create(METHOD_CALL, "(",callee.getFirstChild(),LT(1)), callee, al);
           } else {
               //method call like method() or new Expr(), in the latter case "callee" is null
               #methodCallArgs = #(create(METHOD_CALL, "(",callee, LT(1)), callee, al);
@@ -2705,7 +2706,7 @@ indexPropertyArgs[AST indexee]
         RBRACK!
         { if (indexee != null && indexee.getFirstChild() != null) {
               //expression like obj.index[]
-              #indexPropertyArgs = #(create(INDEX_OP, "INDEX_OP",indexee.getFirstChild(),LT(1)), lb, indexee, al); 
+              #indexPropertyArgs = #(create(INDEX_OP, "INDEX_OP",indexee.getFirstChild(),LT(1)), lb, indexee, al);
           } else {
               //expression like obj[]
               #indexPropertyArgs = #(create(INDEX_OP, "INDEX_OP",indexee,LT(1)), lb, indexee, al);
@@ -3057,7 +3058,7 @@ listOrMapConstructorExpression
         args:argList                 { hasLabels |= argListHasLabels;  }  // any argument label implies a map
         RBRACK!
         {   int type = hasLabels ? MAP_CONSTRUCTOR : LIST_CONSTRUCTOR;
-        	#listOrMapConstructorExpression = #(create(type,"[",lcon,LT(1)),args); 
+            #listOrMapConstructorExpression = #(create(type,"[",lcon,LT(1)),args);
         }
     |
         /* Special case:  [:] is an empty map constructor. */
@@ -3167,9 +3168,9 @@ identPrimary
  */
 newExpression {Token first = LT(1); int jumpBack = mark();}
     :   "new"! nls! (ta:typeArguments!)? (t:type!)?
-        (  nls! 
-           mca:methodCallArgs[null]!
-           
+        (   nls!
+            mca:methodCallArgs[null]!
+
             (
                 options { greedy=true; }:
                 cb:classBlock
@@ -3185,7 +3186,7 @@ newExpression {Token first = LT(1); int jumpBack = mark();}
             // to make sure:
             //   a) [ expr ] and [ ] are not mixed
             //   b) [ expr ] and an init are not used together
-        |  ad:newArrayDeclarator! //(arrayInitializer)?
+        |   ad:newArrayDeclarator! //(arrayInitializer)?
             // Groovy does not support Java syntax for initialized new arrays.
             // Use sequence constructors instead.
             {#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#ad);}
@@ -3480,7 +3481,7 @@ options {
     protected int lastSigTokenType = EOF;  // last returned non-whitespace token
 
     public void setTokenObjectClass(String name) {/*ignore*/}
-    
+
     protected Token makeToken(int t) {
         GroovySourceToken tok = new GroovySourceToken(t);
         tok.setColumn(inputState.getTokenStartColumn());
@@ -3489,13 +3490,13 @@ options {
         tok.setLineLast(inputState.getLine());
         return tok;
     }
-    
+
     protected void pushParenLevel() {
         parenLevelStack.add(Integer.valueOf(parenLevel*SCS_LIMIT + stringCtorState));
         parenLevel = 0;
         stringCtorState = 0;
     }
-    
+
     protected void popParenLevel() {
         int npl = parenLevelStack.size();
         if (npl == 0)  return;
@@ -3853,18 +3854,17 @@ options {
 SL_COMMENT
 options {
     paraphrase="a single line comment";
-} 
-    :
-      "//"
+}
+    :   "//"
       { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
-       (
+        (
             options {  greedy = true;  }:
             // '\uffff' means the EOF character.
             // This will fix the issue GROOVY-766 (infinite loop).
             ~('\n'|'\r'|'\uffff')
         )*
-        { 
-         parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+        {
+          parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
           if (!whitespaceIncluded)  $setType(Token.SKIP); 
         }
         //This might be significant, so don't swallow it inside the comment:

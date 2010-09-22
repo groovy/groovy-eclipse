@@ -106,7 +106,7 @@ import org.objectweb.asm.Opcodes;
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Jochen Theodorou
- * @version $Revision: 20163 $
+ * @version $Revision: 20741 $
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
     private static class MapOfLists {
@@ -746,6 +746,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the method matching the given name and parameters or null
      */
     public FieldNode getDeclaredField(String name) {
+    	// GRECLIPSE: Need to do this because AnnotationVisitor.validateEnum calls it
+        if (!redirect().lazyInitDone) redirect().lazyClassInit();
+        // end
         ClassNode r = redirect ();
         if (r.fieldIndex == null)
             r.fieldIndex = new HashMap<String,FieldNode> ();
@@ -1384,6 +1387,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         ClassNode n = new ClassNode(getName(),getModifiers(),getSuperClass(),null,null);
         n.isPrimaryNode = false;
         n.setRedirect(this.redirect);
+        n.componentType = redirect().getComponentType();
         return n;
     }
 

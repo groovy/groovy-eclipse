@@ -48,7 +48,7 @@ import java.util.*;
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href='mailto:the[dot]mindstorm[at]gmail[dot]com'>Alex Popescu</a>
  * @author Alex Tkachman
- * @version $Revision: 20267 $
+ * @version $Revision: 20678 $
  */
 public class AsmClassGenerator extends ClassGenerator {
 
@@ -361,21 +361,49 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private void generateCreateCallSiteArray() {
+        List<String> callSiteInitMethods = new LinkedList<String>(); 
+        int index = 0;
+        int methodIndex = 0; 
+        final int size = callSites.size(); 
+        final int maxArrayInit = 5000; 
+        // create array initialization methods
+        while (index < size) { 
+            methodIndex++; 
+            String methodName = "$createCallSiteArray_" + methodIndex; 
+            callSiteInitMethods.add(methodName); 
+            MethodVisitor mv = cv.visitMethod(ACC_PRIVATE+ACC_SYNTHETIC+ACC_STATIC, methodName, "([Ljava/lang/String;)V", null, null); 
+            mv.visitCode(); 
+            int methodLimit = size; 
+            // check if the next block is over the max allowed
+            if ((methodLimit - index) > maxArrayInit) { 
+                methodLimit = index + maxArrayInit; 
+            } 
+            for (; index < methodLimit; index++) { 
+                mv.visitVarInsn(ALOAD, 0); 
+                mv.visitLdcInsn(index); 
+                mv.visitLdcInsn(callSites.get(index)); 
+                mv.visitInsn(AASTORE); 
+            } 
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(2,1);
+            mv.visitEnd();
+        }
+        // create base createCallSiteArray method
         mv = cv.visitMethod(ACC_PRIVATE+ACC_SYNTHETIC+ACC_STATIC,"$createCallSiteArray", "()Lorg/codehaus/groovy/runtime/callsite/CallSiteArray;", null, null);
         mv.visitCode();
+        mv.visitLdcInsn(size); 
+        mv.visitTypeInsn(ANEWARRAY, "java/lang/String"); 
+        mv.visitVarInsn(ASTORE, 0); 
+        for (String methodName : callSiteInitMethods) { 
+          mv.visitVarInsn(ALOAD, 0); 
+          mv.visitMethodInsn(INVOKESTATIC,internalClassName,methodName,"([Ljava/lang/String;)V"); 
+        } 
+
         mv.visitTypeInsn(NEW, "org/codehaus/groovy/runtime/callsite/CallSiteArray");
         mv.visitInsn(DUP);
         visitClassExpression(new ClassExpression(classNode));
 
-        final int size = callSites.size();
-        mv.visitLdcInsn(size);
-        mv.visitTypeInsn(ANEWARRAY, "java/lang/String");
-        for (int i = 0; i < size; i++) {
-            mv.visitInsn(DUP);
-            mv.visitLdcInsn(i);
-            mv.visitLdcInsn(callSites.get(i));
-            mv.visitInsn(AASTORE);
-        }
+        mv.visitVarInsn(ALOAD, 0); 
 
         mv.visitMethodInsn(INVOKESPECIAL, "org/codehaus/groovy/runtime/callsite/CallSiteArray", "<init>", "(Ljava/lang/Class;[Ljava/lang/String;)V");
         mv.visitInsn(ARETURN);
@@ -2197,7 +2225,8 @@ public class AsmClassGenerator extends ClassGenerator {
         }
     }
 
-    private static String [] sig = new String [255];
+    private static String[] sig = new String[255];
+
     private static String getCreateArraySignature(int numberOfArguments) {
         if (sig[numberOfArguments] == null) {
             StringBuilder sb = new StringBuilder("(");
@@ -2289,9 +2318,16 @@ public class AsmClassGenerator extends ClassGenerator {
     public void visitMethodCallExpression(MethodCallExpression call) {
         onLineNumber(call, "visitMethodCallExpression: \"" + call.getMethod() + "\":");
 
-        if (isClosureCall(call)) {
+        // Closure calls of the form "localVariable(args)" have already
+        // been rewritten to "localVariable.call(args)" by VariableScopeVisitor
+        // and can be treated like regular method calls here.
+        // Qualified closure calls such as "foo.bar(args)" (where foo.bar returns
+        // a closure) or even "this.someField(args)" are also treated like regular
+        // method calls here, and will be handled by the MOP.
+        if (isUnqualifiedClosureFieldCall(call)) {
             // let's invoke the closure method
         	invokeClosure(call.getArguments(), call.getMethodAsString());
+            record(call.getObjectExpression());
         } else {
             boolean isSuperMethodCall = usesSuper(call);
             MethodCallerMultiAdapter adapter = invokeMethod;
@@ -2299,14 +2335,19 @@ public class AsmClassGenerator extends ClassGenerator {
             if (isSuperMethodCall) adapter = invokeMethodOnSuper;
             if (isStaticInvocation(call)) adapter = invokeStaticMethod;
             makeInvokeMethodCall(call, isSuperMethodCall, adapter);
+
+            record(call.getMethod());
         }
-        record(call.getMethod());
     }
 
-    private boolean isClosureCall(MethodCallExpression call) {
+    /**
+     * Tells if the specified MethodCallExpression represents a closure call
+     * of the form "someField(args)".
+     */
+    private boolean isUnqualifiedClosureFieldCall(MethodCallExpression call) {
         // are we a local variable?
         // it should not be an explicitly "this" qualified method call
-        // and the current class should have a possible method
+        // and the current class should not have a possible method
         String methodName = call.getMethodAsString();
         if (methodName==null) return false;
         if (!call.isImplicitThis()) return false;
@@ -4079,9 +4120,14 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private void execMethodAndStoreForSubscriptOperator(String method, Expression expression) {
+    	execMethodAndStoreForSubscriptOperator(method, expression, null);
+    }
+    
+    private void execMethodAndStoreForSubscriptOperator(String method, Expression expression,
+    		Expression getAtResultExp) {
         // execute method
         makeCallSite(
-                expression,
+        		(getAtResultExp == null ? expression : getAtResultExp),
                 method,
                 MethodCallExpression.NO_ARGUMENTS,
                 false, false, false, false);
@@ -4127,20 +4173,54 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     protected void evaluatePostfixMethod(String method, Expression expression) {
+    	// GROOVY-4246: arr[rand()]++ should evaulate rand() only once and reuse its result
+    	boolean getAtOp = false;
+    	BinaryExpression be = null;
+    	Expression getAtResultExp = null;
+    	String varName = "tmp_postfix_" + method;
+    	final int idx = compileStack.defineTemporaryVariable(varName, false);
+    	
+    	if(expression instanceof BinaryExpression) {
+    		be = (BinaryExpression) expression;
+    		if (be.getOperation().getType() == Types.LEFT_SQUARE_BRACKET) {
+    			getAtOp = true;
+    			be.getRightExpression().visit(this); // execute subscript exp
+    			mv.visitVarInsn(ASTORE, idx); // store the exp result in a local var
+    			BytecodeExpression newRightExp = new BytecodeExpression() {
+    				public void visit(MethodVisitor mv) {
+    					mv.visitVarInsn(ALOAD, idx);
+    				}
+    			};
+    			// change the subscript exp to pick up the local var so that the orig exp is not re-executed
+    			be.setRightExpression(newRightExp);
+    		}
+    		
+    	}
         // load
         expression.visit(this);
 
         // save value for later
-        int tempIdx = compileStack.defineTemporaryVariable("postfix_" + method, true);
+        final int tempIdx = compileStack.defineTemporaryVariable("postfix_" + method, true);
+
+        if(getAtOp) {
+       	 // exp to allow reuse of binary exp already evaluated so that following putAt does not
+       	//  execute the getAt() again
+       	getAtResultExp = new BytecodeExpression() {
+       		public void visit(MethodVisitor mv) {
+       			mv.visitVarInsn(ALOAD, tempIdx);
+       		}
+       	};
+       }
 
         // execute Method
-        execMethodAndStoreForSubscriptOperator(method,expression);
+        execMethodAndStoreForSubscriptOperator(method, expression, getAtResultExp);
         // remove the result of the method call
         mv.visitInsn(POP);
         
         //reload saved value
         mv.visitVarInsn(ALOAD, tempIdx);
         compileStack.removeVar(tempIdx);
+        compileStack.removeVar(idx);
     }
 
     protected void evaluateInstanceof(BinaryExpression expression) {

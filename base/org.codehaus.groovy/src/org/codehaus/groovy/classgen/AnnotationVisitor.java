@@ -78,6 +78,11 @@ public class AnnotationVisitor {
             return node;
         }
 
+        // if enum constants have been used, check if they are all valid
+        if (!checkIfValidEnumConstsAreUsed(node)) {
+            return node;
+        }
+        
         Map<String, Expression> attributes = node.getMembers();
         for (Map.Entry<String, Expression> entry : attributes.entrySet()) {
             String attrName = entry.getKey();
@@ -88,6 +93,49 @@ public class AnnotationVisitor {
         }
         VMPluginFactory.getPlugin().configureAnnotation(node);
         return this.annotation;
+    }
+
+    private boolean checkIfValidEnumConstsAreUsed(AnnotationNode node) {
+        boolean ok = true;
+        Map<String, Expression> attributes = node.getMembers();
+        for (Map.Entry<String, Expression> entry : attributes.entrySet()) {
+            ok &= validateEnumConstant(entry.getValue());
+        }
+        return ok;
+    }
+    
+    private boolean validateEnumConstant(Expression exp) {
+        if (exp instanceof PropertyExpression) {
+            PropertyExpression pe = (PropertyExpression) exp;
+            String name = pe.getPropertyAsString();
+            if (pe.getObjectExpression() instanceof ClassExpression && name != null) {
+                ClassExpression ce = (ClassExpression) pe.getObjectExpression();
+                ClassNode type = ce.getType();
+                if (type.isEnum()) {
+                    boolean ok = false; 
+                    try {
+                    	// GRECLIPSE: can't use getTypeClass() - when will they stop using it, ARGH
+//                        if(type.isResolved()) {
+//                            ok = Enum.valueOf(type.getTypeClass(), name) != null;
+//                        } else {
+                    	// end
+                            FieldNode enumField = type.getDeclaredField(name);
+                            ClassNode cn = enumField.getType();
+                            ok = enumField != null && cn.equals(type);
+                          // GRECLIPSE remove this bit too
+//                        }
+                          // end
+                    } catch(Exception ex) {
+                        // ignore
+                    }
+                    if(!ok) {
+                        addError("No enum const " + type.getName() + "." + name, pe);
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private Expression transformInlineConstants(Expression exp) {

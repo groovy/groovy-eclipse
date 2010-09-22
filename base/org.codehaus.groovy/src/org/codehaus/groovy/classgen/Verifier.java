@@ -48,6 +48,7 @@ import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -72,7 +73,7 @@ import org.objectweb.asm.Opcodes;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 19951 $
+ * @version $Revision: 20746 $
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
@@ -242,6 +243,19 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 ClassNode.EMPTY_ARRAY,
                 new BytecodeSequence(new BytecodeInstruction(){
                     public void visit(MethodVisitor mv) {
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;");
+                        mv.visitMethodInsn(INVOKESTATIC, classInternalName, "$get$$class$" + classInternalName.replaceAll("\\/", "\\$"), "()Ljava/lang/Class;");
+
+                        Label l1 = new Label();
+                        mv.visitJumpInsn(IF_ACMPNE, l1);
+
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitMethodInsn(INVOKESTATIC, "org/codehaus/groovy/runtime/ScriptBytecodeAdapter", "initMetaClass", "(Ljava/lang/Object;)Lgroovy/lang/MetaClass;");
+                        mv.visitInsn(ARETURN);
+
+                        mv.visitLabel(l1);
+                        
                         mv.visitFieldInsn(GETSTATIC, classInternalName, staticMetaClassFieldName, "Lorg/codehaus/groovy/reflection/ClassInfo;");
                         mv.visitVarInsn(ASTORE, 1);
                         mv.visitVarInsn(ALOAD, 1);
@@ -266,7 +280,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         );        
     }
 
-    private void addGroovyObjectInterfaceAndMethods(ClassNode node, final String classInternalName) {
+    protected void addGroovyObjectInterfaceAndMethods(ClassNode node, final String classInternalName) {
         if (!node.isDerivedFromGroovyObject()) node.addInterface(ClassHelper.make(GroovyObject.class));
         FieldNode metaClassField = getMetaClassField(node);
 
@@ -445,6 +459,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         CodeVisitorSupport cvs = new CodeVisitorSupport() {
             public void visitReturnStatement(ReturnStatement statement) {
                 throw new RuntimeParserException("'return' is not allowed in object initializer",statement);
+            }
+
+            @Override
+            public void visitClosureExpression(ClosureExpression expression) {
+                // retun is OK in closures even in initializers
             }
         };
         for (Iterator iterator = init.iterator(); iterator.hasNext();) {
@@ -798,6 +817,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     otherStatements.remove(0);
                     statements.add(0, firstStatement);
                 } 
+                Statement stmtThis$0 = getImplicitThis$0StmtIfInnerClass(otherStatements);
+                if(stmtThis$0 != null) {
+                	// since there can be field init statements that depend on method/property dispatching
+                	// that uses this$0, it needs to bubble up just after the constructor call.
+                	statements.add(1, stmtThis$0);
+                }
                 statements.addAll(otherStatements);
             }
             BlockStatement newBlock = new BlockStatement(statements, block.getVariableScope());
@@ -820,6 +845,34 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         		node.addStaticInitializerStatements(staticStatements, true);
         	}
         }
+    }
+    
+    /*
+     *  when InnerClassVisitor adds this.this$0 = $p$n, it adds it as a BlockStatement having that 
+     *  ExpressionStatemnt 
+     */
+    private Statement getImplicitThis$0StmtIfInnerClass(List<Statement> otherStatements) {
+    	if(!(classNode instanceof InnerClassNode)) return null;
+    	for(Statement stmt : otherStatements) {
+    		if(stmt instanceof BlockStatement) {
+    			List<Statement> stmts = ((BlockStatement) stmt).getStatements();
+    			for(Statement bstmt : stmts) {
+    				if(bstmt instanceof ExpressionStatement) {
+    					Expression expr = ((ExpressionStatement)bstmt).getExpression();
+    					if(expr instanceof BinaryExpression) {
+    						Expression lExpr = ((BinaryExpression)expr).getLeftExpression();
+    						if(lExpr instanceof FieldExpression) {
+    							if("this$0".equals(((FieldExpression) lExpr).getFieldName())) {
+    								stmts.remove(bstmt); // remove from here and let the caller reposition it
+    								return bstmt;
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+    	return null;
     }
     
     private ConstructorCallExpression getFirstIfSpecialConstructorCall(Statement code) {

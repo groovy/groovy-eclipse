@@ -72,7 +72,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
 		groovyLevel=17;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.3.jar");
+    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.5.jar");
     	if (groovyJar==null) {
     		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
     		groovyLevel=16;
@@ -103,7 +103,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
         	groovyLevel=17;
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.3.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.5.jar");
         	if (groovyJar==null) {
         		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
         		groovyLevel=16;

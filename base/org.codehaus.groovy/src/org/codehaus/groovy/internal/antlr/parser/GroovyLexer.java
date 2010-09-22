@@ -76,7 +76,7 @@ public class GroovyLexer extends antlr.CharScanner implements GroovyTokenTypes, 
     protected int lastSigTokenType = EOF;  // last returned non-whitespace token
 
     public void setTokenObjectClass(String name) {/*ignore*/}
-    
+
     protected Token makeToken(int t) {
         GroovySourceToken tok = new GroovySourceToken(t);
         tok.setColumn(inputState.getTokenStartColumn());
@@ -85,13 +85,13 @@ public class GroovyLexer extends antlr.CharScanner implements GroovyTokenTypes, 
         tok.setLineLast(inputState.getLine());
         return tok;
     }
-    
+
     protected void pushParenLevel() {
         parenLevelStack.add(Integer.valueOf(parenLevel*SCS_LIMIT + stringCtorState));
         parenLevel = 0;
         stringCtorState = 0;
     }
-    
+
     protected void popParenLevel() {
         int npl = parenLevelStack.size();
         if (npl == 0)  return;

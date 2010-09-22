@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -459,13 +459,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // with '$' to find an inner class. The case that
                 // the package is really a class is handled else where
                 ConstructedClassWithPackage tmp = (ConstructedClassWithPackage) type;
-                String name = ((ConstructedClassWithPackage) type).className;
-                tmp.className = replaceLastPoint(name);
+                String savedName = tmp.className;
+                tmp.className = replaceLastPoint(savedName);
                 if (resolve(tmp, false, true, true)) {
                     type.setRedirect(tmp.redirect());
                     return true;
                 }
-                tmp.className = name;
+                tmp.className = savedName;
             }   else {
             // GRECLIPSE: start: refactor extract method
             // oldcode
@@ -510,7 +510,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // This way only the name will change, the packagePrefix will
                 // not be included in the lookup. The case where the
                 // packagePrefix is really a class is handled else where.
-                // WARNING: This code does not expect a class that has an static
+                // WARNING: This code does not expect a class that has a static
                 //          inner class in DEFAULT_IMPORTS
                 ConstructedClassWithPackage tmp =  new ConstructedClassWithPackage(packagePrefix,name);
                 if (resolve(tmp, false, false, false)) {
@@ -554,7 +554,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private boolean resolveAliasFromModule(ClassNode type) {
         // In case of getting a ConstructedClassWithPackage here we do not do checks for partial
         // matches with imported classes. The ConstructedClassWithPackage is already a constructed
-        // node and any subclass resolving will then take elsewhere place
+        // node and any subclass resolving will then take place elsewhere
         if (type instanceof ConstructedClassWithPackage) return false;
 
         ModuleNode module = currentClass.getModule();
@@ -578,13 +578,26 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if(importNode != null && importNode != currImportNode) {
                 aliasedNode = importNode.getType();
             }
+            if (aliasedNode == null) {
+                importNode = module.getStaticImports().get(pname);
+                if (importNode != null && importNode != currImportNode) {
+                    // static alias only for inner classes and must be at end of chain
+                    ClassNode tmp = ClassHelper.make(importNode.getType().getName() + "$" + importNode.getFieldName());
+                    if (resolve(tmp, false, false, true)) {
+                        if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
+                            type.setRedirect(tmp.redirect());
+                            return true;
+                        }
+                    }
+                }
+            }
 
             if (aliasedNode != null) {
                 if (pname.length() == name.length()) {
                     // full match
 
                     // We can compare here by length, because pname is always
-                    // a sbustring of name, so same length means they are equal.
+                    // a substring of name, so same length means they are equal.
                     type.setRedirect(aliasedNode);
                     return true;
                 } else {
@@ -657,12 +670,26 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // compiler tries to find an inner class.
                 ConstructedClassWithPackage tmp =  new ConstructedClassWithPackage(module.getPackageName(),name);
                 if (resolve(tmp, false, false, false)) {
+                    ambiguousClass(type, tmp, name);
                     type.setRedirect(tmp.redirect());
                     return true;
                 }
             }
 
-            // check module node imports packages
+            // check module static imports (for static inner classes)
+            for (ImportNode importNode : module.getStaticImports().values()) {
+                if (importNode.getFieldName().equals(name)) {
+                    ClassNode tmp = ClassHelper.make(importNode.getType().getName() + "$" + name);
+                    if (resolve(tmp, false, false, true)) {
+                        if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
+                            type.setRedirect(tmp.redirect());
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            // check module node import packages
             for (ImportNode importNode : module.getStarImports()) {
                 String packagePrefix = importNode.getPackageName();
                 // We limit the inner class lookups here by using ConstructedClassWithPackage.
@@ -676,9 +703,24 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     return true;
                 }
             }
+
+            // check for star imports (import static pkg.Outer.*) matching static inner classes
+            for (ImportNode importNode : module.getStaticStarImports().values()) {
+                ClassNode tmp = ClassHelper.make(importNode.getClassName() + "$" + name);
+                if (resolve(tmp, false, false, true)) {
+                    if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
+                        ambiguousClass(type, tmp, name);
+                        type.setRedirect(tmp.redirect());
+                        return true;
+                    }
+                }
+
+            }
         }
         return false;
     }
+    
+    
     
     // GRECLIPSE: new method
         protected ClassNode resolveNewName(String fullname) {
@@ -729,7 +771,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         //TODO: the case of a NoClassDefFoundError needs a bit more research
         // a simple recompilation is not possible it seems. The current class
         // we are searching for is there, so we should mark that somehow.
-        // Basically the missing class needs to be completly compiled before
+        // Basically the missing class needs to be completely compiled before
         // we can again search for the current name.
         /*catch (NoClassDefFoundError ncdfe) {
             cachedClasses.put(name,SCRIPT);
@@ -911,7 +953,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (isTopLevelProperty) ret = correctClassClassChain(pe);
         return ret;
     }
-
+    
     
     private void checkThisAndSuperAsPropertyAccess(PropertyExpression expression) {
         if (expression.isImplicitThis()) return;
@@ -1022,8 +1064,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         if (left instanceof ClassExpression) {
             if (be.getRightExpression() instanceof ListExpression) {
-            ListExpression list = (ListExpression) be.getRightExpression();
-            if (list.getExpressions().isEmpty()) {
+                ListExpression list = (ListExpression) be.getRightExpression();
+                if (list.getExpressions().isEmpty()) {
                     // we have C[] if the list is empty -> should be an array then!
                     final ClassExpression ce = new ClassExpression(left.getType().makeArray());
                     ce.setSourcePosition(be);
@@ -1049,8 +1091,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         ce.setSourcePosition(be);
                         return ce;
                     }
+                }
             }
-        }
 
             if (be.getRightExpression() instanceof MapEntryExpression) {
                 // may be we have C[k1:v1] -> should become (C)([k1:v1])
@@ -1314,7 +1356,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // end
         currentClass = oldNode;
     }
-
+    
     private void checkCyclicInheritence(ClassNode originalNode, ClassNode parentToCompare, ClassNode[] interfacesToCompare) {
         if(!originalNode.isInterface()) {
             if(parentToCompare == null) return;

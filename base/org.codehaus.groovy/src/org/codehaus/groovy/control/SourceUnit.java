@@ -53,7 +53,7 @@ import antlr.NoViableAltForCharException;
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
- * @version $Id: SourceUnit.java 15229 2009-02-03 14:57:32Z mcspanky $
+ * @version $Id: SourceUnit.java 20591 2010-07-31 04:05:23Z paulk $
  */
 
 public class SourceUnit extends ProcessingUnit {
@@ -90,7 +90,6 @@ public class SourceUnit extends ProcessingUnit {
      * The root of the Abstract Syntax Tree for the source
      */
     protected ModuleNode ast;
-
 
     /**
      * Initializes the SourceUnit from existing machinery.
@@ -337,12 +336,10 @@ public class SourceUnit extends ProcessingUnit {
                     int end = (column + 10 > text.length() ? text.length() : column + 10 - 1);
                     sample = "   " + text.substring(start, end) + Utilities.eol() + "   " +
                             marker.substring(start, marker.length());
-                }
-                else {
+                } else {
                     sample = "   " + text + Utilities.eol() + "   " + marker;
                 }
-            }
-            else {
+            } else {
                 sample = text;
             }
         }

@@ -26,7 +26,7 @@ import java.util.List;
  * just walks the code and expression tree
  * 
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 18094 $
+ * @version $Revision: 20584 $
  */
 public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 

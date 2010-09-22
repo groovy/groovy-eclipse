@@ -66,7 +66,7 @@ import org.objectweb.asm.ClassWriter;
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href="mailto:roshandawrani@codehaus.org">Roshan Dawrani</a>
- * @version $Id: CompilationUnit.java 20222 2010-06-04 08:37:51Z paulk $
+ * @version $Id: CompilationUnit.java 20591 2010-07-31 04:05:23Z paulk $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -686,7 +686,6 @@ public class CompilationUnit extends ProcessingUnit {
     private PrimaryClassNodeOperation staticImport = new PrimaryClassNodeOperation() {
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
             staticImportVisitor.visitClass(classNode, source);
-            optimizer.visitClass(classNode, source);
         }
     };
 
@@ -795,6 +794,8 @@ public class CompilationUnit extends ProcessingUnit {
 
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
 
+            optimizer.visitClass(classNode, source); // GROOVY-4272: repositioned it here from staticImport
+            
             if(!classNode.isSynthetic()) {
                 GenericsVisitor genericsVisitor = new GenericsVisitor(source);
                 genericsVisitor.visitClass(classNode);
@@ -1128,14 +1129,8 @@ public class CompilationUnit extends ProcessingUnit {
             try {
                 ClassNode classNode = (ClassNode) classNodes.next();
                 context = classNode.getModule().getContext();
-                // GRECLIPSE: start
-                /*old{
-                if (context == null || context.phase <= phase) {
-                }*/
-                // newcode
                 // GRECLIPSE get to the bottom of this - why are operations running multiple times that should only run once?
                 if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {                
-                // end
                     body.call(context, new GeneratorContext(this.ast), classNode);
                     // GRECLIPSE: start
                     if (phase==Phases.CLASS_GENERATION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {

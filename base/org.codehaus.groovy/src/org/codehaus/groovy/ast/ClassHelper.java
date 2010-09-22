@@ -337,8 +337,8 @@ public class ClassHelper {
     }
 
     public static boolean isCachedType(ClassNode type) {
-        for (int i=0;i<types.length; i++) {
-            if (types[i] == type) return true;
+        for (ClassNode cachedType : types) {
+            if (cachedType == type) return true;
         }
         return false;
     }

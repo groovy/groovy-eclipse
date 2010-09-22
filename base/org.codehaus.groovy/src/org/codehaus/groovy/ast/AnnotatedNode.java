@@ -21,7 +21,7 @@ import java.util.*;
  * Base class for any AST node which is capable of being annotated
  *
  * @author <a href="mailto:jstrachan@protique.com">James Strachan</a>
- * @version $Revision: 19865 $
+ * @version $Revision: 20601 $
  */
 public class AnnotatedNode extends ASTNode {
     private List<AnnotationNode> annotations = Collections.emptyList();
@@ -98,7 +98,10 @@ public class AnnotatedNode extends ASTNode {
         this.declaringClass = declaringClass;
     }
     
-    
+    /**
+     * Currently only ever returns true for default constructors
+     * added by the compiler. See GROOVY-4161.
+     */
     public boolean hasNoRealSourcePosition() {
         return hasNoRealSourcePositionFlag;
     }

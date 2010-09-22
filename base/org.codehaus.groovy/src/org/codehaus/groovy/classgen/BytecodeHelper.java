@@ -36,7 +36,7 @@ import org.objectweb.asm.Opcodes;
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Revision: 19492 $
+ * @version $Revision: 20725 $
  */
 public class BytecodeHelper implements Opcodes {
 
@@ -434,41 +434,40 @@ public class BytecodeHelper implements Opcodes {
             /** todo it would be more efficient to generate class constants */
             Number n = (Number) value;
             String className = BytecodeHelper.getClassInternalName(value.getClass().getName());
+            String methodType;
+            if(n instanceof BigDecimal || n instanceof BigInteger) {
             mv.visitTypeInsn(NEW, className);
             mv.visitInsn(DUP);
-            String methodType;
+                mv.visitLdcInsn(n.toString());
+                mv.visitMethodInsn(INVOKESPECIAL, className, "<init>", "(Ljava/lang/String;)V");
+            } else {
             if (n instanceof Integer) {
                 //pushConstant(n.intValue());
                 mv.visitLdcInsn(n);
-                methodType = "(I)V";
+                    methodType = "(I)Ljava/lang/Integer;";
             } else if (n instanceof Double) {
                 mv.visitLdcInsn(n);
-                methodType = "(D)V";
+                    methodType = "(D)Ljava/lang/Double;";
             } else if (n instanceof Float) {
                 mv.visitLdcInsn(n);
-                methodType = "(F)V";
+                    methodType = "(F)Ljava/lang/Float;";
             } else if (n instanceof Long) {
                 mv.visitLdcInsn(n);
-                methodType = "(J)V";
-            } else if (n instanceof BigDecimal) {
-                mv.visitLdcInsn(n.toString());
-                methodType = "(Ljava/lang/String;)V";
-            } else if (n instanceof BigInteger) {
-                mv.visitLdcInsn(n.toString());
-                methodType = "(Ljava/lang/String;)V";
+                    methodType = "(J)Ljava/lang/Long;";
             } else if (n instanceof Short) {
                 mv.visitLdcInsn(n);
-                methodType = "(S)V";
+                    methodType = "(S)Ljava/lang/Short;";
             } else if (n instanceof Byte) {
                 mv.visitLdcInsn(n);
-                methodType = "(B)V";
+                    methodType = "(B)Ljava/lang/Byte;";
             } else {
                 throw new ClassGeneratorException(
                         "Cannot generate bytecode for constant: " + value
                                 + " of type: " + value.getClass().getName()
                                 + ".  Numeric constant type not supported.");
             }
-            mv.visitMethodInsn(INVOKESPECIAL, className, "<init>", methodType);
+                mv.visitMethodInsn(INVOKESTATIC, className, "valueOf", methodType);
+            }
         } else if (value instanceof Boolean) {
             Boolean bool = (Boolean) value;
             String text = (bool.booleanValue()) ? "TRUE" : "FALSE";
