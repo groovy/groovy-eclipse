@@ -189,11 +189,111 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Iterator<java.lang.String>");
     }
     
-    /* Not passing yet
-     * def x = [1: [1]]
-     * x.entrySet().iterator().next().getKey().abs()
-     * x.entrySet().iterator().next().getValue().iterator().next()
-     */
+    
+    public void testMapOfList3() throws Exception {
+        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().key";
+        String toFind = "key";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    
+    // not working yet since our approach to determining the type of a map only looks at the static types of the
+    // first elements.  It does not try to infer the type of these elements.
+    public void _testMapOfList4() throws Exception {
+        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().value.iterator().next()";
+        String toFind = "next";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    // this will pass for now since we are not doing anything smart to find the type of a map.
+    // the result should be java.lang.Integer
+    public void testMapOfList5() throws Exception {
+        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().value.iterator().next()";
+        String toFind = "next";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Object<E>");
+    }
+
+    public void testForLoop1() throws Exception {
+        String contents = "def x = 1..4\nfor (a in x) { \na }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testForLoop2() throws Exception {
+        String contents = "for (a in 1..4) { \na }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testForLoop3() throws Exception {
+        String contents = "for (a in [1, 2].iterator()) { \na }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testForLoop4() throws Exception {
+        String contents = "for (a in (1..4).iterator()) { \na }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testForLoop5() throws Exception {
+        String contents = "for (a in [1 : 1]) { \na.key }";
+        String toFind = "key";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testForLoop6() throws Exception {
+        String contents = "for (a in [1 : 1]) { \na.value }";
+        String toFind = "value";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testForLoop7() throws Exception {
+        String contents = "InputStream x\nfor (a in x) { \na }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Byte");
+    }
+    
+    public void testForLoop8() throws Exception {
+        String contents = "DataInputStream x\nfor (a in x) { \na }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Byte");
+    }
+    
+    public void testForLoop9() throws Exception {
+        String contents = "Integer[] x\nfor (a in x) { \na }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    
     
     // also not passing are generic arrays
+    
+    // for loops
 }
