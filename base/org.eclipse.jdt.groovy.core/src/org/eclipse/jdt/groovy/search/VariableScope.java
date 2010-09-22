@@ -16,10 +16,15 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.io.DataInputStream;
+import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -51,6 +56,10 @@ public class VariableScope {
 	public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
 	public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
 	public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.make(Number.class);
+	public static final ClassNode ITERATOR_CLASS = ClassHelper.make(Iterator.class);
+	public static final ClassNode ENUMERATION_CLASS = ClassHelper.make(Enumeration.class);
+	public static final ClassNode INPUT_STREAM_CLASS = ClassHelper.make(InputStream.class);
+	public static final ClassNode DATA_INPUT_STREAM_CLASS = ClassHelper.make(DataInputStream.class);
 
 	// don't cache because we have to add properties
 	public static final ClassNode CLASS_CLASS_NODE = ClassHelper.makeWithoutCaching(Class.class);
@@ -159,7 +168,7 @@ public class VariableScope {
 	}
 
 	public boolean isThisOrSuper(Variable var) {
-		return var.getName().equals("this") || var.getName().equals("super");
+		return var.getName().equals("this") || var.getName().equals("super"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void addVariable(String name, ClassNode type, ClassNode declaringType) {
@@ -380,7 +389,14 @@ public class VariableScope {
 		ClassNode newType;
 		newType = type.getPlainNodeReference();
 		newType.setRedirect(type.redirect());
-		newType.setInterfaces(type.getInterfaces());
+		ClassNode[] origIFaces = type.getInterfaces();
+		if (origIFaces != null) {
+			ClassNode[] newIFaces = new ClassNode[origIFaces.length];
+			for (int i = 0; i < newIFaces.length; i++) {
+				newIFaces[i] = origIFaces[i];
+			}
+			newType.setInterfaces(newIFaces);
+		}
 		newType.setSourcePosition(type);
 		GenericsType[] origgts = type.getGenericsTypes();
 		if (origgts != null) {

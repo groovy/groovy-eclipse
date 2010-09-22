@@ -189,7 +189,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 		// if the object type is not null, then we base the
 		// type of this node on the object type
 		if (objectExpressionType != null) {
-			// lookup the type bsed on the object's expression type
+			// lookup the type based on the object's expression type
 			// assume it is a method/property/field in the object expression type's hierarchy
 
 			if (node instanceof ConstantExpression) {
@@ -412,7 +412,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 			if (maybeDeclaration != null) {
 				declaration = maybeDeclaration;
 				// declaring type may have changed
-				declaringType = declaringTypeFromDeclaration(declaration, info.declaringType);
+				declaringType = declaringTypeFromDeclaration(declaration, info != null ? info.declaringType
+						: VariableScope.OBJECT_CLASS_NODE);
 			} else {
 				confidence = UNKNOWN;
 			}
@@ -569,6 +570,16 @@ public class SimpleTypeLookup implements ITypeLookup {
 		FieldNode constantFromSuper = findConstantInClass(name, allClasses);
 		if (constantFromSuper != null) {
 			return constantFromSuper;
+		}
+
+		// lastly, try converting to a getter and see if the getter version of the method exists
+		// hmmmm...should we do the same for set?
+		if (!name.startsWith("get")) {
+			String getter = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+			maybeMethods = declaringType.getMethods(getter);
+			if (maybeMethods != null && maybeMethods.size() > 0) {
+				return maybeMethods.get(0);
+			}
 		}
 
 		return null;

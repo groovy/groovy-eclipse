@@ -126,7 +126,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * The head of the stack is the current property/attribute/methodcall expression being visited. This stack is used so we can
 	 * keep track of the type of the object expressions in these property expressions
 	 */
-	private Stack<Expression> propertyExpression;
+	private Stack<ASTNode> propertyExpression;
 
 	/**
 	 * Keeps track of the type of the object expression corresponding to each frame of the property expression.
@@ -153,7 +153,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		enclosingDeclarationNode = createModuleNode(unit);
 		this.lookups = lookups;
 		scopes = new Stack<VariableScope>();
-		propertyExpression = new Stack<Expression>();
+		propertyExpression = new Stack<ASTNode>();
 		objectExpressionType = new Stack<ClassNode>();
 		propertyExpressionType = new Stack<ClassNode>();
 	}
@@ -399,6 +399,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * 
 	 * @param node
 	 */
+	@SuppressWarnings("cast")
 	private void visitClassInternal(ClassNode node) {
 		visitAnnotations(node);
 		VariableScope scope = scopes.peek();
@@ -931,13 +932,93 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitForLoop(ForStatement node) {
+		propertyExpression.push(node);
+		node.getCollectionExpression().visit(this);
+		propertyExpression.pop();
+
+		// the type of the collection
+		ClassNode collectionType = objectExpressionType.pop();
+
 		scopes.push(new VariableScope(scopes.peek(), node));
 		Parameter param = node.getVariable();
 		if (param != null) {
-			handleParameterList(new Parameter[] { param });
+			// use a new parameter so that we don't make any changes to the underlying ast
+			Parameter newParam;
+			// now update the type of the parameter with the collection type
+			if (param.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+				ClassNode extractedElementType = extractElementType(collectionType);
+				newParam = new Parameter(extractedElementType, param.getName(), param.getInitialExpression());
+				newParam.setSourcePosition(param);
+				scopes.peek().addVariable(newParam.getName(), extractedElementType, null);
+			} else {
+				newParam = param;
+			}
+
+			handleParameterList(new Parameter[] { newParam });
 		}
-		super.visitForLoop(node);
+
+		node.getLoopBlock().visit(this);
+
 		scopes.pop();
+	}
+
+	/**
+	 * Extracts an element type from a collection
+	 * 
+	 * @param collectionType a collection object, or an object that is iterable
+	 * @return
+	 */
+	private ClassNode extractElementType(ClassNode collectionType) {
+
+		// if array, then use the component type
+		if (collectionType.isArray()) {
+			return collectionType.getComponentType();
+		}
+
+		// check to see if this type has an iterator method
+		// if so, then resolve the type parameters
+		MethodNode iterator = collectionType.getMethod("iterator", new Parameter[0]);
+		ClassNode typeToResolve = null;
+		if (iterator != null) {
+			typeToResolve = iterator.getReturnType();
+		}
+
+		// if the type is an iterator or an enumeration, then resolve the type parameter
+		if (collectionType.declaresInterface(VariableScope.ITERATOR_CLASS)
+				|| collectionType.declaresInterface(VariableScope.ENUMERATION_CLASS)
+				|| collectionType.equals(VariableScope.ITERATOR_CLASS) || collectionType.equals(VariableScope.ENUMERATION_CLASS)) {
+			typeToResolve = collectionType;
+		}
+
+		if (collectionType.declaresInterface(VariableScope.MAP_CLASS_NODE) || collectionType.equals(VariableScope.MAP_CLASS_NODE)) {
+			MethodNode entrySetMethod = collectionType.getMethod("entrySet", new Parameter[0]);
+			if (entrySetMethod != null) {
+				typeToResolve = entrySetMethod.getReturnType();
+			}
+		}
+
+		if (typeToResolve != null) {
+			ClassNode unresolvedCollectionType = collectionType.redirect();
+			GenericsType[] unresolvedGenerics = unresolvedCollectionType.getGenericsTypes();
+			GenericsType[] resolvedGenerics = collectionType.getGenericsTypes();
+			ClassNode resolved = VariableScope.resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, typeToResolve);
+
+			// the first type parameter of resolvedReturn should be what we want
+			GenericsType[] resolvedReturnGenerics = resolved.getGenericsTypes();
+			if (resolvedReturnGenerics != null && resolvedReturnGenerics.length > 0) {
+				return resolvedReturnGenerics[0].getType();
+			}
+		}
+
+		// this is hardcoded from DGM
+		if (collectionType.declaresInterface(VariableScope.INPUT_STREAM_CLASS)
+				|| collectionType.declaresInterface(VariableScope.DATA_INPUT_STREAM_CLASS)
+				|| collectionType.equals(VariableScope.INPUT_STREAM_CLASS)
+				|| collectionType.equals(VariableScope.DATA_INPUT_STREAM_CLASS)) {
+			return VariableScope.BYTE_CLASS_NODE;
+		}
+
+		return VariableScope.OBJECT_CLASS_NODE;
 	}
 
 	@Override
@@ -1384,7 +1465,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private boolean isObjectExpression(Expression node) {
 		if (!propertyExpression.isEmpty()) {
-			Expression maybeProperty = propertyExpression.peek();
+			ASTNode maybeProperty = propertyExpression.peek();
 			if (maybeProperty instanceof PropertyExpression) {
 				PropertyExpression prop = (PropertyExpression) maybeProperty;
 				return prop.getObjectExpression() == node;
@@ -1400,6 +1481,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof TernaryExpression) {
 				TernaryExpression prop = (TernaryExpression) maybeProperty;
 				return prop.getTrueExpression() == node;
+			} else if (maybeProperty instanceof ForStatement) {
+				// this check is used to store the type of the collection expression so that it can be assigned to the for loop
+				// variable
+				ForStatement prop = (ForStatement) maybeProperty;
+				return prop.getCollectionExpression() == node;
 			} else {
 				return false;
 			}
@@ -1411,7 +1497,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	// return true iff node is the LHS of a binary expression
 	private boolean isLHSExpression(Expression node) {
 		if (!propertyExpression.isEmpty()) {
-			Expression maybeProperty = propertyExpression.peek();
+			ASTNode maybeProperty = propertyExpression.peek();
 			if (maybeProperty instanceof BinaryExpression) {
 				BinaryExpression prop = (BinaryExpression) maybeProperty;
 				return prop.getLeftExpression() == node;
@@ -1422,7 +1508,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private boolean isProperty(Expression node) {
 		if (!propertyExpression.isEmpty()) {
-			Expression maybeProperty = propertyExpression.peek();
+			ASTNode maybeProperty = propertyExpression.peek();
 			if (maybeProperty instanceof PropertyExpression) {
 				PropertyExpression prop = (PropertyExpression) maybeProperty;
 				return prop.getProperty() == node;
