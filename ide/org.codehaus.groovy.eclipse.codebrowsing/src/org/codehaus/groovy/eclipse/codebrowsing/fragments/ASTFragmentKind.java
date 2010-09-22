@@ -22,11 +22,18 @@ import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 
 public enum ASTFragmentKind {
-    PROPERTY, METHOD_POINTER, METHOD_CALL, BINARY, SIMPLE_EXPRESSION, EMPTY, ENCLOSING;
+    PROPERTY, SAFE_PROPERTY, SPREAD_SAFE_PROPERTY, METHOD_POINTER, METHOD_CALL, BINARY, SIMPLE_EXPRESSION, EMPTY, ENCLOSING;
 
     static ASTFragmentKind toPropertyKind(Expression expr) {
         if (expr instanceof PropertyExpression) {
-            return PROPERTY;
+            PropertyExpression prop = (PropertyExpression) expr;
+            if (prop.isSafe()) {
+                return SAFE_PROPERTY;
+            } else if (prop.isSpreadSafe()) {
+                return SPREAD_SAFE_PROPERTY;
+            } else {
+                return PROPERTY;
+            }
         } else if (expr instanceof MethodPointerExpression) {
             return METHOD_POINTER;
         } else if (expr instanceof MethodCallExpression) {
@@ -50,6 +57,8 @@ public enum ASTFragmentKind {
         ASTFragmentKind kind = fragment.kind();
         switch (kind) {
             case PROPERTY:
+            case SAFE_PROPERTY:
+            case SPREAD_SAFE_PROPERTY:
             case METHOD_POINTER:
             case METHOD_CALL:
             case BINARY:

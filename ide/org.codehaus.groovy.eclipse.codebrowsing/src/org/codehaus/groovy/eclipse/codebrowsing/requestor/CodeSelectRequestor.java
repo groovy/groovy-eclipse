@@ -17,15 +17,19 @@
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.groovy.util.StringUtil;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -33,11 +37,19 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
+import org.eclipse.jdt.internal.core.ResolvedBinaryField;
+import org.eclipse.jdt.internal.core.ResolvedBinaryMethod;
+import org.eclipse.jdt.internal.core.ResolvedBinaryType;
+import org.eclipse.jdt.internal.core.ResolvedSourceField;
+import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
+import org.eclipse.jdt.internal.core.ResolvedSourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -79,59 +91,27 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     // look in the local scope
                     VariableExpression var = (VariableExpression) result.declaration;
                     requestedElement = 
-                        new LocalVariable((JavaElement) enclosingElement, var.getName(), var.getStart(), var.getEnd()-1, var.getStart(), var.getEnd()-1, 
-                                createTypeSignature(result.type != null ? result.type : var.getType()), new Annotation[0]);
+                        createLocalVariable(result, enclosingElement, var);
                 } else if (result.declaration instanceof Parameter) {
                     // look in the local scope
                     Parameter var = (Parameter) result.declaration;
                     try {
                         requestedElement = 
-                            new LocalVariable((JavaElement) unit.getElementAt(var.getStart()-1), var.getName(), var.getStart(), var.getEnd()-1, var.getStart(), var.getEnd()-1, 
-                                    createTypeSignature(var.getType()), new Annotation[0]);
+                            createLocalVariable(result, (JavaElement) unit.getElementAt(var.getStart()-1), var);
                     } catch (JavaModelException e) {
                         Util.log(e, "Problem getting element at " + (var.getStart()-1) + " for file " + unit.getElementName());
                     }
                 } else {
-                    ClassNode declaringType = null;
-                    if (result.declaringType != null) {
-                        declaringType = removeArray(result.declaringType);
-                    } else {
-                        if (result.declaration instanceof FieldNode) {
-                            declaringType = ((FieldNode) result.declaration).getDeclaringClass();
-                        } else if (result.declaration instanceof MethodNode) {
-                            declaringType = ((MethodNode) result.declaration).getDeclaringClass();
-                        } else if (result.declaration instanceof PropertyNode) {
-                            declaringType = ((PropertyNode) result.declaration).getDeclaringClass();
-                        } else if (result.declaration instanceof ClassNode) {
-                            declaringType = removeArray((ClassNode) result.declaration);
-                        }
-                    }
+                    ClassNode declaringType = findDeclaringType(result);
                     if (declaringType != null) {
                         // find it in the java model
                         IType type = project.groovyClassToJavaType(declaringType);
                         if (type != null) {
                             try {
-                                if (result.declaration instanceof ClassNode) {
-                                    requestedElement = type;
-                                } else if (type.getTypeRoot() != null) {
-                                    if (result.declaration.getEnd() > 0) {
-                                        requestedElement = type.getTypeRoot().getElementAt(result.declaration.getStart());
-                                    }
-                                    if (requestedElement == null) {
-                                        // try something else because source location not set right
-                                        String name = null;
-                                        if (result.declaration instanceof MethodNode) {
-                                            name = ((MethodNode) result.declaration).getName();
-                                        } else if (result.declaration instanceof PropertyNode) {
-                                                name = ((PropertyNode) result.declaration).getName();
-                                        } else if (result.declaration instanceof FieldNode) {
-                                            name = ((FieldNode) result.declaration).getName();
-                                        }
-                                        if (name != null) {
-                                            requestedElement = findElement(type, name);
-                                        }
-                                    }
-                                }
+                                // find the requested java element
+                                IJavaElement maybeRequested = findRequestedElement(result, type);
+                                // try to resolve the type of the requested element.  this will add the proper type parameters, etc to the hover
+                                requestedElement = resolveRequestedElement(result, maybeRequested);
                             } catch (JavaModelException e) {
                                 GroovyCore.logException("Problem with code selection for ASTNode: " + node, e);
                             }
@@ -145,21 +125,220 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
 
-    
-    private String createTypeSignature(ClassNode node) {
-        String name = node.getName();
-        if (name.startsWith("[")) {
-            return name;
+    /**
+     * find the declaring type, removing any array
+     * @param result
+     * @return
+     */
+    private ClassNode findDeclaringType(TypeLookupResult result) {
+        ClassNode declaringType = null;
+        if (result.declaringType != null) {
+            declaringType = removeArray(result.declaringType);
         } else {
-            return Signature.createTypeSignature(name, false);
+            if (result.declaration instanceof FieldNode) {
+                declaringType = ((FieldNode) result.declaration).getDeclaringClass();
+            } else if (result.declaration instanceof MethodNode) {
+                declaringType = ((MethodNode) result.declaration).getDeclaringClass();
+            } else if (result.declaration instanceof PropertyNode) {
+                declaringType = ((PropertyNode) result.declaration).getDeclaringClass();
+            } else if (result.declaration instanceof ClassNode) {
+                declaringType = removeArray((ClassNode) result.declaration);
+            }
         }
+        return declaringType;
     }
 
 
     /**
+     * @param result
+     * @param type
+     * @throws JavaModelException
+     */
+    private IJavaElement findRequestedElement(TypeLookupResult result, IType type)
+            throws JavaModelException {
+        IJavaElement maybeRequested = null;
+        if (result.declaration instanceof ClassNode) {
+            maybeRequested = type;
+        } else if (type.getTypeRoot() != null) {
+            if (result.declaration.getEnd() > 0) {
+                maybeRequested = type.getTypeRoot().getElementAt(result.declaration.getStart());
+            }
+            if (maybeRequested == null) {
+                // try something else because source location not set right
+                String name = null;
+                if (result.declaration instanceof MethodNode) {
+                    name = ((MethodNode) result.declaration).getName();
+                } else if (result.declaration instanceof PropertyNode) {
+                        name = ((PropertyNode) result.declaration).getName();
+                } else if (result.declaration instanceof FieldNode) {
+                    name = ((FieldNode) result.declaration).getName();
+                }
+                if (name != null) {
+                    maybeRequested = findElement(type, name);
+                }
+                if (maybeRequested == null) {
+                    // still couldn't find anything
+                    maybeRequested = type;
+                }
+            }
+            
+        }
+        return maybeRequested;
+    }
+
+
+    /**
+     * Converts the maybeRequested element into a resolved element by creating a unique key for it.
+     */
+    private IJavaElement resolveRequestedElement(TypeLookupResult result, IJavaElement maybeRequested) {
+        AnnotatedNode declaration = (AnnotatedNode) result.declaration;
+        if (declaration instanceof PropertyNode && maybeRequested instanceof IMethod) {
+            // the field associated with this property does not exist, use the method instead
+            String getterName = maybeRequested.getElementName();
+            MethodNode maybeDeclaration = declaration.getDeclaringClass().getMethods(getterName).get(0);
+            declaration = maybeDeclaration == null ? declaration : maybeDeclaration;
+        }
+        
+        String uniqueKey = createUniqueKey(declaration, result.type, result.declaringType);
+        switch (maybeRequested.getElementType()) {
+            case IJavaElement.FIELD:
+                if (maybeRequested.isReadOnly()) {
+                    requestedElement = new ResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey);
+                } else {
+                    requestedElement = new ResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey);
+                }
+                break;
+            case IJavaElement.METHOD:
+                if (maybeRequested.isReadOnly()) {
+                    requestedElement = new ResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey);
+                } else {
+                    requestedElement = new ResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey);
+                }
+                break;
+            case IJavaElement.TYPE:
+                if (maybeRequested.isReadOnly()) {
+                    requestedElement = new ResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey);
+                } else {
+                    requestedElement = new ResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey);
+                }
+                break;
+            default:
+                requestedElement = maybeRequested;
+        }
+        return requestedElement;
+    }
+
+
+    private LocalVariable createLocalVariable(TypeLookupResult result,
+            IJavaElement enclosingElement, Variable var) {
+        ASTNode node = (ASTNode) var;
+        ClassNode type = result.type != null ? result.type : var.getType();
+        return new LocalVariable((JavaElement) enclosingElement, var.getName(), node.getStart(), node.getEnd()-1, node.getStart(), node.getEnd()-1, 
+                Signature.createTypeSignature(createGenericsAwareName(type, true), false), new Annotation[0]);
+    }
+
+
+    /**
+     * Creates the type signature for local variables
      * @param node
      * @return
      */
+    private String createGenericsAwareName(ClassNode node, boolean useSimple) {
+        StringBuilder sb = new StringBuilder();
+        String name = node.getName();
+        if (name.charAt(0) == '[') {
+            int arrayCount = 0;
+            while (name.charAt(arrayCount) == '[') {
+                sb.append("[]");
+                node = node.getComponentType();
+                arrayCount++;
+            }
+        }
+            
+        if (useSimple) {
+            sb.insert(0, node.getNameWithoutPackage());
+        } else {
+            sb.insert(0, node.getName());
+        }
+
+        // recur down the generics
+        GenericsType[] genericsTypes = node.getGenericsTypes();
+        if (genericsTypes != null && genericsTypes.length > 0) {
+            sb.append('<');
+            for (GenericsType gt : genericsTypes) {
+                sb.append(createGenericsAwareName(gt.getType() == null ? VariableScope.OBJECT_CLASS_NODE : gt.getType(), useSimple));
+                sb.append(',');
+            }
+            sb.replace(sb.length()-1, sb.length(), ">");
+        }
+        return sb.toString();
+    }
+
+    
+    /**
+     * Creates the unique key for classes, fields and methods
+     * @param node
+     * @return
+     */
+    private String createUniqueKey(AnnotatedNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
+        StringBuilder sb = new StringBuilder();
+        if (node instanceof PropertyNode) {
+            node = ((PropertyNode) node).getField();
+        }
+        if (node instanceof FieldNode) {
+            return createUniqueKeyForField((FieldNode) node, resolvedType, resolvedDeclaringType).toString();
+        } else if (node instanceof MethodNode) {
+            return createUniqueKeyForMethod((MethodNode) node, resolvedType, resolvedDeclaringType).toString();
+        } else if (node instanceof ClassNode) {
+            return createUniqueKeyForClass(resolvedType, resolvedDeclaringType).toString();
+        }
+        return sb.toString();
+    }
+
+    private StringBuilder createUniqueKeyForMethod(MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));  // won't resolve type params
+        sb.append('.').append(node.getName());
+        sb.append('(');
+        if (node.getParameters() != null) {
+            for (Parameter param : node.getParameters()) {
+                ClassNode paramType = param.getType() != null ? param.getType() : VariableScope.OBJECT_CLASS_NODE;
+                sb.append(createUniqueKeyForClass(paramType, resolvedDeclaringType));  // won't resolve type params
+            }
+        }
+        sb.append(')');
+        sb.append(createUniqueKeyForResolvedClass(resolvedType));
+        return sb;
+    }
+    
+    private StringBuilder createUniqueKeyForField(FieldNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));  // won't resolve type params
+        sb.append('.').append(node.getName()).append(')');
+        sb.append(createUniqueKeyForResolvedClass(resolvedType));
+        return sb;
+    }
+    
+    private StringBuilder createUniqueKeyForResolvedClass(ClassNode resolvedType) {
+        return new StringBuilder(Signature.createTypeSignature(createGenericsAwareName(resolvedType, false/*fully qualified*/), true/*must resolve*/).replace('.', '/'));
+    }
+    
+    // tries to resolve any type parameters in unresolvedType based on those in resolvedDeclaringType
+    private StringBuilder createUniqueKeyForClass(ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
+        // first try to resolve generics
+        ClassNode unresolvedDeclaringType = resolvedDeclaringType.redirect();
+        ClassNode resolvedType;
+        GenericsType[] resolvedGenerics = resolvedDeclaringType.getGenericsTypes();
+        GenericsType[] unresolvedGenerics = unresolvedDeclaringType.getGenericsTypes();
+        if (resolvedGenerics != null && unresolvedGenerics != null) {
+            resolvedType = VariableScope.resolveTypeParameterization(resolvedGenerics, unresolvedGenerics,
+                    VariableScope.clone(unresolvedType));
+        } else {
+            resolvedType = unresolvedType;
+        }
+        return createUniqueKeyForResolvedClass(resolvedType);
+    }
+    
     private boolean doTest(ASTNode node) {
         return node.getClass() == nodeToLookFor.getClass() && nodeToLookFor.getStart() == node.getStart() && nodeToLookFor.getEnd() == node.getEnd();
     }

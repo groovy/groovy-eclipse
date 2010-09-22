@@ -215,11 +215,12 @@ public class ASTFragmentFactory {
             List<ASTFragmentKind> targetKinds, List<Integer> targetEnds) {
         if (startExpression instanceof PropertyExpression) {
             PropertyExpression propertyExpression = (PropertyExpression) startExpression;
+            ASTFragmentKind kind = ASTFragmentKind.toPropertyKind(propertyExpression);
             walkPropertyExpr(propertyExpression.getObjectExpression(), targetExprs, targetArgs, targetKinds, targetEnds);
             int toRemove = targetKinds.size() - 1;
             if (targetKinds.get(toRemove) == ASTFragmentKind.SIMPLE_EXPRESSION) {
                 // need to replace with a property
-                targetKinds.set(toRemove, ASTFragmentKind.PROPERTY);
+                targetKinds.set(toRemove, kind);
                 targetArgs.set(toRemove, null);
             }
             walkPropertyExpr(propertyExpression.getProperty(), targetExprs, targetArgs, targetKinds, targetEnds);
