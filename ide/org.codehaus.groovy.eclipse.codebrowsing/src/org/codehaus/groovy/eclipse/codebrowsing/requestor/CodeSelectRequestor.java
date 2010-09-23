@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
-import org.codehaus.groovy.util.StringUtil;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -37,7 +36,6 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -195,7 +193,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (declaration instanceof PropertyNode && maybeRequested instanceof IMethod) {
             // the field associated with this property does not exist, use the method instead
             String getterName = maybeRequested.getElementName();
-            MethodNode maybeDeclaration = declaration.getDeclaringClass().getMethods(getterName).get(0);
+            MethodNode maybeDeclaration = (MethodNode) declaration.getDeclaringClass().getMethods(getterName).get(0);
             declaration = maybeDeclaration == null ? declaration : maybeDeclaration;
         }
         
