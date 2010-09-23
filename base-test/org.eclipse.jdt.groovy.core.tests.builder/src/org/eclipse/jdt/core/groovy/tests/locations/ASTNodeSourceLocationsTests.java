@@ -262,7 +262,7 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
 	}
 	
 	class ImportStatementSLocTester extends AbstractSLocTester {
-        @Override
+//        @Override
         public void visitImports(ModuleNode module) {
             ImportNodeCompatibilityWrapper wrapper = new ImportNodeCompatibilityWrapper(module);
             SortedSet<ImportNode> nodes = wrapper.getAllImportNodes();
