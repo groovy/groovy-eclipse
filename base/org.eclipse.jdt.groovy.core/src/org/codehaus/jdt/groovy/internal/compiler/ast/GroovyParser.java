@@ -226,7 +226,7 @@ public class GroovyParser {
 			SourceFile file = (SourceFile) sourceUnit;
 			char[] projRelPath = file.resource.getProjectRelativePath().toPortableString().toCharArray();
 			boolean isScript = new ScriptFolderSelector().isScript(projRelPath);
-			System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
+			// System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
 		}
 
 		// FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
