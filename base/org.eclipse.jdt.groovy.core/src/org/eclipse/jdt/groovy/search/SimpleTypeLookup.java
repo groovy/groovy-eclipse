@@ -303,7 +303,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 */
 	private ClassNode parameterizeThisMap(MapExpression node) {
 		if (node.getMapEntryExpressions().size() > 0) {
-			MapEntryExpression entry = node.getMapEntryExpressions().get(0);
+			MapEntryExpression entry = (MapEntryExpression) node.getMapEntryExpressions().get(0);
 			ClassNode map = VariableScope.clone(VariableScope.MAP_CLASS_NODE);
 			map.getGenericsTypes()[0].setType(entry.getKeyExpression().getType());
 			map.getGenericsTypes()[0].setName(entry.getKeyExpression().getType().getName());
