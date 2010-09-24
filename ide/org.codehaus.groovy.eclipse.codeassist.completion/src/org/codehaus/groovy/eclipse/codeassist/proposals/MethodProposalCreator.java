@@ -50,8 +50,10 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                                 .getReturnType());
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
                     GroovyMethodProposal methodProposal = new GroovyMethodProposal(method);
+                    float relevanceMultiplier = isInterestingType ? 101 : 1;
+                    relevanceMultiplier *= method.isStatic() ? 0.1 : 1;
                     methodProposal
-                            .setRelevanceMultiplier(isInterestingType ? 101 : 1);
+                            .setRelevanceMultiplier(relevanceMultiplier);
                     groovyProposals.add(methodProposal);
                 }
 
@@ -83,7 +85,10 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
      * the mock field
      */
     private boolean hasNoField(MethodNode method) {
-        return method.getDeclaringClass().getField(createMockFieldName(method.getName())) == null;
+        return method.getDeclaringClass().getField(
+                createMockFieldName(method.getName())) == null
+                && method.getDeclaringClass().getField(
+                        createCapitalMockFieldName(method.getName())) == null;
     }
 
     /**
@@ -116,11 +121,12 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         return ProposalUtils.looselyMatches(prefix, newName);
     }
 
-    /**
-     * @param methodName
-     * @return
-     */
     private String createMockFieldName(String methodName) {
         return methodName.length() > 3 ? Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4) : "$$$$$";
     }
+
+    private String createCapitalMockFieldName(String methodName) {
+        return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
+    }
+
 }
