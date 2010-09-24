@@ -91,10 +91,6 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                         createCapitalMockFieldName(method.getName())) == null;
     }
 
-    /**
-     * @param method
-     * @return
-     */
     private FieldNode createMockField(MethodNode method) {
         FieldNode field = new FieldNode(createMockFieldName(method.getName()), method.getModifiers(), method.getReturnType(), method.getDeclaringClass(), null);
         field.setDeclaringClass(method.getDeclaringClass());
@@ -102,10 +98,6 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         return field;
     }
 
-    /**
-     * @param prefix
-     * @return
-     */
     private boolean looselyMatchesGetterName(String prefix, String methodName) {
         // fail fast if name is < 4 chars, it doesn't start with get or set, or
         // its 4th char is lower case
