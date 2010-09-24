@@ -61,7 +61,8 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
     private Button groovyLibButt;
 
-    private ScriptFolderSelector scriptFolderSelector;
+    // FIXADE: uncomment usage when script folders are handled by the compiler
+    // private ScriptFolderSelector scriptFolderSelector;
 
     public CompilerPreferencesPage() {
         super("Compiler");
@@ -124,58 +125,12 @@ public class CompilerPreferencesPage extends PreferencePage implements
                 + "that should be reflected in your projects' classpaths.");
         classpathLabel2.setLayoutData(gd);
 
-        scriptFolderSelector = new ScriptFolderSelector(page);
-        scriptFolderSelector.createListContents();
+        // scriptFolderSelector = new ScriptFolderSelector(page);
+        // scriptFolderSelector.createListContents();
 
         Label compilerVersion = new Label(page, SWT.LEFT | SWT.WRAP);
         compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
 
-        // no longer supporting compiler switching from the UI
-        /*
-         * compilerVersion.setText(
-         * "You are currently using Groovy Compiler version " +
-         * CompilerUtils.getGroovyVersion() +
-         * "\nClick to change to using version " +
-         * CompilerUtils.getOtherVersion() + ". Requires restart.");
-         * Button switchTo = new Button(page, SWT.PUSH);
-         * switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
-         * switchTo.addSelectionListener(new SelectionListener() {
-         *
-         * public void widgetSelected(SelectionEvent e) {
-         * Shell shell = page.getShell();
-         * boolean result = MessageDialog.openQuestion(shell,
-         * "Change compiler and restart?",
-         * "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
-         * " the compiler will be changed and Eclipse will be restarted.\n\n" +
-         * "Make sure all your work is saved before clicking \"Yes\".");
-         *
-         * if (result) {
-         * // change compiler
-         * IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
-         * if (status == Status.OK_STATUS) {
-         * restart(shell);
-         * } else {
-         * ErrorDialog error = new ErrorDialog(shell,
-         * "Error occurred", "Error occurred when trying to enable Groovy " +
-         * CompilerUtils.getOtherVersion(),
-         * status, IStatus.ERROR);
-         * error.open();
-         * }
-         * }
-         *
-         * }
-         *
-         * public void widgetDefaultSelected(SelectionEvent e) {
-         *
-         * }
-         * });
-         * Label moreInfo = new Label(page, SWT.LEFT | SWT.WRAP);
-         * moreInfo.setText(
-         * "This feature is currently experimental.  If the UI for switching\n"
-         * +
-         * "compiler levels does not work, there are more instructions on the wiki."
-         * );
-         */
         Link moreInfoLink = new Link(page, SWT.BORDER);
         moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
                 false));
@@ -330,12 +285,12 @@ public class CompilerPreferencesPage extends PreferencePage implements
     protected void performDefaults() {
         super.performDefaults();
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
-        scriptFolderSelector.restoreDefaultsPressed();
+        // scriptFolderSelector.restoreDefaultsPressed();
     }
 
     private void applyPreferences() {
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, groovyLibButt.getSelection());
-        scriptFolderSelector.applyPreferences();
+        // scriptFolderSelector.applyPreferences();
     }
 
 
