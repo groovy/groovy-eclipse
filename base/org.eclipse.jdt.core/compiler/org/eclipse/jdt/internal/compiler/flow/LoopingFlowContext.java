@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
+import java.util.ArrayList;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.Reference;
@@ -17,6 +18,7 @@ import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
@@ -44,6 +46,23 @@ public class LoopingFlowContext extends SwitchFlowContext {
 	Expression[] nullReferences;
 	int[] nullCheckTypes;
 	int nullCount;
+
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=321926
+	static private class EscapingExceptionCatchSite {
+		final ReferenceBinding caughtException;
+		final ExceptionHandlingFlowContext catchingContext;
+		public EscapingExceptionCatchSite(ExceptionHandlingFlowContext catchingContext,	ReferenceBinding caughtException) {
+			this.catchingContext = catchingContext;
+			this.caughtException = caughtException;
+		}
+		void simulateThrowAfterLoopBack(FlowInfo flowInfo) {
+			this.catchingContext.recordHandlingException(this.caughtException,
+					flowInfo.unconditionalInits(), null, // raised exception, irrelevant here
+					null, /* invocation site, irrelevant here */ true // we have no business altering the needed status.
+					);
+		}
+	}
+	private ArrayList escapingExceptionCatchSites = null;
 
 	Scope associatedScope;
 
@@ -607,5 +626,32 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 				return;
 			}
 		}
+	}
+
+	/* Simulate a throw of an exception from inside a loop in its second or subsequent iteration.
+	   See https://bugs.eclipse.org/bugs/show_bug.cgi?id=321926
+	 */
+	public void simulateThrowAfterLoopBack(FlowInfo flowInfo) {
+		if (this.escapingExceptionCatchSites != null) {
+			for (int i = 0, exceptionCount = this.escapingExceptionCatchSites.size(); i < exceptionCount; i++) {
+				((EscapingExceptionCatchSite) this.escapingExceptionCatchSites.get(i)).simulateThrowAfterLoopBack(flowInfo);
+			}
+			this.escapingExceptionCatchSites = null; // don't care for it anymore.
+		}
+	}
+
+	/* Record the fact that some exception thrown by code within this loop
+	   is caught by an outer catch block. This is used to propagate data flow
+	   along the edge back to the next iteration. See simulateThrowAfterLoopBack
+	 */
+	public void recordCatchContextOfEscapingException(ExceptionHandlingFlowContext catchingContext,	ReferenceBinding caughtException) {
+		if (this.escapingExceptionCatchSites == null) {
+			this.escapingExceptionCatchSites = new ArrayList(5);
+		}
+		this.escapingExceptionCatchSites.add(new EscapingExceptionCatchSite(catchingContext, caughtException));
+	}
+
+	public boolean hasEscapingExceptions() {
+		return this.escapingExceptionCatchSites != null;
 	}
 }

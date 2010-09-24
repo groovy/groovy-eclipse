@@ -29,12 +29,15 @@ public class ParameterizedMethodBinding extends MethodBinding {
 		super(
 				originalMethod.modifiers,
 				originalMethod.selector,
-				 originalMethod.returnType,
+				originalMethod.returnType,
 				originalMethod.parameters,
 				originalMethod.thrownExceptions,
 				parameterizedDeclaringClass);
 		this.originalMethod = originalMethod;
-		this.tagBits = originalMethod.tagBits;
+		/* missing type bit cannot be copied as is it might come from the return type or a parameter type that
+		 * is substituted by a raw type.
+		 */
+		this.tagBits = originalMethod.tagBits & ~TagBits.HasMissingType;
 
 		final TypeVariableBinding[] originalVariables = originalMethod.typeVariables;
 		Substitution substitution = null;
@@ -61,13 +64,13 @@ public class ParameterizedMethodBinding extends MethodBinding {
 					return !isStatic && parameterizedDeclaringClass.isRawSubstitution();
 				}
 				public TypeBinding substitute(TypeVariableBinding typeVariable) {
-			        // check this variable can be substituted given copied variables
-			        if (typeVariable.rank < length && originalVariables[typeVariable.rank] == typeVariable) {
+					// check this variable can be substituted given copied variables
+					if (typeVariable.rank < length && originalVariables[typeVariable.rank] == typeVariable) {
 						return substitutedVariables[typeVariable.rank];
-			        }
-			        if (!isStatic)
+					}
+					if (!isStatic)
 						return parameterizedDeclaringClass.substitute(typeVariable);
-			        return typeVariable;
+					return typeVariable;
 				}
 			};
 
@@ -105,8 +108,8 @@ public class ParameterizedMethodBinding extends MethodBinding {
 			this.returnType = Scope.substitute(substitution, this.returnType);
 			this.parameters = Scope.substitute(substitution, this.parameters);
 			this.thrownExceptions = Scope.substitute(substitution, this.thrownExceptions);
-		    // error case where exception type variable would have been substituted by a non-reference type (207573)
-		    if (this.thrownExceptions == null) this.thrownExceptions = Binding.NO_EXCEPTIONS;
+			// error case where exception type variable would have been substituted by a non-reference type (207573)
+			if (this.thrownExceptions == null) this.thrownExceptions = Binding.NO_EXCEPTIONS;
 		}
 		checkMissingType: {
 			if ((this.tagBits & TagBits.HasMissingType) != 0)
@@ -143,7 +146,10 @@ public class ParameterizedMethodBinding extends MethodBinding {
 				originalMethod.thrownExceptions,
 				declaringClass);
 		this.originalMethod = originalMethod;
-		this.tagBits = originalMethod.tagBits;
+		/* missing type bit cannot be copied as is it might come from the return type or a parameter type that
+		 * is substituted by a raw type.
+		 */
+		this.tagBits = originalMethod.tagBits & ~TagBits.HasMissingType;
 
 		final TypeVariableBinding[] originalVariables = originalMethod.typeVariables;
 		Substitution substitution = null;

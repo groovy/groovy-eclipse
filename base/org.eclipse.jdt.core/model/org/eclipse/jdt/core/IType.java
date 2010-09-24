@@ -335,7 +335,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * as the last field declaration in this type.</p>
 	 *
 	 * <p>It is possible that a field with the same name already exists in this type.
-	 * The value of the <code>force</code> parameter effects the resolution of
+	 * The value of the <code>force</code> parameter affects the resolution of
 	 * such a conflict:<ul>
 	 * <li> <code>true</code> - in this case the field is created with the new contents</li>
 	 * <li> <code>false</code> - in this case a <code>JavaModelException</code> is thrown</li>
@@ -393,7 +393,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * to this type.
 	 *
 	 * <p>It is possible that a method with the same signature already exists in this type.
-	 * The value of the <code>force</code> parameter effects the resolution of
+	 * The value of the <code>force</code> parameter affects the resolution of
 	 * such a conflict:<ul>
 	 * <li> <code>true</code> - in this case the method is created with the new contents</li>
 	 * <li> <code>false</code> - in this case a <code>JavaModelException</code> is thrown</li>
@@ -427,7 +427,7 @@ public interface IType extends IMember, IAnnotatable {
 	 * to this type.</p>
 	 *
 	 * <p>It is possible that a type with the same name already exists in this type.
-	 * The value of the <code>force</code> parameter effects the resolution of
+	 * The value of the <code>force</code> parameter affects the resolution of
 	 * such a conflict:<ul>
 	 * <li> <code>true</code> - in this case the type is created with the new contents</li>
 	 * <li> <code>false</code> - in this case a <code>JavaModelException</code> is thrown</li>

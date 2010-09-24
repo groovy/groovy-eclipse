@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,7 @@ char[][] simpleNameReferences;
 char[][] rootReferences;
 
 protected ReferenceCollection(char[][][] qualifiedNameReferences, char[][] simpleNameReferences, char[][] rootReferences) {
-	this.qualifiedNameReferences = internQualifiedNames(qualifiedNameReferences);
+	this.qualifiedNameReferences = internQualifiedNames(qualifiedNameReferences, false);
 	this.simpleNameReferences = internSimpleNames(simpleNameReferences, true);
 	this.rootReferences = internSimpleNames(rootReferences, false);
 }
@@ -33,7 +33,7 @@ public void addDependencies(String[] typeNameDependencies) {
 	char[][][] qNames = new char[typeNameDependencies.length][][];
 	for (int i = typeNameDependencies.length; --i >= 0;)
 		qNames[i] = CharOperation.splitOn('.', typeNameDependencies[i].toCharArray());
-	qNames = internQualifiedNames(qNames);
+	qNames = internQualifiedNames(qNames, false);
 
 	next : for (int i = qNames.length; --i >= 0;) {
 		char[][] qualifiedTypeName = qNames[i];
@@ -53,7 +53,7 @@ public void addDependencies(String[] typeNameDependencies) {
 			this.qualifiedNameReferences[length] = qualifiedTypeName;
 
 			qualifiedTypeName = CharOperation.subarray(qualifiedTypeName, 0, qualifiedTypeName.length - 1);
-			char[][][] temp = internQualifiedNames(new char[][][] {qualifiedTypeName});
+			char[][][] temp = internQualifiedNames(new char[][][] {qualifiedTypeName}, false);
 			if (temp == EmptyQualifiedNames)
 				continue next; // qualifiedTypeName is a well known name
 			qualifiedTypeName = temp[0];
@@ -206,10 +206,14 @@ public static char[][][] internQualifiedNames(StringSet qualifiedStrings) {
 	for (int i = 0, l = strings.length; i < l; i++)
 		if (strings[i] != null)
 			result[--length] = CharOperation.splitOn('/', strings[i].toCharArray());
-	return internQualifiedNames(result);
+	return internQualifiedNames(result, false);
 }
 
 public static char[][][] internQualifiedNames(char[][][] qualifiedNames) {
+	return internQualifiedNames(qualifiedNames, false);
+}
+
+public static char[][][] internQualifiedNames(char[][][] qualifiedNames, boolean keepWellKnown) {
 	if (qualifiedNames == null) return EmptyQualifiedNames;
 	int length = qualifiedNames.length;
 	if (length == 0) return EmptyQualifiedNames;
@@ -223,8 +227,12 @@ public static char[][][] internQualifiedNames(char[][][] qualifiedNames) {
 			char[][] wellKnownName = WellKnownQualifiedNames[j];
 			if (qLength > wellKnownName.length)
 				break; // all remaining well known names are shorter
-			if (CharOperation.equals(qualifiedName, wellKnownName))
+			if (CharOperation.equals(qualifiedName, wellKnownName)) {
+				if (keepWellKnown) {
+					keepers[index++] = wellKnownName;
+				}
 				continue next;
+			}
 		}
 
 		// InternedQualifiedNames[0] is for the rest (> 7 & 1)

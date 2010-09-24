@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
-import org.eclipse.jdt.internal.compiler.ast.MessageSend;
-
 /**
  * Binding denoting a generic method after type parameter substitutions got performed.
  * On parameterized type bindings, all methods got substituted, regardless whether
@@ -61,12 +59,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 					System.arraycopy(inferenceContext.substitutes, 0, uncheckedArguments = new TypeBinding[length], 0, length);
 				}
 				if (methodSubstitute.returnType != TypeBinding.VOID) {
-					TypeBinding expectedType = null;
-					// if message invocation has expected type
-					if (invocationSite instanceof MessageSend) {
-						MessageSend message = (MessageSend) invocationSite;
-						expectedType = message.expectedType;
-					}
+					TypeBinding expectedType = invocationSite.expectedType();
 					if (expectedType != null) {
 						// record it was explicit from context, as opposed to assumed by default (see below)
 						inferenceContext.hasExplicitExpectedType = true;

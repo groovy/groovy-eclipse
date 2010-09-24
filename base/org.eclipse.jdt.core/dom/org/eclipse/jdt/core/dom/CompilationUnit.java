@@ -908,7 +908,7 @@ public class CompilationUnit extends ASTNode {
 	 * on record. Subsequence modifications made to the AST
 	 * are added to the ones already on record. If this method
 	 * is called again later, the resulting text edit object will
-	 * accurately reflect the net cumulative affect of all those
+	 * accurately reflect the net cumulative effect of all those
 	 * changes.
 	 * </p>
 	 *

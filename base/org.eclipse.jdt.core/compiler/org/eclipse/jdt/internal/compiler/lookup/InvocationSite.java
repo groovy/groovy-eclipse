@@ -24,4 +24,5 @@ public interface InvocationSite {
 	void setFieldIndex(int depth);
 	int sourceEnd();
 	int sourceStart();
+	TypeBinding expectedType();
 }

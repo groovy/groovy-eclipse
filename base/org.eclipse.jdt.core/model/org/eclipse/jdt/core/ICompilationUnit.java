@@ -160,7 +160,7 @@ void becomeWorkingCopy(IProgressMonitor monitor) throws JavaModelException;
  *
  * <p>It is possible that the contents of the original resource have changed
  * since this working copy was created, in which case there is an update conflict.
- * The value of the <code>force</code> parameter effects the resolution of
+ * The value of the <code>force</code> parameter affects the resolution of
  * such a conflict:<ul>
  * <li> <code>true</code> - in this case the contents of this working copy are applied to
  * 	the underlying resource even though this working copy was created before
@@ -280,7 +280,7 @@ IImportDeclaration createImport(String name, IJavaElement sibling, int flags, IP
  * to the end of this compilation unit.
  *
  * <p>It is possible that a type with the same name already exists in this compilation unit.
- * The value of the <code>force</code> parameter effects the resolution of
+ * The value of the <code>force</code> parameter affects the resolution of
  * such a conflict:<ul>
  * <li> <code>true</code> - in this case the type is created with the new contents</li>
  * <li> <code>false</code> - in this case a {@link JavaModelException} is thrown</li>

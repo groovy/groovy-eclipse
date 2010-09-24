@@ -277,7 +277,7 @@ IType getType();
 void refresh(IProgressMonitor monitor) throws JavaModelException;
 /**
  * Removes the given listener from this type hierarchy.
- * Has no affect if an identical listener is not registered.
+ * Has no effect if an identical listener is not registered.
  *
  * @param listener the listener
  */

@@ -152,6 +152,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class MatchLocator implements ITypeRequestor {
 
 public static final int MAX_AT_ONCE;
+public static boolean SHOULD_FILTER_ENUM = false;
 static {
 	long maxMemory = Runtime.getRuntime().maxMemory();
 	int ratio = (int) Math.round(((double) maxMemory) / (64 * 0x100000));
@@ -806,6 +807,28 @@ protected boolean encloses(IJavaElement element) {
 	}
 	return false;
 }
+private boolean filterEnum(SearchMatch match) {
+	
+	// filter org.apache.commons.lang.enum package for projects above 1.5 
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264	
+	IJavaElement element = (IJavaElement)match.getElement();
+	PackageFragment pkg = (PackageFragment)element.getAncestor(IJavaElement.PACKAGE_FRAGMENT);
+	if (pkg != null) {
+		// enum was found in org.apache.commons.lang.enum at index 5
+		if (pkg.names.length == 5 && pkg.names[4].equals("enum")) {  //$NON-NLS-1$
+			if (this.options == null) {
+				IJavaProject proj = (IJavaProject)pkg.getAncestor(IJavaElement.JAVA_PROJECT);
+				String complianceStr = proj.getOption(CompilerOptions.OPTION_Source, true);
+				if (CompilerOptions.versionToJdkLevel(complianceStr) >= ClassFileConstants.JDK1_5)
+					return true;
+			} else if (this.options.sourceLevel >= ClassFileConstants.JDK1_5) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 /* (non-Javadoc)
  * Return info about last type argument of a parameterized type reference.
  * These info are made of concatenation of 2 int values which are respectively
@@ -1819,6 +1842,12 @@ protected void report(SearchMatch match) throws CoreException {
 	if (match == null) {
 		if (BasicSearchEngine.VERBOSE) {
 			System.out.println("Cannot report a null match!!!"); //$NON-NLS-1$
+		}
+		return;
+	}
+	if (MatchLocator.SHOULD_FILTER_ENUM && filterEnum(match)){
+		if (BasicSearchEngine.VERBOSE) {
+			System.out.println("Filtered package with name enum"); //$NON-NLS-1$
 		}
 		return;
 	}

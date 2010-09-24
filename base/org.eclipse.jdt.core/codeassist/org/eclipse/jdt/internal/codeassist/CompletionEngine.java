@@ -68,6 +68,7 @@ import org.eclipse.jdt.internal.core.BinaryTypeConverter;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.search.matching.JavaSearchNameEnvironment;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.util.Messages;
 
 /**
@@ -498,6 +499,8 @@ public final class CompletionEngine
 	private final static int SUPERTYPE = 1;
 	private final static int SUBTYPE = 2;
 	
+	private final static char[] DOT_ENUM = ".enum".toCharArray(); //$NON-NLS-1$
+	
 	int expectedTypesPtr = -1;
 	TypeBinding[] expectedTypes = new TypeBinding[1];
 	int expectedTypesFilter;
@@ -613,6 +616,7 @@ public final class CompletionEngine
 		public void setFieldIndex(int depth){/* empty */}
 		public int sourceEnd() { return 0; 	}
 		public int sourceStart() { return 0; 	}
+		public TypeBinding expectedType() { return null; }
 	};
 
 	private int foundTypesCount;
@@ -11721,6 +11725,14 @@ public final class CompletionEngine
 				}
 			}
 		}
+		
+		// filter packages ending with enum for projects above 1.5 
+		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264
+		if (MatchLocator.SHOULD_FILTER_ENUM && this.compilerOptions.sourceLevel >= ClassFileConstants.JDK1_5 &&
+				CharOperation.endsWith(givenPkgName, DOT_ENUM)) { //note: it should be .enum and not just enum
+				return true;
+		}
+		
 		return false;
 	}
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2009 BEA Systems, Inc.
+ * Copyright (c) 2005, 2010 BEA Systems, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,8 +7,11 @@
  *
  * Contributors:
  *    tyeung@bea.com - initial API and implementation
+ *    olivier_thomann@ca.ibm.com - add hashCode() and equals(..) methods
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.classfmt;
+
+import java.util.Arrays;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
@@ -16,6 +19,7 @@ import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
 import org.eclipse.jdt.internal.compiler.env.*;
 import org.eclipse.jdt.internal.compiler.impl.*;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
+import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class AnnotationInfo extends ClassFileStruct implements IBinaryAnnotation {
 	/** The name of the annotation type */
@@ -375,5 +379,31 @@ public String toString() {
 		buffer.append(')');
 	}
 	return buffer.toString();
+}
+public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + Util.hashCode(this.pairs);
+	result = prime * result + CharOperation.hashCode(this.typename);
+	return result;
+}
+public boolean equals(Object obj) {
+	if (this == obj) {
+		return true;
+	}
+	if (obj == null) {
+		return false;
+	}
+	if (getClass() != obj.getClass()) {
+		return false;
+	}
+	AnnotationInfo other = (AnnotationInfo) obj;
+	if (!Arrays.equals(this.pairs, other.pairs)) {
+		return false;
+	}
+	if (!Arrays.equals(this.typename, other.typename)) {
+		return false;
+	}
+	return true;
 }
 }

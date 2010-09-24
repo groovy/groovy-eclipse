@@ -287,8 +287,8 @@ void checkParameterizedTypes() {
  * be actually outputed if sitting inside unreachable code.
  */
 public char[] computeConstantPoolName(LocalTypeBinding localType) {
-	if (localType.constantPoolName() != null) {
-		return localType.constantPoolName();
+	if (localType.constantPoolName != null) {
+		return localType.constantPoolName;
 	}
 	// delegates to the outermost enclosing classfile, since it is the only one with a global vision of its innertypes.
 

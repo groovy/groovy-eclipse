@@ -65,7 +65,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	if (isConditionOptimizedFalse) {
 		thenFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
 	}
-	FlowInfo elseFlowInfo = conditionFlowInfo.initsWhenFalse();
+	FlowInfo elseFlowInfo = conditionFlowInfo.initsWhenFalse().copy();
 	if (isConditionOptimizedTrue) {
 		elseFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
 	}
@@ -127,7 +127,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		elseFlowInfo,
 		isConditionOptimizedFalse,
 		true /*if(true){ return; }  fake-reachable(); */,
-		flowInfo);
+		flowInfo,
+		this);
 	this.mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(mergedInfo);
 	return mergedInfo;
 }

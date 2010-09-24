@@ -297,7 +297,7 @@ static State read(IProject project, DataInputStream in) throws IOException {
 			qName[j] = internedSimpleNames[in.readInt()];
 		internedQualifiedNames[i] = qName;
 	}
-	internedQualifiedNames = ReferenceCollection.internQualifiedNames(internedQualifiedNames);
+	internedQualifiedNames = ReferenceCollection.internQualifiedNames(internedQualifiedNames, false);
 
 	newState.references = new SimpleLookupTable(length = in.readInt());
 	for (int i = 0; i < length; i++) {

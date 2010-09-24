@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -48,6 +48,8 @@ import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
  * @since 3.0
  */
 public abstract class SearchParticipant {
+
+	private IPath lastIndexLocation;
 
 	/**
 	 * Creates a new search participant.
@@ -205,6 +207,10 @@ public abstract class SearchParticipant {
 		// TODO (frederic) should not have to create index manually, should expose API that recreates index instead
 		manager.ensureIndexExists(indexLocation, containerPath);
 		manager.scheduleDocumentIndexing(document, containerPath, indexLocation, this);
+		if (!indexLocation.equals(this.lastIndexLocation)) {
+			manager.updateParticipant(indexLocation, containerPath);
+			this.lastIndexLocation = indexLocation;
+		}
 	}
 
 	/**

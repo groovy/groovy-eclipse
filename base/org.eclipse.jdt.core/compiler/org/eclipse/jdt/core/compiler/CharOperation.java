@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2097,7 +2097,7 @@ public static final int indexOf(final char[] toBeFound, final char[] array, fina
 public static final int indexOf(final char[] toBeFound, final char[] array, final boolean isCaseSensitive, final int start, final int end) {
 	final int arrayLength = end;
 	final int toBeFoundLength = toBeFound.length;
-	if (toBeFoundLength > arrayLength) return -1;
+	if (toBeFoundLength > arrayLength || start < 0) return -1;
 	if (toBeFoundLength == 0) return 0;
 	if (toBeFoundLength == arrayLength) {
 		if (isCaseSensitive) {

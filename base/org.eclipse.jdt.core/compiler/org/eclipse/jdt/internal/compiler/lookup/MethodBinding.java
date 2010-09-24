@@ -353,9 +353,6 @@ public List collectMissingTypes(List missingTypes) {
 			}
 		}
 	}
-	if (missingTypes == null) {
-		System.err.println("Could not find missing types in " + this); //$NON-NLS-1$
-	}
 	return missingTypes;
 }
 

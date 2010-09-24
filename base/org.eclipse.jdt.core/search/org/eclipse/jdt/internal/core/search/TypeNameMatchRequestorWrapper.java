@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
@@ -25,9 +26,12 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.TypeNameMatchRequestor;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
 import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
 
@@ -69,6 +73,8 @@ public class TypeNameMatchRequestorWrapper implements IRestrictedAccessTypeReque
 	 * Cache package handles to optimize memory.
 	 */
 	private HashtableOfArrayToObject packageHandles;
+	private Object lastProject;
+	private long complianceValue;
 
 public TypeNameMatchRequestorWrapper(TypeNameMatchRequestor requestor, IJavaSearchScope scope) {
 	this.requestor = requestor;
@@ -168,6 +174,18 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 	IPackageFragment pkgFragment= (IPackageFragment) this.packageHandles.get(pkgName);
 	if (pkgFragment == null) {
 		pkgFragment= ((PackageFragmentRoot) this.lastPkgFragmentRoot).getPackageFragment(pkgName);
+		// filter org.apache.commons.lang.enum package for projects above 1.5 
+		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264
+		if (MatchLocator.SHOULD_FILTER_ENUM && length == 5 && pkgName[4].equals("enum")) { //$NON-NLS-1$
+			IJavaProject proj = (IJavaProject)pkgFragment.getAncestor(IJavaElement.JAVA_PROJECT);
+			if (!proj.equals(this.lastProject)) {
+				String complianceStr = proj.getOption(CompilerOptions.OPTION_Source, true);
+				this.complianceValue = CompilerOptions.versionToJdkLevel(complianceStr);
+				this.lastProject = proj;
+			}
+			if (this.complianceValue >= ClassFileConstants.JDK1_5)
+				return null;
+		} 
 		this.packageHandles.put(pkgName, pkgFragment);
 	}
 	return pkgFragment.getClassFile(simpleNames[length]).getType();

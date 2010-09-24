@@ -137,6 +137,13 @@ public class WhileStatement extends Statement {
 						actionInfo.unconditionalInits()).
 					addInitializationsFrom(condInfo.initsWhenFalse());
 			}
+			if (loopingContext.hasEscapingExceptions()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=321926
+				FlowInfo loopbackFlowInfo = flowInfo.copy();
+				if (this.continueLabel != null) {  // we do get to the bottom 
+					loopbackFlowInfo.mergedWith(actionInfo.unconditionalCopy());
+				}
+				loopingContext.simulateThrowAfterLoopBack(loopbackFlowInfo);
+			}
 		}
 
 		// end of loop

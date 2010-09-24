@@ -196,7 +196,7 @@ public boolean isClosed();
 public boolean isReadOnly();
 /**
  * Removes the given listener from this buffer.
- * Has no affect if an identical listener is not registered or if the buffer is closed.
+ * Has no effect if an identical listener is not registered or if the buffer is closed.
  *
  * @param listener the listener
  */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -45,7 +45,7 @@ public class SwitchStatement extends Statement {
 	int mergedInitStateIndex = -1;
 
 	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
-	    try {
+		try {
 			flowInfo = this.expression.analyseCode(currentScope, flowContext, flowInfo);
 			SwitchFlowContext switchContext =
 				new SwitchFlowContext(flowContext, this, (this.breakLabel = new BranchLabel()));
@@ -94,8 +94,8 @@ public class SwitchStatement extends Statement {
 			}
 
 			final TypeBinding resolvedTypeBinding = this.expression.resolvedType;
-			if (this.caseCount > 0 && resolvedTypeBinding.isEnum()) {
-				final SourceTypeBinding sourceTypeBinding = this.scope.classScope().referenceContext.binding;
+			if (resolvedTypeBinding.isEnum()) {
+				final SourceTypeBinding sourceTypeBinding = currentScope.classScope().referenceContext.binding;
 				this.synthetic = sourceTypeBinding.addSyntheticMethodForSwitchEnum(resolvedTypeBinding);
 			}
 			// if no default case, then record it may jump over the block directly to the end
@@ -111,9 +111,9 @@ public class SwitchStatement extends Statement {
 			this.mergedInitStateIndex =
 				currentScope.methodScope().recordInitializationStates(mergedInfo);
 			return mergedInfo;
-	    } finally {
-	        if (this.scope != null) this.scope.enclosingCase = null; // no longer inside switch case block
-	    }
+		} finally {
+			if (this.scope != null) this.scope.enclosingCase = null; // no longer inside switch case block
+		}
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class SwitchStatement extends Statement {
 	 */
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
-	    try {
+		try {
 			if ((this.bits & IsReachable) == 0) {
 				return;
 			}
@@ -133,36 +133,37 @@ public class SwitchStatement extends Statement {
 			// prepare the labels and constants
 			this.breakLabel.initialize(codeStream);
 			CaseLabel[] caseLabels = new CaseLabel[this.caseCount];
-			boolean needSwitch = this.caseCount != 0;
-			for (int i = 0; i < this.caseCount; i++) {
+			for (int i = 0, max = this.caseCount; i < max; i++) {
 				this.cases[i].targetLabel = (caseLabels[i] = new CaseLabel(codeStream));
 				caseLabels[i].tagBits |= BranchLabel.USED;
 			}
 			CaseLabel defaultLabel = new CaseLabel(codeStream);
-			if (needSwitch) defaultLabel.tagBits |= BranchLabel.USED;
+			final boolean hasCases = this.caseCount != 0;
+			if (hasCases) defaultLabel.tagBits |= BranchLabel.USED;
 			if (this.defaultCase != null) {
 				this.defaultCase.targetLabel = defaultLabel;
 			}
 
 			final TypeBinding resolvedType = this.expression.resolvedType;
+			boolean valueRequired = false;
 			if (resolvedType.isEnum()) {
-				if (needSwitch) {
-					// go through the translation table
-					codeStream.invoke(Opcodes.OPC_invokestatic, this.synthetic, null /* default declaringClass */);
-					this.expression.generateCode(currentScope, codeStream, true);
-					// get enum constant ordinal()
-					codeStream.invokeEnumOrdinal(resolvedType.constantPoolName());
-					codeStream.iaload();
-				} else {
-					// no need to go through the translation table
-					this.expression.generateCode(currentScope, codeStream, false);
+				// go through the translation table
+				codeStream.invoke(Opcodes.OPC_invokestatic, this.synthetic, null /* default declaringClass */);
+				this.expression.generateCode(currentScope, codeStream, true);
+				// get enum constant ordinal()
+				codeStream.invokeEnumOrdinal(resolvedType.constantPoolName());
+				codeStream.iaload();
+				if (!hasCases) {
+					// we can get rid of the generated ordinal value
+					codeStream.pop();
 				}
 			} else {
+				valueRequired = this.expression.constant == Constant.NotAConstant || hasCases;
 				// generate expression
-				this.expression.generateCode(currentScope, codeStream, needSwitch); // value required (switch without cases)
+				this.expression.generateCode(currentScope, codeStream, valueRequired);
 			}
 			// generate the appropriate switch table/lookup bytecode
-			if (needSwitch) {
+			if (hasCases) {
 				int[] sortedIndexes = new int[this.caseCount];
 				// we sort the keys to be able to generate the code for tableswitch or lookupswitch
 				for (int i = 0; i < this.caseCount; i++) {
@@ -194,6 +195,8 @@ public class SwitchStatement extends Statement {
 					codeStream.lookupswitch(defaultLabel, this.constants, sortedIndexes, caseLabels);
 				}
 				codeStream.updateLastRecordedEndPC(this.scope, codeStream.position);
+			} else if (valueRequired) {
+				codeStream.pop();
 			}
 
 			// generate the switch block statements
@@ -234,9 +237,9 @@ public class SwitchStatement extends Statement {
 				defaultLabel.place();
 			}
 			codeStream.recordPositionsFrom(pc, this.sourceStart);
-	    } finally {
-	        if (this.scope != null) this.scope.enclosingCase = null; // no longer inside switch case block
-	    }
+		} finally {
+			if (this.scope != null) this.scope.enclosingCase = null; // no longer inside switch case block
+		}
 	}
 
 	public StringBuffer printStatement(int indent, StringBuffer output) {
@@ -258,8 +261,7 @@ public class SwitchStatement extends Statement {
 	}
 
 	public void resolve(BlockScope upperScope) {
-
-	    try {
+		try {
 			boolean isEnumSwitch = false;
 			TypeBinding expressionType = this.expression.resolveType(upperScope);
 			if (expressionType != null) {
@@ -285,7 +287,7 @@ public class SwitchStatement extends Statement {
 				}
 			}
 			if (this.statements != null) {
-				this.scope = /*explicitDeclarations == 0 ? upperScope : */new BlockScope(upperScope);
+				this.scope = new BlockScope(upperScope);
 				int length;
 				// collection of cases is too big but we will only iterate until caseCount
 				this.cases = new CaseStatement[length = this.statements.length];
@@ -355,9 +357,9 @@ public class SwitchStatement extends Statement {
 					}
 				}
 			}
-	    } finally {
-	        if (this.scope != null) this.scope.enclosingCase = null; // no longer inside switch case block
-	    }
+		} finally {
+			if (this.scope != null) this.scope.enclosingCase = null; // no longer inside switch case block
+		}
 	}
 
 	public void traverse(

@@ -522,7 +522,17 @@ public class Util implements SuffixConstants {
 			}
 		}
 	}
-
+	public static int hashCode(Object[] array) {
+		int prime = 31;
+		if (array == null) {
+			return 0;
+		}
+		int result = 1;
+		for (int index = 0; index < array.length; index++) {
+			result = prime * result + (array[index] == null ? 0 : array[index].hashCode());
+		}
+		return result;
+	}
 	/**
 	 * Returns whether the given name is potentially a zip archive file name
 	 * (it has a file extension and it is not ".java" nor ".class")

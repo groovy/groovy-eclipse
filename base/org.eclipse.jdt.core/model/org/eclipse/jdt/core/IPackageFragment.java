@@ -49,7 +49,7 @@ public interface IPackageFragment extends IParent, IJavaElement, IOpenable, ISou
 	 *
 	 * <p>It is possible that a compilation unit with the same name already exists in this
 	 * package fragment.
-	 * The value of the <code>force</code> parameter effects the resolution of
+	 * The value of the <code>force</code> parameter affects the resolution of
 	 * such a conflict:<ul>
 	 * <li> <code>true</code> - in this case the compilation is created with the new contents</li>
 	 * <li> <code>false</code> - in this case a <code>JavaModelException</code> is thrown</li>

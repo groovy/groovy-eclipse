@@ -4667,7 +4667,7 @@ public final class JavaCore extends Plugin {
 
 	/**
 	 * Removes the given element changed listener.
-	 * Has no affect if an identical listener is not registered.
+	 * Has no effect if an identical listener is not registered.
 	 *
 	 * @param listener the listener
 	 */
@@ -4691,7 +4691,7 @@ public final class JavaCore extends Plugin {
 	/**
 	 * Removes the given pre-processing resource changed listener.
 	 * <p>
-	 * Has no affect if an identical listener is not registered.
+	 * Has no effect if an identical listener is not registered.
 	 *
 	 * @param listener the listener
 	 * @since 3.0

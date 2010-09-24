@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
+import java.util.ArrayList;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -92,6 +93,7 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 	// all related catch blocks are marked as reachable... instead of those only
 	// until the point where it is safely handled (Smarter - see comment at the end)
 	FlowContext traversedContext = this;
+	ArrayList abruptlyExitedLoops = null;
 	while (traversedContext != null) {
 		SubRoutineStatement sub;
 		if (((sub = traversedContext.subroutine()) != null) && sub.isSubRoutineEscaping()) {
@@ -115,6 +117,12 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 				    int state = caughtException == null
 				    	? Scope.EQUAL_OR_MORE_SPECIFIC /* any exception */
 				        : Scope.compareTypes(raisedException, caughtException);
+				    if (abruptlyExitedLoops != null && caughtException != null && state != Scope.NOT_RELATED) {
+				    	for (int i = 0, abruptlyExitedLoopsCount = abruptlyExitedLoops.size(); i < abruptlyExitedLoopsCount; i++) {
+							LoopingFlowContext loop = (LoopingFlowContext) abruptlyExitedLoops.get(i);
+							loop.recordCatchContextOfEscapingException(exceptionContext, caughtException);
+						}
+					}
 					switch (state) {
 						case Scope.EQUAL_OR_MORE_SPECIFIC :
 							exceptionContext.recordHandlingException(
@@ -156,6 +164,11 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 				}
 				break; // not handled anywhere, thus jump to error handling
 			}
+		} else if (traversedContext instanceof LoopingFlowContext) {
+			if (abruptlyExitedLoops == null) {
+				abruptlyExitedLoops = new ArrayList(5);
+			}
+			abruptlyExitedLoops.add(traversedContext);
 		}
 
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
@@ -195,6 +208,7 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 		raisedCount);
 	FlowContext traversedContext = this;
 
+	ArrayList abruptlyExitedLoops = null;
 	while (traversedContext != null) {
 		SubRoutineStatement sub;
 		if (((sub = traversedContext.subroutine()) != null) && sub.isSubRoutineEscaping()) {
@@ -220,6 +234,12 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 						    int state = caughtException == null
 						    	? Scope.EQUAL_OR_MORE_SPECIFIC /* any exception */
 						        : Scope.compareTypes(raisedException, caughtException);
+						    if (abruptlyExitedLoops != null && caughtException != null && state != Scope.NOT_RELATED) {
+						    	for (int i = 0, abruptlyExitedLoopsCount = abruptlyExitedLoops.size(); i < abruptlyExitedLoopsCount; i++) {
+									LoopingFlowContext loop = (LoopingFlowContext) abruptlyExitedLoops.get(i);
+									loop.recordCatchContextOfEscapingException(exceptionContext, caughtException);
+								}
+							}
 							switch (state) {
 								case Scope.EQUAL_OR_MORE_SPECIFIC :
 									exceptionContext.recordHandlingException(
@@ -282,6 +302,11 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 				}
 				break; // not handled anywhere, thus jump to error handling
 			}
+        } else if (traversedContext instanceof LoopingFlowContext) {
+			if (abruptlyExitedLoops == null) {
+				abruptlyExitedLoops = new ArrayList(5);
+			}
+			abruptlyExitedLoops.add(traversedContext);
 		}
 		if (remainingCount == 0)
 			return;

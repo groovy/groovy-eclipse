@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.core.JarPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.JavaModel;
@@ -53,7 +54,7 @@ public static boolean canSeeFocus(SearchPattern pattern, IPath projectOrJarPath)
 	try {
 		IJavaModel model = JavaModelManager.getJavaModelManager().getJavaModel();
 		IJavaProject project = getJavaProject(projectOrJarPath, model);
-		IJavaElement[] focuses = getFocusedElements(pattern, project);
+		IJavaElement[] focuses = getFocusedElementsAndTypes(pattern, project, null);
 		if (focuses.length == 0) return false;
 		if (project != null) {
 			return canSeeFocus(focuses, (JavaProject) project, null);
@@ -76,14 +77,14 @@ public static boolean canSeeFocus(SearchPattern pattern, IPath projectOrJarPath)
 		return false;
 	}
 }
-private static boolean canSeeFocus(IJavaElement[] focuses, JavaProject javaProject, char[][] focusQualifiedName) {
+private static boolean canSeeFocus(IJavaElement[] focuses, JavaProject javaProject, char[][][] focusQualifiedNames) {
 	int length = focuses.length;
 	for (int i=0; i<length; i++) {
-		if (canSeeFocus(focuses[i], javaProject, focusQualifiedName)) return true;
+		if (canSeeFocus(focuses[i], javaProject, focusQualifiedNames)) return true;
 	}
 	return false;
 }
-private static boolean canSeeFocus(IJavaElement focus, JavaProject javaProject, char[][] focusQualifiedName) {
+private static boolean canSeeFocus(IJavaElement focus, JavaProject javaProject, char[][][] focusQualifiedNames) {
 	try {
 		if (focus == null) return false;
 		if (focus.equals(javaProject)) return true;
@@ -105,7 +106,7 @@ private static boolean canSeeFocus(IJavaElement focus, JavaProject javaProject, 
 		for (int i = 0, length = entries.length; i < length; i++) {
 			IClasspathEntry entry = entries[i];
 			if (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT && entry.getPath().equals(focusPath)) {
-				if (focusQualifiedName != null) { // builder state is usable, hence use it to try to reduce project which can see the focus...
+				if (focusQualifiedNames != null) { // builder state is usable, hence use it to try to reduce project which can see the focus...
 					State projectState = (State) JavaModelManager.getJavaModelManager().getLastBuiltState(javaProject.getProject(), null);
 					if (projectState != null) {
 						Object[] values = projectState.getReferences().valueTable;
@@ -113,7 +114,7 @@ private static boolean canSeeFocus(IJavaElement focus, JavaProject javaProject, 
 						for (int j=0; j<vLength; j++)  {
 							if (values[j] == null) continue;
 							ReferenceCollection references = (ReferenceCollection) values[j];
-							if (references.includes(focusQualifiedName)) {
+							if (references.includes(focusQualifiedNames, null, null)) {
 								return true;
 							}
 						}
@@ -132,7 +133,7 @@ private static boolean canSeeFocus(IJavaElement focus, JavaProject javaProject, 
 /*
  * Create the list of focused jars or projects.
  */
-private static IJavaElement[] getFocusedElements(SearchPattern pattern, IJavaElement focusElement) throws JavaModelException {
+private static IJavaElement[] getFocusedElementsAndTypes(SearchPattern pattern, IJavaElement focusElement, ObjectVector superTypes) throws JavaModelException {
 	if (pattern instanceof MethodPattern) {
 		// For method pattern, it needs to walk along the focus type super hierarchy
 		// and add jars/projects of all the encountered types.
@@ -153,6 +154,8 @@ private static IJavaElement[] getFocusedElements(SearchPattern pattern, IJavaEle
 					IPackageFragmentRoot root = (IPackageFragmentRoot) allTypes[i].getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 					IJavaElement element = root.isArchive() ? root : root.getParent();
 					focusSet.add(element);
+					if (superTypes != null) superTypes.add(allTypes[i]);
+					break;
 				}
 			}
 		}
@@ -190,37 +193,27 @@ private void initializeIndexLocations() {
 	} else {
 		try {
 			// See whether the state builder might be used to reduce the number of index locations
-			boolean isAutoBuilding = ResourcesPlugin.getWorkspace().getDescription().isAutoBuilding();
-			char[][] focusQualifiedName = null;
-			if (isAutoBuilding && focus instanceof IJavaProject) {
-				IJavaElement javaElement = this.pattern.focus;
-				while (javaElement != null && !(javaElement instanceof ITypeRoot)) {
-					javaElement = javaElement.getParent();
-				}
-				if (javaElement != null) {
-					IType primaryType = ((ITypeRoot) javaElement).findPrimaryType();
-					if (primaryType != null) {
-						char[][] qualifiedName = CharOperation.splitOn('.', primaryType.getFullyQualifiedName().toCharArray());
-						char[][][] qualifiedNames = ReferenceCollection.internQualifiedNames(new char[][][] {qualifiedName});
-						focusQualifiedName =  qualifiedNames.length == 0 ? qualifiedName : qualifiedNames[0];
-					}
-				}
-			}
-
+		
 			// find the projects from projectsAndJars that see the focus then walk those projects looking for the jars from projectsAndJars
 			int length = projectsAndJars.length;
 			JavaProject[] projectsCanSeeFocus = new JavaProject[length];
 			SimpleSet visitedProjects = new SimpleSet(length);
 			int projectIndex = 0;
 			SimpleSet externalLibsToCheck = new SimpleSet(length);
-			IJavaElement[] focuses = getFocusedElements(this.pattern, focus);
+			ObjectVector superTypes = new ObjectVector();
+			IJavaElement[] focuses = getFocusedElementsAndTypes(this.pattern, focus, superTypes);
+			char[][][] focusQualifiedNames = null;
+			boolean isAutoBuilding = ResourcesPlugin.getWorkspace().getDescription().isAutoBuilding();
+			if (isAutoBuilding && focus instanceof IJavaProject) {
+				focusQualifiedNames = getQualifiedNames(superTypes);
+			}
 			IJavaModel model = JavaModelManager.getJavaModelManager().getJavaModel();
 			for (int i = 0; i < length; i++) {
 				IPath path = projectsAndJars[i];
 				JavaProject project = (JavaProject) getJavaProject(path, model);
 				if (project != null) {
 					visitedProjects.add(project);
-					if (canSeeFocus(focuses, project, focusQualifiedName)) {
+					if (canSeeFocus(focuses, project, focusQualifiedNames)) {
 						locations.add(manager.computeIndexLocation(path));
 						projectsCanSeeFocus[projectIndex++] = project;
 					}
@@ -295,5 +288,25 @@ private static IJavaProject getJavaProject(IPath path, IJavaModel model) {
 		return project;
 	}
 	return null;
+}
+
+private char[][][] getQualifiedNames(ObjectVector types) {
+	final int size = types.size;
+	char[][][] focusQualifiedNames = null;
+	IJavaElement javaElement = this.pattern.focus;
+	while (javaElement != null && !(javaElement instanceof ITypeRoot)) {
+		javaElement = javaElement.getParent();
+	}
+	if (javaElement != null) {
+		IType primaryType = ((ITypeRoot) javaElement).findPrimaryType();
+		if (primaryType != null) {
+			focusQualifiedNames = new char[size+1][][];
+			focusQualifiedNames[0] = CharOperation.splitOn('.', primaryType.getFullyQualifiedName().toCharArray());
+		}
+	}
+	for (int i = 0; i < size; i++) {
+		focusQualifiedNames[i+1] = CharOperation.splitOn('.', ((IType)(types.elementAt(i))).getFullyQualifiedName().toCharArray());
+	}
+	return focusQualifiedNames == null ? null : ReferenceCollection.internQualifiedNames(focusQualifiedNames, true);
 }
 }

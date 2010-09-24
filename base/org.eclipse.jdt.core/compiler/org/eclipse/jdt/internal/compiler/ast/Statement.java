@@ -191,4 +191,12 @@ public Constant resolveCase(BlockScope scope, TypeBinding testType, SwitchStatem
 	resolve(scope);
 	return Constant.NotAConstant;
 }
+/** 
+ * Implementation of {@link org.eclipse.jdt.internal.compiler.lookup.InvocationSite#expectedType}
+ * suitable at this level. Subclasses should override as necessary.
+ * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#expectedType()
+ */
+public TypeBinding expectedType() {
+	return null;
+}
 }

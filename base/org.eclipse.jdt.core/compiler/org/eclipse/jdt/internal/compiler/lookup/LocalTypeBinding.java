@@ -114,7 +114,12 @@ public char[] computeUniqueKey(boolean isLeaf) {
 }
 
 public char[] constantPoolName() /* java/lang/Object */ {
-	return this.constantPoolName;
+	if (this.constantPoolName == null && this.scope != null) {
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=322154, we do have some
+		// cases where the left hand does not know what the right is doing.
+		this.constantPoolName = this.scope.compilationUnitScope().computeConstantPoolName(this);
+	}
+	return this.constantPoolName;	
 }
 
 ArrayBinding createArrayType(int dimensionCount, LookupEnvironment lookupEnvironment) {
@@ -139,7 +144,7 @@ ArrayBinding createArrayType(int dimensionCount, LookupEnvironment lookupEnviron
  * (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=99686)
  */
 public char[] genericTypeSignature() {
-	if (this.genericReferenceTypeSignature == null && constantPoolName() == null) {
+	if (this.genericReferenceTypeSignature == null && this.constantPoolName == null) {
 		if (isAnonymousType())
 			setConstantPoolName(superclass().sourceName());
 		else
@@ -213,7 +218,7 @@ public void setConstantPoolName(char[] computedConstantPoolName) /* java/lang/Ob
  * (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=102284)
  */
 public char[] signature() {
-	if (this.signature == null && constantPoolName() == null) {
+	if (this.signature == null && this.constantPoolName == null) {
 		if (isAnonymousType())
 			setConstantPoolName(superclass().sourceName());
 		else

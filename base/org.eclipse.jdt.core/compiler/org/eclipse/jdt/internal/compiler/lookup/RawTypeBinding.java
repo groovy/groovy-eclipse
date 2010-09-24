@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,8 +26,30 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
      */
 	public RawTypeBinding(ReferenceBinding type, ReferenceBinding enclosingType, LookupEnvironment environment){
 		super(type, null, enclosingType, environment);
-		if (enclosingType == null || (enclosingType.modifiers & ExtraCompilerModifiers.AccGenericSignature) == 0)
+		this.tagBits &= ~TagBits.HasMissingType;
+		if ((type.tagBits & TagBits.HasMissingType) != 0) {
+			if (type instanceof MissingTypeBinding) {
+				this.tagBits |= TagBits.HasMissingType;
+			} else if (type instanceof ParameterizedTypeBinding) {
+				ParameterizedTypeBinding parameterizedTypeBinding = (ParameterizedTypeBinding) type;
+				if (parameterizedTypeBinding.genericType() instanceof MissingTypeBinding) {
+					this.tagBits |= TagBits.HasMissingType;
+				}
+			}
+		}
+		if (enclosingType != null && (enclosingType.tagBits & TagBits.HasMissingType) != 0) {
+			if (enclosingType instanceof MissingTypeBinding) {
+				this.tagBits |= TagBits.HasMissingType;
+			} else if (enclosingType instanceof ParameterizedTypeBinding) {
+				ParameterizedTypeBinding parameterizedTypeBinding = (ParameterizedTypeBinding) enclosingType;
+				if (parameterizedTypeBinding.genericType() instanceof MissingTypeBinding) {
+					this.tagBits |= TagBits.HasMissingType;
+				}
+			}
+		}
+		if (enclosingType == null || (enclosingType.modifiers & ExtraCompilerModifiers.AccGenericSignature) == 0) {
 			this.modifiers &= ~ExtraCompilerModifiers.AccGenericSignature; // only need signature if enclosing needs one
+		}
 	}
 
 	public char[] computeUniqueKey(boolean isLeaf) {

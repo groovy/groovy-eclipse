@@ -101,7 +101,11 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				actionInfo.addPotentialNullInfoFrom(
 				  condInfo.initsWhenTrue().unconditionalInits()));
 	}
-
+	if (loopingContext.hasEscapingExceptions()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=321926
+		FlowInfo loopbackFlowInfo = flowInfo.copy();
+		loopbackFlowInfo.mergedWith(condInfo.initsWhenTrue().unconditionalCopy());
+		loopingContext.simulateThrowAfterLoopBack(loopbackFlowInfo);
+	}
 	// end of loop
 	FlowInfo mergedInfo = 
 		FlowInfo.mergedOptimizedBranches(

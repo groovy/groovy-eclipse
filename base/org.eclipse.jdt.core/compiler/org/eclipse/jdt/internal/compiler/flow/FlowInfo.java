@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.IfStatement;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 
@@ -300,7 +302,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranches(
 public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 		FlowInfo initsWhenTrue, boolean isOptimizedTrue,
 		FlowInfo initsWhenFalse, boolean isOptimizedFalse,
-		boolean allowFakeDeadBranch, FlowInfo flowInfo) {
+		boolean allowFakeDeadBranch, FlowInfo flowInfo, IfStatement ifStatement) {
 	UnconditionalFlowInfo mergedInfo;
 	if (isOptimizedTrue){
 		if (initsWhenTrue == FlowInfo.DEAD_END && allowFakeDeadBranch) {
@@ -327,7 +329,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 		}
 	}
 	else if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0 &&
-				(initsWhenFalse.tagBits & FlowInfo.UNREACHABLE) != 0 &&
+				(ifStatement.bits & ASTNode.IsElseStatementUnreachable) != 0 &&
 				initsWhenTrue != FlowInfo.DEAD_END &&
 				initsWhenFalse != FlowInfo.DEAD_END) {
 		// Done when the then branch will always be executed but the condition does not have a boolean
@@ -344,7 +346,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 		
 	}
 	else if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0 &&
-			(initsWhenTrue.tagBits & FlowInfo.UNREACHABLE) != 0 && initsWhenTrue != FlowInfo.DEAD_END
+			(ifStatement.bits & ASTNode.IsThenStatementUnreachable) != 0 && initsWhenTrue != FlowInfo.DEAD_END
 			&& initsWhenFalse != FlowInfo.DEAD_END) {
 		// Done when the else branch will always be executed but the condition does not have a boolean
 		// true or false (i.e if(true), etc) for sure

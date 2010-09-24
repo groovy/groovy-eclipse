@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -974,8 +974,27 @@ private boolean hasStructuralAnnotationChanges(IBinaryAnnotation[] currentAnnota
 		for (int j = 0; j < currentPairsLength; j++) {
 			if (!CharOperation.equals(currentPairs[j].getName(), otherPairs[j].getName()))
 				return true;
-			if (!currentPairs[j].getValue().equals(otherPairs[j].getValue()))
+			final Object value = currentPairs[j].getValue();
+			final Object value2 = otherPairs[j].getValue();
+			if (value instanceof Object[]) {
+				Object[] currentValues = (Object[]) value;
+				if (value2 instanceof Object[]) {
+					Object[] currentValues2 = (Object[]) value2;
+					final int length = currentValues.length;
+					if (length != currentValues2.length) {
+						return true;
+					}
+					for (int n = 0; n < length; n++) {
+						if (!currentValues[n].equals(currentValues2[n])) {
+							return true;
+						}
+					}
+					return false;
+				}
 				return true;
+			} else if (!value.equals(value2)) {
+				return true;
+			}
 		}
 	}
 	return false;

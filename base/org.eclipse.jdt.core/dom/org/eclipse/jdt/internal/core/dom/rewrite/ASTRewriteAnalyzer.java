@@ -3403,7 +3403,22 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 						String str= this.formatter.FIRST_ENUM_CONST.getPrefix(indent - 1);
 						doTextInsert(pos, str, getEditGroup(children[0]));
 					}
-					doTextInsert(pos, ";", getEditGroup(children[0])); //$NON-NLS-1$
+					if (token == TerminalTokens.TokenNameCOMMA) {
+						// a comma is at the end of the enum constant before a potential semicolon
+						int endPos= getScanner().getCurrentEndOffset();
+						int nextToken= getScanner().readNext(endPos, true);
+						if (nextToken != TerminalTokens.TokenNameSEMICOLON) {
+							doTextInsert(endPos, ";", getEditGroup(children[0])); //$NON-NLS-1$
+						} else {
+							endPos= getScanner().getCurrentEndOffset();
+							if (isAllOfKind(children, RewriteEvent.REMOVED)) {
+								doTextRemove(pos, endPos - pos, getEditGroup(children[0]));
+							}
+						}
+						pos= endPos;
+					} else {
+						doTextInsert(pos, ";", getEditGroup(children[0])); //$NON-NLS-1$
+					}
 				} else if (hasSemicolon) {
 					int endPos= getScanner().getCurrentEndOffset();
 					if (isAllOfKind(children, RewriteEvent.REMOVED)) {

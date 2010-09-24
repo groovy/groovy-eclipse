@@ -1008,7 +1008,7 @@ public final class ImportRewrite {
 	 * <p>
 	 * Calling this methods does not discard the modifications on record. Subsequence modifications are added
 	 * to the ones already on record. If this method is called again later, the resulting text edit object will accurately
-	 * reflect the net cumulative affect of all those changes.
+	 * reflect the net cumulative effect of all those changes.
 	 * </p>
 	 * @param monitor the progress monitor or <code>null</code>
 	 * @return text edit object describing the changes to the document corresponding to the changes

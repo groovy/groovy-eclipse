@@ -54,11 +54,16 @@ public class IndexManager extends JobManager implements IIndexConstants {
 	// key = indexLocation path, value = index state integer
 	private SimpleLookupTable indexStates = null;
 	private File savedIndexNamesFile = new File(getSavedIndexesDirectory(), "savedIndexNames.txt"); //$NON-NLS-1$
+	private File participantIndexNamesFile = new File(getSavedIndexesDirectory(), "participantsIndexNames.txt"); //$NON-NLS-1$
 	private boolean javaLikeNamesChanged = true;
 	public static final Integer SAVED_STATE = new Integer(0);
 	public static final Integer UPDATING_STATE = new Integer(1);
 	public static final Integer UNKNOWN_STATE = new Integer(2);
 	public static final Integer REBUILDING_STATE = new Integer(3);
+	
+	// search participants who register indexes with the index manager
+	private SimpleLookupTable participantsContainers = null;
+	private boolean participantUpdated = false;
 
 	// Debug
 	public static boolean DEBUG = false;
@@ -337,6 +342,20 @@ public Index[] getIndexes(IPath[] locations, IProgressMonitor progressMonitor) {
 					rebuildIndex(indexLocation, containerPath);
 					index = null;
 				}
+			} else {
+				if (!getJavaPluginWorkingLocation().isPrefixOf(indexLocation)) { // the index belongs to non-jdt search participant
+					if (indexLocation.toFile().exists()) { 
+						try {
+							IPath container = getParticipantsContainer(indexLocation);
+							if (container != null) {
+								index = new Index(indexLocation.toOSString(), container.toOSString(), true /*reuse index file*/);
+								this.indexes.put(indexLocation, index);
+							}
+						} catch (IOException e) {
+							// ignore
+						}
+					} 
+				}
 			}
 		}
 		if (index != null)
@@ -382,6 +401,12 @@ private SimpleLookupTable getIndexStates() {
 		deleteIndexFiles();
 	}
 	return this.indexStates;
+}
+private IPath getParticipantsContainer(IPath indexLocation) {
+	if (this.participantsContainers == null) {
+		readParticipantsIndexNamesFile();
+	}
+	return (IPath)this.participantsContainers.get(indexLocation);
 }
 private IPath getJavaPluginWorkingLocation() {
 	if (this.javaPluginLocation != null) return this.javaPluginLocation;
@@ -674,6 +699,10 @@ public synchronized void removeIndexPath(IPath path) {
 		for (int i = 0; i < count; i++)
 			this.indexes.removeKey(locations[i]);
 		removeIndexesState(locations);
+		if (this.participantsContainers != null && this.participantsContainers.get(path.toOSString()) != null) {
+			this.participantsContainers.removeKey(path.toOSString());	
+			writeParticipantsIndexNamesFile();
+		}
 	}
 }
 /**
@@ -815,6 +844,10 @@ public void saveIndexes() {
 			monitor.exitRead();
 		}
 	}
+	if (this.participantsContainers != null && this.participantUpdated) {
+		writeParticipantsIndexNamesFile();
+		this.participantUpdated = false;
+	}
 	this.needToSave = !allSaved;
 }
 public void scheduleDocumentIndexing(final SearchDocument searchDocument, IPath container, final IPath indexLocation, final SearchParticipant searchParticipant) {
@@ -874,6 +907,28 @@ private char[][] readIndexState(String dirOSString) {
 	}
 	return null;
 }
+private void readParticipantsIndexNamesFile() {
+	SimpleLookupTable containers = new SimpleLookupTable(3);
+	try {
+		char[] participantIndexNames = org.eclipse.jdt.internal.compiler.util.Util.getFileCharContent(this.participantIndexNamesFile, null);
+		if (participantIndexNames.length > 0) {
+			char[][] names = CharOperation.splitOn('\n', participantIndexNames);
+			if (names.length >= 3) {
+				// First line is DiskIndex signature  (see writeParticipantsIndexNamesFile())
+				if (DiskIndex.SIGNATURE.equals(new String(names[0]))) {					
+					for (int i = 1, l = names.length-1 ; i < l ; i+=2) {
+						containers.put(new Path(new String(names[i])), new Path(new String(names[i+1])));
+					}
+				}				
+			}
+		}	
+	} catch (IOException ignored) {
+		if (VERBOSE)
+			Util.verbose("Failed to read participant index file names"); //$NON-NLS-1$
+	}
+	this.participantsContainers = containers;
+	return;
+}
 private synchronized void removeIndexesState(IPath[] locations) {
 	getIndexStates(); // ensure the states are initialized
 	int length = locations.length;
@@ -920,6 +975,15 @@ private synchronized void updateIndexState(IPath indexLocation, Integer indexSta
 	}
 
 }
+public void updateParticipant(IPath indexLocation, IPath containerPath) {
+	if (this.participantsContainers == null) {
+		readParticipantsIndexNamesFile();
+	} 
+	if (this.participantsContainers.get(indexLocation) == null) {
+		this.participantsContainers.put(indexLocation, containerPath);
+		this.participantUpdated  = true;
+	}
+}
 private void writeJavaLikeNamesFile() {
 	BufferedWriter writer = null;
 	String pathName = getJavaPluginWorkingLocation().toOSString();
@@ -944,6 +1008,36 @@ private void writeJavaLikeNamesFile() {
 	} catch (IOException ignored) {
 		if (VERBOSE)
 			Util.verbose("Failed to write javaLikeNames file", System.err); //$NON-NLS-1$
+	} finally {
+		if (writer != null) {
+			try {
+				writer.close();
+			} catch (IOException e) {
+				// ignore
+			}
+		}
+	}
+}
+private void writeParticipantsIndexNamesFile() {
+	BufferedWriter writer = null;
+	try {
+		writer = new BufferedWriter(new FileWriter(this.participantIndexNamesFile));
+		writer.write(DiskIndex.SIGNATURE);
+		writer.write('\n');
+		Object[] indexFiles = this.participantsContainers.keyTable;
+		Object[] containers = this.participantsContainers.valueTable;
+		for (int i = 0, l = indexFiles.length; i < l; i++) {
+			IPath indexFile = (IPath)indexFiles[i];
+			if (indexFile != null) {
+				writer.write(indexFile.toOSString());
+				writer.write('\n');
+				writer.write(((IPath)containers[i]).toOSString());
+				writer.write('\n');
+			}
+		}
+	} catch (IOException ignored) {
+		if (VERBOSE)
+			Util.verbose("Failed to write participant index file names", System.err); //$NON-NLS-1$
 	} finally {
 		if (writer != null) {
 			try {

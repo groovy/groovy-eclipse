@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,5 +38,30 @@ public class StringConstant extends Constant {
 
 	public int typeID() {
 		return T_JavaLangString;
+	}
+
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((this.value == null) ? 0 : this.value.hashCode());
+		return result;
+	}
+
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		StringConstant other = (StringConstant) obj;
+		if (this.value == null) {
+			return other.value == null;
+		} else {
+			return this.value.equals(other.value);
+		}
 	}
 }

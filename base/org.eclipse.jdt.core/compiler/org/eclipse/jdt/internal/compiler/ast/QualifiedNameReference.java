@@ -93,7 +93,9 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 			} else if (localBinding.useFlag == LocalVariableBinding.UNUSED) {
 				localBinding.useFlag = LocalVariableBinding.FAKE_USED;
 			}
-			checkNPE(currentScope, flowContext, flowInfo, true);
+			if (needValue) {
+				checkNPE(currentScope, flowContext, flowInfo, true);
+			}
 	}
 
 	if (needValue) {
@@ -190,12 +192,14 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			if (!flowInfo.isDefinitelyAssigned(localBinding = (LocalVariableBinding) this.binding)) {
 				currentScope.problemReporter().uninitializedLocalVariable(localBinding, this);
 			}
-			if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
+			if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
 				localBinding.useFlag = LocalVariableBinding.USED;
 			} else if (localBinding.useFlag == LocalVariableBinding.UNUSED) {
 				localBinding.useFlag = LocalVariableBinding.FAKE_USED;
 			}
-			checkNPE(currentScope, flowContext, flowInfo, true);
+			if (needValue) {
+				checkNPE(currentScope, flowContext, flowInfo, true);
+			}
 	}
 	if (needValue) {
 		manageEnclosingInstanceAccessIfNecessary(currentScope, flowInfo);
@@ -214,7 +218,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 public void checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, boolean checkString) {
 	// cannot override localVariableBinding because this would project o.m onto o when
-	// analysing assignments
+	// analyzing assignments
 	if ((this.bits & ASTNode.RestrictiveFlagMASK) == Binding.LOCAL) {
 		LocalVariableBinding local = (LocalVariableBinding) this.binding;
 		if (local != null &&
@@ -225,7 +229,7 @@ public void checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInf
 					FlowContext.MAY_NULL, flowInfo);
 			}
 			flowInfo.markAsComparedEqualToNonNull(local);
-				// from thereon it is set
+			// from thereon it is set
 			if (flowContext.initsOnFinally != null) {
 				flowContext.initsOnFinally.markAsComparedEqualToNonNull(local);
 			}

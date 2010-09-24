@@ -14,11 +14,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Vector;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -268,7 +270,30 @@ public class ExternalFoldersManager {
 		}
 		return this.folders;
 	}
-
+	
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=313153
+	// Use the same RefreshJob if the job is still available
+	private void runRefreshJob(Collection paths) {
+		Job[] jobs = Job.getJobManager().find(ResourcesPlugin.FAMILY_MANUAL_REFRESH);
+		RefreshJob refreshJob = null;
+		if (jobs != null) {
+			for (int index = 0; index < jobs.length; index++) {
+				// We are only concerned about ExternalFolderManager.RefreshJob
+				if(jobs[index] instanceof RefreshJob) {
+					refreshJob =  (RefreshJob) jobs[index];
+					refreshJob.addFoldersToRefresh(paths);
+					if (refreshJob.getState() == Job.NONE) {
+						refreshJob.schedule();
+					}
+					break;
+				}
+			}
+		}
+		if (refreshJob == null) {
+			refreshJob = new RefreshJob(new Vector(paths));
+			refreshJob.schedule();
+		}
+	}
 	/*
 	 * Refreshes the external folders referenced on the classpath of the given source project
 	 */
@@ -294,9 +319,8 @@ public class ExternalFoldersManager {
 			if (externalFolders == null) 
 				return;
 
-			Iterator iterator = externalFolders.iterator();
-			Job refreshJob = new RefreshJob(iterator);
-			refreshJob.schedule();
+			runRefreshJob(externalFolders);
+
 		} catch (CoreException e) {
 			Util.log(e, "Exception while refreshing external project"); //$NON-NLS-1$
 		}
@@ -312,10 +336,8 @@ public class ExternalFoldersManager {
 			HashSet externalFolders = getExternalFolders(((JavaProject) JavaCore.create(source)).getResolvedClasspath());
 			if (externalFolders == null)
 				return;
-			Iterator iterator = externalFolders.iterator();
 			
-			Job refreshJob = new RefreshJob(iterator);
-			refreshJob.schedule();
+			runRefreshJob(externalFolders);
 		} catch (CoreException e) {
 			Util.log(e, "Exception while refreshing external project"); //$NON-NLS-1$
 		}
@@ -327,8 +349,8 @@ public class ExternalFoldersManager {
 	}
 
 	class RefreshJob extends Job {
-		Iterator externalFolders = null;
-		RefreshJob(Iterator externalFolders){
+		Vector externalFolders = null;
+		RefreshJob(Vector externalFolders){
 			super(Messages.refreshing_external_folders);
 			this.externalFolders = externalFolders;
 		}
@@ -337,14 +359,38 @@ public class ExternalFoldersManager {
 			return family == ResourcesPlugin.FAMILY_MANUAL_REFRESH;
 		}
 		
+		/*
+		 * Add the collection of paths to be refreshed to the already 
+		 * existing list of paths.  
+		 */
+		public void addFoldersToRefresh(Collection paths) {
+			if (!paths.isEmpty() && this.externalFolders == null) {
+				this.externalFolders = new Vector(); 
+			}
+			Iterator it = paths.iterator();
+			while(it.hasNext()) {
+				Object path = it.next();
+				if (!this.externalFolders.contains(path)) {
+					this.externalFolders.add(path);
+				}
+			}
+		}
+		
 		protected IStatus run(IProgressMonitor pm) {
 			try {
-				while (this.externalFolders.hasNext()) {
-					IPath externalPath = (IPath) this.externalFolders.next();
-					IFolder folder = getFolder(externalPath);
-					if (folder != null) {
+				if (this.externalFolders == null) 
+					return Status.OK_STATUS;
+				IPath externalPath = null;
+				for (int index = 0; index < this.externalFolders.size(); index++ ) {
+					if ((externalPath = (IPath)this.externalFolders.get(index)) != null) {
+						IFolder folder = getFolder(externalPath);
 						folder.refreshLocal(IResource.DEPTH_INFINITE, pm);
 					}
+					// Set the processed ones to null instead of removing the element altogether,
+					// so that they will not be considered as duplicates.
+					// This will also avoid elements being shifted to the left every time an element
+					// is removed. However, there is a risk of Collection size to be increased more often.
+					this.externalFolders.setElementAt(null, index);
 				}
 			} catch (CoreException e) {
 				return e.getStatus();

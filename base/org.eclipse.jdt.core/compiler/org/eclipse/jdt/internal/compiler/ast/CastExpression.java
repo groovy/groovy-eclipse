@@ -244,6 +244,7 @@ private static void checkAlternateBinding(BlockScope scope, Expression receiver,
 			public void setFieldIndex(int depth){ /* ignore */}
 			public int sourceStart() { return 0; }
 			public int sourceEnd() { return 0; }
+			public TypeBinding expectedType() { return invocationSite.expectedType(); }
 		};
 		MethodBinding bindingIfNoCast;
 		if (binding.isConstructor()) {
