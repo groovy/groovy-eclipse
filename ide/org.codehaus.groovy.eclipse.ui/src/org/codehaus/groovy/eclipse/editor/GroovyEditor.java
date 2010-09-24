@@ -29,14 +29,14 @@ import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractMethodAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyTabAction;
 import org.codehaus.groovy.eclipse.editor.highlighting.GroovySemanticReconciler;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
-import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction.FormatKind;
+import org.codehaus.groovy.eclipse.refactoring.actions.FormatGroovyAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.FormatKind;
 import org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -51,7 +51,6 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.actions.IndentAction;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
@@ -695,26 +694,27 @@ public class GroovyEditor extends CompilationUnitEditor {
                 .setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
         setAction("OrganizeImports", organizeImports); //$NON-NLS-1$
 
+        // use our FormatAll instead
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fFormatAll", group,
+                new FormatAllGroovyAction(this.getEditorSite(), FormatKind.FORMAT));
+
         // use our Format instead
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fFormatAll", group, new FormatAllGroovyAction(this.getEditorSite(), FormatKind.FORMAT));
-        IAction formatAction = new FormatAllGroovyAction(this.getEditorSite(), FormatKind.FORMAT);
+        IAction formatAction = new FormatGroovyAction(this.getEditorSite(), FormatKind.FORMAT);
         formatAction
                 .setActionDefinitionId(IJavaEditorActionDefinitionIds.FORMAT);
         setAction("Format", formatAction); //$NON-NLS-1$
         PlatformUI.getWorkbench().getHelpSystem().setHelp(formatAction, IJavaHelpContextIds.FORMAT_ACTION);
 
         // use our Indent instead
-        IAction indentAction = new FormatAllGroovyAction(this.getEditorSite(), FormatKind.INDENT_ONLY);
+        IAction indentAction = new FormatGroovyAction(this.getEditorSite(), FormatKind.INDENT_ONLY);
         indentAction
                 .setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT);
         setAction("Indent", indentAction); //$NON-NLS-1$
         PlatformUI.getWorkbench().getHelpSystem().setHelp(indentAction, IJavaHelpContextIds.INDENT_ACTION);
 
         // Use our IndentOnTab instead
-        Assert.isTrue(getAction(INDENT_ON_TAB) instanceof IndentAction, "Are we using the right action id?");
         IAction indentOnTabAction = new GroovyTabAction(this);
         setAction(INDENT_ON_TAB, indentOnTabAction);
-        Assert.isTrue(getAction(INDENT_ON_TAB) == indentOnTabAction, "Did it work??");
         markAsStateDependentAction(INDENT_ON_TAB, true);
         markAsSelectionDependentAction(INDENT_ON_TAB, true);
 

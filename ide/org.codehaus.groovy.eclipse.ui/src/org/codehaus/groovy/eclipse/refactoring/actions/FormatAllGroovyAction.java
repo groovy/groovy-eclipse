@@ -31,10 +31,8 @@ import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
-import org.eclipse.jdt.internal.ui.actions.ActionUtil;
 import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
 import org.eclipse.jdt.internal.ui.actions.MultiFormatAction;
-import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jdt.ui.actions.FormatAllAction;
@@ -55,9 +53,6 @@ import org.eclipse.ui.IWorkbenchSite;
  *
  */
 public class FormatAllGroovyAction extends FormatAllAction {
-    
-    public static enum FormatKind { INDENT_ONLY, FORMAT }
-    
     
     public static class GroovyMultiFormatAction extends MultiFormatAction {
         final FormatKind kind;
@@ -118,6 +113,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
         /*
          * @see org.eclipse.jdt.internal.ui.actions.CleanUpAction#createCleanUps(org.eclipse.jdt.core.ICompilationUnit[])
          */
+        @Override
         protected ICleanUp[] getCleanUps(ICompilationUnit[] units) {
             Map settings= new Hashtable();
             settings.put(CleanUpConstants.FORMAT_SOURCE_CODE, CleanUpOptions.TRUE);
@@ -146,6 +142,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
     /* (non-Javadoc)
      * Method declared on SelectionDispatchAction.
      */
+    @Override
     public void run(ITextSelection selection) {
         if (getSite() instanceof IEditorSite) {
             IWorkbenchPart part = ((IEditorSite) getSite()).getPart();

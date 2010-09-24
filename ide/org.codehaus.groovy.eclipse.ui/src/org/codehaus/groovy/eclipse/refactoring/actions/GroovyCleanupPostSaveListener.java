@@ -19,7 +19,6 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction.FormatKind;
 import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.fix.CodeFormatCleanUp;
