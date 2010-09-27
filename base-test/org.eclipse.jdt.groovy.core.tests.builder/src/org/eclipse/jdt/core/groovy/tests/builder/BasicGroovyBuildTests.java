@@ -64,6 +64,35 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "p1.Hello", "Hello world", "");
 
 	}
+	
+	// Activate when identified script recognition does not damage performance
+//	public void testScriptSupport() throws Exception {
+//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+//		env.addGroovyJars(projectPath);
+//		fullBuild(projectPath); 
+//		
+//		// remove old package fragment root so that names don't collide
+//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+//		
+//		// The fact that this is 'scripts' should cause us to suppress the .class file
+//		IPath root = env.addPackageFragmentRoot(projectPath, "scripts"); //$NON-NLS-1$
+//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+//
+//		env.addGroovyClass(root, "p1", "Hello",
+//			"package p1;\n"+
+//			"public class Hello {\n"+
+//			"   public static void main(String[] args) {\n"+
+//			"      System.out.println(\"Hello world\");\n"+
+//			"   }\n"+
+//			"}\n"
+//			);
+//			
+//		incrementalBuild(projectPath);
+//		// No compiled output as it was a script
+//		expectingCompiledClassesV("");
+//		expectingNoProblems();
+//	}
 
 	public void testTypeDuplication_GRE796_1() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

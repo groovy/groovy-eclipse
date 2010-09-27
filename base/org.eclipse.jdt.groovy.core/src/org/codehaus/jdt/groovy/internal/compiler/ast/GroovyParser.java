@@ -28,6 +28,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -36,6 +37,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
+import org.eclipse.jdt.internal.core.builder.SourceFile;
 
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates with the groovy parser and translates results
@@ -55,6 +57,8 @@ public class GroovyParser {
 	public static IGroovyDebugRequestor debugRequestor;
 	private CompilerOptions compilerOptions;
 	private Object requestor;
+	private boolean allowTransforms;
+	private ScriptFolderSelector scriptFolderSelector;
 
 	/*
 	 * Each project is allowed a GroovyClassLoader that will be used to load transform definitions and supporting classes. A cache
@@ -133,6 +137,7 @@ public class GroovyParser {
 		// record any paths we use for a project so that when the project is cleared,
 		// the paths (which point to cached classloaders) can be cleared
 
+		this.allowTransforms = allowTransforms;
 		this.gclClasspath = path;
 		this.compilerOptions = options;
 		this.projectName = options.groovyProjectName;
@@ -219,14 +224,6 @@ public class GroovyParser {
 			sourceCode = CharOperation.NO_CHAR; // pretend empty from thereon
 		}
 
-		// FIXADE checking for script folder.
-		// if (sourceUnit instanceof SourceFile) {
-		// SourceFile file = (SourceFile) sourceUnit;
-		// char[] projRelPath = file.resource.getProjectRelativePath().toPortableString().toCharArray();
-		// boolean isScript = new ScriptFolderSelector().isScript(projRelPath);
-		// System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
-		// }
-
 		// FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
 		CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
 		// groovyCompilerConfig.setPluginFactory(new ErrorRecoveredCSTParserPluginFactory(null));
@@ -270,6 +267,24 @@ public class GroovyParser {
 			for (TypeDeclaration decl : gcuDeclaration.types) {
 				GroovyTypeDeclaration gtDeclaration = (GroovyTypeDeclaration) decl;
 				resolver.record(gtDeclaration);
+			}
+		}
+		// Is this a script?
+		// If allowTransforms is TRUE then this is a 'full build' and we should remember which are scripts so that
+		// .class file output can be suppressed
+		boolean SCRIPT_RECOGNITION = false;
+		if (SCRIPT_RECOGNITION) {
+			if (allowTransforms && (sourceUnit instanceof SourceFile)) {
+				if (this.scriptFolderSelector == null) {
+					this.scriptFolderSelector = new ScriptFolderSelector();
+				}
+				SourceFile file = (SourceFile) sourceUnit;
+				char[] projRelPath = file.resource.getProjectRelativePath().toPortableString().toCharArray();
+				boolean isScript = scriptFolderSelector.isScript(projRelPath);
+				if (isScript) {
+					gcuDeclaration.tagAsScript();
+				}
+				// System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
 			}
 		}
 		if (debugRequestor != null) {
@@ -331,6 +346,7 @@ public class GroovyParser {
 		GroovyClassLoader gcl = getLoaderFor(gclClasspath);
 		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
 		this.groovyCompilationUnit = new CompilationUnit(null, null, grabbyLoader, gcl);
+		this.scriptFolderSelector = null;
 		grabbyLoader.setCompilationUnit(this.groovyCompilationUnit);
 		if (gcl == null) {
 			this.groovyCompilationUnit.ensureASTTransformVisitorAdded();

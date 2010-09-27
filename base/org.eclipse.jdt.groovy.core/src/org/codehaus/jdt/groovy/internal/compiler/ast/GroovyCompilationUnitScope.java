@@ -74,6 +74,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	private final static char[] LANG = "lang".toCharArray(); //$NON-NLS-1$
 	private final static char[][] GROOVY_LANG_GROOVYOBJECT = { GROOVY, LANG, "GroovyObject".toCharArray() }; //$NON-NLS-1$
 
+	private boolean isScript = false;
+
 	public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration,
 			LookupEnvironment lookupEnvironment) {
 		super(compilationUnitDeclaration, lookupEnvironment);
@@ -314,6 +316,14 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	@Override
 	public boolean scannerAvailable() {
 		return false;
+	}
+
+	public void setIsScript(boolean isScript) {
+		this.isScript = isScript;
+	}
+
+	public boolean isScript() {
+		return isScript;
 	}
 
 }

@@ -7,6 +7,7 @@ import org.eclipse.jdt.groovy.core.Activator;
 
 public class ScriptFolderSelector {
 
+	private final static char[][] NO_PATTERNS = new char[0][];
 	private final char[][] scriptPatterns;
 
 	public ScriptFolderSelector() {
@@ -17,7 +18,7 @@ public class ScriptFolderSelector {
 
 	private char[][] toCharChar(List<String> listStringPreference) {
 		if (listStringPreference == null) {
-			return new char[0][];
+			return NO_PATTERNS;
 		}
 		char[][] arr = new char[listStringPreference.size()][];
 		int index = 0;

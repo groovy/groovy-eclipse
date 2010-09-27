@@ -119,6 +119,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	public static boolean defaultCheckGenerics = false;
 	public static boolean earlyTransforms = true;
 
+	private boolean isScript = false;
+
 	private static final boolean DEBUG_TASK_TAGS = false;
 
 	public GroovyCompilationUnitDeclaration(ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength,
@@ -1442,10 +1444,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						rEx.printStackTrace();
 						Util.log(rEx, "Couldn't find binding for '" + classname + "': do you maybe have a duplicate type around?");
 					} else {
-						byte[] classbytes = clazz.getBytes();
-						String path = clazz.getName().replace('.', '/');
-						compilationResult
-								.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, binding, path));
+						// Suppress class file output if it is a script
+						boolean isScript = false;
+						if (binding.scope != null && (binding.scope.parent instanceof GroovyCompilationUnitScope)) {
+							GroovyCompilationUnitScope gcuScope = (GroovyCompilationUnitScope) binding.scope.parent;
+							if (gcuScope.isScript()) {
+								isScript = true;
+							}
+						}
+						if (!isScript) {
+							byte[] classbytes = clazz.getBytes();
+							String path = clazz.getName().replace('.', '/');
+							compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, binding,
+									path));
+						}
 					}
 				}
 			}
@@ -1611,7 +1623,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
-		return new GroovyCompilationUnitScope(this, lookupEnvironment);
+		GroovyCompilationUnitScope gcus = new GroovyCompilationUnitScope(this, lookupEnvironment);
+		gcus.setIsScript(isScript);
+		return gcus;
 	}
 
 	public ModuleNode getModuleNode() {
@@ -2067,6 +2081,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 		}
 		return toVerify;
+	}
+
+	public void tagAsScript() {
+		this.isScript = true;
 	}
 
 }
