@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+\ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
 import org.objectweb.asm.Opcodes;
@@ -33,36 +34,43 @@ import org.objectweb.asm.Opcodes;
 /**
  * Provides context information about the standard AST transforms.  Currently,
  * only Singleton is supported.
- * 
+ *
  * This is used for inferencing and for content assist.
- * 
- * 
+ *
+ *
  * @author Andrew Eisenberg
  * @created May 4, 2010
  */
 public abstract class BuiltInASTTransform {
     private static class SingletonASTTransform extends BuiltInASTTransform {
-        
+
         static final String NAME = "groovy.lang.Singleton";
-        
+
         private MethodNode singletonMethod;
         private FieldNode singletonField;
         private SingletonASTTransform(ClassNode thisNode) {
             super(thisNode);
         }
-    
+
         static BuiltInASTTransform create(ClassNode declaringType) {
             if (declaringType != null) {
-                List<AnnotationNode> annotations = declaringType.getAnnotations();
-                for (AnnotationNode annotation : annotations) {
-                    if (annotation.getClassNode().getName().equals(SingletonASTTransform.NAME)) {
-                        return new SingletonASTTransform(declaringType);
+                try {
+                    List<AnnotationNode> annotations = declaringType.getAnnotations();
+                    for (AnnotationNode annotation : annotations) {
+                        if (annotation.getClassNode().getName().equals(SingletonASTTransform.NAME)) {
+                            return new SingletonASTTransform(declaringType);
+                        }
                     }
+                } catch (Throwable t) {
+                    // STS-1255 NoClassDefError being thrown here. Ensure that
+                    // this does not prevent normal
+                    // functioning of inferencing
+                    GroovyCore.logException("Error trying to find annotations on " + declaringType.getName(), t);
                 }
             }
             return null;
         }
-    
+
         @Override
         public TypeAndDeclaration symbolToDeclaration(String symbol) {
             if (thisClass instanceof ClassNode) {
@@ -76,12 +84,12 @@ public abstract class BuiltInASTTransform {
             }
             return null;
         }
-    
+
         @Override
         public Collection<? extends AnnotatedNode> allIntroducedDeclarations() {
             return ListUtil.linked((AnnotatedNode) getSingletonField(), (AnnotatedNode) getSingletonMethod());
         }
-    
+
         private MethodNode getSingletonMethod() {
             if (singletonMethod == null) {
                 singletonMethod = createSingletonMethod();
@@ -94,15 +102,15 @@ public abstract class BuiltInASTTransform {
             }
             return singletonField;
         }
-    
+
         private FieldNode createSingletonField() {
             FieldNode f = new FieldNode("instance", Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, (ClassNode) thisClass, (ClassNode) thisClass, null);
             f.setDeclaringClass(thisClass);
             return f;
         }
-    
+
         private MethodNode createSingletonMethod() {
-            MethodNode m = new MethodNode("getInstance", Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, 
+            MethodNode m = new MethodNode("getInstance", Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC,
                     (ClassNode) thisClass, new Parameter[0], new ClassNode[0], new BlockStatement());
             m.setDeclaringClass(thisClass);
             return m;
@@ -116,17 +124,17 @@ public abstract class BuiltInASTTransform {
 
     // GRECLIPSE-709 only singleton is supported
 //    private static class DelegateASTTransform extends BuiltInASTTransform {
-//        
+//
 //        private static String NAME = "groovy.lang.Delegate";
-//    
+//
 //        List<FieldNode> delegates;
-//        Map<String, MethodNode> delegateMap; 
-//        
+//        Map<String, MethodNode> delegateMap;
+//
 //        DelegateASTTransform(ClassNode thisClass, List<FieldNode> delegates) {
 //            super(thisClass);
 //            this.delegates = delegates;
 //        }
-//    
+//
 //        static BuiltInASTTransform create(ClassNode declaringType) {
 //            if (declaringType != null) {
 //                List<FieldNode> fields = declaringType.getFields();
@@ -146,7 +154,7 @@ public abstract class BuiltInASTTransform {
 //            }
 //            return null;
 //        }
-//        
+//
 //        @Override
 //        public TypeAndDeclaration symbolToDeclaration(String symbol) {
 //            initialize();
@@ -156,13 +164,13 @@ public abstract class BuiltInASTTransform {
 //            }
 //            return null;
 //        }
-//    
+//
 //        @Override
 //        public Collection<? extends AnnotatedNode> allIntroducedDeclarations() {
 //            initialize();
 //            return delegateMap.values();
 //        }
-//    
+//
 //        private void initialize() {
 //            if (delegateMap == null) {
 //                delegateMap = new HashMap<String, MethodNode>();
@@ -175,7 +183,7 @@ public abstract class BuiltInASTTransform {
 //                }
 //            }
 //        }
-//    
+//
 //        /**
 //         * @param orig
 //         * @return
@@ -199,7 +207,7 @@ public abstract class BuiltInASTTransform {
     public abstract TypeAndDeclaration symbolToDeclaration(String symbol);
     public abstract Collection<? extends AnnotatedNode> allIntroducedDeclarations();
     public abstract String prettyName();
-    
+
     public static BuiltInASTTransform[] createAll(ClassNode declaringType) {
         List<BuiltInASTTransform> transforms = new LinkedList<BuiltInASTTransform>();
         BuiltInASTTransform candidate = SingletonASTTransform.create(declaringType);
