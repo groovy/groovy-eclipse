@@ -84,7 +84,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         }
     }
 
-    private String printTypeName(ClassNode type) {
+    protected String printTypeName(ClassNode type) {
         return type != null ? type.getName() + printGenerics(type) : "null";
     }
 
