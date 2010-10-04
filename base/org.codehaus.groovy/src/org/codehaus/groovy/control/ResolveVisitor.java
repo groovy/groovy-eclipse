@@ -1352,6 +1352,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         super.visitClass(node);
 
         // GRECLIPSE: start
+        genericParameterNames.clear();
         finishedResolution();
         // end
         currentClass = oldNode;
