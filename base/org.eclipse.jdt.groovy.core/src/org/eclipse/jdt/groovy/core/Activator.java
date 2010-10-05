@@ -35,10 +35,14 @@ public class Activator extends Plugin {
 	private IEclipsePreferences instanceScope;
 
 	// comma-separated list of regex filters that specify groovy scripts.
-	public static final String GROOVY_SCRIPT_FILTER = "groovy.script.filter";
+	public static final String GROOVY_SCRIPT_FILTERS = "groovy.script.filters";
+	public static final String GROOVY_SCRIPT_FILTERS_ENABLED = "groovy.script.filters.enabled";
 
 	// default list of regex filters to specify groovy scripts
-	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "scripts/**/*.groovy,src/main/resources/**/*.groovy,src/test/resources/**/*.groovy";
+	public static final char[][] CHAR_CHAR_DEFAULT_GROOVY_SCRIPT_FILTER = new char[][] { "scripts/**/*.groovyy".toCharArray(),
+			"y".toCharArray(), "src/main/resources/**/*.groovy:y".toCharArray(), "y".toCharArray(),
+			"src/test/resources/**/*.groovy:y".toCharArray(), "y".toCharArray() };
+	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "scripts/**/*.groovy,y,src/main/resources/**/*.groovy,y,src/test/resources/**/*.groovy,y";
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -93,10 +97,19 @@ public class Activator extends Plugin {
 		return getPreferences().get(key, def);
 	}
 
-	private IEclipsePreferences getPreferences() {
+	public IEclipsePreferences getPreferences() {
 		if (instanceScope == null) {
 			instanceScope = ((IScopeContext) new InstanceScope()).getNode(Activator.PLUGIN_ID);
 		}
 		return instanceScope;
+	}
+
+	/**
+	 * @param groovyScriptFilter
+	 * @param b
+	 * @return
+	 */
+	public boolean getBooleanPreference(String key, boolean def) {
+		return getPreferences().getBoolean(key, def);
 	}
 }

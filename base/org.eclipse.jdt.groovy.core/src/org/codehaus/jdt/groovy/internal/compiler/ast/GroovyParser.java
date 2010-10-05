@@ -11,21 +11,21 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import groovy.lang.GroovyClassLoader;
+
 import java.io.File;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import groovy.lang.GroovyClassLoader;
-
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
@@ -279,9 +279,7 @@ public class GroovyParser {
 					this.scriptFolderSelector = new ScriptFolderSelector();
 				}
 				SourceFile file = (SourceFile) sourceUnit;
-				char[] projRelPath = file.resource.getProjectRelativePath().toPortableString().toCharArray();
-				boolean isScript = scriptFolderSelector.isScript(projRelPath);
-				if (isScript) {
+				if (scriptFolderSelector.isScript(file.resource)) {
 					gcuDeclaration.tagAsScript();
 				}
 				// System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
