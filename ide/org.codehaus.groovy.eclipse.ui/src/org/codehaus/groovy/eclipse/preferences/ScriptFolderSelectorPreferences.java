@@ -15,18 +15,24 @@
  */
 package org.codehaus.groovy.eclipse.preferences;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.CheckedListDialogField;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.IDialogFieldListener;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.IListAdapter;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.ListDialogField;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -37,14 +43,15 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 /**
  * Dialog for creating and editing script folders in the workspace
- * 
+ *
  * @author andrew eisenberg
  * @created Sep 14, 2010
  */
-public class ScriptFolderSelector {
+public class ScriptFolderSelectorPreferences {
 
     private static final ImageDescriptor DESCRIPTOR = JavaPluginImages.DESC_OBJS_INCLUSION_FILTER_ATTRIB;
 
@@ -54,7 +61,11 @@ public class ScriptFolderSelector {
 
     private static final int IDX_REMOVE = 2;
 
-    private static final String[] buttonLabels = { "Add", "Edit", "Remove" };
+    private static final int IDX_CHECKALL = 3;
+
+    private static final int IDX_UNCHECKALL = 4;
+
+    private static final String[] buttonLabels = { "Add", "Edit", "Remove", "Check all", "Uncheck all" };
 
     private static class ScriptLabelProvider extends LabelProvider {
 
@@ -109,9 +120,11 @@ public class ScriptFolderSelector {
 
     private final Composite parent;
 
-    private ListDialogField patternList;
+    private CheckedListDialogField patternList;
 
-    public ScriptFolderSelector(Composite parent) {
+    private BooleanFieldEditor disableButton;
+
+    public ScriptFolderSelectorPreferences(Composite parent) {
         this.parent = parent;
     }
 
@@ -130,6 +143,13 @@ public class ScriptFolderSelector {
         label.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
         label.setText("Groovy Script Folders:");
 
+        // FIXADE should disable the inner control when deselected...
+        disableButton = new BooleanFieldEditor(Activator.GROOVY_SCRIPT_FILTERS_ENABLED,
+                "Disable script folders (treat all script folders as normal source folders)", inner);
+        IPreferenceStore preferenceStore = new ScopedPreferenceStore(new InstanceScope(), Activator.PLUGIN_ID);
+        disableButton.setPreferenceStore(preferenceStore);
+        disableButton.load();
+
         // inner composite contains the dialog itself
         inner = new Composite(inner, SWT.NONE | SWT.BORDER);
         inner.setFont(parent.getFont());
@@ -139,15 +159,20 @@ public class ScriptFolderSelector {
         layout.numColumns = 3;
         inner.setLayout(layout);
         inner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+        inner.setToolTipText("CHECKED boxes are COPIED to output folder.\nUNCHECKED boxes are NOT copied.");
 
         ScriptPatternAdapter adapter = new ScriptPatternAdapter();
 
-        patternList = new ListDialogField(adapter, buttonLabels, new ScriptLabelProvider(DESCRIPTOR));
+        patternList = new CheckedListDialogField(adapter, buttonLabels, new ScriptLabelProvider(DESCRIPTOR));
         patternList.setDialogFieldListener(adapter);
         patternList.setLabelText("Groovy files that match these patterns are treated as scripts.  "
-                + "They will not be compiled and will be copied as-is to the output folder.");
+                + "They will not be compiled and will be copied as-is to the output folder.\n\n"
+                + "CHECKED boxes will be COPIED to the output folder.  UNCHECKED boxes are NOT copied to the output folder.");
         patternList.setRemoveButtonIndex(IDX_REMOVE);
         patternList.enableButton(IDX_EDIT, false);
+        patternList.setCheckAllButtonIndex(IDX_CHECKALL);
+        patternList.setUncheckAllButtonIndex(IDX_UNCHECKALL);
+
         patternList.doFillIntoGrid(inner, 3);
         Label l = patternList.getLabelControl(inner);
         GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
@@ -160,8 +185,9 @@ public class ScriptFolderSelector {
         return patternList;
     }
 
+    // returns the list of patterns alternating with their docopy state
     private List<String> findPatterns() {
-        return Activator.getDefault().getListStringPreference(Activator.GROOVY_SCRIPT_FILTER,
+        return Activator.getDefault().getListStringPreference(Activator.GROOVY_SCRIPT_FILTERS,
                 Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
@@ -218,13 +244,21 @@ public class ScriptFolderSelector {
 
     @SuppressWarnings("unchecked")
     public void applyPreferences() {
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTER, patternList.getElements());
+        List<String> elts = patternList.getElements();
+        List<String> result = new ArrayList<String>(elts.size() * 2);
+        for (String elt : elts) {
+            result.add(elt);
+            result.add(patternList.isChecked(elt) ? "y" : "n");
+        }
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, result);
+
+        disableButton.store();
     }
 
     public void restoreDefaultsPressed() {
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTER,
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS,
                 Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-
+        disableButton.loadDefault();
         resetElements();
     }
 
@@ -233,7 +267,20 @@ public class ScriptFolderSelector {
      */
     private void resetElements() {
         List<String> elements = findPatterns();
-        patternList.setElements(elements);
+        List<String> filteredElements = new ArrayList<String>(elements.size() / 2);
+        List<String> checkedElements = new ArrayList<String>(elements.size() / 2);
+        for (Iterator<String> eltIter = elements.iterator(); eltIter.hasNext();) {
+            String elt = eltIter.next();
+            filteredElements.add(elt);
+            if (eltIter.hasNext()) {
+                String doCopy = eltIter.next();
+                if (doCopy.equals("y")) {
+                    checkedElements.add(elt);
+                }
+            }
+        }
+        patternList.setElements(filteredElements);
+        patternList.setCheckedElements(checkedElements);
         patternList.selectFirstElement();
     }
 

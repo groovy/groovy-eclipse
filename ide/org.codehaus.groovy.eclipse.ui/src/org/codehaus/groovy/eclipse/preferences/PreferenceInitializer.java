@@ -143,8 +143,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP, true);
 
         // Compile
-        store.setDefault(Activator.GROOVY_SCRIPT_FILTER,
+        store.setDefault(Activator.GROOVY_SCRIPT_FILTERS,
                 "scripts/**/*.groovy,src/main/resources/**/*.groovy,src/test/resources/**/*.groovy");
+        store.setDefault(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
     }
 
     public void reset() {
@@ -202,8 +203,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, "proj_home");
 
         // Compile
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTER,
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS,
                 Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
 
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
     }

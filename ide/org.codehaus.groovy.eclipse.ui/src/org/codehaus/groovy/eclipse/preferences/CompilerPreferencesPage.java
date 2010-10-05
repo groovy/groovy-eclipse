@@ -62,7 +62,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
     private Button groovyLibButt;
 
     // FIXADE: uncomment usage when script folders are handled by the compiler
-    // private ScriptFolderSelector scriptFolderSelector;
+    private ScriptFolderSelectorPreferences scriptFolderSelector;
 
     public CompilerPreferencesPage() {
         super("Compiler");
@@ -125,8 +125,10 @@ public class CompilerPreferencesPage extends PreferencePage implements
                 + "that should be reflected in your projects' classpaths.");
         classpathLabel2.setLayoutData(gd);
 
-        // scriptFolderSelector = new ScriptFolderSelector(page);
-        // scriptFolderSelector.createListContents();
+        scriptFolderSelector = new ScriptFolderSelectorPreferences(page);
+
+        // FIXADE Hidden
+        //        scriptFolderSelector.createListContents();
 
         Label compilerVersion = new Label(page, SWT.LEFT | SWT.WRAP);
         compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
@@ -285,12 +287,12 @@ public class CompilerPreferencesPage extends PreferencePage implements
     protected void performDefaults() {
         super.performDefaults();
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
-        // scriptFolderSelector.restoreDefaultsPressed();
+        scriptFolderSelector.restoreDefaultsPressed();
     }
 
     private void applyPreferences() {
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, groovyLibButt.getSelection());
-        // scriptFolderSelector.applyPreferences();
+        scriptFolderSelector.applyPreferences();
     }
 
 
