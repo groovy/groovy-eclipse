@@ -107,7 +107,6 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         env.addGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
         
         // remove old package fragment root so that names don't collide
         env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -118,11 +117,13 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.5");
         javaProject.setOption(CompilerOptions.OPTION_Source, "1.5");
         javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.5");
+        fullBuild(projectPath);
         return proj;
     }
 
     protected GroovyCompilationUnit createUnit(String name, String contents) {
     	IPath path = env.addGroovyClass(project.getFolder("src").getFullPath(), name, contents);
+    	fullBuild(project.getFullPath());
     	return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
     
