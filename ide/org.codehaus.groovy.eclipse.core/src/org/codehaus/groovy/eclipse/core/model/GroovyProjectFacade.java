@@ -133,6 +133,15 @@ public class GroovyProjectFacade {
          return null;
      }
 
+    /**
+     * If this fully qualified name is in a groovy file, then return the
+     * classnode
+     * 
+     * If this is not a groovy file, then return null
+     * 
+     * @param name
+     * @return
+     */
      public ClassNode getClassNodeForName(String name) {
          try {
             IType type = project.findType(name, new NullProgressMonitor());
