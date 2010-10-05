@@ -79,8 +79,22 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         this.indentendOnly = indentendOnly;
         pref = prefs;
         if (selection.getLength() != 0) {
-            formatOffset = selection.getOffset();
-            formatLength = selection.getLength();
+            try {
+                // expand selection to include start of line
+                int startLine = doc.getLineOfOffset(selection.getOffset());
+                formatOffset = doc.getLineInformation(startLine).getOffset();
+
+                // -1 because we don't want a selection at the start of a new
+                // line to cause that line to be formatted
+                int endLine = doc.getLineOfOffset(selection.getOffset() + selection.getLength() - 1);
+                int end = doc.getLineInformation(endLine).getOffset() + doc.getLineInformation(endLine).getLength();
+                formatLength = end - selection.getOffset();
+            } catch (BadLocationException e) {
+                GroovyCore.logException("Exception when calculating offsets for formatting", e);
+                // well, do the best we can
+                formatOffset = selection.getOffset();
+                formatLength = selection.getLength();
+            }
 
         } else {
             formatOffset = 0;
