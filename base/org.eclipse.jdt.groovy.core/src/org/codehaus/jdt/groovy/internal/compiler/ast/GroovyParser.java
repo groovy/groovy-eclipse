@@ -272,18 +272,15 @@ public class GroovyParser {
 		// Is this a script?
 		// If allowTransforms is TRUE then this is a 'full build' and we should remember which are scripts so that
 		// .class file output can be suppressed
-		boolean SCRIPT_RECOGNITION = false;
-		if (SCRIPT_RECOGNITION) {
-			if (allowTransforms && (sourceUnit instanceof SourceFile)) {
-				if (this.scriptFolderSelector == null) {
-					this.scriptFolderSelector = new ScriptFolderSelector();
-				}
-				SourceFile file = (SourceFile) sourceUnit;
-				if (scriptFolderSelector.isScript(file.resource)) {
-					gcuDeclaration.tagAsScript();
-				}
-				// System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
+		if (allowTransforms && (sourceUnit instanceof SourceFile)) {
+			if (this.scriptFolderSelector == null) {
+				this.scriptFolderSelector = new ScriptFolderSelector();
 			}
+			SourceFile file = (SourceFile) sourceUnit;
+			if (scriptFolderSelector.isScript(file.resource)) {
+				gcuDeclaration.tagAsScript();
+			}
+			// System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
 		}
 		if (debugRequestor != null) {
 			debugRequestor.acceptCompilationUnitDeclaration(gcuDeclaration);

@@ -19,7 +19,7 @@ public class ScriptFolderSelector {
 	public ScriptFolderSelector() {
 		// boolean isDisabled = Activator.getDefault().getBooleanPreference(Activator.GROOVY_SCRIPT_FILTER_ENABLED, false);
 		// ALWAYS DISABLED
-		boolean isDisabled = false;
+		boolean isDisabled = true;
 		if (isDisabled) {
 			this.disabled = isDisabled;
 			this.scriptPatterns = null;
@@ -98,7 +98,7 @@ public class ScriptFolderSelector {
 	 * {@link FileKind#SCRIPT_NO_COPY} false for {@link FileKind#SOURCE}.
 	 */
 	public boolean isScript(IResource file) {
-		if (file == null) {
+		if (file == null || disabled) {
 			return false;
 		}
 		return isScript(file.getProjectRelativePath().toPortableString().toCharArray());
