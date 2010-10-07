@@ -25,10 +25,14 @@ import java.io.Reader;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Comment;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.io.FileReaderSource;
 import org.codehaus.groovy.control.io.ReaderSource;
@@ -91,6 +95,10 @@ public class SourceUnit extends ProcessingUnit {
      */
     protected ModuleNode ast;
 
+    // GRECLIPSE start - temp fix whilst groovy guys sort it out
+//	public Map<ClassNode,Map<String,GenericsType>> genericParameters = new HashMap<ClassNode,Map<String,GenericsType>>();
+	// GRECLIPSE end
+	
     /**
      * Initializes the SourceUnit from existing machinery.
      */

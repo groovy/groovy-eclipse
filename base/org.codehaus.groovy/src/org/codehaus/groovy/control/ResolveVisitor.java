@@ -147,6 +147,21 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public void startResolving(ClassNode node, SourceUnit source) {
         this.source = source;
+//        // GRECLIPSE start - use the parents generic parameters
+//        // temp fix whilst groovy team work out their fix
+//        boolean hasOuter = false;
+//        ClassNode outer = node;
+//        while (outer instanceof InnerClassNode) {
+//        	outer = ((InnerClassNode)node).getOuterClass();
+//        	hasOuter=true;
+//        }
+//        if (hasOuter) {
+//        	genericParameterNames = source.genericParameters.get(outer);
+//        } else {
+//            genericParameterNames = new HashMap<String, GenericsType>();
+//            source.genericParameters.put(node,genericParameterNames);
+//        }
+//        // GRECLIPSE end
         visitClass(node);
     }
 
@@ -1292,8 +1307,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public void visitClass(ClassNode node) {
         ClassNode oldNode = currentClass;
-        Map<String, GenericsType> oldPNames = genericParameterNames;
-        genericParameterNames = new HashMap<String, GenericsType>(genericParameterNames);
         currentClass = node;
         // GRECLIPSE: start
         if (!commencingResolution()) {
@@ -1354,7 +1367,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         super.visitClass(node);
 
         // GRECLIPSE: start
-        genericParameterNames = oldPNames;
         finishedResolution();
         // end
         currentClass = oldNode;
