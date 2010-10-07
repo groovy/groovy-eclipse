@@ -7,6 +7,7 @@ Bundle-ClassPath: jdtcoretestsbuilder.jar
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
 Export-Package: org.eclipse.jdt.core.groovy.tests.builder,
+ org.eclipse.jdt.core.groovy.tests.compiler,
  org.eclipse.jdt.core.groovy.tests.locations,
  org.eclipse.jdt.core.groovy.tests.model,
  org.eclipse.jdt.core.groovy.tests.search,
