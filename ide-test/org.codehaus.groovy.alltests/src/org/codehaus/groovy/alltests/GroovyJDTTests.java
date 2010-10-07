@@ -15,6 +15,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests;
+import org.eclipse.jdt.core.groovy.tests.compiler.ScriptFolderTests;
 import org.eclipse.jdt.core.groovy.tests.locations.ASTConverterTests;
 import org.eclipse.jdt.core.groovy.tests.locations.ASTNodeSourceLocationsTests;
 import org.eclipse.jdt.core.groovy.tests.locations.LocationSupportTests;
@@ -31,9 +32,6 @@ import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
  * @created Jul 8, 2009
  *
  * All Groovy-JDT integration tests.
- *
- * TODO Determine if we should include the entire builder and compiler test suites
- * here, or only the Groovy-oriented tests.
  */
 public class GroovyJDTTests {
     public static Test suite() throws Exception {
@@ -56,6 +54,7 @@ public class GroovyJDTTests {
 
         // Compiler tests
         suite.addTest(GroovySimpleTest.suite());
+        suite.addTest(ScriptFolderTests.suite());
 
         // Search tests
         suite.addTest(AllSearchTests.suite());
