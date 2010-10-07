@@ -61,7 +61,6 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
     private Button groovyLibButt;
 
-    // FIXADE: uncomment usage when script folders are handled by the compiler
     private ScriptFolderSelectorPreferences scriptFolderSelector;
 
     public CompilerPreferencesPage() {
@@ -127,8 +126,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
         scriptFolderSelector = new ScriptFolderSelectorPreferences(page);
 
-        // FIXADE Hidden
-        //        scriptFolderSelector.createListContents();
+        scriptFolderSelector.createListContents();
 
         Label compilerVersion = new Label(page, SWT.LEFT | SWT.WRAP);
         compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");

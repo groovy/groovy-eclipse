@@ -32,8 +32,11 @@ import org.eclipse.jdt.internal.ui.wizards.dialogfields.IListAdapter;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.ListDialogField;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
@@ -42,6 +45,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
@@ -143,23 +147,40 @@ public class ScriptFolderSelectorPreferences {
         label.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
         label.setText("Groovy Script Folders:");
 
-        // FIXADE should disable the inner control when deselected...
         disableButton = new BooleanFieldEditor(Activator.GROOVY_SCRIPT_FILTERS_ENABLED,
-                "Disable script folders (treat all script folders as normal source folders)", inner);
+                "Disable script folders (treat all script folders as normal source folders)", BooleanFieldEditor.DEFAULT, inner);
         IPreferenceStore preferenceStore = new ScopedPreferenceStore(new InstanceScope(), Activator.PLUGIN_ID);
         disableButton.setPreferenceStore(preferenceStore);
         disableButton.load();
 
         // inner composite contains the dialog itself
-        inner = new Composite(inner, SWT.NONE | SWT.BORDER);
-        inner.setFont(parent.getFont());
+        final Composite innerInner = new Composite(inner, SWT.NONE | SWT.BORDER);
+        innerInner.setFont(parent.getFont());
         layout = new GridLayout();
         layout.marginHeight = 3;
         layout.marginWidth = 3;
         layout.numColumns = 3;
-        inner.setLayout(layout);
-        inner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-        inner.setToolTipText("CHECKED boxes are COPIED to output folder.\nUNCHECKED boxes are NOT copied.");
+        innerInner.setLayout(layout);
+        innerInner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+        innerInner.setToolTipText("CHECKED boxes are COPIED to output folder.\nUNCHECKED boxes are NOT copied.");
+        boolean enabled = !disableButton.getBooleanValue();
+        innerInner.setEnabled(enabled);
+
+        // enable/disable pattern list based
+        disableButton.setPropertyChangeListener(new IPropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent event) {
+                if (event.getProperty() == FieldEditor.VALUE) {
+                    Object o = event.getNewValue();
+                    if (o instanceof Boolean) {
+                        boolean enabled = !((Boolean) o);
+                        innerInner.setEnabled(enabled);
+                        for (Control c : innerInner.getChildren()) {
+                            c.setEnabled(enabled);
+                        }
+                    }
+                }
+            }
+        });
 
         ScriptPatternAdapter adapter = new ScriptPatternAdapter();
 
@@ -173,8 +194,8 @@ public class ScriptFolderSelectorPreferences {
         patternList.setCheckAllButtonIndex(IDX_CHECKALL);
         patternList.setUncheckAllButtonIndex(IDX_UNCHECKALL);
 
-        patternList.doFillIntoGrid(inner, 3);
-        Label l = patternList.getLabelControl(inner);
+        patternList.doFillIntoGrid(innerInner, 3);
+        Label l = patternList.getLabelControl(innerInner);
         GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
         gd.widthHint = 200;
         l.setLayoutData(gd);
@@ -182,6 +203,13 @@ public class ScriptFolderSelectorPreferences {
         resetElements();
         patternList.enableButton(IDX_ADD, true);
         patternList.setViewerComparator(new ViewerComparator());
+
+        // finally force greying out of tree if required
+        innerInner.setEnabled(enabled);
+        for (Control c : innerInner.getChildren()) {
+            c.setEnabled(enabled);
+        }
+
         return patternList;
     }
 
