@@ -17,9 +17,12 @@ import junit.framework.Test;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.groovy.tests.builder.ProjectUtils;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
@@ -152,23 +155,97 @@ public class ScriptFolderTests extends BuilderTests {
     
     // now that we have tested the settings, let's test that scripts are handled correctly
     public void testScriptInProjectNotCompiled() throws Exception {
-        // this class should compile with errors, but since it is a script
-        // no errors will be found in the project
         Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "def x", true);
-        assertNoExists("bin/Script.class");
-        assertExists("bin/Script.groovy");
+        assertNoExists("Project/bin/Script.class");
+        assertExists("Project/bin/Script.groovy");
+    }
+    public void testScriptInProjectNoCopy() throws Exception {
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"));
+        createScriptInGroovyProject("Script", "def x", true);
+        assertNoExists("Project/bin/Script.class");
+        assertNoExists("Project/bin/Script.groovy");
+    }
+    public void testScriptInProjectDisabled() throws Exception {
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        createScriptInGroovyProject("Script", "def x", true);
+        assertExists("Project/bin/Script.class");
+        assertNoExists("Project/bin/Script.groovy");
     }
     public void testSourceInProjectCompiled() throws Exception {
-        // this class should compile with errors, and since this
-        // is a java class, should report errors
         Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        createScriptInGroovyProject("Script", "class Script { }", false);
-        assertExists("bin/Script.class");
-        assertNoExists("bin/Script.groovy");
-        assertNoExists("bin/Script.java");
+        createScriptInGroovyProject("Script", "class Script { }", false);  // creates a java file
+        assertExists("Project/bin/Script.class");
+        assertNoExists("Project/bin/Script.groovy");
+        assertNoExists("Project/bin/Script.java");
+    }
+    
+    // This is the big test.
+    public void testComplexScriptFolderProject() throws Exception {
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
+        ProjectUtils.createPredefinedProject("ScriptFoldersProject");
+        env.fullBuild();
+        
+        // project root is a source folder, but it is not a script folder
+        assertExists("ScriptFoldersProject/bin/NotAScript1.class");
+        assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
+        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        
+        // src1 is a script folder and compiles to default out folder
+        assertExists("ScriptFoldersProject/bin/Script1.groovy");
+        assertExists("ScriptFoldersProject/bin/p/Script1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/Script1.class");
+        assertNoExists("ScriptFoldersProject/bin/p/Script1.class");
+        
+        // src2 is a script folder and compiles to bin2
+        assertExists("ScriptFoldersProject/bin2/Script2.groovy");
+        assertExists("ScriptFoldersProject/bin2/p/Script2.groovy");
+        assertNoExists("ScriptFoldersProject/bin2/Script2.class");
+        assertNoExists("ScriptFoldersProject/bin2/p/Script2.class");
+        
+        // src3 is a script folder, and is its own out folder
+        assertExistsNotDerived("ScriptFoldersProject/src3/Script3.groovy");
+        assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
+        assertNoExists("ScriptFoldersProject/src3/Script3.class");
+        assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
+    }
+    
+    // as above, but don't copy
+    public void testComplexScriptFolderProjectNoCopy() throws Exception {
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,n,src2/**/*.groovy,n,src3/**/*.groovy,n");
+        ProjectUtils.createPredefinedProject("ScriptFoldersProject");
+        env.fullBuild();
+        
+        // project root is a source folder, but it is not a script folder
+        assertExists("ScriptFoldersProject/bin/NotAScript1.class");
+        assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
+        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        
+        // src1 is a script folder and compiles to default out folder
+        assertNoExists("ScriptFoldersProject/bin/Script1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/p/Script1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/Script1.class");
+        assertNoExists("ScriptFoldersProject/bin/p/Script1.class");
+        
+        // src2 is a script folder and compiles to bin2
+        assertNoExists("ScriptFoldersProject/bin2/Script2.groovy");
+        assertNoExists("ScriptFoldersProject/bin2/p/Script2.groovy");
+        assertNoExists("ScriptFoldersProject/bin2/Script2.class");
+        assertNoExists("ScriptFoldersProject/bin2/p/Script2.class");
+        
+        // src3 is a script folder, and is its own out folder
+        assertExistsNotDerived("ScriptFoldersProject/src3/Script3.groovy");
+        assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
+        assertNoExists("ScriptFoldersProject/src3/Script3.class");
+        assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
     }
     
     
@@ -197,17 +274,24 @@ public class ScriptFolderTests extends BuilderTests {
         fullBuild(projectPath);
         return (CompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
-
     
     private void assertExists(String projectRelativePath) {
-        IProject project = env.getProject("Project");
-        IFile file = project.getFile(projectRelativePath);
+        IWorkspaceRoot root = env.getWorkspace().getRoot();
+        IFile file = root.getFile(new Path(projectRelativePath));
         assertTrue("File should exist: " + file, file.exists());
+        assertTrue("File should be derived: " + file, file.isDerived());
+    }
+    
+    private void assertExistsNotDerived(String projectRelativePath) {
+        IWorkspaceRoot root = env.getWorkspace().getRoot();
+        IFile file = root.getFile(new Path(projectRelativePath));
+        assertTrue("File should exist: " + file, file.exists());
+        assertFalse("File should not be derived: " + file, file.isDerived());
     }
     
     private void assertNoExists(String projectRelativePath) {
-        IProject project = env.getProject("Project");
-        IFile file = project.getFile(projectRelativePath);
+        IWorkspaceRoot root = env.getWorkspace().getRoot();
+        IFile file = root.getFile(new Path(projectRelativePath));
         assertFalse("File should not exist: " + file, file.exists());
     }
     

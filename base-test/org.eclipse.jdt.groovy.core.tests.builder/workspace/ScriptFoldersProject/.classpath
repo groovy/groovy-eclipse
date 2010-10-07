@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src1"/>
+	<classpathentry kind="src" output="src3" path="src3"/>
+	<classpathentry excluding="src1/|src2/|src3/" kind="src" path=""/>
+	<classpathentry kind="src" output="bin2" path="src2"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
+	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
