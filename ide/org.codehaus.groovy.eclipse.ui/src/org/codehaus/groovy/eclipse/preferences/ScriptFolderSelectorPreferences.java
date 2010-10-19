@@ -148,7 +148,8 @@ public class ScriptFolderSelectorPreferences {
         label.setText("Groovy Script Folders:");
 
         disableButton = new BooleanFieldEditor(Activator.GROOVY_SCRIPT_FILTERS_ENABLED,
-                "Disable script folders (treat all script folders as normal source folders)", BooleanFieldEditor.DEFAULT, inner);
+ "Enable script folder support",
+                BooleanFieldEditor.DEFAULT, inner);
         IPreferenceStore preferenceStore = new ScopedPreferenceStore(new InstanceScope(), Activator.PLUGIN_ID);
         disableButton.setPreferenceStore(preferenceStore);
         disableButton.load();
@@ -163,7 +164,7 @@ public class ScriptFolderSelectorPreferences {
         innerInner.setLayout(layout);
         innerInner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
         innerInner.setToolTipText("CHECKED boxes are COPIED to output folder.\nUNCHECKED boxes are NOT copied.");
-        boolean enabled = !disableButton.getBooleanValue();
+        boolean enabled = disableButton.getBooleanValue();
         innerInner.setEnabled(enabled);
 
         // enable/disable pattern list based
@@ -172,7 +173,7 @@ public class ScriptFolderSelectorPreferences {
                 if (event.getProperty() == FieldEditor.VALUE) {
                     Object o = event.getNewValue();
                     if (o instanceof Boolean) {
-                        boolean enabled = !((Boolean) o);
+                        boolean enabled = ((Boolean) o);
                         innerInner.setEnabled(enabled);
                         for (Control c : innerInner.getChildren()) {
                             c.setEnabled(enabled);
@@ -272,6 +273,7 @@ public class ScriptFolderSelectorPreferences {
 
     @SuppressWarnings("unchecked")
     public void applyPreferences() {
+        disableButton.store();
         List<String> elts = patternList.getElements();
         List<String> result = new ArrayList<String>(elts.size() * 2);
         for (String elt : elts) {
@@ -280,13 +282,12 @@ public class ScriptFolderSelectorPreferences {
         }
         Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, result);
 
-        disableButton.store();
     }
 
     public void restoreDefaultsPressed() {
+        disableButton.loadDefault();
         Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS,
                 Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        disableButton.loadDefault();
         resetElements();
     }
 

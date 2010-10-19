@@ -17,7 +17,6 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -126,10 +125,10 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 							start = end = -1;
 							startEndFound = true;
 						}
-					} else if (node instanceof AnnotatedNode) {
+					} else if (node instanceof AnnotationNode) {
 						type = ((AnnotationNode) node).getClassNode();
-						end = node.getEnd();
-						start = node.getStart();
+						end = type.getEnd();
+						start = type.getStart();
 					}
 
 					if (!startEndFound) {

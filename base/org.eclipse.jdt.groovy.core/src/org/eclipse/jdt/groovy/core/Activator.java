@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+ * Copyright (c) 2009, 2010 Codehaus.org, SpringSource, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,7 +19,9 @@ import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.internal.core.util.Util;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.prefs.BackingStoreException;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -75,6 +77,11 @@ public class Activator extends Plugin {
 			concat = sb.toString();
 		}
 		getPreferences().put(key, concat);
+		try {
+			getPreferences().flush();
+		} catch (BackingStoreException e) {
+			Util.log(e);
+		}
 	}
 
 	public void setPreference(String key, String val) {
@@ -82,6 +89,11 @@ public class Activator extends Plugin {
 			val = "";
 		}
 		getPreferences().put(key, val);
+		try {
+			getPreferences().flush();
+		} catch (BackingStoreException e) {
+			Util.log(e);
+		}
 	}
 
 	public List<String> getListStringPreference(String key, String def) {
