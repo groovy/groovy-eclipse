@@ -273,6 +273,8 @@ public class ScriptFolderSelectorPreferences {
 
     @SuppressWarnings("unchecked")
     public void applyPreferences() {
+        // must do the store before setting the preference
+        // to ensure that the store is flushed
         disableButton.store();
         List<String> elts = patternList.getElements();
         List<String> result = new ArrayList<String>(elts.size() * 2);
@@ -285,6 +287,8 @@ public class ScriptFolderSelectorPreferences {
     }
 
     public void restoreDefaultsPressed() {
+        // must do the store before setting the preference
+        // to ensure that the store is flushed
         disableButton.loadDefault();
         Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS,
                 Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
