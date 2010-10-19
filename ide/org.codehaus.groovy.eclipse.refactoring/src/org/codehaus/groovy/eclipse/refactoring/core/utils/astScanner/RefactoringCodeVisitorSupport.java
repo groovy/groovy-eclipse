@@ -289,6 +289,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
         Expression initExp = node.getInitialValueExpression();
         if (initExp != null) {
             analyzeNode(initExp);
+            initExp.visit(this);
             clear(initExp);
         }
 		clear(node);

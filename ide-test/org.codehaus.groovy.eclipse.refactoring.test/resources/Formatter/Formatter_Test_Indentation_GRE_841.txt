@@ -1,0 +1,24 @@
+###prop
+setPreferences=true
+indentation=space
+tabsize=4
+indentendOnly=true
+###src
+class C {
+  def noExprIndent = {
+    if (true)
+    a
+    else
+    af
+  }
+}
+###exp
+class C {
+    def noExprIndent = {
+        if (true)
+            a
+        else
+            af
+    }
+}
+###end
