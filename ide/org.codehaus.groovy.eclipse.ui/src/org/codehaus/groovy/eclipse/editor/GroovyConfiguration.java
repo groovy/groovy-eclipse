@@ -76,6 +76,9 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 	            registry.getExtraGroovyKeywordsForProject(project),
 	            registry.getExtraGJDKKeywordsForProject(project));
 	    ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fCodeScanner", this, tagScanner);
+        // ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class,
+        // "fMultilineCommentScanner", this, tagScanner);
+        ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fSinglelineCommentScanner", this, tagScanner);
 	}
 
     private HighlightingExtenderRegistry highlightingExtender() {

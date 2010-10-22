@@ -24,8 +24,10 @@ import org.eclipse.jface.text.Position;
  */
 public class HighlightedTypedPosition extends Position {
     public static enum HighlightKind {
-        UNKNOWN, REGEX
+        DEPRECATED, FIELD, REGEX, STATIC, UNKNOWN
     }
+
+    public final HighlightKind kind;
 
     public HighlightedTypedPosition(int offset, HighlightKind kind) {
         super(offset);
@@ -37,6 +39,32 @@ public class HighlightedTypedPosition extends Position {
         this.kind = kind;
     }
 
-    public final HighlightKind kind;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        HighlightedTypedPosition other = (HighlightedTypedPosition) obj;
+        if (kind != other.kind)
+            return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((kind == null) ? 0 : kind.hashCode());
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "HighlightedTypedPosition [kind=" + kind + ", offset=" + offset + ", length=" + length + ", isDeleted=" + isDeleted
+                + "]";
+    }
 
 }

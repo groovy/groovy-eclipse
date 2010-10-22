@@ -47,7 +47,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     private IClasspathEntry[] entries;
 
     private IProject project;
-    
+
     public GroovyClasspathContainer(IProject project) {
         this.project = project;
     }
@@ -62,7 +62,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     synchronized void reset() {
         entries = null;
     }
-    
+
     // Theoretically, we can support multiple versions of org.codehaus.groovy here
     private void updateEntries() {
         final List<IClasspathEntry> newEntries = newList();
@@ -70,10 +70,10 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	    	URL groovyURL = CompilerUtils.getExportedGroovyAllJar();
 	        IPath runtimeJarPath = new Path(groovyURL.getPath());
 	        File srcJarFile = new File(groovyURL.getPath().replace(".jar", "-sources.jar"));
-	        IPath srcJarPath = srcJarFile.exists() ? 
+	        IPath srcJarPath = srcJarFile.exists() ?
 	        		new Path(srcJarFile.getAbsolutePath()) : null;
 
-	        		
+
 	        File javadocJarFile = new File(groovyURL.getPath().replace(".jar", "-javadoc.jar"));
 	        IClasspathAttribute[] attrs;
 	        if (javadocJarFile.exists()) {
@@ -81,7 +81,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	            final IClasspathAttribute cpattr = new ClasspathAttribute(
 	                    IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME,
 	                    javadocJarPath);
-	            
+
 	            attrs = new IClasspathAttribute[] { cpattr };
 	        } else {
 	            attrs = new IClasspathAttribute[0];
@@ -90,11 +90,17 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	        		srcJarPath, null, null,
 	                attrs, true);
 	        newEntries.add(entry);
-	        
+
+            URL[] extraJars = CompilerUtils.getExtraJarsForClasspath();
+            for (URL jar : extraJars) {
+                IPath jarPath = new Path(jar.getPath());
+                newEntries.add(newLibraryEntry(jarPath, null, null));
+            }
+
 	        if (useGroovyLibs()) {
 	            newEntries.addAll(getGroovyJarsInDotGroovyLib());
 	        }
-	        
+
 	        entries = newEntries.toArray(new IClasspathEntry[0]);
         } catch (Exception e) {
         	GroovyCore.logException("Problem finding groovy runtime", e);
@@ -116,9 +122,9 @@ public class GroovyClasspathContainer implements IClasspathContainer {
                     PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
         }
     }
-    
+
     /**
-     * Finds all the jars in the ~/.groovy/lib directory and adds them 
+     * Finds all the jars in the ~/.groovy/lib directory and adds them
      * to the classpath
      * @return
      */

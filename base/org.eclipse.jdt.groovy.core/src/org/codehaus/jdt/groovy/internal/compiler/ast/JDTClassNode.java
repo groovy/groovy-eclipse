@@ -525,4 +525,7 @@ public class JDTClassNode extends ClassNode {
 		return null;
 	}
 
+	public ReferenceBinding getJdtBinding() {
+		return jdtBinding;
+	}
 }

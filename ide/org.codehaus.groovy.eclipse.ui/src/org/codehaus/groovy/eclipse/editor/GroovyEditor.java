@@ -564,13 +564,18 @@ public class GroovyEditor extends CompilationUnitEditor {
         setSourceViewerConfiguration(createJavaSourceViewerConfiguration());
     }
 
+    public GroovyConfiguration getGroovyConfiguration() {
+        return (GroovyConfiguration) getSourceViewerConfiguration();
+    }
 
     private void installSemanticHighlighting() {
         try {
+            fSemanticManager.uninstall();
             semanticReconciler = new GroovySemanticReconciler();
             semanticReconciler.install(this, (JavaSourceViewer) this.getSourceViewer());
             ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "addReconcileListener",
                     new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
+
         } catch (SecurityException e) {
             GroovyCore.logException("Unable to install semantic reconciler for groovy editor", e);
         }

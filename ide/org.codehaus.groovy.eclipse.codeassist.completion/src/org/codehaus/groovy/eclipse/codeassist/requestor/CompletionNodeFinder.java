@@ -126,6 +126,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
 
 // @Override
+    @Override
     public void visitImports(ModuleNode node) {
         ImportNodeCompatibilityWrapper wrapper = new ImportNodeCompatibilityWrapper(node);
         for (ImportNode importNode : wrapper.getAllImportNodes()) {
@@ -429,7 +430,8 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     public void visitConstructorCallExpression(
             ConstructorCallExpression call) {
         if (doTest(call.getType())) {
-            createContext(call.getType(), blockStack.peek(), expressionOrStatement());
+            createContext(call.getType(), blockStack.peek(),
+                    ContentAssistLocation.CONSTRUCTOR);
         }
         super.visitConstructorCallExpression(call);
         // might be a completion after the parens

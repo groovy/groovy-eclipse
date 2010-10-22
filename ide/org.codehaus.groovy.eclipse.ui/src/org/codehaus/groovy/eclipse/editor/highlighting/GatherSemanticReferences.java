@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -29,6 +28,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.Position;
 
 public class GatherSemanticReferences {
 
@@ -48,13 +48,24 @@ public class GatherSemanticReferences {
                 visitor.visitCompilationUnit(typeRequestor);
                 List<HighlightedTypedPosition> positions = new ArrayList<HighlightedTypedPosition>(typeRequestor.unknownNodes
                         .size());
-                for (ASTNode node : typeRequestor.unknownNodes) {
-                    positions.add(new HighlightedTypedPosition(node.getStart(), node.getEnd() - node.getStart(),
+                for (Position pos : typeRequestor.unknownNodes) {
+                    positions.add(new HighlightedTypedPosition(pos.getOffset(), pos.getLength(),
                             HighlightKind.UNKNOWN));
                 }
-                for (ASTNode node : typeRequestor.regexNodes) {
-                    positions.add(new HighlightedTypedPosition(node.getStart(), node.getEnd() - node.getStart(),
+                for (Position pos : typeRequestor.regexNodes) {
+                    positions.add(new HighlightedTypedPosition(pos.getOffset(), pos.getLength(),
                             HighlightKind.REGEX));
+                }
+                for (Position pos : typeRequestor.staticNodes) {
+                    positions.add(new HighlightedTypedPosition(pos.getOffset(), pos.getLength(),
+                            HighlightKind.STATIC));
+                }
+                for (Position pos : typeRequestor.deprecatedNodes) {
+                    positions.add(new HighlightedTypedPosition(pos.getOffset(), pos.getLength(),
+                            HighlightKind.DEPRECATED));
+                }
+                for (Position pos : typeRequestor.fieldReferenceNodes) {
+                    positions.add(new HighlightedTypedPosition(pos.getOffset(), pos.getLength(), HighlightKind.FIELD));
                 }
                 return positions;
             } catch (Exception e) {

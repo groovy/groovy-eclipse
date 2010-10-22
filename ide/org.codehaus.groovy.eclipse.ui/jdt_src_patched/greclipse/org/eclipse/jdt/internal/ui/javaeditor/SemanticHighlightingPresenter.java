@@ -255,7 +255,7 @@ public class SemanticHighlightingPresenter implements ITextPresentationListener,
 	 * @param highlighting The highlighting
 	 * @return The new highlighted position
 	 */
-	public HighlightedPosition createHighlightedPosition(int offset, int length, Highlighting highlighting) {
+	public HighlightedPosition createHighlightedPosition(int offset, int length, HighlightingStyle highlighting) {
 		// TODO: reuse deleted positions
 		return new HighlightedPosition(offset, length, highlighting, fPositionUpdater);
 	}
@@ -558,12 +558,14 @@ public class SemanticHighlightingPresenter implements ITextPresentationListener,
 			}
 			StyleRange[] array= new StyleRange[ranges.size()];
 			array= (StyleRange[]) ranges.toArray(array);
-			textPresentation.replaceStyleRanges(array);
+            textPresentation.mergeStyleRanges(array);
+            // textPresentation.replaceStyleRanges(array);
 		} else {
 			for (; i < n; i++) {
 				HighlightedPosition position= (HighlightedPosition) fPositions.get(i);
 				if (!position.isDeleted())
-					textPresentation.replaceStyleRange(position.createStyleRange());
+                    textPresentation.mergeStyleRange(position.createStyleRange());
+                // textPresentation.replaceStyleRange(position.createStyleRange());
 			}
 		}
 	}
@@ -683,7 +685,7 @@ public class SemanticHighlightingPresenter implements ITextPresentationListener,
 	 *
 	 * @param highlighting The highlighting
 	 */
-	public void highlightingStyleChanged(Highlighting highlighting) {
+	public void highlightingStyleChanged(HighlightingStyle highlighting) {
 		for (int i= 0, n= fPositions.size(); i < n; i++) {
 			HighlightedPosition position= (HighlightedPosition) fPositions.get(i);
 			if (position.getHighlighting() == highlighting)
@@ -709,7 +711,7 @@ public class SemanticHighlightingPresenter implements ITextPresentationListener,
 	 * @param length The range length
 	 * @param highlighting
 	 */
-	void addPositionFromUI(int offset, int length, Highlighting highlighting) {
+	void addPositionFromUI(int offset, int length, HighlightingStyle highlighting) {
 		Position position= createHighlightedPosition(offset, length, highlighting);
 		synchronized (fPositionLock) {
 			insertPosition(position);

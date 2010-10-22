@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.core.NameLookup;
 
@@ -24,7 +25,7 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
     public GroovyCompletionProposal(int kind, int completionLocation) {
         super(kind, completionLocation);
     }
-    
+
     public void setNameLookup(NameLookup lookup) {
         super.nameLookup = lookup;
     }
@@ -44,9 +45,28 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
     public void setAccessibility(int kind) {
         super.setAccessibility(kind);
     }
-    
+
+    @Override
+    protected void setDeclarationPackageName(char[] declarationPackageName) {
+        super.setDeclarationPackageName(declarationPackageName);
+    }
+
+    @Override
+    protected void setParameterPackageNames(char[][] parameterPackageNames) {
+        super.setParameterPackageNames(parameterPackageNames);
+    }
+
     @Override
     public void setPackageName(char[] packageName) {
         super.setPackageName(packageName);
+    }
+
+    @Override
+    protected void setIsContructor(boolean isConstructor) {
+        super.setIsContructor(isConstructor);
+    }
+
+    protected void setCompletionEngine(CompletionEngine completionEngine) {
+        this.completionEngine = completionEngine;
     }
 }

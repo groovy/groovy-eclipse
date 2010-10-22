@@ -27,7 +27,7 @@ import org.eclipse.swt.custom.StyleRange;
 public class HighlightedPosition extends Position {
 
     /** Highlighting of the position */
-    private Highlighting fStyle;
+    private HighlightingStyle fStyle;
 
     /** Lock object */
     private Object fLock;
@@ -41,7 +41,7 @@ public class HighlightedPosition extends Position {
      * @param highlighting The position's highlighting
      * @param lock The lock object
      */
-    public HighlightedPosition(int offset, int length, Highlighting highlighting, Object lock) {
+    public HighlightedPosition(int offset, int length, HighlightingStyle highlighting, Object lock) {
         super(offset, length);
         fStyle = highlighting;
         fLock = lock;
@@ -75,7 +75,7 @@ public class HighlightedPosition extends Position {
      * @return <code>true</code> iff the given offset, length and highlighting
      *         are equal to the internal ones.
      */
-    public boolean isEqual(int off, int len, Highlighting highlighting) {
+    public boolean isEqual(int off, int len, HighlightingStyle highlighting) {
         synchronized (fLock) {
             return !isDeleted() && getOffset() == off && getLength() == len && fStyle == highlighting;
         }
@@ -146,7 +146,7 @@ public class HighlightedPosition extends Position {
     /**
      * @return Returns the highlighting.
      */
-    public Highlighting getHighlighting() {
+    public HighlightingStyle getHighlighting() {
         return fStyle;
     }
 }

@@ -167,7 +167,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		this.requestor = requestor;
 		enclosingElement = unit;
 		rethrowVisitComplete = true;
-		VariableScope topLevelScope = new VariableScope(null, enclosingDeclarationNode);
+		VariableScope topLevelScope = new VariableScope(null, enclosingDeclarationNode, false);
 		scopes.push(topLevelScope);
 
 		for (ITypeLookup lookup : lookups) {
@@ -212,7 +212,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 		try {
 
-			scopes.push(new VariableScope(scopes.peek(), node));
+			scopes.push(new VariableScope(scopes.peek(), node, false));
 			enclosingDeclarationNode = node;
 			visitClassInternal(node);
 
@@ -326,7 +326,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 		enclosingDeclarationNode = fieldNode;
-		scopes.push(new VariableScope(scopes.peek(), fieldNode));
+		scopes.push(new VariableScope(scopes.peek(), fieldNode, fieldNode.isStatic()));
 		try {
 			visitField(fieldNode);
 		} catch (VisitCompleted vc) {
@@ -349,7 +349,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				MethodNode lazyMethod = lazyMethods.get(0);
 				enclosingDeclarationNode = lazyMethod;
 				this.requestor = requestor;
-				scopes.push(new VariableScope(scopes.peek(), lazyMethod));
+				scopes.push(new VariableScope(scopes.peek(), lazyMethod, lazyMethod.isStatic()));
 				try {
 					visitConstructorOrMethod(lazyMethod, lazyMethod instanceof ConstructorNode);
 				} catch (VisitCompleted vc) {
@@ -377,7 +377,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		enclosingDeclarationNode = methodNode;
 		this.requestor = requestor;
-		scopes.push(new VariableScope(scopes.peek(), methodNode));
+		scopes.push(new VariableScope(scopes.peek(), methodNode, methodNode.isStatic()));
 		try {
 			visitConstructorOrMethod(methodNode, method.isConstructor());
 		} catch (VisitCompleted vc) {
@@ -891,7 +891,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitClosureExpression(ClosureExpression node) {
-		VariableScope scope = new VariableScope(scopes.peek(), node);
+		VariableScope scope = new VariableScope(scopes.peek(), node, false);
 		scopes.push(scope);
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
@@ -908,7 +908,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBlockStatement(BlockStatement block) {
-		scopes.push(new VariableScope(scopes.peek(), block));
+		scopes.push(new VariableScope(scopes.peek(), block, false));
 		boolean shouldContinue = handleStatement(block);
 		if (shouldContinue) {
 			super.visitBlockStatement(block);
@@ -939,7 +939,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		// the type of the collection
 		ClassNode collectionType = objectExpressionType.pop();
 
-		scopes.push(new VariableScope(scopes.peek(), node));
+		scopes.push(new VariableScope(scopes.peek(), node, false));
 		Parameter param = node.getVariable();
 		if (param != null) {
 			// use a new parameter so that we don't make any changes to the underlying ast
@@ -1023,7 +1023,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitCatchStatement(CatchStatement node) {
-		scopes.push(new VariableScope(scopes.peek(), node));
+		scopes.push(new VariableScope(scopes.peek(), node, false));
 		Parameter param = node.getVariable();
 		if (param != null) {
 			handleParameterList(new Parameter[] { param });

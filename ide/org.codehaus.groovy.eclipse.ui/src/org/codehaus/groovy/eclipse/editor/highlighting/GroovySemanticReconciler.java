@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.editor.highlighting;
 
 
 import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightedPosition;
-import greclipse.org.eclipse.jdt.internal.ui.javaeditor.Highlighting;
+import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightingStyle;
 import greclipse.org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
 
 import java.util.ArrayList;
@@ -60,9 +60,15 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private GroovyEditor editor;
 
     // make these configurable
-    private Highlighting undefinedRefHighlighting;
+    private HighlightingStyle undefinedRefHighlighting;
 
-    private Highlighting regexRefHighlighting;
+    private HighlightingStyle regexRefHighlighting;
+
+    private HighlightingStyle staticRefHighlighting;
+
+    private HighlightingStyle deprecatedRefHighlighting;
+
+    private HighlightingStyle fieldRefHighlighting;
 
     private SemanticHighlightingPresenter presenter;
 
@@ -78,17 +84,23 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
         RGB rgbString = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
+        RGB rgbField = new RGB(0, 0, 192); // Should make this configurable
         GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
         Color colorDefault = colorManager.getColor(rgbDefault);
         Color colorRegex = colorManager.getColor(rgbString);
-        undefinedRefHighlighting = new Highlighting(new TextAttribute(colorDefault, null, TextAttribute.UNDERLINE), true);
-        regexRefHighlighting = new Highlighting(new TextAttribute(colorRegex, null, SWT.ITALIC), true);
+        Color fieldColor = colorManager.getColor(rgbField);
+        undefinedRefHighlighting = new HighlightingStyle(new TextAttribute(colorDefault, null, TextAttribute.UNDERLINE), true);
+        regexRefHighlighting = new HighlightingStyle(new TextAttribute(colorRegex, null, SWT.ITALIC), true);
+        staticRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, SWT.ITALIC), true);
+        deprecatedRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, TextAttribute.STRIKETHROUGH), true);
+        fieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor), true);
     }
+
 
     public void install(GroovyEditor editor, JavaSourceViewer viewer) {
         this.editor = editor;
         this.presenter = new SemanticHighlightingPresenter();
-        presenter.install(viewer, (JavaPresentationReconciler) editor.createJavaSourceViewerConfiguration().getPresentationReconciler(viewer));
+        presenter.install(viewer, (JavaPresentationReconciler) editor.getGroovyConfiguration().getPresentationReconciler(viewer));
     }
 
     public void uninstall() {
@@ -167,6 +179,12 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 return new HighlightedPosition(pos.offset, pos.length, undefinedRefHighlighting, this);
             case REGEX:
                 return new HighlightedPosition(pos.offset, pos.length, regexRefHighlighting, this);
+            case DEPRECATED:
+                return new HighlightedPosition(pos.offset, pos.length, deprecatedRefHighlighting, this);
+            case STATIC:
+                return new HighlightedPosition(pos.offset, pos.length, staticRefHighlighting, this);
+            case FIELD:
+                return new HighlightedPosition(pos.offset, pos.length, fieldRefHighlighting, this);
         }
         // won't get here
         return null;

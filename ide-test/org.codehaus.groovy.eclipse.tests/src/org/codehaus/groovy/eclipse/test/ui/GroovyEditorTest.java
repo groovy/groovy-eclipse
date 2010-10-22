@@ -36,7 +36,7 @@ import org.eclipse.swt.widgets.Event;
  *
  * @author Kris De Volder
  */
-public class GroovyEditorTest extends EclipseTestCase {
+public abstract class GroovyEditorTest extends EclipseTestCase {
 
     /**
      * Special string pattern that indicates the position of the caret

@@ -27,7 +27,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class GroovyLikeCompletionTests extends CompletionTestCase {
 
-    private static final String SCRIPTCONTENTS = "any\nclone\nfindIndexOf\ninject\n";
+    private static final String SCRIPTCONTENTS = "any\nclone\nfindIndexOf\ninject\nclass Foo {\nFoo(first, second) { } }\nnew Foo()";
 
     public GroovyLikeCompletionTests(String name) {
         super(name);

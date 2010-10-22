@@ -77,4 +77,11 @@ public class JDTMethodNode extends MethodNode implements JDTNodes {
 		throw new IllegalStateException("JDTMethodNode is immutable");
 	}
 
+	/**
+	 * @return
+	 */
+	public MethodBinding getMethodBinding() {
+		return methodBinding;
+	}
+
 }

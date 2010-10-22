@@ -21,7 +21,7 @@ import org.eclipse.jface.text.TextAttribute;
  * Highlighting.
  */
 // GROOVY make public not static
-public class Highlighting { // TODO: rename to HighlightingStyle
+public class HighlightingStyle {
 
     /** Text attribute */
     private TextAttribute fTextAttribute;
@@ -35,7 +35,7 @@ public class Highlighting { // TODO: rename to HighlightingStyle
      * @param textAttribute The text attribute
      * @param isEnabled the enabled state
      */
-    public Highlighting(TextAttribute textAttribute, boolean isEnabled) {
+    public HighlightingStyle(TextAttribute textAttribute, boolean isEnabled) {
         setTextAttribute(textAttribute);
         setEnabled(isEnabled);
     }

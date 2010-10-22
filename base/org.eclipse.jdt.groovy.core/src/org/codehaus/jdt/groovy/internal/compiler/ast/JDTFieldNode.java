@@ -71,4 +71,11 @@ public class JDTFieldNode extends FieldNode implements JDTNodes {
 			bits |= ANNOTATIONS_INITIALIZED;
 		}
 	}
+
+	/**
+	 * @return
+	 */
+	public FieldBinding getFieldBinding() {
+		return fieldBinding;
+	}
 }

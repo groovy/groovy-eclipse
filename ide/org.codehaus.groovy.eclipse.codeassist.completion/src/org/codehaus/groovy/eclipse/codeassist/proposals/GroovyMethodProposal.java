@@ -17,6 +17,7 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -88,12 +89,12 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setSignature(methodSignature);
         proposal.setRelevance(computeRelevance());
 
+        // FIXADE refactor this so it is not calculated for each proposal
         IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
         ProposalOptions groovyFormatterPrefs = new ProposalOptions(
                 prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
                 prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
-                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS)
-                        || useNamedArguments);
+                shouldUseNamedArguments(prefs));
 
         // would be nice to use a ParameterGuessingProposal, but that requires
         // setting the extended data of the coreContext. We don't really have
@@ -110,6 +111,11 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         return new GroovyJavaMethodCompletionProposal(proposal, javaContext,
                 groovyFormatterPrefs, contributor);
 
+    }
+    protected boolean shouldUseNamedArguments(IPreferenceStore prefs) {
+        return (prefs
+                .getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS) && method instanceof ConstructorNode)
+                || useNamedArguments;
     }
 
     protected char[] createMethodSignature() {

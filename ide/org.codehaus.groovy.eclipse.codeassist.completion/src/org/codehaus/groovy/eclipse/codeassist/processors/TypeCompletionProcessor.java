@@ -45,11 +45,13 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
         if (shouldShowTypes(context, toSearch)) {
             return Collections.emptyList();
         }
-        
+
         int expressionStart = findExpressionStart(context);
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-                context, getJavaContext(), expressionStart, getNameEnvironment().nameLookup, monitor);
-        
+                context, getJavaContext(), expressionStart,
+                context.completionExpression.length(),
+                getNameEnvironment().nameLookup, monitor);
+
         getNameEnvironment().findTypes(toSearch.toCharArray(), true, // all member
                                                             // types, should
                                                             // be false when
@@ -65,7 +67,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
     /**
      * Don't show types if there is no previous text (except if in imports)
-     * Also, don't show types if there is a '.' 
+     * Also, don't show types if there is a '.'
      * @param context
      * @param toSearch
      * @return
@@ -88,7 +90,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
         } else {
             completionLength = context.completionExpression.length();
         }
-        
+
         int expressionStart = context.completionLocation-completionLength;
         return expressionStart;
     }

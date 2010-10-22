@@ -99,14 +99,21 @@ public class VariableScope {
 
 	private Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
 
+	private boolean isStaticScope;
+
 	/**
 	 * Category that will be declared in the next scope
 	 */
 	private ClassNode categoryBeingDeclared;
 
-	public VariableScope(VariableScope parent, ASTNode enclosingNode) {
+	public VariableScope(VariableScope parent, ASTNode enclosingNode, boolean isStatic) {
 		this.parent = parent;
 		this.enclosingNode = enclosingNode;
+
+		// this scope is considered static if in a static method, or
+		// it's parent is static...however, this will fail for inner classes in static methods
+		// Actually...methodNodes can't contain inner classes, so we are fine
+		this.isStaticScope = isStatic || (parent != null && parent.isStaticScope);
 	}
 
 	/**
@@ -448,5 +455,12 @@ public class VariableScope {
 			return c.getGenericsTypes()[0].getType();
 		}
 		return c;
+	}
+
+	/**
+	 * @return true iff this is a static stack frame
+	 */
+	public boolean isStatic() {
+		return isStaticScope;
 	}
 }
