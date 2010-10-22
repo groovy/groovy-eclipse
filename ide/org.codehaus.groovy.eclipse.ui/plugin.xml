@@ -413,6 +413,21 @@
                menubarPath="debug"
                id="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate">
          </action>
+         <action
+               label="Add Task..."
+               helpContextId="org.eclipse.ui.AddTask_action_context"
+               tooltip="%AddTask.tooltip"
+               class="org.eclipse.ui.texteditor.TaskRulerAction"
+               menubarPath="add"
+               id="org.eclipse.ui.texteditor.TaskRulerAction">
+         </action>
+         <action
+               label="Add Bookmark..."
+               helpContextId="org.eclipse.ui.bookmark_action_context"
+               class="org.eclipse.ui.texteditor.BookmarkRulerAction"
+               menubarPath="add"
+               id="org.eclipse.ui.texteditor.BookmarkRulerAction">
+         </action>
      </viewerContribution>
      
      <!-- Groovy Refactorings -->
