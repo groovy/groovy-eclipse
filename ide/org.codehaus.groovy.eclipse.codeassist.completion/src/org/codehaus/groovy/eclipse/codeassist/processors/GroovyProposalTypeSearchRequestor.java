@@ -651,16 +651,18 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         if (length == 0)
             return Collections.emptyList();
 
-        HashtableOfObject onDemandFound = new HashtableOfObject();
-
-        char[] currentPackageName = this.module.getPackageName().toCharArray();
-        if (currentPackageName == null) {
+        String currentPackageNameStr = this.module.getPackageName();
+        char[] currentPackageName;
+        if (currentPackageNameStr == null) {
             currentPackageName = CharOperation.NO_CHAR;
-        } else if (currentPackageName[currentPackageName.length - 1] == '.') {
-            char[] newPackageName = new char[currentPackageName.length - 1];
-            System.arraycopy(currentPackageName, 0, newPackageName, 0,
-                    newPackageName.length);
-            currentPackageName = newPackageName;
+        } else {
+            currentPackageName = currentPackageNameStr.toCharArray();
+            if (currentPackageName[currentPackageName.length - 1] == '.') {
+                char[] newPackageName = new char[currentPackageName.length - 1];
+                System.arraycopy(currentPackageName, 0, newPackageName, 0,
+                        newPackageName.length);
+                currentPackageName = newPackageName;
+            }
         }
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
         try {

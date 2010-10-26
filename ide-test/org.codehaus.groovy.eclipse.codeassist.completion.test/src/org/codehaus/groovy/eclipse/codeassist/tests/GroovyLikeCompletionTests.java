@@ -16,6 +16,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposal
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.internal.resources.PreferenceInitializer;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -27,7 +28,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class GroovyLikeCompletionTests extends CompletionTestCase {
 
-    private static final String SCRIPTCONTENTS = "any\nclone\nfindIndexOf\ninject\nclass Foo {\nFoo(first, second) { } }\nnew Foo()";
+    private static final String SCRIPTCONTENTS = "any\nclone\nfindIndexOf\ninject\nclass Foo {\nFoo(first, second) { } \n Foo(int third) { }}\nnew Foo()";
 
     public GroovyLikeCompletionTests(String name) {
         super(name);
@@ -93,22 +94,39 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     public void testNamedArguments1() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true);
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "findIndexOf(closure:{ })", 1);
+        doWait();
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "(first:first, second:second)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
     }
     
     public void testNamedArguments2() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true);
         ICompilationUnit unit = createGroovy();
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "inject"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "inject(value:value, closure:{ })", 1);
+        doWait();
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "(third:third)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
+    }
+
+    protected void doWait() {
+        // it seems like 
+        int x = 0;
+        while (! Job.getJobManager().isIdle() && x < 20) {
+            synchronized (this) {
+                try {
+                    wait(1000);
+                } catch (InterruptedException e) {
+                }
+                x++;
+            }
+        }
     }
     
     public void testNamedArguments3() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true);
         ICompilationUnit unit = createGroovy();
+        performDummySearch(unit);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "clone()", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);

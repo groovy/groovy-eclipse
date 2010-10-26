@@ -126,7 +126,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
 
 // @Override
-    @Override
     public void visitImports(ModuleNode node) {
         ImportNodeCompatibilityWrapper wrapper = new ImportNodeCompatibilityWrapper(node);
         for (ImportNode importNode : wrapper.getAllImportNodes()) {

@@ -23,21 +23,24 @@ import org.eclipse.jdt.internal.core.JavaModelManager;
 
 public class ClasspathContainerTest extends EclipseTestCase {
     public void testClassPathContainerContents() throws Exception {
-        GroovyClasspathContainer container = (GroovyClasspathContainer) 
+        GroovyClasspathContainer container = (GroovyClasspathContainer)
             JavaModelManager.getJavaModelManager().getClasspathContainer(new Path("GROOVY_SUPPORT"), testProject.getJavaProject());
         IClasspathEntry[] entries = container.getClasspathEntries();
-        
+
         boolean groovyAllFound = false;
         for (IClasspathEntry entry : entries) {
-            if (entry.getPath().toString().indexOf("groovy-all") != -1) {
+            String pathStr = entry.getPath().toPortableString();
+            if (pathStr.indexOf("groovy-all") != -1) {
                 if (groovyAllFound) {
                     fail("Groovy-all found twice in Groovy Classpath container: " + entry);
                 }
                 groovyAllFound = true;
-            } else {
+            } else if (pathStr.indexOf("/org.codehaus.groovy") == -1) {
+                // fail if there is a path that is not inside of the groovy
+                // plugin
                 fail("Unexpected entry in Groovy Classpath container: " + entry);
             }
         }
-        
+
     }
 }
