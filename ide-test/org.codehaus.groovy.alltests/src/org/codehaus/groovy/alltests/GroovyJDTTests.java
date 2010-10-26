@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.groovy.tests.locations.ASTNodeSourceLocationsTests;
 import org.eclipse.jdt.core.groovy.tests.locations.LocationSupportTests;
 import org.eclipse.jdt.core.groovy.tests.locations.SourceLocationsTests;
 import org.eclipse.jdt.core.groovy.tests.model.AnnotationsTests;
+import org.eclipse.jdt.core.groovy.tests.model.GroovyClassFileTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyCompilationUnitTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyContentTypeTests;
 import org.eclipse.jdt.core.groovy.tests.model.MoveRenameCopyTests;
@@ -40,6 +41,7 @@ public class GroovyJDTTests {
         // Model tests
         suite.addTest(AnnotationsTests.suite());
         suite.addTest(GroovyCompilationUnitTests.suite());
+        suite.addTest(GroovyClassFileTests.suite());
         suite.addTest(GroovyContentTypeTests.suite());
         suite.addTest(MoveRenameCopyTests.suite());
 

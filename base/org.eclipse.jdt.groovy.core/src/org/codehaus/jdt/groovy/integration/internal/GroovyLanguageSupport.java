@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+ * Copyright (c) 2009, 2010 Codehaus.org, SpringSource, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,12 @@
  *     Andrew Eisenberg - Additional work
  *******************************************************************************/
 package org.codehaus.jdt.groovy.integration.internal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -24,25 +30,37 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
+import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
+import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.core.BinaryMember;
+import org.eclipse.jdt.internal.core.BinaryType;
+import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
 import org.eclipse.jdt.internal.core.search.matching.ImportMatchLocatorParser;
@@ -86,6 +104,14 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
 	public ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
 		return new MultiplexingImportMatchLocatorParser(problemReporter, locator);
+	}
+
+	public SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
+			CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+		ProblemReporter problemReporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
+				new DefaultProblemFactory());
+		return new MultiplexingSourceElementRequestorParser(problemReporter, requestor, problemFactory, options,
+				reportLocalDeclarations, optimizeStringLiterals);
 	}
 
 	public CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
@@ -168,5 +194,48 @@ public class GroovyLanguageSupport implements LanguageSupport {
 	public EventHandler getEventHandler() {
 		// FIXASC could be une singleton?
 		return new GroovyEventHandler();
+	}
+
+	/**
+	 * Go through the bunary children and remove all children that do not have a real source location
+	 */
+	public void filterNonSourceMembers(BinaryType binaryType) {
+		try {
+			IJavaElement[] childrenArr = binaryType.getChildren();
+			List<IJavaElement> children = new ArrayList<IJavaElement>(Arrays.asList(childrenArr));
+			List<JavaElement> removedChildren = new LinkedList<JavaElement>();
+			for (Iterator<IJavaElement> childIter = children.iterator(); childIter.hasNext();) {
+				IJavaElement child = childIter.next();
+				if (child instanceof BinaryMember) {
+					BinaryMember binaryChild = (BinaryMember) child;
+					ISourceRange range = binaryChild.getSourceRange();
+					if (range == null || range.getOffset() == -1) {
+						removedChildren.add(binaryChild);
+						childIter.remove();
+					}
+				}
+			}
+			JavaElement[] newChildrenArr = children.toArray(new JavaElement[children.size()]);
+
+			// now comes the icky part.
+
+			// we need to set the children of the ClassFileInfo to the new children
+			// but this class is package protected, so can't access it directly.
+			Object /* ClassFileInfo */classFileInfo = ((ClassFile) binaryType.getParent()).getElementInfo();
+			ReflectionUtils.setPrivateField(classFileInfo.getClass(), "binaryChildren", classFileInfo, newChildrenArr);
+
+			// also need to remove these children from the JavaModelManager
+			JavaModelManager manager = JavaModelManager.getJavaModelManager();
+			for (JavaElement removedChild : removedChildren) {
+				if (removedChild instanceof BinaryType) {
+					manager.removeInfoAndChildren((JavaElement) removedChild.getParent());
+				} else {
+					manager.removeInfoAndChildren(removedChild);
+				}
+			}
+
+		} catch (JavaModelException e) {
+			e.printStackTrace();
+		}
 	}
 }

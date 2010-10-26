@@ -255,7 +255,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return new TypeLookupResult(parameterized, null, null, confidence, scope);
 
 		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
-			// FIXADE because of operator overloading, we should be looking at the type
+			// because of operator overloading, we should be looking at the type
 			// of the inner expression, but Integer will be safe for most of the time.
 			return new TypeLookupResult(VariableScope.INTEGER_CLASS_NODE, null, null, confidence, scope);
 
@@ -303,6 +303,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 */
 	private ClassNode parameterizeThisMap(MapExpression node) {
 		if (node.getMapEntryExpressions().size() > 0) {
+			// must keep the cast for Groovy 1.6.
+			@SuppressWarnings("cast")
 			MapEntryExpression entry = (MapEntryExpression) node.getMapEntryExpressions().get(0);
 			ClassNode map = VariableScope.clone(VariableScope.MAP_CLASS_NODE);
 			map.getGenericsTypes()[0].setType(entry.getKeyExpression().getType());

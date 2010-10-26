@@ -19,9 +19,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -32,7 +30,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 
 
@@ -42,7 +39,7 @@ import org.eclipse.jdt.core.tests.util.Util;
  * @created Jun 4, 2009
  *
  */
-public class GroovyCompilationUnitTests extends BuilderTests {
+public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
     public GroovyCompilationUnitTests(String name) {
         super(name);
     }
@@ -50,8 +47,7 @@ public class GroovyCompilationUnitTests extends BuilderTests {
 		return buildTestSuite(GroovyCompilationUnitTests.class);
 	}
 	
-
-    public void testCreateJavaCompilationUnit() throws Exception {
+	public void testCreateJavaCompilationUnit() throws Exception {
         IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         fullBuild(projectPath);
@@ -113,7 +109,7 @@ public class GroovyCompilationUnitTests extends BuilderTests {
         ModuleNode node1 = unit1.getModuleNode();
         unit1.reconcile(AST.JLS3, true, unit1.owner, null);
         ModuleNode node2 = unit1.getModuleNode();
-        assertTrue ("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node1 == node2);
+        assertTrue ("Multiple calls to getModuleNode should not return the same object after a call to reconcile with problem detection enabled", node1 != node2);
         unit1.discardWorkingCopy();
     }
     
@@ -182,6 +178,28 @@ public class GroovyCompilationUnitTests extends BuilderTests {
         ModuleNode node1 = unit1.getModuleNode();
         ModuleNode node2 = unit1.getModuleNode();
         assertFalse("Multiple calls to getModuleNode should return the different objects if unit is not a working copy", node1 == node2);
+    }
+    
+    public void testGetModuleNode_9() throws Exception {
+        IFile groovyFile = createSimpleGroovyProject();
+        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
+        ModuleNode node1 = unit1.getModuleNode();
+        unit1.reconcile(true, null);
+        ModuleNode node2 = unit1.getModuleNode();
+        unit1.discardWorkingCopy();
+        assertFalse("Multiple calls to getModuleNode should return the different objects after a call to reconcile with force problem detection", node1 == node2);
+    }
+    
+    public void testGetModuleNode_10() throws Exception {
+        IFile groovyFile = createSimpleGroovyProject();
+        GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
+        unit1.becomeWorkingCopy(null);
+        ModuleNode node1 = unit1.getModuleNode();
+        unit1.reconcile(false, null);
+        ModuleNode node2 = unit1.getModuleNode();
+        unit1.discardWorkingCopy();
+        assertTrue("Multiple calls to getModuleNode should return the same object after a call to reconcile with no force problem detection", node1 == node2);
     }
     
     public void testGetNewModuleNode() throws Exception {
@@ -513,79 +531,5 @@ public class GroovyCompilationUnitTests extends BuilderTests {
         assertEquals("value", mvp.getMemberName());
         assertEquals(IMemberValuePair.K_CLASS, mvp.getValueKind());
         assertEquals(expectedName, mvp.getValue());
-	}
-    
-
-    
-    private IFile getFile(String path) {
-        return ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(path));
-    }
-    
-	private IFile createSimpleGroovyProject() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-		env.addGroovyNature("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        fullBuild(projectPath);
-        
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-        
-        IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-
-        env.addGroovyClass(root, "p1", "Hello",
-            "package p1;\n"+
-            "public class Hello {\n"+
-            "   static def main(String[] args) {\n"+
-            "      print \"Hello world\"\n"+
-            "   }\n"+
-            "}\n"
-            );
-        
-        IFile groovyFile = getFile("Project/src/p1/Hello.groovy");
-		return groovyFile;
-	}
-
-	private IPath createAnnotationGroovyProject() throws Exception {
-		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyNature("Project");
-        env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
-        
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-        
-        IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-
-        env.addClass(root, "p", "Anno1.java",
-        		"package p;\n"+
-        		"import java.lang.annotation.*;\n"+
-        		"@Retention(RetentionPolicy.RUNTIME)\n"+
-        		"@interface Anno1 { Class<?> value(); }\n");
-
-        env.addClass(root, "p", "Anno2.java",
-        		"package p;\n"+
-        		"import java.lang.annotation.*;\n"+
-        		"@Retention(RetentionPolicy.RUNTIME)\n"+
-        		"@interface Anno2 { }\n");
-        
-        env.addClass(root, "p", "Anno3.java",
-        		"package p;\n"+
-        		"import java.lang.annotation.*;\n"+
-        		"@Retention(RetentionPolicy.RUNTIME)\n"+
-        		"@interface Anno3 { String value(); }\n");
-        
-        env.addClass(root, "p", "Anno4.java",
-        		"package p;\n"+
-        		"import java.lang.annotation.*;\n"+
-        		"@Retention(RetentionPolicy.RUNTIME)\n"+
-        		"@interface Anno4 { Class<?> value1(); }\n");
-        
-        env.addClass(root, "p", "Target.java",
-        		"package p;\n"+
-        		"class Target { }");
-        return root;
 	}
 }

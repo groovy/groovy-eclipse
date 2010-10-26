@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -54,7 +56,28 @@ public class ModuleNodeMapper {
 		return infoToModuleMap.remove(info);
 	}
 
-	/* synchronized */public static boolean isEmpty() {
+	/**
+	 * Cache the module node if this is a working copy
+	 * 
+	 * @param perWorkingCopyInfo
+	 * @param compilationUnitDeclaration
+	 */
+	synchronized protected void maybeCacheModuleNode(JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo,
+			GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
+		if (perWorkingCopyInfo != null && compilationUnitDeclaration != null) {
+			ModuleNode module = compilationUnitDeclaration.getModuleNode();
+
+			// Store it for later
+			if (module != null) {
+				// GRECLIPSE-804 must synchronize
+				synchronized (ModuleNodeMapper.getInstance()) {
+					ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module);
+				}
+			}
+		}
+	}
+
+	public static boolean isEmpty() {
 		return INSTANCE.infoToModuleMap.isEmpty();
 	}
 

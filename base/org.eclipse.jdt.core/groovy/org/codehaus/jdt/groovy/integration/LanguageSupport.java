@@ -18,11 +18,13 @@ import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
+import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
@@ -39,6 +41,10 @@ public interface LanguageSupport {
 			boolean optimizeStringLiterals, boolean useSourceJavadocParser);
 	
 	MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator);
+
+	SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
+			CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals,
+			boolean useSourceJavadocParser);
 
 	ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator);
 	
@@ -96,5 +102,7 @@ public interface LanguageSupport {
 	boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor);
 
 	EventHandler getEventHandler();
+
+	void filterNonSourceMembers(BinaryType binaryType);
 
 }

@@ -16,6 +16,9 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+
 import junit.framework.Test;
 
 /**
@@ -26,9 +29,6 @@ import junit.framework.Test;
  */
 public class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
  
-    /**
-     * 
-     */
     private static final String INTEGER = "java.lang.Integer";
 
     public static Test suite() {
@@ -77,4 +77,11 @@ public class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.lastIndexOf("foo"), contents.lastIndexOf("foo")+"foo".length(), "java.lang.Integer");
     }
     
+    // now test something slightly different.  Ensure that a reference to a property coming
+    // from a binary groovy file can have its generated getter and setter seen.
+    public void testPropertyNodeReferenceInBinary1() throws Exception {
+        String contents = "new AGroovyClass().getProp1()";
+        env.addJar(project.getFullPath(), "lib/test-groovy-project.jar");
+        assertType(contents, contents.lastIndexOf("getProp1"), contents.lastIndexOf("getProp1")+"getProp1".length(), "java.lang.Integer");
+    }
 }

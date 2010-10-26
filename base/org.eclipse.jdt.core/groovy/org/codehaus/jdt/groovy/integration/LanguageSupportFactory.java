@@ -20,11 +20,13 @@ import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
+import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
@@ -48,6 +50,11 @@ public class LanguageSupportFactory {
 	public static IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, 
 			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
 		return getLanguageSupport().getIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
+	}
+	
+	public static SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, 
+			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+		return getLanguageSupport().getSourceElementParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
 	}
 	
 	public static MatchLocatorParser getMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
@@ -86,6 +93,17 @@ public class LanguageSupportFactory {
 	
 	public static boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
 		return getLanguageSupport().maybePerformDelegatedSearch(possibleMatch, pattern, requestor);
+	}
+	
+	/**
+	 * Removes members from this binary type that are not mapped to locations in the 
+	 * source code (ie- their source location is invalid).  This ensures that 
+	 * generated groovy methods (eg- getters and setters) and fields are not shown in
+	 * the outline view.
+	 * @param binaryType
+	 */
+	public static void filterNonSourceMembers(BinaryType binaryType) {
+		getLanguageSupport().filterNonSourceMembers(binaryType);
 	}
 	
 	

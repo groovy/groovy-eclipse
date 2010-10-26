@@ -16,21 +16,17 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.PerformanceStats;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -51,25 +47,20 @@ import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.ASTHolderCUInfo;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.CompilationUnitProblemFinder;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.OpenableElementInfo;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation;
-import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -79,45 +70,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 @SuppressWarnings("restriction")
 public class GroovyCompilationUnit extends CompilationUnit {
-
-	private static ICodeSelectHelper selectHelper;
-
-	// Inject the code select helper
-	private final static String CODE_SELECT_HELPER_EXTENSION = "org.eclipse.jdt.groovy.core.codeSelectHelper";
-	static {
-
-		// Exactly one code select helper is allowed. Do a check for this.
-		IExtensionPoint extPoint = Platform.getExtensionRegistry().getExtensionPoint(CODE_SELECT_HELPER_EXTENSION);
-		IExtension[] exts = extPoint.getExtensions();
-		if (exts.length < 1) {
-			throw new IllegalArgumentException("No Code Select Helper found");
-		} else if (exts.length > 1) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("Too many Code Select Helpers found:\n");
-			for (IExtension ext : exts) {
-				sb.append("    " + ext.getNamespaceIdentifier() + "." + ext.getSimpleIdentifier());
-			}
-			throw new IllegalArgumentException(sb.toString());
-		}
-		IConfigurationElement[] elts = exts[0].getConfigurationElements();
-		if (elts.length < 1) {
-			throw new IllegalArgumentException("No Code Select Helper found");
-		} else if (elts.length > 1) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("Too many Code Select Helpers found:\n");
-			for (IConfigurationElement elt : elts) {
-				sb.append("    " + elt.getNamespaceIdentifier());
-			}
-			throw new IllegalArgumentException(sb.toString());
-		}
-
-		// all good. Now, instantiate and assign the code select helper
-		try {
-			selectHelper = (ICodeSelectHelper) elts[0].createExecutableExtension("class");
-		} catch (CoreException e) {
-			throw new IllegalArgumentException(e);
-		}
-	}
 
 	private class GroovyErrorHandlingPolicy implements IErrorHandlingPolicy {
 
@@ -142,10 +94,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 		public void acceptResult(CompilationResult result) {
 			results.add(result);
-		}
-
-		public List<CompilationResult> getResults() {
-			return results;
 		}
 
 	}
@@ -402,24 +350,12 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	}
 
 	/**
-	 * Cache the module node if this is a working copy
-	 * 
 	 * @param perWorkingCopyInfo
 	 * @param compilationUnitDeclaration
 	 */
 	protected void maybeCacheModuleNode(JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo,
 			GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
-		if (perWorkingCopyInfo != null && compilationUnitDeclaration != null) {
-			ModuleNode module = compilationUnitDeclaration.getModuleNode();
-
-			// Store it for later
-			if (module != null) {
-				// GRECLIPSE-804 must synchronize
-				synchronized (ModuleNodeMapper.getInstance()) {
-					ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module);
-				}
-			}
-		}
+		ModuleNodeMapper.getInstance().maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
 	}
 
 	/*
@@ -451,37 +387,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			stats.endRun();
 		}
 		return op.ast;
-	}
-
-	// TODO This should be calculated in GroovyCompilationUnitDeclaration
-	private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
-		HashtableOfObjectToInt table = new HashtableOfObjectToInt();
-		if (cDecl.types != null) {
-			for (TypeDeclaration tDecl : cDecl.types) {
-				createSourceEndsForType(tDecl, table);
-			}
-		}
-		return table;
-	}
-
-	// TODO This should be calculated in GroovyCompilationUnitDeclaration
-	private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
-		table.put(tDecl, tDecl.sourceEnd);
-		if (tDecl.fields != null) {
-			for (FieldDeclaration fDecl : tDecl.fields) {
-				table.put(fDecl, fDecl.sourceEnd);
-			}
-		}
-		if (tDecl.methods != null) {
-			for (AbstractMethodDeclaration mDecl : tDecl.methods) {
-				table.put(mDecl, mDecl.sourceEnd);
-			}
-		}
-		if (tDecl.memberTypes != null) {
-			for (TypeDeclaration innerTDecl : tDecl.memberTypes) {
-				createSourceEndsForType(innerTDecl, table);
-			}
-		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -553,8 +458,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu, int offset, int length,
 			WorkingCopyOwner o) throws JavaModelException {
 
-		if (selectHelper != null && isOnBuildPath()) {
-			return selectHelper.select(this, offset, length);
+		if (CodeSelectHelperFactory.selectHelper != null && isOnBuildPath()) {
+			return CodeSelectHelperFactory.selectHelper.select(this, offset, length);
 		}
 		return new IJavaElement[0];
 	}
@@ -581,10 +486,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			}
 		}
 		return null;
-	}
-
-	public static void setSelectHelper(ICodeSelectHelper newSelectHelper) {
-		selectHelper = newSelectHelper;
 	}
 
 	public boolean isOnBuildPath() {
