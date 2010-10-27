@@ -297,7 +297,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * The complete class structure will be initialized only when really
      * needed to avoid having too many objects during compilation
      */
-    protected void lazyClassInit() {
+    // GROOVY - made public, not sure why I need to - some funky problem with it being unreachable if protected, even though I'm in a subtype when trying...
+    public void lazyClassInit() {
         synchronized (lazyInitLock) {
             if (redirect!=null) {
                 throw new GroovyBugError("lazyClassInit called on a proxy ClassNode, that must not happen."+
@@ -625,8 +626,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public void addMethod(MethodNode node) {
         node.setDeclaringClass(this);
-        redirect().methodsList.add(node);
-        redirect().methods.put(node.getName(), node);
+        ClassNode redirect = redirect();
+        redirect.methodsList.add(node);
+        redirect.methods.put(node.getName(), node);
     }
 
     /**

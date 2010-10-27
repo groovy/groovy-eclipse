@@ -64,6 +64,11 @@ public class JDTResolver extends ResolveVisitor {
 
 	// Arbitrary selection of common types
 	private static Map<String, ClassNode> commonTypes = new HashMap<String, ClassNode>();
+
+	// So that testcases can quiz a resolver instance
+	public static boolean recordInstances = false;
+	public static List<JDTResolver> instances = null;
+
 	static {
 		commonTypes.put("java.lang.Object", ClassHelper.OBJECT_TYPE);
 		commonTypes.put("java.lang.String", ClassHelper.STRING_TYPE);
@@ -108,6 +113,22 @@ public class JDTResolver extends ResolveVisitor {
 
 	public JDTResolver(CompilationUnit groovyCompilationUnit) {
 		super(groovyCompilationUnit);
+		if (recordInstances) {
+			if (instances == null) {
+				instances = new ArrayList<JDTResolver>();
+			}
+			instances.add(this);
+		}
+	}
+
+	public JDTClassNode getCachedNode(String name) {
+		for (Map.Entry<Binding, JDTClassNode> nodeFromCache : nodeCache.entrySet()) {
+			String nodename = new String(nodeFromCache.getKey().readableName());
+			if (nodename.equals(name)) {
+				return nodeFromCache.getValue();
+			}
+		}
+		return null;
 	}
 
 	/**

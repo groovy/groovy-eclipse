@@ -134,7 +134,7 @@ public class JDTClassNode extends ClassNode {
 	}
 
 	@Override
-	protected void lazyClassInit() {
+	public void lazyClassInit() {
 		synchronized (lazyInitLock) {
 			if (lazyInitDone) {
 				return;
@@ -190,6 +190,11 @@ public class JDTClassNode extends ClassNode {
 	 */
 	// FIXASC confusing (and problematic?) that the superclass is setup after the generics information
 	void initialize() {
+		if (jdtBinding instanceof ParameterizedTypeBinding) {
+			ClassNode rd = redirect();
+			rd.lazyClassInit();
+			return;
+		}
 		resolver.pushTypeGenerics(getGenericsTypes());
 		if (!jdtBinding.isInterface()) {
 			ReferenceBinding superClass = jdtBinding.superclass();
@@ -209,7 +214,13 @@ public class JDTClassNode extends ClassNode {
 	}
 
 	private void initializeMembers() {
-		MethodBinding[] bindings = jdtBinding.methods();
+		MethodBinding[] bindings = null;
+		if (jdtBinding instanceof ParameterizedTypeBinding) {
+			ReferenceBinding genericType = ((ParameterizedTypeBinding) jdtBinding).genericType();
+			bindings = genericType.methods();
+		} else {
+			bindings = jdtBinding.methods();
+		}
 		if (bindings != null) {
 			for (int i = 0; i < bindings.length; i++) {
 				if (bindings[i].isConstructor()) {
@@ -259,7 +270,12 @@ public class JDTClassNode extends ClassNode {
 			}
 		}
 
-		FieldBinding[] fieldBindings = jdtBinding.fields();
+		FieldBinding[] fieldBindings = null;
+		if (jdtBinding instanceof ParameterizedTypeBinding) {
+			fieldBindings = ((ParameterizedTypeBinding) jdtBinding).genericType().fields();
+		} else {
+			fieldBindings = jdtBinding.fields();
+		}
 		if (fieldBindings != null) {
 			for (int i = 0; i < fieldBindings.length; i++) {
 				FieldNode fNode = fieldBindingToFieldNode(fieldBindings[i]);

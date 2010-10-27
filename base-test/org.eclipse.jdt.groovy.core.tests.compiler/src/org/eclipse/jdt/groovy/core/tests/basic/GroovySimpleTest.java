@@ -30,6 +30,8 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.IGroovyDebugRequestor;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ToolFactory;
@@ -337,7 +339,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"	 ^\n" + 
 		"Groovy:unexpected token:  @ line 8, column 3.\n" + 
 		"----------\n");
-	    	// missing end curly, but that shouldn't cause us to discard what we successfully parsed
+	    // missing end curly, but that shouldn't cause us to discard what we successfully parsed
 		ModuleNode mn = getModuleNode("A.groovy");
 		assertNotNull(mn);
 		ClassNode cn = (ClassNode)mn.getClasses().get(0);
@@ -7653,6 +7655,48 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"package p.q.r;\n" + 
 			"enum Colour { Red,Green,Blue; }\n",
 		},"RedGreenBlue");		
+	}
+	
+	public void testJDTClassNode_633() {
+		try {
+			JDTResolver.recordInstances = true;
+			this.runConformTest(new String[] {
+				"p/Run.groovy",
+				"package p;\n"+
+				"import static p.q.r.Colour.*;\n"+
+				"import p.q.r.Colour2;\n"+
+				"public class Run {\n" + 
+				"  public static void main(String[] argv) {\n"+
+				"    System.out.print(Red);\n"+
+				"    System.out.print(Green);\n"+
+				"    System.out.print(Blue);\n"+
+				"   Colour2 c2 = new Colour2();\n"+
+				"   int i = c2.compareTo('abc');\n"+
+				"  }\n"+
+				"}\n",
+	
+				"p/q/r/Colour.java",
+				"package p.q.r;\n" + 
+				"enum Colour { Red,Green,Blue; }\n",
+	
+				"p/q/r/Colour2.java",
+				"package p.q.r;\n" + 
+				"public class Colour2 implements Comparable<String> { \n"+
+				"  public int compareTo(String s) { return 0; } \n"+
+					"}\n",
+				},"RedGreenBlue");		 
+			
+			// Check on the state of Comparable		
+			JDTClassNode classnode = ((JDTResolver)JDTResolver.instances.get(0)).getCachedNode("java.lang.Comparable<T>");
+			assertNotNull(classnode);
+			// Should have one method
+			List methods = classnode.getMethods();
+			assertEquals(1,methods.size());
+			assertEquals("int compareTo(java.lang.Object)",((MethodNode)methods.get(0)).getTypeDescriptor());
+		} finally {
+			JDTResolver.instances.clear();
+			JDTResolver.recordInstances=false;
+		}
 	}
 	
 	public void testStaticImports2_GtoJ() {
