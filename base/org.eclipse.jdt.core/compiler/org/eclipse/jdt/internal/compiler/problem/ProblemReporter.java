@@ -7080,9 +7080,15 @@ public void unsafeReturnTypeOverride(MethodBinding currentMethod, MethodBinding 
 	int start = type.sourceStart();
 	int end = type.sourceEnd();
 	if (currentMethod.declaringClass == type) {
-		ASTNode location = ((MethodDeclaration) currentMethod.sourceMethod()).returnType;
-		start = location.sourceStart();
-		end = location.sourceEnd();
+		// GROOVY - @Delegate introduced methods don't have a source method (GROOVY-873)
+		if (currentMethod.sourceMethod()!=null) {
+		// GRECLIPSE - end
+			ASTNode location = ((MethodDeclaration) currentMethod.sourceMethod()).returnType;
+			start = location.sourceStart();
+			end = location.sourceEnd();
+		// GROOVY - start
+		}
+		// GROOVY - end
 	}
 	this.handle(
 			IProblem.UnsafeReturnTypeOverride,
