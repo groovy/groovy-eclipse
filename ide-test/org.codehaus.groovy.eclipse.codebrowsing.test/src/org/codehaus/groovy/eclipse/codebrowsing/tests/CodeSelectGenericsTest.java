@@ -197,13 +197,15 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
     public void testCodeSelectArray1() throws Exception {
         String groovyContents = "new XX().xx[0].xx";
         String toFind = "xx";
-        assertCodeSelect(XX, groovyContents, toFind);
+        String elementName = "getXx";
+        assertCodeSelect(XX, null, groovyContents, toFind, elementName);
     }
 
     public void testCodeSelectArray2() throws Exception {
         String groovyContents = "new XX().xx[0].yy";
         String toFind = "yy";
-        assertCodeSelect(XX, groovyContents, toFind);
+        String elementName = "getYy";
+        assertCodeSelect(XX, null, groovyContents, toFind, elementName);
     }
 
     public void testCodeSelectArray3() throws Exception {
@@ -219,15 +221,35 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
     }
 
     public void testCodeSelectArray5() throws Exception {
-        String groovyContents = "new XX().xx[0].setXx()";
+        String groovyContents = "class YY { YY[] xx \nYY yy }\n"
+                + "new YY().xx[0].setXx()";
         String toFind = "setXx";
-        assertCodeSelect(XX, groovyContents, toFind);
+        String elementName = "xx";
+        assertCodeSelect(XX, null, groovyContents, toFind, elementName);
     }
 
     public void testCodeSelectArray6() throws Exception {
-        String groovyContents = "new XX().xx[0].setYy()";
+        String groovyContents = "class YY { YY[] xx \nYY yy }\n"
+                + "new YY().xx[0].setYy()";
         String toFind = "setYy";
-        assertCodeSelect(XX, groovyContents, toFind);
+        String elementName = "yy";
+        assertCodeSelect(XX, null, groovyContents, toFind, elementName);
+    }
+
+    public void testCodeSelectArray7() throws Exception {
+        String groovyContents = "class YY { YY[] xx \nYY yy }\n"
+                + "new YY().xx[0].getXx()";
+        String toFind = "getXx";
+        String elementName = "xx";
+        assertCodeSelect(XX, null, groovyContents, toFind, elementName);
+    }
+
+    public void testCodeSelectArray8() throws Exception {
+        String groovyContents = "class YY { YY[] xx \nYY yy }\n"
+                + "new YY().xx[0].getYy()";
+        String toFind = "getYy";
+        String elementName = "yy";
+        assertCodeSelect(XX, null, groovyContents, toFind, elementName);
     }
 
     private void assertCodeSelect(String structureContents,
@@ -235,10 +257,16 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
             String toFind) throws Exception, JavaModelException {
         assertCodeSelect(structureContents, null, groovyContents, toFind);
     }
-
     private void assertCodeSelect(String structureContents,
             String javaContents, String groovyContents, String toFind)
             throws Exception, JavaModelException {
+        assertCodeSelect(structureContents, javaContents, groovyContents,
+                toFind, toFind);
+    }
+
+    private void assertCodeSelect(String structureContents,
+            String javaContents, String groovyContents, String toFind,
+            String elementName) throws Exception, JavaModelException {
 
         if (javaContents != null) {
             createJavaUnit("Structure", structureContents);
@@ -258,7 +286,8 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
         IJavaElement[] eltFromGroovy = groovyUnit.codeSelect(
                 groovyContents.lastIndexOf(toFind), toFind.length());
         assertEquals("Should have found a selection", 1, eltFromGroovy.length);
-        assertEquals("Should have found reference to: " + toFind, toFind,
+        assertEquals("Should have found reference to: " + elementName,
+                elementName,
                 eltFromGroovy[0].getElementName());
 
         // check the java code select
@@ -266,7 +295,8 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
             IJavaElement[] eltFromJava = javaUnit.codeSelect(
                     javaContents.lastIndexOf(toFind), toFind.length());
             assertEquals("Should have found a selection", 1, eltFromJava.length);
-            assertEquals("Should have found reference to: " + toFind, toFind,
+            assertEquals("Should have found reference to: " + elementName,
+                    elementName,
                     eltFromJava[0].getElementName());
 
             // now check that the unique keys of each of them are the same

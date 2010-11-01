@@ -10,7 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -26,6 +28,22 @@ public class OtherCompletionTests extends CompletionTestCase {
         super(name);
     }
     
+    boolean orig;
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        orig = GroovyPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+    }
+    @Override
+    protected void tearDown() throws Exception {
+        try {   
+            super.tearDown();
+        } finally {
+            GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, orig);
+        }
+    }
+
     public void testGreclipse414() throws Exception {
         String contents = 
 "public class Test {\n" +
@@ -192,7 +210,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "setX"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "setXx value", 1);
+        checkReplacementString(proposals, "setXx(value)", 1);
     }
     
     public void testArrayCompletion4() throws Exception {
