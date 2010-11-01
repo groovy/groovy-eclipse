@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.LazyGenericsType;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * @author Andrew Eisenberg
@@ -311,6 +312,9 @@ public class VariableScope {
 
 				if (typeToParameterize instanceof LazyGenericsType) {
 					// LazyGenericsType is immutable
+					// shouldn't get here...log error and continue
+					Util.log(new RuntimeException(), "Found a JDTClassNode while resolving type parameters.  "
+							+ "This shouldn't happen.  Not trying to resolve any further " + "and continuing.  Type: " + type);
 					continue;
 				}
 

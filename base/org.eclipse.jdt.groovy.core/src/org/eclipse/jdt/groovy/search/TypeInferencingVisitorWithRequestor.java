@@ -79,6 +79,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -138,12 +139,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private Stack<ClassNode> propertyExpressionType;
 
 	/**
-	 * keep track of the most recent LHS of a binary expression seen.
-	 * 
-	 */
-	private Stack<ClassNode> lhsType;
-
-	/**
 	 * Use factory to instantiate
 	 */
 	TypeInferencingVisitorWithRequestor(GroovyCompilationUnit unit, ITypeLookup[] lookups) {
@@ -155,7 +150,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		propertyExpression = new Stack<ASTNode>();
 		objectExpressionType = new Stack<ClassNode>();
 		propertyExpressionType = new Stack<ClassNode>();
-		lhsType = new Stack<ClassNode>();
 	}
 
 	public void visitCompilationUnit(ITypeRequestor requestor) {
@@ -698,9 +692,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
 				}
-				// if (isLHSExpression(node)) {
-				// lhsType.push(result.type);
-				// }
 				return true;
 			case CANCEL_BRANCH:
 				if (isObjectExpression(node)) {
@@ -708,9 +699,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
 				}
-				// if (isLHSExpression(node)) {
-				// lhsType.push(result.type);
-				// }
 				return false;
 			case STOP_VISIT:
 				throw new VisitCompleted();
@@ -859,10 +847,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				objectExpressionType.push(findTypeOfBinaryExpression(node.getOperation().getText(), objExprType, propType));
 			}
 		} else {
-
-			// if (isObjectExpression(node)) {
-			// lhsType.pop();
-			// }
 			propertyExpression.pop();
 
 			// not popped earlier because the method field of the expression was not examined
@@ -1007,8 +991,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		// if the type is an iterator or an enumeration, then resolve the type parameter
 		if (collectionType.declaresInterface(VariableScope.ITERATOR_CLASS)
-				|| collectionType.declaresInterface(VariableScope.ENUMERATION_CLASS)
-				|| collectionType.equals(VariableScope.ITERATOR_CLASS) || collectionType.equals(VariableScope.ENUMERATION_CLASS)) {
+				|| collectionType.equals(VariableScope.ENUMERATION_CLASS)) {
 			typeToResolve = collectionType;
 		}
 
@@ -1020,6 +1003,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 		if (typeToResolve != null) {
+			if (typeToResolve instanceof JDTClassNode) {
+				// JDTClassNodes are immutable, must change that
+				typeToResolve = VariableScope.clone(typeToResolve);
+			}
 			ClassNode unresolvedCollectionType = collectionType.redirect();
 			GenericsType[] unresolvedGenerics = unresolvedCollectionType.getGenericsTypes();
 			GenericsType[] resolvedGenerics = collectionType.getGenericsTypes();

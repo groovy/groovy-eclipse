@@ -384,6 +384,18 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
     
     
+    public void testForLoop10() throws Exception {
+        String contents = "class X {\n"
+                + "List<String> images\n" + "}\n"
+                + "def sample = new X()\n" + "for (img in sample.images) {\n"
+                + "    img\n" + "}";
+        String toFind = "img";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    
+    
     
     // also not passing are generic arrays
     
