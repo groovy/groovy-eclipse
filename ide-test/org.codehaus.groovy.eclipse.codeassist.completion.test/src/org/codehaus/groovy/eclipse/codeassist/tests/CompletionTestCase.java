@@ -38,9 +38,11 @@ import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.ui.ide.IDE;
@@ -196,7 +198,7 @@ public abstract class CompletionTestCase extends BuilderTests {
             
             // if a field
             String propName = proposal.getDisplayString();
-            if (propName.startsWith(name + " ")) {
+            if (propName.startsWith(name + " ") && !(proposal instanceof LazyGenericTypeProposal)) {
                 return proposal;
             } else
             // if a method
@@ -342,6 +344,22 @@ public abstract class CompletionTestCase extends BuilderTests {
             sb.append(proposal.getDisplayString() + "\n");
         }
         return sb.toString();
+    }
+
+    
+    protected void checkProposalApplicationType(String contents, String expected,
+            int proposalLocation, String proposalName) throws Exception {
+        checkProposalApplication(contents, expected, proposalLocation, proposalName, true);
+    }
+    protected void checkProposalApplicationNonType(String contents, String expected,
+            int proposalLocation, String proposalName) throws Exception {
+        checkProposalApplication(contents, expected, proposalLocation, proposalName, false);
+    }
+    
+    protected void checkProposalApplication(String contents, String expected,
+            int proposalLocation, String proposalName, boolean isType) throws Exception {
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, proposalLocation);
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, proposalName, isType), expected);
     }
 
     public void performDummySearch(IJavaElement element) throws Exception{

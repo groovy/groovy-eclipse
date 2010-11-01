@@ -171,7 +171,38 @@ public class OtherCompletionTests extends CompletionTestCase {
         checkReplacementString(proposals, "other", 1);
     }
     
+    public void testArrayCompletion1() throws Exception {
+        String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].x";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "x"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "xx", 1);
+    }
 
+    public void testArrayCompletion2() throws Exception {
+        String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].getX";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "getX"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "getXx()", 1);
+    }
+    
+    public void testArrayCompletion3() throws Exception {
+        String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].setX";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "setX"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "setXx value", 1);
+    }
+    
+    public void testArrayCompletion4() throws Exception {
+        String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().getXx()[0].x";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "x"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "xx", 1);
+    }
+    
     
     // not working in multiline strings yet
 //    public void testGString2() throws Exception {

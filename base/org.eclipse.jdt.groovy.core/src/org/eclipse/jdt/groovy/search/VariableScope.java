@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
+import org.codehaus.jdt.groovy.internal.compiler.ast.LazyGenericsType;
 
 /**
  * @author Andrew Eisenberg
@@ -307,6 +308,11 @@ public class VariableScope {
 			// try to match
 			outer: for (int i = 0; i < typesToParameterize.length; i++) {
 				GenericsType typeToParameterize = typesToParameterize[i];
+
+				if (typeToParameterize instanceof LazyGenericsType) {
+					// LazyGenericsType is immutable
+					continue;
+				}
 
 				// recur down the type parameter
 				resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, typeToParameterize.getType());

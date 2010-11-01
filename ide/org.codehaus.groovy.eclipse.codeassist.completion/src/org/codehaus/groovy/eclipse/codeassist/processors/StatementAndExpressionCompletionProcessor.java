@@ -33,6 +33,8 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractProposalCreator;
@@ -74,10 +76,31 @@ public class StatementAndExpressionCompletionProcessor extends
 
         private Expression arrayAccessLHS;
 
+
         public ExpressionCompletionRequestor() {
-            if (getContext().completionNode instanceof BinaryExpression) {
-                arrayAccessLHS = ((BinaryExpression) getContext().completionNode)
-                        .getLeftExpression();
+            // remember the rightmost part of the LHS of a
+            // binary expression
+            ASTNode maybeLHS = getContext().completionNode;
+            while (maybeLHS != null) {
+                if (maybeLHS instanceof BinaryExpression) {
+                    arrayAccessLHS = ((BinaryExpression) maybeLHS)
+                            .getLeftExpression();
+                    maybeLHS = ((BinaryExpression) maybeLHS)
+                            .getLeftExpression();
+                } else if (maybeLHS instanceof PropertyExpression) {
+                    arrayAccessLHS = ((PropertyExpression) maybeLHS)
+                            .getObjectExpression();
+                    maybeLHS = ((PropertyExpression) maybeLHS).getProperty();
+                } else if (maybeLHS instanceof MethodCallExpression) {
+                    arrayAccessLHS = ((MethodCallExpression) maybeLHS)
+                            .getObjectExpression();
+                    maybeLHS = ((MethodCallExpression) maybeLHS).getMethod();
+                } else {
+                    if (maybeLHS instanceof Expression) {
+                        arrayAccessLHS = (Expression) maybeLHS;
+                    }
+                    maybeLHS = null;
+                }
             }
         }
 
@@ -163,7 +186,10 @@ public class StatementAndExpressionCompletionProcessor extends
          */
         private boolean doTest(ASTNode node) {
             if (node instanceof ArgumentListExpression) {
+                // || node instanceof PropertyExpression) {
                 // we never complete on a list of arguments, but rather one of the arguments itself
+                // also, never do a completion on the property expression, but rather on the
+                // propertyExpression.getProperty() node
                 return false;
             } else if (node instanceof BinaryExpression) {
                 BinaryExpression bin = (BinaryExpression) node;

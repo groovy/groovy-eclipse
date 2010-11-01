@@ -192,12 +192,65 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
                 toFind);
     }
 
+    private static final String XX = "class XX { public XX[] getXx() { return null; }\npublic XX getYy() { return null; }\n }";
+
+    public void testCodeSelectArray1() throws Exception {
+        String groovyContents = "new XX().xx[0].xx";
+        String toFind = "xx";
+        assertCodeSelect(XX, groovyContents, toFind);
+    }
+
+    public void testCodeSelectArray2() throws Exception {
+        String groovyContents = "new XX().xx[0].yy";
+        String toFind = "yy";
+        assertCodeSelect(XX, groovyContents, toFind);
+    }
+
+    public void testCodeSelectArray3() throws Exception {
+        String groovyContents = "new XX().xx[0].getXx()";
+        String toFind = "getXx";
+        assertCodeSelect(XX, groovyContents, toFind);
+    }
+
+    public void testCodeSelectArray4() throws Exception {
+        String groovyContents = "new XX().xx[0].getYy()";
+        String toFind = "getYy";
+        assertCodeSelect(XX, groovyContents, toFind);
+    }
+
+    public void testCodeSelectArray5() throws Exception {
+        String groovyContents = "new XX().xx[0].setXx()";
+        String toFind = "setXx";
+        assertCodeSelect(XX, groovyContents, toFind);
+    }
+
+    public void testCodeSelectArray6() throws Exception {
+        String groovyContents = "new XX().xx[0].setYy()";
+        String toFind = "setYy";
+        assertCodeSelect(XX, groovyContents, toFind);
+    }
+
+    private void assertCodeSelect(String structureContents,
+            String groovyContents,
+            String toFind) throws Exception, JavaModelException {
+        assertCodeSelect(structureContents, null, groovyContents, toFind);
+    }
+
     private void assertCodeSelect(String structureContents,
             String javaContents, String groovyContents, String toFind)
             throws Exception, JavaModelException {
-        createJavaUnit("Structure", structureContents);
+
+        if (javaContents != null) {
+            createJavaUnit("Structure", structureContents);
+        } else {
+            // this is an array test, use a different file name
+            createJavaUnit("XX", structureContents);
+        }
         GroovyCompilationUnit groovyUnit = createUnit(groovyContents);
-        ICompilationUnit javaUnit = createJavaUnit("Java", javaContents);
+        ICompilationUnit javaUnit = null;
+        if (javaContents != null) {
+            javaUnit = createJavaUnit("Java", javaContents);
+        }
         incrementalBuild();
         expectingNoProblems();
 
@@ -209,17 +262,20 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
                 eltFromGroovy[0].getElementName());
 
         // check the java code select
-        IJavaElement[] eltFromJava = javaUnit.codeSelect(
-                javaContents.lastIndexOf(toFind), toFind.length());
-        assertEquals("Should have found a selection", 1, eltFromJava.length);
-        assertEquals("Should have found reference to: " + toFind, toFind,
-                eltFromJava[0].getElementName());
+        if (javaUnit != null) {
+            IJavaElement[] eltFromJava = javaUnit.codeSelect(
+                    javaContents.lastIndexOf(toFind), toFind.length());
+            assertEquals("Should have found a selection", 1, eltFromJava.length);
+            assertEquals("Should have found reference to: " + toFind, toFind,
+                    eltFromJava[0].getElementName());
 
-        // now check that the unique keys of each of them are the same
-        String groovyUniqueKey = getUniqueKey(eltFromGroovy[0]);
-        String javaUniqueKey = getUniqueKey(eltFromJava[0]);
-        assertEquals("Invalid unique key from groovy", javaUniqueKey,
-                groovyUniqueKey);
+            // now check that the unique keys of each of them are the same
+            String groovyUniqueKey = getUniqueKey(eltFromGroovy[0]);
+            String javaUniqueKey = getUniqueKey(eltFromJava[0]);
+            assertEquals("Invalid unique key from groovy", javaUniqueKey,
+                    groovyUniqueKey);
+        }
+
     }
 
     /**

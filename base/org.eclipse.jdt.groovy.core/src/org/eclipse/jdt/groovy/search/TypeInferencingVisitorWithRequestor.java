@@ -123,8 +123,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private boolean rethrowVisitComplete = false;
 
 	/**
-	 * The head of the stack is the current property/attribute/methodcall expression being visited. This stack is used so we can
-	 * keep track of the type of the object expressions in these property expressions
+	 * The head of the stack is the current property/attribute/methodcall/binary expression being visited. This stack is used so we
+	 * can keep track of the type of the object expressions in these property expressions
 	 */
 	private Stack<ASTNode> propertyExpression;
 
@@ -140,9 +140,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	/**
 	 * keep track of the most recent LHS of a binary expression seen.
 	 * 
-	 * Doesn't need to be a stack since this will be consumed immediately after placed.
 	 */
-	private ClassNode lhsType;
+	private Stack<ClassNode> lhsType;
 
 	/**
 	 * Use factory to instantiate
@@ -156,6 +155,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		propertyExpression = new Stack<ASTNode>();
 		objectExpressionType = new Stack<ClassNode>();
 		propertyExpressionType = new Stack<ClassNode>();
+		lhsType = new Stack<ClassNode>();
 	}
 
 	public void visitCompilationUnit(ITypeRequestor requestor) {
@@ -697,9 +697,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					objectExpressionType.push(result.type);
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
-				} else if (isLHSExpression(node)) {
-					lhsType = result.type;
 				}
+				// if (isLHSExpression(node)) {
+				// lhsType.push(result.type);
+				// }
 				return true;
 			case CANCEL_BRANCH:
 				if (isObjectExpression(node)) {
@@ -707,6 +708,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
 				}
+				// if (isLHSExpression(node)) {
+				// lhsType.push(result.type);
+				// }
 				return false;
 			case STOP_VISIT:
 				throw new VisitCompleted();
@@ -822,9 +826,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 		propertyExpression.push(node);
-		node.getRightExpression().visit(this);
+
+		Expression toVisitFirst;
+		Expression toVisitSecond;
+
+		if (isAssignment) {
+			toVisitFirst = node.getRightExpression();
+			toVisitSecond = node.getLeftExpression();
+		} else {
+			toVisitFirst = node.getLeftExpression();
+			toVisitSecond = node.getRightExpression();
+		}
+
+		toVisitFirst.visit(this);
 
 		enclosingAssignment = oldEnclosingAssignment;
+
+		// must get this now, because this value is popped during handlExpreession.
+		ClassNode objExprType = objectExpressionType.peek();
 
 		boolean shouldContinue = handleExpression(node);
 
@@ -832,15 +851,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		ClassNode propType = propertyExpressionType.pop();
 
 		if (shouldContinue) {
-			node.getLeftExpression().visit(this);
+			toVisitSecond.visit(this);
 			propertyExpression.pop();
 
 			// returns true if this binary expression is the property part of another property expression
 			if (isObjectExpression(node)) {
-				objectExpressionType.push(findTypeOfBinaryExpression(node.getOperation().getText(), lhsType, propType));
-				lhsType = null;
+				objectExpressionType.push(findTypeOfBinaryExpression(node.getOperation().getText(), objExprType, propType));
 			}
 		} else {
+
+			// if (isObjectExpression(node)) {
+			// lhsType.pop();
+			// }
 			propertyExpression.pop();
 
 			// not popped earlier because the method field of the expression was not examined
@@ -1474,7 +1496,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				return prop.getObjectExpression() == node;
 			} else if (maybeProperty instanceof BinaryExpression) {
 				BinaryExpression prop = (BinaryExpression) maybeProperty;
-				return prop.getRightExpression() == node;
+				// for assignments, the right expression is property
+				// for others, the left
+				boolean isAssignment = prop.getOperation().getText().equals("=");
+				if (isAssignment) {
+					return prop.getRightExpression() == node;
+				} else {
+					return prop.getLeftExpression() == node;
+				}
 			} else if (maybeProperty instanceof AttributeExpression) {
 				AttributeExpression prop = (AttributeExpression) maybeProperty;
 				return prop.getObjectExpression() == node;

@@ -197,7 +197,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             declaration = maybeDeclaration == null ? declaration : maybeDeclaration;
         }
         
-        String uniqueKey = createUniqueKey(declaration, result.type, result.declaringType);
+        String uniqueKey = createUniqueKey(declaration, result.type, result.declaringType, maybeRequested);
         switch (maybeRequested.getElementType()) {
             case IJavaElement.FIELD:
                 if (maybeRequested.isReadOnly()) {
@@ -276,9 +276,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
     /**
      * Creates the unique key for classes, fields and methods
      * @param node
+     * @param maybeRequested 
      * @return
      */
-    private String createUniqueKey(AnnotatedNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
+    private String createUniqueKey(AnnotatedNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IJavaElement maybeRequested) {
         StringBuilder sb = new StringBuilder();
         if (node instanceof PropertyNode) {
             node = ((PropertyNode) node).getField();
@@ -286,7 +287,12 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (node instanceof FieldNode) {
             return createUniqueKeyForField((FieldNode) node, resolvedType, resolvedDeclaringType).toString();
         } else if (node instanceof MethodNode) {
-            return createUniqueKeyForMethod((MethodNode) node, resolvedType, resolvedDeclaringType).toString();
+            if (maybeRequested.getElementType() == IJavaElement.FIELD) {
+                // this is likely a generated getter or setter
+                return createUniqueKeyForGeneratedAccessor((MethodNode) node, resolvedType, resolvedDeclaringType, (IField) maybeRequested).toString();
+            } else {
+                return createUniqueKeyForMethod((MethodNode) node, resolvedType, resolvedDeclaringType).toString();
+            }
         } else if (node instanceof ClassNode) {
             return createUniqueKeyForClass(resolvedType, resolvedDeclaringType).toString();
         }
@@ -313,6 +319,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
         StringBuilder sb = new StringBuilder();
         sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));  // won't resolve type params
         sb.append('.').append(node.getName()).append(')');
+        sb.append(createUniqueKeyForResolvedClass(resolvedType));
+        return sb;
+    }
+    
+    private StringBuilder createUniqueKeyForGeneratedAccessor(MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IField actualField) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));  // won't resolve type params
+        sb.append('.').append(actualField.getElementName()).append(')');
         sb.append(createUniqueKeyForResolvedClass(resolvedType));
         return sb;
     }

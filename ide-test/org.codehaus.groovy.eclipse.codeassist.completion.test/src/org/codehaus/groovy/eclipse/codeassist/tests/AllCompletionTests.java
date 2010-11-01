@@ -37,6 +37,7 @@ public class AllCompletionTests {
         suite.addTestSuite(FindImportsRegionTests.class);
         suite.addTestSuite(RelevanceTests.class);
         suite.addTestSuite(ProposalProviderAndFilterTests.class);
+        suite.addTestSuite(ConstructorCompletionTests.class);
         
         return suite;
     }

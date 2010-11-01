@@ -188,6 +188,98 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.Iterator<java.lang.String>");
     }
+
+    
+    private static final String XX = "class XX {\nXX[] xx\nXX yy\n}";
+    public void testArray4() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().xx";
+        String toFind = "xx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "[LXX;");
+    }
+
+    public void testArray5() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().xx[0].yy";
+        String toFind = "yy";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "XX");
+    }
+    
+    public void testArray6() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().xx[new XX()].yy";
+        String toFind = "yy";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "XX");
+    }
+    
+    public void testArray7() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().xx[0].yy";
+        String toFind = "yy";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "XX");
+    }
+    public void testArray8() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().xx[0].xx[9].yy";
+        String toFind = "yy";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "XX");
+    }
+    
+    public void testArray9() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().getXx()[0].xx[9].yy";
+        String toFind = "yy";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "XX");
+    }
+    
+    public void testArray10() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().getXx()[0].getYy()";
+        String toFind = "getYy";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "XX");
+    }
+    
+    public void testArray11() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().getXx()";
+        String toFind = "getXx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "[LXX;");
+    }
+    
+    public void testArray12() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().getXx()[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx";
+        String toFind = "xx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "[LXX;");
+    }
+    
+    public void testArray13() throws Exception {
+        createUnit("XX", XX);
+        String contents = "new XX().getYy().getYy().getYy().getYy().getYy().getYy().getYy().getYy().getXx()[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx";
+        String toFind = "xx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "[LXX;");
+    }
+    
     
     
     public void testMapOfList3() throws Exception {
