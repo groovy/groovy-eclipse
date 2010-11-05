@@ -718,7 +718,11 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     public void visitBlockStatement(BlockStatement block) {
-        onLineNumber(block, "visitBlockStatement");
+        // FIXASC comment out line
+        // see http://jira.codehaus.org/browse/GROOVY-4505
+        // remove the rogue line number in the class file
+//        onLineNumber(block, "visitBlockStatement");
+        // FIXASC end
         visitStatement(block);
 
         compileStack.pushVariableScope(block.getVariableScope());
