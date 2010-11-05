@@ -33,6 +33,7 @@ import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.text.JavaPresentationReconciler;
@@ -84,7 +85,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
         RGB rgbString = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-        RGB rgbField = new RGB(0, 0, 192); // Should make this configurable
+        RGB rgbField = findRGB("semanticHighlighting.field.color", new RGB(0, 0, 192));
         GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
         Color colorDefault = colorManager.getColor(rgbDefault);
         Color colorRegex = colorManager.getColor(rgbString);
@@ -96,6 +97,10 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         fieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor), true);
     }
 
+
+    private static RGB findRGB(String key, RGB defaultRGB) {
+        return PreferenceConverter.getColor(JavaPlugin.getDefault().getPreferenceStore(), key);
+    }
 
     public void install(GroovyEditor editor, JavaSourceViewer viewer) {
         this.editor = editor;
