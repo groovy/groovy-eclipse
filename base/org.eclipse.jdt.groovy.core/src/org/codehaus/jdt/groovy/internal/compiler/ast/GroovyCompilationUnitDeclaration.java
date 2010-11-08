@@ -1031,6 +1031,29 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			return methodDeclaration;
 		} else {
 			MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
+
+			// TODO refactor - extract method
+			GenericsType[] generics = methodNode.getGenericsTypes();
+			// generic method
+			if (generics != null && generics.length != 0) {
+				methodDeclaration.typeParameters = new TypeParameter[generics.length];
+				for (int tp = 0; tp < generics.length; tp++) {
+					TypeParameter typeParameter = new TypeParameter();
+					typeParameter.name = generics[tp].getName().toCharArray();
+					ClassNode[] upperBounds = generics[tp].getUpperBounds();
+					if (upperBounds != null) {
+						// FIXASC Positional info for these references?
+						typeParameter.type = createTypeReferenceForClassNode(upperBounds[0]);
+						typeParameter.bounds = (upperBounds.length > 1 ? new TypeReference[upperBounds.length - 1] : null);
+						for (int b = 1, max = upperBounds.length; b < max; b++) {
+							typeParameter.bounds[b - 1] = createTypeReferenceForClassNode(upperBounds[b]);
+							typeParameter.bounds[b - 1].bits |= ASTNode.IsSuperType;
+						}
+					}
+					methodDeclaration.typeParameters[tp] = typeParameter;
+				}
+			}
+
 			boolean isMain = false;
 			// Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
 			// AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs

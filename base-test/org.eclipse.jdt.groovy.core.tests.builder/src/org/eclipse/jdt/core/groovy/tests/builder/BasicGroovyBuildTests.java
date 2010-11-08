@@ -581,7 +581,38 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
 	}
 
-	
+	public void testGenericMethods() throws Exception {
+		IPath projectPath = env.addProject("Project","1.5"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		
+		env.addClass(root, "", "Foo",
+			"public class Foo<T> {\n"+
+			"   public void m() {\n"+
+			"      Bar.agent(null);\n"+
+			"   }\n"+
+			"}\n"
+			);
+
+		env.addGroovyClass(root, "", "Bar",
+			"class Bar {\n"+
+			"   public static <PP> void agent(PP state) {\n"+
+			"   }\n"+
+			"}\n"
+			);
+		
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Foo","Bar");
+		expectingNoProblems();
+	}
+
 	public void testPropertyAccessorLocationChecks() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
