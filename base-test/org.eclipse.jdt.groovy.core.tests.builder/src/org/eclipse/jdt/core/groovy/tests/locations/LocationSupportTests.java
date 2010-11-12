@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 
 /**
  * @author Andrew Eisenberg
@@ -172,6 +173,53 @@ public class LocationSupportTests extends TestCase {
         // use index of 1 because zero index is of Foo
         assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\n".length(), ((ASTNode) module.getClasses().get(1)).getStart());
         assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n }".length(), ((ASTNode) module.getClasses().get(1)).getEnd());
+    }
+    
+    public void testGRECLIPSE887_ImportStatements() throws Exception {
+        String content = "import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*";
+        
+        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        sourceUnit.parse();
+        sourceUnit.completePhase();
+        sourceUnit.convert();
+        ModuleNode module = sourceUnit.getAST();
+        
+        // now check locations
+        assertEquals(0, module.getStart());
+        assertEquals(content.length(), module.getEnd());
+        assertEquals(0, module.getImport("List").getStart());
+        assertEquals("import java.util.List".length(), module.getImport("List").getEnd());
+        assertEquals("import java.util.List\n".length(), module.getStarImports().get(0).getStart());
+        assertEquals("import java.util.List\nimport java.lang.*".length(), module.getStarImports().get(0).getEnd());
+        assertEquals("import java.util.List\nimport java.lang.*\n".length(), module.getImport("A").getStart());
+        assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A".length(), module.getImport("A").getEnd());
+        assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\n".length(), module.getStarImports().get(1).getStart());
+        assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*".length(), module.getStarImports().get(1).getEnd());
+        
+        // now test against the compilation unit declaration 
+        MockGroovyCompilationUnitDeclaration cud = new MockGroovyCompilationUnitDeclaration();
+        cud.createImports(module);
+        
+        assertEquals(module.getImport("List").getStart(), cud.imports[0].declarationSourceStart); 
+        assertEquals(module.getImport("List").getEnd(), cud.imports[0].declarationSourceEnd); 
+        assertEquals(module.getStarImports().get(0).getStart(), cud.imports[1].declarationSourceStart); 
+        assertEquals(module.getStarImports().get(0).getEnd(), cud.imports[1].declarationSourceEnd); 
+        assertEquals(module.getImport("A").getStart(), cud.imports[2].declarationSourceStart); 
+        assertEquals(module.getImport("A").getEnd(), cud.imports[2].declarationSourceEnd); 
+        assertEquals(module.getStarImports().get(1).getStart(), cud.imports[3].declarationSourceStart); 
+        assertEquals(module.getStarImports().get(1).getEnd(), cud.imports[3].declarationSourceEnd); 
+    }
+    
+    class MockGroovyCompilationUnitDeclaration extends GroovyCompilationUnitDeclaration {
+        public MockGroovyCompilationUnitDeclaration() {
+            super(null, null, -1, null, null, null);
+        }
+        
+        @Override
+        protected void createImports(ModuleNode moduleNode) {
+            super.createImports(moduleNode);
+        }
+        
     }
     
     // GRECLIPSE-805

@@ -247,7 +247,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		createTypeDeclarations(moduleNode);
 	}
 
-	private void createImports(ModuleNode moduleNode) {
+	// make protected for testing
+	protected void createImports(ModuleNode moduleNode) {
 		List<ImportNode> importNodes = moduleNode.getImports();
 		List<ImportNode> importPackages = ImportNodeCompatibilityWrapper.getStarImports(moduleNode);
 		Map<String, ImportNode> importStatics = ImportNodeCompatibilityWrapper.getStaticImports(moduleNode);
@@ -280,7 +281,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				String importText = importPackage.getText();
 
 				// when calculating these offsets, assume no extraneous whitespace
-				int packageStartOffset = importPackage.getStart() - "import ".length();
+				int packageStartOffset = importPackage.getStart() + "import ".length();
 				int packageEndOffset = packageStartOffset + importText.length() - "import ".length() - ".*".length();
 
 				char[][] splits = CharOperation.splitOn('.',
