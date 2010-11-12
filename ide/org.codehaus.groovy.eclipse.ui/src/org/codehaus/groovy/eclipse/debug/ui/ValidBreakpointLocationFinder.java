@@ -84,14 +84,14 @@ import org.codehaus.groovy.control.SourceUnit;
 /**
  * @author Andrew Eisenberg
  * @created Aug 4, 2009
- * 
+ *
  * Compute a valid location where to put a breakpoint from a ModuleNode.
  * The result is the first valid location with a line number greater or equals than the given position.
  * A valid location is considered to be the last expression or statement on a given line
  *
  */
 public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
-    
+
     private class VisitCompleted extends RuntimeException {
         private static final long serialVersionUID = 1L;
     }
@@ -99,25 +99,25 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
     private class NodeNotFound extends RuntimeException {
         private static final long serialVersionUID = 1L;
     }
-    
+
     private ASTNode lastValid = null;
-    
+
     private int startLine;
-    
+
     public ValidBreakpointLocationFinder(int startLine) {
         this.startLine = startLine;
     }
-    
+
     private void validateNode(ASTNode node) throws VisitCompleted {
-        
-        if (node.getLineNumber() == -1 || node instanceof BlockStatement) {
+
+        if (node.getLineNumber() == -1 || node instanceof BlockStatement || node instanceof ClosureExpression) {
             // line number hasn't been set, but child line numbers might have
             // continue to search through children
             // also block statements seem to have end locations wrong
             // we can safely ignore them since breakpoints should not be set on block statements
             return;
         }
-        
+
         if (node.getLineNumber() == startLine) {
             lastValid = node;
             // keep on searching until the line is over
@@ -130,13 +130,13 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
             // end the visit because we have gotten to the next declaration continuing on this path is a waste of time
             throw new NodeNotFound();
         }
-        
+
     }
-    
+
     public ASTNode findValidBreakpointLocation(ModuleNode module) {
         ASTNode candidate = null;
         for (ClassNode classNode : (Iterable<ClassNode>) module.getClasses()) {
-                
+
             try {
                 for (Statement initializer : (Iterable<Statement>) classNode.getObjectInitializerStatements()) {
                     this.visitStatement(initializer);
@@ -144,7 +144,7 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
             } catch (VisitCompleted vc) { }
             candidate = returnBetterCandiate(candidate, lastValid);
             lastValid = null;
-            
+
             try {
                 for (PropertyNode pn : (Iterable<PropertyNode>) classNode.getProperties()) {
                     this.visitProperty(pn);
@@ -152,7 +152,7 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
             } catch (VisitCompleted vc) { }
             candidate = returnBetterCandiate(candidate, lastValid);
             lastValid = null;
-            
+
             try {
                 for (FieldNode fn : classNode.getFields()) {
                     this.visitField(fn);
@@ -160,7 +160,7 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
             } catch (VisitCompleted vc) { }
             candidate = returnBetterCandiate(candidate, lastValid);
             lastValid = null;
-            
+
             try {
                 for (ConstructorNode cn : (Iterable<ConstructorNode>) classNode.getDeclaredConstructors()) {
                     this.visitConstructor(cn);
@@ -168,7 +168,7 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
             } catch (VisitCompleted vc) { }
             candidate = returnBetterCandiate(candidate, lastValid);
             lastValid = null;
-            
+
             // if a class is a script, then it can possibly
             // have methods declared within the script
             // so, move the catch block inside the
@@ -189,7 +189,7 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
                 } catch (VisitCompleted vc) { }
                 candidate = returnBetterCandiate(candidate, lastValid);
                 lastValid = null;
-                
+
                 // check the <clinit> method to catch static initializers
                 // and initializations of static methods
                 MethodNode clinit = classNode.getMethod("<clinit>", new Parameter[0]);
@@ -205,17 +205,17 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
         }
         return candidate;
     }
-    
+
 
     /**
-     * compare two ASTNodes and determine which one is closer to the startLine 
-     * 
+     * compare two ASTNodes and determine which one is closer to the startLine
+     *
      */
     private ASTNode returnBetterCandiate(ASTNode first, ASTNode second) {
         if (first != null && second != null) {
             int firstStartLine = first.getLineNumber();
             int secondStartLine = second.getLineNumber();
-            
+
             int firstDiff = Math.abs(firstStartLine - startLine);
             int secondDiff = Math.abs(secondStartLine - startLine);
             return firstDiff < secondDiff ? first : second;
@@ -232,7 +232,7 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
     @Override
     public void visitAnnotations(AnnotatedNode node) {
     }
-    
+
     @Override
     protected void visitConstructorOrMethod(MethodNode node,
             boolean isConstructor) {
@@ -240,28 +240,28 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
             super.visitConstructorOrMethod(node, isConstructor);
         } catch (NodeNotFound nnf) { }
     }
-    
+
     @Override
     public void visitClass(ClassNode node) {
         try {
             super.visitClass(node);
         } catch (NodeNotFound nnf) { }
     }
-    
+
     @Override
     public void visitField(FieldNode node) {
         try {
             super.visitField(node);
         } catch (NodeNotFound nnf) { }
     }
-    
+
     @Override
     public void visitProperty(PropertyNode node) {
         try {
             super.visitProperty(node);
         } catch (NodeNotFound nnf) { }
     }
-    
+
     @Override
     public void visitArgumentlistExpression(ArgumentListExpression ale) {
         validateNode(ale);
@@ -288,6 +288,12 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitBinaryExpression(BinaryExpression expression) {
+        if (expression.getEnd() <= 0) {
+            // avoid synthetic assignment statements,
+            // specifically, initial value expressions that have been moved to
+            // constructors
+            return;
+        }
         validateNode(expression);
         super.visitBinaryExpression(expression);
     }
@@ -463,115 +469,115 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitPrefixExpression(PrefixExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitPrefixExpression(expression);
     }
 
     @Override
     public void visitPropertyExpression(PropertyExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitPropertyExpression(expression);
     }
 
     @Override
     public void visitRangeExpression(RangeExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitRangeExpression(expression);
     }
 
     @Override
     public void visitRegexExpression(RegexExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitRegexExpression(expression);
     }
 
     @Override
     public void visitReturnStatement(ReturnStatement statement) {
-        validateNode(statement); 
+        validateNode(statement);
         super.visitReturnStatement(statement);
     }
 
     @Override
     public void visitShortTernaryExpression(ElvisOperatorExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitShortTernaryExpression(expression);
     }
 
     @Override
     public void visitSpreadExpression(SpreadExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitSpreadExpression(expression);
     }
 
     @Override
     public void visitSpreadMapExpression(SpreadMapExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitSpreadMapExpression(expression);
     }
 
     @Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression call) {
-        validateNode(call); 
+        validateNode(call);
         super.visitStaticMethodCallExpression(call);
     }
 
     @Override
     public void visitSwitch(SwitchStatement statement) {
-        validateNode(statement); 
+        validateNode(statement);
         super.visitSwitch(statement);
     }
 
     @Override
     public void visitSynchronizedStatement(SynchronizedStatement statement) {
-        validateNode(statement); 
+        validateNode(statement);
         super.visitSynchronizedStatement(statement);
     }
 
     @Override
     public void visitTernaryExpression(TernaryExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitTernaryExpression(expression);
     }
 
     @Override
     public void visitThrowStatement(ThrowStatement statement) {
-        validateNode(statement); 
+        validateNode(statement);
         super.visitThrowStatement(statement);
     }
 
     @Override
     public void visitTryCatchFinally(TryCatchStatement statement) {
-        validateNode(statement); 
+        validateNode(statement);
         super.visitTryCatchFinally(statement);
     }
 
     @Override
     public void visitTupleExpression(TupleExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitTupleExpression(expression);
     }
 
     @Override
     public void visitUnaryMinusExpression(UnaryMinusExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitUnaryMinusExpression(expression);
     }
 
     @Override
     public void visitUnaryPlusExpression(UnaryPlusExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitUnaryPlusExpression(expression);
     }
 
     @Override
     public void visitVariableExpression(VariableExpression expression) {
-        validateNode(expression); 
+        validateNode(expression);
         super.visitVariableExpression(expression);
     }
 
     @Override
     public void visitWhileLoop(WhileStatement loop) {
-        validateNode(loop); 
+        validateNode(loop);
         super.visitWhileLoop(loop);
     }
 

@@ -35,8 +35,6 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class GroovyRuntime {
 
-    private static final String junitJarName = "junit.jar";
-
     public static void removeGroovyNature(final IProject project)
             throws CoreException {
         GroovyCore.trace("GroovyRuntime.removeGroovyNature()");
