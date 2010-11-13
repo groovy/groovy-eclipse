@@ -237,6 +237,10 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
     protected void visitConstructorOrMethod(MethodNode node,
             boolean isConstructor) {
         try {
+
+            // FIXADE must do a special ordering of statements if
+            // in a <clinit> or <init>
+            // See GRECLIPSE-888 (not implemented yet).
             super.visitConstructorOrMethod(node, isConstructor);
         } catch (NodeNotFound nnf) { }
     }
@@ -291,7 +295,12 @@ public class ValidBreakpointLocationFinder extends ClassCodeVisitorSupport {
         if (expression.getEnd() <= 0) {
             // avoid synthetic assignment statements,
             // specifically, initial value expressions that have been moved to
-            // constructors
+            // constructors, unless the RHS is a closure expression, in that
+            // case,
+            // visit the closure expression only.
+            if (expression.getRightExpression() instanceof ClosureExpression) {
+                expression.getRightExpression().visit(this);
+            }
             return;
         }
         validateNode(expression);

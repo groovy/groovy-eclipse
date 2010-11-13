@@ -244,6 +244,12 @@
             Create a new Groovy JUnit test suite
          </description>
       </wizard>
+      <primaryWizard
+            id="org.codehaus.groovy.eclipse.ui.groovyClassWizard">
+      </primaryWizard>
+      <primaryWizard
+            id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard">
+      </primaryWizard>
    </extension>
    <extension point="org.eclipse.ui.views">
       <category name="Groovy" id="org.codehaus.groovy.eclipse.Groovy" />
@@ -873,5 +879,17 @@
           type="groovy.lang.Reference"
           value="return get();">
     </javaLogicalStructure>
+ </extension>
+ <extension
+       point="org.eclipse.ui.perspectiveExtensions">
+    <perspectiveExtension
+          targetID="org.eclipse.jdt.ui.JavaPerspective">
+       <newWizardShortcut
+             id="org.codehaus.groovy.eclipse.ui.groovyClassWizard">
+       </newWizardShortcut>
+       <newWizardShortcut
+             id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard">
+       </newWizardShortcut>
+    </perspectiveExtension>
  </extension>
 </plugin>
