@@ -15,8 +15,10 @@ import groovy.lang.GroovyClassLoader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import org.codehaus.groovy.ast.ClassHelper;
@@ -268,16 +270,28 @@ public class JDTResolver extends ResolveVisitor {
 		return false;
 	}
 
+	// Cached set of typenames we can't resolve - so don't continually try
+	private Set<String> failedResolves = new HashSet<String>();
+
 	@Override
 	protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
-		if (type.getName().charAt(0) == 'j') {
+		String name = type.getName();
+		if (name.charAt(0) == 'j') {
 			ClassNode commonRedirect = commonTypes.get(type.getName());
 			if (commonRedirect != null) {
 				type.setRedirect(commonRedirect);
 				return true;
 			}
 		}
-		return super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
+		if (failedResolves.contains(name)) {
+			return false;
+		} else {
+			boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
+			if (!b) {
+				failedResolves.add(name);
+			}
+			return b;
+		}
 	}
 
 	// FIXASC callers could check if it is a 'funky' type before always recording a depedency
