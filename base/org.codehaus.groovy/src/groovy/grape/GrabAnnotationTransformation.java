@@ -38,7 +38,7 @@ import java.util.regex.Matcher;
  
 /**
  * Transformation for declarative dependency management.
- */
+ */ 
 @GroovyASTTransformation(phase=CompilePhase.CONVERSION)
 public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implements ASTTransformation {
     private static final String GRAB_CLASS_NAME = Grab.class.getName();
