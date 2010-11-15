@@ -35,7 +35,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-
+ 
 /**
  * Transformation for declarative dependency management.
  */
