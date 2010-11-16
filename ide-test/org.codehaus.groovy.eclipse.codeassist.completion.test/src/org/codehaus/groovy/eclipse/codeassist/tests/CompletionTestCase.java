@@ -271,6 +271,11 @@ public abstract class CompletionTestCase extends BuilderTests {
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
         unit.becomeWorkingCopy(null);
         
+        // intermitent failures on the build server
+        // just keep on trying
+        SynchronizationUtils.joinBackgroudActivities();
+        SynchronizationUtils.waitForIndexingToComplete();
+
         // necessary???
         // wait for indexes to be built
         int timeout = 0;
@@ -284,6 +289,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         if (timeout == timeoutThreshold) {
             fail("Failure to finish indexing project.  Timed out...");
         }
+        SynchronizationUtils.joinBackgroudActivities();
         SynchronizationUtils.waitForIndexingToComplete();
         return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
         
