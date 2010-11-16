@@ -122,84 +122,84 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingOnlySpecificProblemFor(pathToSecond, new Problem("/Project/src2/p/Foo.groovy", "The type Foo is already defined", pathToSecond, 17,20, 40, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	public void testSlow_GRE870() throws Exception {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.addGroovyJars(projectPath);
-		fullBuild(projectPath);
-		
-		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-
-		env.addGroovyClass(root, "", "Test1",
-				"import static some.Class0.*;\n"+
-				"import static some.Class1.*;\n"+
-				"import static some.Class2.*;\n"+
-				"import static some.Class3.*;\n"+
-				"import static some.Class4.*;\n"+
-				"import static some.Class5.*;\n"+
-				"import static some.Class6.*;\n"+
-				"import static some.Class7.*;\n"+
-				"import static some.Class8.*;\n"+
-				"import static some.Class9.*;\n"+
-				"import static some.Class10.*;\n"+
-				"import static some.Class11.*;\n"+
-				"import static some.Class12.*;\n"+
-				"import static some.Class13.*;\n"+
-				"import static some.Class14.*;\n"+
-				"import static some.Class15.*;\n"+
-				"import static some.Class16.*;\n"+
-				"import static some.Class17.*;\n"+
-				"import static some.Class18.*;\n"+
-				"import static some.Class19.*;\n"+
-				"import static some.Class20.*;\n"+
-				"import static some.Class21.*;\n"+
-				"import static some.Class22.*;\n"+
-				"import static some.Class23.*;\n"+
-				"import static some.Class24.*;\n"+
-				"import static some.Class25.*;\n"+
-				"import static some.Class26.*;\n"+
-				"import static some.Class27.*;\n"+
-				"import static some.Class28.*;\n"+
-				"import static some.Class29.*;\n"+
-				"import static some.Class30.*;\n"+
-				"import static some.Class31.*;\n"+
-				"import static some.Class32.*;\n"+
-				"import static some.Class33.*;\n"+
-				"import static some.Class34.*;\n"+
-				"import static some.Class35.*;\n"+
-				"import static some.Class36.*;\n"+
-				"import static some.Class37.*;\n"+
-				"import static some.Class38.*;\n"+
-				"import static some.Class39.*;\n"+
-				"import static some.Class40.*;\n"+
-				"import static some.Class41.*;\n"+
-				"import static some.Class42.*;\n"+
-				"import static some.Class43.*;\n"+
-				"import static some.Class44.*;\n"+
-				"import static some.Class45.*;\n"+
-				"import static some.Class46.*;\n"+
-				"import static some.Class47.*;\n"+
-				"import static some.Class48.*;\n"+
-				"import static some.Class49.*;\n"+
-				"import static some.Class50.*;\n"+
-				"\n"+
-				"class Test1 {}\n"
-
-			);
-
-		// TODO could guard on this test requiring execution in less than 2mins...
-		
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-
-		incrementalBuild(projectPath);
-		// lots of errors on the missing static imports
-		expectingCompiledClassesV("");
-
-	}
+//	public void testSlow_GRE870() throws Exception {
+//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+//		env.addGroovyJars(projectPath);
+//		fullBuild(projectPath);
+//		
+//		// remove old package fragment root so that names don't collide
+//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+//		
+//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+//
+//		env.addGroovyClass(root, "", "Test1",
+//				"import static some.Class0.*;\n"+
+//				"import static some.Class1.*;\n"+
+//				"import static some.Class2.*;\n"+
+//				"import static some.Class3.*;\n"+
+//				"import static some.Class4.*;\n"+
+//				"import static some.Class5.*;\n"+
+//				"import static some.Class6.*;\n"+
+//				"import static some.Class7.*;\n"+
+//				"import static some.Class8.*;\n"+
+//				"import static some.Class9.*;\n"+
+//				"import static some.Class10.*;\n"+
+//				"import static some.Class11.*;\n"+
+//				"import static some.Class12.*;\n"+
+//				"import static some.Class13.*;\n"+
+//				"import static some.Class14.*;\n"+
+//				"import static some.Class15.*;\n"+
+//				"import static some.Class16.*;\n"+
+//				"import static some.Class17.*;\n"+
+//				"import static some.Class18.*;\n"+
+//				"import static some.Class19.*;\n"+
+//				"import static some.Class20.*;\n"+
+//				"import static some.Class21.*;\n"+
+//				"import static some.Class22.*;\n"+
+//				"import static some.Class23.*;\n"+
+//				"import static some.Class24.*;\n"+
+//				"import static some.Class25.*;\n"+
+//				"import static some.Class26.*;\n"+
+//				"import static some.Class27.*;\n"+
+//				"import static some.Class28.*;\n"+
+//				"import static some.Class29.*;\n"+
+//				"import static some.Class30.*;\n"+
+//				"import static some.Class31.*;\n"+
+//				"import static some.Class32.*;\n"+
+//				"import static some.Class33.*;\n"+
+//				"import static some.Class34.*;\n"+
+//				"import static some.Class35.*;\n"+
+//				"import static some.Class36.*;\n"+
+//				"import static some.Class37.*;\n"+
+//				"import static some.Class38.*;\n"+
+//				"import static some.Class39.*;\n"+
+//				"import static some.Class40.*;\n"+
+//				"import static some.Class41.*;\n"+
+//				"import static some.Class42.*;\n"+
+//				"import static some.Class43.*;\n"+
+//				"import static some.Class44.*;\n"+
+//				"import static some.Class45.*;\n"+
+//				"import static some.Class46.*;\n"+
+//				"import static some.Class47.*;\n"+
+//				"import static some.Class48.*;\n"+
+//				"import static some.Class49.*;\n"+
+//				"import static some.Class50.*;\n"+
+//				"\n"+
+//				"class Test1 {}\n"
+//
+//			);
+//
+//		// TODO could guard on this test requiring execution in less than 2mins...
+//		
+//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+//
+//		incrementalBuild(projectPath);
+//		// lots of errors on the missing static imports
+//		expectingCompiledClassesV("");
+//
+//	}
 
 	public void testTypeDuplication_GRE796_2() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

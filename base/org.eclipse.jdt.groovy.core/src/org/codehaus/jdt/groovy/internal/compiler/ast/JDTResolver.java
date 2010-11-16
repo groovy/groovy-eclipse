@@ -283,15 +283,15 @@ public class JDTResolver extends ResolveVisitor {
 				return true;
 			}
 		}
-		if (failedResolves.contains(name)) {
-			return false;
-		} else {
-			boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
-			if (!b) {
-				failedResolves.add(name);
-			}
-			return b;
-		}
+		// if (failedResolves.contains(name)) {
+		// return false;
+		// } else {
+		boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
+		// if (!b) {
+		// failedResolves.add(name);
+		// }
+		return b;
+		// }
 	}
 
 	// FIXASC callers could check if it is a 'funky' type before always recording a depedency
