@@ -14,6 +14,7 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 import groovy.lang.GroovyClassLoader;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,8 +33,12 @@ import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.batch.FileSystem;
+import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
@@ -103,8 +108,46 @@ public class GroovyParser {
 	// this(requestor, options, problemReporter, true);
 	// }
 
+	private GroovyClassLoader gclForBatch = null;
+
 	private GroovyClassLoader getLoaderFor(String path) {
 		GroovyClassLoader gcl = null;
+		if (projectName == null && path == null) {
+			if (gclForBatch == null) {
+				try {
+				// Batch compilation
+				if (requestor instanceof org.eclipse.jdt.internal.compiler.Compiler) {
+					org.eclipse.jdt.internal.compiler.Compiler compiler = ((org.eclipse.jdt.internal.compiler.Compiler) requestor);
+					LookupEnvironment lookupEnvironment = compiler.lookupEnvironment;
+					if (lookupEnvironment != null) {
+						INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
+						if (nameEnvironment instanceof FileSystem) {
+								FileSystem fileSystem = (FileSystem) nameEnvironment;
+								if (fileSystem!=null) {
+									Field f = FileSystem.class.getDeclaredField("classpaths");
+									if (f!=null) {
+										f.setAccessible(true);
+										gclForBatch = new GroovyClassLoader();
+										Classpath[] classpaths = (Classpath[]) f.get(fileSystem);
+										if (classpaths != null) {
+											for (int i = 0; i < classpaths.length; i++) {
+												gclForBatch.addClasspath(classpaths[i].getPath());
+											}
+										}
+									} else {
+										System.err.println("Cannot find classpaths field on FileSystem class");
+									}
+								}
+						}
+					}
+				}
+				} catch (Exception e) {
+					System.err.println("Unexpected problem computing classpath for ast transform loader:");
+					e.printStackTrace(System.err);
+				}
+			}
+			return gclForBatch;
+		}
 		if (path != null) {
 			if (projectName == null) {
 				// throw new IllegalStateException("Cannot build without knowing project name");
