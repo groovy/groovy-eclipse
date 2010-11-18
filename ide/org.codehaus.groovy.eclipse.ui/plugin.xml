@@ -622,22 +622,32 @@
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             description="Run Groovy Shell"
-            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.run"
+            id="org.codehaus.groovy.eclipse.debug.ui.groovyShellLaunchShortcut.run"
             name="Run Groovy Shell"/>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             description="Debug Groovy Shell"
-            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.debug"
+            id="org.codehaus.groovy.eclipse.debug.ui.groovyShellLaunchShortcut.debug"
             name="Debug Groovy Shell"/>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
+            description="Run Groovy Console"
+            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut.run"
+            name="Run Groovy Console"/>
+      <command
+            categoryId="org.eclipse.debug.ui.category.run"
+            description="Debug Groovy Console"
+            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut.debug"
+            name="Debug Groovy Console"/>
+      <command
+            categoryId="org.eclipse.debug.ui.category.run"
             description="Run Groovy Script"
-            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.run"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.run"
             name="Run Groovy Script"/>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             description="Debug Groovy Script"
-            id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.debug"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.debug"
             name="Debug Groovy Script"/>
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
@@ -662,11 +672,11 @@
    <extension
          point="org.eclipse.ui.bindings">
       <key
-            commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.run"
+            commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.run"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+X G"/>
       <key
-            commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.debug"
+            commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.debug"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+D G"/>
       <key
