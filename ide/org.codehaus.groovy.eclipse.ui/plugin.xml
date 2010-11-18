@@ -78,9 +78,7 @@
 	                    property="org.eclipse.debug.ui.projectNature"
                       value="org.eclipse.jdt.groovy.core.groovyNature">
                   </test>
-                  <adapt
-                        type="org.eclipse.core.resources.IProject">
-                  </adapt>
+              		<adapt type="org.eclipse.core.resources.IProject"/>
               </iterate>
                </with>
             </enablement>

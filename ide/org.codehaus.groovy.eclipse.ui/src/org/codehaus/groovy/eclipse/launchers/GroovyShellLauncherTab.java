@@ -38,55 +38,60 @@ public class GroovyShellLauncherTab extends JavaMainTab {
 	/**
 	 * Dialog for selecting the groovy class to run.
 	 */
-	protected void handleSearchButtonSelected() {
+	@Override
+    protected void handleSearchButtonSelected() {
 	}
-	
+
 	@Override
 	protected void createMainTypeEditor(Composite parent, String text) {
 	    super.createMainTypeEditor(parent, text);
-	    fMainText.getParent().getParent().setVisible(false);
-	    fMainText.setText(groovy.ui.InteractiveShell.class.getName());
-	    Button fSearchButton = (Button) ReflectionUtils.getPrivateField(SharedJavaMainTab.class, "fSearchButton", this);
-	    fSearchButton.setVisible(false);
-	    Button fSearchExternalJarsCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class, "fSearchExternalJarsCheckButton", this);
-	    fSearchExternalJarsCheckButton.setVisible(false);
-	    Button fConsiderInheritedMainButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class, "fConsiderInheritedMainButton", this);
-	    fConsiderInheritedMainButton.setVisible(false);
-	    Button fStopInMainCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class, "fStopInMainCheckButton", this);
-	    fStopInMainCheckButton.setVisible(false);
+        fMainText.getParent().setVisible(false);
+        fMainText.setText(groovy.ui.InteractiveShell.class.getName());
+        Button fSearchButton = (Button) ReflectionUtils.getPrivateField(SharedJavaMainTab.class, "fSearchButton", this);
+        fSearchButton.setVisible(false);
+        Button fSearchExternalJarsCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class,
+                "fSearchExternalJarsCheckButton", this);
+        fSearchExternalJarsCheckButton.setVisible(false);
+        Button fConsiderInheritedMainButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class,
+                "fConsiderInheritedMainButton", this);
+        fConsiderInheritedMainButton.setVisible(false);
+        Button fStopInMainCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class, "fStopInMainCheckButton", this);
+        fStopInMainCheckButton.setVisible(false);
 	}
-	
+
 	@Override
 	protected void updateMainTypeFromConfig(ILaunchConfiguration config) {
 	}
-	
+
 	@Override
 	public void initializeFrom(ILaunchConfiguration config) {
         String projectName = EMPTY_STRING;
         try {
-            projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, EMPTY_STRING);   
+            projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, EMPTY_STRING);
         }
         catch (CoreException ce) {
             setErrorMessage(ce.getStatus().getMessage());
         }
         fProjText.setText(projectName);
-        
-        ReflectionUtils.executePrivateMethod(JavaLaunchTab.class, "setCurrentLaunchConfiguration", 
+
+        ReflectionUtils.executePrivateMethod(JavaLaunchTab.class, "setCurrentLaunchConfiguration",
                 new Class[] { ILaunchConfiguration.class }, this, new Object[] { config });
 	}
-	
+
 	/**
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getName()
 	 */
-	public String getName() {
+	@Override
+    public String getName() {
 		return "Groovy Shell"; //$NON-NLS-1$
-	}	
-	
+	}
+
 	/**
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getImage()
 	 */
-	public Image getImage() {
+	@Override
+    public Image getImage() {
 		return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
-	}	
-	
+	}
+
 }

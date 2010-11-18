@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -117,12 +117,13 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         }
         if (javaProject==null && unit==null) {
             MessageDialog.openError(PlatformUI.getWorkbench().
-                getActiveWorkbenchWindow().getShell(), "Can't run script", "No script or project selected!");
+getActiveWorkbenchWindow().getShell(), "Can't run script",
+                    "No script or project selected!");
             return;
         }
         if (unit != null || canLaunchWithNoType()) {
             launchGroovy(unit, javaProject, mode);
-    	}
+        }
         else {
             MessageDialog.openError(PlatformUI.getWorkbench().
                     getActiveWorkbenchWindow().getShell(), "Can't run script", "No script selected!");
@@ -235,7 +236,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         }
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME,
-                "org.codehaus.groovy.tools.GroovyStarter");
+ "org.codehaus.groovy.tools.GroovyStarter");
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,
                 javaProject.getElementName());
@@ -243,13 +244,12 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                 IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS,
                 "-Dgroovy.starter.conf="+getGroovyConf() +
                 " -Dgroovy.home="+getGroovyHome()
-                );
+);
         launchConfigProperties.put(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "--classpath "
                 + generateClasspath(javaProject) + " --main " + classToRun() + pathToClass);
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY,
- getWorkingDirectory(runType,
-                javaProject));
+                getWorkingDirectory(runType, javaProject));
 
         return launchConfigProperties;
     }
@@ -402,11 +402,11 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      * @see ILaunchShortcut#launch
      */
     public void launch(IEditorPart editor, String mode) {
-    	// make sure we are saved as we run groovy from the file
-    	editor.getEditorSite().getPage().saveEditor(editor,false);
-    	IEditorInput input = editor.getEditorInput();
-    	IFile file = (IFile) input.getAdapter(IFile.class);
-    	ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
+        // make sure we are saved as we run groovy from the file
+        editor.getEditorSite().getPage().saveEditor(editor, false);
+        IEditorInput input = editor.getEditorInput();
+        IFile file = (IFile) input.getAdapter(IFile.class);
+        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         if (unit != null) {
             launchGroovy(unit, unit.getJavaProject(), mode);
         }
@@ -476,18 +476,17 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      */
     public ILaunchConfigurationWorkingCopy createLaunchConfig(Map<String, String> configProperties, String classUnderTest)
             throws CoreException {
-            	String launchName = getLaunchManager().generateUniqueLaunchConfigurationNameFrom( classUnderTest ) ;
-            	ILaunchConfigurationWorkingCopy returnConfig =
-            		getGroovyLaunchConfigType().newInstance(null, launchName);
+        String launchName = getLaunchManager().generateLaunchConfigurationName(classUnderTest);
+        ILaunchConfigurationWorkingCopy returnConfig = getGroovyLaunchConfigType().newInstance(null, launchName);
 
-            	for (Iterator<String> it = configProperties.keySet().iterator(); it.hasNext();) {
-            		String key = it.next();
-            		String value = configProperties.get(key);
-            		returnConfig.setAttribute(key, value);
-            	}
+        for (Iterator<String> it = configProperties.keySet().iterator(); it.hasNext();) {
+            String key = it.next();
+            String value = configProperties.get(key);
+            returnConfig.setAttribute(key, value);
+        }
 
-            	return returnConfig;
-            }
+        return returnConfig;
+    }
 
     /**
      * This class finds any launch configrations that match the defined
@@ -507,14 +506,13 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         List<ILaunchConfiguration> candidateConfigs = ListUtil.newEmptyList();
 
         ILaunchConfiguration[] configs = getLaunchManager()
-                .getLaunchConfigurations(configType);
+.getLaunchConfigurations(configType);
         for (int i = 0; i < configs.length; i++) {
             ILaunchConfiguration config = configs[i];
 
             boolean matches = true;
             for (Iterator<String> it = configProperties.keySet().iterator(); it
-                    .hasNext()
-                    && matches;) {
+.hasNext() && matches;) {
                 String key = it.next();
                 String value = configProperties.get(key);
                 if (!config.getAttribute(key, "").equals(value)) {
@@ -526,13 +524,13 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             }
         }
 
-    	int candidateCount = candidateConfigs.size();
-    	if (candidateCount == 1) {
-    		returnValue = candidateConfigs.get(0);
-    	} else if(candidateCount > 1) {
-    		returnValue = chooseConfiguration(candidateConfigs);
-    	}
-    	return returnValue;
+        int candidateCount = candidateConfigs.size();
+        if (candidateCount == 1) {
+            returnValue = candidateConfigs.get(0);
+        } else if (candidateCount > 1) {
+            returnValue = chooseConfiguration(candidateConfigs);
+        }
+        return returnValue;
     }
 
     /**
@@ -543,8 +541,8 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      * @return Returns the ILaunchConfiguration that the user selected.
      */
     public ILaunchConfiguration chooseConfiguration(List< ILaunchConfiguration > configList) {
-    	IDebugModelPresentation labelProvider= DebugUITools.newDebugModelPresentation();
-    	return (ILaunchConfiguration) LaunchShortcutHelper.chooseFromList(configList, labelProvider, title, text);
+        IDebugModelPresentation labelProvider = DebugUITools.newDebugModelPresentation();
+        return (ILaunchConfiguration) LaunchShortcutHelper.chooseFromList(configList, labelProvider, title, text);
     }
 
     /**
@@ -562,7 +560,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      * @return Returns the default Eclipse launch manager.
      */
     public static ILaunchManager getLaunchManager() {
-    	return DebugPlugin.getDefault().getLaunchManager() ;
+        return DebugPlugin.getDefault().getLaunchManager();
     }
 
 
