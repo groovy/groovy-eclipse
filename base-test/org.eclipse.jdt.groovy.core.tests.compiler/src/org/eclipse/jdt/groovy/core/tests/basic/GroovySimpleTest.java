@@ -9,6 +9,7 @@
  *     SpringSource - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.groovy.core.tests.basic;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -365,6 +366,21 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"@Retention(RetentionPolicy.RUNTIME)\n"+
 	    			"@interface Anno { String value(); }\n"},
 	    			"@Anno(value=abc)");
+    }
+    
+    public void testPrimitiveLikeTypeNames_GRE891() {
+	    	this.runConformTest(new String[]{
+	    			"Foo.java",
+	    			"public class Foo {\n"+
+	    			"public static void main(String[] args) {\n"+
+	    			"  Z[][] zs = new Z().zzz();\n"+
+	    			"  System.out.println(\"works\");\n"+
+	    			"  }\n"+
+	    			"}",
+	    			"Z.groovy",
+	    			"class Z {\n"+
+	    			"   Z[][] zzz() { null }\n"+
+	    			"}\n"},"works");
     }
 	    
 

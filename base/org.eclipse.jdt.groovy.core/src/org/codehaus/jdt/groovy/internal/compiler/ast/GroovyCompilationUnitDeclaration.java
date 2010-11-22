@@ -1218,37 +1218,37 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	/**
-	 * Convert from a signature form to a type reference. For example "C" for character "[[Z" for array of array of boolean
+	 * Convert from an array ClassNode into a TypeReference.
 	 */
 	private TypeReference createTypeReferenceForArrayName(ClassNode node, int start, int end) {
 		String signature = node.getName();
-		int pos = 0;
-		while (signature.charAt(pos) == '[') {
-			pos++;
+		int dim = 0;
+		ClassNode componentType = node;
+		while (componentType.isArray()) {
+			dim++;
+			componentType = componentType.getComponentType();
 		}
-		int dim = pos;
-
-		if (signature.length() == (pos + 1)) {
-			// primitive array component
-			Integer ii = charToTypeId.get(signature.charAt(pos));
+		if (componentType.isPrimitive()) {
+			Integer ii = charToTypeId.get(signature.charAt(dim));
 			if (ii == null) {
-				// silly groovy constructed signature for type variable reference (see GRECLIPSE-700)
-				return createJDTArrayTypeReference(signature.substring(1), dim, start, end);
+				throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not...");
 			} else {
 				return TypeReference.baseTypeReference(ii, dim);
 			}
 		}
-
-		// array component is something like La.b.c;
-		if (signature.charAt(pos) == 'L' && dim > 0) {
-			String arrayComponentTypename = signature.substring(pos + 1, signature.length() - 1); // chop off '['s 'L' and ';'
-			if (arrayComponentTypename.indexOf(".") == -1) {
-				return createJDTArrayTypeReference(arrayComponentTypename, dim, start, end);
-			} else {
-				return createJDTArrayQualifiedTypeReference(arrayComponentTypename, dim, start, end);
-			}
+		if (dim == 0) {
+			throw new IllegalStateException("Array classnode with dimensions 0?? node:" + node.getName());
 		}
-		throw new GroovyEclipseBug("Unable to convert signature to reference.  Signature was '" + signature + "'");
+		// array component is something like La.b.c; ... or sometimes just [[Z (where Z is a type, not primitive)
+		String arrayComponentTypename = signature.substring(dim);
+		if (arrayComponentTypename.charAt(arrayComponentTypename.length() - 1) == ';') {
+			arrayComponentTypename = signature.substring(dim + 1, signature.length() - 1); // chop off '['s 'L' and ';'
+		}
+		if (arrayComponentTypename.indexOf(".") == -1) {
+			return createJDTArrayTypeReference(arrayComponentTypename, dim, start, end);
+		} else {
+			return createJDTArrayQualifiedTypeReference(arrayComponentTypename, dim, start, end);
+		}
 	}
 
 	// because 'length' is computed as 'end-start+1' and start==-1 indicates it does not exist, then
