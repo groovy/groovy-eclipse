@@ -600,14 +600,14 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean hasProperty(String name) {
-    	return getProperty(name)!=null;
+        return getProperty(name) != null;
     }
-    
+
     public PropertyNode getProperty(String name) {
-    	for (PropertyNode pn : getProperties()) {
+        for (PropertyNode pn : getProperties()) {
             if (pn.getName().equals(name)) return pn;
         }
-        return null;   	
+        return null;
     }
 
     public void addConstructor(ConstructorNode node) {
@@ -872,7 +872,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         	}
         }
     }
-    
+
     /**
      * This methods returns a list of all methods of the given name
      * defined in the current class
@@ -935,9 +935,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return true if this node is derived from the given ClassNode
      */
     public boolean isDerivedFrom(ClassNode type) {
-    	if(this.equals(ClassHelper.VOID_TYPE)) {
+        if (this.equals(ClassHelper.VOID_TYPE)) {
             return type.equals(ClassHelper.VOID_TYPE);
-    	}
+        }
         if (type.equals(ClassHelper.OBJECT_TYPE)) return true;
         ClassNode node = this;
         while (node != null) {
@@ -1264,7 +1264,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             // TODO this won't strictly be true when using list expansion in argument calls
             count = tuple.getExpressions().size();
         } else if (arguments instanceof MapExpression) {
-        	count = 1;
+            count = 1;
         }
         
         for (MethodNode method : getMethods(name)) {

@@ -109,9 +109,9 @@ public class ClassHelper {
 
     protected static final ClassNode[] EMPTY_TYPE_ARRAY = {};
     
-    public static final String OBJECT = "java.lang.Object";    
-    
-    
+    public static final String OBJECT = "java.lang.Object";
+
+
     public static ClassNode makeCached(Class c){
         final SoftReference<ClassNode> classNodeSoftReference = ClassHelperCache.classCache.get(c);
         ClassNode classNode;
@@ -134,12 +134,12 @@ public class ClassHelper {
      * @return an array of ClassNodes
      */
     public static ClassNode[] make(Class[] classes) {
-    	ClassNode[] cns = new ClassNode[classes.length];
-    	for (int i=0; i<cns.length; i++) {
-    		cns[i] = make(classes[i]);
-    	}
-    	
-    	return cns;
+        ClassNode[] cns = new ClassNode[classes.length];
+        for (int i=0; i<cns.length; i++) {
+            cns[i] = make(classes[i]);
+        }
+        
+        return cns;
     }
     
     /**
@@ -182,8 +182,8 @@ public class ClassHelper {
         else {
             ClassNode t = makeWithoutCaching(c.getName());
             t.setRedirect(cached);
-        return t;
-    }
+            return t;
+        }
     }
     
     
@@ -262,7 +262,7 @@ public class ClassHelper {
         } else if (cn==double_TYPE) {
             return Double_TYPE;
         } else if (cn==VOID_TYPE) {
-        	return void_WRAPPER_TYPE;
+            return void_WRAPPER_TYPE;
         }
         else {
             return cn;
