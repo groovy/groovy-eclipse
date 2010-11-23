@@ -64,22 +64,13 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 /**
  * A wizard for creating test cases.
  */
-// GROOVY start
-//public class NewTestCaseCreationWizard extends JUnitWizard {
 public class NewTestCaseCreationWizard extends JUnitWizard {
-// GROOVY end
 
-	// GROOVY start
-	//private NewTestCaseWizardPageOne fPage1;
 	private NewTestCaseWizardPageOne fPage1;
-	// GROOVY end
 
 	private NewTestCaseWizardPageTwo fPage2;
 
-	//GROOVY start
-	//public NewTestCaseCreationWizard() {
     public NewTestCaseCreationWizard() {
-	//GROOVY end
 		super();
 		setWindowTitle(WizardMessages.Wizard_title_new_testcase);
 		initDialogSettings();
@@ -97,10 +88,7 @@ public class NewTestCaseCreationWizard extends JUnitWizard {
     public void addPages() {
 		super.addPages();
 		fPage2= new NewTestCaseWizardPageTwo();
-		//GROOVY start
-		//fPage1= new NewTestCaseWizardPageOne(fPage2);
 		fPage1= new NewTestCaseWizardPageOne(fPage2);
-		//GROOVY end
 		addPage(fPage1);
 		fPage1.init(getSelection());
 		addPage(fPage2);

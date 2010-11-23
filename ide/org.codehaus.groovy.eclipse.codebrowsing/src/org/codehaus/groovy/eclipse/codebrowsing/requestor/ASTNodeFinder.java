@@ -244,7 +244,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     	// don't check here if the type reference is implicit
     	// we know that the type is not implicit if the name
     	// location is filled in.
-    	if(call.getOwnerType().getNameEnd() == 0) {
+        if(call.getOwnerType() != call.getOwnerType().redirect()) {
     	    check(call.getOwnerType());
     	}
 

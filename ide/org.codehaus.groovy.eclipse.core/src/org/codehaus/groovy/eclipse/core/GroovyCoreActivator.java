@@ -26,12 +26,8 @@ import org.osgi.framework.BundleContext;
  */
 public class GroovyCoreActivator extends Plugin {
 
-    // The plug-in ID
     public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.core";
 
-    public static final String SUPPORT_GROOVY = "support.groovy";
-
-    // The shared instance
     private static GroovyCoreActivator plugin;
 
     private IEclipsePreferences instanceScope;

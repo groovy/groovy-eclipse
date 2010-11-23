@@ -48,7 +48,8 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     protected final MethodNode method;
     private String contributor;
 
-    private boolean useNamedArguments;
+    private boolean useNamedArguments; // allow individual method proposal contributors to override
+                                       // the setting in the preferences
 
     public GroovyMethodProposal(MethodNode method) {
         super();

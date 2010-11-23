@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
@@ -25,12 +25,12 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
     public CodeSelectMethodsTest() {
         super(CodeSelectMethodsTest.class.getName());
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
-    
+
     public void testCodeSelectClosure() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -92,13 +92,13 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         incrementalBuild(projectPath);
         env.waitForAutoBuild();
         expectingNoProblems();
-        
+
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("redirect"), "redirect".length());
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
     }
-    
+
     public void testCodeSelectMethodInOtherClass() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -108,7 +108,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         "redirect(controller:'user',action:'login')\n" +
         "}}\n";
         env.addGroovyClass(root, "", "Hello", contents);
-        
+
         String contents2 = "class Other {\ndef doNothing() {\nnew PlantController().redirect(controller:'user',action:'login')\n}}";
         env.addGroovyClass(root, "", "Hello2", contents2);
         incrementalBuild(projectPath);
@@ -122,7 +122,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
     }
-    
+
     public void testCodeSelectMethodInSuperClass() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -132,7 +132,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         "redirect(controller:'user',action:'login')\n" +
         "}}\n";
         env.addGroovyClass(root, "", "Hello", contents);
-        
+
         String contents2 = "class Other extends PlantController {\ndef doNothing() {\nredirect(controller:'user',action:'login')\n}}";
         env.addGroovyClass(root, "", "Hello2", contents2);
         incrementalBuild();
@@ -146,7 +146,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
     }
-    
+
     public void testCodeSelectMethodInScriptFromScript() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -175,7 +175,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found local method 'x'", "x", elt[0].getElementName());
     }
-    
+
     public void testCodeSelectStaticMethodFromClass() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -204,7 +204,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found local method 'x'", "x", elt[0].getElementName());
     }
-    
+
     public void testCodeSelectStaticMethodInOtherClass() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -214,7 +214,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         "redirect(controller:'user',action:'login')\n" +
         "}}\n";
         env.addGroovyClass(root, "", "Hello", contents);
-        
+
         String contents2 = "class Other {\ndef doNothing() {\nPlantController.redirect(controller:'user',action:'login')\n}}";
         env.addGroovyClass(root, "", "Hello2", contents2);
         incrementalBuild(projectPath);
@@ -231,7 +231,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
     public void testCodeSelectStaticMethodInOtherClass2() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
-        String contents = 
+        String contents =
             "class C {\n"+
                "static def r(controller)  { }\n"+
                "def checkUser() {\n" +
@@ -239,7 +239,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
                "}" +
             "}\n";
         env.addGroovyClass(root, "", "Hello", contents);
-        
+
         incrementalBuild(projectPath);
         env.waitForAutoBuild();
         expectingNoProblems();
@@ -259,7 +259,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         "redirect(controller:'user',action:'login')\n" +
         "}}\n";
         env.addGroovyClass(root, "", "Hello", contents);
-        
+
         String contents2 = "class Other extends PlantController {\nstatic def doNothing() {\nredirect(controller:'user',action:'login')\n}}";
         env.addGroovyClass(root, "", "Hello2", contents2);
         incrementalBuild();
@@ -272,4 +272,22 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
     }
+
+    public void testCodeSelectStaticInScript() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "doSomething()\nstatic void doSomething() { }";
+        env.addGroovyClass(root, "", "Hello", contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root,
+                "Hello.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("doSomething"),
+                "doSomething".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'doSomething'", "doSomething",
+                elt[0].getElementName());
+    }
+
 }

@@ -272,10 +272,10 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 		int start = source.indexOf(startTag) + startTag.length();
 		
 		String endTag = "/*" + astKind + occurrence + "e*/";
-		int end = Math.min(source.indexOf(endTag) + endTag.length()+1, maxLength);
+		int end = Math.min(source.indexOf(endTag) + endTag.length(), maxLength);
 
 		boolean ignore = false;
-		if (decl instanceof IField && (start == 6 || end == 7)) {
+		if (decl instanceof IField && (start == 6 || end == 6)) {
 			 // a field with multiple variable declaration fragments
 			 // this is not yet being calculated properly
 			 ignore = true;

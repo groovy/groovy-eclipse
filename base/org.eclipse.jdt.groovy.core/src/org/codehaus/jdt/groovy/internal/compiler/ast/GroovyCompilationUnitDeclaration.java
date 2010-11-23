@@ -1690,7 +1690,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		typeDeclaration.bodyStart = Math.max(classNode.getNameEnd(), classNode.getStart());
 
 		// seems to be the same as declarationSourceEnd
-		typeDeclaration.bodyEnd = classNode.getEnd();
+		typeDeclaration.bodyEnd = classNode.getEnd() - 1;
 
 		// start of the modifiers after the javadoc
 		typeDeclaration.modifiersSourceStart = classNode.getStart();
@@ -1710,7 +1710,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		Javadoc doc = findJavadoc(line);
 		ctorDeclaration.javadoc = doc;
 		ctorDeclaration.declarationSourceStart = doc == null ? ctorNode.getStart() : doc.sourceStart;
-		ctorDeclaration.declarationSourceEnd = ctorNode.getEnd();
+		ctorDeclaration.declarationSourceEnd = ctorNode.getEnd() - 1;
 
 		// start of method's modifier list (after Javadoc is ended)
 		ctorDeclaration.modifiersSourceStart = ctorNode.getStart();
@@ -1719,7 +1719,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		ctorDeclaration.bodyStart = ctorNode.getNameEnd();
 
 		// closing bracket or ';' same as declarationSourceEnd
-		ctorDeclaration.bodyEnd = ctorNode.getEnd();
+		ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
 	}
 
 	/**
@@ -1736,7 +1736,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		Javadoc doc = findJavadoc(line);
 		methodDeclaration.javadoc = doc;
 		methodDeclaration.declarationSourceStart = doc == null ? methodNode.getStart() : doc.sourceStart;
-		methodDeclaration.declarationSourceEnd = methodNode.getEnd();
+		methodDeclaration.declarationSourceEnd = methodNode.getEnd() - 1;
 
 		// start of method's modifier list (after Javadoc is ended)
 		methodDeclaration.modifiersSourceStart = methodNode.getStart();
@@ -1746,7 +1746,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		methodDeclaration.bodyStart = Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
 		// closing bracket or ';' same as declarationSourceEnd
-		methodDeclaration.bodyEnd = methodNode.getEnd();
+		methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
 	}
 
 	/**
@@ -1771,7 +1771,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;
 
 		// the end of the fragment including initializer (and trailing ',')
-		fieldDeclaration.declarationSourceEnd = fieldNode.getEnd();
+		fieldDeclaration.declarationSourceEnd = fieldNode.getEnd() - 1;
 
 		// * first character of the declaration's modifier
 		fieldDeclaration.modifiersSourceStart = fieldNode.getStart();
@@ -1786,7 +1786,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// * just before the start of the next fragment
 		// (or the end of the entire declaration if it is the last one)
 		// (how is this different from declarationSourceEnd?)
-		fieldDeclaration.endPart2Position = fieldNode.getEnd();
+		fieldDeclaration.endPart2Position = fieldNode.getEnd() - 1;
 	}
 
 	/**

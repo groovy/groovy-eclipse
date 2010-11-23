@@ -1127,7 +1127,11 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     public void visitTryCatchFinally(TryCatchStatement statement) {
-        onLineNumber(statement, "visitTryCatchFinally");
+        // FIXASC comment out line
+        // see http://jira.codehaus.org/browse/GROOVY-4505
+        // remove the rogue line number in the class file
+//        onLineNumber(block, "visitBlockStatement");
+        // FIXASC end
         visitStatement(statement);
 
         Statement tryStatement = statement.getTryStatement();
