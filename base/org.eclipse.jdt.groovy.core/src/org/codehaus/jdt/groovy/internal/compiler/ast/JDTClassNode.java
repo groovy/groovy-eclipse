@@ -95,6 +95,12 @@ public class JDTClassNode extends ClassNode {
 		unboundWildcard.setGenericsTypes(new GenericsType[] { t });
 	}
 
+	@Override
+	public boolean mightHaveInners() {
+		// return super.hasInnerClasses();
+		return jdtBinding.memberTypes().length != 0;
+	}
+
 	/**
 	 * Create a new JDT ClassNode. Minimal setup is done initially (the superclass and superinterfaces are setup) and the rest of
 	 * the initialization is done later when required.

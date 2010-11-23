@@ -47,7 +47,7 @@ import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
 @SuppressWarnings("restriction")
 public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
-	private Map<String, ClassNode> bindingToClassNodeCache = new HashMap<String, ClassNode>();
+	private Map<String, ClassNode> typenameToClassNodeCache = new HashMap<String, ClassNode>();
 
 	// Matches ResolveVisitor - these are the additional automatic imports for groovy files
 	private static final char[][] javaIo;
@@ -163,12 +163,13 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	 */
 	// FIXASC (optimization) cache any non SourceTypeBinding found and use that information in the lookupClassNodeForBinary
 	public ClassNode lookupClassNodeForSource(String typename, JDTResolver jdtResolver) {
-		ClassNode node = bindingToClassNodeCache.get(typename);
+		ClassNode node = typenameToClassNodeCache.get(typename);
 		if (node != null) {
 			return node;
 		}
 
 		char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());
+
 		TypeBinding jdtBinding = null;
 		try {
 			jdtBinding = getType(compoundName, compoundName.length);
@@ -184,13 +185,13 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 			if (jdtBinding instanceof SourceTypeBinding) {
 				ClassNode classNode = jdtResolver.convertToClassNode(jdtBinding);
 				if (classNode != null) {
-					bindingToClassNodeCache.put(typename, classNode);
+					typenameToClassNodeCache.put(typename, classNode);
 				}
 				return classNode;
 			} else if (jdtBinding instanceof BinaryTypeBinding) {
 				ClassNode newNode = jdtResolver.convertToClassNode(jdtBinding);
 				if (newNode != null) {
-					bindingToClassNodeCache.put(typename, newNode);
+					typenameToClassNodeCache.put(typename, newNode);
 				}
 				return newNode;
 			}

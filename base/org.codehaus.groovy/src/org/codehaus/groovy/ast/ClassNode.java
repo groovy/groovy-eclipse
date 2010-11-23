@@ -1476,4 +1476,18 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 		return false;
 	}
 	// end
+
+	// GRECLIPSE start - helper method.
+	/**
+	 * @return true if this classnode might have inners, conservatively it says yes if it is unsure.
+	 */
+	public boolean mightHaveInners() {
+		ClassNode redirect=redirect();
+		if (redirect.hasClass()) {
+			return true;
+		}
+		boolean b = redirect.innerClasses!=null && redirect.innerClasses.size()>0;
+		return b;
+	}
+	// GRECLIPSE end
 }

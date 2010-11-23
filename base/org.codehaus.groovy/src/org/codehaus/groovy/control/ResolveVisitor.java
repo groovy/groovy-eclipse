@@ -39,11 +39,9 @@ import java.net.URLConnection;
 import java.util.*;
 
 /**
- * Visitor to resolve Types and convert VariableExpression to
- * ClassExpressions if needed. The ResolveVisitor will try to
- * find the Class for a ClassExpression and prints an error if
- * it fails to do so. Constructions like C[], foo as C, (C) foo
- * will force creation of a ClassExpression for C
+ * Visitor to resolve Types and convert VariableExpression to ClassExpressions if needed. The ResolveVisitor 
+ * will try to find the Class for a ClassExpression and record an error if it fails to do so. 
+ * Constructions like C[], foo as C, (C) foo will force creation of a ClassExpression for C
  * <p/>
  * Note: the method to start the resolving is  startResolving(ClassNode, SourceUnit).
  *
@@ -60,6 +58,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private Map cachedClasses = new HashMap();
     private static final Object NO_CLASS = new Object();
     private static final Object SCRIPT = new Object();
+	private static final boolean extracheck = false;
     private SourceUnit source;
     private VariableScope currentScope;
 
@@ -254,14 +253,29 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     // GRECLIPSE: from private to protected
+    /**
+     * Resolve the specified ClassNode
+     */
     protected boolean resolve(ClassNode type) {
         return resolve(type, true, true, true);
     }
 
     // GRECLIPSE: from private to protected
+    /**
+     * Resolve the specified ClassNode, choosing to avoid certain resolution paths based on the boolean values passed in.
+     * 
+     * @param type the ClassNode to be resolved (i.e. have its redirect set)
+     * @param testModuleImports
+     * @param testDefaultImports
+     * @param testStaticInnerClasses
+     */
     protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
+    	
         resolveGenericsTypes(type.getGenericsTypes());
+        
         if (type.isResolved() || type.isPrimaryClassNode()) return true;
+        
+        // Resolve the component type of arrays, for a multidimensional array the component type will be another array
         if (type.isArray()) {
             ClassNode element = type.getComponentType();
             boolean resolved = resolve(element, testModuleImports, testDefaultImports, testStaticInnerClasses);
@@ -272,7 +286,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             return resolved;
         }
 
-        // test if vanilla name is current class name
+        // test if vanilla name is current class name - short circuits routes back to resolution attempts on the same node
         if (currentClass == type) return true;
 
         if (genericParameterNames.get(type.getName()) != null) {
@@ -288,7 +302,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             return true;
         }
 
-        return  resolveNestedClass(type) ||
+        return resolveNestedClass(type) ||
                 resolveFromModule(type, testModuleImports) ||
                 resolveFromCompileUnit(type) ||
                 resolveFromDefaultImports(type, testDefaultImports) ||
@@ -314,12 +328,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     	}
     	
     	for (ClassNode classToCheck : hierClasses.values()) {
+    		if (classToCheck.mightHaveInners()) { 
             name = classToCheck.getName()+"$"+type.getName();
             val = ClassHelper.make(name);
-        if (resolveFromCompileUnit(val)) {
-            type.setRedirect(val);
-            return true;
-    	}
+	        if (resolveFromCompileUnit(val)) {
+	            type.setRedirect(val);
+	            return true;
+	    	}
+	  		}
     	}
         
     	// another case we want to check here is if we are in a
@@ -721,6 +737,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
             // check for star imports (import static pkg.Outer.*) matching static inner classes
             for (ImportNode importNode : module.getStaticStarImports().values()) {
+            	if (!importNode.isUnresolvable()) { // GRECLIPSE - extra check
                 ClassNode tmp = ClassHelper.make(importNode.getClassName() + "$" + name);
                 if (resolve(tmp, false, false, true)) {
                     if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
@@ -729,13 +746,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         return true;
                     }
                 }
+            	} // GRECLIPSE - end of check
 
             }
         }
         return false;
-    }
-    
-    
+    }    
     
     // GRECLIPSE: new method
         protected ClassNode resolveNewName(String fullname) {
@@ -1341,6 +1357,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 	type.setName(oldTypeName);
                 }
                 addError("unable to resolve class " + type.getName(), type);
+            	importNode.markAsUnresolvable();
             }
             for (ImportNode importNode : module.getStaticImports().values()) {
                 ClassNode type = importNode.getType();
@@ -1350,7 +1367,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 ClassNode type = importNode.getType();
                 if (resolve(type, true, true, true)) continue;
-                addError("unable to resolve class " + type.getName(), type);
+                if (!importNode.isUnresolvable()) {
+                	addError("unable to resolve class " + type.getName(), type);
+                }
             }
             module.setImportsResolved(true);
         }
