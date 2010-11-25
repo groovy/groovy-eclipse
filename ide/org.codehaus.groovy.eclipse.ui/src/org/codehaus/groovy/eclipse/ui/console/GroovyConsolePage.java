@@ -22,13 +22,17 @@ import java.util.GregorianCalendar;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.IGroovyLogger;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.console.IConsoleConstants;
 import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.TextConsole;
 import org.eclipse.ui.console.TextConsolePage;
 import org.eclipse.ui.console.TextConsoleViewer;
+import org.eclipse.ui.console.actions.CloseConsoleAction;
+import org.eclipse.ui.internal.console.ScrollLockAction;
 import org.eclipse.ui.part.IPageSite;
 
 /**
@@ -37,6 +41,10 @@ import org.eclipse.ui.part.IPageSite;
  * @created Nov 24, 2010
  */
 public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger {
+
+    private ScrollLockAction fScrollLockAction;
+
+    private CloseConsoleAction fCloseConsoleAction;
 
     public GroovyConsolePage(TextConsole console, IConsoleView view) {
         super(console, view);
@@ -60,7 +68,9 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
             public void run() {
                 StyledText text = getViewer().getTextWidget();
                 text.append(category.getPaddedLabel() + " : " + txt);
-                text.setTopIndex(text.getLineCount() - 1);
+                if (!fScrollLockAction.isChecked()) {
+                    text.setTopIndex(text.getLineCount() - 1);
+                }
             }
         });
     }
@@ -82,6 +92,11 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
     @Override
     public void dispose() {
         super.dispose();
+        if (fScrollLockAction != null) {
+            fScrollLockAction.dispose();
+            fScrollLockAction = null;
+        }
+        fCloseConsoleAction = null;
         GroovyLogManager.manager.removeLogger(this);
     }
 
@@ -92,4 +107,25 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
         return viewer;
     }
 
+    @Override
+    protected void createActions() {
+        super.createActions();
+        fScrollLockAction = new ScrollLockAction(getConsoleView());
+        fCloseConsoleAction = new CloseConsoleAction(getConsole());
+        setAutoScroll(!fScrollLockAction.isChecked());
+    }
+
+    public void setAutoScroll(boolean scroll) {
+        TextConsoleViewer viewer = (TextConsoleViewer) getViewer();
+        if (viewer != null) {
+            fScrollLockAction.setChecked(!scroll);
+        }
+    }
+
+    @Override
+    protected void configureToolBar(IToolBarManager mgr) {
+        super.configureToolBar(mgr);
+        mgr.appendToGroup(IConsoleConstants.OUTPUT_GROUP, fScrollLockAction);
+        mgr.appendToGroup(IConsoleConstants.LAUNCH_GROUP, fCloseConsoleAction);
+    }
 }

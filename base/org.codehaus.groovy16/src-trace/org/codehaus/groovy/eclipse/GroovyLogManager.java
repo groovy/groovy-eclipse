@@ -84,12 +84,16 @@ public class GroovyLogManager {
                 }
             }
             if (foundIndex >= 0) {
-                IGroovyLogger[] newLoggers = new IGroovyLogger[loggers.length - 1];
-                if (foundIndex > 0) {
-                    System.arraycopy(loggers, 0, newLoggers, 0, foundIndex);
+                if (loggers.length > 1) {
+                    IGroovyLogger[] newLoggers = new IGroovyLogger[loggers.length - 1];
+                    if (foundIndex > 0) {
+                        System.arraycopy(loggers, 0, newLoggers, 0, foundIndex);
+                    }
+                    System.arraycopy(loggers, foundIndex+1, newLoggers, foundIndex, loggers.length-foundIndex-1);
+                    loggers = newLoggers;
+                } else {
+                    loggers = null;
                 }
-                System.arraycopy(loggers, foundIndex+1, newLoggers, foundIndex, loggers.length-foundIndex-1);
-                loggers = newLoggers;
                 return true;
             }
         }
