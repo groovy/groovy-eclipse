@@ -900,4 +900,12 @@
        </newWizardShortcut>
     </perspectiveExtension>
  </extension>
+ <extension
+       point="org.eclipse.ui.console.consoleFactories">
+    <consoleFactory
+          class="org.codehaus.groovy.eclipse.ui.console.GroovyConsoleFactory"
+          icon="icons/run_groovy_class.gif"
+          label="Groovy Event Console">
+    </consoleFactory>
+ </extension>
 </plugin>

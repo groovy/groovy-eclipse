@@ -3,14 +3,15 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Runtime Plug-in
 Bundle-SymbolicName: org.codehaus.groovy
 Bundle-Version: 1.6.7.qualifier
-Bundle-ClassPath: groovy-eclipse-1.6.7.jar,
+Bundle-ClassPath: groovy-eclipse.jar,
  lib/asm-2.2.3.jar,
  lib/asm-tree-2.2.3.jar,
  lib/antlr-2.7.7.jar,
  lib/commons-cli-1.0.jar,
  lib/bsf-2.4.0.jar,
  lib/ivy-2.1.0-rc2.jar,
- lib/groovy-1.6.7.jar
+ lib/groovy-1.6.7.jar,
+ eclipse-trace.jar
 Groovy-Runtime-Jars: groovy.jar
 Export-Package: antlr,
  antlr.ASdebug,
@@ -76,6 +77,7 @@ Export-Package: antlr,
  org.codehaus.groovy.control,
  org.codehaus.groovy.control.io,
  org.codehaus.groovy.control.messages,
+ org.codehaus.groovy.eclipse,
  org.codehaus.groovy.groovydoc,
  org.codehaus.groovy.internal.antlr.parser,
  org.codehaus.groovy.reflection,

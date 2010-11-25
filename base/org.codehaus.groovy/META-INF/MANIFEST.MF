@@ -10,7 +10,8 @@ Bundle-ClassPath: groovy-eclipse.jar,
  lib/ivy-2.2.0-rc1.jar,
  lib/commons-cli-1.2.jar,
  lib/bsf-2.4.0.jar,
- lib/groovy-1.7.5.jar
+ lib/groovy-1.7.5.jar,
+ eclipse-trace.jar
 Groovy-Runtime-Jars: groovy.jar
 Export-Package: antlr,
  antlr.ASdebug,
@@ -77,6 +78,7 @@ Export-Package: antlr,
  org.codehaus.groovy.control,
  org.codehaus.groovy.control.io,
  org.codehaus.groovy.control.messages,
+ org.codehaus.groovy.eclipse,
  org.codehaus.groovy.groovydoc,
  org.codehaus.groovy.internal.antlr.parser,
  org.codehaus.groovy.reflection,
