@@ -174,16 +174,22 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitClosureExpression(ClosureExpression node) {
-            for (Parameter param : node.getParameters()) {
-                handleType(param.getType(), false);
+            Parameter[] parameters = node.getParameters();
+            if (parameters != null) {
+                for (Parameter param : parameters) {
+                    handleType(param.getType(), false);
+                }
             }
             super.visitClosureExpression(node);
         }
 
         @Override
         public void visitAnnotations(AnnotatedNode node) {
-            for (AnnotationNode an : (Iterable<AnnotationNode>) node.getAnnotations()) {
-                handleType(an.getClassNode(), true);
+            Iterable<AnnotationNode> annotations = (Iterable<AnnotationNode>) node.getAnnotations();
+            if (annotations != null) {
+                for (AnnotationNode an : annotations) {
+                    handleType(an.getClassNode(), true);
+                }
             }
             super.visitAnnotations(node);
         }
