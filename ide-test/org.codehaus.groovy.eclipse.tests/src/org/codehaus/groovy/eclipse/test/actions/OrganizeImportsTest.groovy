@@ -340,6 +340,25 @@ public class OrganizeImportsTest extends EclipseTestCase {
         def expectedImports = [ 'javax.swing.text.BadLocationException' ] 
         doAddImportTest(contents, expectedImports)
     }
+    
+    // Test GRECLIPSE-895
+    void testCatchClausesExceptions() {
+        String contents =
+            """
+            import java.util.zip.ZipException
+            
+            try {
+                nothing
+            } catch (ZipException e1) {
+            
+            } catch (BadLocationException e2) {
+            
+            }
+            """
+        def expectedImports = [ 'javax.swing.text.BadLocationException' ]
+        doAddImportTest(contents, expectedImports)
+    }
+
 	
     void doAddImportTest(contents, expectedImports) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)

@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
@@ -194,6 +195,11 @@ public class OrganizeGroovyImports {
             super.visitAnnotations(node);
         }
 
+        @Override
+        public void visitCatchStatement(CatchStatement node) {
+            handleType(node.getVariable().getType(), false);
+            super.visitCatchStatement(node);
+        }
 
 
         /**
