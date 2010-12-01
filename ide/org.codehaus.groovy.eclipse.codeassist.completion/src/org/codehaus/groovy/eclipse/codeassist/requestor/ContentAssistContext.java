@@ -25,6 +25,8 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
  * @author Andrew Eisenberg
@@ -81,6 +83,12 @@ public class ContentAssistContext {
      * the class, method or field containing the completion location
      */
     public final AnnotatedNode containingDeclaration;
+
+    /**
+     * The {@link VariableScope} at the requested location. Might be null if a
+     * {@link TypeInferencingVisitorWithRequestor} has not been sent down the AST yet.
+     */
+    public VariableScope currentScope;
 
     public ContentAssistContext(int completionLocation,
     		String completionExpression, String fullCompletionExpression, ASTNode completionNode,

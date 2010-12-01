@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
  * @author Andrew Eisenberg
@@ -33,6 +34,8 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
      * invocation or null if there is none
      */
     protected ClassNode lhsType;
+
+    protected VariableScope currentScope;
 
     public AbstractProposalCreator() {
         super();
@@ -77,4 +80,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         this.lhsType = lhsType;
     }
 
+    public void setCurrentScope(VariableScope currentScope) {
+        this.currentScope = currentScope;
+    }
 }

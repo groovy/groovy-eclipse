@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.DocumentSourceBuffer;
 import org.codehaus.groovy.eclipse.codeassist.factories.ConstructorCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ExpressionCompletionProcessorFactory;
@@ -91,6 +93,7 @@ public class GroovyCompletionProposalComputer implements
 
     public List<ICompletionProposal> computeCompletionProposals(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {
+
         if (! (context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
         }
@@ -100,6 +103,10 @@ public class GroovyCompletionProposalComputer implements
         if (! (unit instanceof GroovyCompilationUnit)) {
             return Collections.EMPTY_LIST;
         }
+        GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
+                "Starting content assist for " + unit.getElementName());
+        String event = "Content assist for " + unit.getElementName();
+        GroovyLogManager.manager.logStart(event);
 
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
 
@@ -132,6 +139,8 @@ public class GroovyCompletionProposalComputer implements
                 }
             }
         }
+
+        GroovyLogManager.manager.logEnd(event, TraceCategory.CONTENT_ASSIST);
         return proposals;
     }
 

@@ -74,6 +74,8 @@ public class StatementAndExpressionCompletionProcessor extends
         ClassNode lhsType;
         Set<ClassNode> categories;
 
+        VariableScope currentScope;
+
         private Expression arrayAccessLHS;
 
 
@@ -139,6 +141,7 @@ public class StatementAndExpressionCompletionProcessor extends
                     (node instanceof ClassExpression &&
                      // if we are completing on '.class' then never static context
                      resultingType != VariableScope.CLASS_CLASS_NODE);
+                currentScope = result.scope;
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
@@ -267,6 +270,8 @@ public class StatementAndExpressionCompletionProcessor extends
                 if (creator instanceof AbstractProposalCreator) {
                     ((AbstractProposalCreator) creator)
                             .setLhsType(requestor.lhsType);
+                    ((AbstractProposalCreator) creator)
+                            .setCurrentScope(requestor.currentScope);
                 }
                 groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
                         context.completionExpression, isStatic));
@@ -293,6 +298,7 @@ public class StatementAndExpressionCompletionProcessor extends
 
         // get proposals from providers
         try {
+            context.currentScope = requestor.currentScope;
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
             for (IProposalProvider provider : providers) {
                 try {
@@ -362,7 +368,8 @@ public class StatementAndExpressionCompletionProcessor extends
      */
     private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
          return getContext().location == ContentAssistLocation.EXPRESSION ? requestor.resultingType :
-             getContext().getEnclosingGroovyType();
+                // use the current 'this' type so that closure types are correct
+             requestor.currentScope.lookupName("this").type;
     }
 
     /**
