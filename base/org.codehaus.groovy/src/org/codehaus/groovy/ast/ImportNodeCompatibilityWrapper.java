@@ -35,7 +35,15 @@ import java.util.TreeSet;
 public class ImportNodeCompatibilityWrapper {
     private class ImportNodeComparator implements Comparator<ImportNode> {
         public int compare(ImportNode i1, ImportNode i2) {
-            return i1.getStart() - i2.getStart();
+            int start1 = i1.getStart();
+            if (start1 <= 0 && i1.getType() != null) {
+                start1 = i1.getType().getStart();
+            }
+            int start2 = i2.getStart();
+            if (start2 <= 0 && i2.getType() != null) {
+                start2 = i2.getType().getStart();
+            }
+            return start1 - start2;
         }
     }
     

@@ -16,6 +16,8 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.List;
+
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -99,12 +101,12 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 	}
 
 	/**
-	 * This method is a placeholder for supporting more
-	 * than just assignments.
+	 * This method is a placeholder for supporting more than just assignments.
 	 */
 	private boolean isInterestingOperation(BinaryExpression assign) {
 		switch (assign.getOperation().getType()) {
 			case Types.EQUALS:
+				// should we handle other cases too?
 				// case Types.PLUS_EQUAL:
 				// case Types.MINUS_EQUAL:
 				// case Types.LEFT_SHIFT:
@@ -150,6 +152,36 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 	}
 
 	public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
+		// if this is a static import, then add to the top level scope
+		ClassNode type = node.getType();
+		if (node.isStar() && type != null) {
+			// importing all static fields in the class
+			List<FieldNode> fields = type.getFields();
+			for (FieldNode field : fields) {
+				if (field.isStatic()) {
+					scope.addVariable(field.getName(), field.getType(), type);
+				}
+			}
+
+			List<MethodNode> methods = node.getType().getMethods();
+			for (MethodNode method : methods) {
+				if (method.isStatic()) {
+					scope.addVariable(method.getName(), method.getReturnType(), type);
+				}
+			}
+
+		} else if (node.isStatic() && type != null && node.getFieldName() != null) {
+			FieldNode field = type.getField(node.getFieldName());
+			if (field != null) {
+				scope.addVariable(field.getName(), field.getType(), type);
+			}
+			List<MethodNode> methods = type.getDeclaredMethods(node.getFieldName());
+			if (methods != null) {
+				for (MethodNode method : methods) {
+					scope.addVariable(method.getName(), method.getReturnType(), type);
+				}
+			}
+		}
 		return null;
 	}
 

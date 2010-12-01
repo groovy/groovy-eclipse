@@ -10,6 +10,7 @@ import org.codehaus.groovy.eclipse.refactoring.test.ParticipantTesting;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTest;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSetup;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IType;
@@ -81,9 +82,9 @@ public class RenameFieldTests extends RefactoringTest {
                     .getProcessor();
 
             int numbers = 1;
-            List elements = new ArrayList();
+            List<IAnnotatable> elements = new ArrayList<IAnnotatable>();
             elements.add(field);
-            List args = new ArrayList();
+            List<RenameArguments> args = new ArrayList<RenameArguments>();
             args.add(new RenameArguments(newFieldName, updateReferences));
             if (renameGetter) {
                 elements.add(processor.getGetter());

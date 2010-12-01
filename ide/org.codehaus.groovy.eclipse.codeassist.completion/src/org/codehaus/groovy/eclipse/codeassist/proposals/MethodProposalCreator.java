@@ -16,14 +16,20 @@
 
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -77,6 +83,16 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                 }
             }
         }
+
+        // now do methods from static imports
+        ClassNode enclosingTypeDeclaration = currentScope
+                .getEnclosingTypeDeclaration();
+        if (enclosingTypeDeclaration != null
+                && type.getName().equals(enclosingTypeDeclaration.getName())) {
+            groovyProposals.addAll(getStaticImportProposals(prefix,
+                    type.getModule()));
+        }
+
         return groovyProposals;
     }
 
@@ -119,6 +135,43 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
 
     private String createCapitalMockFieldName(String methodName) {
         return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
+    }
+
+    private List<IGroovyProposal> getStaticImportProposals(String prefix,
+            ModuleNode module) {
+        List<IGroovyProposal> staticProposals = new ArrayList<IGroovyProposal>();
+        Map<String, ImportNode> staticImports = ImportNodeCompatibilityWrapper
+                .getStaticImports(module);
+        for (Entry<String, ImportNode> entry : staticImports.entrySet()) {
+            String fieldName = entry.getValue().getFieldName();
+            if (fieldName != null
+                    && ProposalUtils.looselyMatches(prefix, fieldName)) {
+                List<MethodNode> methods = entry.getValue().getType()
+                        .getDeclaredMethods(fieldName);
+                if (methods != null) {
+                    for (MethodNode method : methods) {
+                        staticProposals.add(new GroovyMethodProposal(method));
+                    }
+                }
+            }
+        }
+        Map<String, ImportNode> staticStarImports = ImportNodeCompatibilityWrapper
+                .getStaticStarImports(module);
+        for (Entry<String, ImportNode> entry : staticStarImports.entrySet()) {
+            ClassNode type = entry.getValue().getType();
+            if (type != null) {
+                for (MethodNode method : (Iterable<MethodNode>) type
+                        .getMethods()) {
+                    if (method.isStatic()
+                            && ProposalUtils.looselyMatches(prefix,
+                                    method.getName())) {
+                        staticProposals.add(new GroovyMethodProposal(method));
+                    }
+                }
+            }
+        }
+
+        return staticProposals;
     }
 
 }

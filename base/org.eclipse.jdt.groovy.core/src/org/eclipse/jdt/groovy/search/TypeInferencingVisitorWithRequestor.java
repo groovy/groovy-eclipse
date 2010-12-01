@@ -396,7 +396,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	@SuppressWarnings("cast")
 	private void visitClassInternal(ClassNode node) {
-		unit.getResolver().currentClass = node;
+		if (unit.getResolver() != null) {
+			unit.getResolver().currentClass = node;
+		}
 		visitAnnotations(node);
 		VariableScope scope = scopes.peek();
 		scope.addVariable("this", node, node);

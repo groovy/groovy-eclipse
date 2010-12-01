@@ -37,10 +37,6 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
 
     protected VariableScope currentScope;
 
-    public AbstractProposalCreator() {
-        super();
-    }
-
     protected boolean checkName(String name) {
         return name.charAt(0) != '<' && !name.contains("$");
     }

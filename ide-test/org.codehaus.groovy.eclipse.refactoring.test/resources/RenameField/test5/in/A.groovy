@@ -1,6 +1,5 @@
 package p
 class A {
-    def f = 7
     {
         f = f
         while (true) {
@@ -9,4 +8,5 @@ class A {
         }
         f++
     }
+    def f = 7
 }

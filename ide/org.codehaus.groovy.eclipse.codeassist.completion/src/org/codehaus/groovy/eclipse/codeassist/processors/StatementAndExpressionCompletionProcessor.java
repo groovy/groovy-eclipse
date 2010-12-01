@@ -154,9 +154,6 @@ public class StatementAndExpressionCompletionProcessor extends
             return node == arrayAccessLHS;
         }
 
-        /**
-         * @param result
-         */
         private void maybeRememberLHSType(TypeLookupResult result) {
             if (isAssignmentOfLhs(result.getEnclosingAssignment())) {
                 // check to see if this is the rhs of an assignment.
@@ -183,10 +180,6 @@ public class StatementAndExpressionCompletionProcessor extends
             return node != null && node.getLeftExpression() == lhsNode;
         }
 
-        /**
-         * @param node
-         * @return
-         */
         private boolean doTest(ASTNode node) {
             if (node instanceof ArgumentListExpression) {
                 // || node instanceof PropertyExpression) {

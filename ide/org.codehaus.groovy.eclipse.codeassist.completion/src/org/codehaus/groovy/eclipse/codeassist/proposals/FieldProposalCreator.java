@@ -16,16 +16,21 @@
 
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.objectweb.asm.Opcodes;
@@ -70,7 +75,50 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
             groovyProposals.add(CLASS_PROPOSAL);
         }
 
+        // now add all proposals coming from static imports
+        ClassNode enclosingTypeDeclaration = currentScope
+                .getEnclosingTypeDeclaration();
+        if (enclosingTypeDeclaration != null
+                && type.getName().equals(enclosingTypeDeclaration.getName())) {
+            groovyProposals.addAll(getStaticImportProposals(prefix,
+                    type.getModule()));
+        }
+
         return groovyProposals;
+    }
+
+    private List<IGroovyProposal> getStaticImportProposals(
+            String prefix, ModuleNode module) {
+        List<IGroovyProposal> staticProposals = new ArrayList<IGroovyProposal>();
+        Map<String, ImportNode> staticImports = ImportNodeCompatibilityWrapper
+                .getStaticImports(module);
+        for (Entry<String, ImportNode> entry : staticImports.entrySet()) {
+            String fieldName = entry.getValue().getFieldName();
+            if (fieldName != null
+                    && ProposalUtils.looselyMatches(prefix, fieldName)) {
+                FieldNode field = entry.getValue().getType()
+                        .getField(fieldName);
+                if (field != null) {
+                    staticProposals.add(new GroovyFieldProposal(field));
+                }
+            }
+        }
+        Map<String, ImportNode> staticStarImports = ImportNodeCompatibilityWrapper
+                .getStaticStarImports(module);
+        for (Entry<String, ImportNode> entry : staticStarImports.entrySet()) {
+            ClassNode type = entry.getValue().getType();
+            if (type != null) {
+                for (FieldNode field : (Iterable<FieldNode>) type.getFields()) {
+                    if (field.isStatic()
+                            && ProposalUtils.looselyMatches(prefix,
+                                    field.getName())) {
+                        staticProposals.add(new GroovyFieldProposal(field));
+                    }
+                }
+            }
+        }
+
+        return staticProposals;
     }
 
     /**
