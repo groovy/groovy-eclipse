@@ -18,12 +18,14 @@ package org.eclipse.jdt.groovy.search;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -31,8 +33,12 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.LazyGenericsType;
@@ -90,6 +96,16 @@ public class VariableScope {
 		}
 	}
 
+	public static class CallAndType {
+		public CallAndType(MethodCallExpression call, ClassNode declaringType) {
+			this.call = call;
+			this.declaringType = declaringType;
+		}
+
+		public final MethodCallExpression call;
+		public final ClassNode declaringType;
+	}
+
 	public static ClassNode NO_CATEGORY = null;
 
 	/**
@@ -97,11 +113,21 @@ public class VariableScope {
 	 */
 	private VariableScope parent;
 
+	/**
+	 * AST node for this scope, typically, a block, closure, or body declaration
+	 */
 	private ASTNode enclosingNode;
 
 	private Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
 
 	private boolean isStaticScope;
+
+	/**
+	 * the enclosing method call is the one where there are the current node is part of an argument list
+	 */
+	private CallAndType enclosingMethodCall;
+
+	private final ClosureExpression enclosingClosure;
 
 	/**
 	 * Category that will be declared in the next scope
@@ -113,9 +139,13 @@ public class VariableScope {
 		this.enclosingNode = enclosingNode;
 
 		// this scope is considered static if in a static method, or
-		// it's parent is static...however, this will fail for inner classes in static methods
-		// Actually...methodNodes can't contain inner classes, so we are fine
+		// it's parent is static
 		this.isStaticScope = isStatic || (parent != null && parent.isStaticScope);
+		if (enclosingNode instanceof ClosureExpression) {
+			this.enclosingClosure = (ClosureExpression) enclosingNode;
+		} else {
+			this.enclosingClosure = null;
+		}
 	}
 
 	/**
@@ -142,9 +172,6 @@ public class VariableScope {
 		}
 	}
 
-	/**
-	 * @return
-	 */
 	private boolean isCategoryBeingDeclared() {
 		return categoryBeingDeclared != null;
 	}
@@ -154,19 +181,22 @@ public class VariableScope {
 	}
 
 	/**
-	 * Find the variable in the current environment,
+	 * Find the variable in the current environment, Look in this scope or parent scope if not found here
 	 * 
 	 * @param name
 	 * @return the variable info or null if not found
 	 */
 	public VariableInfo lookupName(String name) {
-		if ("this".equals(name)) { //$NON-NLS-1$
-			ClassNode declaringType = getEnclosingTypeDeclaration();
-			return new VariableInfo(declaringType, declaringType);
-		} else if ("super".equals(name)) { //$NON-NLS-1$
-			ClassNode declaringType = getEnclosingTypeDeclaration();
-			ClassNode superType = declaringType != null ? declaringType.getSuperClass() : null;
-			return new VariableInfo(superType, superType);
+		//		if ("this".equals(name)) { //$NON-NLS-1$
+		// ClassNode declaringType = getEnclosingTypeDeclaration();
+		// return new VariableInfo(declaringType, declaringType);
+		// } else
+		if ("super".equals(name)) { //$NON-NLS-1$
+			VariableInfo var = lookupName("this");
+			if (var != null) {
+				ClassNode superType = var.declaringType.getSuperClass();
+				return new VariableInfo(superType, superType);
+			}
 		}
 
 		VariableInfo var = nameVariableMap.get(name);
@@ -186,6 +216,16 @@ public class VariableScope {
 
 	public void addVariable(Variable var) {
 		addVariable(var.getName(), var.getType(), var.getOriginType());
+	}
+
+	public ModuleNode getEnclosingModuleNode() {
+		if (enclosingNode instanceof ModuleNode) {
+			return (ModuleNode) enclosingNode;
+		} else if (parent != null) {
+			return parent.getEnclosingModuleNode();
+		} else {
+			return null;
+		}
 	}
 
 	public ClassNode getEnclosingTypeDeclaration() {
@@ -313,8 +353,8 @@ public class VariableScope {
 				if (typeToParameterize instanceof LazyGenericsType) {
 					// LazyGenericsType is immutable
 					// shouldn't get here...log error and continue
-					Util.log(new RuntimeException(), "Found a JDTClassNode while resolving type parameters.  "
-							+ "This shouldn't happen.  Not trying to resolve any further " + "and continuing.  Type: " + type);
+					Util.log(new RuntimeException(), "Found a JDTClassNode while resolving type parameters.  " //$NON-NLS-1$
+							+ "This shouldn't happen.  Not trying to resolve any further " + "and continuing.  Type: " + type); //$NON-NLS-1$ //$NON-NLS-2$
 					continue;
 				}
 
@@ -472,5 +512,66 @@ public class VariableScope {
 	 */
 	public boolean isStatic() {
 		return isStaticScope;
+	}
+
+	public ClosureExpression getEnclosingClosure() {
+		if (enclosingClosure == null && parent != null) {
+			return parent.getEnclosingClosure();
+		}
+		return enclosingClosure;
+	}
+
+	/**
+	 * @return the enclosing method call expression if one exists, or null otherwise. For example, when visiting the following
+	 *         closure, the enclosing method call is 'run'
+	 * 
+	 *         <pre>
+	 * def runner = new Runner()
+	 * runner.run {
+	 *   print "hello!"
+	 * }
+	 * </pre>
+	 */
+	public List<CallAndType> getAllEnclosingMethodCallExpressions() {
+		List<CallAndType> list;
+		if (parent == null) {
+			list = new ArrayList<CallAndType>();
+		} else {
+			list = parent.getAllEnclosingMethodCallExpressions();
+			if (enclosingMethodCall != null) {
+				list.add(enclosingMethodCall);
+			}
+		}
+		return list;
+	}
+
+	public CallAndType getEnclosingMethodCallExpression() {
+		if (parent != null && enclosingMethodCall == null) {
+			return parent.getEnclosingMethodCallExpression();
+		}
+		return enclosingMethodCall;
+	}
+
+	public void setEnclosingMethodCall(CallAndType enclosingMethodCall) {
+		this.enclosingMethodCall = enclosingMethodCall;
+	}
+
+	// this is the expression cache. I don't know if I like this.
+	// records the type of all expressions that were seen so far by this scope
+	private final Map<Expression, ClassNode> expressionTypeCache = new HashMap<Expression, ClassNode>();
+
+	public void recordExpressionType(Expression expr, ClassNode type) {
+		expressionTypeCache.put(expr, type);
+	}
+
+	public ClassNode queryExpressionType(Expression expr) {
+		return expressionTypeCache.get(expr);
+	}
+
+	/**
+	 * @return
+	 */
+	public boolean isTopLevel() {
+		return parent == null;
 	}
 }

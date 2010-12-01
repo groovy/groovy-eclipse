@@ -13,13 +13,12 @@ package org.codehaus.jdt.groovy.model;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
@@ -42,8 +41,6 @@ import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
@@ -68,8 +65,9 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @created Jun 2, 2009
  * 
  */
-@SuppressWarnings("restriction")
 public class GroovyCompilationUnit extends CompilationUnit {
+
+	private JDTResolver resolver;
 
 	private class GroovyErrorHandlingPolicy implements IErrorHandlingPolicy {
 
@@ -85,15 +83,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 		public boolean stopOnFirstError() {
 			return stopOnFirst;
-		}
-
-	}
-
-	private class GroovyResolveRequestor implements ICompilerRequestor {
-		private List<CompilationResult> results = new LinkedList<CompilationResult>();
-
-		public void acceptResult(CompilationResult result) {
-			results.add(result);
 		}
 
 	}
@@ -174,7 +163,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 				&& ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1; //$NON-NLS-1$
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes", "nls" })
 	@Override
 	protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource)
 			throws JavaModelException {
@@ -309,6 +298,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
 						parser, this.owner, problems, createAST, reconcileFlags, pm);
 			}
 
+			resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
+
 			// GROOVY
 			// if this is a working copy, then we have more work to do
 			maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
@@ -389,7 +380,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		return op.ast;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Object getAdapter(Class adapter) {
 		if (adapter == GroovyCompilationUnit.class) {
@@ -432,6 +423,16 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		}
 	}
 
+	/**
+	 * FIXADE determine if keeping this field and getter available is a problem. Ie- does it cause memory leaks or access to stale
+	 * data? Should the resovler be associated with the cached module node?
+	 * 
+	 * @return
+	 */
+	public JDTResolver getResolver() {
+		return resolver;
+	}
+
 	public GroovyCompilationUnit cloneCachingContents(char[] newContents) {
 		return new CompilationUnitClone(newContents);
 	}
@@ -468,6 +469,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * There is no such thing as a primary type in Groovy. First look for a type of the same name as the CU, Else get the first type
 	 * in getAllTypes()
 	 */
+	@SuppressWarnings("nls")
 	@Override
 	public IType findPrimaryType() {
 		IType type = super.findPrimaryType();

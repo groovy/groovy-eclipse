@@ -294,6 +294,15 @@ public class JDTResolver extends ResolveVisitor {
 		// }
 	}
 
+	public ClassNode resolve(String qualifiedName) {
+		ClassNode type = ClassHelper.makeWithoutCaching(qualifiedName);
+		if (super.resolve(type)) {
+			return type.redirect();
+		} else {
+			return ClassHelper.DYNAMIC_TYPE;
+		}
+	}
+
 	// FIXASC callers could check if it is a 'funky' type before always recording a depedency
 	// by 'funky' I mean that the type was constructed just to try something (org.foo.bar.java$lang$Wibble doesn't want recording!)
 	private void recordDependency(String typename) {

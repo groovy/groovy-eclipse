@@ -550,4 +550,8 @@ public class JDTClassNode extends ClassNode {
 	public ReferenceBinding getJdtBinding() {
 		return jdtBinding;
 	}
+
+	public JDTResolver getResolver() {
+		return resolver;
+	}
 }

@@ -82,6 +82,11 @@ public class TypeLookupResult {
 	public final VariableScope scope;
 
 	/**
+	 * Extra Javadoc that should appear in hovers
+	 */
+	public final String extraDoc;
+
+	/**
 	 * The assignment statement that encloses this expression, or null if there is none
 	 */
 	BinaryExpression enclosingAssignment;
@@ -97,11 +102,27 @@ public class TypeLookupResult {
 	 */
 	public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeConfidence confidence,
 			VariableScope scope) {
+		this(type, declaringType, declaration, confidence, scope, null);
+	}
+
+	/**
+	 * create a TypeLookupResult with a class node.
+	 * 
+	 * @param type the type of the expression being analyzed
+	 * @param declaringType the declaring type of the expression if the expression is a field, method, or type reference
+	 * @param confidence the confidence in this type assertion
+	 * @param the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
+	 * @param scope the variable scope at this location
+	 * @param extraDoc extra javadoc to be shown in hovers
+	 */
+	public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeConfidence confidence,
+			VariableScope scope, String extraDoc) {
 		this.confidence = confidence;
 		this.type = ClassHelper.isPrimitiveType(type) ? ClassHelper.getWrapper(type) : type;
 		this.declaringType = declaringType;
 		this.declaration = declaration;
 		this.scope = scope;
+		this.extraDoc = extraDoc;
 	}
 
 	public BinaryExpression getEnclosingAssignment() {

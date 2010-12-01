@@ -89,6 +89,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
+import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -395,8 +396,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	@SuppressWarnings("cast")
 	private void visitClassInternal(ClassNode node) {
+		unit.getResolver().currentClass = node;
 		visitAnnotations(node);
 		VariableScope scope = scopes.peek();
+		scope.addVariable("this", node, node);
 
 		TypeLookupResult result = null;
 		result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scope);
@@ -425,7 +428,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		VariableScope currentScope = scope;
 		// don't use Java 5 style for loop here because Groovy 1.6.x does not
 		// have type parameters for its getMethods() method.
-		for (Iterator methodIter = node.getMethods().iterator(); methodIter.hasNext();) {
+		for (@SuppressWarnings("rawtypes")
+		Iterator methodIter = node.getMethods().iterator(); methodIter.hasNext();) {
 			MethodNode method = (MethodNode) methodIter.next();
 			currentScope.addVariable(method.getName(), method.getReturnType(), method.getDeclaringClass());
 		}
@@ -600,6 +604,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
+	@SuppressWarnings("cast")
 	@Override
 	public void visitAnnotations(AnnotatedNode node) {
 		for (AnnotationNode annotation : (Iterable<AnnotationNode>) node.getAnnotations()) {
@@ -649,8 +654,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private boolean handleStatement(Statement node) {
 		// don't check the lookups because statements have no type.
 		// but individual requestors may choose to end the visit here
-		TypeLookupResult noLookup = new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE,
-				VariableScope.OBJECT_CLASS_NODE, TypeConfidence.EXACT, scopes.peek());
+		VariableScope currentScope = scopes.peek();
+		VariableInfo info = currentScope.lookupName("this");
+		ClassNode declaring = info == null ? VariableScope.OBJECT_CLASS_NODE : info.declaringType;
+
+		TypeLookupResult noLookup = new TypeLookupResult(declaring, declaring, declaring, TypeConfidence.EXACT, currentScope);
 		VisitStatus status = handleRequestor(node, requestor, noLookup);
 		switch (status) {
 			case CONTINUE:
@@ -666,12 +674,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private boolean handleExpression(Expression node) {
 		TypeLookupResult result = null;
-		ClassNode objectExprType = null;
+		ClassNode objectExprType;
+		VariableScope scope = scopes.peek();
 		if (isProperty(node)) {
 			objectExprType = objectExpressionType.pop();
+		} else {
+			// if inside a closure and that closure is an argument to a method call,
+			// then use the declaring type of the method call.
+			// eg-
+			// foo.run { someMethod() }
+			// the declaring type of someMethod() should be the type of foo.
+			// CallAndType cat = scope.getEnclosingMethodCallExpression();
+			// objectExprType = cat != null && scope.getEnclosingClosure() != null ? cat.declaringType : null;
+			objectExprType = null;
 		}
 
-		VariableScope scope = scopes.peek();
 		for (ITypeLookup lookup : lookups) {
 			TypeLookupResult candidate = lookup.lookupType(node, scope, objectExprType);
 			if (candidate != null) {
@@ -692,6 +709,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
 				}
+				scope.recordExpressionType(node, result.type);
 				return true;
 			case CANCEL_BRANCH:
 				if (isObjectExpression(node)) {
@@ -907,6 +925,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			if (scope.lookupName("it") == null) {
 				scope.addVariable("it", VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE);
 			}
+			CallAndType cat = scope.getEnclosingMethodCallExpression();
+			if (cat != null) {
+				scope.addVariable("this", cat.declaringType, cat.declaringType);
+				scope.addVariable("super", cat.declaringType.getUnresolvedSuperClass(), cat.declaringType.getUnresolvedSuperClass());
+			}
 			super.visitClosureExpression(node);
 		}
 		scopes.pop();
@@ -1116,6 +1139,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitMethodCallExpression(MethodCallExpression node) {
 		propertyExpression.push(node);
 		node.getObjectExpression().visit(this);
+
+		VariableScope scope = scopes.peek();
+		CallAndType origEnclosing = scope.getEnclosingMethodCallExpression();
+		CallAndType call = new CallAndType(node,
+				objectExpressionType.isEmpty() ? ((AnnotatedNode) this.enclosingDeclarationNode).getDeclaringClass()
+						: objectExpressionType.peek());
 		boolean shouldContinue = handleExpression(node);
 		// boolean shouldContinue = true;
 		if (shouldContinue) {
@@ -1129,7 +1158,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			if (catNode != null) {
 				addCategoryToBeDeclared(catNode);
 			}
-			node.getArguments().visit(this);
+			scope.setEnclosingMethodCall(call);
+			try {
+				node.getArguments().visit(this);
+			} finally {
+				scope.setEnclosingMethodCall(origEnclosing);
+			}
 			if (isObjectExpression(node)) {
 				// returns true if this method call expression is the property field of another property expression
 				objectExpressionType.push(propType);
@@ -1331,6 +1365,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			case CONTINUE:
 				visitClassReference(node.getClassNode());
 				if (node.getMembers() != null) {
+					@SuppressWarnings("cast")
 					Collection<Expression> exprs = (Collection<Expression>) node.getMembers().values();
 					for (Expression expr : exprs) {
 						if (expr instanceof AnnotationConstantExpression) {
@@ -1436,6 +1471,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		return null;
 	}
 
+	@SuppressWarnings("cast")
 	private ClassNode findClassWithName(String simpleName) {
 		for (ClassNode clazz : (Iterable<ClassNode>) getModuleNode().getClasses()) {
 			if (clazz.getNameWithoutPackage().equals(simpleName)) {
@@ -1508,18 +1544,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		} else {
 			return false;
 		}
-	}
-
-	// return true iff node is the LHS of a binary expression
-	private boolean isLHSExpression(Expression node) {
-		if (!propertyExpression.isEmpty()) {
-			ASTNode maybeProperty = propertyExpression.peek();
-			if (maybeProperty instanceof BinaryExpression) {
-				BinaryExpression prop = (BinaryExpression) maybeProperty;
-				return prop.getLeftExpression() == node;
-			}
-		}
-		return false;
 	}
 
 	private boolean isProperty(Expression node) {
@@ -1642,6 +1666,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				if (args.getExpressions().size() >= 2 && args.getExpressions().get(1) instanceof ClosureExpression) {
 					// really, should be doing inference on the first expression and seeing if it
 					// is a class node, but looking up in scope is good enough for now
+					@SuppressWarnings("cast")
 					Expression expr = ((List<Expression>) args.getExpressions()).get(0);
 					if (expr instanceof ClassExpression) {
 						return expr.getType();

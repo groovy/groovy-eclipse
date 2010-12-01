@@ -39,10 +39,28 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 		public TypeAndDeclaration(ClassNode type, ASTNode declaration) {
 			this.type = type;
 			this.declaration = declaration;
+			this.declaringType = null;
+			this.extraDoc = null;
+		}
+
+		public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType) {
+			this.type = type;
+			this.declaration = declaration;
+			this.declaringType = declaringType;
+			this.extraDoc = null;
+		}
+
+		public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc) {
+			this.type = type;
+			this.declaration = declaration;
+			this.declaringType = declaringType;
+			this.extraDoc = extraDoc;
 		}
 
 		protected final ClassNode type;
+		protected final ClassNode declaringType;
 		protected final ASTNode declaration;
+		protected final String extraDoc;
 	}
 
 	public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
@@ -50,13 +68,15 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 			ClassNode declaringType = objectExpressionType != null ? objectExpressionType : scope.getEnclosingTypeDeclaration();
 			TypeAndDeclaration tAndD = lookupTypeAndDeclaration(declaringType, ((ConstantExpression) node).getText(), scope);
 			if (tAndD != null) {
-				return new TypeLookupResult(tAndD.type, declaringType, tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope);
+				return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType,
+						tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope, tAndD.extraDoc);
 			}
 		} else if (node instanceof VariableExpression) {
 			ClassNode declaringType = objectExpressionType != null ? objectExpressionType : scope.getEnclosingTypeDeclaration();
 			TypeAndDeclaration tAndD = lookupTypeAndDeclaration(declaringType, ((VariableExpression) node).getName(), scope);
 			if (tAndD != null) {
-				return new TypeLookupResult(tAndD.type, declaringType, tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope);
+				return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType,
+						tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope, tAndD.extraDoc);
 			}
 		}
 		return null;
