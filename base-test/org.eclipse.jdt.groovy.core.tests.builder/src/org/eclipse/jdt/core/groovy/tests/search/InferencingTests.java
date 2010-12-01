@@ -363,4 +363,22 @@ public class InferencingTests extends AbstractInferencingTest {
         int end = start + 1;
         assertType(contents, start, end, "java.lang.Integer");
     }
+    public void testInClosure1() throws Exception {
+        String contents = "class Bar {\ndef meth() { } }\n new Bar().meth {\n this }";
+        int start = contents.lastIndexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "Bar");
+    }
+    public void testInClosure2() throws Exception {
+        String contents = "class Bar {\ndef meth(x) { } }\n new Bar().meth(6) {\n this }";
+        int start = contents.lastIndexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "Bar");
+    }
+    public void testInClosure3() throws Exception {
+        String contents = "class Baz { }\nclass Bar {\ndef meth(x) { } }\n new Bar().meth(6) {\n new Baz() }";
+        int start = contents.lastIndexOf("Baz");
+        int end = start + "Baz".length();
+        assertType(contents, start, end, "Baz");
+    }
 }
