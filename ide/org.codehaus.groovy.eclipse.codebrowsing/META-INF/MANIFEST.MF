@@ -8,9 +8,11 @@ Require-Bundle: org.eclipse.core.runtime.compatibility,
  org.codehaus.groovy.eclipse.core;bundle-version="2.1.1";visibility:=reexport,
  org.eclipse.jdt.core,
  org.eclipse.jdt.groovy.core;bundle-version="2.1.1",
- org.codehaus.groovy;bundle-version="1.6.7"
+ org.codehaus.groovy;bundle-version="1.6.7",
+ org.eclipse.core.resources;bundle-version="3.6.0"
 Bundle-ActivationPolicy: lazy
 Export-Package: org.codehaus.groovy.eclipse.codebrowsing,
+ org.codehaus.groovy.eclipse.codebrowsing.elements,
  org.codehaus.groovy.eclipse.codebrowsing.fragments,
  org.codehaus.groovy.eclipse.codebrowsing.requestor,
  org.codehaus.groovy.eclipse.codebrowsing.selection

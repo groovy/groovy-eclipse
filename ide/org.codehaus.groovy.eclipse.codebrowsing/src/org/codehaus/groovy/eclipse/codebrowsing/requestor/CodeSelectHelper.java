@@ -19,6 +19,8 @@ package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ICodeSelectHelper;
 import org.eclipse.jdt.core.IJavaElement;
@@ -36,17 +38,24 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
         ModuleNode module = unit.getModuleNode();
         if (module != null) {
-            ASTNode nodeToLookFor = findASTNodeAt(module, new Region(start, length));
-            if (nodeToLookFor != null) {
-                // shortcut.  Check to see if we are looking for this type itself
-                if (isTypeDeclaration(module, nodeToLookFor)) {
-                    return returnThisNode(unit, nodeToLookFor);
+            GroovyLogManager.manager.log(TraceCategory.CODESELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
+            String event = "Code select: " + unit.getElementName();
+            GroovyLogManager.manager.logStart(event);
+            try {
+                ASTNode nodeToLookFor = findASTNodeAt(module, new Region(start, length));
+                if (nodeToLookFor != null) {
+                    // shortcut.  Check to see if we are looking for this type itself
+                    if (isTypeDeclaration(module, nodeToLookFor)) {
+                        return returnThisNode(unit, nodeToLookFor);
+                    }
+                    
+                    CodeSelectRequestor requestor = new CodeSelectRequestor(nodeToLookFor, unit);
+                    TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
+                    visitor.visitCompilationUnit(requestor);
+                    return requestor.getRequestedElement() != null ? new IJavaElement[] { requestor.getRequestedElement() } : new IJavaElement[0];
                 }
-                
-                CodeSelectRequestor requestor = new CodeSelectRequestor(nodeToLookFor, unit);
-                TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
-                visitor.visitCompilationUnit(requestor);
-                return requestor.getRequestedElement() != null ? new IJavaElement[] { requestor.getRequestedElement() } : new IJavaElement[0];
+            } finally {
+                GroovyLogManager.manager.logEnd(event, TraceCategory.CODESELECT);
             }
         }
         return new IJavaElement[0];

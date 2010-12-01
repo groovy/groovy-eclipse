@@ -27,6 +27,12 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryField;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryType;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceField;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceType;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -42,12 +48,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
-import org.eclipse.jdt.internal.core.ResolvedBinaryField;
-import org.eclipse.jdt.internal.core.ResolvedBinaryMethod;
-import org.eclipse.jdt.internal.core.ResolvedBinaryType;
-import org.eclipse.jdt.internal.core.ResolvedSourceField;
-import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
-import org.eclipse.jdt.internal.core.ResolvedSourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -201,23 +201,23 @@ public class CodeSelectRequestor implements ITypeRequestor {
         switch (maybeRequested.getElementType()) {
             case IJavaElement.FIELD:
                 if (maybeRequested.isReadOnly()) {
-                    requestedElement = new ResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey);
+                    requestedElement = new GroovyResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc);
                 } else {
-                    requestedElement = new ResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey);
+                    requestedElement = new GroovyResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc);
                 }
                 break;
             case IJavaElement.METHOD:
                 if (maybeRequested.isReadOnly()) {
-                    requestedElement = new ResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey);
+                    requestedElement = new GroovyResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc);
                 } else {
-                    requestedElement = new ResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey);
+                    requestedElement = new GroovyResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc);
                 }
                 break;
             case IJavaElement.TYPE:
                 if (maybeRequested.isReadOnly()) {
-                    requestedElement = new ResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey);
+                    requestedElement = new GroovyResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc);
                 } else {
-                    requestedElement = new ResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey);
+                    requestedElement = new GroovyResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc);
                 }
                 break;
             default:
