@@ -26,7 +26,7 @@ import java.util.Arrays;
 public enum TraceCategory {
 
     DEFAULT("_"), CLASSPATH("Classpath"),
-    REFACTORING("Refactoring"), COMPILER("Compiler"), DSL("DSL");
+    REFACTORING("Refactoring"), COMPILER("Compiler"), DSL("DSL"), CODESELECT("Code select"), CONTENT_ASSIST("Content assist");
     
     TraceCategory(String label) {
         this.label = label;
