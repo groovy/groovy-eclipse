@@ -27,6 +27,9 @@ import org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory;
 import org.eclipse.jdt.internal.ui.text.java.ContentAssistProcessor;
 import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProcessor;
+import org.eclipse.jdt.internal.ui.text.java.hover.JavaInformationProvider;
+import org.eclipse.jdt.internal.ui.text.java.hover.JavaTypeHover;
+import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -109,7 +112,6 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         reconciler
             .setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
 
-
         DefaultDamagerRepairer dr = new DefaultDamagerRepairer(getStringScanner());
         reconciler.setDamager(dr,
                 GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
@@ -186,5 +188,23 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
             }
         }
         return strats;
+    }
+
+    /**
+     * Use our {@link GroovyExtraInformationHover} instead of a
+     * {@link JavadocHover}. Shows extra information provided
+     * by DSLs
+     */
+    @Override
+    public IInformationPresenter getInformationPresenter(ISourceViewer sourceViewer) {
+        IInformationPresenter informationPresenter = super.getInformationPresenter(sourceViewer);
+        JavaInformationProvider provider = (JavaInformationProvider) informationPresenter
+                .getInformationProvider(IDocument.DEFAULT_CONTENT_TYPE);
+        JavaTypeHover implementation = (JavaTypeHover) ReflectionUtils.getPrivateField(JavaInformationProvider.class,
+                "fImplementation", provider);
+        GroovyExtraInformationHover hover = new GroovyExtraInformationHover();
+        hover.setEditor(this.getEditor());
+        ReflectionUtils.setPrivateField(JavaTypeHover.class, "fJavadocHover", implementation, hover);
+        return informationPresenter;
     }
 }

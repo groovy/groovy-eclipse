@@ -908,4 +908,16 @@
           label="Groovy Event Console">
     </consoleFactory>
  </extension>
+ 
+    <extension
+         point="org.eclipse.jdt.ui.javaEditorTextHovers">
+      <hover
+            activate="true"
+            class="org.codehaus.groovy.eclipse.editor.GroovyExtraInformationHover"
+            description="Used JavaDoc supplied by Groovy DSL"
+            id="org.codehaus.groovy.eclipse.dsl.gdslhover"
+            label="Groovy Information Hover">
+      </hover>
+   </extension>
+ 
 </plugin>

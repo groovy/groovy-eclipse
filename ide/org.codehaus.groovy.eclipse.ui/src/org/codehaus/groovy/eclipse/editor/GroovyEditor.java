@@ -193,15 +193,14 @@ public class GroovyEditor extends CompilationUnitEditor {
     /**
      * Borrowed from {@link CompilationUnitEditor.ExitPolicy}
      */
-    @SuppressWarnings("unchecked")
     private class GroovyExitPolicy implements IExitPolicy {
 
         final char fExitCharacter;
         final char fEscapeCharacter;
-        final Stack fStack;
+        final Stack<GroovyBracketLevel> fStack;
         final int fSize;
 
-        public GroovyExitPolicy(char exitCharacter, char escapeCharacter, Stack stack) {
+        public GroovyExitPolicy(char exitCharacter, char escapeCharacter, Stack<GroovyBracketLevel> stack) {
             fExitCharacter= exitCharacter;
             fEscapeCharacter= escapeCharacter;
             fStack= stack;
@@ -215,7 +214,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 
             if (fSize == fStack.size() && !isMasked(offset)) {
                 if (event.character == fExitCharacter) {
-                    GroovyBracketLevel level= (GroovyBracketLevel) fStack.peek();
+                    GroovyBracketLevel level= fStack.peek();
                     if (level.fFirstPosition.offset > offset || level.fSecondPosition.offset < offset)
                         return null;
                     if (level.fSecondPosition.offset == offset && length == 0)
@@ -268,7 +267,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         private boolean fCloseAngularBrackets= true;
         private final String CATEGORY= toString();
         private final IPositionUpdater fUpdater= new GroovyExclusivePositionUpdater(CATEGORY);
-        private final Stack fBracketLevelStack= new Stack();
+        private final Stack<GroovyBracketLevel> fBracketLevelStack= new Stack<GroovyBracketLevel>();
 
         public void setCloseBracketsEnabled(boolean enabled) {
             fCloseBrackets= enabled;
@@ -492,7 +491,7 @@ public class GroovyEditor extends CompilationUnitEditor {
          */
         public void left(LinkedModeModel environment, int flags) {
 
-            final GroovyBracketLevel level= (GroovyBracketLevel) fBracketLevelStack.pop();
+            final GroovyBracketLevel level= fBracketLevelStack.pop();
 
             if (flags != ILinkedModeListener.EXTERNAL_MODIFICATION)
                 return;
