@@ -272,8 +272,8 @@ public class OrganizeImportsTest extends EclipseTestCase {
                 Foo(DateFormat arg) { }
             }
             """
-            def expectedImports = [ ] // none added, none removed
-                                    doAddImportTest(contents, expectedImports)
+        def expectedImports = [ ] // none added, none removed
+        doAddImportTest(contents, expectedImports)
     }
     
     void testGRECLISPE546b() {
@@ -284,8 +284,8 @@ public class OrganizeImportsTest extends EclipseTestCase {
             Foo(DateFormat arg) { }
             }
             """
-            def expectedImports = [ 'java.text.DateFormat']
-                                    doAddImportTest(contents, expectedImports)
+        def expectedImports = ['java.text.DateFormat']
+        doAddImportTest(contents, expectedImports)
     }
 	
     // should not have a stack overflow
@@ -359,10 +359,102 @@ public class OrganizeImportsTest extends EclipseTestCase {
         doAddImportTest(contents, expectedImports)
     }
 
-	
+    // Test GRECLIPSE-600
+    void testNestedAnnotations1() {
+        testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy", 
+        """
+            @interface NamedQueries {
+              NamedQuery value();
+            }
+            
+            @interface NamedQuery {
+            }"""
+        
+        String contents = """
+            @NamedQueries(
+                @NamedQuery 
+            )
+            class MyEntity {  }
+        """
+        def expectedImports = ['anns.NamedQueries', 'anns.NamedQuery']
+        doAddImportTest(contents, expectedImports)
+    }
+    
+    // Test GRECLIPSE-600
+    void testNestedAnnotations2() {
+        testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy", 
+        """
+            
+            @interface NamedQueries {
+              NamedQuery value();
+            }
+            
+            @interface NamedQuery {
+            }"""
+        
+        String contents = """
+            import anns.NamedQueries 
+            import anns.NamedQuery 
+            
+            @NamedQueries(
+                @NamedQuery 
+            )
+            class MyEntity {  }
+        """
+        def expectedImports = [ ]
+        doAddImportTest(contents, expectedImports)
+    }
+    
+    // Test GRECLIPSE-600
+    void testNestedAnnotations3() {
+        testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy",
+        """
+            @interface NamedQueries {
+              NamedQuery[] value();
+            }
+            
+            @interface NamedQuery {
+            }"""
+        
+        String contents = """
+            @NamedQueries(
+                [@NamedQuery]
+            )
+            class MyEntity {  }
+        """
+        def expectedImports = ['anns.NamedQueries', 'anns.NamedQuery']
+        doAddImportTest(contents, expectedImports)
+    }
+    
+    // Test GRECLIPSE-600
+    void testNestedAnnotations4() {
+        testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy",
+        """
+            
+            @interface NamedQueries {
+              NamedQuery[] value();
+            }
+            
+            @interface NamedQuery {
+            }"""
+        
+        String contents = """
+            import anns.NamedQueries
+            import anns.NamedQuery
+            
+            @NamedQueries(
+                [@NamedQuery]
+            )
+            class MyEntity {  }
+        """
+        def expectedImports = [ ]
+        doAddImportTest(contents, expectedImports)
+    }
+    
     void doAddImportTest(contents, expectedImports) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         def unit = JavaCore.createCompilationUnitFrom(file)
+        testProject.waitForIndexer()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
         if (expectedImports == null) {

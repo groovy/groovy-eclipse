@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -18,11 +19,13 @@ import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
@@ -186,13 +189,26 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitAnnotations(AnnotatedNode node) {
-            Iterable<AnnotationNode> annotations = (Iterable<AnnotationNode>) node.getAnnotations();
-            if (annotations != null) {
+            List<AnnotationNode> annotations = (List<AnnotationNode>) node.getAnnotations();
+            if (annotations != null && !annotations.isEmpty()) {
                 for (AnnotationNode an : annotations) {
+                    if (an.isBuiltIn()) {
+                        continue;
+                    }
                     handleType(an.getClassNode(), true);
+                    for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
+                        Expression value = member.getValue();
+                        value.visit(this);
+                    }
                 }
             }
-            super.visitAnnotations(node);
+        }
+
+        @Override
+        public void visitConstantExpression(ConstantExpression node) {
+            if (node instanceof AnnotationConstantExpression) {
+                handleType(node.getType(), true);
+            }
         }
 
         @Override
