@@ -399,9 +399,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (unit.getResolver() != null) {
 			unit.getResolver().currentClass = node;
 		}
-		visitAnnotations(node);
 		VariableScope scope = scopes.peek();
 		scope.addVariable("this", node, node);
+
+		visitAnnotations(node);
 
 		TypeLookupResult result = null;
 		result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scope);
@@ -1214,7 +1215,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitPropertyExpression(PropertyExpression node) {
 		propertyExpression.push(node);
 		node.getObjectExpression().visit(this);
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue;
+		// don't visit the property expression itself if
+		// it is a synthetic PropertyExpression (eg- synthetic 'this.'
+		// or synthetic access to statically imported field or method
+		if (node.getObjectExpression().getLength() > 0) {
+			shouldContinue = handleExpression(node);
+		} else {
+			shouldContinue = true;
+		}
 		if (shouldContinue) {
 			node.getProperty().visit(this);
 			// this is the type of this property expression

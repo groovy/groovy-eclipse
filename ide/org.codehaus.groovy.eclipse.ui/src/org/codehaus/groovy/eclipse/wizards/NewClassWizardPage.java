@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
+import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.runtime.CoreException;
@@ -30,6 +31,10 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages;
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogFieldGroup;
+import org.eclipse.jdt.ui.wizards.NewTypeWizardPage;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 
@@ -39,7 +44,9 @@ import org.eclipse.text.edits.TextEdit;
  */
 public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizardPage {
 
-	private IStatus fStatus;
+    private static final int FINAL_INDEX = 1;
+
+    private IStatus fStatus;
 
 	/**
 	 * Creates a new <code>NewClassWizardPage</code>
@@ -48,6 +55,14 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 		super();
 		setTitle("Groovy Class");
 		setDescription("Create a new Groovy class");
+    }
+
+
+	@Override
+    protected void createModifierControls(Composite composite, int nColumns) {
+        super.createModifierControls(composite, nColumns);
+        SelectionButtonDialogFieldGroup group = getOtherModifierButtonsFieldGroup();
+        group.getSelectionButton(FINAL_INDEX).setText("Create Script");
 	}
 
 	@Override
@@ -114,18 +129,27 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 	    GroovyCompilationUnit unit = (GroovyCompilationUnit) pack.getCompilationUnit(getCompilationUnitName(getTypeName()));
 	    try {
     	    monitor.beginTask("Remove semi-colons", 1);
+            unit.becomeWorkingCopy(new SubProgressMonitor(monitor, 1));
+
     	    // remove ';' on package declaration
     	    IPackageDeclaration[] packs = unit.getPackageDeclarations();
     	    if (packs.length > 0) {
     	        ISourceRange range = packs[0].getSourceRange();
     	        int position = range.getOffset() + range.getLength();
                 if (unit.getContents()[position] == ';') {
-                    unit.becomeWorkingCopy(new SubProgressMonitor(monitor, 1));
                     TextEdit edit = new ReplaceEdit(position, 1, "");
                     unit.applyTextEdit(edit, new SubProgressMonitor(monitor, 1));
     	            unit.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1));
     	        }
     	    }
+
+            // remove type declaration for scripts
+            if (isScript()) {
+                ISourceRange range = unit.getTypes()[0].getSourceRange();
+                TextEdit edit = new DeleteEdit(range.getOffset(), range.getLength());
+                unit.applyTextEdit(edit, new SubProgressMonitor(monitor, 1));
+                unit.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1));
+            }
     	    monitor.worked(1);
         } finally {
             if (unit != null) {
@@ -135,6 +159,20 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         }
 	}
 
+    private boolean isScript() {
+        // the final check box has been usurped and is now the checkbox for
+        // script
+        SelectionButtonDialogFieldGroup group = getOtherModifierButtonsFieldGroup();
+        return group.isSelected(FINAL_INDEX);
+    }
+
+    /**
+     * @return
+     */
+    public SelectionButtonDialogFieldGroup getOtherModifierButtonsFieldGroup() {
+        return (SelectionButtonDialogFieldGroup) ReflectionUtils.getPrivateField(
+                NewTypeWizardPage.class, "fOtherMdfButtons", this);
+    }
 
    private String getTypeNameWithoutParameters() {
         String typeNameWithParameters= getTypeName();
@@ -152,6 +190,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
        modifiers &= ~F_PUBLIC;
        modifiers &= ~F_PRIVATE;
        modifiers &= ~F_PROTECTED;
+        modifiers &= ~F_FINAL;
        return modifiers;
    }
 
@@ -166,4 +205,5 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
     protected void updateStatus(IStatus status) {
         fStatus = status;
     }
+
 }

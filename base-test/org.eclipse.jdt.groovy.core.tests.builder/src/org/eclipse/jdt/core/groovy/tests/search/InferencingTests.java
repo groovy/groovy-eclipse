@@ -387,27 +387,27 @@ public class InferencingTests extends AbstractInferencingTest {
                           "NULL_ATTRIBUTE_VALUE";
         int start = contents.lastIndexOf("NULL_ATTRIBUTE_VALUE");
         int end = start + "NULL_ATTRIBUTE_VALUE".length();
-        assertType(contents, start, end, "java.lange.String");
+        assertType(contents, start, end, "java.lang.String");
     }
     public void testStaticImports2() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.getAttributeKey\n" + 
-                          "getAttributeKey()";
+                          "getAttributeKey('')";
         int start = contents.lastIndexOf("getAttributeKey");
-        int end = start + "NULL_ATTRIBUTE_VALUE".length();
-        assertType(contents, start, end, "javax.swing.text.html.HTML.Attribute");
+        int end = start + "getAttributeKey('')".length();
+        assertType(contents, start, end, "javax.swing.text.html.HTML$Attribute");
     }
     public void testStaticImports3() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.*\n" + 
                           "NULL_ATTRIBUTE_VALUE";
         int start = contents.lastIndexOf("NULL_ATTRIBUTE_VALUE");
         int end = start + "NULL_ATTRIBUTE_VALUE".length();
-        assertType(contents, start, end, "java.lange.String");
+        assertType(contents, start, end, "java.lang.String");
     }
     public void testStaticImports4() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.*\n" + 
-                          "getAttributeKey()";
+                          "getAttributeKey('')";
         int start = contents.lastIndexOf("getAttributeKey");
-        int end = start + "NULL_ATTRIBUTE_VALUE".length();
-        assertType(contents, start, end, "javax.swing.text.html.HTML.Attribute");
+        int end = start + "getAttributeKey('')".length();
+        assertType(contents, start, end, "javax.swing.text.html.HTML$Attribute");
     }
 }

@@ -60,35 +60,36 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+I">
       </key>
       <key
             commandId="org.codehaus.groovy.eclipse.refactoring.command.rename"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+R">
       </key>
       <key
             commandId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+M">
       </key>
        <key
             commandId="org.codehaus.groovy.eclipse.editor.commands.Format"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M2+F">
       </key>
       <key
             commandId="org.codehaus.groovy.eclipse.editor.commands.Indentation"
-            contextId="org.codehaus.groovy.eclipse.editor.GroovyEditorScope"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+I">
       </key>
    </extension>
+   <!--
       <extension
          point="org.eclipse.ltk.core.refactoring.renameParticipants">
          <renameParticipant
@@ -107,6 +108,7 @@
             </enablement>
          </renameParticipant>
 		</extension>
+		-->
       <extension
             point="org.eclipse.ui.preferencePages">
          <page

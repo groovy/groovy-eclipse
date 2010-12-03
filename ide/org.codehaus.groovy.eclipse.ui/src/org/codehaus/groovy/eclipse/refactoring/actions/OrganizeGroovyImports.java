@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.Flags;
@@ -46,11 +47,11 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameMatch;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
+import org.eclipse.jdt.ui.CodeStyleConfiguration;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
@@ -329,22 +330,24 @@ public class OrganizeGroovyImports {
         importsSlatedForRemoval = new HashMap<String, ImportNode>();
         FindUnresolvedReferencesVisitor visitor = new FindUnresolvedReferencesVisitor();
 
-        for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
-            if (imp.getType() != null) {
-                importsSlatedForRemoval.put(imp.getClassName(), imp);
-            }
-        }
-
-
-        // find all missing types
-        // find all imports that are not referenced
-        for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
-            visitor.visitClass(clazz);
-        }
-
-
         try {
-            ImportRewrite rewriter = ImportRewrite.create(unit, true);
+            ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, false);
+
+            for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
+                if (imp.getType() != null) {
+                    String className = imp.getClassName();
+                    if (className != null) {
+                        importsSlatedForRemoval.put(className, imp);
+                        rewriter.addImport(className);
+                    }
+                }
+            }
+
+            // find all missing types
+            // find all imports that are not referenced
+            for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
+                visitor.visitClass(clazz);
+            }
 
             // remove old
             // will not work for aliased imports
