@@ -217,6 +217,20 @@ public class CompilerUtils {
 					if (prefix.equals(projectName)) {
 						pathElement = project.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
 					} else {
+						
+						// for GRECLIPSE-917.  Entry is something like /SomeOtherProject/foo/bar/doodah.jar
+						if (cpe.getEntryKind()==IClasspathEntry.CPE_LIBRARY) {
+							try {
+								IProject iproject = project.getWorkspace().getRoot().getProject(prefix);
+								if (iproject!=null) {
+									IFile ifile = iproject.getFile(cpePath.removeFirstSegments(1));
+									IPath ipath = (ifile==null?null:ifile.getRawLocation());
+									pathElement = (ipath==null?null:ipath.toOSString());
+								}
+							} catch (Throwable t) {
+								t.printStackTrace();
+							}
+						}
 						if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
 							// the classpath entry is a dependency on another project - we need the output folders of that project
 							IProject iproject = project.getWorkspace().getRoot().getProject(prefix);
@@ -244,7 +258,9 @@ public class CompilerUtils {
                             // FIXASC this ought to also allow for separate output folders in the project we depend upon *sigh*
 							// FIXASC what does all this look like for batch compilation?  Should it be passed in rather than computed here
 						} else {
-							pathElement = cpe.getPath().toOSString();
+							if (pathElement==null) {
+								pathElement = cpe.getPath().toOSString();
+							}
 						}
 					}
  					path.append(pathElement);
