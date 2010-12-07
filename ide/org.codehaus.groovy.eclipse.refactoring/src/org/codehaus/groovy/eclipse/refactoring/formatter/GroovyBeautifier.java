@@ -80,6 +80,20 @@ public class GroovyBeautifier {
         scanner.startASTscan();
         for(ASTNode _node : scanner.getMatchedNodes().keySet()) {
             ListExpression node = ((ListExpression)_node);
+
+            GroovyDocumentScanner tokens = formatter.getTokens();
+            Token lastToken = null;
+            try {
+                lastToken = tokens.getLastNonWhitespaceTokenBefore(node.getEnd() - 1);
+                if (lastToken == null || lastToken.getType() == GroovyTokenTypes.STRING_CTOR_START) {
+                    //This means we are inside a GString and we won't apply edits here so skip this
+                    continue;
+                }
+            } catch (BadLocationException e) {
+                Util.log(e);
+                continue;
+            }
+
             int nodeStart = node.getStart();
             int nodeEnd = node.getEnd();
             int nodeLen = nodeEnd - nodeStart;
@@ -87,7 +101,6 @@ public class GroovyBeautifier {
             List<Expression> exps = node.getExpressions();
             if (isLong || (hasClosureElement(node) && node.getExpressions().size() > 1)) {
                 //Split the list
-                GroovyDocumentScanner tokens = formatter.getTokens();
                 for (int i = 0; i < exps.size(); i++) {
                     Expression exp = exps.get(i);
                     Token before = tokens.getLastTokenBefore(exp.getStart());
@@ -100,17 +113,10 @@ public class GroovyBeautifier {
                         Util.log(e);
                     }
                 }
-                Token lastToken;
-                try {
-                    lastToken = tokens.getLastNonWhitespaceTokenBefore(node.getEnd() - 1);
-                    replaceWhiteSpaceAfter(edits, lastToken, formatter.getNewLine());
-                } catch (BadLocationException e) {
-                    Util.log(e);
-                }
+                replaceWhiteSpaceAfter(edits, lastToken, formatter.getNewLine());
             }
             else {
                 //Compact the list
-                GroovyDocumentScanner tokens = formatter.getTokens();
                 for (int i = 0; i < exps.size(); i++) {
                     Expression exp = exps.get(i);
                     Token before = tokens.getLastTokenBefore(exp.getStart());
@@ -123,14 +129,8 @@ public class GroovyBeautifier {
                         Util.log(e);
                     }
                 }
-                Token lastToken;
-                try {
-                    lastToken = tokens.getLastNonWhitespaceTokenBefore(node.getEnd() - 1);
-                    replaceWhiteSpaceAfter(edits, lastToken,
-                            lastToken.getType() == GroovyTokenTypes.SL_COMMENT ? formatter.getNewLine() : "");
-                } catch (BadLocationException e) {
-                    Util.log(e);
-                }
+                replaceWhiteSpaceAfter(edits, lastToken,
+                        lastToken.getType() == GroovyTokenTypes.SL_COMMENT ? formatter.getNewLine() : "");
             }
         }
     }

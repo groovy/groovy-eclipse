@@ -1,0 +1,18 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+class FormatTest {
+
+def test () {
+def message = "${foo([])}"
+}
+} 
+###exp
+class FormatTest {
+	
+	def test () {
+		def message = "${foo([])}"
+	}
+} 
+###end
