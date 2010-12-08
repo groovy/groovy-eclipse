@@ -368,6 +368,20 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"@Anno(value=abc)");
     }
     
+    public void testVarargs_GRE925() {
+    	this.runConformTest(new String[]{
+    			"Test.java",
+    			"class Test {\n"+
+    			"  void method(String[] x) {}\n"+
+    			"  public static void main(String []argv) {}\n"+
+    			"}",
+    			"SubTest.groovy",
+    			"class SubTest extends Test {\n"+
+    			" void method(String[] x) { super.method(x); }\n"+
+    			"}"
+    	});
+    }
+    
     public void testPrimitiveLikeTypeNames_GRE891() {
 	    	this.runConformTest(new String[]{
 	    			"Foo.java",

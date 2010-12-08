@@ -7420,6 +7420,17 @@ public void varargsArgumentNeedCast(MethodBinding method, TypeBinding argumentTy
 	}
 }
 public void varargsConflict(MethodBinding method1, MethodBinding method2, SourceTypeBinding type) {
+	// GROOVY - start (GRE925)
+	// Groovy 'guesses' about varargs rather than remembering from the declaration *sigh*
+	ReferenceBinding rb1 = method1.declaringClass;
+	ReferenceBinding rb2 = method2.declaringClass;
+	if (rb1!=null && (rb1 instanceof SourceTypeBinding) && ((SourceTypeBinding)rb1).scope!=null && !((SourceTypeBinding)rb1).scope.shouldReport(IProblem.VarargsConflict)) { 
+		return;
+	}
+	if (rb2!=null && (rb2 instanceof SourceTypeBinding) && ((SourceTypeBinding)rb2).scope!=null && !((SourceTypeBinding)rb2).scope.shouldReport(IProblem.VarargsConflict)) { 
+		return;
+	}
+	// GROOVY - end
 	this.handle(
 		IProblem.VarargsConflict,
 		new String[] {

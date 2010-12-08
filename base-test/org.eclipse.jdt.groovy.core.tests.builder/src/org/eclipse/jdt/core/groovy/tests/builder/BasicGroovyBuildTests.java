@@ -121,6 +121,35 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		incrementalBuild(projectPath);
 		expectingOnlySpecificProblemFor(pathToSecond, new Problem("/Project/src2/p/Foo.groovy", "The type Foo is already defined", pathToSecond, 17,20, 40, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	public void testVarargs_GRE925() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "SubTest",
+				"class SubTest extends Test {\n"+
+				" void method(String[] x) { super.method(x); }\n"+
+				"}");
+		
+		env.addClass(root, "", "Test",
+				"class Test {\n"+
+				"  void method(String[] x) {}\n"+
+				"  public static void main(String []argv) {}\n"+
+				"}");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Test","SubTest");
+		expectingNoProblems();
+	}
+	
+
 	
 	public void testSlow_GRE870() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

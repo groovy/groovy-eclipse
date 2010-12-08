@@ -191,12 +191,10 @@ public class GroovyClassScope extends ClassScope {
 				modifiers |= ClassFileConstants.AccAbstract;
 			}
 			char[] methodName = name.toCharArray();
-	/*		if (typeDeclaration != null) {
-				// check we are not attempting to override a final method
-				MethodBinding[] existingBindings = typeDeclaration.binding.getMethods(name.toCharArray());
-				int stop = 1;
-			}
-    */
+			/*
+			 * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
+			 * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
+			 */
 			MethodBinding mb = new MethodBinding(modifiers, methodName, returnType, parameterTypes, null,
 					this.referenceContext.binding);
 			// FIXASC parameter names - what value would it have to set them correctly?
@@ -218,6 +216,9 @@ public class GroovyClassScope extends ClassScope {
 		if (problem == IProblem.MethodNameClash) {
 			return false;
 		}
+		if (problem == IProblem.VarargsConflict) {
+			return false;
+		}
 		return true;
 	}
 
@@ -234,8 +235,8 @@ public class GroovyClassScope extends ClassScope {
 		int idx = 0;
 		for (MethodNode methodNode : mns) {
 			TypeBinding[] parameterTypes = null;
-			TypeBinding returnType = compilationUnitScope().environment.getResolvedType(CharOperation.splitAndTrimOn('.',
-					methodNode.getReturnType().getName().toCharArray()), this);
+			TypeBinding returnType = compilationUnitScope().environment.getResolvedType(
+					CharOperation.splitAndTrimOn('.', methodNode.getReturnType().getName().toCharArray()), this);
 			newMethods[idx++] = new MethodBinding(methodNode.getModifiers(), selector, returnType, parameterTypes, null,
 					this.referenceContext.binding);
 		}
