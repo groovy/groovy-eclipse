@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
@@ -103,6 +104,9 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
             ClassNode clazz = ((ImportNode) node).getType();
             start = clazz.getStart();
             length = clazz.getLength();
+        } else if (node instanceof StaticMethodCallExpression) {
+            start = node.getStart();
+            length = ((StaticMethodCallExpression) node).getMethod().length();
         } else {
             start = node.getStart();
             length = node.getLength();

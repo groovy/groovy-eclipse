@@ -50,6 +50,7 @@ public class FormatGroovyAction extends SelectionDispatchAction {
             setToolTipText("Indent Groovy file");
             setDescription("Indent selection in Groovy file");
         } else if (kind == FormatKind.FORMAT) {
+            setText("Format");
             setToolTipText("Format Groovy file");
             setDescription("Format selection in Groovy file");
         }

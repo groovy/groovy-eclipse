@@ -16,7 +16,7 @@ def alsoEmpty = [
 ###exp
 def shortList = [//co
 	1, 2, //me
-	3 //nt 
+	3 //nt
 ]
 
 def emptyList = [/*empty*/]

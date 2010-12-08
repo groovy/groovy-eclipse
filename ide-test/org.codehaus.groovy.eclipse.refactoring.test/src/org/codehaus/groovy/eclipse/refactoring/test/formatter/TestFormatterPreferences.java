@@ -33,6 +33,7 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
+
 /**
  * This tets suite is to contain some tests for checking whether
  * the FormatterPreferences are properly taken from the right preferences
@@ -45,6 +46,7 @@ public class TestFormatterPreferences extends EclipseTestCase {
 
     private static final String TAB_SIZE = DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE;
     private static final String TAB_CHAR = DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR;
+    private static final String INDENT_EMPTY_LINES = DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES;
     private static final String BRACES_START = PreferenceConstants.GROOVY_FORMATTER_BRACES_START;
     private static final String BRACES_END = PreferenceConstants.GROOVY_FORMATTER_BRACES_END;
     private static final String SMART_PASTE = org.eclipse.jdt.ui.PreferenceConstants.EDITOR_SMART_PASTE;
@@ -100,7 +102,6 @@ public class TestFormatterPreferences extends EclipseTestCase {
 
     }
 
-
     /**
      * Tab related preferences should be inherited from the Java project.
      */
@@ -121,7 +122,34 @@ public class TestFormatterPreferences extends EclipseTestCase {
         formatPrefs = new FormatterPreferences(gunit);
         assertEquals(13, formatPrefs.getTabSize());
     }
+    
+    /**
+     * Indentation of empty lines preferences should be inherited from the Java project.
+     */
+    public void testIndentEmptyLinesPrefs() throws Exception {
+        IPreferenceStore projectPrefs = new ScopedPreferenceStore(new ProjectScope(testProject.getProject()), JavaCore.PLUGIN_ID);
+        assertTrue("Using the wrong preferences store?", projectPrefs.contains(INDENT_EMPTY_LINES));
 
+        projectPrefs.setValue(INDENT_EMPTY_LINES, DefaultCodeFormatterConstants.TRUE);
+        IFormatterPreferences formatPrefs =  new FormatterPreferences(gunit);
+        assertTrue(formatPrefs.isIndentEmptyLines());
+
+        projectPrefs.setValue(INDENT_EMPTY_LINES, DefaultCodeFormatterConstants.FALSE);
+        formatPrefs = new FormatterPreferences(gunit);
+        assertFalse(formatPrefs.isIndentEmptyLines());
+    }
+    
+
+    /**
+     * If not defined in the Java project explicitly indent empty lines prefs should be
+     * be inherited from JavaCore preferences.
+     */
+    public void testIndentEmptyLinesFromCore() throws Exception {
+        setJavaPreference(INDENT_EMPTY_LINES, DefaultCodeFormatterConstants.TRUE);
+        IFormatterPreferences formatPrefs = new FormatterPreferences(gunit);
+        assertTrue(formatPrefs.isIndentEmptyLines());
+    }
+    
     /**
      * If not defined in the Java project explicitly tab related preferences should
      * be inherited from JavaCore preferences.

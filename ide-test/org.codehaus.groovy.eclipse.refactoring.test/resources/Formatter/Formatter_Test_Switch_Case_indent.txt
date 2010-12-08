@@ -34,20 +34,20 @@ def swicher(String x) {
 			println 'some code'
 			println 'some more code'
 			break
-		
+
 		case 'ZOR':
 			println 'no break'
-		
+
 		case 'BAR':
 			println 'some code'
 			println 'some more code'
 			break
-		
+
 		case '1':
 		case '2':
 			println 'double case'
 			break
-		
+
 		default:
 			println 'no other matched'
 			println 'go on then'

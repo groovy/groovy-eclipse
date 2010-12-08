@@ -24,12 +24,12 @@ def a = [3]
 class EmailCommand {
 	String email
 	String messageContent
-	
+
 	static constraints = {
 		email("email": true, "blank": false)
 		messageContent("blank": false)
 	}
-	
+
 	void fun() {
 		def a = [3]
 		a.each { println it }

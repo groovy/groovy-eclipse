@@ -20,6 +20,7 @@ package org.codehaus.groovy.eclipse.refactoring.formatter;
 
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 
@@ -59,6 +60,8 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
 
     private static final boolean DEFAULT_SMART_PASTE = true;
 
+    private static final boolean DEFAULT_INDENT_EMPTY_LINES = false;
+
     // //// preferences cached in fields below ////////////
 
     private boolean useTabs;
@@ -74,6 +77,8 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
     private int maxLineLength;
 
     private boolean smartPaste;
+
+    private boolean indentEmptyLines;
 
 	////////////////////////////////////////////////////
 
@@ -95,6 +100,12 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
      * @param preferences
      */
     private void refresh(IPreferenceStore preferences) {
+
+        indentEmptyLines = DEFAULT_INDENT_EMPTY_LINES;
+        String pIndentEmpty = preferences.getString(DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES);
+        if (pIndentEmpty != null) {
+            indentEmptyLines = pIndentEmpty.equals(DefaultCodeFormatterConstants.TRUE);
+        }
 
         bracesStart = DEFAULT_BRACES_START;
         String pBracesStart = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_BRACES_START);
@@ -162,6 +173,10 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
 
     public boolean isSmartPaste() {
         return smartPaste;
+    }
+
+    public boolean isIndentEmptyLines() {
+        return indentEmptyLines;
     }
 
 }

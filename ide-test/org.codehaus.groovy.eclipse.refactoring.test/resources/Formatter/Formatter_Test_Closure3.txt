@@ -10,7 +10,8 @@ foo()
 ###exp
 def foo= {
 	->
-	if(true) { // fragile!
+	if(true) {
+		// fragile!
 		println 'foo'
 	}
 }

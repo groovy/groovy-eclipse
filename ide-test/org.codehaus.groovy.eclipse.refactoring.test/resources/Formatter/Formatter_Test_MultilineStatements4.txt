@@ -11,7 +11,8 @@ println 'hello'
 ###exp
 String appPath,controller,clazz
 new File(appPath,controller).eachLine { String line->
-	if(line=~/def index = \{ \}/) { // fragile!
+	if(line=~/def index = \{ \}/) {
+		// fragile!
 		println 'hello'
 	}
 }

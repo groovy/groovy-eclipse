@@ -1,0 +1,37 @@
+###prop
+setPreferences=true
+bracesEnd=next
+indentation=space
+tabsize=4
+indentEmptyLines=true
+###src
+// some thing
+def blub() {   
+    // some comment   
+    def a = 1;   
+    
+
+    
+    def b = 1    
+    def c = 1;   
+    
+
+      
+}   
+  
+###exp
+// some thing
+def blub() {
+    // some comment
+    def a = 1;
+    
+    
+    
+    def b = 1
+    def c = 1;
+    
+    
+    
+}
+
+###end

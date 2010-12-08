@@ -1,3 +1,4 @@
+
 package org.codehaus.groovy.eclipse.test.actions
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
@@ -19,24 +20,24 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
  *
  */
 public class OrganizeImportsTest extends EclipseTestCase {
-	
-	final static String CONTENTS_SUPPORTING = 
-	"""
+    
+    final static String CONTENTS_SUPPORTING = 
+    """
         class FirstClass { }
         class SecondClass { }
         class ThirdClass { }
         """
     final static String CONTENTS_SUPPORTING2 = 
-        """
+    """
         class FourthClass { }
         """
     final static String CONTENTS_JAVA_SUPPORTING = 
-        """
+    """
         public class Outer { 
             public static class Inner { }
         }
         """
-
+    
     protected void setUp() throws Exception {
         super.setUp()
         testProject.addNature(GroovyNature.GROOVY_NATURE)
@@ -49,112 +50,112 @@ public class OrganizeImportsTest extends EclipseTestCase {
     
     void testAddImport1() {
         String contents = 
-        """ 
-        FirstClass x
-        """
-        def expectedImports = ["import other.FirstClass;\n"]
+                """ 
+                FirstClass x
+                """
+        def expectedImports = ["import other.FirstClass\n"]
         doAddImportTest(contents, expectedImports)
     }
-
+    
     void testAddImport2() {
         String contents = 
-        """ 
-        def x = new FirstClass()
-        """
-        def expectedImports = ["import other.FirstClass;\n"]
+                """ 
+                def x = new FirstClass()
+                """
+        def expectedImports = ["import other.FirstClass\n"]
         doAddImportTest(contents, expectedImports)
     }
     void testAddImport3() {
         String contents = 
-""" 
-    def x(FirstClass y) { }
-"""
-        def expectedImports = ["import other.FirstClass;\n"]
+                """ 
+                def x(FirstClass y) { }
+                """
+        def expectedImports = ["import other.FirstClass\n"]
         doAddImportTest(contents, expectedImports)
     }
     void testAddImport4() {
         String contents = 
-            """ 
+                """ 
             def x = { FirstClass y -> print "" }
             """
-            def expectedImports = ["import other.FirstClass;\n"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import other.FirstClass\n"]
+        doAddImportTest(contents, expectedImports)
     }
     void testAddImport5() {
         String contents = 
-            """ 
+                """ 
             class Main {
                 FirstClass x
             }
             """
-            def expectedImports = ["import other.FirstClass;\n"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import other.FirstClass\n"]
+        doAddImportTest(contents, expectedImports)
     }
     void testAddImport6() {
         String contents = 
-            """ 
+                """ 
             class Main {
             FirstClass x() { }
             }
             """
-            def expectedImports = ["import other.FirstClass;\n"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import other.FirstClass\n"]
+        doAddImportTest(contents, expectedImports)
     }
     void testAddImport7() {
         String contents = 
-            """ 
+                """ 
             class Main {
             def x(FirstClass f) { }
             }
             """
-            def expectedImports = ["import other.FirstClass;\n"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import other.FirstClass\n"]
+        doAddImportTest(contents, expectedImports)
     }
     void testAddImport8() {
         String contents = 
-            """ 
+                """ 
             class Main {
             def x(FirstClass[] f) { }
             }
             """
-            def expectedImports = ["import other.FirstClass;\n"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import other.FirstClass\n"]
+        doAddImportTest(contents, expectedImports)
     }
-
+    
     void testAddImport9() {
         String contents = 
-        """
-        import javax.swing.text.html.HTML;
+                """
+        import javax.swing.text.html.HTML
         HTML.class
         """
         def expectedImports = []
         doAddImportTest(contents, expectedImports)
     }
-
+    
     void testAddInnerImport1() {
         String contents = 
-            """ 
+                """ 
             class Main {
             def x(Inner f) { }
             }
             """
-            def expectedImports = ["import other.Outer.Inner;\n"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import other.Outer.Inner\n"]
+        doAddImportTest(contents, expectedImports)
     }
     void testAddInnerImport2() {
         String contents = 
-            """ 
+                """ 
             class Main {
             def x(Outer.Inner f) { }
             }
             """
-            def expectedImports = ["import other.Outer;\n"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import other.Outer\n"]
+        doAddImportTest(contents, expectedImports)
     }
     void testAddInnerImport3() {
         String contents = 
-        """ 
-        import other.Outer;
+                """ 
+        import other.Outer
         class Main {
         def x(Outer.Inner f) { }
         }
@@ -164,76 +165,75 @@ public class OrganizeImportsTest extends EclipseTestCase {
     }
     void testAddInnerImport4() {
         String contents = 
-            """ 
+                """ 
             class Main {
             def x(UnknownTag f) { }
             }
             """
-            def expectedImports = ["import javax.swing.text.html.HTML.UnknownTag;"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import javax.swing.text.html.HTML.UnknownTag"]
+        doAddImportTest(contents, expectedImports)
     }
     void testAddInnerImport5() {
         String contents = 
-            """ 
+                """ 
             class Main {
             def x(HTML.UnknownTag f) { }
             }
             """
-            def expectedImports = ["import javax.swing.text.html.HTML;"]
-            doAddImportTest(contents, expectedImports)
+        def expectedImports = ["import javax.swing.text.html.HTML"]
+        doAddImportTest(contents, expectedImports)
     }
-	
-	// test that 'as' keyword works in list expressions
-	void testGRECLIPSE470a() {
-	    String contents ="""
+    
+    // test that 'as' keyword works in list expressions
+    void testGRECLIPSE470a() {
+        String contents ="""
 	        import javax.xml.XMLConstants
 	        ['value':XMLConstants.XML_NS_URI] as Map
 	        """
-		def expectedImports = [ ] // none added, none removed
-		doAddImportTest(contents, expectedImports)
-	}
-	
-	void testGenerics() {
-		String contents ="""
+        doAddImportTest(contents)
+    }
+    
+    void testGenerics() {
+        String contents ="""
             import java.util.Map.Entry
 		    Entry<SecondClass, HTML> entry
             """
-		def expectedImports = [ "import javax.swing.text.html.HTML", "import other.SecondClass"]
-		doAddImportTest(contents, expectedImports)
-	}
-	
+        def expectedImports = [ "import javax.swing.text.html.HTML", "import other.SecondClass"]
+        doAddImportTest(contents, expectedImports)
+    }
+    
     void testRemoveImport1() {
-		// should not remove import because module is empty
+        // should not remove import because module is empty
         String contents = 
-            """ 
+                """ 
             import other.SecondClass
             """
-            doDeleteImportTest(contents, 0)
+        doDeleteImportTest(contents, 0)
     }
     void testRemoveImport1a() {
         String contents = 
-            """ 
+                """ 
             import other.SecondClass
             a
             """
-            doDeleteImportTest(contents, 1)
+        doDeleteImportTest(contents, 1)
     }
-
+    
     void testRemoveImport2() {
         String contents = 
-            """ 
+                """ 
             import other.SecondClass
             import javax.swing.text.html.HTML
             class Main {
                 HTML f = null
             }
             """
-            doDeleteImportTest(contents, 1)
+        doDeleteImportTest(contents, 1)
     }
-
+    
     void testRemoveImport3() {
         String contents = 
-            """ 
+                """ 
             import other.ThirdClass
             import javax.swing.text.html.HTML
             import other.SecondClass
@@ -241,12 +241,12 @@ public class OrganizeImportsTest extends EclipseTestCase {
                 HTML f = null
             }
             """
-            doDeleteImportTest(contents, 2)
+        doDeleteImportTest(contents, 2)
     }
-
+    
     void testChoices1() {
         String contents = 
-            """ 
+                """ 
             FourthClass f = null
             """
         doChoiceTest(contents, ["other2.FourthClass", "other3.FourthClass"])    
@@ -254,31 +254,29 @@ public class OrganizeImportsTest extends EclipseTestCase {
     
     void testGRECLISPE506() {
         String contents = 
-            """ 
-            import java.text.DateFormat;
+                """ 
+            import java.text.DateFormat
         
             new String(DateFormat.getDateInstance())
             """
-		def expectedImports = [ ] // none added, none removed
-		doAddImportTest(contents, expectedImports)
+        doAddImportTest(contents)
     }
     
     void testGRECLISPE546a() {
         String contents = 
-            """ 
-            import java.text.DateFormat;
+                """ 
+            import java.text.DateFormat
             
             class Foo {
                 Foo(DateFormat arg) { }
             }
             """
-        def expectedImports = [ ] // none added, none removed
-        doAddImportTest(contents, expectedImports)
+        doAddImportTest(contents)
     }
     
     void testGRECLISPE546b() {
         String contents = 
-            """ 
+                """ 
             
             class Foo {
             Foo(DateFormat arg) { }
@@ -287,49 +285,48 @@ public class OrganizeImportsTest extends EclipseTestCase {
         def expectedImports = ['java.text.DateFormat']
         doAddImportTest(contents, expectedImports)
     }
-	
+    
     // should not have a stack overflow
     void testGRECLISPE643() {
         String contents = 
-            """ 
+                """ 
             enum MyEnum {
                 ONE_VALUE, ANOTHER_VALUE
             }
             """
-            doAddImportTest(contents, [ ])
+        doAddImportTest(contents, [ ])
     }
     
-	
-	void testDynamicVariable1() {
-		String contents = 
-		    """
+    
+    void testDynamicVariable1() {
+        String contents = 
+                """
 		    HTML.NULL_ATTRIBUTE_VALUE
             """
-		def expectedImports = [ 'javax.swing.text.html.HTML']
-		doAddImportTest(contents, expectedImports)
-	}
-	void testDynamicVariable2() {
-	    String contents = 
-	        """
+        def expectedImports = [ 'javax.swing.text.html.HTML']
+        doAddImportTest(contents, expectedImports)
+    }
+    void testDynamicVariable2() {
+        String contents = 
+                """
 	        nothing.HTML.NULL_ATTRIBUTE_VALUE
 	        """
-	     def expectedImports = [ ]
-         doAddImportTest(contents, expectedImports)
-	}
-
-	void testDynamicVariable3() {
-		String contents = 
-		    """ 
+        doAddImportTest(contents)
+    }
+    
+    void testDynamicVariable3() {
+        String contents = 
+                """ 
 		    new String(DateFormat.getDateInstance())
 		    """
-		def expectedImports = [ 'java.text.DateFormat' ] 
-		doAddImportTest(contents, expectedImports)
-	}
+        def expectedImports = [ 'java.text.DateFormat' ] 
+        doAddImportTest(contents, expectedImports)
+    }
     
     // Test GRECLISPE-823
     void testThrownExceptions() {
         String contents = 
-            """ 
+                """ 
             import java.util.zip.ZipException
             
             def x() throws BadLocationException {
@@ -344,7 +341,7 @@ public class OrganizeImportsTest extends EclipseTestCase {
     // Test GRECLIPSE-895
     void testCatchClausesExceptions() {
         String contents =
-            """
+                """
             import java.util.zip.ZipException
             
             try {
@@ -358,11 +355,11 @@ public class OrganizeImportsTest extends EclipseTestCase {
         def expectedImports = [ 'javax.swing.text.BadLocationException' ]
         doAddImportTest(contents, expectedImports)
     }
-
+    
     // Test GRECLIPSE-600
     void testNestedAnnotations1() {
         testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy", 
-        """
+                """
             @interface NamedQueries {
               NamedQuery value();
             }
@@ -383,7 +380,7 @@ public class OrganizeImportsTest extends EclipseTestCase {
     // Test GRECLIPSE-600
     void testNestedAnnotations2() {
         testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy", 
-        """
+                """
             
             @interface NamedQueries {
               NamedQuery value();
@@ -393,22 +390,21 @@ public class OrganizeImportsTest extends EclipseTestCase {
             }"""
         
         String contents = """
-            import anns.NamedQueries 
-            import anns.NamedQuery 
+            import anns.NamedQueries
+            import anns.NamedQuery
             
             @NamedQueries(
                 @NamedQuery 
             )
             class MyEntity {  }
         """
-        def expectedImports = [ ]
-        doAddImportTest(contents, expectedImports)
+        doAddImportTest(contents)
     }
     
     // Test GRECLIPSE-600
     void testNestedAnnotations3() {
         testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy",
-        """
+                """
             @interface NamedQueries {
               NamedQuery[] value();
             }
@@ -429,7 +425,7 @@ public class OrganizeImportsTest extends EclipseTestCase {
     // Test GRECLIPSE-600
     void testNestedAnnotations4() {
         testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy",
-        """
+                """
             
             @interface NamedQueries {
               NamedQuery[] value();
@@ -447,35 +443,112 @@ public class OrganizeImportsTest extends EclipseTestCase {
             )
             class MyEntity {  }
         """
-        def expectedImports = [ ]
+        doAddImportTest(contents)
+    }
+    
+    void testInnerClass1() {
+        testProject.createGroovyTypeAndPackage "inner", "HasInner.groovy",
+                """
+                class HasInner {
+                  class InnerInner { }
+                }
+                """
+        
+        String contents =
+            """
+            InnerInner f
+            """
+        def expectedImports = [ 'inner.HasInner.InnerInner']
         doAddImportTest(contents, expectedImports)
     }
     
-    void doAddImportTest(contents, expectedImports) {
+    void testInnerClass2() {
+        testProject.createGroovyTypeAndPackage "inner", "HasInner.groovy",
+                """
+                class HasInner {
+                  class InnerInner { }
+                }
+                """
+        String contents =
+                """
+            import inner.HasInner.InnerInner\n
+            InnerInner f
+            """
+        doAddImportTest(contents)
+    }
+    
+    void testInnerClass3() {
+        testProject.createGroovyTypeAndPackage "inner", "HasInner.groovy",
+                """
+                class HasInner {
+                  class InnerInner { }
+                }
+                """
+        String contents =
+            """
+            HasInner.InnerInner f
+            """
+            def expectedImports = [ 'inner.HasInner']
+        doAddImportTest(contents, expectedImports)
+    }
+    
+    void testInnerClass4() {
+        testProject.createGroovyTypeAndPackage "inner", "HasInner.groovy",
+                """
+                class HasInner {
+                  class InnerInner { }
+                }
+                """
+        String contents =
+            """
+            import inner.HasInner\n
+            HasInner.InnerInner f
+            """
+        doAddImportTest(contents)
+    }
+    
+    
+    void doAddImportTest(contents, expectedImports = [ ]) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         def unit = JavaCore.createCompilationUnitFrom(file)
         testProject.waitForIndexer()
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
+        IChooseImportQuery query = new NoChoiceQuery()
+        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
         TextEdit edit = organize.calculateMissingImports()
         if (expectedImports == null) {
             assertNull "Expected null due to a compile error in the contents", edit
         }
         
+        def actualContents = unit.contents
         def children = edit.getChildren() as List
         def newChildren = []
+        children.each { 
+            if (it instanceof DeleteEdit) {
+                // check to see if the edit is whitespace only
+                def del = it as DeleteEdit
+                for (i in del.offset..del.inclusiveEnd) {
+                    if (! Character.isWhitespace(actualContents[i] as char)) {
+                        fail("Found unexpected DeleteEdit: $it [ ${actualContents[del.offset..del.inclusiveEnd]} ]")
+                    }
+                }
+            }
+         }
         children.each {
-        	InsertEdit insert ->
-					if (insert.text.trim().length() > 0 && insert.text != '\n') {
-						newChildren += insert
-					}
-				}
+            TextEdit t ->
+            if (t instanceof InsertEdit) {
+                def insert = t as InsertEdit
+                if (insert.text.trim().length() > 0 && insert.text != '\n') {
+                    newChildren += insert
+                }
+            }
+        }
         if (expectedImports.size() > 0) {
             assertEquals "Found incorrect imports in text edit: \n$edit\nwith expected imports:\n$expectedImports", expectedImports.size(), newChildren.size()
         } else {
             assertEquals "Found incorrect imports in text edit: \n$edit\nwith expected imports:\n$expectedImports", 0, newChildren.size()
         }
         
-
+        
         def notFound = ""
         for (TextEdit child : newChildren) {
             if (! child instanceof InsertEdit) {
@@ -484,13 +557,13 @@ public class OrganizeImportsTest extends EclipseTestCase {
                 notFound << child.getText() << "\n"
             }
         }
-
+        
         if (notFound.length() > 0) {
             fail "Did not find the following imports:\n$notFound"
         }
     }
-
-
+    
+    
     void doDeleteImportTest(contents, numDeletes) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
@@ -504,8 +577,8 @@ public class OrganizeImportsTest extends EclipseTestCase {
             assertTrue("$child is not a delete edit", child instanceof DeleteEdit)
         }
     }
-
-
+    
+    
     void doChoiceTest(contents, expectedChoices) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
@@ -518,7 +591,6 @@ public class OrganizeImportsTest extends EclipseTestCase {
         }
         assertEquals "Wrong number of choices found.  Expecting:\n$expectedChoices\nFound:\n$query.choices", query.choices.size(), expectedChoices.size()
     }
-    
 }
 
 class NoChoiceQuery implements IChooseImportQuery {

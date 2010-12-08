@@ -1,0 +1,32 @@
+###prop
+setPreferences=true
+indentation=space
+tabsize=4
+indentendOnly=false
+###src
+class Foo {
+
+static main(args) {
+printit()
+printit()
+printit()
+printit()
+}
+	
+static printit() {print 'Message'}
+}
+###exp
+class Foo {
+
+    static main(args) {
+        printit()
+        printit()
+        printit()
+        printit()
+    }
+
+    static printit() {
+        print 'Message'
+    }
+}
+###end

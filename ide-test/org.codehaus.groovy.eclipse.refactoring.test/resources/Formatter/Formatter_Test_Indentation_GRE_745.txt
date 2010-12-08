@@ -14,7 +14,7 @@ swing.actions() {
 }
 }
 ###exp
-public class SwingIt 
+public class SwingIt
 {
     def swingit() {
         swing.actions() {

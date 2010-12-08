@@ -4,6 +4,6 @@ setPreferences=true
 4.times {} 
   a.each { c.append(it) } 
 ###exp
-4.times {} 
-a.each { c.append(it) } 
+4.times {}
+a.each { c.append(it) }
 ###end

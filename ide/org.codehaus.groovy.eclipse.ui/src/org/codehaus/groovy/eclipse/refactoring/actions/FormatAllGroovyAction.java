@@ -53,7 +53,7 @@ import org.eclipse.ui.IWorkbenchSite;
  *
  */
 public class FormatAllGroovyAction extends FormatAllAction {
-    
+
     public static class GroovyMultiFormatAction extends MultiFormatAction {
         final FormatKind kind;
         public GroovyMultiFormatAction(IWorkbenchSite site, FormatKind kind) {
@@ -67,7 +67,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
             ErrorDialog.openError(getShell(), getActionName(), null, status);
         }
 
-        
+
         // Copied from super, but comment out section to test if on classpath
         private void run(ICompilationUnit cu) {
 //            if (!ActionUtil.isEditable(fEditor, getShell(), cu))
@@ -75,8 +75,8 @@ public class FormatAllGroovyAction extends FormatAllAction {
             if (cu.isReadOnly()) {
                 return;
             }
-            
-            
+
+
             ICleanUp[] cleanUps= getCleanUps(new ICompilationUnit[] {
                 cu
             });
@@ -128,17 +128,18 @@ public class FormatAllGroovyAction extends FormatAllAction {
     public FormatAllGroovyAction(IWorkbenchSite site, FormatKind kind) {
         super(site);
         ReflectionUtils.setPrivateField(FormatAllAction.class, "fCleanUpDelegate", this, new GroovyMultiFormatAction(site, kind));
-        
+
         if (kind == FormatKind.INDENT_ONLY) {
             setText("Indent");
             setToolTipText("Indent Groovy file");
             setDescription("Indent Groovy file");
         } else if (kind == FormatKind.FORMAT) {
+            setText("Format");
             setToolTipText("Format Groovy file");
             setDescription("Format Groovy file");
         }
     }
-    
+
     /* (non-Javadoc)
      * Method declared on SelectionDispatchAction.
      */

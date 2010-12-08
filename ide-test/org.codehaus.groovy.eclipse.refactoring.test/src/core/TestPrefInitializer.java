@@ -22,6 +22,7 @@ package core;
 import java.util.HashMap;
 
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 
@@ -66,6 +67,11 @@ public class TestPrefInitializer {
 				PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH,
 				Integer.parseInt(maxLineLength));
 
+		String indentEmptyLines = properties.get("indentEmptyLines");
+		if (indentEmptyLines!=null) {
+			pref.setValue(DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES, indentEmptyLines);
+		}
+		
 		return pref;
 	}
 

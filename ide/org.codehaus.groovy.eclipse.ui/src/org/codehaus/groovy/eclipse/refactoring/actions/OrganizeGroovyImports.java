@@ -1,5 +1,8 @@
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import greclipse.org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import greclipse.org.eclipse.jdt.ui.CodeStyleConfiguration;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,7 +36,6 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.Flags;
@@ -42,7 +44,6 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
-import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -51,13 +52,9 @@ import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
-import org.eclipse.jdt.ui.CodeStyleConfiguration;
-import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
-import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
-import org.eclipse.text.edits.TextEditVisitor;
 
 /**
  * @author andrew
@@ -218,11 +215,12 @@ public class OrganizeGroovyImports {
             super.visitCatchStatement(node);
         }
 
-
         /**
          * Assume dynamic variables are a candidate for Organize imports,
-         * but only if name begins with a capital.  This will hopefully
-         * filter out most false positives.
+         * but only if name begins with a capital. This will hopefully
+         * filter out most false positives, but will miss
+         * types that start with lower case.
+         *
          * @param expr
          */
         private void handleVariableExpression(VariableExpression expr) {
@@ -269,14 +267,14 @@ public class OrganizeGroovyImports {
                     name = node.getName();
                 }
 
-                String nameWithDots = name.replace('$', '.');
+                String partialName = name;// .replace('$', '.');
                 int innerIndex = name.lastIndexOf('$');
                 while (innerIndex > -1) {
-                    doNotRemoveImport(nameWithDots);
-                    nameWithDots = nameWithDots.substring(0, innerIndex);
+                    doNotRemoveImport(partialName);
+                    partialName = partialName.substring(0, innerIndex);
                     innerIndex = name.lastIndexOf('$', innerIndex-1);
                 }
-                doNotRemoveImport(nameWithDots);
+                doNotRemoveImport(partialName);
             }
 
             if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
@@ -338,7 +336,7 @@ public class OrganizeGroovyImports {
                     String className = imp.getClassName();
                     if (className != null) {
                         importsSlatedForRemoval.put(className, imp);
-                        rewriter.addImport(className);
+                        rewriter.addImport(className.replace('$', '.'));
                     }
                 }
             }
@@ -363,7 +361,8 @@ public class OrganizeGroovyImports {
             }
             TextEdit edit = rewriter.rewriteImports(null);
             // remove ';' from edits
-            edit = removeSemiColons(edit);
+            // no longer needed since we have our own import rewriter
+            // edit = removeSemiColons(edit);
             return edit;
         } catch (CoreException e) {
             GroovyCore.logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
@@ -407,30 +406,31 @@ public class OrganizeGroovyImports {
         return false;
     }
 
-    /**
-     * @param edit
-     * @return
-     */
-    private TextEdit removeSemiColons(TextEdit edit) {
-        TextEditVisitor visitor = new TextEditVisitor() {
-            @Override
-            public boolean visit(InsertEdit edit) {
-                String text = edit.getText();
-                text = text.replace(';', ' ');
-                ReflectionUtils.setPrivateField(InsertEdit.class, "fText", edit, text);
-                return super.visit(edit);
-            }
-            @Override
-            public boolean visit(ReplaceEdit edit) {
-                String text = edit.getText();
-                text = text.replace(';', ' ');
-                ReflectionUtils.setPrivateField(InsertEdit.class, "fText", edit, text);
-                return super.visit(edit);
-            }
-        };
-        edit.accept(visitor);
-        return edit;
-    }
+    // no longer needed since we have our own import rewriter
+    // /**
+    // * @param edit
+    // * @return
+    // */
+    // private TextEdit removeSemiColons(TextEdit edit) {
+    // TextEditVisitor visitor = new TextEditVisitor() {
+    // @Override
+    // public boolean visit(InsertEdit edit) {
+    // String text = edit.getText();
+    // text = text.replace(';', ' ');
+    // ReflectionUtils.setPrivateField(InsertEdit.class, "fText", edit, text);
+    // return super.visit(edit);
+    // }
+    // @Override
+    // public boolean visit(ReplaceEdit edit) {
+    // String text = edit.getText();
+    // text = text.replace(';', ' ');
+    // ReflectionUtils.setPrivateField(InsertEdit.class, "fText", edit, text);
+    // return super.visit(edit);
+    // }
+    // };
+    // edit.accept(visitor);
+    // return edit;
+    // }
 
     public boolean calculateAndApplyMissingImports() throws JavaModelException {
         TextEdit edit = calculateMissingImports();

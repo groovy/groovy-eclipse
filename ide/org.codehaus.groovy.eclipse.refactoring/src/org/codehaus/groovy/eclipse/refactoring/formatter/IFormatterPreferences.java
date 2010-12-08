@@ -28,4 +28,6 @@ public interface IFormatterPreferences {
     int getIndentationMultiline();
     int getMaxLineLength();
     boolean isSmartPaste();
+
+    boolean isIndentEmptyLines();
 }

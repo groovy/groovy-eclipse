@@ -30,6 +30,9 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.stmt.SwitchStatement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.text.edits.DeleteEdit;
+import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -41,6 +44,14 @@ import antlr.Token;
  * @author kdvolder
  */
 public class GroovyIndentation {
+
+    private static boolean DEBUG = false;
+
+    private void debug(String msg) {
+        if (DEBUG) {
+            System.out.println(msg);
+        }
+    }
 
 	private final DefaultGroovyFormatter formatter;
 	private final IFormatterPreferences pref;
@@ -77,7 +88,7 @@ public class GroovyIndentation {
 			}
 
 			Token token = null;
-			for (int i = 0; i < tokens.size() -1 ; i++) {
+            for (int i = 0; i < tokens.size(); i++) {
 				token = tokens.get(i);
 				int offsetToken = formatter.getOffsetOfToken(token);
 				int offsetNextToken = formatter.getOffsetOfToken(formatter
@@ -118,24 +129,28 @@ public class GroovyIndentation {
 						;
 						break;
 
+                    case GroovyTokenTypes.EOF:
 					case GroovyTokenTypes.NLS:
                         int nextTokenType = formatter.getNextTokenIncludingNLS(i).getType();
                         if (nextTokenType == GroovyTokenTypes.RCURLY || nextTokenType == GroovyTokenTypes.RBRACK)
 							tempIndentation[token.getLine()]--;
-						int offsetAfterNLS = offsetToken + formatter.getProgressDocument().getLineDelimiter(
-								token.getLine()-1).length();
-						addEdit(new ReplaceEdit(offsetAfterNLS,
-											(offsetNextToken - offsetAfterNLS),
-											formatter.getLeadingGap(indentation
-																	+ tempIndentation[token.getLine()])));
-						lineInd.setLineIndentation(token.getLine()+1, indentation + tempIndentation[token.getLine()]);
+                        deleteWhiteSpaceBefore(token);
+                        if (token.getType() != GroovyTokenTypes.EOF) {
+                            int offsetAfterNLS = offsetToken
+                                + formatter.getProgressDocument().getLineDelimiter(token.getLine() - 1).length();
+                            if (!isEmptyLine(token.getLine()) || formatter.pref.isIndentEmptyLines()) {
+                                addEdit(new ReplaceEdit(offsetAfterNLS, (offsetNextToken - offsetAfterNLS),
+                                        formatter.getLeadingGap(indentation + tempIndentation[token.getLine()])));
+                            }
+                            lineInd.setLineIndentation(token.getLine() + 1, indentation + tempIndentation[token.getLine()]);
 
-						// check if the next token is a multiline Statement
-						Token nextMultiToken = formatter.getNextTokenIncludingNLS(i);
-						if (formatter.isMultilineStatement(nextMultiToken)) {
-							setAdditionalIndentation(nextMultiToken,pref.getIndentationMultiline(), false);
-							lineInd.setMultilineToken(token.getLine(), token);
-						}
+                            // check if the next token is a multiline Statement
+                            Token nextMultiToken = formatter.getNextTokenIncludingNLS(i);
+                            if (formatter.isMultilineStatement(nextMultiToken)) {
+                                setAdditionalIndentation(nextMultiToken, pref.getIndentationMultiline(), false);
+                                lineInd.setMultilineToken(token.getLine(), token);
+                            }
+                        }
 
 						break;
 					case GroovyTokenTypes.ML_COMMENT:
@@ -155,9 +170,52 @@ public class GroovyIndentation {
 		return indentationEdits;
 	}
 
+    /**
+     * @param Zero-based line number in the formattedDocument
+     * @return Whether the line in the dcoument contains only whitespace.
+     */
+    private boolean isEmptyLine(int line) {
+        try {
+            IDocument d = formatter.getProgressDocument();
+            int lineStart = d.getLineOffset(line);
+            int lineLen = d.getLineLength(line);
+            String lineTxt = d.get(lineStart, lineLen);
+            boolean result = lineTxt.trim().equals("");
+            debug("isEmptyLine(" + line + ") txt = '" + lineTxt + "'" + "=>" + result);
+            return result;
+        } catch (BadLocationException e) {
+            return true; // Presumably the line is outside the document so its
+                         // empty by definition
+        }
+    }
 
+    /**
+     * Create and add an edit to remove any whitespace (excluding newlines)
+     * before the given token.
+     *
+     * @throws BadLocationException
+     */
+    private void deleteWhiteSpaceBefore(Token token) throws BadLocationException {
+        int endPos = tokens.getOffset(token);
+        int startPos = endPos;
+        IDocument d = formatter.getProgressDocument();
+        while (startPos > 0 && isTabOrSpace(d.getChar(startPos - 1))) {
+            startPos--;
+        }
+        // Complication, we shouldn't do this if "indent empty lines" is true
+        // and this is an empty line
+        // because then the delete edit will conflict with the edit to create
+        // the indentation.
+        if (!formatter.pref.isIndentEmptyLines() || !isEmptyLine(formatter.getProgressDocument().getLineOfOffset(startPos))) {
+            addEdit(new DeleteEdit(startPos, endPos - startPos));
+        }
+    }
 
-	private void indentendSwitchStatement(Token token) {
+    private boolean isTabOrSpace(char c) {
+        return c == ' ' || c == '\t';
+    }
+
+    private void indentendSwitchStatement(Token token) {
 		if (token != null) {
 			ASTNode node = formatter.findCorrespondingNode(token);
 			if (node instanceof SwitchStatement) {
@@ -189,10 +247,28 @@ public class GroovyIndentation {
 		}
 	}
 
-	private void addEdit(ReplaceEdit edit) {
+    private void addEdit(TextEdit edit) {
 		if(edit != null && edit.getOffset() >= formatter.formatOffset &&
 				edit.getOffset() + edit.getLength() <= formatter.formatOffset + formatter.formatLength) {
-			indentationEdits.addChild(edit);
+            if (edit instanceof DeleteEdit) {
+                debug("DeleteEdit: " + edit.getOffset() + ":" + edit.getLength());
+                debug("---------------------------");
+                IDocument doc = formatter.getProgressDocument();
+                try {
+                    debug(doc.get(0, edit.getOffset())
+                            + "|*>" + doc.get(edit.getOffset(), edit.getLength()) + "<*|"
+                            + doc.get(edit.getOffset() + edit.getLength(), doc.getLength() - (edit.getOffset() + edit.getLength())));
+                } catch (BadLocationException e) {
+                    e.printStackTrace();
+                }
+                debug("---------------------------");
+            }
+            try {
+                indentationEdits.addChild(edit);
+            } catch (MalformedTreeException e) {
+                debug("Ignored conflicting edit: " + edit);
+                GroovyCore.logException("WARNING: Formatting ignored a conflicting text edit", e);
+            }
 		}
 	}
 

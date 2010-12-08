@@ -119,15 +119,15 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             this.end = end;
         }
 
-        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
+        public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult,
                 IJavaElement enclosingElement) {
             
-            if (node.getStart() == start && node.getEnd() == end && 
-                    !(node instanceof MethodNode /* ignore the run() method*/) &&
-                    !(node instanceof Statement /* ignore all statements */) &&
-                    !(node instanceof ClassNode && ((ClassNode) node).isScript() /* ignore the script */ )) {
-                this.result = result;
-                this.node = node;
+            if (visitorNode.getStart() == start && visitorNode.getEnd() == end && 
+                    !(visitorNode instanceof MethodNode /* ignore the run() method*/) &&
+                    !(visitorNode instanceof Statement /* ignore all statements */) &&
+                    !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */ )) {
+                this.result = visitorResult;
+                this.node = visitorNode;
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;

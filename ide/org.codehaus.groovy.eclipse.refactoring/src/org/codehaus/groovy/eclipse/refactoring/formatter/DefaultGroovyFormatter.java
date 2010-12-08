@@ -58,7 +58,8 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
     protected IFormatterPreferences pref;
 	private ModuleNode rootNode;
-	private Document formattedDocument;
+
+    private Document formattedDocument;
 	private final boolean indentendOnly;
 	public int formatOffset, formatLength;
 
@@ -170,8 +171,8 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 //			}
 
 		} catch (Exception e) {
-		    // swallow exception.  Caused by unparseable code
-//			throw new RuntimeException("Formatting could not be performed.\nMessage:" + e.getMessage() + "\nCause: " + e.getCause() + "\nType: " + e.getClass().getName(), e);
+            // swallow exception. Caused by unparseable code
+            e.printStackTrace();
 		}
 		if (!formattedDocument.get().equals(document.get()))
 			return new ReplaceEdit(0, document.getLength(), formattedDocument

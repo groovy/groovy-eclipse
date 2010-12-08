@@ -20,7 +20,7 @@ includeTargets << grailsScript("_GrailsBootstrap")
 target("default": "Runs a set of pixels tests on the CSS Engine and GE")
 {
 	depends("configureProxy", "packageApp", "classpath", "bootstrap")
-	
+
 	setupInfrastructure()
 	setupDecorations()
 	generateCSSFile(decoration)

@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -300,10 +301,32 @@ public class GroovyBeautifier {
 			if(ignoreToken.contains(token))
 				continue;
 
-			switch (formatter.getTokens().get(i).getType()) {
+            switch (formatter.getTokens().get(i).getType()) {
 				case GroovyTokenTypes.LCURLY:
+                    KlenkDocumentScanner tokens = formatter.getTokens();
 					if(skipNextNLS){skipNextNLS = false; break;}
 					addEdit(lCurlyCorrector.correctLineWrap(i,token),edits);
+
+                    // Ensure a newline exists after the "{" token...
+                    ASTNode node = formatter.findCorrespondingNode(token);
+                    if (node == null || !(node instanceof ClosureExpression || node instanceof ArgumentListExpression)) {
+                        // this rule doesn't apply for closures which have their
+                        // own formatting logic. Note that
+                        // ArgumentListExpression is included because when an
+                        // argument list expression
+                        // is returned for a "{" this means it is a "special"
+                        // argument list without any "()" and just one closure
+                        // in it.
+                        Token nextToken = tokens.getNextToken(token);
+                        if (nextToken != null) {
+                            int type = nextToken.getType();
+                            if (type != GroovyTokenTypes.NLS) {
+                                int start = tokens.getEnd(token);
+                                int end = tokens.getOffset(nextToken);
+                                addEdit(new ReplaceEdit(start, end - start, formatter.getNewLine()), edits);
+                            }
+                        }
+                    }
 					break;
 				case GroovyTokenTypes.RCURLY:
 					if(skipNextNLS){skipNextNLS = false; break;}
