@@ -20,7 +20,7 @@ class StaticMathod {
     public static start() {
         myExtract()
     }
-    
+
     private static myExtract() {
         int a = 6
     }

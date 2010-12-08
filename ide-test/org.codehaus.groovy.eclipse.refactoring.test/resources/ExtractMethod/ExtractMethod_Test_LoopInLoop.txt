@@ -34,7 +34,7 @@ class ExtractOutOfClosure {
         }
         println(count)
     }
-    
+
     private int myExtract(int count, int i, int r) {
         count = count + i + r
         return count

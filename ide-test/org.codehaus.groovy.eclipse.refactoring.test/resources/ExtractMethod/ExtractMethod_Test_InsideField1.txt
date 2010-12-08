@@ -26,7 +26,7 @@ class ParameterTypes {
         String myStringVar
         myExtract(myDefVar, myIntVar, myStringVar)
     }
-    
+
     private myExtract(myDefVar, int myIntVar, String myStringVar) {
         println(myDefVar + myIntVar + myStringVar)
     }

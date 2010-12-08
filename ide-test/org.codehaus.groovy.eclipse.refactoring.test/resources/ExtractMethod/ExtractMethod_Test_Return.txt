@@ -30,7 +30,7 @@ class HalloWelt {
         a = myParameter(a, c, abc, xyz)
         println(a)
     }
-    
+
     static int myParameter(int a, int c, String abc, String xyz) {
         for (def i = 0; i < 10; i++) {
             println(a, c, abc, xyz)

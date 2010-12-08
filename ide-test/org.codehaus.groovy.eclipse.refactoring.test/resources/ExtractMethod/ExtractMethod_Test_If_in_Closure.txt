@@ -28,7 +28,7 @@ class FieldReports {
             line = myExtract(line)
         }
     }
-    
+
     def static String myExtract(String line) {
         if (line.startsWith("||")) {
             line = line.replaceAll(/\|\|/, ";").replaceAll(/\'/, "")

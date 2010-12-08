@@ -29,7 +29,7 @@ class ExtractOutOfClosure {
             i = myExtract(pos, i)
         }
     }
-    
+
     private int myExtract(pos, int i) {
         println(pos)
         i++

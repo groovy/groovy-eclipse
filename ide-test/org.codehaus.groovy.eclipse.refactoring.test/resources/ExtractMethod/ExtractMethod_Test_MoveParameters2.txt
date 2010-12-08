@@ -23,7 +23,7 @@ class closureTest {
         def a, b, c, delta
         m2(delta, a, b, c)
     }
-    
+
     private m2(delta, a, b, c) {
         println(a + b + c + delta)
     }

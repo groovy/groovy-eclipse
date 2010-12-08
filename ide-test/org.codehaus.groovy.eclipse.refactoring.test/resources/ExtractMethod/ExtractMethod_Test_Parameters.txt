@@ -26,7 +26,7 @@ class HalloWelt {
         String abc, xyz
         myParameter(a, c, abc, xyz)
     }
-    
+
     static myParameter(int a, int c, String abc, String xyz) {
         for (def i = 0; i < 10; i++) {
             println(a, c, abc, xyz)

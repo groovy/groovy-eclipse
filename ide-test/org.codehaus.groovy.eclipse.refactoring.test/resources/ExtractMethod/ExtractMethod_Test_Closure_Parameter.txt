@@ -13,7 +13,7 @@ tabsize=4
 class ClosureParameters {
     public start() {
         def myIterList = [:]
-        myIterList.each {pos -> 
+        myIterList.each {pos ->
             println(pos)
         }
     }
@@ -24,9 +24,9 @@ class ClosureParameters {
         def myIterList = [:]
         myExtract(myIterList)
     }
-    
+
     private myExtract(Map myIterList) {
-        myIterList.each {pos -> 
+        myIterList.each {pos ->
             println(pos)
         }
     }

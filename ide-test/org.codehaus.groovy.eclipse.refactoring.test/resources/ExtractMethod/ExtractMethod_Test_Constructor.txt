@@ -26,12 +26,12 @@ class Constr {
     public Constr() {
         extr()
     }
-    
+
     private extr() {
         println("constructor")
     }
     public Constr(def a) {
-        
+
     }
     static void main(args) {
         new Constr()

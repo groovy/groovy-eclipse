@@ -27,7 +27,7 @@ class ReturnOnyUsedAfter {
         b = myExtract(a, b)
         b++
     }
-    
+
     private int myExtract(int a, int b) {
         a = b++
         int c = 8

@@ -20,7 +20,7 @@ class TestClass{
     def TestClass(){
         initMethod()
     }
-    
+
     private initMethod() {
         String myString = ""
     }

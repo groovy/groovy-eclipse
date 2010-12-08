@@ -23,7 +23,7 @@ class HalloWelt {
     static void main() {
         myNewMethod()
     }
-    
+
     protected static myNewMethod() {
         for (def a = 0; a < 10; a++) {
             println("run")

@@ -20,7 +20,7 @@ class TestClass{
     def TestClass(vari){
         initMethod(vari)
     }
-    
+
     private initMethod(vari) {
         println vari
     }

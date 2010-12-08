@@ -29,7 +29,7 @@ class StaticField {
         staticField = 3
         println(a)
     }
-    
+
     private int myExtract(int a) {
         staticField = 10 + a
         a++
