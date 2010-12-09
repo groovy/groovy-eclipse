@@ -268,6 +268,8 @@ public abstract class CompletionTestCase extends BuilderTests {
         
         IPath pathToGroovyClass = env.addGroovyClass(pack, "TransformerTest2", contents);
         fullBuild();
+        expectingNoProblems();
+        
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
         unit.becomeWorkingCopy(null);
         
@@ -280,10 +282,13 @@ public abstract class CompletionTestCase extends BuilderTests {
         int maxCount = 15;
         ICompletionProposal[] proposals;
         do {
-            if (count > 0) {
-                System.out.println("Retrying content assist for " + unit.getElementName());
-            }
+            System.out.println("Content assist for " + unit.getElementName());
             proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
+            if (proposals == null) {
+                System.out.println("Found null proposals");
+            } else {
+                System.out.println("Found : " + Arrays.toString(proposals));
+            }
             count++;
         } while ((proposals == null || proposals.length == 0) && count < maxCount);
 
