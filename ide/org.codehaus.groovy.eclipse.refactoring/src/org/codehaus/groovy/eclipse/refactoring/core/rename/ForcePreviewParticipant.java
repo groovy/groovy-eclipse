@@ -1,8 +1,6 @@
 package org.codehaus.groovy.eclipse.refactoring.core.rename;
 
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -15,20 +13,26 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 
+/**
+ * As of 2.1.1, this is no longer used
+ *
+ * @author andrew
+ * @created Dec 9, 2010
+ */
 public class ForcePreviewParticipant extends RenameParticipant {
-    
+
     // give tests ability to disable this participant
     private static boolean muted = false;
 
     private static final String FIRST_MSG = "This is a rename refactoring involving Groovy.\n" +
             		"Due to Groovy's dynamicism, it is recommended that\n" +
             		"you preview the changes before applying them.";
-    
-    private static final String SECOND_MSG = 
+
+    private static final String SECOND_MSG =
             "If you do not want to rename the associated file, UNCHECK\n" +
-    		"the 'Move Compilation Unit' option in the preview pane."; 
+    		"the 'Move Compilation Unit' option in the preview pane.";
     private IType type;
-    
+
     public ForcePreviewParticipant() { }
 
     @Override
@@ -67,14 +71,14 @@ public class ForcePreviewParticipant extends RenameParticipant {
         }
         return false;
     }
-    
+
     boolean shouldWarnAboutFileRename() {
         if (type != null) {
             return type.equals(type.getCompilationUnit().findPrimaryType());
         }
         return false;
     }
-    
+
     public static void mute() {
         muted = true;
     }

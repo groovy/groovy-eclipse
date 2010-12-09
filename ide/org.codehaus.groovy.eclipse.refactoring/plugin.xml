@@ -21,12 +21,12 @@
       <category
             description="Refactorings"
             id="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
-            name="Refactor Groovy Commands">
+            name="Groovy Refactoring Commands">
       </category>
       <category
             description="Source"
             id="org.codehaus.groovy.eclipse.editor.category.source"
-            name="Source Groovy Commands">
+            name="Groovy Source Commands">
       </category>
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
@@ -76,6 +76,11 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+M">
       </key>
+      <!-- 
+      		We don't need the formatting and indentation commands since they are provided by the GroovyEditor
+      		and use the commandId for the Java Editor variants of the command
+       -->
+			<!--
        <key
             commandId="org.codehaus.groovy.eclipse.editor.commands.Format"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
@@ -88,6 +93,7 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+I">
       </key>
+      -->
    </extension>
    <!--
       <extension
