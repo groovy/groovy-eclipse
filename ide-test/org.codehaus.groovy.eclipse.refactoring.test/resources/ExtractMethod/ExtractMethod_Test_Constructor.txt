@@ -31,7 +31,7 @@ class Constr {
         println("constructor")
     }
     public Constr(def a) {
-
+        
     }
     static void main(args) {
         new Constr()
