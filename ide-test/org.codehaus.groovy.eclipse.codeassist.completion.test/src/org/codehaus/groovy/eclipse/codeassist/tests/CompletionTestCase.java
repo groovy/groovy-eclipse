@@ -272,26 +272,22 @@ public abstract class CompletionTestCase extends BuilderTests {
         unit.becomeWorkingCopy(null);
         
         // intermitent failures on the build server
-        // just keep on trying
         SynchronizationUtils.joinBackgroudActivities();
         SynchronizationUtils.waitForIndexingToComplete();
 
-        // necessary???
-        // wait for indexes to be built
-        int timeout = 0;
-        int timeoutThreshold = 100000;
-        while (JavaModelManager.getIndexManager().awaitingJobsCount() > 0 && timeout < timeoutThreshold) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) { }
-            timeout++;
-        }
-        if (timeout == timeoutThreshold) {
-            fail("Failure to finish indexing project.  Timed out...");
-        }
-        SynchronizationUtils.joinBackgroudActivities();
-        SynchronizationUtils.waitForIndexingToComplete();
-        return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
+        // intermitent failures on build server.  proposals not found, so perform this part in a loop
+        int count = 0;
+        int maxCount = 15;
+        ICompletionProposal[] proposals;
+        do {
+            if (count > 0) {
+                System.out.println("Retrying content assist for " + unit.getElementName());
+            }
+            proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
+            count++;
+        } while ((proposals == null || proposals.length == 0) && count < maxCount);
+
+        return proposals;
         
     }
     

@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import org.codehaus.groovy.eclipse.codeassist.processors.GroovyImportRewriteFactory;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyProposalTypeSearchRequestor;
 
 import groovy.util.GroovyTestCase;
@@ -149,6 +150,6 @@ import a.b.c // fdsaffdsa
                 )
     }
     void checkRegion(String initial, String expected) {
-        assertEquals expected, GroovyProposalTypeSearchRequestor.findImportsRegion(initial).toString();
+        assertEquals expected, GroovyImportRewriteFactory.findImportsRegion(initial).toString();
     }
 }
