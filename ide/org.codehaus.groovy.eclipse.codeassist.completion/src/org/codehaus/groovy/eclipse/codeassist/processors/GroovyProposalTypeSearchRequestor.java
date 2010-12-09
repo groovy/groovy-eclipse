@@ -99,10 +99,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
         public int accessibility;
 
-        public char[] fullyQualifiedName = null;
-
-        public boolean mustBeQualified = false;
-
         public AcceptedConstructor(int modifiers, char[] simpleTypeName,
                 int parameterCount, char[] signature, char[][] parameterTypes,
                 char[][] parameterNames, int typeModifiers, char[] packageName,
@@ -682,7 +678,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                 final int accessibility = acceptedConstructor.accessibility;
                 char[] fullyQualifiedName = CharOperation.concat(packageName,
                         simpleTypeName, '.');
-                acceptedConstructor.fullyQualifiedName = fullyQualifiedName;
 
                 if (!this.importCachesInitialized) {
                     initializeImportCaches();
