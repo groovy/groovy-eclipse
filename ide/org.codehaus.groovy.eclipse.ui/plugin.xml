@@ -432,6 +432,15 @@
                menubarPath="add"
                id="org.eclipse.ui.texteditor.BookmarkRulerAction">
          </action>
+         
+         <!-- This adds "Quick Fix" action to the Groovy editor ruler context menu -->
+		 <action
+               label="Select Annotation ruler"
+               helpContextId="org.eclipse.ui.bookmark_action_context"
+               class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
+               menubarPath="add"
+               id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
+         </action> 
      </viewerContribution>
      
      <!-- Groovy Refactorings -->

@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,7 @@
 
 package org.codehaus.groovy.eclipse.editor.actions;
 
-import java.util.Set;
-
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Shell;
+import org.codehaus.groovy.eclipse.ui.utils.GroovyResourceUtil;
 
 /**
  * @author Andrew Eisenberg
@@ -30,31 +25,8 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class RenameToGroovyAction extends RenameToGroovyOrJavaAction {
     public static String COMMAND_ID = "org.codehaus.groovy.eclipse.ui.convertToGroovy";
+
     public RenameToGroovyAction() {
-        super(GROOVY);
-    }
-    
-    protected void askToConvert(Set<IProject> affectedProjects, Shell shell) {
-        if (affectedProjects.size() == 0) {
-            return;
-        }
-        StringBuilder sb = new StringBuilder();
-        if (affectedProjects.size() > 1) {
-            sb.append("Projects ");
-            for (IProject project : affectedProjects) {
-                sb.append(project.getName()).append(", ");
-            }
-            sb.replace(sb.length()-2, 2, " do ");
-        } else {
-            sb.append("Project ").append(affectedProjects.iterator().next().getName()).append(" does ");
-        }
-        sb.append("have the Groovy nature.  Do you want to add it?");
-        
-        boolean yes = MessageDialog.openQuestion(shell, "Convert to Groovy?", sb.toString());
-        if (yes) {
-            for (IProject project : affectedProjects) {
-                GroovyRuntime.addGroovyRuntime(project);
-            }
-        }
+        super(GroovyResourceUtil.GROOVY);
     }
 }

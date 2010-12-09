@@ -28,8 +28,6 @@
 		</or>
 	</condition>
 	
-	<property file="${buildHome}/pluginbuilder.config" />
-	
 	<property name="buildLabel" value="${buildType}-${version.full}" />
 	<property name="buildId" value="${version.full}" />
 	

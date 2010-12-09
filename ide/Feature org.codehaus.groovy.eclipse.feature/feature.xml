@@ -36,7 +36,6 @@
          id="org.codehaus.groovy.jdt.patch"
          version="0.0.0"/>
 
-	 <!-- either org.codehaus.groovy16.feature or org.codehaus.groovy17.feature is required -->
    <includes
          id="org.codehaus.groovy16.feature"
          version="0.0.0"
@@ -140,5 +139,12 @@
          download-size="0"
          install-size="0"
          version="0.0.0"/>
+
+   <plugin
+         id="org.codehaus.groovy.eclipse.quickfix"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>

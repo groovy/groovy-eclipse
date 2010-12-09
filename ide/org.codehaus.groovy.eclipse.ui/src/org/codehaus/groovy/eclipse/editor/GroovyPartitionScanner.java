@@ -145,14 +145,14 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 		List<IRule> rules= new ArrayList<IRule>();
 
 		// Add rule for single line comments.
-		rules.add(new EndOfLineRule("//", sComment)); //$NON-NLS-1$
+        rules.add(new EndOfLineRule("//", sComment));
 
 
 		// Add rule for strings and character constants.
-        rules.add(new MultiLineRule("'''", "'''", mString, '\\'));
-        rules.add(new MultiLineRule("\"\"\"", "\"\"\"", mString, '\\')); //$NON-NLS-2$ //$NON-NLS-1$
-        rules.add(new SingleLineRule("\"", "\"", sString, '\\')); //$NON-NLS-2$ //$NON-NLS-1$
-		rules.add(new SingleLineRule("'", "'", sString, '\\')); //$NON-NLS-2$ //$NON-NLS-1$
+        rules.add(new MultiLineRule("'''", "'''", mString));
+        rules.add(new MultiLineRule("\"\"\"", "\"\"\"", mString));
+        rules.add(new SingleLineRule("\"", "\"", sString, '\\'));
+        rules.add(new SingleLineRule("'", "'", sString, '\\'));
 
 
 		// Add special case word rule.

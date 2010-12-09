@@ -102,12 +102,15 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
     @Override
     protected RuleBasedScanner getStringScanner() {
+        // return super.getStringScanner();
         return stringScanner;
     }
 
     @Override
     public IPresentationReconciler getPresentationReconciler(
             ISourceViewer sourceViewer) {
+
+        // FIXADE : cache reconciler as a field so it is not recreated
         PresentationReconciler reconciler = (PresentationReconciler) super.getPresentationReconciler(sourceViewer);
         reconciler
             .setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
@@ -172,8 +175,8 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     @Override
     public IQuickAssistAssistant getQuickAssistAssistant(
             ISourceViewer sourceViewer) {
-        // disable quick assist
-        return null;
+        // Enable quick fix assistant for Groovy quick fixes
+        return super.getQuickAssistAssistant(sourceViewer);
     }
 
     @Override

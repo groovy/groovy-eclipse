@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package org.codehaus.groovy.eclipse.editor.actions;
 
+import org.codehaus.groovy.eclipse.ui.utils.GroovyResourceUtil;
+
 /**
  * @author Andrew Eisenberg
  * @created Aug 26, 2009
@@ -23,8 +25,9 @@ package org.codehaus.groovy.eclipse.editor.actions;
  */
 public class RenameToJavaAction extends RenameToGroovyOrJavaAction {
     public static String COMMAND_ID = "org.codehaus.groovy.eclipse.ui.convertToJava";
+
     public RenameToJavaAction() {
-        super(JAVA);
+        super(GroovyResourceUtil.JAVA);
     }
 
 }

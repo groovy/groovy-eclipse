@@ -1,3 +1,18 @@
+/*
+ * Copyright 2010 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import greclipse.org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
@@ -38,20 +53,14 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.IJavaSearchScope;
-import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
-import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -66,7 +75,7 @@ public class OrganizeGroovyImports {
      * From {@link OrganizeImportsOperation.TypeReferenceProcessor.UnresolvedTypeData}
      *
      */
-    static class UnresolvedTypeData {
+    public static class UnresolvedTypeData {
         final String ref;
         final boolean isAnnotation;
         final List<TypeNameMatch> foundInfos;
@@ -86,6 +95,10 @@ public class OrganizeGroovyImports {
                 }
             }
             foundInfos.add(info);
+        }
+
+        public List<TypeNameMatch> getFoundInfos() {
+            return foundInfos;
         }
     }
 
@@ -303,8 +316,8 @@ public class OrganizeGroovyImports {
     }
 
     private final GroovyCompilationUnit unit;
-    private HashMap<String, UnresolvedTypeData> missingTypes;
-    private HashMap<String, ImportNode> importsSlatedForRemoval;
+    private Map<String, UnresolvedTypeData> missingTypes;
+    private Map<String, ImportNode> importsSlatedForRemoval;
 
     private IChooseImportQuery query;
 
@@ -446,7 +459,7 @@ public class OrganizeGroovyImports {
     private IType[] resolveMissingTypes() throws JavaModelException {
 
         // fill in all the potential matches
-        searchForTypes();
+        new TypeSearch().searchForTypes(unit, missingTypes);
         List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<TypeNameMatch>();
         List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<TypeNameMatch[]>();
         List<ISourceRange> ranges = new ArrayList<ISourceRange>();
@@ -486,49 +499,5 @@ public class OrganizeGroovyImports {
             return new IType[0];
         }
     }
-
-
-    /**
-     * Use a SearchEngine to look for the types
-     * This will not find inner types, however
-     * @see OrganizeImportsOperation.TypeReferenceProcessor#process(org.eclipse.core.runtime.IProgressMonitor)
-     * @param missingType
-     * @throws JavaModelException
-     */
-    private void searchForTypes() throws JavaModelException {
-        char[][] allTypes = new char[missingTypes.size()][];
-        int i = 0;
-        for (String simpleName : missingTypes.keySet()) {
-            allTypes[i++] = simpleName.toCharArray();
-        }
-        final List<TypeNameMatch> typesFound= new ArrayList<TypeNameMatch>();
-        TypeNameMatchCollector collector= new TypeNameMatchCollector(typesFound);
-        IJavaSearchScope scope= SearchEngine.createJavaSearchScope(new IJavaElement[] { unit.getJavaProject() });
-        new SearchEngine().searchAllTypeNames(null, allTypes, scope, collector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
-
-        for (TypeNameMatch match : typesFound) {
-            UnresolvedTypeData data = missingTypes.get(match.getSimpleTypeName());
-            if (data == null) {
-                GroovyCore.logException("GRECLIPSE-735: Match not found in missing types: " + match.getFullyQualifiedName(),
-                        new Exception());
-                continue;
-            }
-            if (isOfKind(match, data.isAnnotation)) {
-                data.addInfo(match);
-            }
-        }
-    }
-
-    /**
-     * If looking for an annotation, then filter out non-annoations,
-     * otherwise everything is acceptable.
-     * @param match
-     * @param isAnnotation
-     * @return
-     */
-    private boolean isOfKind(TypeNameMatch match, boolean isAnnotation) {
-        return isAnnotation ? Flags.isAnnotation(match.getModifiers()) : true;
-    }
-
 
 }

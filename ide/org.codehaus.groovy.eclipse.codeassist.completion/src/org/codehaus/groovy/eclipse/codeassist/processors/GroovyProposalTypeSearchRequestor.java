@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -33,7 +31,6 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompleti
 import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -46,10 +43,6 @@ import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor;
@@ -78,7 +71,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * Method parts are omitted or commented out when they are not relevant for
  * or not supported by groovy completion.
  */
-class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
+public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         RelevanceConstants {
 
     private static final char[][] DEFAULT_GROOVY_IMPORTS = { "java.math.BigDecimal".toCharArray(), "java.math.BigInteger".toCharArray() };
@@ -218,11 +211,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
     private final String completionExpression;
 
-    // will be non-null if there is an unrevoverable error in the module node
-    private ImportRewrite rewrite;
-
-    // set to true if there is a problem creating the rewrite
-    private boolean cantCreateRewrite = false;
+	private GroovyImportRewriteFactory groovyRewriter;
 
     private boolean shouldAcceptConstructors;
 
@@ -247,6 +236,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         this.isImport = context.location == ContentAssistLocation.IMPORT;
         this.shouldAcceptConstructors = context.location == ContentAssistLocation.CONSTRUCTOR;
         this.completionExpression = context.completionExpression;
+		groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
     }
 
     public void acceptConstructor(int modifiers, char[] simpleTypeName,
@@ -578,7 +568,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
         LazyGenericTypeProposal javaCompletionProposal = new LazyGenericTypeProposal(proposal, javaContext);
         javaCompletionProposal.setRelevance(proposal.getRelevance());
-        ImportRewrite r = forceImportRewrite();
+		ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
             ReflectionUtils.setPrivateField(
                     LazyJavaTypeCompletionProposal.class, "fImportRewrite",
@@ -860,7 +850,7 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         LazyJavaCompletionProposal javaCompletionProposal = new GroovyJavaMethodCompletionProposal(
                 proposal, javaContext, getProposalOptions());
         javaCompletionProposal.setRelevance(proposal.getRelevance());
-        ImportRewrite r = forceImportRewrite();
+		ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
             ReflectionUtils.setPrivateField(
                     LazyJavaTypeCompletionProposal.class, "fImportRewrite",
@@ -923,114 +913,8 @@ class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         return proposal;
     }
 
-    /**
-     * Returns an import rewrite for the module node only if
-     * ModuleNode.encounteredUnrecoverableError()
-     *
-     * Tries to find the start and end locations of the import statements. Makes
-     * a best guess using regular expression. This method ensures that even if
-     * the ComplationUnit is unparseable, the imports are still placed in the
-     * correct location.
-     *
-     * @return an {@link ImportRewrite} for the ModuleNode if it encountered an
-     *         unrecoverable error, or null if no problems.
-     */
-    private ImportRewrite forceImportRewrite() {
-
-        if (!module.encounteredUnrecoverableError()) {
-            return null;
-        }
-
-        if (rewrite == null && !cantCreateRewrite) {
-
-            // find a reasonable substring that contains
-            // what looks to be the import dependencies
-            CharArraySequence contents = new CharArraySequence(
-                    unit.getContents());
-            CharArraySequence imports = findImportsRegion(contents);
-
-            // Now send this to a parser
-            // need to be very careful here that if we can't parse, then
-            // don't send to rewriter
-            ASTParser parser = ASTParser.newParser(AST.JLS3);
-            parser.setSource(unit.cloneCachingContents(CharOperation.concat(
-                    imports.chars(), "\nclass X { }".toCharArray())));
-            parser.setKind(ASTParser.K_COMPILATION_UNIT);
-            ASTNode result = null;
-            try {
-                result = parser.createAST(monitor);
-            } catch (IllegalStateException e) {
-                GroovyCore.logException("Can't create ImportRewrite for:\n"
-                        + imports, e);
-            }
-            if (result instanceof CompilationUnit) {
-                rewrite = ImportRewrite.create((CompilationUnit) result, true);
-            } else {
-                // something wierd happened.
-                // ensure we don't try again
-                cantCreateRewrite = true;
-            }
-        }
-
-        return rewrite;
-    }
-
-    /**
-     * Convenience methpd for
-     * {@link GroovyProposalTypeSearchRequestor#findImportsRegion(CharArraySequence)}
-     */
-    static CharArraySequence findImportsRegion(String contents) {
-        return findImportsRegion(new CharArraySequence(contents));
-    }
-
-    private static final Pattern IMPORTS_PATTERN = Pattern
-            .compile("(\\A|[\\n\\r])import\\s");
-
-    private static final Pattern PACKAGE_PATTERN = Pattern
-            .compile("(\\A|[\\n\\r])package\\s");
-
-    private static final Pattern EOL_PATTERN = Pattern.compile("($|[\\n\\r])");
-
     private ProposalOptions groovyProposalPrefs;
 
-    /**
-     * Finds a region of text that kind of looks like where the imports should
-     * be placed. Uses regular expressions.
-     *
-     * @param contents
-     *            the contents of a compilation unit
-     * @return a presumed region
-     */
-    private static CharArraySequence findImportsRegion(
-            CharArraySequence contents) {
-        // heuristics:
-        // look for last index of ^import
-        // if that returns -1, then look for ^package
-        Matcher matcher = IMPORTS_PATTERN.matcher(contents);
-        int importsEnd = 0;
-        while (matcher.find(importsEnd)) {
-            importsEnd = matcher.end();
-        }
-
-        if (importsEnd == 0) {
-            // no imports found, look for package declaration
-            matcher = PACKAGE_PATTERN.matcher(contents);
-            if (matcher.find()) {
-                importsEnd = matcher.end();
-            }
-
-        }
-
-        if (importsEnd > 0) {
-            // look for end of line
-            matcher = EOL_PATTERN.matcher(contents);
-            if (matcher.find(importsEnd)) {
-                importsEnd = matcher.end();
-            }
-        }
-
-        return contents.subSequence(0, importsEnd);
-    }
 
     /**
      * Made public for testing

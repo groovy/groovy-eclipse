@@ -5,7 +5,8 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.ui; singleton:=true
 Bundle-Version: 2.1.1.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.GroovyPlugin
 Bundle-Vendor: The Codehaus
-Export-Package: greclipse.org.eclipse.jdt.internal.ui.javaeditor,
+Export-Package: greclipse.org.eclipse.jdt.core.dom.rewrite,
+ greclipse.org.eclipse.jdt.internal.ui.javaeditor,
  org.codehaus.groovy.eclipse,
  org.codehaus.groovy.eclipse.actions,
  org.codehaus.groovy.eclipse.adapters,
@@ -18,6 +19,7 @@ Export-Package: greclipse.org.eclipse.jdt.internal.ui.javaeditor,
  org.codehaus.groovy.eclipse.refactoring.actions,
  org.codehaus.groovy.eclipse.ui,
  org.codehaus.groovy.eclipse.ui.cpcontainer,
+ org.codehaus.groovy.eclipse.ui.utils,
  org.codehaus.groovy.eclipse.wizards
 Require-Bundle: org.eclipse.core.resources,
  org.eclipse.ui,

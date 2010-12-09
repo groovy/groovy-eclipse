@@ -380,8 +380,7 @@ public class OrganizeImportsTest extends EclipseTestCase {
     // Test GRECLIPSE-600
     void testNestedAnnotations2() {
         testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy", 
-                """
-            
+            """
             @interface NamedQueries {
               NamedQuery value();
             }
@@ -425,8 +424,7 @@ public class OrganizeImportsTest extends EclipseTestCase {
     // Test GRECLIPSE-600
     void testNestedAnnotations4() {
         testProject.createGroovyTypeAndPackage "anns", "Annotations.groovy",
-                """
-            
+            """
             @interface NamedQueries {
               NamedQuery[] value();
             }
