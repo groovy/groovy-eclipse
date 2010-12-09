@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.jdt.ui.quickFixProcessors">
+      <quickFixProcessor
+            name="Groovy Quick Fix Processor"
+            class="org.codehaus.groovy.eclipse.quickfix.processors.GroovyQuickFixProcessor"
+            id="org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor">
+      </quickFixProcessor>
+    </extension>
+  
+</plugin>
