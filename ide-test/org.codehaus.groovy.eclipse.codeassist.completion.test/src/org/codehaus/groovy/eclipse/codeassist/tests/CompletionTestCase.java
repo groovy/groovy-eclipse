@@ -268,7 +268,8 @@ public abstract class CompletionTestCase extends BuilderTests {
         
         IPath pathToGroovyClass = env.addGroovyClass(pack, "TransformerTest2", contents);
         fullBuild();
-        expectingNoProblems();
+        // don't do this here since many completeion tests intentionally have errors
+//        expectingNoProblems();
         
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
         unit.becomeWorkingCopy(null);
