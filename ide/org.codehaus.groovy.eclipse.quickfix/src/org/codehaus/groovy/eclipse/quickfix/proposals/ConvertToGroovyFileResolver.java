@@ -33,6 +33,8 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 
+	public static final String DESCRIPTION = "Convert to Groovy file and open in Groovy editor";
+
 	public ConvertToGroovyFileResolver(IQuickFixProblemContext problem) {
 		super(problem);
 	}
@@ -42,8 +44,6 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 		public ConvertToGroovyQuickFix(IQuickFixProblemContext problem) {
 			super(problem);
 		}
-
-		private static final String DESCRIPTION = "Convert to Groovy file and open in Groovy editor";
 
 		protected String getImageBundleLocation() {
 			return JavaPluginImages.IMG_CORRECTION_CHANGE;

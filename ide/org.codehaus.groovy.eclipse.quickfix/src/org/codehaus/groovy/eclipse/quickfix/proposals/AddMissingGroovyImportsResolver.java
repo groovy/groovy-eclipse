@@ -111,7 +111,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 			// For inner types, display the fully qualified top-level type as
 			// the declaration for the suggested type
 			String declaration = declaringType != null ? declaringType
-					.getFullyQualifiedName() : getSuggestedJavaType()
+					.getFullyQualifiedName().replace('$', '.') : getSuggestedJavaType()
 					.getPackageFragment().getElementName();
 			return "Import '" + getSuggestedJavaType().getElementName() + "' ("
 					+ declaration + ")";

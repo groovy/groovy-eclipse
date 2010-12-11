@@ -182,6 +182,11 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.quickfix.test">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.quickfix.test">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
   	
 		<!-- Update site -->
 		<copy todir="${featuresDestDir}/Site Groovy">

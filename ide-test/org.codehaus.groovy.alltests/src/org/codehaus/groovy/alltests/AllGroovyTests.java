@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
+ * Copyright (c) 2009, 2010 SpringSource and others.
  * All rights reserved. This program and the accompanying materials 
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import org.codehaus.groovy.eclipse.codeassist.tests.AllCompletionTests;
 import org.codehaus.groovy.eclipse.codebrowsing.tests.AllBrowsingTests;
 import org.codehaus.groovy.eclipse.core.AllCoreTests;
 import org.codehaus.groovy.eclipse.junit.test.AllJUnitTests;
+import org.codehaus.groovy.eclipse.quickfix.test.AllQuickFixTests;
 import org.codehaus.groovy.eclipse.refactoring.test.AllRefactoringTests;
 import org.codehaus.groovy.eclipse.test.AllUITests;
 
@@ -36,6 +37,7 @@ public class AllGroovyTests {
         suite.addTest(AllCompletionTests.suite());
         suite.addTest(AllBrowsingTests.suite());
         suite.addTest(AllRefactoringTests.suite());
+        suite.addTest(AllQuickFixTests.suite());
         return suite;
     }
 }
