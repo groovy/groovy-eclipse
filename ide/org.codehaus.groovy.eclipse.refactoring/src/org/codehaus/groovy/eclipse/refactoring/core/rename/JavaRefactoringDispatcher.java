@@ -19,7 +19,6 @@ import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings;
-import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor;
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.refactoring.UserInterfaceManager;
@@ -61,19 +60,11 @@ public class JavaRefactoringDispatcher {
 		return null;
 	}
 	
-	/**
-     * @param element2
-     * @return
-	 * @throws CoreException 
-     */
     private RenameSupport createLocalVariableRefactoring() throws CoreException {
         RenameJavaElementDescriptor descriptor = createDescriptorForLocalVariable();
         return RenameSupport.create(descriptor);
     }
 
-    /**
-     * @return
-     */
     public RenameJavaElementDescriptor createDescriptorForLocalVariable() {
         Map<String, String> args = new HashMap<String, String>();
         args.put("name", getNewName());

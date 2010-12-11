@@ -317,6 +317,7 @@ public class OrganizeGroovyImports {
 
     private final GroovyCompilationUnit unit;
     private Map<String, UnresolvedTypeData> missingTypes;
+
     private Map<String, ImportNode> importsSlatedForRemoval;
 
     private IChooseImportQuery query;
@@ -345,14 +346,34 @@ public class OrganizeGroovyImports {
             ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, false);
 
             for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
+                String fieldName = imp.getFieldName();
+                if (fieldName == null) {
+                    fieldName = "*";
+                }
                 if (imp.getType() != null) {
                     String className = imp.getClassName();
                     if (className != null) {
-                        importsSlatedForRemoval.put(className, imp);
-                        rewriter.addImport(className.replace('$', '.'));
+                        // GRECLIPSE-929 ensure that statics and on-demand
+                        // statics are never removed
+                        // FIXADE we should be doing a better job here and can
+                        // definitely walk the tree to find if a static is
+                        // really being used, but for now, don't
+                        if (!imp.isStaticStar() && !imp.isStatic()) {
+                            importsSlatedForRemoval.put(className, imp);
+                            rewriter.addImport(className.replace('$', '.'));
+                        } else {
+                            rewriter.addStaticImport(className.replace('$', '.'), fieldName, true);
+                        }
+                    }
+                } else {
+                    if (imp.isStatic()) {
+                        rewriter.addStaticImport(imp.getPackageName().replace('$', '.'), fieldName, true);
+                    } else { // imp.isStar()
+                        rewriter.addImport(imp.getPackageName() + "*");
                     }
                 }
             }
+
 
             // find all missing types
             // find all imports that are not referenced

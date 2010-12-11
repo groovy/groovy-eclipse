@@ -159,6 +159,11 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     public boolean isUnresolvable() {
     	return unresolvable;
     }
+    
+    // see GROOVY-44578 static star imports are not marked as static
+    public boolean isStaticStar() {
+        return type != null && alias == null;
+    }
     // GRECLIPSE - end
 
 }

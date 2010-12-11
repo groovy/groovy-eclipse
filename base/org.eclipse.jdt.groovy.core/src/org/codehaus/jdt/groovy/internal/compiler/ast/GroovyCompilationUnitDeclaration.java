@@ -320,9 +320,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 			for (Map.Entry<String, ImportNode> importStaticStar : importStaticStars.entrySet()) {
 				String classname = importStaticStar.getKey();
+				ImportNode importNode = importStaticStar.getValue();
+				ClassNode importedType = importNode.getType();
+				int typeStartOffset = importedType != null ? startOffset(importedType) : 0;
+				int typeEndOffset = importedType != null ? endOffset(importedType) : 0;
 				char[][] splits = CharOperation.splitOn('.', classname.toCharArray());
-				imports[importNum++] = new ImportReference(splits, getPositionsFor(splits), true, ClassFileConstants.AccDefault
-						| ClassFileConstants.AccStatic);
+				ImportReference ref = new ImportReference(splits, positionsFor(splits, typeStartOffset, typeEndOffset), true,
+						ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+				ref.sourceEnd = Math.max(typeEndOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
+				ref.declarationSourceStart = importNode.getStart();
+				ref.declarationSourceEnd = importNode.getEnd();
+				ref.declarationEnd = ref.sourceEnd;
+				imports[importNum++] = ref;
 			}
 
 			// ensure proper lexical order

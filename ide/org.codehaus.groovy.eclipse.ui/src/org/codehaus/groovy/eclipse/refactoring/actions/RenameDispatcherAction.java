@@ -27,7 +27,6 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
@@ -60,37 +59,4 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
 		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 		refactoring.openDialog(shell);
 	}
-	
-//	private RefactoringStatus ensureChecked(RenameRefactoring refactoring) throws CoreException {
-//	    RefactoringStatus preCheckStatus;
-//        if (!refactoring.isApplicable()) {
-//            preCheckStatus= RefactoringStatus.createFatalErrorStatus(JavaUIMessages.RenameSupport_not_available);
-//        } else {
-//            preCheckStatus= new RefactoringStatus();
-//        }
-//        return preCheckStatus;
-//	}
-//
-//	private void showInformation(Shell parent, RefactoringStatus status) {
-//	    String message= status.getMessageMatchingSeverity(RefactoringStatus.FATAL);
-//	    MessageDialog.openInformation(parent, JavaUIMessages.RenameSupport_dialog_title, message);
-//	}
-//
-//	
-//	private boolean openDialog(Shell parent, RenameRefactoring refactoring) throws CoreException {
-//       RefactoringStatus preCheckStatus = ensureChecked(refactoring);
-//        if (preCheckStatus.hasFatalError()) {
-//            showInformation(parent, preCheckStatus);
-//            return false;
-//        }
-//
-//        UserInterfaceStarter starter = RenameUserInterfaceManager.getDefault().getStarter(refactoring);
-//        return starter.activate(refactoring, parent, ((JavaRenameProcessor) refactoring.getProcessor()).getSaveMode());
-//	}
-	
-	public static int getUIFlags() {
-		return RefactoringWizard.DIALOG_BASED_USER_INTERFACE
-				| RefactoringWizard.PREVIEW_EXPAND_FIRST_NODE;
-	}
-
 }

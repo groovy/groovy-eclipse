@@ -400,6 +400,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 ClassNode type = ClassHelper.make(packageName);
                 configureAST(type, importNode);
                 addStaticStarImport(type, packageName, annotations);
+                // GRECLIPSE: start: must configure sloc for import node
+                // new
+                ASTNode imp = (ASTNode) output.getStaticStarImports().get(packageName);
+                configureAST(imp, importNode);
+                // end
             } else {
                 // import is like "import foo.*"
                 addStarImport(packageName, annotations);
@@ -421,6 +426,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 ClassNode type = ClassHelper.make(packageName);
                 configureAST(type, importNode);
                 addStaticImport(type, name, alias, annotations);
+                // GRECLIPSE: start: must configure sloc for import node
+                // new
+                ASTNode imp = (ASTNode) output.getStaticImports().get(alias == null ? name : alias);
+                configureAST(imp, importNode);
+                // end
             } else {
                 // import is like "import foo.Bar"
                 ClassNode type = ClassHelper.make(packageName+"."+name);

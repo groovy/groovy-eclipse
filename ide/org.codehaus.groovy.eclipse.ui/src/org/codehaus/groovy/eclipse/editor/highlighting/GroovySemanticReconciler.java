@@ -174,10 +174,6 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         }
     }
 
-    /**
-     * @param unkownNode
-     * @return
-     */
     private HighlightedPosition createHighlightedPosition(HighlightedTypedPosition pos) {
         switch (pos.kind) {
             case UNKNOWN:
@@ -195,10 +191,6 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         return null;
     }
 
-    /**
-     * @param newPositions
-     * @param range
-     */
     private void maybeAddPosition(List<HighlightedPosition> newPositions, List<HighlightedPosition> oldPositionsCopy,
             HighlightedPosition maybePosition) {
         boolean found = false;

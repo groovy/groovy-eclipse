@@ -506,6 +506,67 @@ public class OrganizeImportsTest extends EclipseTestCase {
     }
     
     
+    // GRECLIPSE-929
+    void testStaticImport() {
+        String contents =
+                """
+                import static java.lang.String.format
+                format
+                """
+        doAddImportTest(contents)
+    }
+
+    // GRECLIPSE-929
+    void testStaticImport2() {
+        // never remove static imports
+        String contents =
+            """
+            import static java.lang.String.format
+            """
+            doAddImportTest(contents)
+    }
+    
+    // GRECLIPSE-929
+    void testStaticStarImport() {
+        String contents =
+            """
+            import static java.lang.String.*
+            format
+            """
+            doAddImportTest(contents)
+    }
+    
+    // GRECLIPSE-929
+    void testStaticStarImport2() {
+        // never remove static star imports
+        String contents =
+            """
+            import static java.lang.String.*
+            """
+            doAddImportTest(contents)
+    }
+    
+    // GRECLIPSE-929
+    void testStarImport() {
+        String contents =
+            """
+            import javax.swing.text.html.*
+            HTML
+            """
+            doAddImportTest(contents)
+    }
+    
+    // GRECLIPSE-929
+    void testStarImport2() {
+        // never remove star imports
+        String contents =
+            """
+            import javax.swing.text.html.*
+            """
+            doAddImportTest(contents)
+    }
+    
+    
     void doAddImportTest(contents, expectedImports = [ ]) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         def unit = JavaCore.createCompilationUnitFrom(file)

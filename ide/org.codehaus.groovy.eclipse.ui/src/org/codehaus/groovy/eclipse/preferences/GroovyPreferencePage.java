@@ -109,7 +109,9 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                     "This option is particularly useful for testing frameworks\n" +
                     "that use a formatted output such as Spock\n\n");
 
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, "Underline staticly unknown references", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
+                "Enable semantic highlighting (underline statically unknown references, "
+                        + "highlight fields, statics, and deprecated elements", getFieldEditorParent()));
 
         Label contentAssistLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
         contentAssistLabel.setText("\n\nGroovy Content assist options to make your content assist Groovier.");
