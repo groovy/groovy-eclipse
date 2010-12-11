@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><!--
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
     Copyright (c) 2009 Codehaus.org, SpringSource, and others.
     All rights reserved. This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v1.0
@@ -8,7 +9,6 @@
     Contributors:
         Andrew Eisenberg - modified for Groovy Eclipse 2.0
  -->
-
 <feature
       id="org.codehaus.groovy.alltests.feature"
       label="%featureName"
@@ -51,15 +51,13 @@
          id="org.codehaus.groovy.eclipse.tests"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.codehaus.groovy.eclipse.core.test"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.codehaus.groovy.alltests"
@@ -72,36 +70,31 @@
          id="org.codehaus.groovy.eclipse.codeassist.completion.test"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.codehaus.groovy.eclipse.codebrowsing.test"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.codehaus.groovy.eclipse.junit.test"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.codehaus.groovy.eclipse.refactoring.test"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.eclipse.jdt.groovy.core.tests.builder"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.eclipse.jdt.groovy.core.tests.compiler"
@@ -111,6 +104,13 @@
 
    <plugin
          id="org.eclipse.test.performance"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.codehaus.groovy.eclipse.quickfix.test"
          download-size="0"
          install-size="0"
          version="0.0.0"
