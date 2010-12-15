@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.test;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.eclipse.test.actions.AliasingOrganizeImportsTest;
 import org.codehaus.groovy.eclipse.test.actions.ConvertToJavaOrGroovyActionTest;
 import org.codehaus.groovy.eclipse.test.actions.GroovyNatureActionTestCase;
 import org.codehaus.groovy.eclipse.test.actions.OrganizeImportsTest;
@@ -58,6 +59,7 @@ public class AllUITests {
 		suite.addTestSuite(DebugBreakpointsTests.class);
 		suite.addTestSuite(BreakpointLocationTests.class);
 		suite.addTestSuite(OrganizeImportsTest.class);
+		suite.addTestSuite(AliasingOrganizeImportsTest.class);
 		suite.addTestSuite(SaveParticipantRegistryTest.class);
 		suite.addTestSuite(ConvertToJavaOrGroovyActionTest.class);
 		suite.addTestSuite(ConsoleLineTrackerTests.class);
