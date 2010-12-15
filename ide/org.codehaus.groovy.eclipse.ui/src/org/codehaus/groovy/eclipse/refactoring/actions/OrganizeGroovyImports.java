@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -341,9 +342,11 @@ public class OrganizeGroovyImports {
         missingTypes = new HashMap<String,UnresolvedTypeData>();
         importsSlatedForRemoval = new HashMap<String, ImportNode>();
         FindUnresolvedReferencesVisitor visitor = new FindUnresolvedReferencesVisitor();
+        Map<String, String> aliases = new HashMap<String, String>();
 
         try {
             ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, false);
+
 
             for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
                 String fieldName = imp.getFieldName();
@@ -358,11 +361,18 @@ public class OrganizeGroovyImports {
                         // FIXADE we should be doing a better job here and can
                         // definitely walk the tree to find if a static is
                         // really being used, but for now, don't
+                        String dottedClassName = className.replace('$', '.');
                         if (!imp.isStaticStar() && !imp.isStatic()) {
-                            importsSlatedForRemoval.put(className, imp);
-                            rewriter.addImport(className.replace('$', '.'));
+                            importsSlatedForRemoval.put(dottedClassName, imp);
+                            rewriter.addImport(dottedClassName);
+                            if (isAliased(imp)) {
+                                aliases.put("n" + dottedClassName, imp.getAlias());
+                            }
                         } else {
-                            rewriter.addStaticImport(className.replace('$', '.'), fieldName, true);
+                            rewriter.addStaticImport(dottedClassName, fieldName, true);
+                            if (isAliased(imp)) {
+                                aliases.put("s" + dottedClassName + "." + fieldName, imp.getAlias());
+                            }
                         }
                     }
                 } else {
@@ -373,7 +383,6 @@ public class OrganizeGroovyImports {
                     }
                 }
             }
-
 
             // find all missing types
             // find all imports that are not referenced
@@ -393,6 +402,12 @@ public class OrganizeGroovyImports {
             for (IType resolved : resolvedTypes) {
                 rewriter.addImport(resolved.getFullyQualifiedName('.'));
             }
+
+            // now add aliases back to existing imports
+            for (Entry<String, String> alias : aliases.entrySet()) {
+                rewriter.addAlias(alias.getKey(), alias.getValue());
+            }
+
             TextEdit edit = rewriter.rewriteImports(null);
             // remove ';' from edits
             // no longer needed since we have our own import rewriter
@@ -404,6 +419,30 @@ public class OrganizeGroovyImports {
             GroovyCore.logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
         }
         return null;
+    }
+
+    /**
+     * @param imp
+     * @return
+     */
+    private boolean isAliased(ImportNode imp) {
+        String alias = imp.getAlias();
+        if (alias == null) {
+            return false;
+        }
+
+        String fieldName = imp.getFieldName();
+        if (fieldName != null) {
+            return !fieldName.equals(alias);
+        }
+        String className = imp.getClassName();
+        if (className != null) {
+            // it is possible to import from the default package
+            boolean aliasIsSameAsClassName = className.endsWith(alias)
+                    && (className.length() == alias.length() || className.endsWith("." + alias) || className.endsWith("$" + alias));
+            return !aliasIsSameAsClassName;
+        }
+        return false;
     }
 
     /**

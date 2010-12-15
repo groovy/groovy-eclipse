@@ -17,7 +17,7 @@
 
 package greclipse.org.eclipse.jdt.core.dom.rewrite;
 
-import greclipse.org.eclipse.jdt.internal.core.dom.rewrite.ImportRewriteAnalyzer; // GROOVY use our version of ImportRewriteAnalyzer
+import greclipse.org.eclipse.jdt.internal.core.dom.rewrite.ImportRewriteAnalyzer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1178,4 +1178,17 @@ public final class ImportRewrite {
 		return (String[]) res.toArray(new String[res.size()]);
 	}
 
+    // GRECLIPSE allow aliases to be added to imports, but only if they already
+    // exist
+    public void addAlias(String importName, String aliasName) {
+        int index = addedImports.indexOf(importName);
+        if (index >= 0) {
+            addedImports.set(index, importName + " as " + aliasName);
+        }
+        index = existingImports.indexOf(importName);
+        if (index >= 0) {
+            existingImports.set(index, importName + " as " + aliasName);
+        }
+    }
+    // GRECLIPSE end
 }
