@@ -281,7 +281,7 @@ public class OrganizeGroovyImports {
                     name = node.getName();
                 }
 
-                String partialName = name;// .replace('$', '.');
+                String partialName = name.replace('$', '.');
                 int innerIndex = name.lastIndexOf('$');
                 while (innerIndex > -1) {
                     doNotRemoveImport(partialName);
