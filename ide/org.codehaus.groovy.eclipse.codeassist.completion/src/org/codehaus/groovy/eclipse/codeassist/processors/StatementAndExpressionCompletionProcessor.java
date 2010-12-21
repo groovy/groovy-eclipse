@@ -78,6 +78,8 @@ public class StatementAndExpressionCompletionProcessor extends
 
         private Expression arrayAccessLHS;
 
+        // keep track of the number of array accesses that must be dereferenced
+        private int derefCount = 0;
 
         public ExpressionCompletionRequestor() {
             // remember the rightmost part of the LHS of a
@@ -85,10 +87,9 @@ public class StatementAndExpressionCompletionProcessor extends
             ASTNode maybeLHS = getContext().completionNode;
             while (maybeLHS != null) {
                 if (maybeLHS instanceof BinaryExpression) {
-                    arrayAccessLHS = ((BinaryExpression) maybeLHS)
+                    maybeLHS = arrayAccessLHS = ((BinaryExpression) maybeLHS)
                             .getLeftExpression();
-                    maybeLHS = ((BinaryExpression) maybeLHS)
-                            .getLeftExpression();
+                    derefCount++;
                 } else if (maybeLHS instanceof PropertyExpression) {
                     arrayAccessLHS = ((PropertyExpression) maybeLHS)
                             .getObjectExpression();
@@ -133,8 +134,12 @@ public class StatementAndExpressionCompletionProcessor extends
             }
             if (success) {
                 maybeRememberLHSType(result);
-                resultingType = derefList ? VariableScope.deref(result.type)
-                        : result.type;
+                resultingType = result.type;
+                if (derefList) {
+                    for (int i = 0; i < derefCount; i++) {
+                        resultingType = VariableScope.deref(resultingType);
+                    }
+                }
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
                 isStatic = node instanceof StaticMethodCallExpression ||

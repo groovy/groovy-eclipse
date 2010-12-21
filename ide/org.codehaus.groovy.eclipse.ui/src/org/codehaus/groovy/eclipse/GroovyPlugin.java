@@ -225,9 +225,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
         PrefUtil.getInternalPreferenceStore().removePropertyChangeListener(ensure);
     }
 
-	/**
-     *
-     */
     private void maybeAskToConvertLegacyProjects() {
         AskToConvertLegacyProjects ask = new AskToConvertLegacyProjects();
         if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS)) {

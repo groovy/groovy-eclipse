@@ -82,7 +82,12 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setName(method.getName().toCharArray());
         proposal.setParameterNames(createParameterNames(context.unit));
         proposal.setParameterTypeNames(createParameterTypeNames(method));
-        proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionLocation - context.completionExpression.length());
+        // proposal.setReplaceRange(context.completionLocation -
+        // context.completionExpression.length(), context.completionLocation -
+        // context.completionExpression.length());
+        proposal.setReplaceRange(context.completionLocation
+                - context.completionExpression.length(),
+                context.completionLocation);
         proposal.setFlags(getModifiers());
         proposal.setAdditionalFlags(CompletionFlags.Default);
         char[] methodSignature = createMethodSignature();

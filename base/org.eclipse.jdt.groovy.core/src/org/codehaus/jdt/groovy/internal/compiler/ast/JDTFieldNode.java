@@ -17,6 +17,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 
 /**
@@ -25,7 +26,7 @@ import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
  * @author Andy Clement
  */
 @SuppressWarnings("restriction")
-public class JDTFieldNode extends FieldNode implements JDTNodes {
+public class JDTFieldNode extends FieldNode implements JDTNode {
 
 	private FieldBinding fieldBinding;
 	private JDTResolver resolver;
@@ -72,10 +73,20 @@ public class JDTFieldNode extends FieldNode implements JDTNodes {
 		}
 	}
 
-	/**
-	 * @return
-	 */
 	public FieldBinding getFieldBinding() {
 		return fieldBinding;
 	}
+
+	public JDTResolver getResolver() {
+		return resolver;
+	}
+
+	public Binding getJdtBinding() {
+		return fieldBinding;
+	}
+
+	public boolean isDeprecated() {
+		return fieldBinding.isDeprecated();
+	}
+
 }

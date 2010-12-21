@@ -164,6 +164,15 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
     
+    // GRECLIPSE-941
+    public void testMapOfList4() throws Exception {
+        String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndef x = dataTyped      ['foo'][5][2]\nx";
+        String toFind = "x";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Date");
+    }
+    
     public void testArray1() throws Exception {
         String contents = "def x = [ 1, 2 ] as String[]\nx";
         String toFind = "x";
@@ -383,7 +392,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
     
-    
     public void testForLoop10() throws Exception {
         String contents = "class X {\n"
                 + "List<String> images\n" + "}\n"
@@ -394,10 +402,4 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.String");
     }
-    
-    
-    
-    // also not passing are generic arrays
-    
-    // for loops
 }

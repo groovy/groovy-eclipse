@@ -116,8 +116,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             javaProject = extractJavaProject(selection);
         }
         if (javaProject==null && unit==null) {
-            MessageDialog.openError(PlatformUI.getWorkbench().
-getActiveWorkbenchWindow().getShell(), "Can't run script",
+            MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Can't run script",
                     "No script or project selected!");
             return;
         }
@@ -226,7 +225,7 @@ getActiveWorkbenchWindow().getShell(), "Can't run script",
 
         if (runType != null) {
             try {
-                pathToClass = " \"" + runType.getResource().getLocation().toOSString() + " \"";
+                pathToClass = " \"" + runType.getResource().getLocation().toOSString() + "\"";
             } catch (NullPointerException e) {
                 pathToClass = "";
                 GroovyCore.errorRunningGroovy(new IllegalArgumentException("Could not find file to run for " + runType));

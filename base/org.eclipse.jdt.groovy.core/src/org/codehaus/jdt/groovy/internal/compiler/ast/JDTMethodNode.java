@@ -18,6 +18,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 
 /**
@@ -26,7 +27,7 @@ import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
  * @author Andy Clement
  */
 @SuppressWarnings("restriction")
-public class JDTMethodNode extends MethodNode implements JDTNodes {
+public class JDTMethodNode extends MethodNode implements JDTNode {
 
 	private MethodBinding methodBinding;
 	private JDTResolver resolver;
@@ -77,11 +78,19 @@ public class JDTMethodNode extends MethodNode implements JDTNodes {
 		throw new IllegalStateException("JDTMethodNode is immutable");
 	}
 
-	/**
-	 * @return
-	 */
+	public JDTResolver getResolver() {
+		return resolver;
+	}
+
 	public MethodBinding getMethodBinding() {
 		return methodBinding;
 	}
 
+	public Binding getJdtBinding() {
+		return methodBinding;
+	}
+
+	public boolean isDeprecated() {
+		return methodBinding.isDeprecated();
+	}
 }

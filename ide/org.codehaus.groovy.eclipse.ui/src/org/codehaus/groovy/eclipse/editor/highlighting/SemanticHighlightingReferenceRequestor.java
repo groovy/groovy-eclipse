@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -28,9 +29,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -82,7 +81,7 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
             staticNodes.add(getPosition(node));
         }
 
-        if (result.declaration instanceof FieldNode) {
+        if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {
             fieldReferenceNodes.add(getPosition(node));
         }
 
@@ -95,7 +94,7 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
      */
     private Position getPosition(ASTNode node) {
         int start, length;
-        if (node instanceof MethodNode || node instanceof FieldNode
+        if (node instanceof MethodNode || node instanceof FieldNode || node instanceof PropertyNode
                 || (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0)) {
             AnnotatedNode an = (AnnotatedNode) node;
             start = an.getNameStart();
@@ -118,9 +117,28 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
         if (declaration instanceof ClassNode) {
             declaration = ((ClassNode) declaration).redirect();
         }
-        return (declaration instanceof JDTClassNode && ((JDTClassNode) declaration).getJdtBinding().isDeprecated())
-                || (declaration instanceof JDTMethodNode && ((JDTMethodNode) declaration).getMethodBinding().isDeprecated())
-                || (declaration instanceof JDTFieldNode && ((JDTFieldNode) declaration).getFieldBinding().isDeprecated());
+
+        if (declaration instanceof JDTNode) {
+            return ((JDTNode) declaration).isDeprecated();
+        } else if (declaration instanceof ClassNode || declaration instanceof FieldNode || declaration instanceof MethodNode) {
+            return hasDeprecatedAnnotation((AnnotatedNode) declaration);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param declaration
+     * @return
+     */
+    private boolean hasDeprecatedAnnotation(AnnotatedNode declaration) {
+        List<AnnotationNode> anns = declaration.getAnnotations();
+        for (AnnotationNode ann : anns) {
+            if (ann.getClassNode() != null && ann.getClassNode().getName().equals("java.lang.Deprecated")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isStatic(ASTNode declaration) {

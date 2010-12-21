@@ -150,13 +150,13 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         List<CompletionProposalCategory> categories = (List<CompletionProposalCategory>) ReflectionUtils.getPrivateField(ContentAssistProcessor.class, "fCategories", processor);
         List<CompletionProposalCategory> newCategories = new ArrayList<CompletionProposalCategory>(categories.size()-1);
         for (CompletionProposalCategory category : categories) {
-            if (!category.getId().equals("org.eclipse.jdt.ui.javaTypeProposalCategory") &&
-                    !category.getId().equals("org.eclipse.jdt.ui.javaNoTypeProposalCategory") &&
-                    !category.getId().equals("org.eclipse.jdt.ui.javaAllProposalCategory")) {
+            if (!category.getId().equals("org.eclipse.jdt.ui.javaTypeProposalCategory")
+                    && !category.getId().equals("org.eclipse.jdt.ui.javaNoTypeProposalCategory")
+                    && !category.getId().equals("org.eclipse.jdt.ui.javaAllProposalCategory")
+                    && !category.getId().equals("org.eclipse.mylyn.java.ui.javaAllProposalCategory")) {
                 newCategories.add(category);
             }
         }
-
 
         ReflectionUtils.setPrivateField(ContentAssistProcessor.class, "fCategories", processor, newCategories);
         return assistant;

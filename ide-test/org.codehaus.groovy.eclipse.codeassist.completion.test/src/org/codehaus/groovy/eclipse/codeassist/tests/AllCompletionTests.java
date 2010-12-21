@@ -39,6 +39,7 @@ public class AllCompletionTests {
         suite.addTestSuite(ProposalProviderAndFilterTests.class);
         suite.addTestSuite(ConstructorCompletionTests.class);
         suite.addTestSuite(StaticImportsCompletionTests.class);
+        suite.addTestSuite(GenericCompletionTests.class);
         
         return suite;
     }

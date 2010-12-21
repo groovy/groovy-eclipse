@@ -112,6 +112,8 @@ public class GroovyCompletionProposalComputer implements
 
         ModuleNode module = gunit.getModuleNode();
         if (module == null) {
+            GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
+                    "Null module node for " + gunit.getElementName());
             return Collections.EMPTY_LIST;
         }
 

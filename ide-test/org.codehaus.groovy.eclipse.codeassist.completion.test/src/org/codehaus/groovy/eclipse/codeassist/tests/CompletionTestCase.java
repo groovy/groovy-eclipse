@@ -367,7 +367,11 @@ public abstract class CompletionTestCase extends BuilderTests {
     protected void checkProposalApplication(String contents, String expected,
             int proposalLocation, String proposalName, boolean isType) throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, proposalLocation);
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, proposalName, isType), expected);
+        ICompletionProposal firstProposal = findFirstProposal(proposals, proposalName, isType);
+        if (firstProposal == null) {
+            fail("Expected at least one proposal, but found none");
+        }
+        applyProposalAndCheck(new Document(contents), firstProposal, expected);
     }
 
     public void performDummySearch(IJavaElement element) throws Exception{

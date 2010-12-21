@@ -28,14 +28,14 @@ import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
  * <li>thing[10].value</li>
  * <li>[1, 2, 3].collect { it.toString() }. // Note the '.'</li>
  * </ul>
- * 
+ *
  * @author empovazan
  */
 public class ExpressionFinder {
 	/**
 	 * Find an expression starting at the offset and working backwards. The found expression is one that could possibly
 	 * have completions.
-	 * 
+	 *
 	 * @param sourceBuffer
 	 * @param offset
 	 * @return The expression, or null if no suitable expression was found.
@@ -52,7 +52,7 @@ public class ExpressionFinder {
 			}
 
 			endOffset = token.endOffset;
-			
+
 			boolean offsetIsWhitespace = Character.isWhitespace(stream.getCurrentChar());
 			boolean offsetIsQuote = stream.getCurrentChar() == '\"' || stream.getCurrentChar() == '\'';
 			// no expression associated with a quote
@@ -61,17 +61,17 @@ public class ExpressionFinder {
 			}
 			skipLineBreaksAndComments(stream);
 			token = stream.next();
-			
+
 			// if the offset is a whitespace, then content assist should be on a blank expression unless
 			// there is a '.', '..', or '?.'
 			if (offsetIsWhitespace && token.type != Token.DOT && token.type != Token.DOUBLE_DOT && token.type != Token.SAFE_DEREF && token.type != Token.SPREAD) {
 				return "";
 			}
-			
+
 			if (token.type == Token.EOF) {
 				return null;
 			}
-			
+
 			switch (token.type) {
 				case Token.DOT:
 				case Token.DOUBLE_DOT:
@@ -106,7 +106,7 @@ public class ExpressionFinder {
 
 	/**
 	 * Splits the given expression into two parts: the type evaluation part, and the code completion part.
-	 * 
+	 *
 	 * @param expression
 	 *            The expression returned by the {@link #findForCompletions(ISourceBuffer, int)} method.
 	 * @return A string pair, the expression to complete, and the prefix to be completed.<br>
@@ -115,7 +115,7 @@ public class ExpressionFinder {
 	 *         String[1] is the empty string if the last character is a '.'.<br>
 	 *         String[1] is 'ident' if the expression ends with '.ident'.<br>
 	 *         String[1] is null if the expression itself is to be used for completion.
-	 *         Also, remove starting '$'.  These only occur when inside GStrings, and should not be completed against. 
+	 *         Also, remove starting '$'.  These only occur when inside GStrings, and should not be completed against.
 	 */
 	public String[] splitForCompletion(String expression) {
 	    String[] split = splitForCompletionNoTrim(expression);
@@ -133,8 +133,8 @@ public class ExpressionFinder {
 	    }
 	    return split;
 	}
-	
-	
+
+
 	public String[] splitForCompletionNoTrim(String expression) {
        String[] ret = new String[2];
 
@@ -143,7 +143,7 @@ public class ExpressionFinder {
             ret[1] = null;
             return ret;
         }
-        
+
         StringSourceBuffer sb = new StringSourceBuffer(expression);
         TokenStream stream = new TokenStream(sb, expression.length() - 1);
         Token token0, token1, token2;
@@ -174,14 +174,14 @@ public class ExpressionFinder {
 
         return ret;
 	}
-	
-	
+
+
 
 	/**
 	 * FIXADE only skip line breaks if the previous character is a '.' otherwise
 	 * line breaks should signify the end of the completion
-	 * For now, though we just ignore skipping all line breaks 
-	 * 
+	 * For now, though we just ignore skipping all line breaks
+	 *
 	 */
 	private void skipLineBreaksAndComments(TokenStream stream)
 			throws TokenStreamException {
@@ -203,7 +203,7 @@ public class ExpressionFinder {
 	private Token dot(TokenStream stream) throws TokenStreamException, ParseException {
 		skipLineBreaksAndComments(stream);
 		Token token = stream.next();
-		
+
 		switch (token.type) {
 			case Token.IDENT:
 				return ident(stream);
@@ -265,7 +265,7 @@ public class ExpressionFinder {
 				return new Token(Token.EOF, last.startOffset, last.endOffset, null);
 		}
 	}
-	
+
 	private Token quotedString(TokenStream stream) throws TokenStreamException, ParseException {
 		Token token = stream.peek();
 		Token last;
@@ -273,8 +273,8 @@ public class ExpressionFinder {
       case Token.EOF:
       case Token.LINE_BREAK:
         last = stream.last();
-        return new Token(Token.EOF, last.startOffset, last.startOffset, null);  
-      case Token.SEMI: 
+        return new Token(Token.EOF, last.startOffset, last.startOffset, null);
+      case Token.SEMI:
         last = stream.last();
         return new Token(Token.EOF, last.startOffset, last.startOffset, null);
       case Token.IDENT:
@@ -326,6 +326,8 @@ public class ExpressionFinder {
 				return parenBlock(stream);
 			case Token.BRACE_BLOCK:
 				return braceBlock(stream);
+            case Token.BRACK_BLOCK:
+                return brackBlock(stream);
 			default:
 				throw new ParseException(token);
 		}

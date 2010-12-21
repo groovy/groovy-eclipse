@@ -171,4 +171,8 @@ public class JDTAnnotationNode extends AnnotationNode {
 		}
 		throw new GroovyEclipseBug("Problem in JDTAnnotatioNode.createExpressionFor(binding=" + b + " value=" + value + ")");
 	}
+
+	public JDTResolver getResolver() {
+		return resolver;
+	}
 }

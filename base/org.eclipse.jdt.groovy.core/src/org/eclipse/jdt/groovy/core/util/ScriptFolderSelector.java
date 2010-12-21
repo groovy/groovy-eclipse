@@ -28,7 +28,13 @@ public class ScriptFolderSelector {
 
 	public static boolean isEnabled() {
 		// disabled by default
-		return Activator.getDefault().getBooleanPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+		Activator activator = Activator.getDefault();
+		// perform null check since this is occasionally being called during shutdown after the plugin has been closed
+		if (activator != null) {
+			return activator.getBooleanPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+		} else {
+			return false;
+		}
 	}
 
 	public ScriptFolderSelector() {

@@ -9,8 +9,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.maven.ide.eclipse,
  org.maven.ide.eclipse.jdt,
  org.eclipse.core.resources;bundle-version="3.5.1",
- org.eclipse.jdt.groovy.core;bundle-version="2.1.1",
- org.codehaus.groovy.eclipse.core;bundle-version="2.1.1",
+ org.eclipse.jdt.groovy.core;bundle-version="2.1.2",
+ org.codehaus.groovy.eclipse.core;bundle-version="2.1.2",
  org.eclipse.jdt.core;bundle-version="3.5.1"
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ActivationPolicy: lazy

@@ -1016,12 +1016,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 		// if the type is an iterator or an enumeration, then resolve the type parameter
-		if (collectionType.declaresInterface(VariableScope.ITERATOR_CLASS)
+		if (collectionType.declaresInterface(VariableScope.ITERATOR_CLASS) || collectionType.equals(VariableScope.ITERATOR_CLASS)
+				|| collectionType.declaresInterface(VariableScope.ENUMERATION_CLASS)
 				|| collectionType.equals(VariableScope.ENUMERATION_CLASS)) {
 			typeToResolve = collectionType;
-		}
-
-		if (collectionType.declaresInterface(VariableScope.MAP_CLASS_NODE) || collectionType.equals(VariableScope.MAP_CLASS_NODE)) {
+		} else if (collectionType.declaresInterface(VariableScope.MAP_CLASS_NODE)
+				|| collectionType.equals(VariableScope.MAP_CLASS_NODE)) {
 			MethodNode entrySetMethod = collectionType.getMethod("entrySet", new Parameter[0]);
 			if (entrySetMethod != null) {
 				typeToResolve = entrySetMethod.getReturnType();

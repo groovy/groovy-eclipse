@@ -64,7 +64,7 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
  * @author Andy Clement
  */
 @SuppressWarnings("restriction")
-public class JDTClassNode extends ClassNode {
+public class JDTClassNode extends ClassNode implements JDTNode {
 
 	private static final Parameter[] NO_PARAMETERS = new Parameter[0];
 
@@ -553,5 +553,9 @@ public class JDTClassNode extends ClassNode {
 
 	public JDTResolver getResolver() {
 		return resolver;
+	}
+
+	public boolean isDeprecated() {
+		return jdtBinding.isDeprecated();
 	}
 }

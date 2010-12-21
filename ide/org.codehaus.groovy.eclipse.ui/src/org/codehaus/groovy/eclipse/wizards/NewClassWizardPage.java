@@ -15,9 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -95,7 +97,8 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         IJavaProject project = pack.getJavaProject();
         try {
             if (!project.getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
-                status.setError(project.getElementName() + " is not a groovy project");
+                status.setWarning(project.getElementName()
+                        + " is not a groovy project.  Groovy Nature will be added to project upon completion.");
             }
         } catch (CoreException e) {
             status.setError("Exception when accessing project natures for " + project.getElementName());
@@ -123,9 +126,19 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 	@Override
 	public void createType(IProgressMonitor monitor) throws CoreException,
 	        InterruptedException {
+        IPackageFragment pack = getPackageFragment();
+        if (pack != null) {
+            IProject project = pack.getJavaProject().getProject();
+            if (!GroovyNature.hasGroovyNature(project)) {
+                // add groovy nature
+                GroovyRuntime.addGroovyNature(project);
+            }
+        }
+
 	    super.createType(monitor);
 	    monitor = new SubProgressMonitor(monitor, 1);
-	    IPackageFragment pack= getPackageFragment();
+
+
 	    GroovyCompilationUnit unit = (GroovyCompilationUnit) pack.getCompilationUnit(getCompilationUnitName(getTypeName()));
 	    try {
     	    monitor.beginTask("Remove semi-colons", 1);
@@ -203,6 +216,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 
     @Override
     protected void updateStatus(IStatus status) {
+        super.updateStatus(status);
         fStatus = status;
     }
 

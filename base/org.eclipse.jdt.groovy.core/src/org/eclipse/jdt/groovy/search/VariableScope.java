@@ -501,8 +501,12 @@ public class VariableScope {
 	public static ClassNode deref(ClassNode c) {
 		if (c.isArray()) {
 			return c.getComponentType();
-		} else if (c.getGenericsTypes() != null && c.getGenericsTypes().length > 0) {
-			return c.getGenericsTypes()[0].getType();
+		} else {
+			GenericsType[] genericsTypes = c.getGenericsTypes();
+			if (genericsTypes != null && genericsTypes.length > 0) {
+				// use length-1 so that both Maps and Collections are handled
+				return genericsTypes[genericsTypes.length - 1].getType();
+			}
 		}
 		return c;
 	}
