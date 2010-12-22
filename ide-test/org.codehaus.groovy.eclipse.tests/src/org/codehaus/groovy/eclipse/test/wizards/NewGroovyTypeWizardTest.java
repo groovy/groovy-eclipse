@@ -77,17 +77,24 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
 		StubUtility.setCodeTemplate(CodeTemplateContextType.INTERFACEBODY_ID, "/* interface body */\n", null);
 		StubUtility.setCodeTemplate(CodeTemplateContextType.ENUMBODY_ID, "/* enum body */\n", null);
 		StubUtility.setCodeTemplate(CodeTemplateContextType.ANNOTATIONBODY_ID, "/* annotation body */\n", null);
-
 	}
 
 	public void testNotGroovyProject() throws Exception {
 		GroovyRuntime.removeGroovyNature(fJProject.getProject());
-		fProject.createPackage("test1");
+		IPackageFragment frag = fProject.createPackage("test1");
 		NewClassWizardPage wizardPage= new NewClassWizardPage();
 		wizardPage.setPackageFragmentRoot(fSourceFolder, true);
-		assertStatus(IStatus.ERROR, "is not a groovy project", wizardPage.getStatus());
+		wizardPage.setPackageFragment(frag, true);
+		assertStatus(IStatus.WARNING, "is not a groovy project.  Groovy Nature will be added to project upon completion.", wizardPage.getStatus());
 	}
 
+	public void testDiscouraedDefaultPackage() throws Exception {
+	    GroovyRuntime.removeGroovyNature(fJProject.getProject());
+	    NewClassWizardPage wizardPage= new NewClassWizardPage();
+	    wizardPage.setPackageFragmentRoot(fSourceFolder, true);
+	    assertStatus(IStatus.WARNING, "The use of the default package is discouraged.", wizardPage.getStatus());
+	}
+	
 	/** Helper method to check an IStatus */
 	protected void assertStatus(int severity, String msgFragment, IStatus status) {
         assertEquals(severity, status.getSeverity());
