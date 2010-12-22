@@ -298,7 +298,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 						parser, this.owner, problems, createAST, reconcileFlags, pm);
 			}
 
-			resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
+			// resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
 
 			// GROOVY
 			// if this is a working copy, then we have more work to do
@@ -430,7 +430,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * @return
 	 */
 	public JDTResolver getResolver() {
-		return resolver;
+		return null;
+		// return resolver;
 	}
 
 	public GroovyCompilationUnit cloneCachingContents(char[] newContents) {
