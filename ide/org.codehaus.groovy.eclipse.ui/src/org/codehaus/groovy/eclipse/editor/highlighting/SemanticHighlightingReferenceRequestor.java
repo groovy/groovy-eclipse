@@ -16,8 +16,9 @@
 
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -28,7 +29,10 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -44,16 +48,13 @@ import org.eclipse.jface.text.Position;
  * @created Oct 29, 2009
  */
 public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
-
-    List<Position> unknownNodes = new LinkedList<Position>();
-
-    List<Position> regexNodes = new LinkedList<Position>();
-
-    List<Position> deprecatedNodes = new LinkedList<Position>();
-
-    List<Position> staticNodes = new LinkedList<Position>();
-
-    List<Position> fieldReferenceNodes = new LinkedList<Position>();
+    /**
+     * this set contains positions in a non-overlapping,
+     * increasing lexical order
+     * but the inferencing visitor does not always search in a lexical order.
+     * This list should be changed to an ordered list
+     */
+    SortedSet<HighlightedTypedPosition> typedPosition = new TreeSet<HighlightedTypedPosition>();
 
     final char[] contents;
 
@@ -63,35 +64,52 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
             IJavaElement enclosingElement) {
-        if (node.getEnd() <= 0) {
+        // ignore statements
+        if (!(node instanceof AnnotatedNode)) {
             return VisitStatus.CONTINUE;
         }
+
+        // ignore nodes with invalid slocs
+        if (node.getEnd() <= 0 || (node.getStart() == 0 && node.getEnd() == 1)) {
+            return VisitStatus.CONTINUE;
+        }
+
+        HighlightedTypedPosition pos = null;
         if (result.confidence == TypeConfidence.UNKNOWN && node.getEnd() > 0) {
-            unknownNodes.add(getPosition(node));
+            Position p = getPosition(node);
+            typedPosition.add(new HighlightedTypedPosition(p, HighlightKind.UNKNOWN));
+
             // don't continue if we have an unknown reference
             return VisitStatus.CANCEL_BRANCH;
         } else if (node instanceof ConstantExpression && node.getStart() < contents.length && contents[node.getStart()] == '/') {
-            regexNodes.add(getPosition(node));
-        }
-        if (isDeprecated(result.declaration)) {
-            deprecatedNodes.add(getPosition(node));
+            Position p = getPosition(node);
+            pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+        } else if (node instanceof AnnotatedNode && isDeprecated(result.declaration)) {
+            Position p = getPosition(node);
+            pos = new HighlightedTypedPosition(p, HighlightKind.DEPRECATED);
+        } else if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {
+            Position p = getPosition(node);
+            if (isStatic(result.declaration)) {
+                pos = new HighlightedTypedPosition(p, HighlightKind.STATIC_FIELD);
+            } else {
+                pos = new HighlightedTypedPosition(p, HighlightKind.FIELD);
+            }
+        } else if (result.declaration instanceof MethodNode) {
+            Position p = getPosition(node);
+            if (isStatic(result.declaration)) {
+                pos = new HighlightedTypedPosition(p, HighlightKind.STATIC_METHOD);
+            } else {
+                pos = new HighlightedTypedPosition(p, HighlightKind.METHOD);
+            }
         }
 
-        if (isStatic(result.declaration)) {
-            staticNodes.add(getPosition(node));
-        }
-
-        if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {
-            fieldReferenceNodes.add(getPosition(node));
+        if (pos != null && (pos.getOffset() > 0 || pos.getLength() > 1)) {
+            typedPosition.add(pos);
         }
 
         return VisitStatus.CONTINUE;
     }
 
-    /**
-     * @param node
-     * @return
-     */
     private Position getPosition(ASTNode node) {
         int start, length;
         if (node instanceof MethodNode || node instanceof FieldNode || node instanceof PropertyNode
@@ -106,10 +124,20 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
         } else if (node instanceof StaticMethodCallExpression) {
             start = node.getStart();
             length = ((StaticMethodCallExpression) node).getMethod().length();
+        } else if (node instanceof MethodCallExpression) {
+            Expression e = ((MethodCallExpression) node).getMethod();
+            // FIXADE : determine if we need to ignore funky method calls that
+            // use things like GStrings in the
+            // name
+            // if (e instanceof ConstantExpression) {
+                start = e.getStart();
+            length = e.getLength();
+            // }
         } else {
             start = node.getStart();
             length = node.getLength();
         }
+
         return new Position(start, length);
     }
 
@@ -127,10 +155,6 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
         return false;
     }
 
-    /**
-     * @param declaration
-     * @return
-     */
     private boolean hasDeprecatedAnnotation(AnnotatedNode declaration) {
         List<AnnotationNode> anns = declaration.getAnnotations();
         for (AnnotationNode ann : anns) {

@@ -179,7 +179,7 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
             int indentLevel = indentor.getLineIndentLevel(d, lineNum);
             String line;
             do {
-                line = indentor.getLine(d, ++lineNum);
+                line = GroovyIndentationService.getLine(d, ++lineNum);
                 line = line.trim();
             } while (line.equals("") && lineNum < d.getNumberOfLines());
             int nextIndentLevel = indentor.getLineIndentLevel(d, lineNum);

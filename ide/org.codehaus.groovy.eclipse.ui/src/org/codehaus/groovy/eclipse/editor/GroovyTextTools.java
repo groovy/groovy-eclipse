@@ -29,21 +29,19 @@ public class GroovyTextTools {
     private final GroovyColorManager colorManager = new GroovyColorManager();
 
     private IPartitionTokenScanner partitionScanner;
-    
-    private HighlightingExtenderRegistry highlightingExtenderRegistry; 
-    
+
+    private HighlightingExtenderRegistry highlightingExtenderRegistry;
+
     public GroovyColorManager getColorManager() {
         return colorManager;
     }
-    
+
     public void dispose() {
         colorManager.dispose();
         highlightingExtenderRegistry = null;
+        partitionScanner = null;
     }
-    
-    /**
-     * @return
-     */
+
     public IPartitionTokenScanner getGroovyPartitionScanner() {
         if (partitionScanner == null) {
             partitionScanner = new GroovyPartitionScanner();
@@ -58,5 +56,4 @@ public class GroovyTextTools {
         }
         return highlightingExtenderRegistry;
     }
-    
 }

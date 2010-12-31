@@ -173,7 +173,8 @@
             extensions="groovy"
             icon="icons/groovy_file.gif"
             id="org.codehaus.groovy.eclipse.editor.GroovyEditor"
-            name="Groovy Editor">
+            name="Groovy Editor"
+            symbolicFontName="org.eclipse.jdt.ui.editors.textfont">
          <contentTypeBinding
                contentTypeId="org.eclipse.jdt.groovy.core.groovySource">
          </contentTypeBinding>

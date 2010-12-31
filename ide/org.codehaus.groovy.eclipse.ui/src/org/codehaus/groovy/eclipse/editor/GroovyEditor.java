@@ -103,6 +103,7 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel;
+import org.eclipse.ui.texteditor.ChainedPreferenceStore;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 public class GroovyEditor extends CompilationUnitEditor {
@@ -559,9 +560,14 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     @Override
     protected void setPreferenceStore(IPreferenceStore store) {
-        super.setPreferenceStore(store);
+        ChainedPreferenceStore newStore = new ChainedPreferenceStore(new IPreferenceStore[] { store,
+                GroovyPlugin.getDefault().getPreferenceStore() });
+        super.setPreferenceStore(newStore);
+
+        // now create a new configuration to overwrite the Java-centric one
         setSourceViewerConfiguration(createJavaSourceViewerConfiguration());
     }
+
 
     public GroovyConfiguration getGroovyConfiguration() {
         return (GroovyConfiguration) getSourceViewerConfiguration();

@@ -18,7 +18,9 @@ package org.codehaus.groovy.eclipse.test.ui;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.DEPRECATED;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.FIELD;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.REGEX;
-import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.METHOD;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_METHOD;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_FIELD;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.UNKNOWN;
 
 import java.util.Arrays;
@@ -48,16 +50,18 @@ public class SemanticHighlightingTests extends EclipseTestCase {
     }
     
     public void testStaticFieldRanges() throws Exception {
-        String contents = "class X { static FOO }";
+        String contents = "class X { static FOO\n def x() { \n FOO } }";
         assertHighlighting(contents, 
-                new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), FIELD),
-                new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), STATIC));
+                new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), STATIC_FIELD),
+                new HighlightedTypedPosition(contents.indexOf("x"), "x".length(), METHOD),
+                new HighlightedTypedPosition(contents.lastIndexOf("FOO"), "FOO".length(), STATIC_FIELD));
     }
     
     public void testStaticMethodRanges() throws Exception {
-        String contents = "class X { static FOO() {} }";
+        String contents = "class X { static FOO() { FOO() } }";
         assertHighlighting(contents, 
-                new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), STATIC));
+                new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), STATIC_METHOD),
+                new HighlightedTypedPosition(contents.lastIndexOf("FOO"), "FOO".length(), STATIC_METHOD));
     }
     
     public void testRegex() throws Exception {
@@ -77,9 +81,23 @@ public class SemanticHighlightingTests extends EclipseTestCase {
         assertHighlighting(contents, 
                 new HighlightedTypedPosition(contents.indexOf("Java"), "Java".length(), DEPRECATED),
                 new HighlightedTypedPosition(contents.lastIndexOf("Java"), "Java".length(), DEPRECATED),
-                new HighlightedTypedPosition(contents.indexOf("CONST"), "CONST".length(), DEPRECATED),
-                new HighlightedTypedPosition(contents.indexOf("CONST"), "CONST".length(), FIELD),
-                new HighlightedTypedPosition(contents.indexOf("CONST"), "CONST".length(), STATIC));
+                new HighlightedTypedPosition(contents.indexOf("CONST"), "CONST".length(), DEPRECATED));
+    }
+    
+    public void testDeprecated2() throws Exception {
+        String contents = "@Deprecated\nclass FOO {\n FOO x }";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), DEPRECATED),
+                new HighlightedTypedPosition(contents.lastIndexOf("FOO"), "FOO".length(), DEPRECATED),
+                new HighlightedTypedPosition(contents.lastIndexOf("x"), "x".length(), FIELD));
+    }
+    
+    public void testDeprecated3() throws Exception {
+        String contents = "class FOO {\n @Deprecated FOO x\n def y() { x } }";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("x"), "x".length(), DEPRECATED),
+                new HighlightedTypedPosition(contents.lastIndexOf("y"), "y".length(), METHOD),
+                new HighlightedTypedPosition(contents.lastIndexOf("x"), "x".length(), DEPRECATED));
     }
     
     

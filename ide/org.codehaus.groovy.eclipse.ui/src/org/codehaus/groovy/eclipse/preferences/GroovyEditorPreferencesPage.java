@@ -15,17 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.preferences;
 
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_KEYWORD_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_LINK_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_TAG_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR;
-
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.GroovyColorManager;
@@ -33,15 +22,22 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.text.IJavaColorConstants;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ColorFieldEditor;
+import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.dialogs.PreferenceLinkArea;
+import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
 
 /**
  * This class represents a preference page that is contributed to the
@@ -56,8 +52,49 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 		implements IWorkbenchPreferencePage {
 
+    class SpacerFieldEditor extends FieldEditor {
+
+        private Label spacer;
+
+        public SpacerFieldEditor(Composite parent) {
+            spacer = new Label(parent, SWT.NONE);
+            GridData gd = new GridData();
+            spacer.setLayoutData(gd);
+        }
+
+        @Override
+        protected void adjustForNumColumns(int numColumns) {
+            ((GridData) spacer.getLayoutData()).horizontalSpan = numColumns;
+        }
+
+        @Override
+        protected void doFillIntoGrid(Composite parent, int numColumns) {
+            GridData gd = new GridData();
+            gd.horizontalSpan = numColumns;
+            spacer.setLayoutData(gd);
+        }
+
+        @Override
+        protected void doLoad() {}
+
+        @Override
+        public void store() {}
+
+        @Override
+        protected void doLoadDefault() {}
+
+        @Override
+        protected void doStore() {}
+
+        @Override
+        public int getNumberOfControls() {
+            return 0;
+        }
+
+    }
+
 	public GroovyEditorPreferencesPage() {
-		super(GRID);
+        super(GRID);
 		setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
 	}
 
@@ -66,187 +103,116 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 	 * GUI blocks needed to manipulate various types of preferences. Each field
 	 * editor knows how to save and restore itself.
 	 */
-	public void createFieldEditors() {
+	@Override
+    public void createFieldEditors() {
 
 		// GJDK Color Prefs
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_GJDK_method_coloring"), getFieldEditorParent())); //$NON-NLS-1$
-		addField(new ColorFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
-				Messages
-						.getString("GroovyEditorPreferencesPage.GJDK_method_color"), getFieldEditorParent())); //$NON-NLS-1$
+        final ColorFieldEditor gjdkEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
+                "GroovyEditorPreferencesPage.GJDK_method_color");
 
 		// Groovy Keyword Color Prefs
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_Groovy_keyword_coloring"), getFieldEditorParent())); //$NON-NLS-1$
-		addField(new ColorFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Groovy_keyword_color"), getFieldEditorParent())); //$NON-NLS-1$
-
-		// Multiline Comment Color Prefs
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_multi_line_comment_coloring"), getFieldEditorParent())); //$NON-NLS-1$
-
-		final ColorFieldEditor commentColor = new ColorFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Multi_line_comment_color"), getFieldEditorParent()); //$NON-NLS-1$
-
-		addField(commentColor);
+        final ColorFieldEditor gKeywordEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
+                "GroovyEditorPreferencesPage.Groovy_keyword_color");
 
 		// Java Types Comment Color Prefs
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_Java_types_coloring"), getFieldEditorParent())); //$NON-NLS-1$
-
-		final ColorFieldEditor javaTypesColor = new ColorFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Java_types_color"), getFieldEditorParent()); //$NON-NLS-1$
-
-		addField(javaTypesColor);
+        final ColorFieldEditor javaTypesEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
+                "GroovyEditorPreferencesPage.Java_types_color");
 
 		// Java Keyword Color Prefs
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_Java_keyword_coloring"), getFieldEditorParent())); //$NON-NLS-1$
-
-		final ColorFieldEditor javaKeywordColor = new ColorFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Java_keyword_color"), getFieldEditorParent()); //$NON-NLS-1$
-
-		addField(javaKeywordColor);
+        final ColorFieldEditor javaKeywordEditor = createColorEditor(
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, "GroovyEditorPreferencesPage.Java_keyword_color");
 
 		// String Coloring
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_String_coloring"), getFieldEditorParent())); //$NON-NLS-1$
+        final ColorFieldEditor stringEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
+                "GroovyEditorPreferencesPage.String_color");
 
-		final ColorFieldEditor stringColor = new ColorFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
-				Messages.getString("GroovyEditorPreferencesPage.String_color"), getFieldEditorParent()); //$NON-NLS-1$
-		
-		addField(stringColor);
 
-		// Number Coloring
-		addField(new BooleanFieldEditor(
-		        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_ENABLED,
-		        Messages
-		        .getString("GroovyEditorPreferencesPage.Enable_Number_coloring"), getFieldEditorParent())); //$NON-NLS-1$
-		
-		final ColorFieldEditor numberColor = new ColorFieldEditor(
-		        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
-		        Messages.getString("GroovyEditorPreferencesPage.Number_color"), getFieldEditorParent()); //$NON-NLS-1$
-		
-		addField(numberColor);
-		
-		// GroovyDoc Keyword
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_KEYWORD_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_GroovyDoc_keyword_coloring"), getFieldEditorParent())); //$NON-NLS-1$
+        // Bracket Coloring
+        final ColorFieldEditor bracketEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR,
+                "GroovyEditorPreferencesPage.Bracket_color");
 
-		final ColorFieldEditor groovyDocKeywordColor = new ColorFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_KEYWORD_COLOR,
-				Messages
-						.getString("GroovyEditorPreferencesPage.GroovyDoc_keyword_color"), getFieldEditorParent()); //$NON-NLS-1$
+        // Operator Coloring
+        final ColorFieldEditor operatorEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR,
+                "GroovyEditorPreferencesPage.Operator_color");
 
-		addField(groovyDocKeywordColor);
+        // Annotation Coloring
+        final ColorFieldEditor annotationEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR,
+                "GroovyEditorPreferencesPage.Annotation_color");
 
-		
-		// GroovyDoc Tag
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_TAG_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_GroovyDoc_tag_coloring"), getFieldEditorParent())); //$NON-NLS-1$
+        // Return Coloring
+        final ColorFieldEditor returnEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR,
+                "GroovyEditorPreferencesPage.Return_color");
 
-		final ColorFieldEditor groovyDocTagColor = new ColorFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_TAG_COLOR,
-				Messages
-						.getString("GroovyEditorPreferencesPage.GroovyDoc_tag_color"), getFieldEditorParent()); //$NON-NLS-1$
+        // Number Coloring
+        final ColorFieldEditor numberEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
+                "GroovyEditorPreferencesPage.Number_color");
 
-		addField(groovyDocTagColor);
-
-		
-		// GroovyDoc Link
-		addField(new BooleanFieldEditor(
-				PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_LINK_ENABLED,
-				Messages
-						.getString("GroovyEditorPreferencesPage.Enable_GroovyDoc_link_coloring"), getFieldEditorParent())); //$NON-NLS-1$
-
-        final ColorFieldEditor groovyDocLinkColor = new ColorFieldEditor(
-                PreferenceConstants.GROOVY_EDITOR_GROOVYDOC_LINK_COLOR,
-                Messages
-                        .getString("GroovyEditorPreferencesPage.GroovyDoc_link_color"), getFieldEditorParent()); //$NON-NLS-1$
-
-        addField(groovyDocLinkColor);
-
-        
         // Default color
-        final ColorFieldEditor groovyDefaultColor = new ColorFieldEditor(
-                PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
-                Messages
-                        .getString("GroovyEditorPreferencesPage.Groovy_Default_color"), getFieldEditorParent()); //$NON-NLS-1$
+        final ColorFieldEditor defaultEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
+                "GroovyEditorPreferencesPage.Groovy_Default_color");
 
-        addField(groovyDefaultColor);
+        // Semantic highlighting
+        Label l = new Label(getFieldEditorParent(), SWT.NONE);
+        l.setText("\n\nSemantic Highlighting preferences:");
+        Composite c = new Composite(getFieldEditorParent(), SWT.NONE | SWT.BORDER);
+        GridData gd = new GridData();
+        gd.horizontalSpan = 2;
+        c.setLayoutData(gd);
+        c.setLayout(new FillLayout(SWT.VERTICAL));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
+                "Enable semantic highlighting (underline statically unknown references,\n"
+                        + "highlight fields, statics, and deprecated elements", c));
 
-        
+        PreferenceLinkArea area = new PreferenceLinkArea(
+                c,
+                SWT.WRAP,
+                "org.eclipse.jdt.ui.preferences.JavaEditorColoringPreferencePage",
+                " \n\n"
+                        + "Semantic highlighting colors for fields and methods can be controlled in the\n<a>Java -> Editor -> Syntax Coloring</a> page.",
+                (IWorkbenchPreferenceContainer) getContainer(), null);
+        area.getControl().setLayoutData(gd);
+
         // Change to Java Defaults
-        Button javaColorButton = new Button(super.getFieldEditorParent(),
-                SWT.BUTTON1);
-        
-		javaColorButton
-				.setText(Messages
-						.getString("GroovyEditorPreferencesPage.Copy_Java_Color_Preferences")); //$NON-NLS-1$
+        Composite parent = getFieldEditorParent();
+        Button javaColorButton = new Button(parent, SWT.BUTTON1);
+
+        javaColorButton.setText(Messages.getString("GroovyEditorPreferencesPage.Copy_Java_Color_Preferences"));
 		javaColorButton.addSelectionListener(new SelectionListener() {
 			public void widgetSelected(SelectionEvent arg0) {
 
 				IPreferenceStore store = JavaPlugin.getDefault()
 						.getPreferenceStore();
-
 				RGB rgb = PreferenceConverter.getColor(store,
+				        IJavaColorConstants.JAVA_KEYWORD);
+				gjdkEditor.getColorSelector().setColorValue(rgb);
+				gKeywordEditor.getColorSelector().setColorValue(rgb);
+				javaTypesEditor.getColorSelector().setColorValue(rgb);
+				javaKeywordEditor.getColorSelector().setColorValue(rgb);
+
+				rgb = PreferenceConverter.getColor(store,
 						IJavaColorConstants.JAVA_STRING);
-				stringColor.getColorSelector().setColorValue(rgb);
+                stringEditor.getColorSelector().setColorValue(rgb);
 
-				rgb = PreferenceConverter.getColor(store,
-                        IJavaColorConstants.JAVA_DEFAULT);
-                numberColor.getColorSelector().setColorValue(rgb);
-				
-				rgb = PreferenceConverter.getColor(store,
-						IJavaColorConstants.JAVA_KEYWORD);
-				javaKeywordColor.getColorSelector().setColorValue(rgb);
-				javaTypesColor.getColorSelector().setColorValue(rgb);
+                rgb = PreferenceConverter.getColor(store,
+                        IJavaColorConstants.JAVA_BRACKET);
+                bracketEditor.getColorSelector().setColorValue(rgb);
 
-				rgb = PreferenceConverter.getColor(store,
-						IJavaColorConstants.JAVA_MULTI_LINE_COMMENT);
-				commentColor.getColorSelector().setColorValue(rgb);
+                rgb = PreferenceConverter.getColor(store,
+                        IJavaColorConstants.JAVA_OPERATOR);
+                operatorEditor.getColorSelector().setColorValue(rgb);
 
-				rgb = PreferenceConverter.getColor(store,
-						IJavaColorConstants.JAVADOC_KEYWORD);
-				groovyDocKeywordColor.getColorSelector().setColorValue(rgb);
+                rgb = PreferenceConverter.getColor(store,
+                        IJavaColorConstants.JAVA_ANNOTATION);
+                annotationEditor.getColorSelector().setColorValue(rgb);
 
-				rgb = PreferenceConverter.getColor(store,
-						IJavaColorConstants.JAVADOC_TAG);
-				groovyDocTagColor.getColorSelector().setColorValue(rgb);
+                rgb = PreferenceConverter.getColor(store,
+                        IJavaColorConstants.JAVA_KEYWORD_RETURN);
+                returnEditor.getColorSelector().setColorValue(rgb);
 
-				rgb = PreferenceConverter.getColor(store,
-						IJavaColorConstants.JAVADOC_LINK);
-				groovyDocLinkColor.getColorSelector().setColorValue(rgb);
+                rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_DEFAULT);
+                numberEditor.getColorSelector().setColorValue(rgb);
+                defaultEditor.getColorSelector().setColorValue(rgb);
 
-				rgb = PreferenceConverter.getColor(store,
-				        IJavaColorConstants.JAVA_DEFAULT);
-				groovyDefaultColor.getColorSelector().setColorValue(rgb);
 			}
 
 			public void widgetDefaultSelected(SelectionEvent arg0) {
@@ -255,15 +221,26 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 
 	}
 
+    private ColorFieldEditor createColorEditor(String preference, String nls) {
+        Composite parent = getFieldEditorParent();
+        addField(new SpacerFieldEditor(parent));
+        ColorFieldEditor colorFieldEditor = new ColorFieldEditor(preference, Messages.getString(nls), parent);
+        addField(colorFieldEditor);
+        addField(new BooleanFieldEditor(preference + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, "make bold",
+                BooleanFieldEditor.SEPARATE_LABEL, getFieldEditorParent()));
+        return colorFieldEditor;
+    }
+
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
 	public void init(IWorkbench workbench) {
 	}
 
-	protected String getPageId() {
+	@Override
+    protected String getPageId() {
 		return "org.codehaus.groovy.eclipse.preferences.editor";
 	}
 
@@ -272,27 +249,8 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 	    boolean success = super.performOk();
 	    if (success) {
     	    GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
-            colorManager.unbindColor(GROOVY_EDITOR_GROOVYDOC_KEYWORD_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_GROOVYDOC_TAG_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_GROOVYDOC_LINK_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR);
-            colorManager.unbindColor(GROOVY_EDITOR_DEFAULT_COLOR);
-
-            colorManager.bindColor(GROOVY_EDITOR_GROOVYDOC_KEYWORD_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_GROOVYDOC_KEYWORD_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_GROOVYDOC_TAG_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_GROOVYDOC_TAG_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_GROOVYDOC_LINK_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_GROOVYDOC_LINK_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_MULTILINECOMMENTS_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR));
-            colorManager.bindColor(GROOVY_EDITOR_DEFAULT_COLOR, PreferenceConverter.getColor(getPreferenceStore(), GROOVY_EDITOR_DEFAULT_COLOR));
+            colorManager.uninitialize();
+            colorManager.initialize();
 	    }
 	    return success;
 	}

@@ -113,9 +113,6 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 		setPredicateRules(result);
 	}
 
-    /**
-     * @return
-     */
     public static List<IRule> createRules(boolean withColor) {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 
@@ -124,7 +121,7 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         Object objmString;
         Object objsString;
         Object objsComment;
-        if (withColor && store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_ENABLED)) {
+        if (withColor) {
             RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
             objComment = objmString = objsString = objsComment = objdComment = new TextAttribute(new Color(null, rgb), null,
                     SWT.ITALIC);

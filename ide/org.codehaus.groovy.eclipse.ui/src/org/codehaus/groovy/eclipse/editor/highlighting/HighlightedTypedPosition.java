@@ -22,12 +22,17 @@ import org.eclipse.jface.text.Position;
  * @author andrew
  * @created Jun 10, 2010
  */
-public class HighlightedTypedPosition extends Position {
+public class HighlightedTypedPosition extends Position implements Comparable<HighlightedTypedPosition> {
     public static enum HighlightKind {
-        DEPRECATED, FIELD, REGEX, STATIC, UNKNOWN
+        DEPRECATED, FIELD, METHOD, STATIC_FIELD, STATIC_METHOD, REGEX, UNKNOWN
     }
 
     public final HighlightKind kind;
+
+    public HighlightedTypedPosition(Position p, HighlightKind kind) {
+        super(p.getOffset(), p.getLength());
+        this.kind = kind;
+    }
 
     public HighlightedTypedPosition(int offset, HighlightKind kind) {
         super(offset);
@@ -67,4 +72,10 @@ public class HighlightedTypedPosition extends Position {
                 + "]";
     }
 
+    public int compareTo(HighlightedTypedPosition o) {
+        if (o == null) {
+            return 1;
+        }
+        return this.offset - o.offset;
+    }
 }

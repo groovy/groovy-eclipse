@@ -42,10 +42,7 @@ public class GroovyMultilineStringAutoEditStrategy extends AbstractAutoEditStrat
 
     private IAutoEditStrategy wrappee = new DefaultIndentLineAutoEditStrategy();
 
-    private String contentType;
-
     public GroovyMultilineStringAutoEditStrategy(String contentType) {
-        this.contentType = contentType;
     }
 
     public void customizeDocumentCommand(IDocument d, DocumentCommand c) {

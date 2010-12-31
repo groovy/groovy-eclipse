@@ -22,6 +22,7 @@ import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightingStyle;
 import greclipse.org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,11 +66,15 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     private HighlightingStyle regexRefHighlighting;
 
-    private HighlightingStyle staticRefHighlighting;
-
     private HighlightingStyle deprecatedRefHighlighting;
 
     private HighlightingStyle fieldRefHighlighting;
+
+    private HighlightingStyle staticFieldRefHighlighting;
+
+    private HighlightingStyle methodRefHighlighting;
+
+    private HighlightingStyle staticMethodRefHighlighting;
 
     private SemanticHighlightingPresenter presenter;
 
@@ -81,20 +86,21 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
 
     public GroovySemanticReconciler() {
-        RGB rgbDefault = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
-                PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
         RGB rgbString = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
         RGB rgbField = findRGB("semanticHighlighting.field.color", new RGB(0, 0, 192));
+        RGB rgbMethod = findRGB("semanticHighlighting.method.color", new RGB(0, 0, 0));
         GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
-        Color colorDefault = colorManager.getColor(rgbDefault);
         Color colorRegex = colorManager.getColor(rgbString);
         Color fieldColor = colorManager.getColor(rgbField);
-        undefinedRefHighlighting = new HighlightingStyle(new TextAttribute(colorDefault, null, TextAttribute.UNDERLINE), true);
+        Color methodColor = colorManager.getColor(rgbMethod);
+        undefinedRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, TextAttribute.UNDERLINE), true);
         regexRefHighlighting = new HighlightingStyle(new TextAttribute(colorRegex, null, SWT.ITALIC), true);
-        staticRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, SWT.ITALIC), true);
         deprecatedRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, TextAttribute.STRIKETHROUGH), true);
         fieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor), true);
+        staticFieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor, null, SWT.ITALIC), true);
+        methodRefHighlighting = new HighlightingStyle(new TextAttribute(methodColor), true);
+        staticMethodRefHighlighting = new HighlightingStyle(new TextAttribute(methodColor, null, SWT.ITALIC), true);
     }
 
 
@@ -135,7 +141,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             if (unit != null) {
                 presenter.setCanceled(progressMonitor.isCanceled());
                 GatherSemanticReferences finder = new GatherSemanticReferences(unit);
-                List<HighlightedTypedPosition> semanticReferences = finder.findSemanticHighlightingReferences();
+                Collection<HighlightedTypedPosition> semanticReferences = finder.findSemanticHighlightingReferences();
                 progressMonitor.worked(50);
 
                 List<HighlightedPosition> newPositions = new LinkedList<HighlightedPosition>();
@@ -182,10 +188,14 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 return new HighlightedPosition(pos.offset, pos.length, regexRefHighlighting, this);
             case DEPRECATED:
                 return new HighlightedPosition(pos.offset, pos.length, deprecatedRefHighlighting, this);
-            case STATIC:
-                return new HighlightedPosition(pos.offset, pos.length, staticRefHighlighting, this);
             case FIELD:
                 return new HighlightedPosition(pos.offset, pos.length, fieldRefHighlighting, this);
+            case STATIC_FIELD:
+                return new HighlightedPosition(pos.offset, pos.length, staticFieldRefHighlighting, this);
+            case METHOD:
+                return new HighlightedPosition(pos.offset, pos.length, methodRefHighlighting, this);
+            case STATIC_METHOD:
+                return new HighlightedPosition(pos.offset, pos.length, staticMethodRefHighlighting, this);
         }
         // won't get here
         return null;
