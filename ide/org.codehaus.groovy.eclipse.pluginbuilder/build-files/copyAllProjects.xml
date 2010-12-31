@@ -29,6 +29,10 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.eclipse.feature">
 			</fileset>
 		</copy>
+		<copy todir="${featuresDestDir}/org.codehaus.groovy.headless.feature">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.headless.feature">
+			</fileset>
+		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy16.feature">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy16.feature">
 			</fileset>

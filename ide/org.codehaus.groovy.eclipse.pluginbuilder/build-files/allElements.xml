@@ -44,6 +44,11 @@
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.eclipse.feature" />
 		</ant>
+		<echo message="Delegating to org.codehaus.groovy.headless.feature"/>
+		<ant antfile="${genericTargets}" target="${target}">
+			<property name="type" value="feature" />
+			<property name="id" value="org.codehaus.groovy.headless.feature" />
+		</ant>
 		<echo message="Delegating to org.codehaus.groovy.alltests.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
