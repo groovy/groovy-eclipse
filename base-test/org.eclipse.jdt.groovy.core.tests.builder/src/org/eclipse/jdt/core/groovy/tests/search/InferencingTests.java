@@ -410,4 +410,23 @@ public class InferencingTests extends AbstractInferencingTest {
         int end = start + "getAttributeKey('')".length();
         assertType(contents, start, end, "javax.swing.text.html.HTML$Attribute");
     }
+    
+    public void testDGM1() throws Exception {
+        String contents = "'$print'";
+        int start = 0;
+        int end = contents.length();
+        assertDeclaringType(contents, start, end, "groovy.lang.Script");
+    }
+    public void testDGM2() throws Exception {
+        String contents = "'${print}'";
+        int start = 0;
+        int end = contents.length();
+        assertDeclaringType(contents, start, end, "groovy.lang.Script");
+    }
+    public void testDGM3() throws Exception {
+        String contents = "class Foo {\n def m() {\n '${print}'\n } }";
+        int start = contents.indexOf("'${print}'");
+        int end = start + "'${print}'".length();
+        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
 }

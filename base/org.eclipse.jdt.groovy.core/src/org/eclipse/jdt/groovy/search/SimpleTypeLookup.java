@@ -225,12 +225,27 @@ public class SimpleTypeLookup implements ITypeLookup {
 				// check for a '$' as a start.
 				if (node.getText().startsWith("$")) { //$NON-NLS-1$
 					String realName = node.getText().substring(1);
-					VariableInfo var = scope.lookupName(realName);
-					if (var != null) {
-						return new TypeLookupResult(var.type, var.declaringType, null, confidence, scope);
+					if (realName.startsWith("{") && realName.endsWith("}")) {
+						realName = realName.substring(1, realName.length() - 1);
 					}
+					return findTypeForNameWithKnownObjectExpression(realName, node.getType(), scope.getEnclosingTypeDeclaration(),
+							scope, confidence);
+					// // check if name is in current scope
+					// // this will not work if the name is declared in super class
+					// VariableInfo var = scope.lookupName(realName);
+					// if (var != null) {
+					// return new TypeLookupResult(var.type, var.declaringType, null, confidence, scope);
+					// }
+					// // also check for name in super classes
+					// ClassNode enclosingTypeDeclaration = scope.getEnclosingTypeDeclaration();
+					// ASTNode declaration = findDeclaration(realName, enclosingTypeDeclaration);
+					// if (declaration != null) {
+					// ClassNode realDeclaration = declaringTypeFromDeclaration(declaration, enclosingTypeDeclaration);
+					// return new TypeLookupResult(type, realDeclaration, declaration, confidence, scope);
+					// }
+
 				}
-				return new TypeLookupResult(node.getType(), null, null, confidence, scope);
+				return new TypeLookupResult(node.getType(), null, null, UNKNOWN, scope);
 			}
 
 		} else if (node instanceof TupleExpression || node instanceof ListExpression || node instanceof RangeExpression) {

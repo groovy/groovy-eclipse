@@ -15,8 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.codehaus.groovy.ast.ModuleNode;
@@ -33,12 +35,18 @@ import org.codehaus.groovy.eclipse.refactoring.actions.FormatGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatKind;
 import org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
+import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.ISourceRange;
@@ -56,7 +64,10 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory;
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction;
+import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder;
+import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
+import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
 import org.eclipse.jdt.ui.PreferenceConstants;
@@ -73,10 +84,13 @@ import org.eclipse.jface.text.BadPositionCategoryException;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension;
+import org.eclipse.jface.text.IDocumentExtension4;
 import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.IPositionUpdater;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.ISelectionValidator;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.ITextViewerExtension;
 import org.eclipse.jface.text.ITypedRegion;
 import org.eclipse.jface.text.Position;
@@ -88,7 +102,9 @@ import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags;
 import org.eclipse.jface.text.link.LinkedModeUI.IExitPolicy;
 import org.eclipse.jface.text.link.LinkedPosition;
 import org.eclipse.jface.text.link.LinkedPositionGroup;
+import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.IAnnotationModel;
+import org.eclipse.jface.text.source.IAnnotationModelExtension;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
@@ -104,6 +120,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel;
 import org.eclipse.ui.texteditor.ChainedPreferenceStore;
+import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 public class GroovyEditor extends CompilationUnitEditor {
@@ -924,6 +941,216 @@ public class GroovyEditor extends CompilationUnitEditor {
         if (wasInstalled) {
             installSemanticHighlighting();
         }
+    }
+
+    /**
+     * Finds and marks occurrence annotations.
+     * Copied from {@link JavaEditor}
+     *
+     * @since 3.0
+     */
+    class OccurrencesFinderJob extends Job {
+
+        private final IDocument fDocument;
+
+        private final ISelection fSelection;
+
+        private final ISelectionValidator fPostSelectionValidator;
+
+        private boolean fCanceled = false;
+
+        private final OccurrenceLocation[] fLocations;
+
+        public OccurrencesFinderJob(IDocument document, OccurrenceLocation[] locations, ISelection selection) {
+            super("Mark Occurrences");
+            fDocument = document;
+            fSelection = selection;
+            fLocations = locations;
+
+            if (getSelectionProvider() instanceof ISelectionValidator)
+                fPostSelectionValidator = (ISelectionValidator) getSelectionProvider();
+            else
+                fPostSelectionValidator = null;
+        }
+
+        // cannot use cancel() because it is declared final
+        void doCancel() {
+            fCanceled = true;
+            cancel();
+        }
+
+        private boolean isCanceled(IProgressMonitor progressMonitor) {
+            return fCanceled || progressMonitor.isCanceled() || fPostSelectionValidator != null
+                    && !(fPostSelectionValidator.isValid(fSelection) || getForcedMarkOccurrencesSelection() == fSelection)
+                    || LinkedModeModel.hasInstalledModel(fDocument);
+        }
+
+        /*
+         * @see Job#run(org.eclipse.core.runtime.IProgressMonitor)
+         */
+        @Override
+        public IStatus run(IProgressMonitor progressMonitor) {
+            if (isCanceled(progressMonitor))
+                return Status.CANCEL_STATUS;
+
+            ITextViewer textViewer = getViewer();
+            if (textViewer == null)
+                return Status.CANCEL_STATUS;
+
+            IDocument document = textViewer.getDocument();
+            if (document == null)
+                return Status.CANCEL_STATUS;
+
+            IDocumentProvider documentProvider = getDocumentProvider();
+            if (documentProvider == null)
+                return Status.CANCEL_STATUS;
+
+            IAnnotationModel annotationModel = documentProvider.getAnnotationModel(getEditorInput());
+            if (annotationModel == null)
+                return Status.CANCEL_STATUS;
+
+            // Add occurrence annotations
+            int length = fLocations.length;
+            Map annotationMap = new HashMap(length);
+            for (int i = 0; i < length; i++) {
+
+                if (isCanceled(progressMonitor))
+                    return Status.CANCEL_STATUS;
+
+                OccurrenceLocation location = fLocations[i];
+                Position position = new Position(location.getOffset(), location.getLength());
+
+                String description = location.getDescription();
+                String annotationType = (location.getFlags() == IOccurrencesFinder.F_WRITE_OCCURRENCE) ? "org.eclipse.jdt.ui.occurrences.write" : "org.eclipse.jdt.ui.occurrences"; //$NON-NLS-1$ //$NON-NLS-2$
+
+                annotationMap.put(new Annotation(annotationType, false, description), position);
+            }
+
+            if (isCanceled(progressMonitor))
+                return Status.CANCEL_STATUS;
+
+            synchronized (myGetLockObject(annotationModel)) {
+                if (annotationModel instanceof IAnnotationModelExtension) {
+                    ((IAnnotationModelExtension) annotationModel).replaceAnnotations(getOccurrenceAnnotations(), annotationMap);
+                } else {
+                    myRemoveOccurrenceAnnotations();
+                    Iterator iter = annotationMap.entrySet().iterator();
+                    while (iter.hasNext()) {
+                        Map.Entry mapEntry = (Map.Entry) iter.next();
+                        annotationModel.addAnnotation((Annotation) mapEntry.getKey(), (Position) mapEntry.getValue());
+                    }
+                }
+                setOccurrenceAnnotations((Annotation[]) annotationMap.keySet().toArray(
+                        new Annotation[annotationMap.keySet().size()]));
+            }
+
+            return Status.OK_STATUS;
+        }
+    }
+
+    // create our own since the version in the super class is of a
+    // non-accessible type
+    private OccurrencesFinderJob groovyOccurrencesFinderJob = null;
+
+    // the following methods are used to get, set, and call private members in
+    // the super class that have to do with mark ocurrences.
+
+    private Object myGetLockObject(IAnnotationModel model) {
+        return ReflectionUtils.executePrivateMethod(JavaEditor.class, "getLockObject", new Class[] { IAnnotationModel.class },
+                this, new Object[] { model });
+    }
+
+    private void myRemoveOccurrenceAnnotations() {
+        ReflectionUtils.executePrivateMethod(JavaEditor.class, "removeOccurrenceAnnotations", new Class[0], this, new Object[0]);
+    }
+
+    private void setOccurrenceAnnotations(Annotation[] as) {
+        ReflectionUtils.setPrivateField(JavaEditor.class, "fOccurrenceAnnotations", this, as);
+    }
+
+    private void setMarkOccurrenceTargetRegion(IRegion r) {
+        ReflectionUtils.setPrivateField(JavaEditor.class, "fMarkOccurrenceTargetRegion", this, r);
+    }
+
+    private void setMarkOccurrenceModificationStamp(long l) {
+        ReflectionUtils.setPrivateField(JavaEditor.class, "fMarkOccurrenceModificationStamp", this, l);
+    }
+
+    private Annotation[] getOccurrenceAnnotations() {
+        return (Annotation[]) ReflectionUtils.getPrivateField(JavaEditor.class, "fOccurrenceAnnotations", this);
+    }
+
+    private IRegion getMarkOccurrenceTargetRegion() {
+        return (IRegion) ReflectionUtils.getPrivateField(JavaEditor.class, "fMarkOccurrenceTargetRegion", this);
+    }
+
+    private long getMarkOccurrenceModificationStamp() {
+        return (Long) ReflectionUtils.getPrivateField(JavaEditor.class, "fMarkOccurrenceModificationStamp", this);
+    }
+
+    private boolean getStickyOccurrenceAnnotations() {
+        return (Boolean) ReflectionUtils.getPrivateField(JavaEditor.class, "fStickyOccurrenceAnnotations", this);
+    }
+
+    private boolean getMarkOccurrenceAnnotations() {
+        return (Boolean) ReflectionUtils.getPrivateField(JavaEditor.class, "fMarkOccurrenceAnnotations", this);
+    }
+
+    private ISelection getForcedMarkOccurrencesSelection() {
+        return (ISelection) ReflectionUtils.getPrivateField(JavaEditor.class, "fForcedMarkOccurrencesSelection", this);
+    }
+
+
+    /**
+     * Override from super class since we need to handle Groovy code here.
+     */
+    @Override
+    protected void updateOccurrenceAnnotations(ITextSelection selection, org.eclipse.jdt.core.dom.CompilationUnit astRoot) {
+        if (groovyOccurrencesFinderJob != null)
+            groovyOccurrencesFinderJob.cancel();
+
+        if (!getMarkOccurrenceAnnotations())
+            return;
+
+        if (astRoot == null || selection == null)
+            return;
+
+        IDocument document = getSourceViewer().getDocument();
+        if (document == null)
+            return;
+
+        boolean hasChanged = false;
+        if (document instanceof IDocumentExtension4) {
+            int offset = selection.getOffset();
+            long currentModificationStamp = ((IDocumentExtension4) document).getModificationStamp();
+            IRegion markOccurrenceTargetRegion = getMarkOccurrenceTargetRegion();
+            hasChanged = currentModificationStamp != getMarkOccurrenceModificationStamp();
+            if (markOccurrenceTargetRegion != null && !hasChanged) {
+                if (markOccurrenceTargetRegion.getOffset() <= offset
+                        && offset <= markOccurrenceTargetRegion.getOffset() + markOccurrenceTargetRegion.getLength())
+                    return;
+            }
+            setMarkOccurrenceTargetRegion(JavaWordFinder.findWord(document, offset));
+            setMarkOccurrenceModificationStamp(currentModificationStamp);
+        }
+
+        OccurrenceLocation[] locations = null;
+
+        GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
+        finder.initialize(astRoot, selection.getOffset(), selection.getLength());
+        locations = finder.getOccurrences();
+
+        if (locations == null) {
+            if (!getStickyOccurrenceAnnotations())
+                myRemoveOccurrenceAnnotations();
+            else if (hasChanged) // check consistency of current annotations
+                myRemoveOccurrenceAnnotations();
+            return;
+        }
+
+        groovyOccurrencesFinderJob = new OccurrencesFinderJob(document, locations, selection);
+        groovyOccurrencesFinderJob.run(new NullProgressMonitor());
+
     }
 
     @Override

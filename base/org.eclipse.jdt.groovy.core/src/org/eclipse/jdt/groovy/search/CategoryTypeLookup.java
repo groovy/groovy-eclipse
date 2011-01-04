@@ -51,8 +51,14 @@ public class CategoryTypeLookup implements ITypeLookup {
 			ClassNode currentType = objectExpressionType != null ? objectExpressionType : scope.getEnclosingTypeDeclaration();
 			Set<MethodNode> possibleMethods = new HashSet<MethodNode>();
 			// go through all categories and look for and look for a method with the given name
+			String text = constExpr.getText();
+			if (text.startsWith("${") && text.endsWith("}")) {
+				text = text.substring(2, text.length() - 1);
+			} else if (text.startsWith("$")) {
+				text = text.substring(1);
+			}
 			for (ClassNode category : categories) {
-				List<?> methods = category.getMethods(constExpr.getText()); // use List<?> because groovy 1.6.5 does not
+				List<?> methods = category.getMethods(text); // use List<?> because groovy 1.6.5 does not
 				// have type parameters on this method
 				possibleMethods.addAll((Collection<? extends MethodNode>) methods);
 			}

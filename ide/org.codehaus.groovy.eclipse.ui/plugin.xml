@@ -668,6 +668,12 @@
             description="Converts a file with a java extension to a file with a groovy extension"
             id="org.codehaus.groovy.eclipse.ui.convertToGroovy"
             name="Convert to Groovy"/>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.editor.category.source"
+            description="Populates the search view with all occurrecnes of currently selected token in the file"
+            id="org.codehaus.groovy.eclipse.ui.findOccurrences"
+            name="Find occurrences in current file">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
@@ -711,6 +717,20 @@
             locale="de_CH"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M3+G J"/>
+            
+      <!-- Disable the JDT find occurrences quick menu when in groovy files-->      
+      <key
+            commandId="org.eclipse.jdt.ui.edit.text.java.search.occurrences.in.file.quickMenu"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence=""/>
+            
+      <!-- Use our command instead -->
+      <key
+            commandId="org.codehaus.groovy.eclipse.ui.findOccurrences"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+U"/>
    </extension>
    <extension point="org.eclipse.debug.ui.consoleLineTrackers">
 		<consoleLineTracker
@@ -858,6 +878,13 @@
                actionID="RulerClick"
                id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
          </action>
+       <action
+             class="org.codehaus.groovy.eclipse.editor.actions.FindOccurrencesAction"
+             definitionId="org.codehaus.groovy.eclipse.ui.findOccurrences"
+             id="org.codehaus.groovy.eclipse.ui.action.findOccurrences"
+             label="Find Occurrences in file"
+             style="push">
+       </action>
       </editorContribution>
  </extension>
  <extension

@@ -39,6 +39,7 @@ import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
 import org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests;
 import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestCaseWizardTest;
 import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTest;
+import org.codehaus.groovy.eclipse.ui.search.FindOccurrencesTests;
 
 /**
  * Suite needs to be run as eclipse plugin test
@@ -67,6 +68,7 @@ public class AllUITests {
 		suite.addTestSuite(BracketInserterTests.class);
 		suite.addTestSuite(NewGroovyTypeWizardTest.class);
         suite.addTestSuite(NewGroovyTestCaseWizardTest.class);
+        suite.addTest(FindOccurrencesTests.suite());
 		return suite;
 	}
 }

@@ -62,6 +62,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
     
     private IJavaElement requestedElement;
     
+    private ASTNode requestedNode;
+    
     private final GroovyProjectFacade project;
     
     private final GroovyCompilationUnit unit;
@@ -84,7 +86,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         
         if (doTest(node)) {
-            if (result.declaration != null) {
+            requestedNode = result.declaration;
+            if (requestedNode instanceof ClassNode) {
+                requestedNode = ((ClassNode) requestedNode).redirect();
+            }
+            if (requestedNode != null) {
                 if (result.declaration instanceof VariableExpression) {
                     // look in the local scope
                     VariableExpression var = (VariableExpression) result.declaration;
@@ -403,6 +409,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
 
+    public ASTNode getRequestedNode() {
+        return requestedNode;
+    }
+    
     public IJavaElement getRequestedElement() {
         return requestedElement;
     }
