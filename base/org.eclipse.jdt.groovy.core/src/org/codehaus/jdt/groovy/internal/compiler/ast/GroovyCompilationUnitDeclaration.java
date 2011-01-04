@@ -586,7 +586,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		Map<ClassNode, TypeDeclaration> fromClassNodeToDecl = new HashMap<ClassNode, TypeDeclaration>();
 
 		char[] mainName = toMainName(compilationResult.getFileName());
-
+		boolean isInner = false;
 		List<ClassNode> classNodes = null;
 		classNodes = moduleClassNodes;
 		Map<ClassNode, List<TypeDeclaration>> innersToRecord = new HashMap<ClassNode, List<TypeDeclaration>>();
@@ -605,8 +605,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				String outername = outerClass.getNameWithoutPackage();
 				String newInner = innerClassNode.getNameWithoutPackage().substring(outername.length() + 1);
 				typeDeclaration.name = newInner.toCharArray();
+				isInner = true;
 			} else {
 				typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
+				isInner = false;
 			}
 
 			// classNode.getInnerClasses();
@@ -622,6 +624,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// FIXASC should not do this for inner classes, just for top level types
 			// FIXASC does this make things visible that shouldn't be?
 			mods = mods & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
+			if (!isInner) {
+				if ((mods & Opcodes.ACC_STATIC) != 0) {
+					mods = mods & ~(Opcodes.ACC_STATIC);
+				}
+			}
 			typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
 
 			if (!(classNode instanceof InnerClassNode)) {

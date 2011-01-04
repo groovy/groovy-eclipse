@@ -267,6 +267,32 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"}",
 	    	},"abc");
     }
+
+    public void testStaticOuter_GRE944() {
+	    	this.runConformTest(new String[]{
+	    			"A.groovy",
+	    			"static class A {\n"+
+	    			"  public static void main(String[]argv) {print 'abc';}\n"+
+	    			"}\n",
+	    	},"abc");
+    }
+
+    public void testStaticOuter_GRE944_2() {
+	    	this.runConformTest(new String[]{
+	    			"B.java",
+	    			"public class B {\n"+
+	    			"  public static void main(String[] argv) {\n" +
+	    			"    new A.C().foo();\n" +
+	    			"  }\n" +
+	    			"}\n",
+	    			"A.groovy",
+	    			"static class A {\n"+
+	    			"  static class C {\n"+
+	    			"  public void foo() {print 'abcd';}\n"+
+	    			"  }\n"+
+	    			"}\n",
+	    	},"abcd");
+    }
     
 
     public void testGRE830() {
