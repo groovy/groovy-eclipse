@@ -270,8 +270,10 @@ public class JDTResolver extends ResolveVisitor {
 		return false;
 	}
 
-	// Cached set of typenames we can't resolve - so don't continually try
-	private Set<String> failedResolves = new HashSet<String>();
+	// Records a list of type names that aren't resolvable for the current resolution (unresolvables is cleared in
+	// finishedResolution()). This means we won't constantly attempt to lookup something that is not found through the same routes
+	// over and over (GRECLIPSE-870)
+	private Set<String> unresolvables = new HashSet<String>();
 
 	@Override
 	protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
@@ -283,15 +285,17 @@ public class JDTResolver extends ResolveVisitor {
 				return true;
 			}
 		}
-		// if (failedResolves.contains(name)) {
-		// return false;
-		// } else {
-		boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
-		// if (!b) {
-		// failedResolves.add(name);
-		// }
-		return b;
-		// }
+		if (unresolvables.contains(name)) {
+			// System.out.println("Skipping... " + name);
+			return false;
+		} else {
+			boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
+			// System.out.println("resolving... " + type.getName() + " = " + b);
+			if (!b) {
+				unresolvables.add(name);
+			}
+			return b;
+		}
 	}
 
 	public ClassNode resolve(String qualifiedName) {
@@ -587,6 +591,7 @@ public class JDTResolver extends ResolveVisitor {
 	protected void finishedResolution() {
 		scopes.remove(this.currentClass);
 		haveBeenResolved.add(currentClass);
+		unresolvables.clear();
 	}
 
 	private GroovyCompilationUnitScope getScope() {
@@ -619,6 +624,7 @@ public class JDTResolver extends ResolveVisitor {
 	public void startResolving(ClassNode node, SourceUnit source) {
 		try {
 			super.startResolving(node, source);
+			unresolvables.clear();
 		} catch (AbortResolutionException are) {
 			// Can occur if there are other problems with the node (syntax errors) - so don't try resolving it
 		}

@@ -151,6 +151,595 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	
 
 	
+	public void testSlowAnotherAttempt_GRE870() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper1",
+				"package a.b.c.d.e.f\n"+
+				"class Helper1 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper2",
+				"package a.b.c.d.e.f\n"+
+				"class Helper2 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper3",
+				"package a.b.c.d.e.f\n"+
+				"class Helper3 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper4",
+				"package a.b.c.d.e.f\n"+
+				"class Helper4 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper5",
+				"package a.b.c.d.e.f\n"+
+				"class Helper5 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper6",
+				"package a.b.c.d.e.f\n"+
+				"class Helper6 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper7",
+				"package a.b.c.d.e.f\n"+
+				"class Helper7 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper8",
+				"package a.b.c.d.e.f\n"+
+				"class Helper8 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "Helper9",
+				"package a.b.c.d.e.f\n"+
+				"class Helper9 {}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "HelperBase",
+				"package a.b.c.d.e.f\n"+
+				"class HelperBase {\n"+
+				"	static final String TYPE = 'test'\n"+
+				"}\n");
+		env.addGroovyClass(root, "a.b.c.d.e.f", "SomeHelper",
+				"package a.b.c.d.e.f\n"+
+				"class SomeHelper extends HelperBase {}\n");
+
+		env.addGroovyClass(root, "a.b.c.d.e.f", "SomeTests",
+		"package a.b.c.d.e.f\n"+
+		"\n"+
+		"import static a.b.c.d.e.f.Helper1.*\n"+
+		"import static a.b.c.d.e.f.Helper2.*\n"+
+		"import static a.b.c.d.e.f.Helper3.*\n"+
+		"import static a.b.c.d.e.f.Helper4.*\n"+
+		"import static a.b.c.d.e.f.Helper5.*\n"+
+		"import static a.b.c.d.e.f.Helper6.*\n"+
+		"import static a.b.c.d.e.f.Helper7.*\n"+
+		"import static a.b.c.d.e.f.Helper8.*\n"+
+		"import static a.b.c.d.e.f.Helper9.*\n"+
+		"\n"+
+		"import static a.b.c.d.e.f.SomeHelper.*\n"+
+		"\n"+
+		"class SomeTests {\n"+
+		"\n"+
+		"    public void test1() {\n"+
+		"		def details = [:]\n"+
+		"\n"+
+		"        assert details[TYPE] == 'test' \n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test' \n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"        assert details[TYPE] == 'test'\n"+
+		"    }\n"+
+		"}\n");
+
+		// TODO how to create a reliable timed test? This should take about 2-3seconds, not > 10 - at least on my machine ;)
+		
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		incrementalBuild(projectPath);
+		// lots of errors on the missing static imports
+		expectingCompiledClassesV("a.b.c.d.e.f.Helper1,a.b.c.d.e.f.Helper2,a.b.c.d.e.f.Helper3,a.b.c.d.e.f.Helper4,a.b.c.d.e.f.Helper5,a.b.c.d.e.f.Helper6,a.b.c.d.e.f.Helper7,a.b.c.d.e.f.Helper8,a.b.c.d.e.f.Helper9,a.b.c.d.e.f.HelperBase,a.b.c.d.e.f.SomeHelper,a.b.c.d.e.f.SomeTests");
+
+	}
+	
+	
 	public void testSlow_GRE870() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
