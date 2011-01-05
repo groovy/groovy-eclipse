@@ -188,12 +188,13 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 		// if the object type is not null, then we base the
 		// type of this node on the object type
+		ClassNode nodeType = node.getType();
 		if (objectExpressionType != null) {
 			// lookup the type based on the object's expression type
 			// assume it is a method/property/field in the object expression type's hierarchy
 
 			if (node instanceof ConstantExpression) {
-				return findTypeForNameWithKnownObjectExpression(((ConstantExpression) node).getText(), node.getType(),
+				return findTypeForNameWithKnownObjectExpression(((ConstantExpression) node).getText(), nodeType,
 						objectExpressionType, scope, confidence);
 
 			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {
@@ -228,24 +229,15 @@ public class SimpleTypeLookup implements ITypeLookup {
 					if (realName.startsWith("{") && realName.endsWith("}")) {
 						realName = realName.substring(1, realName.length() - 1);
 					}
-					return findTypeForNameWithKnownObjectExpression(realName, node.getType(), scope.getEnclosingTypeDeclaration(),
-							scope, confidence);
-					// // check if name is in current scope
-					// // this will not work if the name is declared in super class
-					// VariableInfo var = scope.lookupName(realName);
-					// if (var != null) {
-					// return new TypeLookupResult(var.type, var.declaringType, null, confidence, scope);
-					// }
-					// // also check for name in super classes
-					// ClassNode enclosingTypeDeclaration = scope.getEnclosingTypeDeclaration();
-					// ASTNode declaration = findDeclaration(realName, enclosingTypeDeclaration);
-					// if (declaration != null) {
-					// ClassNode realDeclaration = declaringTypeFromDeclaration(declaration, enclosingTypeDeclaration);
-					// return new TypeLookupResult(type, realDeclaration, declaration, confidence, scope);
-					// }
-
+					return findTypeForNameWithKnownObjectExpression(realName, nodeType, scope.getEnclosingTypeDeclaration(), scope,
+							confidence);
 				}
-				return new TypeLookupResult(node.getType(), null, null, UNKNOWN, scope);
+				if (nodeType.equals(VariableScope.STRING_CLASS_NODE)) {
+					// likely a proper quoted string constant
+					return new TypeLookupResult(nodeType, null, node, confidence, scope);
+				} else {
+					return new TypeLookupResult(nodeType, null, null, UNKNOWN, scope);
+				}
 			}
 
 		} else if (node instanceof TupleExpression || node instanceof ListExpression || node instanceof RangeExpression) {
@@ -287,7 +279,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 				return new TypeLookupResult(VariableScope.CLASS_CLASS_NODE, VariableScope.CLASS_CLASS_NODE,
 						VariableScope.CLASS_CLASS_NODE, TypeConfidence.EXACT, scope);
 			} else {
-				return new TypeLookupResult(node.getType(), declaringType, node.getType(), confidence, scope);
+				return new TypeLookupResult(nodeType, declaringType, nodeType, confidence, scope);
 			}
 		} else if (node instanceof StaticMethodCallExpression) {
 			StaticMethodCallExpression expr = (StaticMethodCallExpression) node;
@@ -301,12 +293,12 @@ public class SimpleTypeLookup implements ITypeLookup {
 		// if we get here, then we can't infer the type. Set to unknown if required.
 		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)
 				&& !(node instanceof MapEntryExpression) && !(node instanceof PropertyExpression)
-				&& !(node instanceof TupleExpression) && node.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+				&& !(node instanceof TupleExpression) && nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
 			confidence = UNKNOWN;
 		}
 
 		// don't know
-		return new TypeLookupResult(node.getType(), declaringType, null, confidence, scope);
+		return new TypeLookupResult(nodeType, declaringType, null, confidence, scope);
 	}
 
 	/**
