@@ -163,181 +163,210 @@ public class GroovyCompilationUnit extends CompilationUnit {
 				&& ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1; //$NON-NLS-1$
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes", "nls" })
+	/**
+	 * Track how deep we are in recursive calls to buildStructure
+	 */
+	static MyThreadLocal depth = new MyThreadLocal();
+
+	static class MyThreadLocal extends ThreadLocal<Integer> {
+		@Override
+		protected Integer initialValue() {
+			return 0;
+		}
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes", "nls", "restriction" })
 	@Override
 	protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource)
 			throws JavaModelException {
-
-		if (!isOnBuildPath()) {
-			return false;
-		}
-
-		CompilationUnitElementInfo unitInfo = (CompilationUnitElementInfo) info;
-
-		// ensure buffer is opened
-		IBuffer buffer = getBufferManager().getBuffer(this);
-		if (buffer == null) {
-			openBuffer(pm, unitInfo); // open buffer independently from the
-			// info, since we are building the info
-		}
-
-		// generate structure and compute syntax problems if needed
-		GroovyCompilationUnitStructureRequestor requestor = new GroovyCompilationUnitStructureRequestor(this, unitInfo, newElements);
-		JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo = getPerWorkingCopyInfo();
-		JavaProject project = (JavaProject) getJavaProject();
-
-		// determine what kind of buildStructure we are doing
-		boolean createAST;
-		int reconcileFlags;
-		boolean resolveBindings;
-		HashMap problems;
-		if (info instanceof ASTHolderCUInfo) {
-			ASTHolderCUInfo astHolder = (ASTHolderCUInfo) info;
-			createAST = ((Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "astLevel", astHolder)).intValue() != NO_AST; //$NON-NLS-1$
-			resolveBindings = ((Boolean) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "resolveBindings", astHolder))
-					.booleanValue();
-			reconcileFlags = ((Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "reconcileFlags", astHolder)) //$NON-NLS-1$
-					.intValue();
-			problems = (HashMap) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "problems", astHolder);
-		} else {
-			createAST = false;
-			resolveBindings = false;
-			reconcileFlags = 0;
-			problems = null;
-		}
-
-		boolean computeProblems = perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() && project != null
-				&& JavaProject.hasJavaNature(project.getProject());
-		IProblemFactory problemFactory = new DefaultProblemFactory();
-
-		// compiler options
-		Map<String, String> options = (project == null ? JavaCore.getOptions() : project.getOptions(true));
-		if (!computeProblems) {
-			// disable task tags checking to speed up parsing
-			options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
-		}
-
-		// FIXASC deal with the case of project==null to reduce duplication in this next line and call to setGroovyClasspath
-		// Required for Groovy, but not for Java
-		options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-
-		CompilerOptions compilerOptions = new CompilerOptions(options);
-
-		if (project != null) {
-			CompilerUtils.setGroovyClasspath(compilerOptions, project);
-		}
-
-		// Required for Groovy, but not for Java
-		ProblemReporter reporter = new ProblemReporter(new GroovyErrorHandlingPolicy(!computeProblems), compilerOptions,
-				new DefaultProblemFactory());
-
-		SourceElementParser parser = new MultiplexingSourceElementRequestorParser(reporter, requestor, /*
-																										 * not needed if computing
-																										 * groovy only
-																										 */
-		problemFactory, compilerOptions, true/* report local declarations */, !createAST /*
-																						 * optimize string literals only if not
-																						 * creating a DOM AST
-																						 */);
-		parser.reportOnlyOneSyntaxError = !computeProblems;
-		// maybe not needed for groovy, but I don't want to find out.
-		parser.setMethodsFullRecovery(true);
-		parser.setStatementsRecovery((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
-
-		if (!computeProblems && !resolveBindings && !createAST) // disable javadoc parsing if not computing problems, not resolving
-			// and not creating ast
-			parser.javadocParser.checkDocComment = false;
-		requestor.setParser(parser);
-
-		// update timestamp (might be IResource.NULL_STAMP if original does not
-		// exist)
-		if (underlyingResource == null) {
-			underlyingResource = getResource();
-		}
-		// underlying resource is null in the case of a working copy on a class
-		// file in a jar
-		if (underlyingResource != null) {
-			ReflectionUtils.setPrivateField(CompilationUnitElementInfo.class, "timestamp", unitInfo, underlyingResource //$NON-NLS-1$
-					.getModificationStamp());
-		}
-
-		GroovyCompilationUnitDeclaration compilationUnitDeclaration = null;
-		CompilationUnit source = cloneCachingContents();
 		try {
-			// GROOVY
-			// note that this is a slightly different approach than taken by super.buildStructure
-			// in super.buildStructure, there is a test here to see if computeProblems is true.
-			// if false, then parser.parserCompilationUnit is called.
-			// this will not work for Groovy because we need to ensure bindings are resolved
-			// for many operations (content assist and code select) to work.
-			// So, for groovy, always use CompilationUnitProblemFinder.process and then process problems
-			// separately only if necessary
-			if (problems == null) {
-				// report problems to the problem requestor
-				problems = new HashMap();
-				compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(source,
-						parser, this.owner, problems, createAST, reconcileFlags, pm);
-				if (computeProblems) {
-					try {
-						perWorkingCopyInfo.beginReporting();
-						for (Iterator iteraror = problems.values().iterator(); iteraror.hasNext();) {
-							CategorizedProblem[] categorizedProblems = (CategorizedProblem[]) iteraror.next();
-							if (categorizedProblems == null)
-								continue;
-							for (int i = 0, length = categorizedProblems.length; i < length; i++) {
-								perWorkingCopyInfo.acceptProblem(categorizedProblems[i]);
+			depth.set(depth.get() + 1);
+
+			if (!isOnBuildPath()) {
+				return false;
+			}
+
+			CompilationUnitElementInfo unitInfo = (CompilationUnitElementInfo) info;
+
+			// ensure buffer is opened
+			IBuffer buffer = getBufferManager().getBuffer(this);
+			if (buffer == null) {
+				openBuffer(pm, unitInfo); // open buffer independently from the
+				// info, since we are building the info
+			}
+
+			// generate structure and compute syntax problems if needed
+			GroovyCompilationUnitStructureRequestor requestor = new GroovyCompilationUnitStructureRequestor(this, unitInfo,
+					newElements);
+			JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo = getPerWorkingCopyInfo();
+			JavaProject project = (JavaProject) getJavaProject();
+
+			// determine what kind of buildStructure we are doing
+			boolean createAST;
+			int reconcileFlags;
+			boolean resolveBindings;
+			HashMap problems;
+			if (info instanceof ASTHolderCUInfo) {
+				ASTHolderCUInfo astHolder = (ASTHolderCUInfo) info;
+				createAST = ((Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "astLevel", astHolder)).intValue() != NO_AST; //$NON-NLS-1$
+				resolveBindings = ((Boolean) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "resolveBindings", astHolder))
+						.booleanValue();
+				reconcileFlags = ((Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "reconcileFlags", astHolder)) //$NON-NLS-1$
+						.intValue();
+				problems = (HashMap) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "problems", astHolder);
+			} else {
+				createAST = false;
+				resolveBindings = false;
+				reconcileFlags = 0;
+				problems = null;
+			}
+
+			boolean computeProblems = perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() && project != null
+					&& JavaProject.hasJavaNature(project.getProject());
+			IProblemFactory problemFactory = new DefaultProblemFactory();
+
+			// compiler options
+			Map<String, String> options = (project == null ? JavaCore.getOptions() : project.getOptions(true));
+			if (!computeProblems) {
+				// disable task tags checking to speed up parsing
+				options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
+			}
+
+			// FIXASC deal with the case of project==null to reduce duplication in this next line and call to setGroovyClasspath
+			// Required for Groovy, but not for Java
+			options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+
+			CompilerOptions compilerOptions = new CompilerOptions(options);
+
+			if (project != null) {
+				CompilerUtils.setGroovyClasspath(compilerOptions, project);
+			}
+
+			// Required for Groovy, but not for Java
+			ProblemReporter reporter = new ProblemReporter(new GroovyErrorHandlingPolicy(!computeProblems), compilerOptions,
+					new DefaultProblemFactory());
+
+			SourceElementParser parser = new MultiplexingSourceElementRequestorParser(reporter, requestor, /*
+																											 * not needed if
+																											 * computing groovy only
+																											 */
+			problemFactory, compilerOptions, true/* report local declarations */, !createAST /*
+																							 * optimize string literals only if not
+																							 * creating a DOM AST
+																							 */);
+			parser.reportOnlyOneSyntaxError = !computeProblems;
+			// maybe not needed for groovy, but I don't want to find out.
+			parser.setMethodsFullRecovery(true);
+			parser.setStatementsRecovery((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
+
+			if (!computeProblems && !resolveBindings && !createAST) // disable javadoc parsing if not computing problems, not
+																	// resolving
+				// and not creating ast
+				parser.javadocParser.checkDocComment = false;
+			requestor.setParser(parser);
+
+			// update timestamp (might be IResource.NULL_STAMP if original does not
+			// exist)
+			if (underlyingResource == null) {
+				underlyingResource = getResource();
+			}
+			// underlying resource is null in the case of a working copy on a class
+			// file in a jar
+			if (underlyingResource != null) {
+				ReflectionUtils.setPrivateField(CompilationUnitElementInfo.class, "timestamp", unitInfo, underlyingResource //$NON-NLS-1$
+						.getModificationStamp());
+			}
+
+			GroovyCompilationUnitDeclaration compilationUnitDeclaration = null;
+			CompilationUnit source = cloneCachingContents();
+			try {
+				// GROOVY
+				// note that this is a slightly different approach than taken by super.buildStructure
+				// in super.buildStructure, there is a test here to see if computeProblems is true.
+				// if false, then parser.parserCompilationUnit is called.
+				// this will not work for Groovy because we need to ensure bindings are resolved
+				// for many operations (content assist and code select) to work.
+				// So, for groovy, always use CompilationUnitProblemFinder.process and then process problems
+				// separately only if necessary
+				// addendum (GRECLIPSE-942). The testcase for that bug includes a package with 200
+				// types in that refer to each other in a chain, through field references. If a reconcile
+				// references the top of the chain we can go through a massive number of recursive calls into
+				// this buildStructure for each one. The 'full' parse (with bindings) is only required for
+				// the top most (regardless of the computeProblems setting) and so we track how many recursive
+				// calls we have made - if we are at depth 2 we do what JDT was going to do (the quick thing).
+				if (computeProblems || depth.get() < 2) {
+					if (problems == null) {
+						// report problems to the problem requestor
+						problems = new HashMap();
+						compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
+								source, parser, this.owner, problems, createAST, reconcileFlags, pm);
+						if (computeProblems) {
+							try {
+								perWorkingCopyInfo.beginReporting();
+								for (Iterator iteraror = problems.values().iterator(); iteraror.hasNext();) {
+									CategorizedProblem[] categorizedProblems = (CategorizedProblem[]) iteraror.next();
+									if (categorizedProblems == null)
+										continue;
+									for (int i = 0, length = categorizedProblems.length; i < length; i++) {
+										perWorkingCopyInfo.acceptProblem(categorizedProblems[i]);
+									}
+								}
+							} finally {
+								perWorkingCopyInfo.endReporting();
 							}
 						}
-					} finally {
-						perWorkingCopyInfo.endReporting();
+					} else {
+						// collect problems
+						compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
+								source, parser, this.owner, problems, createAST, reconcileFlags, pm);
+					}
+				} else {
+					compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) parser
+							.parseCompilationUnit(source, true /* full parse to find local elements */, pm);
+				}
+				// resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
+
+				// GROOVY
+				// if this is a working copy, then we have more work to do
+				maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
+
+				// create the DOM AST from the compiler AST
+				if (createAST) {
+					org.eclipse.jdt.core.dom.CompilationUnit ast;
+					try {
+						ast = AST.convertCompilationUnit(AST.JLS3, compilationUnitDeclaration, options, computeProblems, source,
+								reconcileFlags, pm);
+						ReflectionUtils.setPrivateField(ASTHolderCUInfo.class, "ast", info, ast); //$NON-NLS-1$
+					} catch (OperationCanceledException e) {
+						// catch this exception so as to not enter the catch(RuntimeException e) below
+						// might need to do the same for AbortCompilation
+						throw e;
+					} catch (IllegalArgumentException e) {
+						// if necessary, we can do some better reporting here.
+						Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " //$NON-NLS-1$
+								+ this.getParent().getElementName() + "." + getElementName()); //$NON-NLS-1$
+					} catch (Exception e) {
+						Util.log(e, "Problem with build structure for " + this.getElementName()); //$NON-NLS-1$
 					}
 				}
-			} else {
-				// collect problems
-				compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(source,
-						parser, this.owner, problems, createAST, reconcileFlags, pm);
-			}
-
-			// resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
-
-			// GROOVY
-			// if this is a working copy, then we have more work to do
-			maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
-
-			// create the DOM AST from the compiler AST
-			if (createAST) {
-				org.eclipse.jdt.core.dom.CompilationUnit ast;
-				try {
-					ast = AST.convertCompilationUnit(AST.JLS3, compilationUnitDeclaration, options, computeProblems, source,
-							reconcileFlags, pm);
-					ReflectionUtils.setPrivateField(ASTHolderCUInfo.class, "ast", info, ast); //$NON-NLS-1$
-				} catch (OperationCanceledException e) {
-					// catch this exception so as to not enter the catch(RuntimeException e) below
-					// might need to do the same for AbortCompilation
-					throw e;
-				} catch (IllegalArgumentException e) {
-					// if necessary, we can do some better reporting here.
-					Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " //$NON-NLS-1$
-							+ this.getParent().getElementName() + "." + getElementName()); //$NON-NLS-1$
-				} catch (Exception e) {
-					Util.log(e, "Problem with build structure for " + this.getElementName()); //$NON-NLS-1$
+			} catch (OperationCanceledException e) {
+				// catch this exception so as to not enter the catch(RuntimeException e) below
+				// might need to do the same for AbortCompilation
+				throw e;
+			} catch (Exception e) {
+				// GROOVY: The groovy compiler does not handle broken code well in many situations
+				// use this general catch clause so that exceptions thrown by broken code
+				// do not bubble up the stack.
+				Util.log(e, "Problem with build structure for " + this.getElementName()); //$NON-NLS-1$
+			} finally {
+				if (compilationUnitDeclaration != null) {
+					compilationUnitDeclaration.cleanUp();
 				}
 			}
-		} catch (OperationCanceledException e) {
-			// catch this exception so as to not enter the catch(RuntimeException e) below
-			// might need to do the same for AbortCompilation
-			throw e;
-		} catch (Exception e) {
-			// GROOVY: The groovy compiler does not handle broken code well in many situations
-			// use this general catch clause so that exceptions thrown by broken code
-			// do not bubble up the stack.
-			Util.log(e, "Problem with build structure for " + this.getElementName()); //$NON-NLS-1$
+			return unitInfo.isStructureKnown();
 		} finally {
-			if (compilationUnitDeclaration != null) {
-				compilationUnitDeclaration.cleanUp();
-			}
+			depth.set(depth.get() - 1);
 		}
-		return unitInfo.isStructureKnown();
 	}
 
 	/**
