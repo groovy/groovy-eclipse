@@ -54,6 +54,8 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
     public void selectionChanged(IAction action, ISelection selection) {
         if (selection instanceof TextSelection) {
             sel = (TextSelection) selection;
+        } else {
+            sel = null;
         }
     }
 
@@ -67,8 +69,11 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
 
     private void showMessage(Shell shell, String msg) {
         IEditorStatusLine statusLine = (IEditorStatusLine) editor.getAdapter(IEditorStatusLine.class);
-        if (statusLine != null)
+        if (statusLine != null) {
             statusLine.setMessage(true, msg, null);
-        shell.getDisplay().beep();
+        }
+        if (shell != null) {
+            shell.getDisplay().beep();
+        }
     }
 }

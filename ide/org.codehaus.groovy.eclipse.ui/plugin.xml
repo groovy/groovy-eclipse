@@ -719,12 +719,13 @@
             sequence="M1+M3+G J"/>
             
       <!-- Disable the JDT find occurrences quick menu when in groovy files-->      
+      <!--
       <key
             commandId="org.eclipse.jdt.ui.edit.text.java.search.occurrences.in.file.quickMenu"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence=""/>
-            
+      -->  
       <!-- Use our command instead -->
       <key
             commandId="org.codehaus.groovy.eclipse.ui.findOccurrences"
