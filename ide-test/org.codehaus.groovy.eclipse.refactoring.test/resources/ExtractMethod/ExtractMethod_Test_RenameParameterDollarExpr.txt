@@ -29,7 +29,7 @@ def m1(){
     }
 }
 
-private m2(GString variNEW) {
+private m2(String variNEW) {
     println ("${variNEW}")
 }
 ###end
