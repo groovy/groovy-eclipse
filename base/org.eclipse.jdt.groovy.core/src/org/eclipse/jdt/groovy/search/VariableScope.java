@@ -505,6 +505,7 @@ public class VariableScope {
 			GenericsType[] genericsTypes = c.getGenericsTypes();
 			if (genericsTypes != null && genericsTypes.length > 0) {
 				// use length-1 so that both Maps and Collections are handled
+				// for maps, we return the type of <value>.
 				return genericsTypes[genericsTypes.length - 1].getType();
 			}
 		}
@@ -577,5 +578,15 @@ public class VariableScope {
 	 */
 	public boolean isTopLevel() {
 		return parent == null;
+	}
+
+	/**
+	 * Does the following name exist in this scope (does not recur up to parent scopes).
+	 * 
+	 * @param name
+	 * @return true iff in the {@link #nameVariableMap}
+	 */
+	public boolean containsInThisScope(String name) {
+		return nameVariableMap.containsKey(name);
 	}
 }

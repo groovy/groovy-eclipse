@@ -99,11 +99,16 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 } else if (result.declaration instanceof Parameter) {
                     // look in the local scope
                     Parameter var = (Parameter) result.declaration;
+                    int position = var.getStart()-1;
+                    if (position < 0) {
+                        // could be an implicit variable like 'it'
+                        position = nodeToLookFor.getStart()-1;
+                    }
                     try {
                         requestedElement = 
-                            createLocalVariable(result, (JavaElement) unit.getElementAt(var.getStart()-1), var);
+                            createLocalVariable(result, (JavaElement) unit.getElementAt(position), var);
                     } catch (JavaModelException e) {
-                        Util.log(e, "Problem getting element at " + (var.getStart()-1) + " for file " + unit.getElementName());
+                        Util.log(e, "Problem getting element at " + position + " for file " + unit.getElementName());
                     }
                 } else {
                     ClassNode declaringType = findDeclaringType(result);

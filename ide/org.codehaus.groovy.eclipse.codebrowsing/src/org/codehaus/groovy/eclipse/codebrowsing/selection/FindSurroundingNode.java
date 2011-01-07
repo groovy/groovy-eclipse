@@ -379,24 +379,24 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitListExpression(ListExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitListExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
     @Override
     public void visitMapEntryExpression(MapEntryExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitMapEntryExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
     @Override
     public void visitMapExpression(MapExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitMapExpression(node);
+        check(node);
         nodeStack.pop();
     }
 

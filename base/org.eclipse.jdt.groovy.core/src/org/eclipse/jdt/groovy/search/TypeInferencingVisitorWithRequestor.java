@@ -17,8 +17,10 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -79,7 +81,6 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -922,11 +923,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		scopes.push(scope);
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
+			ClassNode implicitParamType = findImplicitParamType(scope);
 			if (node.getParameters() != null && node.getParameters().length > 0) {
 				handleParameterList(node.getParameters());
-			}
-			if (scope.lookupName("it") == null) {
-				scope.addVariable("it", VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE);
+
+				// maybe set the implicit param type of the first param
+				Parameter firstParameter = node.getParameters()[0];
+				if (implicitParamType != VariableScope.OBJECT_CLASS_NODE
+						&& firstParameter.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+					firstParameter.setType(implicitParamType);
+					scope.addVariable(firstParameter);
+				}
+			} else
+			// it variable only exists if there are no explicit parameters
+			if (implicitParamType != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
+				scope.addVariable("it", implicitParamType, VariableScope.OBJECT_CLASS_NODE);
 			}
 			CallAndType cat = scope.getEnclosingMethodCallExpression();
 			if (cat != null) {
@@ -936,6 +947,39 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			super.visitClosureExpression(node);
 		}
 		scopes.pop();
+	}
+
+	/**
+	 * Determine if the parameter type can be implicitly determined We look for DGM method calls that take closures and see what
+	 * kind of type they expect.
+	 * 
+	 * @param scope
+	 * @return
+	 */
+	private ClassNode findImplicitParamType(VariableScope scope) {
+		CallAndType call = scope.getEnclosingMethodCallExpression();
+		if (call != null) {
+			if (dgmClosureMethods.contains(call.call.getMethodAsString())) {
+				return extractElementType(call.declaringType);
+			}
+		}
+		return VariableScope.OBJECT_CLASS_NODE;
+	}
+
+	/**
+	 * We hard code the list of methods that take a closure and expect to iterate over that closure
+	 */
+	private static final Set<String> dgmClosureMethods = new HashSet<String>();
+	static {
+		dgmClosureMethods.add("find");
+		dgmClosureMethods.add("each");
+		dgmClosureMethods.add("reverseEach");
+		dgmClosureMethods.add("eachWithIndex");
+		dgmClosureMethods.add("unique");
+		dgmClosureMethods.add("every");
+		dgmClosureMethods.add("collect");
+		dgmClosureMethods.add("findAll");
+		dgmClosureMethods.add("groupBy");
 	}
 
 	@Override
@@ -1029,10 +1073,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 		if (typeToResolve != null) {
-			if (typeToResolve instanceof JDTClassNode) {
-				// JDTClassNodes are immutable, must change that
-				typeToResolve = VariableScope.clone(typeToResolve);
-			}
+			// if (typeToResolve instanceof JDTClassNode) {
+			// JDTClassNodes are immutable, must change that
+			typeToResolve = VariableScope.clone(typeToResolve);
+			// }
 			ClassNode unresolvedCollectionType = collectionType.redirect();
 			GenericsType[] unresolvedGenerics = unresolvedCollectionType.getGenericsTypes();
 			GenericsType[] resolvedGenerics = collectionType.getGenericsTypes();

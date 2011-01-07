@@ -11,6 +11,8 @@
 
 package org.eclipse.jdt.core.groovy.tests.model;
 
+import java.util.Arrays;
+
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 
@@ -287,12 +289,7 @@ public class GroovyContentTypeTests extends BuilderTests {
     void charCharNoContains(char[][] charChar, String containsStr) {
         char[] contains = containsStr.toCharArray();
         for (char[] chars : charChar) {
-            if (chars.length == contains.length) {
-                for (int i = 0; i < chars.length; i++) {
-                    if (chars[i] != contains[i]) {
-                        continue;
-                    }
-                }
+            if (Arrays.equals(chars, contains)) {
                 // found match
                 fail("Should not have found '" + new String(contains) + "' in '" + charCharToString(charChar) + "'");
             }

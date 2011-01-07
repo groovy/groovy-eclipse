@@ -34,6 +34,14 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
         if (editor == null || sel == null) {
             return;
         }
+
+        // ensure that selection is up to date. For some reason,
+        // selection changed is not being called when the selection changes
+        // from a 0-length selection to another 0-length selection
+        ISelection editorSel = editor.getSelectionProvider().getSelection();
+        if (editorSel instanceof TextSelection) {
+            sel = (TextSelection) editorSel;
+        }
         FindOccurrencesEngine engine = FindOccurrencesEngine.create(new GroovyOccurrencesFinder());
         try {
             String result = engine.run(editor.getGroovyCompilationUnit(), sel.getOffset(), sel.getLength());

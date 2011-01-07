@@ -402,4 +402,57 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.String");
     }
+    
+    // all testing for GRECLIPSE-833
+    public void testDGMClosure1() throws Exception {
+        String contents = "[''].each { it }";
+        String toFind = "it";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    public void testDGMClosure2() throws Exception {
+        String contents = "[''].reverseEach { val -> val }";
+        String toFind = "val";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    public void testDGMClosure3() throws Exception {
+        String contents = "(1..4).find { it }";
+        String toFind = "it";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    public void testDGMClosure4() throws Exception {
+        String contents = "['a':1].unique { it.key }";
+        String toFind = "key";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    public void testDGMClosure5() throws Exception {
+        String contents = "['a':1].collect { it.value }";
+        String toFind = "value";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    // Integer is explicit, so should use that as a type
+    public void testDGMClosure7() throws Exception {
+        String contents = "[''].reverseEach { Integer val -> val }";
+        String toFind = "val";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    // Integer is explicit, so should use that as a type
+    public void testDGMClosure8() throws Exception {
+        String contents = "[''].reverseEach { Integer it -> it }";
+        String toFind = "it";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
 }

@@ -27,6 +27,7 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
@@ -221,6 +222,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 				return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, confidence, scope);
 			} else if (constExpr.isEmptyStringExpression()) {
 				return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
+			} else if (ClassHelper.isNumberType(nodeType)) {
+				return new TypeLookupResult(nodeType, null, null, confidence, scope);
 			} else {
 				// there is a possibility that this is a constant expression inside a GString.
 				// check for a '$' as a start.
@@ -255,7 +258,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 			return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof GStringExpression) {
-			return new TypeLookupResult(VariableScope.GSTRING_CLASS_NODE, null, null, confidence, scope);
+			// note that we return String type here, not GString so that DGMs will apply
+			return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
 
 		} else if (node instanceof MapExpression) {
 			ClassNode parameterized = parameterizeThisMap((MapExpression) node);
