@@ -22,6 +22,8 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
  *
  * Tests that constructor completions are working properly.  Ensures that the
  * resulting document has the correct text in it.
+ * 
+ * FIXADE Failing on build server not being run
  */
 public class ConstructorCompletionTests extends CompletionTestCase {
 
