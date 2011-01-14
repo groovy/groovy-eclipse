@@ -21,6 +21,9 @@ import java.util.Collection;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -63,11 +66,76 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
 
                 maybeDeclaration = ((ClassNode) maybeDeclaration).redirect();
             }
-            if (maybeDeclaration == declaration) {
+            if (isEquivalent(maybeDeclaration)) {
                 references.add(node);
             }
         }
         return VisitStatus.CONTINUE;
+    }
+
+    private boolean isEquivalent(ASTNode maybeDeclaration) {
+        if (maybeDeclaration == declaration) {
+            return true;
+        }
+        // here we need to test for dynamically added fields and methods
+        // they will not be the same instance, so we need to check
+        // for equivalence some other way
+        if (maybeDeclaration.getClass() == declaration.getClass()) {
+            if (maybeDeclaration instanceof FieldNode) {
+                FieldNode maybeField = (FieldNode) maybeDeclaration;
+                FieldNode field = (FieldNode) declaration;
+                return maybeField.getName().equals(field.getName())
+                        && maybeField.getDeclaringClass().equals(field.getDeclaringClass());
+            } else if (maybeDeclaration instanceof MethodNode) {
+                MethodNode maybeMethod = (MethodNode) maybeDeclaration;
+                MethodNode method = (MethodNode) declaration;
+                return checkParamLength(maybeMethod, method) && maybeMethod.getName().equals(method.getName())
+                        && maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) && checkParams(maybeMethod, method);
+            }
+
+        }
+        return false;
+
+    }
+
+    private boolean checkParams(MethodNode maybeMethod, MethodNode method) {
+        Parameter[] maybeParameters = maybeMethod.getParameters();
+        Parameter[] parameters = method.getParameters();
+
+        for (int i = 0; i < parameters.length; i++) {
+            if (!maybeParameters[i].getName().equals(parameters[i].getName()) || !typeEquals(maybeParameters[i], parameters[i])) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean typeEquals(Parameter maybeParameter, Parameter parameter) {
+        ClassNode maybeType = maybeParameter.getType();
+        ClassNode type = parameter.getType();
+        if (maybeType == null) {
+            return type == null;
+        } else if (type == null) {
+            return false;
+        }
+        return maybeType.getName().equals(type.getName());
+    }
+
+    private boolean checkParamLength(MethodNode maybeMethod, MethodNode method) {
+        Parameter[] maybeParameters = maybeMethod.getParameters();
+        Parameter[] parameters = method.getParameters();
+        if (maybeParameters == null) {
+            return parameters == null;
+        } else if (parameters == null) {
+            return false;
+        }
+
+        if (maybeParameters.length != parameters.length) {
+            return false;
+        }
+
+        return true;
     }
 
     public Collection<ASTNode> getReferences() {
