@@ -21,6 +21,7 @@ import java.util.Collection;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -43,11 +44,23 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
     }
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-        // hmmmm...can we get into a state where we have a property node, but
-        // are looking for a field node?
+        if (node.getLength() == 0) {
+            return VisitStatus.CONTINUE;
+        }
+
         if (node instanceof AnnotatedNode) {
             ASTNode maybeDeclaration = result.declaration;
+            if (maybeDeclaration == null) {
+                return VisitStatus.CONTINUE;
+            }
             if (maybeDeclaration instanceof ClassNode) {
+                // sometimes generated methods and properties have a classnode
+                // as the declaration.
+                // we want to ignore these
+                if (!(node instanceof ClassExpression || node instanceof ClassNode)) {
+                    return VisitStatus.CONTINUE;
+                }
+
                 maybeDeclaration = ((ClassNode) maybeDeclaration).redirect();
             }
             if (maybeDeclaration == declaration) {

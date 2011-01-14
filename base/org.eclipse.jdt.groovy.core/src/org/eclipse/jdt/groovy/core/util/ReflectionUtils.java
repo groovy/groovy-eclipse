@@ -30,6 +30,14 @@ import org.eclipse.jdt.groovy.core.Activator;
  */
 public class ReflectionUtils {
 
+	/**
+	 * 
+	 */
+	private static final Class[] NO_TYPES = new Class[0];
+	/**
+	 * 
+	 */
+	private static final Object[] NO_ARGS = new Object[0];
 	private static Map<String, Field> fieldMap = new HashMap<String, Field>();
 
 	public static <T> Object getPrivateField(Class<T> clazz, String fieldName, Object target) {
@@ -43,8 +51,8 @@ public class ReflectionUtils {
 			}
 			return field.get(target);
 		} catch (Exception e) {
-			Activator.getDefault().getLog().log(
-					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error getting private field '" + fieldName //$NON-NLS-1$
+			Activator.getDefault().getLog()
+					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error getting private field '" + fieldName //$NON-NLS-1$
 							+ "' on class " + clazz, e)); //$NON-NLS-1$
 		}
 		return null;
@@ -61,10 +69,14 @@ public class ReflectionUtils {
 			}
 			field.set(target, newValue);
 		} catch (Exception e) {
-			Activator.getDefault().getLog().log(
-					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error setting private field '" + fieldName //$NON-NLS-1$
+			Activator.getDefault().getLog()
+					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error setting private field '" + fieldName //$NON-NLS-1$
 							+ "' on class " + clazz, e)); //$NON-NLS-1$
 		}
+	}
+
+	public static <T> Object executeNoArgPrivateMethod(Class<T> clazz, String methodName, Object target) {
+		return executePrivateMethod(clazz, methodName, NO_TYPES, target, NO_ARGS);
 	}
 
 	public static <T> Object executePrivateMethod(Class<T> clazz, String methodName, Class<?>[] types, Object target, Object[] args) {
@@ -74,8 +86,8 @@ public class ReflectionUtils {
 			method.setAccessible(true);
 			return method.invoke(target, args);
 		} catch (Exception e) {
-			Activator.getDefault().getLog().log(
-					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error executing private method '" + methodName //$NON-NLS-1$
+			Activator.getDefault().getLog()
+					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error executing private method '" + methodName //$NON-NLS-1$
 							+ "' on class " + clazz, e)); //$NON-NLS-1$
 		}
 		return null;

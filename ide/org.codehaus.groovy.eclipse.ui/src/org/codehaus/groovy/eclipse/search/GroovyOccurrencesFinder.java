@@ -105,8 +105,8 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
                 // should be finding the start and end of the name region only,
                 // but this finds the entire declaration
                 Parameter c = (Parameter) node;
-                int length = c.getLength();
-                int start = c.getStart();
+                int start = c.getNameStart();
+                int length = c.getNameEnd() - c.getNameStart();
                 occurrenceLocation = new OccurrenceLocation(start, length, K_OCCURRENCE, "Occurrence of ''" + getElementName()
                         + "''");
             } else if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) {
@@ -187,4 +187,7 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
         this.gunit = gunit;
     }
 
+    public org.codehaus.groovy.ast.ASTNode getNodeToLookFor() {
+        return nodeToLookFor;
+    }
 }

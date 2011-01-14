@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -25,17 +25,21 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.ISourceReference;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 /**
  * @author martin
- * extended by Stefan Reinhard
+ *         extended by Stefan Reinhard
+ *         condensed by Andrew Eisenberg
  */
 public class RenameDispatcherAction extends GroovyRefactoringAction {
-	
+
 
 	public void run(IAction action) {
 		if (initRefactoring()) {
@@ -43,11 +47,17 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
 			try {
 			    ISourceReference target = dispatcher.getRefactoringTarget();
 			    if (target instanceof IMember || target instanceof ILocalVariable) {
-			        openJavaRefactoringWizard((IJavaElement) target);
+                    IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
+                    boolean lightweight = store.getBoolean(PreferenceConstants.REFACTOR_LIGHTWEIGHT);
+                    if (lightweight) {
+                        new GroovyRenameLinkedMode((IJavaElement) target, getEditor()).start();
+                    } else {
+                        openJavaRefactoringWizard((IJavaElement) target);
+                    }
 			    } else {
 			        displayErrorDialog("Cannot refactor on current selection.  No refactoring candidates found");
 			    }
-			} catch (CoreException e) {
+            } catch (CoreException e) {
 				displayErrorDialog(e.getMessage());
 			}
 		}

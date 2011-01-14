@@ -187,10 +187,6 @@ public class VariableScope {
 	 * @return the variable info or null if not found
 	 */
 	public VariableInfo lookupName(String name) {
-		//		if ("this".equals(name)) { //$NON-NLS-1$
-		// ClassNode declaringType = getEnclosingTypeDeclaration();
-		// return new VariableInfo(declaringType, declaringType);
-		// } else
 		if ("super".equals(name)) { //$NON-NLS-1$
 			VariableInfo var = lookupName("this");
 			if (var != null) {
@@ -199,11 +195,21 @@ public class VariableScope {
 			}
 		}
 
-		VariableInfo var = nameVariableMap.get(name);
+		VariableInfo var = lookupNameInCurrentScope(name);
 		if (var == null && parent != null) {
 			var = parent.lookupName(name);
 		}
 		return var;
+	}
+
+	/**
+	 * Looks up the name in the current scope. Does not recur up to parent scopes
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public VariableInfo lookupNameInCurrentScope(String name) {
+		return nameVariableMap.get(name);
 	}
 
 	public boolean isThisOrSuper(Variable var) {
@@ -323,7 +329,7 @@ public class VariableScope {
 	 * @return
 	 */
 	private boolean internalUpdateVariable(String name, ClassNode type, ClassNode declaringType) {
-		VariableInfo info = nameVariableMap.get(name);
+		VariableInfo info = lookupNameInCurrentScope(name);
 		if (info != null) {
 			nameVariableMap.put(name, new VariableInfo(type, declaringType == null ? info.declaringType : declaringType));
 			return true;

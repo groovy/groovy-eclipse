@@ -23,7 +23,6 @@ import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractGroovySearchTest;
-import org.eclipse.jdt.core.groovy.tests.search.CategorySearchTests;
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 
 /**
@@ -54,13 +53,20 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
     
     public void testFindLocalOccurrences3() throws Exception {
         String contents = "nuthin\ndef x(int x) {\nx}";
-        doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf("int x"), "int x".length(), contents.lastIndexOf('x'), 1);
+        int afterParen = contents.indexOf('(');
+        doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf("x", afterParen), 1, contents.lastIndexOf('x'), 1);
     }        
     
     // looking for the method declaration, not the parameter
     public void testFindLocalOccurrences4() throws Exception {
         String contents = "nuthin\ndef x(int x) {\nx}";
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1);
+    }        
+    
+    public void testFindForLoopOccurrences() throws Exception {
+        String contents = "for (x in []) {\n" +
+        		"x }";
+        doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1);
     }        
     
     /**

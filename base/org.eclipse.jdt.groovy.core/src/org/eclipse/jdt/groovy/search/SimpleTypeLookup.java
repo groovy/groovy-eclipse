@@ -124,8 +124,16 @@ public class SimpleTypeLookup implements ITypeLookup {
 	}
 
 	public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
-		return new TypeLookupResult(node.getType(), scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, EXACT,
-				scope);
+		// look up the type in the current scope to see if the type has
+		// has been predetermined (eg- for loop variables)
+		VariableInfo info = scope.lookupNameInCurrentScope(node.getName());
+		ClassNode type;
+		if (info != null) {
+			type = info.type;
+		} else {
+			type = node.getType();
+		}
+		return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, EXACT, scope);
 	}
 
 	/**
