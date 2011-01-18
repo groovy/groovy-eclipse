@@ -18,6 +18,7 @@ import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.util.Util;
+import org.eclipse.jdt.internal.core.builder.SourceFile;
 
 /*
  * Compiler error handler, responsible to determine whether
@@ -159,6 +160,11 @@ public void handle(
 			}
 			break;
 		case ProblemSeverities.Warning :
+			if ((this.options.groovyFlags & 0x01) != 0) {
+				if ((unitResult.compilationUnit instanceof SourceFile) && ((SourceFile)unitResult.compilationUnit).isInLinkedSourceFolder()) {
+					return;
+				}
+			}
 			record(problem, unitResult, referenceContext);
 			break;
 	}
