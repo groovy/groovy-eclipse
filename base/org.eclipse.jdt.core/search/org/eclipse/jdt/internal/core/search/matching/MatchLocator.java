@@ -1730,6 +1730,11 @@ protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated)
 	// GROOVY Start
 	// Do not process non-Java files.  They use a separate delegated search
 	if (LanguageSupportFactory.isInterestingSourceFile(new String(possibleMatch.getFileName()))) {
+		try {
+			this.lookupEnvironment.buildTypeBindings(possibleMatch.parsedUnit, null /*no access restriction*/);
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
 		possibleMatch.parsedUnit.resolve();
 		return;
 	}
