@@ -111,4 +111,13 @@ public String toString() {
 	return "SourceFile[" //$NON-NLS-1$
 		+ this.resource.getFullPath() + "]";  //$NON-NLS-1$
 }
+
+// FIXASC - GRECLIPSE-963
+public boolean isInLinkedSourceFolder() {
+	if (this.sourceLocation==null || this.sourceLocation.sourceFolder==null) {
+		return false;
+	}
+	return this.sourceLocation.sourceFolder.isLinked(); 
+}
+// FIXASC - end
 }
