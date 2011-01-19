@@ -1569,7 +1569,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			if (message instanceof SimpleMessage) {
 				SimpleMessage simpleMessage = (SimpleMessage) message;
 				sev |= ProblemSeverities.Error;
-				msg = "Groovy:" + simpleMessage.getMessage();
+				String simpleText = simpleMessage.getMessage();
+				if (simpleText.length() > 1 && simpleText.charAt(0) == '\n') {
+					simpleText = simpleText.substring(1);
+				}
+				msg = "Groovy:" + simpleText;
 				if (msg.indexOf("\n") != -1) {
 					msg = msg.substring(0, msg.indexOf("\n"));
 				}
@@ -1580,7 +1584,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				sev |= ProblemSeverities.Error;
 				// FIXASC in the short term, prefixed groovy to indicate
 				// where it came from
-				msg = "Groovy:" + errorMessage.getCause().getMessage();
+				String actualMessage = syntaxException.getMessage();
+				if (actualMessage.length() > 1 && actualMessage.charAt(0) == '\n') {
+					actualMessage = actualMessage.substring(1);
+				}
+				msg = "Groovy:" + actualMessage;
 				if (msg.indexOf("\n") != -1) {
 					msg = msg.substring(0, msg.indexOf("\n"));
 				}

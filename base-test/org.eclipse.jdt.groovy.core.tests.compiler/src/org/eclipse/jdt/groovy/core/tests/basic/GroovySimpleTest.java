@@ -267,6 +267,21 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"}",
 	    	},"abc");
     }
+    
+    public void testGroovyColon_GRE801() {
+    	this.runNegativeTest(new String[]{
+    			"A.groovy",
+    		    "httpClientControl.demand.generalConnection(1..1) = {->\n"+
+    		    "currHttp\n"+
+    		    "} \n"},
+    		    "----------\n" + 
+    			"1. ERROR in A.groovy (at line 1)\n" + 
+    			"	httpClientControl.demand.generalConnection(1..1) = {->\n" + 
+    			"	                                                  ^\n" + 
+    			"Groovy:\"httpClientControl.demand.generalConnection((1..1))\" is a method call expression, but it should be a variable expression at line: 1 column: 50. File: A.groovy @ line 1, column 50.\n" + 
+    			"----------\n");
+    }
+
 
     public void testStaticOuter_GRE944() {
 	    	this.runConformTest(new String[]{
