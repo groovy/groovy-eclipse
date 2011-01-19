@@ -1276,6 +1276,28 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		assertTrue(mn.encounteredUnrecoverableError());
 	}
 	
+	public void testUnrecoverableErrors_GRE949() {
+		this.runNegativeTest(new String[] {
+				"Foo.groovy",
+				"package com.foo\n"+
+				"\n"+
+				"import javax.swing.text.html.HTML\n"+
+				"\n"+
+				"void nuthin() {\n"+
+				"if (! (this instanceof HTMLAccessibleContext/_/) {\n"+
+				"\n"+
+				"}\n"+
+				"}"
+				},"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 6)\n" + 
+				"	if (! (this instanceof HTMLAccessibleContext/_/) {\n" + 
+				"	                                            ^\n" + 
+				"Groovy:unexpected token: / @ line 6, column 45.\n" + 
+				"----------\n");
+		ModuleNode mn = getModuleNode("Foo.groovy");
+		assertTrue(mn.encounteredUnrecoverableError());
+	}
+	
 	public void testUnrecoverableErrors_GRE755_2() {
 		this.runNegativeTest(new String[] {
 			"Bar.groovy",
