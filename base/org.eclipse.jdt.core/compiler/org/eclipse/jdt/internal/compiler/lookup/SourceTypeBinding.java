@@ -1313,7 +1313,31 @@ public MethodBinding resolveTypesFor(MethodBinding method) {
 		method.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 
 	AbstractMethodDeclaration methodDecl = method.sourceMethod();
+	// FIXASC
+	/* code was 
 	if (methodDecl == null) return null; // method could not be resolved in previous iteration
+    }*/
+	/* new version: */
+	if (methodDecl == null) {
+		if (method instanceof LazilyResolvedMethodBinding) {
+			LazilyResolvedMethodBinding lrMethod = (LazilyResolvedMethodBinding)method;
+			// the rest is a copy of the code below but doesn't depend on the method declaration
+			// nothing to do for method type parameters (there are none)
+			// nothing to do for method exceptions (there are none)
+			TypeBinding ptb = lrMethod.getParameterTypeBinding();
+			if (ptb==null) {
+				method.parameters = Binding.NO_PARAMETERS;
+			} else {
+				method.parameters = new TypeBinding[]{ptb};
+			}
+			method.returnType = lrMethod.getReturnTypeBinding();
+			method.modifiers &= ~ExtraCompilerModifiers.AccUnresolved;
+			return method;
+		}
+		// returning null is what this clause would have done anyway
+		return null;
+	}
+	// FIXASC - end
 
 	TypeParameter[] typeParameters = methodDecl.typeParameters();
 	if (typeParameters != null) {

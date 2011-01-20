@@ -11,6 +11,7 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,11 +20,15 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -120,26 +125,50 @@ public class GroovyClassScope extends ClassScope {
 		if (this.referenceContext instanceof GroovyTypeDeclaration) {
 			GroovyTypeDeclaration typeDeclaration = (GroovyTypeDeclaration) this.referenceContext;
 
-			// FIXASC the methods created here need to be a subtype of
-			// MethodBinding because they need their source position to be the
-			// property
-			List<PropertyNode> properties = typeDeclaration.properties;
-			for (PropertyNode property : properties) {
-				String name = property.getName();
-				FieldBinding fBinding = typeDeclaration.binding.getField(name.toCharArray(), false);
-				// null binding indicates there was a problem resolving its type
-				if (fBinding != null && !(fBinding.type instanceof MissingTypeBinding)) {
-					String getterName = "get" + MetaClassHelper.capitalize(name);
-					createMethod(getterName, property.isStatic(), "", /* TypeBinding.NO_TYPES */null, fBinding.type, groovyMethods,
-							methodBindings, typeDeclaration);
-					if (!fBinding.isFinal()) {
-						String setterName = "set" + MetaClassHelper.capitalize(name);
-						createMethod(setterName, property.isStatic(), "", new TypeBinding[] { fBinding.type }, TypeBinding.VOID,
+			boolean useOldWay = false;
+			if (useOldWay) {
+				// FIXASC the methods created here need to be a subtype of
+				// MethodBinding because they need their source position to be the
+				// property
+				List<PropertyNode> properties = typeDeclaration.properties;
+				for (PropertyNode property : properties) {
+					String name = property.getName();
+					FieldBinding fBinding = typeDeclaration.binding.getField(name.toCharArray(), false);
+					// null binding indicates there was a problem resolving its type
+					if (fBinding != null && !(fBinding.type instanceof MissingTypeBinding)) {
+						String getterName = "get" + MetaClassHelper.capitalize(name);
+						createMethod(getterName, property.isStatic(), "", /* TypeBinding.NO_TYPES */null, fBinding.type,
 								groovyMethods, methodBindings, typeDeclaration);
+						if (!fBinding.isFinal()) {
+							String setterName = "set" + MetaClassHelper.capitalize(name);
+							createMethod(setterName, property.isStatic(), "", new TypeBinding[] { fBinding.type },
+									TypeBinding.VOID, groovyMethods, methodBindings, typeDeclaration);
+						}
+						if (fBinding.type == TypeBinding.BOOLEAN) {
+							createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", /* TypeBinding.NO_TYPES, */
+							null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
+						}
 					}
-					if (fBinding.type == TypeBinding.BOOLEAN) {
-						createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", /* TypeBinding.NO_TYPES, */
-						null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
+				}
+			} else {
+				// Create getters/setters without resolving the types.
+				List<PropertyNode> properties = typeDeclaration.properties;
+				for (PropertyNode property : properties) {
+					String name = property.getName();
+					String capitalizedName = MetaClassHelper.capitalize(name);
+					// Create getter
+					createGetterMethod(name, "get" + capitalizedName, property.isStatic(), groovyMethods, methodBindings,
+							typeDeclaration);
+					// Create setter if non-final property
+					if (!Modifier.isFinal(property.getModifiers())) {
+						createSetterMethod(name, "set" + capitalizedName, property.isStatic(), groovyMethods, methodBindings,
+								typeDeclaration, property.getType().getName());
+					}
+					// Create isA if type is boolean
+					String propertyType = property.getType().getName();
+					if (propertyType.equals("boolean")) {
+						createGetterMethod(name, "is" + capitalizedName, property.isStatic(), groovyMethods, methodBindings,
+								typeDeclaration);
 					}
 				}
 			}
@@ -196,6 +225,114 @@ public class GroovyClassScope extends ClassScope {
 			 * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
 			 */
 			MethodBinding mb = new MethodBinding(modifiers, methodName, returnType, parameterTypes, null,
+					this.referenceContext.binding);
+			// FIXASC parameter names - what value would it have to set them correctly?
+			groovyMethods.add(mb);
+		}
+	}
+
+	private void createGetterMethod(String propertyName, String name, boolean isStatic, List<MethodBinding> groovyMethods,
+			MethodBinding[] existingMethods, GroovyTypeDeclaration typeDeclaration) {
+		boolean found = false;
+
+		char[] nameAsCharArray = name.toCharArray();
+		for (MethodBinding existingMethod : existingMethods) {
+			if (CharOperation.equals(nameAsCharArray, existingMethod.selector)) {
+				// check if this possible candidate has parameters (if it does, it can't be our getter)
+				if ((existingMethod.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
+					// need some intelligence here
+					AbstractMethodDeclaration methodDecl = existingMethod.sourceMethod();
+					if (methodDecl == null) {
+						// FIXASC decide what we can do here
+					} else {
+						Argument[] arguments = methodDecl.arguments;
+						if (arguments == null || arguments.length == 0) {
+							found = true;
+						}
+					}
+				} else {
+					TypeBinding[] existingParams = existingMethod.parameters;
+					if (existingParams == null || existingParams.length == 0) {
+						found = true;
+					}
+				}
+			}
+		}
+
+		// FIXASC what about inherited methods - what if the supertype
+		// provides an implementation, does the subtype get a new method?
+		if (!found) {
+			int modifiers = ClassFileConstants.AccPublic;
+			if (isStatic) {
+				modifiers |= ClassFileConstants.AccStatic;
+			}
+			if (this.referenceContext.binding.isInterface()) {
+				modifiers |= ClassFileConstants.AccAbstract;
+			}
+			/*
+			 * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
+			 * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
+			 */
+			MethodBinding mb = new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameAsCharArray, null,
+					this.referenceContext.binding);
+			// FIXASC parameter names - what value would it have to set them correctly?
+			groovyMethods.add(mb);
+		}
+	}
+
+	private void createSetterMethod(String propertyName, String name, boolean isStatic, List<MethodBinding> groovyMethods,
+			MethodBinding[] existingMethods, GroovyTypeDeclaration typeDeclaration, String propertyType) {
+		boolean found = false;
+
+		char[] nameAsCharArray = name.toCharArray();
+		for (MethodBinding existingMethod : existingMethods) {
+			if (CharOperation.equals(nameAsCharArray, existingMethod.selector)) {
+				// check if this possible candidate has parameters (if it does, it can't be our getter)
+				if ((existingMethod.modifiers & ExtraCompilerModifiers.AccUnresolved) != 0) {
+					// lets look at the declaration
+					AbstractMethodDeclaration methodDecl = existingMethod.sourceMethod();
+					if (methodDecl == null) {
+						// FIXASC decide what we can do here
+					} else {
+						Argument[] arguments = methodDecl.arguments;
+						if (arguments != null && arguments.length == 1) {
+							// might be a candidate, it takes one parameter
+							// TypeReference tr = arguments[0].type;
+							// String typename = new String(CharOperation.concatWith(tr.getTypeName(), '.'));
+							// // not really an exact comparison here...
+							// if (typename.endsWith(propertyName)) {
+							found = true;
+							// }
+						}
+					}
+				} else {
+					TypeBinding[] existingParams = existingMethod.parameters;
+					if (existingParams != null && existingParams.length == 1) {
+						// if (CharOperation.equals(existingParams[0].signature(),)) {
+						// might be a candidate, it takes one parameter
+						found = true;
+						// }
+					}
+				}
+			}
+		}
+
+		// FIXASC what about inherited methods - what if the supertype
+		// provides an implementation, does the subtype get a new method?
+		if (!found) {
+			int modifiers = ClassFileConstants.AccPublic;
+			if (isStatic) {
+				modifiers |= ClassFileConstants.AccStatic;
+			}
+			if (this.referenceContext.binding.isInterface()) {
+				modifiers |= ClassFileConstants.AccAbstract;
+			}
+			char[] methodName = name.toCharArray();
+			/*
+			 * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
+			 * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
+			 */
+			MethodBinding mb = new LazilyResolvedMethodBinding(false, propertyName, modifiers, methodName, null,
 					this.referenceContext.binding);
 			// FIXASC parameter names - what value would it have to set them correctly?
 			groovyMethods.add(mb);

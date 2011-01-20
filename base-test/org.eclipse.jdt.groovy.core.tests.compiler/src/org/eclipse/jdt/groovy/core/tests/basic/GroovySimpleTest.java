@@ -6299,6 +6299,155 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			},
 			"success");
 	}
+
+	public void testGroovyPropertyAccessors_ErrorCases1() {
+		// check no duplicate created for 'String getProp'
+		this.runConformTest(new String[] {
+				"p/C.java",
+				"package p;\n" +
+				"public class C {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    G o = new G();\n"+
+				"    System.out.print(o.getProp());\n"+
+				"  }\n"+
+				"}\n",				
+
+				"p/G.groovy",
+				"package p;\n"+
+				"public class G {\n" + 
+				"  String prop = 'foo'\n"+
+				"  String getProp() { return prop; }\n"+
+				"}\n",
+			},
+			"foo");
+	}
+	
+
+	public void testGroovyPropertyAccessors_ErrorCases2() {
+		// check no duplicate created for 'boolean isProp'
+		this.runConformTest(new String[] {
+				"p/C.java",
+				"package p;\n" +
+				"public class C {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    G o = new G();\n"+
+				"    System.out.print(o.isProp());\n"+
+				"  }\n"+
+				"}\n",				
+
+				"p/G.groovy",
+				"package p;\n"+
+				"public class G {\n" + 
+				"  boolean prop = false\n"+
+				"  boolean isProp() { return prop; }\n"+
+				"}\n",
+			},
+			"false");
+	}
+	
+	public void testGroovyPropertyAccessors_ErrorCases3() {
+		// although there is a getProp already defined, it takes a parameter
+		// so a new one should still be generated
+		this.runConformTest(new String[] {
+				"p/C.java",
+				"package p;\n" +
+				"public class C {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    G o = new G();\n"+
+				"    System.out.print(o.getProp());\n"+
+				"  }\n"+
+				"}\n",				
+
+				"p/G.groovy",
+				"package p;\n"+
+				"public class G {\n" + 
+				"  String prop = 'foo'\n"+
+				"  String getProp(String s) { return prop; }\n"+
+				"}\n",
+			},
+			"foo");
+	}
+	
+	public void testGroovyPropertyAccessors_ErrorCases4() {
+		// although there is a setProp already defined, it takes no parameters
+		// so a new one should still be generated
+		this.runConformTest(new String[] {
+				"p/C.java",
+				"package p;\n" +
+				"public class C {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    G o = new G();\n"+
+				"    o.setProp(\"abc\");\n"+
+				"    System.out.print(\"abc\");\n"+
+				"  }\n"+
+				"}\n",				
+
+				"p/G.groovy",
+				"package p;\n"+
+				"public class G {\n" + 
+				"  String prop = 'foo'\n"+
+				"  void setProp() { }\n"+
+				"}\n",
+			},
+			"abc");
+	}
+
+	// testcase commented out - seems groovyc doesn't allow this - fails to generate the setProp(H)...
+//	public void testGroovyPropertyAccessors_ErrorCases5() {
+//		// although there is a setProp already defined, it takes a parameter
+//		// of a different type to the property type
+//		this.runConformTest(new String[] {
+//				"p/C.java",
+//				"package p;\n" +
+//				"public class C {\n"+
+//				"  public static void main(String[] argv) {\n"+
+//				"    G o = new G();\n"+
+//				"    o.setProp(new H());\n"+
+//				"    System.out.print(\"abc\");\n"+
+//				"  }\n"+
+//				"}\n",				
+//				
+//				"p/H.java",
+//				"package p;\n"+
+//				"class H{}\n",
+//				
+//				"p/J.java",
+//				"package p;\n"+
+//				"class J{}\n",
+//				
+//				"p/G.groovy",
+//				"package p;\n"+
+//				"public class G {\n" + 
+//				"  H prop\n"+
+//				"  void setProp(J b) { }\n"+
+//				"}\n",
+//			},
+//			"abc");
+//	}
+//	see reasoning on previous testcase
+//	public void testGroovyPropertyAccessors_ErrorCases6() {
+//		// although there is a setProp already defined, it takes a parameter
+//		// of a different type to the property type
+//		this.runConformTest(new String[] {
+//				"p/C.java",
+//				"package p;\n" +
+//				"public class C {\n"+
+//				"  public static void main(String[] argv) {\n"+
+//				"    G o = new G();\n"+
+//				"    o.setProp(\"abc\");\n"+
+//				"    System.out.print(\"abc\");\n"+
+//				"  }\n"+
+//				"}\n",				
+//
+//				"p/G.groovy",
+//				"package p;\n"+
+//				"public class G {\n" + 
+//				"  String prop = 'foo'\n"+
+//				"  void setProp(boolean b) { }\n"+
+//				"}\n",
+//			},
+//			"abc");
+//	}
 	
 	public void testGroovyPropertyAccessors() {
 		this.runConformTest(new String[] {
