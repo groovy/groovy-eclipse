@@ -373,6 +373,12 @@ public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachm
 }
 	public void addEntry(IPath projectPath, IClasspathEntry entryPath) throws JavaModelException {
 		IClasspathEntry[] classpath = getClasspath(projectPath);
+		// first look to see if the entry already exists:
+		for (IClasspathEntry entry : classpath) {
+            if (entry.equals(entryPath)) {
+                return;
+            }
+        }
 		IClasspathEntry[] newClaspath = new IClasspathEntry[classpath.length + 1];
 		System.arraycopy(classpath, 0, newClaspath, 0, classpath.length);
 		newClaspath[classpath.length] = entryPath;
