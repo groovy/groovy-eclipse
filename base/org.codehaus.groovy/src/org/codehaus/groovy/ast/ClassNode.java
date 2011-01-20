@@ -604,9 +604,14 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public PropertyNode getProperty(String name) {
-        for (PropertyNode pn : getProperties()) {
-            if (pn.getName().equals(name)) return pn;
-        }
+    	try {
+	        for (PropertyNode pn : getProperties()) {
+	        	String pname = pn.getName();
+	            if (pname.equals(name)) return pn;
+	        }
+    	} catch (NullPointerException npe) {
+    		throw new RuntimeException("greclipse-972 debug: null pointer in getProperty(), type is "+this.getName()+" props are "+getProperties(),npe);
+    	}
         return null;
     }
 
