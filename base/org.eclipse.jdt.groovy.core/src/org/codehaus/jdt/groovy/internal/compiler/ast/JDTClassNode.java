@@ -455,6 +455,13 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	@Override
 	public List<AnnotationNode> getAnnotations() {
 		if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
+			ensureAnnotationsInitialized();
+		}
+		return super.getAnnotations();
+	}
+
+	private synchronized void ensureAnnotationsInitialized() {
+		if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
 			if ((jdtBinding instanceof SourceTypeBinding)) {
 				// ensure resolved
 				((SourceTypeBinding) jdtBinding).getAnnotationTagBits();
@@ -465,10 +472,15 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			}
 			bits |= ANNOTATIONS_INITIALIZED;
 		}
-		return super.getAnnotations();
 	}
 
 	protected void ensurePropertiesInitialized() {
+		if ((bits & PROPERTIES_INITIALIZED) == 0) {
+			initializeProperties();
+		}
+	}
+
+	protected synchronized void initializeProperties() {
 		if ((bits & PROPERTIES_INITIALIZED) == 0) {
 			lazyClassInit();
 			// getX methods
