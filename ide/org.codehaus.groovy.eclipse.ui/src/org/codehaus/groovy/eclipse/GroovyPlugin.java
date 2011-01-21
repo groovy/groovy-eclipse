@@ -47,8 +47,12 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     private final class JUnitPageListener implements IPageListener {
         public void pageOpened(IWorkbenchPage page) {
-            IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
-            service.addPartListener(ensure);
+            try {
+                IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
+                service.addPartListener(ensure);
+            } catch (NullPointerException e) {
+                // can ignore...something is not initialized any more.
+            }
         }
 
         public void pageClosed(IWorkbenchPage page) {

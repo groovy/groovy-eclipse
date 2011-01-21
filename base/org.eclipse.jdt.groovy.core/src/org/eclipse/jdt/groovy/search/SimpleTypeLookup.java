@@ -595,8 +595,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 		// lastly, try converting to a getter and see if the getter version of the method exists
 		// hmmmm...should we do the same for set?
-		if (!name.startsWith("get")) {
-			String getter = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+		if (!name.startsWith("get") && name.length() > 0) {
+			String getter = "get" + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
 			maybeMethods = declaringType.getMethods(getter);
 			if (maybeMethods != null && maybeMethods.size() > 0) {
 				return maybeMethods.get(0);

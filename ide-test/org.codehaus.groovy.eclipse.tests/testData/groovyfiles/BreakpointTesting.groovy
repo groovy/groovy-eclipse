@@ -1,7 +1,7 @@
 
 def t = [ x:1, y:2 ] // 1
 
-def shiftTriangle = { it -> // 12
+def shiftTriangle = { it ->
 	it.x += 1 // 2
 	it.y += 1 // 3
 
@@ -18,7 +18,7 @@ println "Triangle is at $t.centerLocation"
 
 t = ""
 
-def x() {
+def x() { // 12
     print "Hi"  // 5
 }
 
@@ -38,7 +38,7 @@ t = []; // 11
 
 
 class Class {
-    def m() {
+    def m() {  // 22
         here()
         here() // 14
         here()
@@ -49,5 +49,20 @@ class Class {
     
     static h = {
     	here() // 17
+    }
+}
+
+public class Printing {
+    Printing() {  // 21
+        print 8  // 18
+    }
+    
+    static y() {  // 23 
+    }
+    def x = {
+        print 9  // 19
+    }
+    static z = {
+        print 9  // 20
     }
 }

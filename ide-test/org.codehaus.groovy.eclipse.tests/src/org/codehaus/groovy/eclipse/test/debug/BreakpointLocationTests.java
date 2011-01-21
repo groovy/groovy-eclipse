@@ -149,6 +149,30 @@ public class BreakpointLocationTests extends EclipseTestCase {
         doBreakpointTest(17);
     }
     
+    public void testBreakpointInScript18() throws Exception {
+        doBreakpointTest(18);
+    }
+    
+    public void testBreakpointInScript19() throws Exception {
+        doBreakpointTest(19);
+    }
+    
+    public void testBreakpointInScript20() throws Exception {
+        doBreakpointTest(20);
+    }
+    
+    public void testBreakpointInScript21() throws Exception {
+        doBreakpointTest(21);
+    }
+    
+    public void testBreakpointInScript22() throws Exception {
+        doBreakpointTest(22);
+    }
+    
+    public void testBreakpointInScript23() throws Exception {
+        doBreakpointTest(23);
+    }
+    
     private void doBreakpointTest(int i) throws Exception {
         int location = document.get().indexOf("// " + i)-3;
         int line = document.getLineOfOffset(location)+1;  

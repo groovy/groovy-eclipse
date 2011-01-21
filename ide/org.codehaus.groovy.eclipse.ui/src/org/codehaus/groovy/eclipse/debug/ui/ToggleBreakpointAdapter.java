@@ -3,7 +3,7 @@
  * program and the accompanying materials are made available under the terms of
  * the Eclipse Public License v1.0 which accompanies this distribution, and is
  * available at http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors: Sian January - initial version
  *              Andrew Eisenberg - convert for use with Groovy
  ******************************************************************************/
@@ -55,15 +55,17 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 /**
  * Toggles a line breakpoint in a Java editor.
- * Based on org.eclipse.jdt.internal.debug.ui.actions.ToggleBreakpointAdapter, but uses
- * BreakpointLocationVerifierJob and ValidBreakpointLocationLocator from this package and does not
- * support method breakpoints or field watchpoints.
- * 
+ * Based on org.eclipse.jdt.internal.debug.ui.actions.ToggleBreakpointAdapter,
+ * but uses
+ * BreakpointLocationVerifierJob and ValidBreakpointLocationLocator from this
+ * package and does not
+ * support field watchpoints.
+ *
  * Borrowed from same class in AJDT
  */
 public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtension {
 	public final static Object TOGGLE_BREAKPOINT_FAMILY = new Object();
-	
+
 	public ToggleBreakpointAdapter() {
 		// init helper in UI thread
 		ActionDelegateHelper.getDefault();
@@ -110,7 +112,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.eclipse.debug.ui.actions.IToggleBreakpointsTarget#toggleLineBreakpoints(IWorkbenchPart,
      *      ISelection)
      */
@@ -124,6 +126,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
             public boolean belongsTo(Object family) {
                 return family == TOGGLE_BREAKPOINT_FAMILY;
             }
+            @Override
             protected IStatus run(IProgressMonitor monitor) {
                 if (selection instanceof ITextSelection) {
                     if (monitor.isCanceled()) {
@@ -156,7 +159,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                                     if (offset < start || offset > end) {
                                         // not in the inner type
                                         IStatusLineManager statusLine = editorPart.getEditorSite().getActionBars().getStatusLineManager();
-                                        statusLine.setErrorMessage(NLS.bind("Breakpoints can only be created within the type associated with the editor: {0}.", new String[] { type.getTypeQualifiedName() })); 
+                                        statusLine.setErrorMessage(NLS.bind("Breakpoints can only be created within the type associated with the editor: {0}.", new String[] { type.getTypeQualifiedName() }));
                                         Display.getCurrent().beep();
                                         return Status.OK_STATUS;
                                     }
@@ -212,7 +215,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                                 JDIDebugUIPlugin.log(ble);
                             }
                         }
-                        
+
                         if (typeName != null && resource != null) {
                             IJavaLineBreakpoint existingBreakpoint = JDIDebugModel.lineBreakpointExists(resource, typeName, lineNumber);
                             if (existingBreakpoint != null) {
@@ -228,7 +231,6 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                 return Status.OK_STATUS;
             }
         };
-//        job.setSystem(true);
         job.schedule();
     }
 

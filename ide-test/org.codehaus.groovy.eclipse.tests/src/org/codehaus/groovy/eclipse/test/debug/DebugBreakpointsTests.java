@@ -166,7 +166,31 @@ public class DebugBreakpointsTests extends EclipseTestCase {
     public void testBreakpointInScript17() throws Exception {
         doBreakpointTest(17);
     }
+
+    public void testBreakpointInScript18() throws Exception {
+        doBreakpointTest(18);
+    }
     
+    public void testBreakpointInScript19() throws Exception {
+        doBreakpointTest(19);
+    }
+    
+    public void testBreakpointInScript20() throws Exception {
+        doBreakpointTest(20);
+    }
+    
+    public void testBreakpointInScript21() throws Exception {
+        doBreakpointTest(21);
+    }
+    
+    public void testBreakpointInScript22() throws Exception {
+        doBreakpointTest(22);
+    }
+    
+    public void testBreakpointInScript23() throws Exception {
+        doBreakpointTest(23);
+    }
+
     private void doBreakpointTest(int i) throws Exception {
         // occasional failures on build server...perform in a loop
         int count = 0;
@@ -182,11 +206,8 @@ public class DebugBreakpointsTests extends EclipseTestCase {
             }
         }
     }
-    /**
-     * @param i
-     * @throws CoreException
-     */
-    public void innerDoBreakpointTest(int i) throws CoreException {
+
+    private void innerDoBreakpointTest(int i) throws CoreException {
         ITextSelection selection = new TextSelection(new Document(text), text.indexOf("// " + i)-3, 3);
         boolean canToggle = adapter.canToggleLineBreakpoints(editor, selection);
         assertTrue("Should be able to toggle breakpoint at section " + i, canToggle);
