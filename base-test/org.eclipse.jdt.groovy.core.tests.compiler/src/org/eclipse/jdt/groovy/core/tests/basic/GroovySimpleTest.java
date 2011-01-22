@@ -309,6 +309,59 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    	},"abcd");
     }
     
+    public void testEnumStatic_GRE974() {
+    	this.runConformTest(new String[]{
+    			"A.groovy",
+    			"package be.flow\n"+
+    			"\n"+
+    			"enum C1{\n"+
+    			"	TEST_C1\n"+
+    			"}	\n"+
+    			"\n"+
+    			"class A {\n"+
+    			"	public enum C2{\n"+
+    			"		TEST_C2\n"+
+    			"	}\n"+
+    			"}",
+    			
+    			"B.groovy",
+    			"package be.flow\n"+
+    			"\n"+
+    			"import static be.flow.C1.TEST_C1;\n"+
+    			"import static be.flow.A.C2.*;\n"+
+    			"\n"+
+    			"class B {\n"+
+    			"	\n"+
+    			"	B(){\n"+
+    			"		super(TEST_C2)\n"+
+    			"	}\n"+
+    			"	\n"+
+    			"	void doIt(){\n"+
+    			"		println(be.flow.C1.TEST_C1);\n"+
+    			"		println(be.flow.A.C2.TEST_C2);\n"+
+    			"		println(TEST_C2);\n"+
+    			"	}\n"+
+    			"	\n"+
+    			"}",
+    			
+    			"D.groovy",
+    			"package be.flow\n"+
+    			"\n"+
+    			"import static be.flow.C1.TEST_C1;\n"+
+    			"import static be.flow.A.C2.*;\n"+
+    			"\n"+
+    			"class D {\n"+
+    			"	\n"+
+    			"	static void doIt(){\n"+
+    			"		println(be.flow.C1.TEST_C1);\n"+
+    			"		println(be.flow.A.C2.TEST_C2);\n"+
+    			"		println(TEST_C2);\n"+
+    			"	}\n"+
+    			"	\n"+
+    			"}"
+    			},"");
+    }
+    
 
     public void testGRE830() {
 	    	this.runNegativeTest(new String[]{

@@ -730,28 +730,31 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	/**
-	 * Build JDT representations of all the fields on the groovy type
+	 * Build JDT representations of all the fields on the groovy type. <br>
+	 * Enum field handling<br>
+	 * Groovy handles them as follows: they have the ACC_ENUM bit set and the type is the type of the declaring enum type. When
+	 * building declarations, if you want the SourceTypeBinding to correctly build an enum field binding (in
+	 * SourceTypeBinding.resolveTypeFor(FieldBinding)) then you need to: (1) avoid setting modifiers, the enum fields are not
+	 * expected to have any modifiers (2) leave the type as null, that is how these things are identified by JDT.
 	 */
 	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode) {
 		List<FieldDeclaration> fieldDeclarations = new ArrayList<FieldDeclaration>();
 		List<FieldNode> fieldNodes = classNode.getFields();
 		if (fieldNodes != null) {
 			for (FieldNode fieldNode : fieldNodes) {
-				// boolean isEnumField = (fieldNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
+				boolean isEnumField = (fieldNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 				boolean isSynthetic = (fieldNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0;
-				// if (isEnumField) {
-				// enumFields.add(fieldNode);
-				// } else
 				if (!isSynthetic) {
 					// JavaStubGenerator ignores private fields but I don't
 					// think we want to here
 					FieldDeclaration fieldDeclaration = new FieldDeclaration(fieldNode.getName().toCharArray(), 0, 0);
 					fieldDeclaration.annotations = transformAnnotations(fieldNode.getAnnotations());
-					// 4000 == AccEnum
-					fieldDeclaration.modifiers = fieldNode.getModifiers() & ~0x4000;
-					fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
+					if (!isEnumField) {
+						fieldDeclaration.modifiers = fieldNode.getModifiers() & ~0x4000; // 4000 == AccEnum
+						fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
+					}
 					fieldDeclaration.javadoc = new Javadoc(108, 132);
-					fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode);
+					fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode, isEnumField);
 					fieldDeclarations.add(fieldDeclaration);
 				}
 			}
@@ -1776,7 +1779,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	/**
 	 * Try to get the source locations for field declarations to be as correct as possible
 	 */
-	private void fixupSourceLocationsForFieldDeclaration(FieldDeclaration fieldDeclaration, FieldNode fieldNode) {
+	private void fixupSourceLocationsForFieldDeclaration(FieldDeclaration fieldDeclaration, FieldNode fieldNode, boolean isEnumField) {
 		// TODO (groovy) each area marked with a '*' is only approximate
 		// and can be revisited to make more precise
 
@@ -1792,11 +1795,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		int line = fieldNode.getLineNumber();
 		Javadoc doc = findJavadoc(line);
 		fieldDeclaration.javadoc = doc;
-		fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;
 
-		// the end of the fragment including initializer (and trailing ',')
-		fieldDeclaration.declarationSourceEnd = fieldNode.getEnd() - 1;
-
+		if (isEnumField) {
+			// they have no 'leading' type declaration or modifiers
+			fieldDeclaration.declarationSourceStart = fieldNode.getNameStart();
+			fieldDeclaration.declarationSourceEnd = fieldNode.getNameEnd() - 1;
+		} else {
+			fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;
+			// the end of the fragment including initializer (and trailing ',')
+			fieldDeclaration.declarationSourceEnd = fieldNode.getEnd() - 1;
+		}
 		// * first character of the declaration's modifier
 		fieldDeclaration.modifiersSourceStart = fieldNode.getStart();
 

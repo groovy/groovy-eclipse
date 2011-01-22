@@ -736,7 +736,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
         
-        // GRECLIPSE: start
+        // GRECLIPSE: start 
         classNode.setNameStart(nameStart);
         classNode.setNameEnd(nameEnd);
         configureAST(classNode, enumNode);
@@ -780,7 +780,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             	}
             }
         }
+
+        // GRECLIPSE: start
+        GroovySourceAST groovySourceAST = (GroovySourceAST) node;
+        int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
+        int nameEnd = nameStart + identifier.length()-1;
+        FieldNode fn = 
+        // end
         EnumHelper.addEnumConstant(classNode, identifier, init);
+        // GRECLIPSE: start
+        fn.setNameStart(nameStart);
+        fn.setNameEnd(nameEnd);
+        // end
         enumConstantBeingDef = false;
     }
     
