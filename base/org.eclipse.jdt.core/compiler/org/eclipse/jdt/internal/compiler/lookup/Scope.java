@@ -1199,7 +1199,7 @@ public abstract class Scope {
 	}
 
 	// GROOVY start
-	// FIXASC (M3:ast_transform_methods) put thought into this approach
+	// GROOVY (M3:ast_transform_methods) put thought into this approach
 	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
 		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector);
 		if (extraMethods!=null) {
@@ -2663,19 +2663,38 @@ public abstract class Scope {
 						}
 						if (temp != type && temp != null) {
 							if (temp.isValidBinding()) {
-								ImportReference importReference = someImport.reference;
-								if (importReference != null) {
-									importReference.bits |= ASTNode.Used;
+								// GROOVY - start - allow for imports expressed in source to override 'default' imports - GRECLIPSE-945
+								boolean conflict = true; // do we need to continue checking
+								if (this.parent!=null && foundInImport) {
+									CompilationUnitScope cuScope = compilationUnitScope();
+									if (cuScope!=null) {
+										ReferenceBinding chosenBinding = cuScope.selectBinding(temp,type,someImport.reference!=null);
+										if (chosenBinding!=null) {
+											// The new binding was selected as a valid answer
+											conflict = false;
+											foundInImport = true;
+											type = chosenBinding;
+										}
+									}
 								}
-								if (foundInImport) {
-									// Answer error binding -- import on demand conflict; name found in two import on demand packages.
-									temp = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.Ambiguous);
-									if (typeOrPackageCache != null)
-										typeOrPackageCache.put(name, temp);
-									return temp;
+								if (conflict) {
+								// GROOVY - end
+									ImportReference importReference = someImport.reference;
+									if (importReference != null) {
+										importReference.bits |= ASTNode.Used;
+									}
+									if (foundInImport) {
+										// Answer error binding -- import on demand conflict; name found in two import on demand packages.
+										temp = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.Ambiguous);
+										if (typeOrPackageCache != null)
+											typeOrPackageCache.put(name, temp);
+										return temp;
+									}
+									type = temp;
+									foundInImport = true;
+								// GROOVY - start
 								}
-								type = temp;
-								foundInImport = true;
+								// GROOVY - end
 							} else if (foundType == null) {
 								foundType = temp;
 							}

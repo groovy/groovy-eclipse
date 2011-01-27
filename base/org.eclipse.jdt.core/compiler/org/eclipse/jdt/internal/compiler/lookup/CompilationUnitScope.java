@@ -1000,5 +1000,8 @@ protected void reportImportProblem(ImportReference importReference, Binding impo
 public boolean canSeeEverything() {
 	return false;
 }
+public ReferenceBinding selectBinding(ReferenceBinding temp, ReferenceBinding type, boolean isDeclaredImport) {
+	return null;
+}
 //GROOVY end
 }

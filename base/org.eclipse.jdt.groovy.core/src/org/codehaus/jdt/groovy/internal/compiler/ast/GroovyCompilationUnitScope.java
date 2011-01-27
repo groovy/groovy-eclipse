@@ -49,6 +49,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
 	private Map<String, ClassNode> typenameToClassNodeCache = new HashMap<String, ClassNode>();
 
+	private static final char[][] javaLang;
 	// Matches ResolveVisitor - these are the additional automatic imports for groovy files
 	private static final char[][] javaIo;
 	private static final char[][] javaNet;
@@ -60,6 +61,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	private static final char[][] javaMathBigInteger;
 
 	static {
+		javaLang = CharOperation.splitOn('.', "java.lang".toCharArray());
 		javaIo = CharOperation.splitOn('.', "java.io".toCharArray());
 		javaNet = CharOperation.splitOn('.', "java.net".toCharArray());
 		javaUtil = CharOperation.splitOn('.', "java.util".toCharArray());
@@ -327,4 +329,39 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		return isScript;
 	}
 
+	/**
+	 * This method is designed to be called when two bindings have been discovered, it will determine which is the right answer or
+	 * return null if there is no right answer (and an ambiguous binding message will be reported). If in here it means two star
+	 * imports have found a type. One might be a groovy.util style input (i.e. a 'built in' import), and one a 'normal' import that
+	 * was actually expressed in the source code. Whether the newly found type was discovered via an import expressed in the import
+	 * is determined by the 'isDeclaredImport' flag. If that is true we just have to check whether the originally found type uses
+	 * one of the special names.  If the original type doesn't use a 'special name' then we
+	 * allow it to override the newly found value and return it.<br>
+	 * This code does not yet allow for the originallyFound import to be also found via a declared import (e.g. if the user is daft
+	 * enough to 'import groovy.util.*' - making a change to pass that information through would be more disruptive.
+	 * 
+	 * @param newlyFound the binding found after the first one was discovered
+	 * @param originallyFound the binding found initially
+	 * @param isDeclaredImport indicates if the 'temp' binding was found using a real import from the source code (rather than an
+	 *        'injected' one)
+	 */
+	public ReferenceBinding selectBinding(ReferenceBinding newlyFound, ReferenceBinding originallyFound, boolean isDeclaredImport) {
+		if (isDeclaredImport) {
+			// This means 'temp' is found via a real import reference in the source code, let's take a closer look at 'type'
+			if (originallyFound.fPackage != null) {
+				char[][] packageName = originallyFound.fPackage.compoundName;
+				// packageName might be 'groovy.util'
+				if (CharOperation.equals(javaLang, packageName) || CharOperation.equals(javaIo, packageName)
+						|| CharOperation.equals(javaNet, packageName) || CharOperation.equals(javaUtil, packageName)
+						|| CharOperation.equals(groovyLang, packageName) || CharOperation.equals(groovyUtil, packageName)) {
+					return newlyFound;
+				} else {
+					// Groovy rule: if the originally found one is via a declared import, which it must be
+					// if we are here, use it in preference to the newlyFound one.
+					return originallyFound;
+				}
+			}
+		}
+		return null;
+	}
 }

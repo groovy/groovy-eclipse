@@ -291,6 +291,183 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"}\n",
 	    	},"abc");
     }
+    
+    public void testAmbiguous_GRE945_gu() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import bug.factory.*\n"+
+    			"class Code {\n"+
+    			"  static Factory fact = new Factory()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"Factory.groovy",
+    			"package bug.factory\n"+
+    			"class Factory { static foo() { print 'abc'}}\n",
+    			
+    		},"abc");
+    }
+    
+    public void testAmbiguous_GRE945_jl() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import bug.factory.*\n"+
+    			"class Code {\n"+
+    			"  static StringBuffer fact = new StringBuffer()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    print fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"StringBuffer.groovy",
+    			"package bug.factory\n"+
+    			"class StringBuffer { static String foo() { return 'abc'}}\n",
+    			
+    		},"abc");
+    }
+    
+    public void testAmbiguous_GRE945_bothFromSource() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import a.*\n"+
+    			"import b.*\n"+
+    			"class Code {\n"+
+    			"  static A fact = new A()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    print fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"a/A.groovy",
+    			"package a\n"+
+    			"class A { static String foo() { return 'abc'}}\n",
+    			
+    			"b/A.groovy",
+    			"package b\n"+
+    			"class A { static String foo() { return 'def'}}\n",
+    			
+    		},"abc");
+    }
+    
+    public void testAmbiguous_GRE945_bothFromSource_2() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import b.*\n"+
+    			"import a.*\n"+
+    			"class Code {\n"+
+    			"  static A fact = new A()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    print fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"a/A.groovy",
+    			"package a\n"+
+    			"class A { static String foo() { return 'abc'}}\n",
+    			
+    			"b/A.groovy",
+    			"package b\n"+
+    			"class A { static String foo() { return 'def'}}\n",
+    			
+    		},"def");
+    }
+    
+    public void testAmbiguous_GRE945_bothFromSource_3() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import b.*\n"+
+    			"import a.*\n"+
+    			"class Code {\n"+
+    			"  static Process fact = new Process()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    print fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"a/Process.groovy",
+    			"package a\n"+
+    			"class Process { static String foo() { return 'abc'}}\n",
+    			
+    			"b/Process.groovy",
+    			"package b\n"+
+    			"class Process { static String foo() { return 'def'}}\n",
+    			
+    		},"def");
+    }
+    
+    public void testAmbiguous_GRE945_ju() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import bug.factory.*\n"+
+    			"class Code {\n"+
+    			"  static List fact = new List()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"List.groovy",
+    			"package bug.factory\n"+
+    			"class List { static foo() { print 'abc'}}\n",
+    			
+    		},"abc");
+    }
+    
+    public void testAmbiguous_GRE945_jn() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import bug.factory.*\n"+
+    			"class Code {\n"+
+    			"  static Socket fact = new Socket()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"Socket.groovy",
+    			"package bug.factory\n"+
+    			"class Socket { static foo() { print 'abc'}}\n",
+    			
+    		},"abc");
+    }
+    
+    public void testAmbiguous_GRE945_gl() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import bug.factory.*\n"+
+    			"class Code {\n"+
+    			"  static Tuple fact = new Tuple()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"Tuple.groovy",
+    			"package bug.factory\n"+
+    			"class Tuple { static foo() { print 'abc'}}\n",
+    			
+    		},"abc");
+    }
+    
+    public void testAmbiguous_GRE945_ji() {
+    	this.runConformTest(new String[]{
+    			"Code.groovy",
+    			"import bug.factory.*\n"+
+    			"class Code {\n"+
+    			"  static Serializable fact = new Serializable()\n"+
+    			"  public static void main(String[]argv) {\n"+
+    			"    fact.foo()\n"+
+    			"  }\n"+
+    			"}\n",
+
+    			"Serializable.groovy",
+    			"package bug.factory\n"+
+    			"class Serializable { static foo() { print 'abc'}}\n",
+    			
+    		},"abc");
+    }
 
     public void testStaticOuter_GRE944_2() {
 	    	this.runConformTest(new String[]{
@@ -3328,21 +3505,17 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testStarImports_GRE421() {
-		this.runNegativeTest(new String[]{
-				"a/b/c/Process.java",
-				"package a.b.c;\n"+
-				"public class Process {}\n",
+		this.runConformTest(new String[]{
 				"Wibble.groovy",
 				"import a.b.c.*;\n"+
 				"class Wibble {\n"+
-				"	 Process process\n"+
-				"}\n"},
-				"----------\n" + 
-				"1. ERROR in Wibble.groovy (at line 3)\n" + 
-				"	Process process\n" + 
-				"	^^^^^^^\n" + 
-				"The type Process is ambiguous\n" + 
-				"----------\n");
+				"	 Process process = new Process()\n"+
+				"  public static void main(String[] argv) { print new Wibble().process.class}\n"+
+				"}\n",
+				"a/b/c/Process.java",
+				"package a.b.c;\n"+
+				"public class Process {}\n"},
+				"class a.b.c.Process");
 	}
 	
 
