@@ -49,6 +49,7 @@ import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.WarningMessage;
+import org.codehaus.groovy.syntax.SyntaxException;
 
 /**
  * This class handles the invocation of the ASTAnnotationTransformation
@@ -146,7 +147,17 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             // second pass, call visit on all of the collected nodes
             for (ASTNode[] node : targetNodes) {
                 for (ASTTransformation snt : transforms.get(node[0])) {
-                    snt.visit(node, source);
+                	try {
+                		snt.visit(node, source);
+                	// GRECLIPSE-977 - start
+                	} catch (NoClassDefFoundError ncdfe) {
+                		String transformName = snt.getClass().getName();
+                		StringBuilder sb = new StringBuilder();
+                		sb.append("Unable to run AST transform "+transformName+": missing class "+ncdfe.getMessage());
+                		sb.append(": are you attempting to use groovy classes in an AST transform in the same project in which it is defined? http://groovy.codehaus.org/Eclipse+Plugin+2.0.0+FAQ#EclipsePlugin2.0.0FAQ-Q.DoesitsupportcustomASTtransformations%3F");
+                		source.addError(new SyntaxException(sb.toString(), ncdfe, 0, 0));
+                	}
+                	// GRECLIPSE - end
                 }
             }
         }
