@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.codebrowsing.elements;
 
 /**
- * 
+ * Allows Groovy elements to provide customized Javadoc hovers.
  * @author Andrew Eisenberg
  * @created Nov 22, 2010
  */
