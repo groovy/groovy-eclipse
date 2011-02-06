@@ -84,7 +84,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     protected void setUp() throws Exception {
         super.setUp();
         System.out.println("\n------------------------------");
-        System.out.println("Starting: " + this.getName());
+        System.out.println("Starting: " + this.getClass().getName() + "." + this.getName());
         searchRequestor = new MockSearchRequestor();
         project = createSimpleGroovyProject();
     }

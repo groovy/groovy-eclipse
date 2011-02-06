@@ -479,10 +479,12 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         returnParameters = new HashSet<Variable>();
         inferredReturnTypes = new ArrayList<ClassNode>();
 
-        // Add Variables which are used in the selected block
-        // returnParameters.addAll(selReturnVar);
-        // Add Variables which are used after selected Block
-        returnParameters.addAll(postUsedVar);
+        // Variables that are assigned in the block and used after it are the
+        // ones that should be added as return parameters.
+        Set<Variable> assignedInBlockAndUsedAfterBlock = new HashSet<Variable>(postUsedVar);
+        assignedInBlockAndUsedAfterBlock.retainAll(selReturnVar);
+
+        returnParameters.addAll(assignedInBlockAndUsedAfterBlock);
         // add variables used in the loop
         returnParameters.addAll(innerLoopAssigned);
 
@@ -525,10 +527,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         }
     }
 
-    /**
-     * @param type
-     * @return
-     */
     private ClassNode maybeConvertToPrimitiveType(ClassNode type) {
         return ClassHelper.getUnwrapper(ClassHelper.make(type.getName()))
                 .getPlainNodeReference();

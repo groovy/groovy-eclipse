@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
+import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
  *
@@ -51,15 +52,23 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (node instanceof Variable) {
             if (inferredTypes.containsKey(node)) {
-                inferredTypes.put((Variable) node, result.type.getPlainNodeReference());
+                inferredTypes.put((Variable) node, extractType(result));
             } else if (node instanceof VariableExpression) {
                 Variable accessedVar = ((VariableExpression) node).getAccessedVariable();
                 if (inferredTypes.containsKey(accessedVar)) {
-                    inferredTypes.put((Variable) accessedVar, result.type.getPlainNodeReference());
+                    inferredTypes.put((Variable) accessedVar, extractType(result));
                 }
             }
         }
         return VisitStatus.CONTINUE;
+    }
+
+    private ClassNode extractType(TypeLookupResult result) {
+        ClassNode type = result.type.getPlainNodeReference();
+        if (type.getName().equals(VariableScope.VOID_WRAPPER_CLASS_NODE.getName())) {
+            type = VariableScope.OBJECT_CLASS_NODE;
+        }
+        return type;
     }
 
     public Map<Variable, ClassNode> getInferredTypes() {

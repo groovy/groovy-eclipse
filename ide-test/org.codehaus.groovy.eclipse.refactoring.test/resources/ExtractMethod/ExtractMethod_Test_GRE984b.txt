@@ -1,0 +1,38 @@
+###prop
+selectionType=points
+startLine=4
+startColumn=13
+endLine=7
+endColumn=14
+newMethodName=myExtract
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+class H {
+    private void test(a, b) {
+        if(!a.someprop) {
+            def c
+            a.someprop = 'x'
+            a.someprop2 = 'y'
+            a.otherprop = c
+        }
+    }
+}
+###exp
+class H {
+    private void test(a, b) {
+        if(!a.someprop) {
+            myExtract(a)
+            a.otherprop = c
+        }
+    }
+    
+    private Object myExtract(a) {
+        def c
+        a.someprop = 'x'
+        a.someprop2 = 'y'
+        return c
+    }
+}
+###end
