@@ -7,6 +7,7 @@ endColumn=14
 newMethodName=myExtract
 setPreferences=true
 indentation=space
+modifier=private
 tabsize=4
 ###src
 class H {
@@ -23,12 +24,12 @@ class H {
 class H {
     private void test(a, b) {
         if(!a.someprop) {
-            myExtract(a)
+            def c = myExtract(a)
             a.otherprop = c
         }
     }
-    
-    private Object myExtract(a) {
+
+    private myExtract(a) {
         def c
         a.someprop = 'x'
         a.someprop2 = 'y'

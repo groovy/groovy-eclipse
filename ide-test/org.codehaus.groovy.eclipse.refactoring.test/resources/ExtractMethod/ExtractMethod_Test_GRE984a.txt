@@ -29,7 +29,7 @@ class H {
         }
         a.otherprop = c
     }
-    
+
     def myExtract(a) {
         a.someprop = 'x'
         a.someprop2 = 'y'

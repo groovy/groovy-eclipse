@@ -473,13 +473,12 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         Set<Variable> selReturnVar = scanner.getAssignedVariables();
         Set<Variable> innerLoopAssigned = scanner.getInnerLoopAssignedVariables();
 
-        actualParameters = new ArrayList<Variable>();
-        actualParameters.addAll(scanner.getUsedVariables());
+        actualParameters = new ArrayList<Variable>(scanner.getUsedVariables());
         inferredTypeOfActualParameters = new ArrayList<ClassNode>(actualParameters.size());
         returnParameters = new HashSet<Variable>();
         inferredReturnTypes = new ArrayList<ClassNode>();
 
-        // Variables that are assigned in the block and used after it are the
+        // Variables that are assigned in the block AND used after it are the
         // ones that should be added as return parameters.
         Set<Variable> assignedInBlockAndUsedAfterBlock = new HashSet<Variable>(postUsedVar);
         assignedInBlockAndUsedAfterBlock.retainAll(selReturnVar);

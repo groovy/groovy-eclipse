@@ -173,8 +173,12 @@ public class ASTVariableScanner {
 
 		@Override
 		public void visitBinaryExpression(BinaryExpression expression) {
-				expression.getLeftExpression().visit(new DefaultAssignementVisit(container, expression.getOperation()));
-				expression.getRightExpression().visit(this);
+            if (expression.getLeftExpression() instanceof VariableExpression) {
+                expression.getLeftExpression().visit(new DefaultAssignementVisit(container, expression.getOperation()));
+            } else {
+                expression.getLeftExpression().visit(this);
+            }
+            expression.getRightExpression().visit(this);
 		}
 
 		@Override
@@ -210,7 +214,7 @@ public class ASTVariableScanner {
                 return;
             }
 			Variable var = expression.getAccessedVariable();
-            if (isUsed(var) && operator.getType() != Types.LEFT_SQUARE_BRACKET) {
+            if (/* isUsed(var) && */operator.getType() != Types.LEFT_SQUARE_BRACKET) {
                 returnVariables.add(var);
 			}
 		}
