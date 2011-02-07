@@ -39,14 +39,17 @@ import java.net.URLConnection;
 import java.util.*;
 
 /**
- * Visitor to resolve Types and convert VariableExpression to ClassExpressions if needed. The ResolveVisitor 
- * will try to find the Class for a ClassExpression and record an error if it fails to do so. 
- * Constructions like C[], foo as C, (C) foo will force creation of a ClassExpression for C
+ * Visitor to resolve Types and convert VariableExpression to
+ * ClassExpressions if needed. The ResolveVisitor will try to
+ * find the Class for a ClassExpression and prints an error if
+ * it fails to do so. Constructions like C[], foo as C, (C) foo
+ * will force creation of a ClassExpression for C
  * <p/>
  * Note: the method to start the resolving is  startResolving(ClassNode, SourceUnit).
  *
  * @author Jochen Theodorou
  * @author Roshan Dawrani
+ * @author Alex Tkachman
  */
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE: start: from private to public 
@@ -57,8 +60,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected CompilationUnit compilationUnit;
     private Map cachedClasses = new HashMap();
     private static final Object NO_CLASS = new Object();
-    private static final Object SCRIPT = new Object();
-	private static final boolean extracheck = false;
     private SourceUnit source;
     private VariableScope currentScope;
 
@@ -274,8 +275,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         resolveGenericsTypes(type.getGenericsTypes());
         
         if (type.isResolved() || type.isPrimaryClassNode()) return true;
-        
-        // Resolve the component type of arrays, for a multidimensional array the component type will be another array
         if (type.isArray()) {
             ClassNode element = type.getComponentType();
             boolean resolved = resolve(element, testModuleImports, testDefaultImports, testStaticInnerClasses);
@@ -286,7 +285,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             return resolved;
         }
 
-        // test if vanilla name is current class name - short circuits routes back to resolution attempts on the same node
+        // test if vanilla name is current class name
         if (currentClass == type) return true;
 
         if (genericParameterNames.get(type.getName()) != null) {
@@ -307,9 +306,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveFromCompileUnit(type) ||
                 resolveFromDefaultImports(type, testDefaultImports) ||
                 resolveFromStaticInnerClasses(type, testStaticInnerClasses) ||
-                resolveFromClassCache(type) ||
-                resolveToClass(type) ||
-                resolveToScript(type);
+                resolveToClass(type);
     }
 
     private boolean resolveNestedClass(ClassNode type) {
@@ -419,17 +416,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected boolean resolveToScript(ClassNode type) {
         String name = type.getName();
 
-        // We do not need to check instances of LowerCaseClass
-        // to be a script, because unless there was an import for
-        // for this we  do not lookup these cases. This was a decision
-        // made on the mailing list. To ensure we will not visit this
-        // method again we set a NO_CLASS for this name
-        if (type instanceof LowerCaseClass) {
-            cachedClasses.put(name, NO_CLASS);
-        }
         
-        if (cachedClasses.get(name) == NO_CLASS) return false;
-        if (cachedClasses.get(name) == SCRIPT) cachedClasses.put(name, NO_CLASS);
         if (name.startsWith("java.")) return type.isResolved();
         //TODO: don't ignore inner static classes completely
         if (name.indexOf('$') != -1) return type.isResolved();
@@ -763,15 +750,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected boolean resolveToClass(ClassNode type) {
         String name = type.getName();
 
-        // We do not need to check instances of LowerCaseClass
-        // to be a Class, because unless there was an import for
-        // for this we  do not lookup these cases. This was a decision
-        // made on the mailing list. To ensure we will not visit this
-        // method again we set a NO_CLASS for this name
-        if (type instanceof LowerCaseClass) {
-            cachedClasses.put(name,NO_CLASS);
-        }
-
         // We use here the class cache cachedClasses to prevent
         // calls to ClassLoader#loadClass. disabling this cache will
         // cause a major performance hit. Unlike at the end of this
@@ -780,10 +758,25 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // we do not want to recompile, recompilation is already
         // scheduled then
         Object cached = cachedClasses.get(name);
-        if (cached == NO_CLASS) return false;
+        if (cached == NO_CLASS)
+            return false;
+
+        if (cached != null) {
         // cached == SCRIPT should not happen here!
-        if (cached == SCRIPT) throw new GroovyBugError("name "+name+" was marked as script, but was not resolved as such");
-        if (cached != null) return true;
+            type.setRedirect((ClassNode) cached);
+            return true;
+        }
+
+
+        // We do not need to check instances of LowerCaseClass
+        // to be a Class, because unless there was an import for
+        // for this we  do not lookup these cases. This was a decision
+        // made on the mailing list. To ensure we will not visit this
+        // method again we set a NO_CLASS for this name
+        if (type instanceof LowerCaseClass) {
+            cachedClasses.put(name,NO_CLASS);
+            return false;
+        }
 
         if (currentClass.getModule().hasPackageName() && name.indexOf('.') == -1) return false;
         GroovyClassLoader loader = compilationUnit.getClassLoader();
@@ -793,11 +786,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // here since the GroovyClassLoader would create a new CompilationUnit
             cls = loader.loadClass(name, false, true);
         } catch (ClassNotFoundException cnfe) {
-            cachedClasses.put(name, SCRIPT);
-            return false;
+            cachedClasses.put(name, NO_CLASS);
+            return resolveToScript(type);
         } catch (CompilationFailedException cfe) {
             compilationUnit.getErrorCollector().addErrorAndContinue(new ExceptionMessage(cfe, true, source));
-            return false;
+            return resolveToScript(type);
         }
         //TODO: the case of a NoClassDefFoundError needs a bit more research
         // a simple recompilation is not possible it seems. The current class
@@ -816,7 +809,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         //      because  we want to give a possible script a chance to
         //      recompile. This can only be done if the loader was not
         //      the instance defining the class.
-        return cls.getClassLoader() == loader;
+        return cls.getClassLoader() == loader || resolveToScript(type);
     }
 
 
@@ -1323,6 +1316,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public void visitClass(ClassNode node) {
         ClassNode oldNode = currentClass;
+        Map<String, GenericsType> oldPNames = genericParameterNames;
+        genericParameterNames = new HashMap<String, GenericsType>(genericParameterNames);
         currentClass = node;
         // GRECLIPSE: start
         if (!commencingResolution()) {
@@ -1384,6 +1379,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         checkCyclicInheritence(node, node.getUnresolvedSuperClass(), node.getInterfaces());
         
         super.visitClass(node);
+
+        genericParameterNames = oldPNames;
 
         // GRECLIPSE: start
         finishedResolution();

@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.transform;
 
-import groovy.lang.GroovyObject;
 import groovy.lang.Immutable;
 import groovy.lang.MetaClass;
 import groovy.lang.MissingPropertyException;
 import groovy.lang.ReadOnlyPropertyException;
-
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.*;
@@ -353,10 +350,11 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
         for (FieldNode fNode : fList) {
             if (fNode.isPublic()) continue; // public fields will be rejected elsewhere
             if (cNode.getProperty(fNode.getName()) != null) continue; // a property
+            if (fNode.isFinal() && fNode.isStatic()) continue;
             if (fNode.getName().contains("$")) continue; // internal field
             if (fNode.isFinal() && fNode.getInitialExpression() != null) body.addStatement(checkFinalArgNotOverridden(cNode, fNode));
-                body.addStatement(createConstructorStatementDefault(fNode));
-            }
+            body.addStatement(createConstructorStatementDefault(fNode));
+        }
         body.addStatement(assignStatement(constructorStyle, ConstantExpression.TRUE));
         final Parameter[] params = new Parameter[]{new Parameter(HASHMAP_TYPE, "args")};
         cNode.addConstructor(new ConstructorNode(ACC_PUBLIC, params, ClassNode.EMPTY_ARRAY, new IfStatement(
@@ -478,7 +476,7 @@ public class ImmutableASTTransformation implements ASTTransformation, Opcodes {
     private boolean isKnownImmutable(ClassNode fieldType) {
         if (!fieldType.isResolved()) return false;
         // GRECLIPSE: start
-        /*old{
+        /*{
         return fieldType.isEnum() ||
                 ClassHelper.isPrimitiveType(fieldType) ||
                 inImmutableList(fieldType.getName());

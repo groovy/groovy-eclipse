@@ -26,7 +26,7 @@ import java.util.List;
  * just walks the code and expression tree
  * 
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 20584 $
+ * @version $Revision: 21378 $
  */
 public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
@@ -258,6 +258,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     public void visitFieldExpression(FieldExpression expression) {
     }
 
+    @Deprecated
     public void visitRegexExpression(RegexExpression expression) {
     }
 

@@ -23,7 +23,7 @@ import groovy.lang.GroovyClassLoader;
  * during processing.
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
- * @version $Id: ProcessingUnit.java 10981 2008-02-29 17:50:27Z shemnon $
+ * @version $Id: ProcessingUnit.java 21284 2010-12-10 20:19:09Z hamletdrc $
  */
 
 public abstract class ProcessingUnit {
@@ -125,6 +125,11 @@ public abstract class ProcessingUnit {
         return Phases.getDescription(this.phase);
     }
 
+    /**
+     * Errors found during the compilation should be reported through the ErrorCollector.
+     * @return
+     *      the ErrorCollector for this ProcessingUnit
+     */
     public ErrorCollector getErrorCollector() {
         return errorCollector;
     }

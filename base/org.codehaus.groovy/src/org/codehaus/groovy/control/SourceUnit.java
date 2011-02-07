@@ -57,7 +57,7 @@ import antlr.NoViableAltForCharException;
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
- * @version $Id: SourceUnit.java 20591 2010-07-31 04:05:23Z paulk $
+ * @version $Id: SourceUnit.java 21482 2011-02-04 14:55:53Z blackdrag $
  */
 
 public class SourceUnit extends ProcessingUnit {
@@ -355,13 +355,34 @@ public class SourceUnit extends ProcessingUnit {
         return sample;
     }
     
+    /**
+     * This method adds an exception to the error collector. The Exception most likely has no line number attached to it.
+     * For this reason you should use this method sparingly. Prefer using addError for syntax errors or add an error
+     * to the {@link ErrorCollector} directly by retrieving it with getErrorCollector().
+     * @param e
+     *      the exception that occurred
+     * @throws CompilationFailedException
+     *      on error
+     */
     public void addException(Exception e) throws CompilationFailedException {
         getErrorCollector().addException(e,this);
     }
     
+    /**
+     * This method adds a SyntaxException to the error collector. The exception should specify the line and column
+     * number of the error.  This method should be reserved for real errors in the syntax of the SourceUnit. If
+     * your error is not in syntax, and is a semantic error, or more general error, then use addException or use
+     * the error collector directly by retrieving it with getErrorCollector().
+     * @param se
+     *      the exception, which should have line and column information
+     * @throws CompilationFailedException
+     *      on error
+     */
     public void addError(SyntaxException se) throws CompilationFailedException {
         getErrorCollector().addError(se,this);
     }
+    
+    public ReaderSource getSource() { return source; }
 
     // GRECLIPSE: start
     public List<Comment> getComments() {

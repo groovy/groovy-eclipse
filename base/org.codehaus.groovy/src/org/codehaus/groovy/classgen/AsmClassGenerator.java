@@ -48,7 +48,7 @@ import java.util.*;
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href='mailto:the[dot]mindstorm[at]gmail[dot]com'>Alex Popescu</a>
  * @author Alex Tkachman
- * @version $Revision: 20678 $
+ * @version $Revision: 21378 $
  */
 public class AsmClassGenerator extends ClassGenerator {
 
@@ -718,11 +718,6 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     public void visitBlockStatement(BlockStatement block) {
-        // FIXASC comment out line
-        // see http://jira.codehaus.org/browse/GROOVY-4505
-        // remove the rogue line number in the class file
-//        onLineNumber(block, "visitBlockStatement");
-        // FIXASC end
         visitStatement(block);
 
         compileStack.pushVariableScope(block.getVariableScope());
@@ -1127,11 +1122,6 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     public void visitTryCatchFinally(TryCatchStatement statement) {
-        // FIXASC comment out line
-        // see http://jira.codehaus.org/browse/GROOVY-4505
-        // remove the rogue line number in the class file
-//        onLineNumber(block, "visitBlockStatement");
-        // FIXASC end
         visitStatement(statement);
 
         Statement tryStatement = statement.getTryStatement();
@@ -1848,6 +1838,7 @@ public class AsmClassGenerator extends ClassGenerator {
         }
     }
 
+    @Deprecated
     public void visitRegexExpression(RegexExpression expression) {
         expression.getRegex().visit(this);
         regexPattern.call(mv);
@@ -2002,9 +1993,6 @@ public class AsmClassGenerator extends ClassGenerator {
             boolean safe, boolean spreadSafe, boolean implicitThis
     ) {
         ClassNode cn = classNode;
-        if (isInClosure() && !implicitThis) {
-            cn = getOutermostClass();
-        }
         makeCall(new ClassExpression(cn), receiver, message, arguments,
                 adapter, safe, spreadSafe, implicitThis);
     }
@@ -2644,14 +2632,18 @@ public class AsmClassGenerator extends ClassGenerator {
             String name = expression.getPropertyAsString();
             if (name != null) {
                 FieldNode field = null;
+                boolean privateSuperField = false;
                 if (isSuperExpression(objectExpression)) {
                     field = classNode.getSuperClass().getDeclaredField(name);
+                    if (field != null && ((field.getModifiers() & ACC_PRIVATE) != 0)) {
+                    	privateSuperField = true;
+                    }
                 } else {
                 	if(isNotExplicitThisInClosure(expression.isImplicitThis())) {
                         field = classNode.getDeclaredField(name);
                 	}
                 }
-                if (field != null) {
+                if (field != null && !privateSuperField) {//GROOVY-4497: don't visit super field if it is private
                     visitFieldExpression(new FieldExpression(field));
                     return;
                 }

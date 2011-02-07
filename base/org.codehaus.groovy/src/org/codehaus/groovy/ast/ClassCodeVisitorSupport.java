@@ -151,7 +151,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         );
     }
     
-    // GRECLIPSE: start
+    // GRECLIPSE start
     protected void addTypeError(String msg, ClassNode expr ) {
         int line = expr.getLineNumber();
         int col = expr.getColumnNumber();

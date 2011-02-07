@@ -157,12 +157,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             if (left instanceof StaticMethodCallExpression) {
                 StaticMethodCallExpression smce = (StaticMethodCallExpression) left;
                 StaticMethodCallExpression result = new StaticMethodCallExpression(smce.getOwnerType(), smce.getMethod(), right);
-                // FIXASC handle property expression
-                // orig
-                // result.setSourcePosition(be);
-                // new
                 setSourcePosition(result, be);
-                // FIXASC end
                 return result;
             }
         } else {
@@ -177,12 +172,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         if (v != null && v instanceof DynamicVariable) {
             Expression result = findStaticFieldOrPropAccessorImportFromModule(v.getName());
             if (result != null) {
-                // FIXASC handle property expression
-                // orig
-                // result.setSourcePosition(ve);
-                // new
                 setSourcePosition(result, ve);
-                // FIXASC end
                 if (inAnnotation) {
                     result = transformInlineConstants(result);
                 }
@@ -193,15 +183,11 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         return ve;
     }
 
-    
-    // FIXASC Ensure that property expressions have their source locations
-    // set properly
-    // new code
     /**
-     * Set the source position of toSet including its property expression if 
-     * it has one
-     * @param toSet
-     * @param origNode
+     * Set the source position of toSet including its property expression if it has one.
+     *
+     * @param toSet resulting node
+     * @param origNode original node
      */
     private void setSourcePosition(Expression toSet, Expression origNode) {
         toSet.setSourcePosition(origNode);
@@ -209,7 +195,6 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             ((PropertyExpression) toSet).getProperty().setSourcePosition(origNode);
         }
     }
-    // FIXASC end
 
     // resolve constant-looking expressions statically (do here as gets transformed away later)
     private Expression transformInlineConstants(Expression exp) {
@@ -263,12 +248,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             if (mce.isImplicitThis()) {
                 Expression ret = findStaticMethodImportFromModule(method, args);
                 if (ret != null) {
-                    // FIXASC handle property expression
-                    // orig
-                    // ret.setSourcePosition(mce);
-                    // new
                     setSourcePosition(ret, mce);
-                    // FIXASC end
                     return ret;
                 }
                 if (method instanceof ConstantExpression && !inLeftExpression){
@@ -277,12 +257,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 	ret = findStaticFieldOrPropAccessorImportFromModule(methodName);
                 	if (ret != null) {
                 		ret = new MethodCallExpression(ret, "call", args);
-                        // FIXASC handle property expression
-                        // orig
-                        // ret.setSourcePosition(mce);
-                        // new
                         setSourcePosition(ret, mce);
-                        // FIXASC end
                 		return ret;
                 	}
                 }
@@ -302,12 +277,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                     if (inSpecialConstructorCall ||
                             (lookForPossibleStaticMethod && currentClass.hasPossibleStaticMethod(methodName, args))) {
                     	StaticMethodCallExpression smce = new StaticMethodCallExpression(currentClass, methodName, args);
-                        // FIXASC handle property expression
-                        // orig
-                        // smce.setSourcePosition(mce);
-                        // new
                     	setSourcePosition(smce, mce);
-                        // FIXASC end
                         return smce;
                     }
                 }
@@ -318,12 +288,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         result.setSafe(mce.isSafe());
         result.setImplicitThis(mce.isImplicitThis());
         result.setSpreadSafe(mce.isSpreadSafe());
-        // FIXASC handle property expression
-        // orig
-        // result.setSourcePosition(mce);
-        // new
         setSourcePosition(result, mce);
-        // FIXASC end
         return result;
     }
 

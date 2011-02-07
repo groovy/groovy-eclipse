@@ -153,14 +153,14 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         super.visitAnnotations(node);
         for (AnnotationNode annotation : node.getAnnotations()) {
         	// GRECLIPSE: start: under eclipse we may be asking a node that has no backing class
-        	// oldcode:
-//            Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
-//            if (transformClassAnnotation == null) {
-//                // skip if there is no such annotation
-//                continue;
-//            }
-//            addTransformsToClassNode(annotation, transformClassAnnotation);
-            // newcode:
+        	/*{
+            Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
+            if (transformClassAnnotation == null) {
+                // skip if there is no such annotation
+                continue;
+            }
+            addTransformsToClassNode(annotation, transformClassAnnotation);
+            }*/// newcode:
         	String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
         	Class[] transformClasses = getTransformClasses(annotation.getClassNode());
         	if (transformClassNames==null && transformClasses == null) {

@@ -115,10 +115,11 @@ public class AnnotationVisitor {
                     boolean ok = false; 
                     try {
                     	// GRECLIPSE: can't use getTypeClass() - when will they stop using it, ARGH
-//                        if(type.isResolved()) {
-//                            ok = Enum.valueOf(type.getTypeClass(), name) != null;
-//                        } else {
-                    	// end
+                    	/*{
+                        if(type.isResolved()) {
+                            ok = Enum.valueOf(type.getTypeClass(), name) != null;
+                        } else {
+                    	}*/// end
                             FieldNode enumField = type.getDeclaredField(name);
                             ClassNode cn = enumField.getType();
                             ok = enumField != null && cn.equals(type);

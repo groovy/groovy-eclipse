@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" output="bin-trace" path="src-trace"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-1.7.5.jar" sourcepath="lib/groovy-1.7.5-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-1.7.7.jar" sourcepath="lib/groovy-1.7.7-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/antlr-2.7.7.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-3.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-tree-3.2.jar"/>
@@ -10,6 +10,6 @@
 	<classpathentry exported="true" kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-cli-1.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/bsf-2.4.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/ivy-2.2.0-rc1.jar"/>
+	<classpathentry kind="lib" path="lib/ivy-2.2.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

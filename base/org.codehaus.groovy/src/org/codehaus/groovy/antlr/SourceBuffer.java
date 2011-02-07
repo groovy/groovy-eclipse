@@ -99,27 +99,23 @@ public class SourceBuffer {
         return snippet.toString();
     }
 
-    // GRECLIPSE: start
-    // oldcode:
-//    /**
-//     * Writes the specified character into the buffer
-//     * @param c
-//     */
-//    public void write(int c) {
-//        if (c != -1) {
-//            current.append((char)c);
-//        }
-//        if (c == '\n') {
-//            current = new StringBuffer();
-//            lines.add(current);
-//        }
-//    }
-    // newcode:
     /**
      * Writes the specified character into the buffer
      * @param c
      */
-    
+    // GRECLIPSE: start
+    /*{
+    public void write(int c) {
+        if (c != -1) {
+            current.append((char)c);
+        }
+        if (c == '\n') {
+            current = new StringBuffer();
+            lines.add(current);
+        }
+    } 
+    }*/
+    // newcode:
     private boolean prevWasCarriageReturn = false;
     private int col = 0;
     // FIXASC tidy this up, looks slow

@@ -66,7 +66,7 @@ import org.objectweb.asm.ClassWriter;
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href="mailto:roshandawrani@codehaus.org">Roshan Dawrani</a>
- * @version $Id: CompilationUnit.java 20591 2010-07-31 04:05:23Z paulk $
+ * @version $Id: CompilationUnit.java 21351 2010-12-22 08:40:55Z paulk $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -187,7 +187,7 @@ public class CompilationUnit extends ProcessingUnit {
                 ev.visitClass(classNode);
             }
         }, Phases.CONVERSION);
-        addPhaseOperation(resolve, Phases.SEMANTIC_ANALYSIS);
+//        addPhaseOperation(resolve, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(staticImport, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(new PrimaryClassNodeOperation() {
             @Override
@@ -524,6 +524,11 @@ public class CompilationUnit extends ProcessingUnit {
 
         while (throughPhase >= phase && phase <= Phases.ALL) {
 
+            if (phase == Phases.SEMANTIC_ANALYSIS) {
+                doPhaseOperation(resolve);
+                if (dequeued()) continue;
+            }
+
             processPhaseOperations(phase);
             // Grab processing may have brought in new AST transforms into various phases, process them as well
             processNewPhaseOperations(phase);
@@ -546,8 +551,8 @@ public class CompilationUnit extends ProcessingUnit {
     
     private void processPhaseOperations(int ph) {
         LinkedList ops = phaseOperations[ph];
-        for (Iterator it = ops.iterator(); it.hasNext();) {
-            doPhaseOperation(it.next());
+        for (Object next : ops) {
+            doPhaseOperation(next);
         }
     }
     

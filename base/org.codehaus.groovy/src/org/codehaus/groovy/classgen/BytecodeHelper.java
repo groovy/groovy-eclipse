@@ -36,7 +36,7 @@ import org.objectweb.asm.Opcodes;
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Revision: 20725 $
+ * @version $Revision: 21030 $
  */
 public class BytecodeHelper implements Opcodes {
 
@@ -527,7 +527,6 @@ public class BytecodeHelper implements Opcodes {
     }
 
     public void storeVar(Variable variable) {
-        String type = variable.getTypeName();
         int index = variable.getIndex();
 
         if (variable.isHolder()) {
