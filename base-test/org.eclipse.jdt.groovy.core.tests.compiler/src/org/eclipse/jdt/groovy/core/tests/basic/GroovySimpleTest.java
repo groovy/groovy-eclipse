@@ -292,6 +292,19 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    	},"abc");
     }
     
+    public void testCrashRatherThanError_GRE986() {
+    	this.runNegativeTest(new String[]{
+    			"A.groovy",
+    			"hello \\u\n"+
+    			"class Foo {}\n"
+    	},"----------\n" + 
+		"1. ERROR in A.groovy (at line 1)\n" + 
+		"	hello \\u\n" + 
+		"	       ^\n" + 
+		"Groovy:Did not find four digit hex character code. line: 1 col:7 @ line 1, column 7.\n" + 
+		"----------\n");
+    }
+    
     public void testAmbiguous_GRE945_gu() {
     	this.runConformTest(new String[]{
     			"Code.groovy",

@@ -28,6 +28,7 @@ import org.codehaus.groovy.syntax.SyntaxException;
 
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
+import antlr.TokenStreamIOException;
 import antlr.TokenStreamRecognitionException;
 // FIXASC (groovychange) new type
 /**
@@ -82,8 +83,31 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
 			se.setFatal(true);
 			sourceUnit.addError(se);
 		} catch (TokenStreamException e) {
-            configureLocationSupport(sourceBuffer);
-			sourceUnit.addException(e);
+			configureLocationSupport(sourceBuffer);
+			// GRECLIPSE
+			boolean handled = false;
+			if (e instanceof TokenStreamIOException) {
+				TokenStreamIOException tsioe = (TokenStreamIOException)e;
+				// GRECLIPSE-896: "Did not find four digit hex character code. line: 1 col:7"
+				if (e.getMessage().startsWith("Did not find four digit hex character code.")) {
+					String m = e.getMessage();
+					int linepos = m.indexOf("line:");
+					int colpos = m.indexOf("col:");
+					int line = Integer.valueOf(m.substring(linepos+5,colpos).trim());
+					int col = Integer.valueOf(m.substring(colpos+4).trim());
+				    SyntaxException se = new SyntaxException(
+				            e.getMessage(), e, line, col);
+					se.setFatal(true);
+					sourceUnit.addError(se);
+					handled=true;
+				}
+			}
+			if (!handled) {
+				// end
+				sourceUnit.addException(e);
+			// GRECLIPSE
+			}
+			// end
 		}
 		
 		super.ast = parser.getAST();
@@ -135,3 +159,4 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
         return new int[] { origLine, origColumn };
     }
 }
+
