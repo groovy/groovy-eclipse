@@ -89,17 +89,22 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
 			if (e instanceof TokenStreamIOException) {
 				TokenStreamIOException tsioe = (TokenStreamIOException)e;
 				// GRECLIPSE-896: "Did not find four digit hex character code. line: 1 col:7"
-				if (e.getMessage().startsWith("Did not find four digit hex character code.")) {
-					String m = e.getMessage();
-					int linepos = m.indexOf("line:");
-					int colpos = m.indexOf("col:");
-					int line = Integer.valueOf(m.substring(linepos+5,colpos).trim());
-					int col = Integer.valueOf(m.substring(colpos+4).trim());
-				    SyntaxException se = new SyntaxException(
-				            e.getMessage(), e, line, col);
-					se.setFatal(true);
-					sourceUnit.addError(se);
-					handled=true;
+				String m = e.getMessage();
+				if (m!=null && m.startsWith("Did not find four digit hex character code.")) {
+					try {
+						int linepos = m.indexOf("line:");
+						int colpos = m.indexOf("col:");
+						int line = Integer.valueOf(m.substring(linepos+5,colpos).trim());
+						int col = Integer.valueOf(m.substring(colpos+4).trim());
+					    SyntaxException se = new SyntaxException(
+					            e.getMessage(), e, line, col);
+						se.setFatal(true);
+						sourceUnit.addError(se);
+						handled=true;
+					} catch (Throwable t) {
+						System.err.println(m);
+						t.printStackTrace(System.err);
+					}
 				}
 			}
 			if (!handled) {
