@@ -659,7 +659,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 					// move to default package
 					multiEdit.addChild(new DeleteEdit(packageRange.getOffset(), packageRange.getLength()));
 				} else {
-					multiEdit.addChild(new ReplaceEdit(packageRange.getOffset(), packageRange.getLength(), "package " + Util.concatWith(destPackageName, '.') + "\n")); //$NON-NLS-1$ //$NON-NLS-2$
+					multiEdit.addChild(new ReplaceEdit(packageRange.getOffset(), packageRange.getLength(), "package " + Util.concatWith(destPackageName, '.'))); //$NON-NLS-1$
 				}
 			} else {
 				// move from default package
