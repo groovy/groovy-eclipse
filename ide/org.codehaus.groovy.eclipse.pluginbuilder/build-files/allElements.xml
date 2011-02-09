@@ -39,18 +39,16 @@
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.jdt.patch" />
 		</ant>
-		<echo message="Delegating to org.codehaus.groovy.eclipse.feature"/>
-		<ant antfile="${genericTargets}" target="${target}">
-			<property name="type" value="feature" />
-			<property name="id" value="org.codehaus.groovy.eclipse.feature" />
-		</ant>
-		<!--  Comment out because causing problems on build server
 		<echo message="Delegating to org.codehaus.groovy.headless.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.headless.feature" />
 		</ant>
-		-->
+		<echo message="Delegating to org.codehaus.groovy.eclipse.feature"/>
+		<ant antfile="${genericTargets}" target="${target}">
+			<property name="type" value="feature" />
+			<property name="id" value="org.codehaus.groovy.eclipse.feature" />
+		</ant>
 		<echo message="Delegating to org.codehaus.groovy.alltests.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
@@ -73,6 +71,12 @@
  	<!-- ===================================================================== -->
 	<target name="assemble.org.codehaus.groovy.jdt.patch">
 		<echo message="Assembling org.codehaus.groovy.jdt.patch"/>
+		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
+			<property name="zipargs" value="" />
+		</ant>
+	</target>
+	<target name="assemble.org.codehaus.groovy.headless.feature">
+		<echo message="Assembling org.codehaus.groovy.headless.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
