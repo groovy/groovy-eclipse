@@ -198,7 +198,6 @@ public class GroovyParser {
 		// types and is *only* called if a grab has occurred somewhere during compilation.
 		// Currently it is not cached but created each time - we'll have to decide if there is a need to cache
 		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
-
 		this.groovyCompilationUnit = new CompilationUnit(null, null, grabbyLoader, allowTransforms ? gcl : null);
 		if (grabbyLoader != null) {
 			grabbyLoader.setCompilationUnit(groovyCompilationUnit);
@@ -211,6 +210,10 @@ public class GroovyParser {
 			// its probably grails!
 			// nothing up my sleeve, abracadabra!
 			this.groovyCompilationUnit.addPhaseOperation(new GrailsInjector(gcl), Phases.CANONICALIZATION);
+			if (allowTransforms && gcl != null) {
+				this.groovyCompilationUnit.addPhaseOperation(new GrailsGlobalPluginAwareEntityInjector(gcl),
+						Phases.CANONICALIZATION);
+			}
 		}
 		// this.lookupEnvironment = lookupEnvironment;
 		this.problemReporter = problemReporter;
@@ -288,6 +291,14 @@ public class GroovyParser {
 			filepath = new String(sourceUnit.getFileName());
 		}
 
+		// if (filepath.endsWith("AuditLogEventController.groovy")) {
+		// // Try to turn this into a 'real' absolute canonical file system reference
+		// IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(filepath));
+		// try {
+		// filepath = file.getLocation().toFile().getCanonicalPath();
+		// } catch (IOException e) {
+		// }
+		// }
 		SourceUnit groovySourceUnit = new SourceUnit(filepath, new String(sourceCode), groovyCompilerConfig,
 				groovyCompilationUnit.getClassLoader(), errorCollector);
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
