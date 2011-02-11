@@ -13,15 +13,17 @@ import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.internal.core.builder.SourceFile;
 
 /**
  * Grails runs an ASTTransform org.codehaus.groovy.grails.compiler.injection.GlobalPluginAwareEntityASTTransformation. But this
  * transform doesn't execute when compiler is called from within STS/Eclipse because it requires plugin information inside of
- * GrailsBuildSettings to be intialized and present in BuildSettingsHolder. All of this is finicky and fragile to setup. So instead
- * we ensure the ASTTransform is disabled and this somewhat hacky workaround in the Groovy Eclipse compiler.
+ * GrailsBuildSettings to be intialized and present in BuildSettingsHolder. All of this is finicky and fragile to setup. So instead, 
+ * this somewhat hacky workaround in the Groovy Eclipse compiler does the same thing as the tranforms.
  * 
  * @author Kris De Volder
  */
+@SuppressWarnings("restriction")
 public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOperation {
 
 	private static final boolean DEBUG = false;
@@ -99,8 +101,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 		}
 	}
 
-	private PluginInfo getInfo(IPath sourcePath) {
-
+	public static PluginInfo getInfo(IPath sourcePath) {
 		// The path is expected to have this form
 		// Example:
 		// /test-pro/.link_to_grails_plugins/audit-logging-0.5.4/grails-app/controllers/org/codehaus/groovy/grails/plugins/orm/auditable/AuditLogEventController.groovy
@@ -114,7 +115,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 
 		if (sourcePath.segmentCount() > 3) {
 			String link = sourcePath.segment(1);
-			if (link.equals(".link_to_grails_plugins")) {
+			if (link.equals(SourceFile.LINK_TO_GRAILS_PLUGINS)) {
 				String pluginNameAndVersion = sourcePath.segment(2);
 				int split = pluginNameAndVersion.lastIndexOf('-');
 				if (split >= 0) {
@@ -132,4 +133,5 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 		// => the transform will not apply.
 		return null;
 	}
+
 }
