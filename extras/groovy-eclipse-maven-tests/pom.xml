@@ -63,7 +63,8 @@
 				<version>2.3.1</version>
 				<configuration>
 					<compilerId>groovy-eclipse-compiler</compilerId>
-					<verbose>true</verbose>
+					<compilerArgument>nowarn</compilerArgument>
+					<!--<verbose>true</verbose>-->
 				</configuration>
 				<dependencies>
 					<dependency>

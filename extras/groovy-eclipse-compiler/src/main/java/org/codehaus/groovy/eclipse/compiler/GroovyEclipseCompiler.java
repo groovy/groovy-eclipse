@@ -237,8 +237,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.add("1.5");
         }
 
-        //trigger nowarn based on the CompilerConfiguration
-        if ( !config.isShowWarnings() ) {
+        // trigger nowarn based on the CompilerConfiguration
+        if (config.isShowWarnings() ) {
             args.add("-nowarn");
         }
 

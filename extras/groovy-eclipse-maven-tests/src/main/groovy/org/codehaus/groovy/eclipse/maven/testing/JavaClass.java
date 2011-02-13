@@ -19,4 +19,7 @@ package org.codehaus.groovy.eclipse.maven.testing;
 public class JavaClass {
     Example e;
     Helper h;
+    // include an unused var here.
+    // if nowarn is set in the pom, then there should no warning in the output 
+    private int unused;
 }
