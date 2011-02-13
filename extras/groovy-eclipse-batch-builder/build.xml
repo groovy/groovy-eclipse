@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2010 SpringSource, VMWare and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+    
+    Contributors:
+        Andrew Eisenberg - initial API and implementation
+ -->
+
+<project name="Build the groovy-eclipse-batch jar" default="extract_and_create_jar">
+
+	<!-- ================================= 
+          target: extract_and_create_jar
+          Do all the work: extract the original jars to the extract location and jar it up to a single jar
+          also copy over the pom.      
+       ================================= -->
+	<target name="extract_and_create_jar" depends="_init,_extract,_create.jar,_copy_pom"/>
+
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: _extract 
+          extract the contents of all jars and copy them to the extract location                      
+         - - - - - - - - - - - - - - - - - -->
+	<target name="_extract" depends="_init">
+		<mkdir dir="${jar.dest}"/>
+		<delete dir="${extract.loc}" failonerror="no"/>
+		<mkdir dir="${extract.loc}"/>
+		<unzip dest="${extract.loc}">
+			<fileset refid="orig.plugin.jars"/>
+			<fileset refid="orig.groovy.jars"/>
+		</unzip>
+		
+		<!-- Overwrite existing with classes from workspace bin folders-->
+		<copy todir="${extract.loc}">
+			<fileset refid="jdt.groovy.core.class.files"/>
+			<fileset refid="jdt.core.class.files"/>
+			<fileset refid="groovy.core.class.files"/>
+			<fileset refid="ant.groovy.class.files"/>
+		</copy>
+		
+
+		<!-- now unzip the jdt compiler adapter jar.  It is a jar within a jar -->
+		<unzip dest="${extract.loc}" src="${workspace.loc}/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
+
+		<!--
+		<delete dir="${extract.loc}/META-INF">
+			<exclude name="dgminfo"/>
+			<exclude name="services"/>
+			<exclude name="*.properties"/>
+		</delete>
+		-->
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: _create.jar        
+          jar up all relevant files in the extract location               
+         - - - - - - - - - - - - - - - - - -->
+	<target name="_create.jar" depends="_init">
+		<mkdir dir="${jar.dest}"/>
+		<jar destfile="${jar.dest}/${jar.name}">
+			<fileset dir="${extract.loc}">
+				<include name="**/*.class"/>
+				<include name="**/*.properties"/>
+				<include name="**/*.rsc"/>
+				<include name="**/dgminfo"/>
+				<include name="**/*.profile"/>
+			</fileset>
+		</jar>
+	</target>
+
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: _init   
+          create properties and filesets                   
+         - - - - - - - - - - - - - - - - - -->
+	<target name="_init">
+		<property file="build.properties"/>
+		<property name="jar.name" value="groovy-eclipse-batch-${version}.jar"/>
+		<property name="pom.name" value="groovy-eclipse-batch-${version}.pom"/>
+
+		<fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
+			<include name="org.eclipse.osgi_*.jar" />
+			<include name="org.eclipse.core.runtime_*.jar" />
+			<include name="org.eclipse.core.resources_*.jar" />
+			<include name="org.eclipse.core.filesystem_*.jar" />
+			<include name="org.eclipse.equinox.common_*.jar" />
+			<include name="org.eclipse.core.jobs_*.jar" />
+			<include name="org.eclipse.text_*.jar" />
+			<include name="org.eclipse.jdt.core_*.jar" />
+		</fileset>
+
+		<fileset dir="${workspace.loc}" id="orig.groovy.jars">
+			
+			<include name="org.codehaus.groovy/lib/groovy-1.7.*.jar"/>
+			<include name="org.codehaus.groovy/lib/antlr-*.jar"/>
+			<include name="org.codehaus.groovy/lib/asm-3*.jar"/>
+			<include name="org.codehaus.groovy/lib/asm-tree-3*.jar"/>
+			
+			<exclude name="org.codehaus.groovy/lib/*sources*"/>
+		</fileset>
+			
+		
+		<!-- Ensure that this comes later becayse the groovy-eclipse.jar must overwrite the groovy jar -->
+			<fileset dir="${workspace.loc}/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${workspace.loc}/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${workspace.loc}/org.codehaus.groovy/bin" id="groovy.core.class.files">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${workspace.loc}/org.codehaus.groovy.eclipse.ant/bin" id="ant.groovy.class.files">
+				<include name="**/*.*" />
+			</fileset>
+
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: _copy_pom    
+          copy the pom to the jar destination and ensure that the proper version is inserted                  
+         - - - - - - - - - - - - - - - - - -->
+	<target name="_copy_pom" depends="_init">
+		<copy  file="pom.xml" tofile="${jar.dest}/${pom.name}"/>
+		<replace file="${jar.dest}/${pom.name}" token="REPLACE_WITH_VERSION" value="${version}"></replace>
+	</target>
+
+</project>
