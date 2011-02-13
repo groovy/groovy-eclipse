@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-set>
+  <components>
+    <component>
+      <role>org.codehaus.plexus.compiler.Compiler</role>
+      <role-hint>groovy-eclipse-compiler</role-hint>
+      <implementation>org.codehaus.groovy.eclipse.compiler.GroovyEclipseCompiler</implementation>
+      <description />
+      <isolated-realm>false</isolated-realm>
+    </component>
+  </components>
+</component-set>
