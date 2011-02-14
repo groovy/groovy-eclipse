@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Andrew Eisenberg     - Initial API and implementation
+ *     Carlos Fernandez     - fix for nowarn
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.compiler;
 
