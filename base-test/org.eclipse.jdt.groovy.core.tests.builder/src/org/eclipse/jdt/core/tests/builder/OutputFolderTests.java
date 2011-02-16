@@ -117,7 +117,7 @@ public class OutputFolderTests extends BuilderTests {
 		// simulate exit/restart
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		JavaProject project = (JavaProject)manager.getJavaModel().getJavaProject("P"); //$NON-NLS-1$
-		manager.removePerProjectInfo(project);
+		manager.removePerProjectInfo(project,true);
 		
 		// change cu and build
 		IPath cuPath = env.addClass(projectPath, "src", "A", //$NON-NLS-1$ //$NON-NLS-2$
