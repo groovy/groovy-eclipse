@@ -134,7 +134,7 @@ public class GroovyParser {
 		// This will orphan the loader on the heap
 		PathLoaderPair removed = projectToLoaderCache.remove(projectName);
 		if (removed != null) {
-			close(removed.groovyClassLoader);
+			// close(removed.groovyClassLoader);
 		}
 		// System.out.println("Cleaning up loader for project " + projectName + "?" + (removed == null ? "no" : "yes"));
 	}
