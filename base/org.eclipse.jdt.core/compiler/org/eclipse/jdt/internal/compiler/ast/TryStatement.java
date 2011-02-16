@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for bug 332637 - Dead Code detection removing code that isn't dead
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -126,15 +127,15 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 								addPotentialInitializationsFrom(
 									handlingContext.initsOnReturn));
 				} else {
+					FlowInfo initsOnException = handlingContext.initsOnException(this.caughtExceptionTypes[i]);
 					catchInfo =
-						flowInfo.unconditionalCopy().
-							addPotentialInitializationsFrom(
-								handlingContext.initsOnException(
-									this.caughtExceptionTypes[i]))
-							.addPotentialInitializationsFrom(tryInfo.unconditionalCopy())
+						flowInfo.nullInfoLessUnconditionalCopy()
+							.addPotentialInitializationsFrom(initsOnException)
+							.addNullInfoFrom(initsOnException)	// null info only from here, this is the only way to enter the catch block
 							.addPotentialInitializationsFrom(
-								handlingContext.initsOnReturn.
-									nullInfoLessUnconditionalCopy());
+									tryInfo.nullInfoLessUnconditionalCopy())
+							.addPotentialInitializationsFrom(
+									handlingContext.initsOnReturn.nullInfoLessUnconditionalCopy());
 				}
 
 				// catch var is always set
@@ -235,15 +236,15 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 								addPotentialInitializationsFrom(
 									handlingContext.initsOnReturn));
 				}else {
+					FlowInfo initsOnException = handlingContext.initsOnException(this.caughtExceptionTypes[i]);
 					catchInfo =
-						flowInfo.unconditionalCopy()
+						flowInfo.nullInfoLessUnconditionalCopy()
+							.addPotentialInitializationsFrom(initsOnException)
+							.addNullInfoFrom(initsOnException)	// null info only from here, this is the only way to enter the catch block
 							.addPotentialInitializationsFrom(
-								handlingContext.initsOnException(
-									this.caughtExceptionTypes[i]))
-									.addPotentialInitializationsFrom(tryInfo.unconditionalCopy())
+									tryInfo.nullInfoLessUnconditionalCopy())
 							.addPotentialInitializationsFrom(
-									handlingContext.initsOnReturn.
-									nullInfoLessUnconditionalCopy());
+									handlingContext.initsOnReturn.nullInfoLessUnconditionalCopy());
 				}
 
 				// catch var is always set

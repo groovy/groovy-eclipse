@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -68,7 +68,6 @@ import org.eclipse.jdt.internal.core.BinaryTypeConverter;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.search.matching.JavaSearchNameEnvironment;
-import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.util.Messages;
 
 /**
@@ -11728,7 +11727,7 @@ public final class CompletionEngine
 		
 		// filter packages ending with enum for projects above 1.5 
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264
-		if (MatchLocator.SHOULD_FILTER_ENUM && this.compilerOptions.sourceLevel >= ClassFileConstants.JDK1_5 &&
+		if (this.compilerOptions.sourceLevel >= ClassFileConstants.JDK1_5 &&
 				CharOperation.endsWith(givenPkgName, DOT_ENUM)) { //note: it should be .enum and not just enum
 				return true;
 		}

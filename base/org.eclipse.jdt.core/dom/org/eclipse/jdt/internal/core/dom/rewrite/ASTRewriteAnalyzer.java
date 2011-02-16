@@ -2544,7 +2544,7 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		}
 		if (node.getAST().apiLevel() >= AST.JLS3) {
 			int pos= rewriteJavadoc(node, PackageDeclaration.JAVADOC_PROPERTY);
-			rewriteNodeList(node, PackageDeclaration.ANNOTATIONS_PROPERTY, pos, "", " "); //$NON-NLS-1$ //$NON-NLS-2$
+			rewriteModifiers2(node, PackageDeclaration.ANNOTATIONS_PROPERTY, pos);
 		}
 
 		rewriteRequiredNode(node, PackageDeclaration.NAME_PROPERTY);

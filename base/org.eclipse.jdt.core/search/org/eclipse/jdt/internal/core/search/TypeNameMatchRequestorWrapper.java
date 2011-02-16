@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,6 @@ import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
-import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
 import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
 
@@ -176,7 +175,7 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 		pkgFragment= ((PackageFragmentRoot) this.lastPkgFragmentRoot).getPackageFragment(pkgName);
 		// filter org.apache.commons.lang.enum package for projects above 1.5 
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264
-		if (MatchLocator.SHOULD_FILTER_ENUM && length == 5 && pkgName[4].equals("enum")) { //$NON-NLS-1$
+		if (length == 5 && pkgName[4].equals("enum")) { //$NON-NLS-1$
 			IJavaProject proj = (IJavaProject)pkgFragment.getAncestor(IJavaElement.JAVA_PROJECT);
 			if (!proj.equals(this.lastProject)) {
 				String complianceStr = proj.getOption(CompilerOptions.OPTION_Source, true);

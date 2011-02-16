@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,7 +130,7 @@ public class ModelUpdater {
 			case IJavaElement.JAVA_PROJECT :
 				JavaModelManager manager = JavaModelManager.getJavaModelManager();
 				JavaProject javaProject = (JavaProject) element;
-				manager.removePerProjectInfo(javaProject);
+				manager.removePerProjectInfo(javaProject, true /* remove external jar files indexes and timestamps*/);
 				manager.containerRemove(javaProject);
 				break;
 			case IJavaElement.PACKAGE_FRAGMENT_ROOT :

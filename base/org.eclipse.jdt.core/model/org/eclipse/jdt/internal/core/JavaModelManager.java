@@ -3662,13 +3662,15 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		return null;
 	}
 
-	public void removePerProjectInfo(JavaProject javaProject) {
+	public void removePerProjectInfo(JavaProject javaProject, boolean removeExtJarInfo) {
 		synchronized(this.perProjectInfos) { // use the perProjectInfo collection as its own lock
 			IProject project = javaProject.getProject();
 			PerProjectInfo info= (PerProjectInfo) this.perProjectInfos.get(project);
 			if (info != null) {
 				this.perProjectInfos.remove(project);
-				info.forgetExternalTimestampsAndIndexes();
+				if (removeExtJarInfo) {
+					info.forgetExternalTimestampsAndIndexes();
+				}
 			}
 		}
 		resetNonChainingJarsCache();

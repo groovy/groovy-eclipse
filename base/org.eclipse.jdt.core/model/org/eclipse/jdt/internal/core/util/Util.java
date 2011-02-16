@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -3620,5 +3620,61 @@ public class Util {
 				defaultOptionsMap.put(JavaCore.COMPILER_TASK_PRIORITIES, new String(CharOperation.concatWith(taskPriorities,',')));
 			}
 		}
+	}
+	
+	/**
+	 * Answers true if the given name, starting from the given index, starts with the given prefix,
+	 * false otherwise. isCaseSensitive is used to find out whether or not the comparison should be
+	 * case sensitive.
+	 * <br>
+	 * <br>
+	 * For example:
+	 * <ol>
+	 * <li><pre>
+	 *    prefix = { 'a' , 'B' }
+	 *    name = { 'c', 'd', 'a' , 'b', 'b', 'a', 'b', 'a' }
+	 *    startIndex = 2
+	 *    isCaseSensitive = false
+	 *    result => true
+	 * </pre>
+	 * </li>
+	 * <li><pre>
+	 *    prefix = { 'a' , 'B' }
+	 *    name = { 'c', 'd', 'a' , 'b', 'b', 'a', 'b', 'a' }
+	 *    startIndex = 2
+	 *    isCaseSensitive = true
+	 *    result => false
+	 * </pre>
+	 * </li>
+	 * </ol>
+	 *
+	 * @param prefix the given prefix
+	 * @param name the given name
+	 * @param isCaseSensitive to find out whether or not the comparison should be case sensitive
+	 * @param startIndex index from which the prefix should be searched in the name
+	 * @return true if the given name starts with the given prefix, false otherwise
+	 * @throws NullPointerException if the given name is null or if the given prefix is null
+	 */
+	public static final boolean prefixEquals(
+		char[] prefix,
+		char[] name,
+		boolean isCaseSensitive,
+		int startIndex) {
+
+		int max = prefix.length;
+		if (name.length - startIndex < max)
+			return false;
+		if (isCaseSensitive) {
+			for (int i = max; --i >= 0;) // assumes the prefix is not larger than the name
+				if (prefix[i] != name[startIndex + i])
+					return false;
+			return true;
+		}
+
+		for (int i = max; --i >= 0;) // assumes the prefix is not larger than the name
+			if (ScannerHelper.toLowerCase(prefix[i])
+				!= ScannerHelper.toLowerCase(name[startIndex + i]))
+				return false;
+		return true;
 	}
 }

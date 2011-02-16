@@ -353,7 +353,7 @@ public class DeltaProcessor {
 										// java project doesn't exist: ignore
 									}
 									removeFromParentInfo(javaProject);
-									this.manager.removePerProjectInfo(javaProject);
+									this.manager.removePerProjectInfo(javaProject, false /* don't remove index files and timestamp info of external jar */);
 									this.manager.containerRemove(javaProject);
 								}
 								this.state.rootsAreStale = true;
@@ -376,7 +376,7 @@ public class DeltaProcessor {
 										checkExternalFolderChange(project, javaProject);
 									} else {
 										// remove classpath cache so that initializeRoots() will not consider the project has a classpath
-										this.manager.removePerProjectInfo(javaProject);
+										this.manager.removePerProjectInfo(javaProject, true /* remove external jar files indexes and timestamps */);
 										// remove container cache for this project
 										this.manager.containerRemove(javaProject);
 										// close project
@@ -409,7 +409,7 @@ public class DeltaProcessor {
 						this.manager.forceBatchInitializations(false/*not initAfterLoad*/);
 
 						// remove classpath cache so that initializeRoots() will not consider the project has a classpath
-						this.manager.removePerProjectInfo(javaProject);
+						this.manager.removePerProjectInfo(javaProject, true /* remove external jar files indexes and timestamps*/);
 						// remove container cache for this project
 						this.manager.containerRemove(javaProject);
 
@@ -893,6 +893,7 @@ public class DeltaProcessor {
 									externalArchivesStatus.put(entryPath, EXTERNAL_JAR_ADDED);
 									this.state.getExternalLibTimeStamps().put(entryPath, new Long(newTimeStamp));
 									// index the new jar
+									this.manager.indexManager.removeIndex(entryPath);
 									this.manager.indexManager.indexLibrary(entryPath, project.getProject());
 								}
 							}

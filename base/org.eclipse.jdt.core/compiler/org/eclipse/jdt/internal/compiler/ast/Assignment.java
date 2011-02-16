@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -37,6 +37,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 // a field reference, a blank final field reference, a field of an enclosing instance or
 // just a local variable.
 	LocalVariableBinding local = this.lhs.localVariableBinding();
+	flowInfo = ((Reference) this.lhs)
+		.analyseAssignment(currentScope, flowContext, flowInfo, this, false)
+		.unconditionalInits();
 	int nullStatus = this.expression.nullStatus(flowInfo);
 	if (local != null && (local.type.tagBits & TagBits.IsBaseType) == 0) {
 		if (nullStatus == FlowInfo.NULL) {
@@ -44,9 +47,6 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				FlowContext.CAN_ONLY_NULL | FlowContext.IN_ASSIGNMENT, flowInfo);
 		}
 	}
-	flowInfo = ((Reference) this.lhs)
-		.analyseAssignment(currentScope, flowContext, flowInfo, this, false)
-		.unconditionalInits();
 	if (local != null && (local.type.tagBits & TagBits.IsBaseType) == 0) {
 		switch(nullStatus) {
 			case FlowInfo.NULL :

@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for bug 332637 - Dead Code detection removing code that isn't dead
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -32,6 +33,13 @@ public FlowInfo addInitializationsFrom(FlowInfo otherInits) {
 
 	this.initsWhenTrue.addInitializationsFrom(otherInits);
 	this.initsWhenFalse.addInitializationsFrom(otherInits);
+	return this;
+}
+
+public FlowInfo addNullInfoFrom(FlowInfo otherInits) {
+
+	this.initsWhenTrue.addNullInfoFrom(otherInits);
+	this.initsWhenFalse.addNullInfoFrom(otherInits);
 	return this;
 }
 

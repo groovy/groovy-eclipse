@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2010 IBM Corporation and others.
+ * Copyright (c) 2009, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -145,7 +145,7 @@ public class JavadocContents {
 			for (int i = 0; i < this.tempAnchorIndexesCount; i++) {
 				int anchorEndStart = this.tempAnchorIndexes[i];
 				
-				if (anchorEndStart != -1 && CharOperation.indexOf(anchor, this.content, false, anchorEndStart) == anchorEndStart) {
+				if (anchorEndStart != -1 && Util.prefixEquals(anchor, this.content, false, anchorEndStart)) {
 					
 					this.tempAnchorIndexes[i] = -1;
 					
@@ -165,7 +165,7 @@ public class JavadocContents {
 			
 			this.tempLastAnchorFoundIndex = anchorEndStart;
 			
-			if (CharOperation.indexOf(anchor, this.content, false, anchorEndStart) == anchorEndStart) {
+			if (Util.prefixEquals(anchor, this.content, false, anchorEndStart)) {
 				return computeChildRange(anchorEndStart, anchor, indexOfSectionBottom);
 			} else {
 				if (this.tempAnchorIndexes.length == this.tempAnchorIndexesCount) {
