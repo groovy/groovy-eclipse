@@ -100,8 +100,8 @@ public class GroovySnippetCompiler {
 
         Map options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        Compiler compiler = new Compiler(
-                new NameEnvironment(project.getProject()),
+        NameEnvironment nameEnvironment = new NameEnvironment(project.getProject());
+        Compiler compiler = new Compiler(nameEnvironment,
                 DefaultErrorHandlingPolicies.proceedWithAllProblems(),
                 options,
                 new Requestor(),
@@ -109,6 +109,7 @@ public class GroovySnippetCompiler {
         GroovyCompilationUnitDeclaration decl =
             (GroovyCompilationUnitDeclaration)
             compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);
+        nameEnvironment.cleanup();
         return decl;
     }
 
