@@ -19,6 +19,8 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.JarFile;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
@@ -62,7 +64,7 @@ public class GroovyParser {
 	private String gclClasspath;
 	public static IGroovyDebugRequestor debugRequestor;
 	private CompilerOptions compilerOptions;
-	private Object requestor;
+	public Object requestor;
 	private boolean allowTransforms;
 	private ScriptFolderSelector scriptFolderSelector;
 
@@ -89,11 +91,51 @@ public class GroovyParser {
 	}
 
 	/**
+	 * Close the jar files that have been kept open by the URLClassLoader
+	 */
+	public static void close(GroovyClassLoader groovyClassLoader) {
+		// System.out.println("Running close for GCL " + groovyClassLoader);
+		try {
+			Class<?> clazz = java.net.URLClassLoader.class;
+			Field field_urlClasspath = clazz.getDeclaredField("ucp");
+			field_urlClasspath.setAccessible(true);
+			Object urlClasspath = field_urlClasspath.get(groovyClassLoader);
+			Field field_loaders = urlClasspath.getClass().getDeclaredField("loaders");
+			field_loaders.setAccessible(true);
+			Object[] jarLoaders = ((java.util.Collection<?>) field_loaders.get(urlClasspath)).toArray();
+			// int count = 0;
+			for (Object jarLoader : jarLoaders) {
+				try {
+					Field field_jarFile = jarLoader.getClass().getDeclaredField("jar");
+					field_jarFile.setAccessible(true);
+					JarFile jarFile = (JarFile) field_jarFile.get(jarLoader);
+					String jarFileName = jarFile.getName();
+					if (jarFileName.indexOf("cache") != -1 || jarFileName.indexOf("plugins") != -1) {
+						// System.out.println("Closing " + jarFile.getName());
+						// count++;
+						jarFile.close();
+					}
+				} catch (Throwable t) {
+					// t.printStackTrace();
+					// Probably not a JarLoader
+				}
+			}
+			// System.out.println("Closed " + count + " jars");
+		} catch (Throwable t) {
+			// Not the kind of VM we thought it was...
+			// t.printStackTrace();
+		}
+	}
+
+	/**
 	 * Remove all cached classloaders for this project
 	 */
 	public static void tidyCache(String projectName) {
 		// This will orphan the loader on the heap
 		PathLoaderPair removed = projectToLoaderCache.remove(projectName);
+		if (removed != null) {
+			close(removed.groovyClassLoader);
+		}
 		// System.out.println("Cleaning up loader for project " + projectName + "?" + (removed == null ? "no" : "yes"));
 	}
 
