@@ -97,8 +97,14 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         				values[e++] = ((ConstantExpression)expr).getText();
         			}
         		} else {
-        			values = new String[1];
-        			values[0] = ((ConstantExpression)expr2).getText();
+        			try {
+	        			values = new String[1];
+	        			values[0] = ((ConstantExpression)expr2).getText();
+        			} catch (Throwable t) {
+        				RuntimeException re = new RuntimeException("Unable to process the expression, don't know what it is.  Expression is "+expr2+" from transform annotation "+transformAnnotation.getClassNode().getName(),t);
+        				re.printStackTrace();
+        				throw re;
+        			}
         		}
         		return values;
         	}
