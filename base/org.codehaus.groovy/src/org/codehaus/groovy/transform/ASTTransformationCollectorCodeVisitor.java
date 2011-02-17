@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -88,6 +89,9 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         		// will work so long as signature for the member 'value' is String[]
         		Expression expr2 = transformAnnotation.getMember("value");
         		String[] values = null;
+        		if (expr2==null) {
+        			return NONE;
+        		}
         		if (expr2 instanceof ListExpression) {
         			ListExpression expression = (ListExpression)expr2;
         			List<Expression> expressions = expression.getExpressions();
@@ -96,15 +100,11 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         			for (Expression expr: expressions) {
         				values[e++] = ((ConstantExpression)expr).getText();
         			}
+        		} else if (expr2 instanceof ConstantExpression) {
+        			values = new String[1];
+        			values[0] = ((ConstantExpression)expr2).getText();
         		} else {
-        			try {
-	        			values = new String[1];
-	        			values[0] = ((ConstantExpression)expr2).getText();
-        			} catch (Throwable t) {
-        				RuntimeException re = new RuntimeException("Unable to process the expression, don't know what it is.  Expression is "+expr2+" from transform annotation "+transformAnnotation.getClassNode().getName(),t);
-        				re.printStackTrace();
-        				throw re;
-        			}
+        			throw new IllegalStateException("NYI: eclipse doesn't understand this kind of expression in an Ast transform definition: "+expr2+" (class="+expr2.getClass().getName()+")");
         		}
         		return values;
         	}
@@ -131,11 +131,31 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 }
             }  
         	if (transformAnnotation!=null) {
-        		Expression expression = (Expression)transformAnnotation.getMember("classes");
-        		if (expression!=null) {
-        			// Will need to extract the classnames
-        			throw new RuntimeException("nyi implemented in eclipse");
+        		Expression expr = (Expression)transformAnnotation.getMember("classes");
+        		if (expr==null) {
+        			return NO_CLASSES;
         		}
+        		Class[] values = NO_CLASSES;
+    			// Will need to extract the classnames
+        		if (expr instanceof ListExpression) {
+        			ListExpression expression = (ListExpression)expr;
+        			List<Expression> expressions = expression.getExpressions();
+        			values = new Class[expressions.size()];
+        			int e=0;
+        			for (Expression oneExpr: expressions) {
+        				String classname = ((ClassExpression)oneExpr).getType().getName();
+        				try {
+        					values[e++] = Class.forName(classname,false,transformLoader);
+        				} catch (ClassNotFoundException cnfe) {
+        		            source.getErrorCollector().addError(new SimpleMessage("Ast transform processing, cannot find "+classname, source));
+        				}
+        			}
+        			return values;
+        		} else {
+        			
+        		}
+
+        		throw new RuntimeException("nyi implemented in eclipse: need to support: "+expr+" (class="+expr.getClass()+")");
         	}
         	return null;
     	} else {

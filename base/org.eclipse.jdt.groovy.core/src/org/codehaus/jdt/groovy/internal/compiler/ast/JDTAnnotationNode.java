@@ -166,8 +166,9 @@ public class JDTAnnotationNode extends AnnotationNode {
 		} else if (CharOperation.equals(b.signature(), jlString)) {
 			String v = ((StringConstant) value).stringValue();
 			return new ConstantExpression(v);
-		} else {
-
+		} else if (b.isClass()) {
+			ClassExpression classExpression = new ClassExpression(resolver.convertToClassNode((TypeBinding) value));
+			return classExpression;
 		}
 		throw new GroovyEclipseBug("Problem in JDTAnnotatioNode.createExpressionFor(binding=" + b + " value=" + value + ")");
 	}
