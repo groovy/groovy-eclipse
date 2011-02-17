@@ -57,7 +57,7 @@ import antlr.NoViableAltForCharException;
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
- * @version $Id: SourceUnit.java 21482 2011-02-04 14:55:53Z blackdrag $
+ * @version $Id: SourceUnit.java 21480 2011-02-04 13:55:32Z blackdrag $
  */
 
 public class SourceUnit extends ProcessingUnit {

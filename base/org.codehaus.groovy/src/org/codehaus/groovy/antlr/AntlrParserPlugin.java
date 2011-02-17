@@ -231,11 +231,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             convertGroovy(ast);
         	// GRECLIPSE: start
             // does it look broken? (ie. have we built a script for it containing rubbish)
-            if (output.getMethods().isEmpty() && sourceUnit.getErrorCollector().hasErrors() && looksBroken(output)) {
+            boolean hasNoMethods = output.getMethods().isEmpty();
+            if (hasNoMethods && sourceUnit.getErrorCollector().hasErrors() && looksBroken(output)) {
             		output.setEncounteredUnrecoverableError(true);
             }
         	// end
-            if(output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
+            if(output.getStatementBlock().isEmpty() && hasNoMethods && output.getClasses().isEmpty()) {
             	// GRECLIPSE: start
             	if (ast==null && sourceUnit.getErrorCollector().hasErrors()) {
             		output.setEncounteredUnrecoverableError(true);
