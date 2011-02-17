@@ -1736,7 +1736,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		assertNull(cn);
 	}
 	 */
-	public void testAliasing_GRE473() {
+	public void testAliasing_GRE473() { 
 		this.runConformTest(new String[] {
 				"Foo.groovy",
 				"import java.util.regex.Pattern as JavaPattern\n"+
