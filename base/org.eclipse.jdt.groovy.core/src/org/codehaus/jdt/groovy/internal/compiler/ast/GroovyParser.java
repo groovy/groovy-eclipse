@@ -132,11 +132,14 @@ public class GroovyParser {
 	 */
 	public static void tidyCache(String projectName) {
 		// This will orphan the loader on the heap
-		PathLoaderPair removed = projectToLoaderCache.remove(projectName);
-		if (removed != null) {
-			// close(removed.groovyClassLoader);
+		projectToLoaderCache.remove(projectName);
+	}
+
+	public static void closeClassLoader(String projectName) {
+		PathLoaderPair pathLoaderPair = projectToLoaderCache.get(projectName);
+		if (pathLoaderPair != null) {
+			close(pathLoaderPair.groovyClassLoader);
 		}
-		// System.out.println("Cleaning up loader for project " + projectName + "?" + (removed == null ? "no" : "yes"));
 	}
 
 	// public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
@@ -454,4 +457,5 @@ public class GroovyParser {
 	public CompilerOptions getCompilerOptions() {
 		return compilerOptions;
 	}
+
 }

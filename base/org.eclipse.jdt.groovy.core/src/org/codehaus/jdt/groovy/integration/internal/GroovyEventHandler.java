@@ -29,7 +29,9 @@ public class GroovyEventHandler implements EventHandler {
 			}
 		} else if (event.equals("close")) {
 			if (javaProject != null) {
-				GroovyParser.tidyCache(javaProject.getProject().getName());
+				String projectName = javaProject.getProject().getName();
+				GroovyParser.closeClassLoader(projectName);
+				GroovyParser.tidyCache(projectName);
 			}
 		}
 	}
