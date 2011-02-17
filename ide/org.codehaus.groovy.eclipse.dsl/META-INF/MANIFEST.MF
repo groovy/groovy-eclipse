@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Groovy DSL support
+Bundle-SymbolicName: org.codehaus.groovy.eclipse.dsl;singleton:=true
+Bundle-Version: 2.1.2.qualifier
+Bundle-Activator: org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
+Bundle-Vendor: Codehaus.org
+Require-Bundle: org.eclipse.core.runtime,
+ org.codehaus.groovy;bundle-version="1.6.7",
+ org.eclipse.jdt.core;bundle-version="3.6.1",
+ org.eclipse.jdt.groovy.core,
+ org.eclipse.core.resources;bundle-version="3.6.0",
+ org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.1.2",
+ org.eclipse.ui;bundle-version="3.6.1",
+ org.eclipse.jdt.ui;bundle-version="3.6.1",
+ org.codehaus.groovy.eclipse.codeassist.completion,
+ org.codehaus.groovy.eclipse.ui;bundle-version="2.1.2",
+ org.eclipse.jface.text;bundle-version="3.6.1",
+ org.eclipse.ui.ide;bundle-version="3.6.1",
+ org.eclipse.core.resources;bundle-version="3.6.0"
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.dsl.earlystartup"
+Export-Package: org.codehaus.groovy.eclipse.dsl.pointcuts,
+ org.codehaus.groovy.eclipse.dsl.pointcuts.impl

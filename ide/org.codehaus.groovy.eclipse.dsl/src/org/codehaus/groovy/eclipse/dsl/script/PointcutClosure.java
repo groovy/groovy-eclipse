@@ -1,0 +1,86 @@
+/*
+ * Copyright 2003-2010 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.codehaus.groovy.eclipse.dsl.script;
+
+import groovy.lang.Closure;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+
+/**
+ * Hmmm...not sure if this is really used.
+ * @author andrew
+ * @created Feb 11, 2011
+ */
+public class PointcutClosure extends Closure {
+    private static final long serialVersionUID = -2300392180869356706L;
+    
+    private final IPointcut pointcut;
+    
+    public PointcutClosure(Object owner, IPointcut pointcut) {
+        super(owner);
+        this.pointcut = pointcut;
+    }
+
+    public PointcutClosure(Object owner, Object thisObject, IPointcut pointcut) {
+        super(owner, thisObject);
+        this.pointcut = pointcut;
+    }
+    
+    @Override
+    public Object call(Object arguments) {
+        if (arguments instanceof Map<?, ?>) {
+            for (Entry<Object, Object> entry : ((Map<Object, Object>) arguments).entrySet()) {
+                Object key = entry.getKey();
+                pointcut.addArgument(key == null ? null : key.toString(), entry.getValue());
+            }
+        } else if (arguments instanceof Collection<?>) {
+            for (Object arg : (Collection<Object>) arguments) {
+                pointcut.addArgument(arg);
+            }
+        } else if (arguments instanceof Object[]) {
+            for (Object arg : (Object[]) arguments) {
+                pointcut.addArgument(arg);
+            }
+        } else {
+            pointcut.addArgument(arguments);
+        }
+        return pointcut;
+    }
+    
+    
+    @Override
+    public Object call(Object[] args) {
+        if (args == null) {
+            return null;
+        }
+        if (args.length == 1 && args[0] instanceof Map) {
+            return call(args[0]);
+        }
+        for (Object arg : args) {
+            pointcut.addArgument(arg);
+        }
+        return pointcut;
+    }
+    
+    @Override
+    public Object call() {
+        return pointcut;
+    }
+}
