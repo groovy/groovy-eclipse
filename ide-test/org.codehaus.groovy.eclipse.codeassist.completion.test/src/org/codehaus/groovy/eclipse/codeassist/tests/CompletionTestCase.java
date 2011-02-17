@@ -33,7 +33,6 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.util.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
@@ -274,15 +273,16 @@ public abstract class CompletionTestCase extends BuilderTests {
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
         unit.becomeWorkingCopy(null);
         
-        // intermitent failures on the build server
-        SynchronizationUtils.joinBackgroudActivities();
-        SynchronizationUtils.waitForIndexingToComplete();
-
         // intermitent failures on build server.  proposals not found, so perform this part in a loop
         int count = 0;
         int maxCount = 15;
         ICompletionProposal[] proposals;
         do {
+            // intermitent failures on the build server
+            SynchronizationUtils.joinBackgroudActivities();
+            SynchronizationUtils.waitForIndexingToComplete();
+            
+            
             System.out.println("Content assist for " + unit.getElementName());
             proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
             if (proposals == null) {

@@ -16,9 +16,16 @@
 package org.codehaus.groovy.eclipse.test;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.TypeNameRequestor;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -64,6 +71,7 @@ public class SynchronizationUtils {
 		boolean calm= allJobsQuiet();
 		while (!calm && System.currentTimeMillis() < endTime) {
 			runEventQueue(intervalTime);
+//			printJobs();
 			calm= allJobsQuiet();
 		}
 		return calm;
@@ -134,22 +142,43 @@ public class SynchronizationUtils {
     }
 	
 	public static void waitForIndexingToComplete() {
-       SynchronizationUtils.joinBackgroudActivities();
+	    try {
+            performDummySearch(JavaModelManager.getJavaModelManager().getJavaModel());
+        } catch (CoreException e1) {
+            e1.printStackTrace();
+        }
+	    SynchronizationUtils.joinBackgroudActivities();
         Job[] jobs = Job.getJobManager().find(null);
         for (int i = 0; i < jobs.length; i++) {
             if (jobs[i].getName().startsWith("Java indexing")) {
                 boolean wasInterrupted = true;
                 while (wasInterrupted) {
-                try {
-                    wasInterrupted = false;
-                    jobs[i].join();
-                } catch (InterruptedException e) {
-                    wasInterrupted = true;
-                }
+                    try {
+                        wasInterrupted = false;
+                        jobs[i].join();
+                    } catch (InterruptedException e) {
+                        wasInterrupted = true;
+                    }
                 }
             }
         }
 	}
+	
+    protected static class Requestor extends TypeNameRequestor { }
+
+    private static void performDummySearch(IJavaElement element) throws CoreException {
+        new SearchEngine().searchAllTypeNames(
+            null,
+            SearchPattern.R_EXACT_MATCH,
+            "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
+            SearchPattern.R_EXACT_MATCH,
+            IJavaSearchConstants.CLASS,
+            SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
+            new Requestor(),
+            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
+            null);
+    }
+
 
 	public static void waitForRefactoringToComplete() {
 	    SynchronizationUtils.joinBackgroudActivities();
