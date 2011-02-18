@@ -56,8 +56,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public ClassNode currentClass;
     // note: BigInteger and BigDecimal are also imported by default
     public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.io.", "java.net.", "java.util.", "groovy.lang.", "groovy.util."};
-    // GRECLIPSE: start: to protected (was private)
-    protected CompilationUnit compilationUnit;
+    // GRECLIPSE: start: to public (was private)
+    public CompilationUnit compilationUnit;
     private Map cachedClasses = new HashMap();
     private static final Object NO_CLASS = new Object();
     private SourceUnit source;

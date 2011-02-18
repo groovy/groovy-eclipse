@@ -163,6 +163,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected Object lazyInitLock = new Object();
 
     // clazz!=null when resolved
+    // GRECLIPSE: to protected
     protected Class clazz;
     // only false when this classNode is constructed from a class
     // GRECLIPSE: from private to protected
@@ -1376,6 +1377,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             setRedirect(cn);
             return redirect().clazz;
         }
+        if (redirect().getClass().getName().endsWith("JDTClassNode")) {
+        	// special!
+        	return redirect().getTypeClass();
+        }
         throw new GroovyBugError("ClassNode#getTypeClass for "+getName()+" is called before the type class is set ");
     }
 
@@ -1524,5 +1529,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 		boolean b = redirect.innerClasses!=null && redirect.innerClasses.size()>0;
 		return b;
 	}
+	
 	// GRECLIPSE end
 }

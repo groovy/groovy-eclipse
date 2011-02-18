@@ -13,6 +13,8 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.lang.reflect.Modifier;
 import java.util.List;
+
+import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -569,5 +571,30 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
 	public boolean isDeprecated() {
 		return jdtBinding.isDeprecated();
+	}
+
+	private boolean unfindable = false;
+
+	/**
+	 * Some AST transforms are written such that they refer to typeClass on a ClassNode. This is not available under Eclipse.
+	 * However, we can support it in a rudimentary fashion by attempting a class load for the class using the transform loader (if
+	 * available).
+	 */
+	public Class getTypeClass() {
+		if (clazz != null || unfindable) {
+			return clazz;
+		}
+		ClassLoader transformLoader = resolver.compilationUnit.getTransformLoader();
+		if (transformLoader != null) {
+			// What about array types
+			try {
+				clazz = Class.forName(this.getName(), false, transformLoader);
+				return clazz;
+			} catch (ClassNotFoundException e) {
+				unfindable = true;
+			}
+		}
+		throw new GroovyBugError("JDTClassNode.getTypeClass() cannot locate class for " + getName() + " using transform loader "
+				+ transformLoader);
 	}
 }
