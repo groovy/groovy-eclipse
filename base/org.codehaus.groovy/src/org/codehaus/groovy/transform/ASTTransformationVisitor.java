@@ -154,7 +154,11 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 		snt.visit(node, source);
                 		long etime = System.nanoTime(); 
                 		if (GroovyLogManager.manager.hasLoggers()) {
-                			GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"local transform "+snt.getClass().getName()+" on "+classNode.getName()+":"+node[1]+" = "+((etime-stime)/1000000)+"ms");
+                			try {
+	                			GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"local transform "+snt.getClass().getName()+" on "+classNode.getName()+":"+node[1]+" = "+((etime-stime)/1000000)+"ms");
+	            			} catch (Throwable t) {
+	            				t.printStackTrace();
+	            			}
                 		}
                 	// GRECLIPSE-977 - start
                 	} catch (NoClassDefFoundError ncdfe) {
@@ -377,7 +381,11 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                             instance.visit(new ASTNode[] {source.getAST()}, source);
                             long etime = System.nanoTime(); 
                     		if (GroovyLogManager.manager.hasLoggers()) {
-                    			GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"Global transform "+instance.getClass().getName()+" on "+source.getName()+" = "+((etime-stime)/1000000)+"ms");
+                    			try {
+                    				GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"Global transform "+instance.getClass().getName()+" on "+source.getName()+" = "+((etime-stime)/1000000)+"ms");
+                    			} catch (Throwable t) {
+                    				t.printStackTrace();
+                    			}
                     		}
                     		// GRECLIPSE: start
                         	} catch (NoClassDefFoundError ncdfe) {
