@@ -155,7 +155,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 		long etime = System.nanoTime(); 
                 		if (GroovyLogManager.manager.hasLoggers()) {
                 			try {
-	                			GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"local transform "+snt.getClass().getName()+" on "+classNode.getName()+":"+node[1]+" = "+((etime-stime)/1000000)+"ms");
+	                			GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"Local transform "+snt.getClass().getName()+" on "+classNode.getName()+":"+node[1]+" = "+((etime-stime)/1000000)+"ms");
 	            			} catch (Throwable t) {
 	            				t.printStackTrace();
 	            			}
