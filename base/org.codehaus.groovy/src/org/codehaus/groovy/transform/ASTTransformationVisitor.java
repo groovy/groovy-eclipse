@@ -381,10 +381,13 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                             instance.visit(new ASTNode[] {source.getAST()}, source);
                             long etime = System.nanoTime(); 
                     		if (GroovyLogManager.manager.hasLoggers()) {
-                    			try {
-                    				GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"Global transform "+instance.getClass().getName()+" on "+source.getName()+" = "+((etime-stime)/1000000)+"ms");
-                    			} catch (Throwable t) {
-                    				t.printStackTrace();
+                    			long timetaken = (etime-stime)/1000000;
+                    			if (timetaken>0) {
+	                    			try {
+	                    				GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"Global transform "+instance.getClass().getName()+" on "+source.getName()+" = "+timetaken+"ms");
+	                    			} catch (Throwable t) {
+	                    				t.printStackTrace();
+	                    			}
                     			}
                     		}
                     		// GRECLIPSE: start
