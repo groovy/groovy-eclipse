@@ -49,6 +49,8 @@ import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.WarningMessage;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.syntax.SyntaxException;
 
 /**
@@ -148,7 +150,12 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             for (ASTNode[] node : targetNodes) {
                 for (ASTTransformation snt : transforms.get(node[0])) {
                 	try {
+                		long stime = System.nanoTime();
                 		snt.visit(node, source);
+                		long etime = System.nanoTime(); 
+                		if (GroovyLogManager.manager.hasLoggers()) {
+                			GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"local transform "+snt.getClass().getName()+" on "+classNode.getName()+":"+node[1]+" = "+((etime-stime)/1000000)+"ms");
+                		}
                 	// GRECLIPSE-977 - start
                 	} catch (NoClassDefFoundError ncdfe) {
                 		String transformName = snt.getClass().getName();
@@ -176,6 +183,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
+    
 
     public static void addPhaseOperations(final CompilationUnit compilationUnit) {
         addGlobalTransforms(compilationUnit);
@@ -365,8 +373,13 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         	if (isBuggered) return;
                         	try { 
                               // end
+                            long stime = System.nanoTime();
                             instance.visit(new ASTNode[] {source.getAST()}, source);
-                        	// GRECLIPSE: start
+                            long etime = System.nanoTime(); 
+                    		if (GroovyLogManager.manager.hasLoggers()) {
+                    			GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"Global transform "+instance.getClass().getName()+" on "+source.getName()+" = "+((etime-stime)/1000000)+"ms");
+                    		}
+                    		// GRECLIPSE: start
                         	} catch (NoClassDefFoundError ncdfe) {
                         		// Suggests that the transform is written in Java but has dependencies on Groovy source
                         		// within the same project - as this has yet to be compiled, we can't find the class.
