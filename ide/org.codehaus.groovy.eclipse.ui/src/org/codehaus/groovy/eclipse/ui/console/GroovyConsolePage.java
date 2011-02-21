@@ -50,6 +50,15 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
         super(console, view);
     }
 
+    private String twodigit(int i) {
+        String number = Integer.toString(i);
+        if (number.length() < 2) {
+            return new StringBuffer("0").append(number).toString();
+        } else {
+            return number.toString();
+        }
+    }
+
     public void log(final TraceCategory category, String message) {
         /*
          * This code no longer dependent on either java.util.DateFormat, nor its ICU4J
@@ -61,8 +70,14 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
         Calendar calendar = GregorianCalendar.getInstance();
         calendar.setTime(new Date());
 
-        final String txt = calendar.get(Calendar.HOUR_OF_DAY) + ":"  //$NON-NLS-1$
-            + calendar.get(Calendar.MINUTE) + ":" + calendar.get(Calendar.SECOND) + " " + message + "\n"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        StringBuffer time = new StringBuffer();
+        time.append(twodigit(calendar.get(Calendar.HOUR_OF_DAY))).append(":");
+        time.append(twodigit(calendar.get(Calendar.MINUTE))).append(":");
+        time.append(twodigit(calendar.get(Calendar.SECOND)));
+        time.append(" ").append(message).append("\n");
+        final String txt = time.toString();
+        //        final String txt = twodigit(calendar.get(Calendar.HOUR_OF_DAY)) + ":"  //$NON-NLS-1$
+        //            + calendar.get(Calendar.MINUTE) + ":" + calendar.get(Calendar.SECOND) + " " + message + "\n"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         this.getControl().getDisplay().asyncExec(new Runnable() {
             public void run() {
