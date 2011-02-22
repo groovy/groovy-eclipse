@@ -27,10 +27,6 @@
       %license
    </license>
 
-   <url>
-      <update label="%updateSiteName" url="http://dist.codehaus.org/groovy/distributions/update/"/>
-   </url>
-
    <includes
          id="org.codehaus.groovy.eclipse.feature"
          version="0.0.0"/>

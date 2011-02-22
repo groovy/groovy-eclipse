@@ -28,10 +28,6 @@
       %license
    </license>
 
-   <url>
-      <update label="%updateSiteName" url="http://dist.codehaus.org/groovy/distributions/update/"/>
-   </url>
-
    <requires>
       <import feature="org.eclipse.jdt" version="3.6.0.v20100124-2000-7z8WFRAFMTdeCo0y7FJt1Zi45027" patch="true"/>
    </requires>

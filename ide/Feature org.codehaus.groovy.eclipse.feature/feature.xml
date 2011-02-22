@@ -28,10 +28,6 @@
       %license
    </license>
 
-   <url>
-      <update label="%updateSiteName" url="http://dist.codehaus.org/groovy/distributions/greclipse/snapshot/e3.5/"/>
-   </url>
-
    <includes
          id="org.codehaus.groovy.jdt.patch"
          version="0.0.0"/>
