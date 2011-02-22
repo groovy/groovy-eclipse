@@ -81,10 +81,13 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
 
         this.getControl().getDisplay().asyncExec(new Runnable() {
             public void run() {
-                StyledText text = getViewer().getTextWidget();
-                text.append(category.getPaddedLabel() + " : " + txt);
-                if (!fScrollLockAction.isChecked()) {
-                    text.setTopIndex(text.getLineCount() - 1);
+                TextConsoleViewer viewer = getViewer();
+                if (viewer != null) {
+                    StyledText text = viewer.getTextWidget();
+                    text.append(category.getPaddedLabel() + " : " + txt);
+                    if (!fScrollLockAction.isChecked()) {
+                        text.setTopIndex(text.getLineCount() - 1);
+                    }
                 }
             }
         });
