@@ -23,15 +23,27 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.FinalPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PrivatePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PublicPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.StaticPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.SynchronizedPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AnnotatedByPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingClassPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingFieldPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingMethodPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingScriptPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FileExtensionPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindMethodPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ProjectNaturePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut;
 import org.eclipse.core.resources.IProject;
 
@@ -44,15 +56,38 @@ public class PointcutFactory {
 
     private static final Map<String, Class<? extends IPointcut>> registry = new HashMap<String, Class<? extends IPointcut>>();
     static {
+        // combinatorial pointcuts
         registry.put("and", AndPointcut.class);
+        registry.put("or", OrPointcut.class);
+
+        // binding pointcuts
         registry.put("bind", BindPointcut.class);
+
+        // semantic pointcuts
         registry.put("currentType", CurrentTypePointcut.class);
-        registry.put("fileExtension", FileExtensionPointcut.class);
+
+        // filtering pointcuts
         registry.put("annotatedBy", AnnotatedByPointcut.class);
         registry.put("findField", FindFieldPointcut.class);
         registry.put("findMethod", FindMethodPointcut.class);
-        registry.put("or", OrPointcut.class);
+        registry.put("findProperty", FindPropertyPointcut.class);
+        registry.put("name", NamePointcut.class);
+        registry.put("isFinal", FinalPointcut.class);
+        registry.put("isPrivate", PrivatePointcut.class);
+        registry.put("isPublic", PublicPointcut.class);
+        registry.put("isStatic", StaticPointcut.class);
+        registry.put("isSynchronized", SynchronizedPointcut.class);
+        
+        // lexical pointcuts
+        registry.put("enclosingClass", EnclosingClassPointcut.class);
+        registry.put("enclosingField", EnclosingFieldPointcut.class);
+        registry.put("enclosingMethod", EnclosingMethodPointcut.class);
+        registry.put("enclosingScript", EnclosingScriptPointcut.class);
+        
+        // structural pointcuts
+        registry.put("fileExtension", FileExtensionPointcut.class);
         registry.put("nature", ProjectNaturePointcut.class);
+        registry.put("sourceFolder", SourceFolderPointcut.class);
     }
     
     private final Map<String, Closure> localRegistry = new HashMap<String, Closure>();

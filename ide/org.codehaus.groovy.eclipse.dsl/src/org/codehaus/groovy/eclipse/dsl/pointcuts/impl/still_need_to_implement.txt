@@ -1,0 +1,17 @@
+enclosingTypeDeclaration
+enclosingFieldDeclaration
+enclosingMethodDeclaration
+enclosingScript
+enclosingEnum  ???
+enclosingInterface   ???
+enclosingAnnotation --- true if inside an annotation reference  
+enclosingClosure
+enclosingInitializer
+enclosingMethodCall
+
+within  -- takes one or more AST nodes as a pointcut arg and determines if the current pattern is contained within it, or if there are no args, returns all AST nodes that we are within 
+findProperty
+
+typeOf --- takes a field, method, method call expr, or any expression and looks for the type of the expression or member
+declaringTypeOf --- takes a field, method, method call expr, or any expression and looks for the declaring type of the expression or member
+(maybe limit to members, closures and method calls)

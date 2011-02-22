@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.dsl.lookup;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -39,12 +38,6 @@ public class ResolverCache {
     public ResolverCache(JDTResolver resolver, ModuleNode thisModule) {
         this.nameTypeCache = new HashMap<String, ClassNode>();
         this.resolver = resolver;
-        List<ClassNode> classes = thisModule.getClasses();
-        if (classes != null) {
-            for (ClassNode clazz : classes) {
-                nameTypeCache.put(clazz.getName(), clazz);
-            }
-        }
     }
     
     public ClassNode resolve(String qName) {

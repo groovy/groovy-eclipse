@@ -46,7 +46,7 @@ public class DSLDStore {
         keyContextMap = new HashMap<String, Set<IPointcut>>();
     }
     
-    public void addContribution(IPointcut context, IContributionGroup contribution) {
+    public void addContributionGroup(IPointcut context, IContributionGroup contribution) {
         List<IContributionGroup> contributions = contextContributionMap.get(context);
         if (contributions == null) {
             contributions = new ArrayList<IContributionGroup>();
@@ -107,14 +107,14 @@ public class DSLDStore {
     }
     public void addAllContexts(List<IPointcut> contexts, IContributionGroup contribution) {
         for (IPointcut context : contexts) {
-            addContribution(context, contribution);
+            addContributionGroup(context, contribution);
         }
     }
     
     
     public void purgeFileFromStore(IFile file) {
         GroovyLogManager.manager.log(TraceCategory.DSL, "Purging context for DSL file " + file);
-        Set<IPointcut> contexts = keyContextMap.get(convertToIdentifier(file));
+        Set<IPointcut> contexts = keyContextMap.remove(convertToIdentifier(file));
         if (contexts != null) {
             for (IPointcut context : contexts) {
                 contextContributionMap.remove(context);

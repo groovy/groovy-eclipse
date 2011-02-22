@@ -18,22 +18,27 @@ package org.codehaus.groovy.eclipse.dsl.tests;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-
 /**
- *
+ * Tests type inferencing that involve dsls
+ * 
  * @author Andrew Eisenberg
- * @created Mar 27, 2010
+ * @created Feb 18, 2011
  */
-public class AllDSLTests {
-    public static Test suite() {
-        final TestSuite suite = new TestSuite(AllDSLTests.class.getPackage().getName());
+public class DSLInferencingTests extends AbstractDSLInferencingTest {
+    public DSLInferencingTests(String name) {
+        super(name);
+    }
 
-        suite.addTest(PointcutCreationTests.suite());
-        suite.addTest(PointcutEvaluationTests.suite());
-        suite.addTest(DSLInferencingTests.suite());
-        suite.addTest(DSLStoreTests.suite());
-        suite.addTestSuite(StringObjectVectorTests.class);
-        return suite;
+    public static Test suite() {
+        return new TestSuite(DSLInferencingTests.class);
+    }
+    
+    public void testSimpleDSL() throws Exception {
+        assertType("foo", "java.lang.Object", true);
+        createDsls("currentType().accept { property ( name: \"foo\", type: Date ) }");
+        assertType("foo", "java.util.Date", true);
+        deleteDslFile(0);
+        assertType("foo", "java.lang.Object", true);
     }
 
 }

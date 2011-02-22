@@ -23,7 +23,6 @@ import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.Status;
 
 
 
@@ -45,7 +44,7 @@ public abstract class AbstractPointcut implements IPointcut {
     public AbstractPointcut(String containerIdentifier) {
         this.containerIdentifier = containerIdentifier;
     }
-
+    
     public String getContainerIdentifier() {
         return containerIdentifier;
     }
@@ -104,10 +103,6 @@ public abstract class AbstractPointcut implements IPointcut {
         }
     }
     
-    public final Object getArgument(String name) {
-        return elements.find(name);
-    }
-    
     public IPointcut normalize() {
         for (Object elt : elements.getElements()) {
             if (elt instanceof IPointcut) {
@@ -138,7 +133,7 @@ public abstract class AbstractPointcut implements IPointcut {
         if (project != null) {
             // register this pointcut and group for the given project
             GroovyDSLCoreActivator.getDefault().getContextStoreManager()
-                    .getDSLDStore(project).addContribution(this, group);
+                    .getDSLDStore(project).addContributionGroup(this, group);
         }
     }
     
@@ -180,13 +175,26 @@ public abstract class AbstractPointcut implements IPointcut {
     /**
      * A standard verification that checks to see the number of args
      * @arg num 
-     * @return {@link Status#OK_STATUS} if number of args matches num
+     * @return a string if number of args is not 1 else null
      */
     protected final String hasOneArg() {
         if (elements.getElements().length == 1) {
             return null;
         } else {
-            return "Expecting 1 argument, but found " + elements.getElements().length;
+            return "Expecting 1 argument, but found " + elements.getElements().length + ".  Consider using '&' or '|' to connect arguments.";
+        }
+    }
+    
+    /**
+     * A standard verification that checks to see the number of args
+     * @arg num 
+     * @return a string if number of args is not 1 or 0 else null
+     */
+    protected final String hasOneOrNoArgs() {
+        if (elements.getElements().length <= 1) {
+            return null;
+        } else {
+            return "Expecting 1 or no arguments, but found " + elements.getElements().length + ".  Consider using '&' or '|' to connect arguments.";
         }
     }
     
@@ -206,7 +214,7 @@ public abstract class AbstractPointcut implements IPointcut {
         String maybeStatus = allArgsAreStrings();
         String maybeStatus2 = allArgsArePointcuts(); 
         if (maybeStatus != null && maybeStatus2 != null) {
-            return "This pointcut supports exactly one argument of type Pointcut or String";
+            return "This pointcut supports exactly one argument of type Pointcut or String.  Consider using '&' or '|' to connect arguments.";
         }
         maybeStatus = hasOneArg();
         if (maybeStatus != null) {
@@ -215,16 +223,60 @@ public abstract class AbstractPointcut implements IPointcut {
         return null;
     }
     
+    protected final String oneStringOrOnePointcutOrOneClassArg() {
+        String maybeStatus = allArgsAreStrings();
+        String maybeStatus2 = allArgsArePointcuts(); 
+        String maybeStatus3 = allArgsAreClasses(); 
+        if (maybeStatus != null && maybeStatus2 != null && maybeStatus3 != null) {
+            return "This pointcut supports exactly one argument of type Pointcut or String or Class.  Consider using '&' or '|' to connect arguments.";
+        }
+        maybeStatus = hasOneArg();
+        if (maybeStatus != null) {
+            return maybeStatus;
+        }
+        return null;
+    }
+    
+    protected final String allArgsAreClasses() {
+        for (Object arg : elements.getElements()) {
+            if (arg == null) {
+                continue;
+            }
+            if (! (arg instanceof Class<?>)) {
+                return "All arguments should be classes";
+            }
+        }
+        return null;
+    }
+
+    
     protected IPointcut and(IPointcut other) {
         AbstractPointcut andPointcut = new AndPointcut(containerIdentifier);
+        andPointcut.setProject(project);
         andPointcut.and(this);
         andPointcut.and(other);
         return andPointcut;
     }
     protected IPointcut or(IPointcut other) {
         AbstractPointcut orPointcut = new OrPointcut(containerIdentifier);
+        orPointcut.setProject(project);
         orPointcut.or(this);
         orPointcut.or(other);
         return orPointcut;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("AbstractPointcut [getClass()=");
+        builder.append(getClass());
+        builder.append(", containerIdentifier=");
+        builder.append(containerIdentifier);
+        builder.append(", elements=");
+        builder.append(elements);
+        builder.append("]");
+        return builder.toString();
+    }
+    
+    
 }

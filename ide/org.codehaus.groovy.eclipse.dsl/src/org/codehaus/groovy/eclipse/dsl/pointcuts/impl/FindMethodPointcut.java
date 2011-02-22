@@ -21,10 +21,7 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 
 /**
  * the match returns true if the pattern passed in has a method with the
@@ -32,72 +29,44 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
  * @author andrew
  * @created Feb 11, 2011
  */
-public class FindMethodPointcut extends AbstractPointcut {
+public class FindMethodPointcut extends FilteringPointcut<MethodNode> {
 
     public FindMethodPointcut(String containerIdentifier) {
-        super(containerIdentifier);
+        super(containerIdentifier, MethodNode.class);
     }
 
-    public BindingSet matches(GroovyDSLDContext pattern) {
-        List<MethodNode> methods = getMethods(pattern);
-        if (methods == null || methods.size() == 0) {
-            return null;
-        }
-        
-        Object first = getFirstArgument();
-        if (first instanceof String) {
-            List<MethodNode> matches = new ArrayList<MethodNode>();
-            for (MethodNode field : methods) {
-                if (field.getName().equals(first)) {
-                    matches.add(field);
-                }
-            }
-            if (matches.size() == 0) {
-                return null;
-            } else if (matches.size() == 1) {
-                return new BindingSet(matches.get(0));
-            } else {
-                return new BindingSet(matches);
-            }
-        } else {
-            pattern.setOuterPointcutBinding(methods);
-            return ((IPointcut) first).matches(pattern);
-        }
-    }
 
     /**
      * extracts fields from the outer binding, or from the current type if there is no outer binding
      * the outer binding should be either a {@link Collection} or a {@link ClassNode}
      */
-    private List<MethodNode> getMethods(GroovyDSLDContext pattern) {
+    protected List<MethodNode> filterOuterBindingByType(GroovyDSLDContext pattern) {
         Object outer = pattern.getOuterPointcutBinding();
         if (outer == null) {
             return pattern.getCurrentType().getMethods();
         } else {
             if (outer instanceof Collection<?>) {
-                List<MethodNode> methods = new ArrayList<MethodNode>();
+                List<MethodNode> fields = new ArrayList<MethodNode>();
                 for (Object elt : (Collection<Object>) outer) {
                     if (elt instanceof MethodNode) {
-                        methods.add((MethodNode) elt);
+                        fields.add((MethodNode) elt);
                     }
                 }
-                return methods;
+                return fields;
             } else if (outer instanceof ClassNode) {
                 return ((ClassNode) outer).getMethods();
             }
         }
         return null;
     }
-
-    /**
-     * Expecting one argument that can either be a string or another pointcut
-     */
+    
+    
     @Override
-    public String verify() {
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutArg();
-        if (oneStringOrOnePointcutArg == null) {
-            return super.verify();
+    protected MethodNode filterObject(MethodNode result, GroovyDSLDContext context, String firstArgAsString) {
+        if (firstArgAsString == null || result.getName().equals(firstArgAsString)) {
+            return result;
+        } else {
+            return null;
         }
-        return oneStringOrOnePointcutArg;
     }
 }

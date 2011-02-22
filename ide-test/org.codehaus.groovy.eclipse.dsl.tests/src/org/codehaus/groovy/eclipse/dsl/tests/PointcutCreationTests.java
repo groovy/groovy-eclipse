@@ -19,15 +19,24 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.FinalPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PrivatePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PublicPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.StaticPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AnnotatedByPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingClassPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingFieldPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingMethodPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingScriptPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FileExtensionPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AnnotatedByPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ProjectNaturePointcut;
-import org.eclipse.core.internal.resources.NatureManager;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractGroovySearchTest;
 
 
@@ -69,13 +78,13 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testInvalidPointcutCreation1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType()");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertEquals("Expecting 1 argument, but found 0", pc.verify());
+        assertEquals("Expecting 1 argument, but found 0.  Consider using '&' or '|' to connect arguments.", pc.verify());
     }
     
     public void testInvalidPointcutCreation2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(annotatedBy()))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertEquals("This pointcut supports exactly one argument of type Pointcut or String", pc.verify());
+        assertEquals("This pointcut supports exactly one argument of type Pointcut or String or Class.  Consider using '&' or '|' to connect arguments.", pc.verify());
     }
     
     public void testAnd1() throws Exception {
@@ -146,7 +155,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testInvalidAnd1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\") & currentType()");
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
-        assertEquals("Expecting 1 argument, but found 0", pc.verify());
+        assertEquals("Expecting 1 argument, but found 0.  Consider using '&' or '|' to connect arguments.", pc.verify());
     }
     
     public void testOr1() throws Exception {
@@ -252,6 +261,77 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getFirstArgument());
     }
     
+    public void testEnclosing1() throws Exception {
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingClass(findProperty(isStatic()) & name(\"yes\"))");
+        assertEquals("Should have been an enclosingClass pointcut", EnclosingClassPointcut.class, pc.getClass());
+        assertNull(pc.verify());
+        
+        assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getFirstArgument().getClass());
+        pc = (IPointcut) pc.getFirstArgument();
+        assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
+
+        assertEquals(FindPropertyPointcut.class, pc.getArgumentValues()[0].getClass());
+        assertEquals(StaticPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1].getClass());
+        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1]).getArgumentValues().length);
+        
+        assertEquals(NamePointcut.class, pc.getArgumentValues()[1].getClass());
+        assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0].equals("yes"));
+    }
+    
+    public void testEnclosing2() throws Exception {
+        // a meaningless pointcut
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingField(findProperty(isPublic()) & name(\"yes\"))");
+        assertEquals("Should have been an enclosingField pointcut", EnclosingFieldPointcut.class, pc.getClass());
+        assertNull(pc.verify());
+        
+        assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getFirstArgument().getClass());
+        pc = (IPointcut) pc.getFirstArgument();
+        assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
+        
+        assertEquals(FindPropertyPointcut.class, pc.getArgumentValues()[0].getClass());
+        assertEquals(PublicPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1].getClass());
+        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1]).getArgumentValues().length);
+        
+        assertEquals(NamePointcut.class, pc.getArgumentValues()[1].getClass());
+        assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0].equals("yes"));
+    }
+    
+    public void testEnclosing3() throws Exception {
+        // a meaningless pointcut
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingMethod(findProperty(isPrivate()) & name(\"yes\"))");
+        assertEquals("Should have been an enclosingMethod pointcut", EnclosingMethodPointcut.class, pc.getClass());
+        assertNull(pc.verify());
+        
+        assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getFirstArgument().getClass());
+        pc = (IPointcut) pc.getFirstArgument();
+        assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
+        
+        assertEquals(FindPropertyPointcut.class, pc.getArgumentValues()[0].getClass());
+        assertEquals(PrivatePointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1].getClass());
+        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1]).getArgumentValues().length);
+        
+        assertEquals(NamePointcut.class, pc.getArgumentValues()[1].getClass());
+        assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0].equals("yes"));
+    }
+    
+    public void testEnclosing4() throws Exception {
+        // a meaningless pointcut
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingScript(findProperty(isFinal()) & name(\"yes\"))");
+        assertEquals("Should have been an enclosingScript pointcut", EnclosingScriptPointcut.class, pc.getClass());
+        assertNull(pc.verify());
+        
+        assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getFirstArgument().getClass());
+        pc = (IPointcut) pc.getFirstArgument();
+        assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
+        
+        assertEquals(FindPropertyPointcut.class, pc.getArgumentValues()[0].getClass());
+        assertEquals(FinalPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1].getClass());
+        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1]).getArgumentValues().length);
+        
+        assertEquals(NamePointcut.class, pc.getArgumentValues()[1].getClass());
+        assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0].equals("yes"));
+    }
+    
     public void testBindAndFileExtension() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("bind(b: fileExtension(\"fdafdsfds\") )");
         assertEquals(BindPointcut.class, pc.getClass());
@@ -305,6 +385,6 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         IPointcut pc = new PointcutScriptExecutor().createPointcut(
         		"registerPointcut('mine', { pattern -> null })\n" +
         		"mine()");
-        assertEquals("MyPointcut", pc.getClass().getName());
+        assertEquals("org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut", pc.getClass().getName());
     }
 }

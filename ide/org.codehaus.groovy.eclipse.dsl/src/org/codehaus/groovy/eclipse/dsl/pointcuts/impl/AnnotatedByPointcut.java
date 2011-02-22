@@ -15,18 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 
 /**
  * the match returns true if the pattern passed in has an annotated node that has an annotation 
@@ -34,78 +27,22 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
  * @author andrew
  * @created Feb 11, 2011
  */
-public class AnnotatedByPointcut extends AbstractPointcut {
+public class AnnotatedByPointcut extends FilteringPointcut<AnnotatedNode> {
 
     public AnnotatedByPointcut(String containerIdentifier) {
-        super(containerIdentifier);
+        super(containerIdentifier, AnnotatedNode.class);
     }
-
-    public BindingSet matches(GroovyDSLDContext pattern) {
-        List<AnnotatedNode> annotatables = getAnnotatables(pattern);
-        if (annotatables == null || annotatables.size() == 0) {
-            return null;
-        }
-        
-        Object first = getFirstArgument();
-        if (first instanceof String) {
-            List<AnnotatedNode> matches = new ArrayList<AnnotatedNode>();
-            for (AnnotatedNode annotatable : annotatables) {
-                List<AnnotationNode> annotations = annotatable.getAnnotations();
-                if (annotations != null) {
-                    for (AnnotationNode annotation : annotations) {
-                        if (annotation.getClassNode().getName().equals(first)) {
-                            matches.add(annotatable);
-                            break;
-                        }
-                    }
+    
+    protected AnnotatedNode filterObject(AnnotatedNode result, GroovyDSLDContext context, String firstArgAsString) {
+        List<AnnotationNode> annotations = result.getAnnotations();
+        if (annotations != null) {
+            for (AnnotationNode annotation : annotations) {
+                if (annotation.getClassNode().getName().equals(firstArgAsString)) {
+                    return result;
                 }
-            }
-            if (matches.size() == 0) {
-                return null;
-            } else if (matches.size() == 1) {
-                return new BindingSet(matches.get(0));
-            } else {
-                return new BindingSet(matches);
-            }
-        } else {
-            pattern.setOuterPointcutBinding(annotatables);
-            return ((IPointcut) first).matches(pattern);
-        }
-    }
-
-    /**
-     * extracts annotated nodes from the outer binding, or from the current type if there is no outer binding
-     * the outer binding should be either a {@link Collection} or a {@link ClassNode}
-     */
-    private List<AnnotatedNode> getAnnotatables(GroovyDSLDContext pattern) {
-        Object outer = pattern.getOuterPointcutBinding();
-        if (outer == null) {
-            return Collections.singletonList((AnnotatedNode) pattern.getCurrentType());
-        } else {
-            if (outer instanceof Collection<?>) {
-                List<AnnotatedNode> annotatables = new ArrayList<AnnotatedNode>();
-                for (Object elt : (Collection<Object>) outer) {
-                    if (elt instanceof AnnotatedNode) {
-                        annotatables.add((AnnotatedNode) elt);
-                    }
-                }
-                return annotatables;
-            } else if (outer instanceof AnnotatedNode) {
-                return Collections.singletonList((AnnotatedNode) outer);
             }
         }
         return null;
     }
 
-    /**
-     * Expecting one argument that can either be a string or another pointcut
-     */
-    @Override
-    public String verify() {
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutArg();
-        if (oneStringOrOnePointcutArg == null) {
-            return super.verify();
-        }
-        return oneStringOrOnePointcutArg;
-    }
 }

@@ -58,7 +58,7 @@ public class PointcutClosure extends Closure {
             for (Object arg : (Object[]) arguments) {
                 pointcut.addArgument(arg);
             }
-        } else {
+        } else if (arguments != null) {
             pointcut.addArgument(arguments);
         }
         return pointcut;

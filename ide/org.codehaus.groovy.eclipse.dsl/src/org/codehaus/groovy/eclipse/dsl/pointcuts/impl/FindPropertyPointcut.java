@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 
 /**
@@ -29,10 +29,10 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  * @author andrew
  * @created Feb 11, 2011
  */
-public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
+public class FindPropertyPointcut extends FilteringPointcut<PropertyNode> {
 
-    public FindFieldPointcut(String containerIdentifier) {
-        super(containerIdentifier, FieldNode.class);
+    public FindPropertyPointcut(String containerIdentifier) {
+        super(containerIdentifier, PropertyNode.class);
     }
 
 
@@ -40,21 +40,21 @@ public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
      * extracts fields from the outer binding, or from the current type if there is no outer binding
      * the outer binding should be either a {@link Collection} or a {@link ClassNode}
      */
-    protected List<FieldNode> filterOuterBindingByType(GroovyDSLDContext pattern) {
+    protected List<PropertyNode> filterOuterBindingByType(GroovyDSLDContext pattern) {
         Object outer = pattern.getOuterPointcutBinding();
         if (outer == null) {
-            return pattern.getCurrentType().getFields();
+            return pattern.getCurrentType().getProperties();
         } else {
             if (outer instanceof Collection<?>) {
-                List<FieldNode> fields = new ArrayList<FieldNode>();
+                List<PropertyNode> fields = new ArrayList<PropertyNode>();
                 for (Object elt : (Collection<Object>) outer) {
-                    if (elt instanceof FieldNode) {
-                        fields.add((FieldNode) elt);
+                    if (elt instanceof PropertyNode) {
+                        fields.add((PropertyNode) elt);
                     }
                 }
                 return fields;
             } else if (outer instanceof ClassNode) {
-                return ((ClassNode) outer).getFields();
+                return ((ClassNode) outer).getProperties();
             }
         }
         return null;
@@ -62,7 +62,7 @@ public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
     
     
     @Override
-    protected FieldNode filterObject(FieldNode result, GroovyDSLDContext context, String firstArgAsString) {
+    protected PropertyNode filterObject(PropertyNode result, GroovyDSLDContext context, String firstArgAsString) {
         if (firstArgAsString == null || result.getName().equals(firstArgAsString)) {
             return result;
         } else {

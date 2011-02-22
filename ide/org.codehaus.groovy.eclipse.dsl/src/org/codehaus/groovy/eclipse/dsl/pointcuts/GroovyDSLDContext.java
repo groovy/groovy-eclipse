@@ -35,7 +35,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 public class GroovyDSLDContext {
 
     public GroovyDSLDContext(GroovyCompilationUnit unit) throws CoreException {
-        this(unit.getJavaProject().getProject().getDescription().getNatureIds(), unit.getResource().getFullPath().toPortableString());
+        this(unit.getJavaProject().getProject().getDescription().getNatureIds(), unit.getResource().getFullPath().removeFirstSegments(1).toPortableString());
         resolver = new ResolverCache(unit.getResolver(), unit.getModuleNode());
     }
     
@@ -94,19 +94,22 @@ public class GroovyDSLDContext {
      * @return true iff typeName equals the targetType name or any tyoe in the hierarchy
      */
     public boolean matchesType(String typeName) {
+        return matchesType(typeName, targetType);
+    }
+    public boolean matchesType(String typeName, ClassNode toCheck) {
         // when left unspecified, always return true
-        if (typeName == null || targetType == null) {
+        if (typeName == null || toCheck == null) {
             return true;
         }
         
-        if (typeName.equals(targetType.getName())) {
+        if (typeName.equals(toCheck.getName())) {
             return true;
         }
         
         if (cachedHierarchy == null) {
             // use linked hash set because order is important
             cachedHierarchy = new LinkedHashSet<ClassNode>();
-            getAllSupers(targetType, cachedHierarchy);
+            getAllSupers(toCheck, cachedHierarchy);
         }
         
         for (ClassNode node : cachedHierarchy) {
@@ -116,6 +119,8 @@ public class GroovyDSLDContext {
         }
         return false;
     }
+    
+    
     
     public VariableScope getCurrentScope() {
         return currentScope;

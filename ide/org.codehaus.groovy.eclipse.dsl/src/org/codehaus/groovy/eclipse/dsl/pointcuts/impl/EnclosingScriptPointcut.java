@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -27,46 +28,48 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
  * @author andrew
  * @created Feb 10, 2011
  */
-public class CurrentTypePointcut extends AbstractPointcut {
+public class EnclosingScriptPointcut extends AbstractPointcut {
 
-    public CurrentTypePointcut(String containerIdentifier) {
+    public EnclosingScriptPointcut(String containerIdentifier) {
         super(containerIdentifier);
     }
 
     public BindingSet matches(GroovyDSLDContext pattern) {
+        ClassNode enclosing = pattern.getCurrentScope().getEnclosingTypeDeclaration();
+        if (enclosing == null || !enclosing.isScript()) {
+            return null;
+        }
+        
         Object firstArgument = getFirstArgument();
         if (firstArgument instanceof String) {
-            if (pattern.matchesType((String) firstArgument)) {
-                return new BindingSet().addDefaultBinding(pattern.getCurrentType());
+            if (pattern.matchesType((String) firstArgument, enclosing)) {
+                return new BindingSet().addDefaultBinding(enclosing);
             } else {
                 return null;
             }
         } else if (firstArgument instanceof Class<?>) {
-            if (pattern.matchesType(((Class<?>) firstArgument).getName())) {
-                return new BindingSet().addDefaultBinding(pattern.getCurrentType());
+            if (pattern.matchesType(((Class<?>) firstArgument).getName(), enclosing)) {
+                return new BindingSet().addDefaultBinding(enclosing);
             } else {
                 return null;
             }
-        } else if (firstArgument != null) {
-            pattern.setOuterPointcutBinding(pattern.getCurrentType());
+        } else {
+            pattern.setOuterPointcutBinding(enclosing);
             BindingSet matches = ((IPointcut) firstArgument).matches(pattern);
             if (matches != null) {
-                matches.addDefaultBinding(pattern.getCurrentType());
+                matches.addDefaultBinding(enclosing);
             }
             return matches;
-        } else {
-            // always match if there is no argument
-            return new BindingSet(pattern.getCurrentType());
         }
     }
 
     /**
-     * expecting one arg that is either a string or a pointcut or a class, or no arguments
+     * expecting one arg that is either a string or a pointcut or a class
      */
     @Override
     public String verify() {
         String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
-        if (oneStringOrOnePointcutArg == null || getArgumentValues().length == 0) {
+        if (oneStringOrOnePointcutArg == null) {
             return super.verify();
         }
         return oneStringOrOnePointcutArg;

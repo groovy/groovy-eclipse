@@ -56,7 +56,7 @@ public class DSLDResourceListener implements IResourceChangeListener {
         public boolean visit(IResourceDelta delta) throws CoreException {
             IResource deltaResource = delta.getResource();
             
-            if (!(deltaResource.isAccessible() || deltaResource.getType() == IResource.PROJECT) || deltaResource.isDerived()) {
+            if (deltaResource.isDerived()) {
                 // fail fast
                 return false;
             }
@@ -103,7 +103,7 @@ public class DSLDResourceListener implements IResourceChangeListener {
                     // if this file diden't exist in the past, then this is a no-op
                     store.purgeFileFromStore(file);
                     
-                    if (eventType == IResourceChangeEvent.POST_CHANGE) {
+                    if (file.isAccessible() && eventType == IResourceChangeEvent.POST_CHANGE) {
                         // also refresh the file
                         DSLDScriptExecutor executor = new DSLDScriptExecutor(JavaCore.create(project));
                         executor.executeScript(file);

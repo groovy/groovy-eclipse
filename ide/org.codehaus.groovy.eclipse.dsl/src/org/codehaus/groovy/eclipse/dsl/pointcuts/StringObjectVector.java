@@ -21,13 +21,9 @@ public final class StringObjectVector {
 	static int INITIAL_SIZE = 10;
 
 	public int size;
-	int maxSize;
+	public int maxSize;
 	private String[] names;
 	private Object[] elements;
-
-	public StringObjectVector() {
-		this(INITIAL_SIZE);
-	}
 
 	public StringObjectVector(int initialSize) {
 		this.maxSize = initialSize > 0 ? initialSize : INITIAL_SIZE;
@@ -53,7 +49,7 @@ public final class StringObjectVector {
 	public boolean contains(Object element) {
         if (element == null) {
             for (int i = this.size; --i >= 0;)
-                if (element == null)
+                if (this.elements[i] == null)
                     return true;
         } else {
             for (int i = this.size; --i >= 0;)
@@ -69,7 +65,7 @@ public final class StringObjectVector {
 	public boolean containsName(String name) {
 	    if (name == null) {
             for (int i = this.size; --i >= 0;)
-                if (name == null)
+                if (this.names[i] == null)
                     return true;
 	    } else {
     	    for (int i = this.size; --i >= 0;)
@@ -80,15 +76,27 @@ public final class StringObjectVector {
 	}
 	
 	public Object elementAt(int index) {
+        if (index >= size) {
+            throw new ArrayIndexOutOfBoundsException(index);
+        }
 		return this.elements[index];
 	}
 
 	public Object find(String name) {
-
-		for (int i = this.size; --i >= 0;)
-			if (name.equals(this.names[i]))
-				return this.elements[i];
-		return null;
+        if (name == null) {
+            for (int i = this.size; --i >= 0;) {
+                if (this.names[i] == null) {
+                    return this.elements[i];
+                }
+            }
+        } else {
+            for (int i = this.size; --i >= 0;) {
+                if (name.equals(this.names[i])) {
+                    return this.elements[i];
+                }
+            }
+        }
+        return null;
 	}
 
 	public String toString() {
@@ -100,6 +108,9 @@ public final class StringObjectVector {
 	}
 
     public String nameAt(int index) {
+        if (index >= size) {
+            throw new ArrayIndexOutOfBoundsException(index);
+        }
         return this.names[index];
     }
     

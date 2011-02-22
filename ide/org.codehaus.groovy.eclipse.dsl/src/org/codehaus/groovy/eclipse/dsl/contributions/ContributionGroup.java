@@ -18,6 +18,8 @@ package org.codehaus.groovy.eclipse.dsl.contributions;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +74,8 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
     
     private Map<String, Object> bindings;
 
+    private ClassNode currentType;
+
     public ContributionGroup(Closure contributionClosure) {
         this.contributionClosure = contributionClosure;
         
@@ -85,21 +89,33 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
      * This is the main entry point into the contribution
      */
     public List<IContributionElement> getContributions(GroovyDSLDContext pattern, BindingSet matches) {
-        
         // uh oh...needs to be synchronized, or can we make this class stateless?
-        // add the fields to the binding?
         synchronized (this) {
-            this.contributions = new ArrayList<IContributionElement>();
-            this.scope = pattern.getCurrentScope();
-            this.resolver = pattern.resolver;
-            this.bindings = matches.getBindings();
-            contributionClosure.call();
-            List<IContributionElement> result = contributions;
-            this.contributions = null;
-            this.scope = null;
-            this.resolver = null;
-            this.bindings = null;
-            return result;
+            List<IContributionElement> result;
+            try {
+                this.contributions = new ArrayList<IContributionElement>();
+                this.scope = pattern.getCurrentScope();
+                this.resolver = pattern.resolver;
+                this.bindings = matches.getBindings();
+                this.currentType = pattern.getCurrentType();
+                contributionClosure.call();
+            } catch (Exception e) {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    // only log if logger is available, otherwise, ignore
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    GroovyLogManager.manager.log(TraceCategory.DSL, "Exception caught.\n" +
+                            writer.getBuffer());
+                }
+            } finally {
+                result = contributions;
+                this.contributions = null;
+                this.scope = null;
+                this.resolver = null;
+                this.bindings = null;
+                this.currentType = null;
+            }
+        return result;
         }
     }
 
@@ -168,6 +184,7 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
         String name = asString(args.get("name"));
         String type = asString(args.get("type"));
         String declaringType = asString(args.get("declaringType")); // might be null
+        declaringType = declaringType == null ? currentType.getName() : declaringType;
         Object value = args.get("provider");
         String provider = value == null ? this.provider : asString(value); // might be null
         String doc = asString(args.get("doc")); // might be null
@@ -266,6 +283,8 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
         Object maybeStatic = args.get("isStatic");
         if (maybeStatic == null) {
             return false;
+        } else if (maybeStatic instanceof Boolean) {
+            return (Boolean) maybeStatic;
         } else {
             return Boolean.getBoolean(maybeStatic.toString());
         }

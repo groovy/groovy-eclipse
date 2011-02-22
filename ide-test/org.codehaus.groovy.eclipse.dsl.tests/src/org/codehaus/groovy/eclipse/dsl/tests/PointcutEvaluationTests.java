@@ -150,6 +150,14 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
                 "currentType(left & right)", ClassNode.class, "java.lang.Integer");
     }
 
+    public void testEvaluateTypeMethodField5c() throws Exception {
+        doTestOfLastDefaultBinding("package p\n2", 
+                
+                "def left = { findField(\"value\") }\n" +
+                "def right = { findMethod(\"intValue\") }\n" +
+                "currentType(left() & right())", ClassNode.class, "java.lang.Integer");
+    }
+    
     public void testEvaluateTypeMethodField6Fail_a() throws Exception {
         doTestOfLastDefaultBinding("package p\n2", "currentType(findField(\"notHere\") & findMethod(\"intValue\"))", null, null);
     }
@@ -232,7 +240,7 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     
     
     public void testEvaluateFileExtension1() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "fileExtension(\"groovy\")", String.class, "/Project/src/p/Unit.groovy");
+        doTestOfLastDefaultBinding("package p\n2", "fileExtension(\"groovy\")", String.class, "src/p/Unit.groovy");
     }
     
     public void testEvaluateFileExtension2Fail() throws Exception {
@@ -263,17 +271,17 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     public void testNamedBinding3() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"org.eclipse.jdt.groovy.core.groovyNature\") ) | " +
                 "bind( c : fileExtension(\"groovy\") )", 
-                new BindingResult(null, ArrayList.class, "org.eclipse.jdt.groovy.core.groovyNature, /Project/src/p/Unit.groovy"),
+                new BindingResult(null, ArrayList.class, "org.eclipse.jdt.groovy.core.groovyNature, src/p/Unit.groovy"),
                 new BindingResult("b", String.class, "org.eclipse.jdt.groovy.core.groovyNature"),
-                new BindingResult("c", String.class, "/Project/src/p/Unit.groovy"));
+                new BindingResult("c", String.class, "src/p/Unit.groovy"));
     }
     
     public void testNamedBinding4() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"org.eclipse.jdt.groovy.core.groovyNature\") ) & " +
                 "bind( c : fileExtension(\"groovy\") )", 
-                new BindingResult(null, ArrayList.class, "org.eclipse.jdt.groovy.core.groovyNature, /Project/src/p/Unit.groovy"),
+                new BindingResult(null, ArrayList.class, "org.eclipse.jdt.groovy.core.groovyNature, src/p/Unit.groovy"),
                 new BindingResult("b", String.class, "org.eclipse.jdt.groovy.core.groovyNature"),
-                new BindingResult("c", String.class, "/Project/src/p/Unit.groovy"));
+                new BindingResult("c", String.class, "src/p/Unit.groovy"));
     }
     
     public void testNamedBinding5() throws Exception {
@@ -306,9 +314,9 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
         doTestOfLastBindingSet("package p\n2", 
                 "bind( b : currentType(\"java.lang.Integer\") ) | " +
                 "bind( c : fileExtension(\"groovy\") )", 
-                new BindingResult(null, ArrayList.class, "java.lang.Integer, /Project/src/p/Unit.groovy"),
+                new BindingResult(null, ArrayList.class, "java.lang.Integer, src/p/Unit.groovy"),
                 new BindingResult("b", ClassNode.class, "java.lang.Integer"),
-                new BindingResult("c", String.class, "/Project/src/p/Unit.groovy"));
+                new BindingResult("c", String.class, "src/p/Unit.groovy"));
     }
     
     public void testTypesNamedBinding4() throws Exception {

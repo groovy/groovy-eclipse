@@ -41,6 +41,16 @@ import org.eclipse.core.resources.IProject;
  *      It should not mutate state
  * <ol>
  * 
+ * There are several broad categories of pointcuts, each with their own expectactions:
+ * <ol>
+ * <li>Filtering pointcuts, which require a surrounding pointcut to pass some state in (eg- find field/method)
+ * <li>Structural pointcuts, which depend on the lexical structure of the code (eg- enclosingClass)
+ * <li>Layout pointcuts, which depend on invariant factors external to the current module (eg- location in project, or file name)
+ * <li>Semantic pointcuts, which depend on inferencing (eg- currentType)
+ * </ol>
+ * Each category offers a different way to internally optimize
+ * 
+ * 
  * @author andrew
  * @created Nov 17, 2010
  */
@@ -92,7 +102,6 @@ public interface IPointcut {
     
     Object getFirstArgument();
     String getFirstArgumentName();
-    Object getArgument(String name);
     Object[] getArgumentValues();
     String[] getArgumentNames();
     
