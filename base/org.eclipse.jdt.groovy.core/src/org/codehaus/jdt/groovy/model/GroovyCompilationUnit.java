@@ -67,8 +67,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyCompilationUnit extends CompilationUnit {
 
-	private JDTResolver resolver;
-
 	private class GroovyErrorHandlingPolicy implements IErrorHandlingPolicy {
 
 		final boolean stopOnFirst;
@@ -324,7 +322,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
 					compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) parser
 							.parseCompilationUnit(source, true /* full parse to find local elements */, pm);
 				}
-				// resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
 
 				// GROOVY
 				// if this is a working copy, then we have more work to do
@@ -453,14 +450,17 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	}
 
 	/**
-	 * FIXADE determine if keeping this field and getter available is a problem. Ie- does it cause memory leaks or access to stale
-	 * data? Should the resovler be associated with the cached module node?
+	 * Only returns a resolver if this is a working copy
+	 * and the DSL bundle is available (that is the only bundle that requires
+	 * this method)
 	 * 
-	 * @return
+	 * @return a {@link JDTResolver} for this unit
 	 */
 	public JDTResolver getResolver() {
-		return null;
-		// return resolver;
+		PerWorkingCopyInfo info = getPerWorkingCopyInfo();
+		synchronized (ModuleNodeMapper.getInstance()) {
+			return ModuleNodeMapper.getInstance().getResolver(info);
+		}
 	}
 
 	public GroovyCompilationUnit cloneCachingContents(char[] newContents) {

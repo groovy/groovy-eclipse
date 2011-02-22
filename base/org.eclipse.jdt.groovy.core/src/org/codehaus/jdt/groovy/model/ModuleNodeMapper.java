@@ -18,6 +18,8 @@ import java.util.Map;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
@@ -33,27 +35,60 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class ModuleNodeMapper {
 
+	private class ModuleNodeInfo {
+		public ModuleNodeInfo(ModuleNode module, JDTResolver resolver) {
+			this.module = module;
+			this.resolver = resolver;
+		}
+
+		final ModuleNode module;
+		final JDTResolver resolver;
+	}
+
 	private static final ModuleNodeMapper INSTANCE = new ModuleNodeMapper();
 
 	static ModuleNodeMapper getInstance() {
 		return INSTANCE;
 	}
 
-	private final Map<PerWorkingCopyInfo, ModuleNode> infoToModuleMap = new HashMap<PerWorkingCopyInfo, ModuleNode>();
+	private final Map<PerWorkingCopyInfo, ModuleNodeInfo> infoToModuleMap = new HashMap<PerWorkingCopyInfo, ModuleNodeInfo>();
 
-	synchronized void store(PerWorkingCopyInfo info, ModuleNode node) {
+	synchronized void store(PerWorkingCopyInfo info, ModuleNode module, JDTResolver resolver) {
 		sweepAndPurgeModuleNodes();
-		infoToModuleMap.put(info, node);
+		infoToModuleMap.put(info, new ModuleNodeInfo(module, shouldStoreResovler() ? resolver : null));
+	}
+
+	private final static boolean DSL_BUNDLE_INSTALLED;
+	static {
+	    boolean result = false;
+	    try {
+	    	result = Platform.getBundle("org.codehaus.groovy.eclipse.dsl") != null;
+	    } catch (Exception e) {
+	        Util.log(e);
+	    }
+	    DSL_BUNDLE_INSTALLED = result;
+	}
+
+	private boolean shouldStoreResovler() {
+		return DSL_BUNDLE_INSTALLED;
 	}
 
 	synchronized ModuleNode get(PerWorkingCopyInfo info) {
 		sweepAndPurgeModuleNodes();
-		return infoToModuleMap.get(info);
+		return infoToModuleMap.get(info).module;
+	}
+
+	synchronized JDTResolver getResolver(PerWorkingCopyInfo info) {
+		if (info == null) {
+			return null;
+		}
+		sweepAndPurgeModuleNodes();
+		return infoToModuleMap.get(info).resolver;
 	}
 
 	synchronized ModuleNode remove(PerWorkingCopyInfo info) {
 		sweepAndPurgeModuleNodes();
-		return infoToModuleMap.remove(info);
+		return infoToModuleMap.remove(info).module;
 	}
 
 	/**
@@ -69,10 +104,13 @@ public class ModuleNodeMapper {
 
 			// Store it for later
 			if (module != null) {
-				// GRECLIPSE-804 must synchronize
-				synchronized (ModuleNodeMapper.getInstance()) {
-					ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module);
+				JDTResolver resolver;
+				if (shouldStoreResovler()) {
+					resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
+				} else {
+					resolver = null;
 				}
+				ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module, resolver);
 			}
 		}
 	}

@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -37,15 +38,23 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         super(name);
     }
 
-    
+
     protected void assertType(String contents, String expectedType) {
-        assertType(contents, 0, contents.length(), expectedType);
+        assertType(contents, 0, contents.length(), expectedType, false);
     }
 
     protected void assertType(String contents, int exprStart, int exprEnd,
             String expectedType) {
+        assertType(contents, exprStart, exprEnd, expectedType, false);
+    }
+    protected void assertType(String contents, String expectedType, boolean forceWorkingCopy) {
+        assertType(contents, 0, contents.length(), expectedType, forceWorkingCopy);
+    }
+
+    protected void assertType(String contents, int exprStart, int exprEnd,
+            String expectedType, boolean forceWorkingCopy) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
-        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit);
+        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
         
         assertNotNull("Did not find expected ASTNode", requestor.node);
         if (! expectedType.equals(printTypeName(requestor.result.type))) {
@@ -59,18 +68,36 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             
         }
     }
-
-    private SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit) {
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-        SearchRequestor requestor = new SearchRequestor(exprStart, exprEnd);
-        visitor.visitCompilationUnit(requestor);
-        return requestor;
+    
+    private SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit, boolean forceWorkingCopy) {
+        try {
+            if (forceWorkingCopy) {
+                unit.becomeWorkingCopy(null);
+            }
+            try {
+                TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+                SearchRequestor requestor = new SearchRequestor(exprStart, exprEnd);
+                visitor.visitCompilationUnit(requestor);
+                return requestor;
+            } finally {
+                if (forceWorkingCopy) {
+                    unit.discardWorkingCopy();
+                }
+            }
+        } catch (JavaModelException e) {
+            throw new RuntimeException(e);
+        }
     }
-
+    
+    
     protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
             String expectedDeclaringType) {
+        assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false);
+    }
+    protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
+            String expectedDeclaringType, boolean forceWorkingCopy) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
-        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit);
+        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
         
         assertNotNull("Did not find expected ASTNode", requestor.node);
         if (! expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {

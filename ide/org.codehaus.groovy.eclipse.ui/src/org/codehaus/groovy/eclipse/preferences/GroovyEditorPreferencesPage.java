@@ -161,14 +161,15 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
         c.setLayout(new FillLayout(SWT.VERTICAL));
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
                 "Enable semantic highlighting (underline statically unknown references,\n"
-                        + "highlight fields, statics, and deprecated elements", c));
+                        + "highlight fields, methods, statics, and deprecated elements", c));
 
         PreferenceLinkArea area = new PreferenceLinkArea(
                 c,
                 SWT.WRAP,
                 "org.eclipse.jdt.ui.preferences.JavaEditorColoringPreferencePage",
                 " \n\n"
-                        + "Semantic highlighting colors for fields and methods can be controlled in the\n<a>Java -> Editor -> Syntax Coloring</a> page.",
+                        + "Semantic highlighting colors for fields and methods are inherited from Java and can be edited here: "
+                        + "\n<a>Java -> Editor -> Syntax Coloring</a> page. And go to the <i>Java</i> section.",
                 (IWorkbenchPreferenceContainer) getContainer(), null);
         area.getControl().setLayoutData(gd);
 

@@ -76,6 +76,7 @@ import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -439,13 +440,34 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 		// visit <clinit> body because this is where static field initializers are placed
+		// only visit field initializers here.
+		// it is important here to get the right variable scope for the initializer.
+		// need to ensure that the field is one of the enclosing nodes
 		MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
 		if (clinit != null && clinit.getCode() instanceof BlockStatement) {
 			for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {
-				element.visit(this);
+				// only visit the static initialization of a field
+				if (element instanceof ExpressionStatement
+						&& ((ExpressionStatement) element).getExpression() instanceof BinaryExpression) {
+					BinaryExpression bexpr = (BinaryExpression) ((ExpressionStatement) element).getExpression();
+					if (bexpr.getLeftExpression() instanceof FieldExpression) {
+						FieldNode f = ((FieldExpression) bexpr.getLeftExpression()).getField();
+						if (f != null && f.isStatic() && bexpr.getRightExpression() != null) {
+							VariableScope fieldScope = new VariableScope(currentScope, f, true);
+							scopes.push(fieldScope);
+							try {
+								bexpr.getRightExpression().visit(this);
+							} finally {
+								scopes.pop();
+							}
+						}
+					}
+				}
 			}
 		}
 
+		// I'm not actually sure that there will be anything here. I think these
+		// will all be moved to a constructor
 		for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
 			element.visit(this);
 		}
