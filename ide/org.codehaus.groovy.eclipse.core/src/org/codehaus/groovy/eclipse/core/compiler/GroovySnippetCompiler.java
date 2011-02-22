@@ -30,18 +30,20 @@ import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.core.builder.NameEnvironment;
 import org.objectweb.asm.Opcodes;
 
-
 /**
  * @author Andrew Eisenberg
  * @created Aug 6, 2009
- *
- *
- * This class is used to compile a snippet of groovy source code into a module node
+ * 
+ * 
+ *          This class is used to compile a snippet of groovy source code into a
+ *          module node.
+ *          The client is responsible for calling {@link #cleanup()} when all
+ *          {@link ClassNode}s
+ *          created by this compiler are no longer needed
  */
 public class GroovySnippetCompiler {
 
     /**
-     *
      * @author Andrew Eisenberg
      * @created Aug 6, 2009
      * Provide an empty requestor, no compilation results required
@@ -51,12 +53,10 @@ public class GroovySnippetCompiler {
         }
     }
 
-
-
-    private final GroovyProjectFacade project;
+    private NameEnvironment nameEnvironment;
 
     public GroovySnippetCompiler(GroovyProjectFacade project) {
-        this.project = project;
+        nameEnvironment = new NameEnvironment(project.getProject());
     }
 
     /**
@@ -100,7 +100,6 @@ public class GroovySnippetCompiler {
 
         Map options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        NameEnvironment nameEnvironment = new NameEnvironment(project.getProject());
         Compiler compiler = new Compiler(nameEnvironment,
                 DefaultErrorHandlingPolicies.proceedWithAllProblems(),
                 options,
@@ -109,10 +108,13 @@ public class GroovySnippetCompiler {
         GroovyCompilationUnitDeclaration decl =
             (GroovyCompilationUnitDeclaration)
             compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);
-        nameEnvironment.cleanup();
         return decl;
     }
 
+
+    public void cleanup() {
+        nameEnvironment.cleanup();
+    }
 
     /**
      * Compile source code into a module node when

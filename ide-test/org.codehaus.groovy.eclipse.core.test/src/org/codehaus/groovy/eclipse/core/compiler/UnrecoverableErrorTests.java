@@ -22,7 +22,7 @@ import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 /**
  * All of these tests here should produce {@link ModuleNode}s with
  * encounteredUnrecoverableError set to true
- * 
+ *
  * @author andrew
  * @created Feb 9, 2011
  */
@@ -34,6 +34,12 @@ public class UnrecoverableErrorTests extends EclipseTestCase {
         super.setUp();
         GroovyRuntime.addGroovyRuntime(testProject.getProject());
         compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade());
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        compiler.cleanup();
     }
 
     public ModuleNode compileScript(String script) {

@@ -28,7 +28,13 @@ public class ErrorRecoveryTests extends EclipseTestCase {
 		GroovyRuntime.addGroovyRuntime(testProject.getProject());
 		compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade());
 	}
-	
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        compiler.cleanup();
+    }
+
 	public CompilationResult compileScript(String script) {
 	    long start = System.currentTimeMillis();
 	    CompilationResult result = compiler.compileForErrors(script, "Test");
@@ -40,37 +46,37 @@ public class ErrorRecoveryTests extends EclipseTestCase {
 	    CompilationResult result = compileScript("s.");
 	    assertEquals(1, result.getAllProblems().length);
 	}
-	
+
 	public void testDotNothing2() {
 		CompilationResult result = compileScript("s.a.");
         assertEquals(1, result.getAllProblems().length);
 	}
-	
+
 	public void testDotNothing3() {
 		CompilationResult result = compileScript("s[10].");
         assertEquals(1, result.getAllProblems().length);
 	}
-	
+
 	public void testDotNothing4() {
 		CompilationResult result = compileScript("s().");
         assertEquals(1, result.getAllProblems().length);
 	}
-	
+
 	public void testDotNothing5() {
 		CompilationResult result = compileScript("s { it }.");
         assertEquals(1, result.getAllProblems().length);
 	}
-	
+
 	public void testDotNothing6() {
 		CompilationResult result = compileScript("String s = 'hello'; s.");
         assertEquals(1, result.getAllProblems().length);
 	}
-	
+
 	public void testSpreadDotNothing() {
 		CompilationResult result = compileScript("s*.");
         assertEquals(1, result.getAllProblems().length);
 	}
-	
+
 	public void testOptionalDotNothing() {
 		CompilationResult result = compileScript("s?.");
         assertEquals(1, result.getAllProblems().length);

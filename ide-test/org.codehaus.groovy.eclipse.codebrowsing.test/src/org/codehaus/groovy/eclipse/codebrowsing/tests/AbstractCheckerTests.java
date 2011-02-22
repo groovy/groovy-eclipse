@@ -37,6 +37,7 @@ import org.eclipse.jdt.core.tests.util.TestCase;
 public class AbstractCheckerTests extends TestCase {
 
     private TestProject testProject;
+    private GroovySnippetCompiler compiler;
 
     public AbstractCheckerTests(String name) {
         super(name);
@@ -48,11 +49,14 @@ public class AbstractCheckerTests extends TestCase {
         System.out.println("------------------------------");
         System.out.println("Starting: " + getName());
         testProject = new TestProject();
+        compiler = new GroovySnippetCompiler(
+                testProject.getGroovyProjectFacade());
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
+        compiler.cleanup();
         testProject.dispose();
     }
 
@@ -83,7 +87,6 @@ public class AbstractCheckerTests extends TestCase {
 
 
     protected ModuleNode createModuleFromText(String text) throws CoreException {
-        GroovySnippetCompiler compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade());
         return compiler.compile(text);
     }
 
