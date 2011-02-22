@@ -21,6 +21,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
@@ -100,7 +101,7 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
      * @return the AST node associated with this proposal, or null if there is
      *         none.
      */
-    protected AnnotatedNode getAssociatedNode() {
+    public AnnotatedNode getAssociatedNode() {
         return null;
     }
 

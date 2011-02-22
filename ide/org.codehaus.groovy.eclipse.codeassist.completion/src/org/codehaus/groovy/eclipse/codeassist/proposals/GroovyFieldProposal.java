@@ -68,7 +68,7 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
     }
 
     @Override
-    protected AnnotatedNode getAssociatedNode() {
+    public AnnotatedNode getAssociatedNode() {
         return field;
     }
 

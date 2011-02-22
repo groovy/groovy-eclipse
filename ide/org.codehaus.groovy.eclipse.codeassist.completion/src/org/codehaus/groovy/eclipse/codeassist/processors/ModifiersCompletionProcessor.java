@@ -22,7 +22,7 @@ import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.getImage;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
+import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -100,7 +100,7 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
         int start= proposal.getReplaceStart();
         int length= context.completionExpression.length();
         StyledString label= createDisplayString(proposal);
-        int relevance = Relevance.LOWEST.getRelavance(5);
+        int relevance = Relevance.LOWEST.getRelevance(5);
         JavaCompletionProposal jcp = new JavaCompletionProposal(completion, start, length, null, label, relevance);
         jcp.setImage(getImage(proposal));
         return jcp;

@@ -28,9 +28,11 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompletionProposal.ProposalOptions;
-import org.codehaus.groovy.eclipse.codeassist.proposals.Relevance;
+import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
+import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -40,6 +42,8 @@ import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -215,6 +219,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
     // Constructors
     private CompletionEngine mockEngine;
 
+    // all the types in the target Compilation unit
+    private IType[] allTypesInUnit;
+
     public GroovyProposalTypeSearchRequestor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, int exprStart,
             int replaceLength, NameLookup nameLookup, IProgressMonitor monitor) {
@@ -233,6 +240,12 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         this.shouldAcceptConstructors = context.location == ContentAssistLocation.CONSTRUCTOR;
         this.completionExpression = context.completionExpression;
 		groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
+        try {
+            allTypesInUnit = unit.getAllTypes();
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Problem with type completion", e);
+            allTypesInUnit = new IType[0];
+        }
     }
 
     public void acceptConstructor(int modifiers, char[] simpleTypeName,
@@ -497,11 +510,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             completionName = simpleTypeName;
         }
 
-        int relMultiplier = 1;
-        relMultiplier += accessibility == IAccessRule.K_ACCESSIBLE ? 3 : 0;
-        relMultiplier += (modifiers & Flags.AccDefault) != 0 ? 0 : 1;
-        relMultiplier += (modifiers & Flags.AccPrivate) != 0 ? 0 : 1;
-
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition - this.offset);
         proposal.setDeclarationSignature(packageName);
         proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
@@ -509,7 +517,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         proposal.setFlags(modifiers);
         proposal.setReplaceRange(this.offset, this.offset + this.replaceLength);
         proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-        proposal.setRelevance(Relevance.LOWEST.getRelavance(relMultiplier));
+        proposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
         proposal.setPackageName(packageName);
@@ -544,11 +552,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             completionName = simpleTypeName;
         }
 
-        int relMultiplier = 1;
-        relMultiplier += accessibility == IAccessRule.K_ACCESSIBLE ? 3 : 0;
-        relMultiplier += (modifiers & Flags.AccDefault) != 0 ? 0 : 1;
-        relMultiplier += (modifiers & Flags.AccPrivate) != 0 ? 0 : 1;
-
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition - this.offset);
         proposal.setDeclarationSignature(packageName);
         proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
@@ -556,7 +559,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         proposal.setFlags(modifiers);
         proposal.setReplaceRange(this.offset, this.offset + this.replaceLength);
         proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-        proposal.setRelevance(Relevance.LOWEST.getRelavance(relMultiplier));
+        proposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
         proposal.setNameLookup(nameLookup);
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
@@ -766,7 +769,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                 + this.replaceLength);
         typeProposal.setTokenRange(this.offset, this.offset
                 + this.replaceLength);
-        typeProposal.setRelevance(Relevance.LOW.getRelavance(relevanceMultiplier));
+        typeProposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(
+                fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
 
 
         int flags = Flags.AccPublic;
@@ -828,7 +832,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         proposal.setCompletion(this.completionExpression.toCharArray());
         proposal.setFlags(modifiers);
         proposal.setRelevance(Relevance.MEDIUM_HIGH
-                .getRelavance(relevanceMultiplier));
+                .getRelevance(relevanceMultiplier));
 
         proposal.setCompletion(new char[] { '(', ')' });
         proposal.setFlags(modifiers);
@@ -836,7 +840,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                 + this.replaceLength); // replacement range is *after* the end
                                        // of the type completion
         proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-        proposal.setRelevance(Relevance.MEDIUM.getRelavance(1));
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(typeModifiers);
         proposal.setPackageName(packageName);

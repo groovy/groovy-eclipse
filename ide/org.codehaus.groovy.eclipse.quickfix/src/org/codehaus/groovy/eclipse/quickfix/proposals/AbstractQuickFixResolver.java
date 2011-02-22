@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2010-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,10 @@ package org.codehaus.groovy.eclipse.quickfix.proposals;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * Base Groovy quick fix resolver that makes it more convenient for concrete
@@ -74,10 +78,25 @@ public abstract class AbstractQuickFixResolver implements IQuickFixResolver {
 		return problemTypes;
 	}
 
+	protected IType[] getContextTypes() {
+		IQuickFixProblemContext context = getQuickFixProblem();
+		if (context != null) {
+			ICompilationUnit unit = context.getCompilationUnit();
+			if (unit != null) {
+				try {
+					return unit.getAllTypes();
+				} catch (JavaModelException e) {
+					// do nothing
+				}
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * 
-	 * @return non null, non empty list of problem types that this resolver
-	 *         can handle
+	 * @return non null, non empty list of problem types that this resolver can
+	 *         handle
 	 */
 	protected abstract IProblemType[] getTypes();
 

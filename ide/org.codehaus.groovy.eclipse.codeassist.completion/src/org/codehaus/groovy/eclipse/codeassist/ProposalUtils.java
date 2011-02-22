@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,17 @@ import java.util.List;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
+import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
@@ -65,6 +74,47 @@ public class ProposalUtils {
             return Signature.createTypeSignature(name, false);
         }
     }
+
+	/**
+	 * Can be null if access restriction cannot be resolved for given type
+	 *
+	 * @param type
+	 * @param project
+	 * @return
+	 */
+	public static AccessRestriction getTypeAccessibility(IType type) {
+
+		PackageFragmentRoot root = (PackageFragmentRoot) type
+				.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+
+		try {
+			IClasspathEntry entry = root.getResolvedClasspathEntry();
+			// Alternative:
+			// entry = ((JavaProject) typeProject).getClasspathEntryFor(root
+			// .getPath());
+			if (entry instanceof ClasspathEntry) {
+				AccessRuleSet accessRuleSet = ((ClasspathEntry) entry)
+						.getAccessRuleSet();
+				if (accessRuleSet != null) {
+					char[] packageName = type.getPackageFragment()
+							.getElementName().toCharArray();
+					char[][] packageChars = CharOperation.splitOn('.',
+							packageName);
+					char[] fileWithoutExtension = type.getElementName()
+							.toCharArray();
+
+					return accessRuleSet
+							.getViolatedRestriction(CharOperation.concatWith(
+									packageChars, fileWithoutExtension, '/'));
+
+				}
+			}
+		} catch (JavaModelException e) {
+			// nothing
+		}
+
+		return null;
+	}
 
     public static char[] createMethodSignature(MethodNode node) {
         return createMethodSignatureStr(node, 0).toCharArray();

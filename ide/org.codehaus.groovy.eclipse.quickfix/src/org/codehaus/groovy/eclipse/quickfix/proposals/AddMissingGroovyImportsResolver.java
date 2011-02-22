@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2010-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
+import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules.RelevanceRuleType;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports.UnresolvedTypeData;
@@ -59,11 +61,11 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 		private GroovyCompilationUnit unit;
 
 		public AddMissingImportProposal(IType resolvedSuggestedType,
-				GroovyCompilationUnit unit, IQuickFixProblemContext problem) {
-			super(problem);
+				GroovyCompilationUnit unit, IQuickFixProblemContext problem,
+				int relevance) {
+			super(problem, relevance);
 			this.resolvedSuggestedType = resolvedSuggestedType;
 			this.unit = unit;
-
 		}
 
 		public IType getSuggestedJavaType() {
@@ -111,8 +113,9 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 			// For inner types, display the fully qualified top-level type as
 			// the declaration for the suggested type
 			String declaration = declaringType != null ? declaringType
-					.getFullyQualifiedName().replace('$', '.') : getSuggestedJavaType()
-					.getPackageFragment().getElementName();
+					.getFullyQualifiedName().replace('$', '.')
+					: getSuggestedJavaType().getPackageFragment()
+							.getElementName();
 			return "Import '" + getSuggestedJavaType().getElementName() + "' ("
 					+ declaration + ")";
 		}
@@ -248,8 +251,10 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 		if (suggestions != null) {
 			List<ICompletionProposal> fixes = new ArrayList<ICompletionProposal>();
 			for (IType type : suggestions) {
+				int revelance = getRelevance(type);
 				fixes.add(new AddMissingImportProposal(type,
-						getGroovyCompilationUnit(), getQuickFixProblem()));
+						getGroovyCompilationUnit(), getQuickFixProblem(),
+						revelance));
 			}
 			return fixes;
 		}
@@ -265,6 +270,13 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 	protected GroovyCompilationUnit getGroovyCompilationUnit() {
 		return (GroovyCompilationUnit) getQuickFixProblem()
 				.getCompilationUnit();
+	}
+
+	protected int getRelevance(IType type) {
+		if (type == null) {
+			return 0;
+		}
+		return RelevanceRules.ALL_RULES.getRelevance(type, getContextTypes());
 	}
 
 }

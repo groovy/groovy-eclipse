@@ -67,7 +67,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
     @Override
-    protected AnnotatedNode getAssociatedNode() {
+    public AnnotatedNode getAssociatedNode() {
         return method;
     }
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.relevance;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +21,10 @@ import java.util.Set;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyCategoryMethodProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 
@@ -87,7 +91,7 @@ public enum Relevance {
      *            a value < 1
      * @return the actual relavance of the associated proposal
      */
-    public int getRelavance(float multiplier) {
+    public int getRelevance(float multiplier) {
         return (int) ((float) value * multiplier);
     }
 
@@ -103,7 +107,7 @@ public enum Relevance {
      */
     public static int calculateRelevance(AbstractGroovyProposal groovyProposal,
             float multiplier) {
-        return findRelevanceClass(groovyProposal).getRelavance(multiplier);
+        return findRelevanceClass(groovyProposal).getRelevance(multiplier);
     }
 
     public static Relevance findRelevanceClass(

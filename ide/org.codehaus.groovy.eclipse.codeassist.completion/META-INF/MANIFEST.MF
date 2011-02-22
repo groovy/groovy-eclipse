@@ -20,5 +20,6 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: org.codehaus.groovy.eclipse.codeassist,
  org.codehaus.groovy.eclipse.codeassist.processors,
  org.codehaus.groovy.eclipse.codeassist.proposals,
+ org.codehaus.groovy.eclipse.codeassist.relevance,
  org.codehaus.groovy.eclipse.codeassist.requestor
 Bundle-Vendor: The Codehaus

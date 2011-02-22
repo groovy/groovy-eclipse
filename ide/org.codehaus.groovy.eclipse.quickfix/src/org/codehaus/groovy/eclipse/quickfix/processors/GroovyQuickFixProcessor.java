@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2010-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.quickfix.processors;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.quickfix.proposals.AbstractGroovyQuickFixProposal;
 import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyProblemFactory;
 import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyQuickFixResolverRegistry;
 import org.codehaus.groovy.eclipse.quickfix.proposals.IProblemDescriptor;
@@ -66,8 +67,8 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 		// as the proposals should not appear if the problem is in any other
 		// type of project
 		if (isProblemInGroovyProject(context, locations)) {
-			IQuickFixProblemContext problemContext = getQuickFixProblemContext(context,
-					locations);
+			IQuickFixProblemContext problemContext = getQuickFixProblemContext(
+					context, locations);
 
 			if (problemContext != null) {
 				List<IQuickFixResolver> resolvers = new GroovyQuickFixResolverRegistry(
@@ -188,6 +189,8 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 		}
 
 		final ICompletionProposal proposalToConvert = proposal;
+		final int relevance = proposalToConvert instanceof AbstractGroovyQuickFixProposal ? ((AbstractGroovyQuickFixProposal) proposalToConvert)
+				.getRelevance() : 0;
 
 		return new IJavaCompletionProposal() {
 
@@ -216,7 +219,7 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 			}
 
 			public int getRelevance() {
-				return 0;
+				return relevance;
 			}
 		};
 	}
