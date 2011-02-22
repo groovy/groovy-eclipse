@@ -60,13 +60,13 @@ public class ModuleNodeMapper {
 
 	private final static boolean DSL_BUNDLE_INSTALLED;
 	static {
-	    boolean result = false;
-	    try {
-	    	result = Platform.getBundle("org.codehaus.groovy.eclipse.dsl") != null;
-	    } catch (Exception e) {
-	        Util.log(e);
-	    }
-	    DSL_BUNDLE_INSTALLED = result;
+		boolean result = false;
+		try {
+			result = Platform.getBundle("org.codehaus.groovy.eclipse.dsl") != null;
+		} catch (Exception e) {
+			Util.log(e);
+		}
+		DSL_BUNDLE_INSTALLED = result;
 	}
 
 	private boolean shouldStoreResovler() {
@@ -75,7 +75,8 @@ public class ModuleNodeMapper {
 
 	synchronized ModuleNode get(PerWorkingCopyInfo info) {
 		sweepAndPurgeModuleNodes();
-		return infoToModuleMap.get(info).module;
+		ModuleNodeInfo moduleNodeInfo = infoToModuleMap.get(info);
+		return moduleNodeInfo != null ? moduleNodeInfo.module : null;
 	}
 
 	synchronized JDTResolver getResolver(PerWorkingCopyInfo info) {
@@ -83,12 +84,14 @@ public class ModuleNodeMapper {
 			return null;
 		}
 		sweepAndPurgeModuleNodes();
-		return infoToModuleMap.get(info).resolver;
+		ModuleNodeInfo moduleNodeInfo = infoToModuleMap.get(info);
+		return moduleNodeInfo != null ? moduleNodeInfo.resolver : null;
 	}
 
 	synchronized ModuleNode remove(PerWorkingCopyInfo info) {
 		sweepAndPurgeModuleNodes();
-		return infoToModuleMap.remove(info).module;
+		ModuleNodeInfo removed = infoToModuleMap.remove(info);
+		return removed != null ? removed.module : null;
 	}
 
 	/**
