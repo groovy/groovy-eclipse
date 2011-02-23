@@ -403,6 +403,24 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
     
+    
+    public void testForLoop11() throws Exception {
+        // @formatter:off
+        String contents = 
+            "class X {\n" + 
+            " public void m() {\n" + 
+            "  List<String> ls = new ArrayList<String>();\n" +
+            "  for (foo in ls) {\n" + 
+            "   foo\n" + 
+            "  }\n" + 
+            " }\n" +
+            "}\n";
+        // @formatter:on
+        String toFind = "foo";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
     // all testing for GRECLIPSE-833
     public void testDGMClosure1() throws Exception {
         String contents = "[''].each { it }";

@@ -1040,15 +1040,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		scopes.push(new VariableScope(scopes.peek(), node, false));
 		Parameter param = node.getVariable();
 		if (param != null) {
+			// visit the original parameter, so that requestors relying on
+			// object equality will work
+			handleParameterList(new Parameter[] { param });
+
 			// now update the type of the parameter with the collection type
 			if (param.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
 				ClassNode extractedElementType = extractElementType(collectionType);
 				scopes.peek().addVariable(param.getName(), extractedElementType, null);
 			}
-
-			// visit the original parameter, so that requestors relying on
-			// object equality will work
-			handleParameterList(new Parameter[] { param });
 		}
 
 		node.getLoopBlock().visit(this);
