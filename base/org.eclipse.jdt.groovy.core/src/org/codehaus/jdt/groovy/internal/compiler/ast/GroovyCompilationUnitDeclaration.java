@@ -1474,7 +1474,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						// closures will be represented as InnerClassNodes
 						ClassNode current = classnode;
 						while (current instanceof InnerClassNode && binding == null) {
-							current = ((InnerClassNode) classnode).getOuterClass();
+							current = ((InnerClassNode) current).getOuterClass();
 							binding = findBinding(types, current);
 							if (DEBUG) {
 								log("Had another look because it is in an InnerClassNode, found binding? " + (binding != null));
