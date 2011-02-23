@@ -42,7 +42,8 @@ public class GroovyErrorCollectorForJDT extends ErrorCollector {
 
 	@Override
 	protected void failIfErrors() throws CompilationFailedException {
-		// super.failIfErrors();
+		if (transformActive) {
+			super.failIfErrors();
+		}
 	}
-
 }

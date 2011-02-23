@@ -151,7 +151,17 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 for (ASTTransformation snt : transforms.get(node[0])) {
                 	try {
                 		long stime = System.nanoTime();
-                		snt.visit(node, source);
+                		boolean okToSet = source!=null && source.getErrorCollector()!=null;
+                		try {
+                			if (okToSet) {
+                				source.getErrorCollector().transformActive=true; 
+                			}
+	                		snt.visit(node, source);
+                		} finally {
+                			if (okToSet) {
+                				source.getErrorCollector().transformActive=false;
+                			}
+                		}
                 		long etime = System.nanoTime(); 
                 		if (GroovyLogManager.manager.hasLoggers()) {
                 			try {
@@ -378,7 +388,18 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         	try { 
                               // end
                             long stime = System.nanoTime();
-                            instance.visit(new ASTNode[] {source.getAST()}, source);
+                            boolean okToSet = source!=null && source.getErrorCollector()!=null;
+
+                    		try {
+                    			if (okToSet) {
+                    				source.getErrorCollector().transformActive=true; 
+                    			}
+                                instance.visit(new ASTNode[] {source.getAST()}, source);
+                    		} finally {
+                    			if (okToSet) {
+                    				source.getErrorCollector().transformActive=false;
+                    			}
+                    		}
                             long etime = System.nanoTime(); 
                     		if (GroovyLogManager.manager.hasLoggers()) {
                     			long timetaken = (etime-stime)/1000000;
