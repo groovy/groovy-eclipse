@@ -509,7 +509,10 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			propertyName.append(methodName.substring(4));
 		}
 		int mods = methodNode.getModifiers();
-		return new PropertyNode(propertyName.toString(), mods, propertyType, this, null, null, null);
+		PropertyNode property = new PropertyNode(propertyName.toString(), mods, propertyType, this, null, null, null);
+		property.setDeclaringClass(this);
+		property.getField().setDeclaringClass(this);
+		return property;
 	}
 
 	/**

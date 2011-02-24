@@ -290,4 +290,61 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
                 elt[0].getElementName());
     }
 
+    public void testCodeSelectStaticProperty1() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class Super {\n" + "    def static getSql() {   }\n"
+                + "}\n" + " \n" + "class Sub extends Super {\n"
+                + "    def static foo() {\n" + "        sql  \n" + "     }\n"
+                + "} ";
+        env.addGroovyClass(root, "", "Super", contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root,
+                "Super.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("sql"),
+                "sql".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'getSql'", "getSql",
+                elt[0].getElementName());
+    }
+
+    public void testCodeSelectStaticProperty2() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class Super {\n" + "    def getSql() {   }\n"
+                + "}\n" + " \n" + "class Sub extends Super {\n"
+                + "    def foo() {\n" + "        sql  \n" + "     }\n" + "} ";
+        env.addGroovyClass(root, "", "Super", contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root,
+                "Super.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("sql"),
+                "sql".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'getSql'", "getSql",
+                elt[0].getElementName());
+    }
+
+    public void testCodeSelectStaticProperty3() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class Super {\n" + "    def getSql() {   }\n"
+                + "    def foo() {\n" + "        sql  \n" + "     }\n" + "} ";
+        env.addGroovyClass(root, "", "Super", contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root,
+                "Super.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("sql"),
+                "sql".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'getSql'", "getSql",
+                elt[0].getElementName());
+    }
+
 }

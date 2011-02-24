@@ -49,11 +49,11 @@ public class RelevanceRules implements IRelevanceRule {
 
 	private RelevanceRuleType[] ruleTypes;
 
-    public static RelevanceRules ALL_RULES = new RelevanceRules(
-            RelevanceRuleType.LIBRARY_TYPE, RelevanceRuleType.SOURCE_TYPE,
-            // FIXNS: Enable only after it has been tested
-            // RelevanceRuleType.ACCESSIBILITY,
-            RelevanceRuleType.MODIFIERS, RelevanceRuleType.SIMILAR_PACKAGE);
+	public static RelevanceRules ALL_RULES = new RelevanceRules(
+			RelevanceRuleType.LIBRARY_TYPE, RelevanceRuleType.SOURCE_TYPE,
+			// FIXNS: Enable only after it has been tested
+			// RelevanceRuleType.ACCESSIBILITY,
+			RelevanceRuleType.MODIFIERS, RelevanceRuleType.SIMILAR_PACKAGE);
 
 	public static IRelevanceRule getRule(RelevanceRuleType type) {
 
@@ -89,35 +89,36 @@ public class RelevanceRules implements IRelevanceRule {
 	 * available rule types will be used. This constructor allows a caller to
 	 * use only a subset of rules.
 	 */
-    public RelevanceRules(RelevanceRuleType... ruleTypes) {
+	public RelevanceRules(RelevanceRuleType... ruleTypes) {
 		this.ruleTypes = ruleTypes;
 	}
 
-    /**
-     * Computes the integer relevance value of a given type based on registered relevance rule types
-     */
-    public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes,
-            int accessibility, int modifiers) {
-        if (fullyQualifiedName == null) {
-            return 0;
-        }
+	/**
+	 * Computes the integer relevance value of a given type based on registered
+	 * relevance rule types
+	 */
+	public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes,
+			int accessibility, int modifiers) {
+		if (fullyQualifiedName == null) {
+			return 0;
+		}
 
-        // use all the rule types if none were specified by the invoker.
-        RelevanceRuleType[] rTypes = ruleTypes == null || ruleTypes.length == 0 ? RelevanceRuleType
-                .values() : ruleTypes;
+		// use all the rule types if none were specified by the invoker.
+		RelevanceRuleType[] rTypes = ruleTypes == null || ruleTypes.length == 0 ? RelevanceRuleType
+				.values() : ruleTypes;
 
-        int relevance = getStartingRelevanceValue();
-        for (RelevanceRuleType ruleType : rTypes) {
-            IRelevanceRule rule = getRule(ruleType);
-            if (rule != null) {
-                relevance += rule.getRelevance(fullyQualifiedName,
-                        contextTypes, accessibility, modifiers);
-            }
-        }
-        // Use lowest Relevance category as Types have lowest relevance
-        // category
-        return Relevance.LOWEST.getRelevance(relevance);
-    }
+		int relevance = getStartingRelevanceValue();
+		for (RelevanceRuleType ruleType : rTypes) {
+			IRelevanceRule rule = getRule(ruleType);
+			if (rule != null) {
+				relevance += rule.getRelevance(fullyQualifiedName,
+						contextTypes, accessibility, modifiers);
+			}
+		}
+		// Use lowest Relevance category as Types have lowest relevance
+		// category
+		return Relevance.LOWEST.getRelevance(relevance);
+	}
 
 	/**
 	 * Computes the integer relevance value of a given type based on registered
@@ -165,11 +166,11 @@ public class RelevanceRules implements IRelevanceRule {
 					.applyCategory(1);
 		}
 
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
-            // don't know
-            return 0;
-        }
+		public int getRelevance(char[] fullyQualifiedName,
+				IType[] contextTypes, int accessibility, int modifiers) {
+			// don't know
+			return 0;
+		}
 
 	}
 
@@ -204,14 +205,14 @@ public class RelevanceRules implements IRelevanceRule {
 					break;
 				}
 			}
-            return getRelevance(null, null, accessibility, 0);
+			return getRelevance(null, null, accessibility, 0);
 		}
 
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
-            return accessibility == IAccessRule.K_ACCESSIBLE ? TypeRelevanceCategory.MEDIUM_TYPE
-                    .applyCategory(1) : 0;
-        }
+		public int getRelevance(char[] fullyQualifiedName,
+				IType[] contextTypes, int accessibility, int modifiers) {
+			return accessibility == IAccessRule.K_ACCESSIBLE ? TypeRelevanceCategory.MEDIUM_TYPE
+					.applyCategory(1) : 0;
+		}
 	}
 
 	/**
@@ -231,8 +232,8 @@ public class RelevanceRules implements IRelevanceRule {
 			} else if (areTypesInSamePackage(relevanceType, contextTypes)) {
 				category = TypeRelevanceCategory.MEDIUM_HIGH_TYPE;
 			} else {
-                // ignore this rule if not in same package or unit
-                category = null;
+				// ignore this rule if not in same package or unit
+				category = null;
 			}
 			return category;
 
@@ -245,22 +246,22 @@ public class RelevanceRules implements IRelevanceRule {
 			try {
 				int modifiers = relevanceType.getFlags();
 				category = getTypeCategory(relevanceType, contextTypes);
-                if (category != null) {
-                    relevance += (modifiers & Flags.AccDefault) != 0 ? 0 : 1;
-                    relevance += (modifiers & Flags.AccPrivate) != 0 ? 0 : 1;
-                    return category.applyCategory(relevance);
-                }
+				if (category != null) {
+					relevance += (modifiers & Flags.AccDefault) != 0 ? 0 : 1;
+					relevance += (modifiers & Flags.AccPrivate) != 0 ? 0 : 1;
+					return category.applyCategory(relevance);
+				}
 			} catch (JavaModelException e) {
-                GroovyCore.logException("Exception calculating relevance", e);
+				GroovyCore.logException("Exception calculating relevance", e);
 			}
-            return 0;
+			return 0;
 		}
 
-        // don't do for relevance calculation involving content assist
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
-            return 0;
-        }
+		// don't do for relevance calculation involving content assist
+		public int getRelevance(char[] fullyQualifiedName,
+				IType[] contextTypes, int accessibility, int modifiers) {
+			return 0;
+		}
 
 	}
 
@@ -283,10 +284,10 @@ public class RelevanceRules implements IRelevanceRule {
 			JAVA("java"), JAVAX("javax"), GROOVY("groovy"), GROOVYX("groovyx");
 
 			private LibraryType(String value) {
-                this.value = value.toCharArray();
+				this.value = value.toCharArray();
 			}
 
-            private char[] value;
+			private char[] value;
 
 			public char[] getValue() {
 				return value;
@@ -300,12 +301,12 @@ public class RelevanceRules implements IRelevanceRule {
 		 * @param relevanceType
 		 * @return first segment in the package name containing the type
 		 */
-        protected LibraryType getLibraryType(char[] qualifiedName) {
-            char[][] segments = CharOperation.splitOn('.', qualifiedName);
+		protected LibraryType getLibraryType(char[] qualifiedName) {
+			char[][] segments = CharOperation.splitOn('.', qualifiedName);
 			if (segments != null && segments.length > 0) {
-                char[] firstPackSegment = segments[0];
+				char[] firstPackSegment = segments[0];
 				for (LibraryType type : LibraryType.values()) {
-                    if (Arrays.equals(type.getValue(), firstPackSegment)) {
+					if (Arrays.equals(type.getValue(), firstPackSegment)) {
 						return type;
 					}
 				}
@@ -315,39 +316,39 @@ public class RelevanceRules implements IRelevanceRule {
 		}
 
 		public int getRelevance(IType relevanceType, IType[] contextTypes) {
-            if (relevanceType == null) {
-                return 0;
-            }
-            return getRelevance(relevanceType.getFullyQualifiedName()
-                    .toCharArray(), contextTypes, 0, 0);
+			if (relevanceType == null) {
+				return 0;
+			}
+			return getRelevance(relevanceType.getFullyQualifiedName()
+					.toCharArray(), contextTypes, 0, 0);
 		}
 
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
-            // Default is zero, meaning relevance for types in any other library
-            // is governed by other rules. Only types in the following libraries
-            // get higher priority
-            int relevance = 0;
-            LibraryType packType = getLibraryType(fullyQualifiedName);
-            if (packType != null) {
-                switch (packType) {
-                    case JAVA:
-                        relevance += 4;
-                        break;
-                    case GROOVY:
-                        relevance += 3;
-                        break;
-                    case GROOVYX:
-                        relevance += 2;
-                        break;
-                    case JAVAX:
-                        relevance += 1;
-                        break;
-                }
-            }
+		public int getRelevance(char[] fullyQualifiedName,
+				IType[] contextTypes, int accessibility, int modifiers) {
+			// Default is zero, meaning relevance for types in any other library
+			// is governed by other rules. Only types in the following libraries
+			// get higher priority
+			int relevance = 0;
+			LibraryType packType = getLibraryType(fullyQualifiedName);
+			if (packType != null) {
+				switch (packType) {
+				case JAVA:
+					relevance += 4;
+					break;
+				case GROOVY:
+					relevance += 3;
+					break;
+				case GROOVYX:
+					relevance += 2;
+					break;
+				case JAVAX:
+					relevance += 1;
+					break;
+				}
+			}
 
-            return TypeRelevanceCategory.LOW_TYPE.applyCategory(relevance);
-        }
+			return TypeRelevanceCategory.LOW_TYPE.applyCategory(relevance);
+		}
 
 	}
 
@@ -383,15 +384,16 @@ public class RelevanceRules implements IRelevanceRule {
 		}
 
 		public int getRelevance(IType relevanceType, IType[] contextTypes) {
+			return getRelevance(relevanceType.getFullyQualifiedName('.')
+					.toCharArray(), contextTypes, 0, 0);
+		}
+
+		public int getRelevance(char[] fullyQualifiedName,
+				IType[] contextTypes, int accessibility, int modifiers) {
 			int relevance = 0;
-
 			IPackageFragment contextFragment = getContextPackageFragment(contextTypes);
-
-			if (contextFragment != null && relevanceType != null) {
-				IPackageFragment relevanceFragment = relevanceType
-						.getPackageFragment();
-				String relQualified = convertToDot(relevanceFragment
-						.getElementName());
+			if (contextFragment != null && fullyQualifiedName != null) {
+				String relQualified = String.valueOf(fullyQualifiedName);
 				String contextQualified = convertToDot(contextFragment
 						.getElementName());
 
@@ -411,37 +413,8 @@ public class RelevanceRules implements IRelevanceRule {
 
 			}
 
-            return getRelevance(relevanceType.getFullyQualifiedName('.')
-                    .toCharArray(), contextTypes, 0, 0);
+			return TypeRelevanceCategory.HIGH_TYPE.applyCategory(relevance);
 		}
-
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
-            int relevance = 0;
-            IPackageFragment contextFragment = getContextPackageFragment(contextTypes);
-            if (contextFragment != null && fullyQualifiedName != null) {
-                String relQualified = String.valueOf(fullyQualifiedName);
-                String contextQualified = convertToDot(contextFragment
-                        .getElementName());
-
-                String[] relSegments = relQualified.split("\\.");
-                String[] contextSegments = contextQualified.split("\\.");
-
-                for (int i = 0; i < relSegments.length
-                        && i < contextSegments.length; i++) {
-                    if (relSegments[i].equals(contextSegments[i])) {
-                        relevance++;
-                    } else {
-                        // Stop relevance counting once different segments are
-                        // encountered
-                        break;
-                    }
-                }
-
-            }
-
-            return TypeRelevanceCategory.HIGH_TYPE.applyCategory(relevance);
-        }
 
 	}
 }

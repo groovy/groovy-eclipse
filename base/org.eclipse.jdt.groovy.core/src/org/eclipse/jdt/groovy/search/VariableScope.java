@@ -280,7 +280,11 @@ public class VariableScope {
 			propertyName.append(methodName.substring(4));
 		}
 		int mods = methodNode.getModifiers();
-		return new PropertyNode(propertyName.toString(), mods, propertyType, methodNode.getDeclaringClass(), null, null, null);
+		ClassNode declaringClass = methodNode.getDeclaringClass();
+		PropertyNode property = new PropertyNode(propertyName.toString(), mods, propertyType, declaringClass, null, null, null);
+		property.setDeclaringClass(declaringClass);
+		property.getField().setDeclaringClass(declaringClass);
+		return property;
 	}
 
 	/**

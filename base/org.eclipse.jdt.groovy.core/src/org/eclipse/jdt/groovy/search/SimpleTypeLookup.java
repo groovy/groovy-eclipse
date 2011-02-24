@@ -164,6 +164,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 				return type;
 			} else if (var instanceof FieldNode) {
 				return ((FieldNode) var).getDeclaringClass();
+			} else if (var instanceof PropertyNode) {
+				return ((PropertyNode) var).getDeclaringClass();
 			} else if (scope.isThisOrSuper((VariableExpression) node)) { // use 'node' because 'var' may be null
 				// this or super expression, but it is not bound,
 				// probably because concrete ast was requested

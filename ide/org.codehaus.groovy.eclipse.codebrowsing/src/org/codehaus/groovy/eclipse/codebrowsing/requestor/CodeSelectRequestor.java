@@ -178,7 +178,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 if (result.declaration instanceof MethodNode) {
                     name = ((MethodNode) result.declaration).getName();
                 } else if (result.declaration instanceof PropertyNode) {
-                        name = ((PropertyNode) result.declaration).getName();
+                    name = ((PropertyNode) result.declaration).getName();
                 } else if (result.declaration instanceof FieldNode) {
                     name = ((FieldNode) result.declaration).getName();
                 }
