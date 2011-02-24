@@ -38,9 +38,12 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
         ModuleNode module = unit.getModuleNode();
         if (module != null) {
-            GroovyLogManager.manager.log(TraceCategory.CODESELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
-            String event = "Code select: " + unit.getElementName();
-            GroovyLogManager.manager.logStart(event);
+            String event = null;
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.CODESELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
+                event = "Code select: " + unit.getElementName();
+                GroovyLogManager.manager.logStart(event);
+            }
             try {
                 ASTNode nodeToLookFor = findASTNodeAt(module, new Region(start, length));
                 if (nodeToLookFor != null) {
@@ -55,7 +58,9 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                     return requestor.getRequestedElement() != null ? new IJavaElement[] { requestor.getRequestedElement() } : new IJavaElement[0];
                 }
             } finally {
-                GroovyLogManager.manager.logEnd(event, TraceCategory.CODESELECT);
+                if (event != null) {
+                    GroovyLogManager.manager.logEnd(event, TraceCategory.CODESELECT);
+                }
             }
         }
         return new IJavaElement[0];
@@ -64,9 +69,12 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     public ASTNode selectASTNode(GroovyCompilationUnit unit, int start, int length) {
         ModuleNode module = unit.getModuleNode();
         if (module != null) {
-            GroovyLogManager.manager.log(TraceCategory.CODESELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
-            String event = "Code select: " + unit.getElementName();
-            GroovyLogManager.manager.logStart(event);
+            String event = null;
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.CODESELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
+                event = "Code select: " + unit.getElementName();
+                GroovyLogManager.manager.logStart(event);
+            }
             try {
                 ASTNode nodeToLookFor = findASTNodeAt(module, new Region(start, length));
                 if (nodeToLookFor != null) {
@@ -81,7 +89,9 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                     return requestor.getRequestedNode();
                 }
             } finally {
-                GroovyLogManager.manager.logEnd(event, TraceCategory.CODESELECT);
+                if (event != null) {
+                    GroovyLogManager.manager.logEnd(event, TraceCategory.CODESELECT);
+                }
             }
         }
         return null;

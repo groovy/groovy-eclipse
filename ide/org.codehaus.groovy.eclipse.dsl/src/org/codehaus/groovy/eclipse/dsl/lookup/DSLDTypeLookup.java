@@ -27,7 +27,9 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     private GroovyDSLDContext initialPattern;
     
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
-        GroovyLogManager.manager.log(TraceCategory.DSL, "DSL Type lookup created for " + unit.getElementName());
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "DSL Type lookup created for " + unit.getElementName());
+        }
         try {
             // FIXADE better error handling
             initialPattern = new GroovyDSLDContext(unit);
@@ -48,7 +50,9 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         for (IContributionElement elt : elts) {
             TypeAndDeclaration td = elt.lookupType(name, declaringType, initialPattern.resolver);
             if (td != null) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "DSL match found for " + name + " in " + elt.contributionName());
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.DSL, "DSL match found for " + name + " in " + elt.contributionName());
+                }
                 return td;
             }
         }

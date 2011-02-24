@@ -101,7 +101,6 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
                 contributionClosure.call();
             } catch (Exception e) {
                 if (GroovyLogManager.manager.hasLoggers()) {
-                    // only log if logger is available, otherwise, ignore
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
                     GroovyLogManager.manager.log(TraceCategory.DSL, "Exception caught.\n" +
@@ -224,7 +223,9 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
             type = ((MethodNode) expr).getReturnType();
         } else {
             // invalid
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot invoke delegatesTo() on an invalid object: " + expr);
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot invoke delegatesTo() on an invalid object: " + expr);
+            }
             return;
         }
         if (!type.getName().equals(Object.class.getName())) {

@@ -57,10 +57,12 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
     private static void log(int severity, String message, Throwable throwable) {
         final IStatus status = new Status(severity, PLUGIN_ID, 0, message, throwable);
         getDefault().getLog().log(status);
-        if (throwable != null) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Exception caught.  See error log.  Message: " + throwable.getLocalizedMessage());
-        } else if (message != null) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Message logged.  See error log.  Message: " + message);
+        if (GroovyLogManager.manager.hasLoggers()) {
+            if (throwable != null) {
+                GroovyLogManager.manager.log(TraceCategory.DSL, "Exception caught.  See error log.  Message: " + throwable.getLocalizedMessage());
+            } else if (message != null) {
+                GroovyLogManager.manager.log(TraceCategory.DSL, "Message logged.  See error log.  Message: " + message);
+            }
         }
     }
     public static void logException(String message, Throwable throwable) {

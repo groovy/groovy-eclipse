@@ -113,7 +113,9 @@ public class DSLDStore {
     
     
     public void purgeFileFromStore(IFile file) {
-        GroovyLogManager.manager.log(TraceCategory.DSL, "Purging context for DSL file " + file);
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "Purging context for DSL file " + file);
+        }
         Set<IPointcut> contexts = keyContextMap.remove(convertToIdentifier(file));
         if (contexts != null) {
             for (IPointcut context : contexts) {

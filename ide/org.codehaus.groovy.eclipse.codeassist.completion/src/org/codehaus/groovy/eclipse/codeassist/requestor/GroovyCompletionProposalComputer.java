@@ -103,17 +103,23 @@ public class GroovyCompletionProposalComputer implements
         if (! (unit instanceof GroovyCompilationUnit)) {
             return Collections.EMPTY_LIST;
         }
-        GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
-                "Starting content assist for " + unit.getElementName());
-        String event = "Content assist for " + unit.getElementName();
-        GroovyLogManager.manager.logStart(event);
+
+        String event = null;
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
+                    "Starting content assist for " + unit.getElementName());
+            event = "Content assist for " + unit.getElementName();
+            GroovyLogManager.manager.logStart(event);
+        }
 
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
 
         ModuleNode module = gunit.getModuleNode();
         if (module == null) {
-            GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
-                    "Null module node for " + gunit.getElementName());
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
+                        "Null module node for " + gunit.getElementName());
+            }
             return Collections.EMPTY_LIST;
         }
 
@@ -142,7 +148,10 @@ public class GroovyCompletionProposalComputer implements
             }
         }
 
-        GroovyLogManager.manager.logEnd(event, TraceCategory.CONTENT_ASSIST);
+        if (event != null) {
+            GroovyLogManager.manager
+                    .logEnd(event, TraceCategory.CONTENT_ASSIST);
+        }
         return proposals;
     }
 

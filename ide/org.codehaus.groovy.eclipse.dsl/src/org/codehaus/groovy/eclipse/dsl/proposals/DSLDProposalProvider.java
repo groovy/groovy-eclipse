@@ -25,10 +25,12 @@ public class DSLDProposalProvider implements IProposalProvider {
             ContentAssistContext context, ClassNode completionType,
             boolean isStatic, Set<ClassNode> categories) {
         
-        GroovyLogManager.manager.log(TraceCategory.DSL, "Getting DSL proposals for " + context.fullCompletionExpression);
-        String event = "DSL proposals";
-        GroovyLogManager.manager.logStart(event);
-        
+        String event = null;
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "Getting DSL proposals for " + context.fullCompletionExpression);
+            event = "DSL proposals";
+            GroovyLogManager.manager.logStart(event);
+        }        
         List<IContributionElement> contributions;
         List<IGroovyProposal> proposals = new ArrayList<IGroovyProposal>();
         try {
@@ -47,7 +49,9 @@ public class DSLDProposalProvider implements IProposalProvider {
         } catch (CoreException e) {
             GroovyDSLCoreActivator.logException(e);
         }
-        GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
+        if (event != null) {
+            GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
+        }
         
         return proposals;
     }

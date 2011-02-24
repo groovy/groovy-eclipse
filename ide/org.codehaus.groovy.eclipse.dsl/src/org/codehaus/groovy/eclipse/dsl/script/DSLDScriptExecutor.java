@@ -23,6 +23,8 @@ import groovy.lang.Script;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -153,9 +155,12 @@ public class DSLDScriptExecutor {
 
     public Object executeScript(IFile scriptFile) {
         scriptName = scriptFile.getFullPath().toPortableString();
-        GroovyLogManager.manager.log(TraceCategory.DSL, "About to compile script for " + scriptFile);
-        String event = "Script creation for " + scriptFile;
-        GroovyLogManager.manager.logStart(event);
+        String event = null;
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "About to compile script for " + scriptFile);
+            event = "Script creation for " + scriptFile;
+            GroovyLogManager.manager.logStart(event);
+        }
         factory = new PointcutFactory(scriptName, project.getProject());
         Object result = null;
         try {
@@ -164,18 +169,27 @@ public class DSLDScriptExecutor {
             try {
                 clazz = gcl.parseClass(scriptContents, scriptName);
             } catch (Exception e) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "Attempted to compile " + scriptName + "but failed because:\n" + e.getLocalizedMessage());
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    GroovyLogManager.manager.log(TraceCategory.DSL, "Attempted to compile " + scriptName + "but failed because:\n" +
+                            writer.getBuffer());
+                }
                 return result;
             }
             Script dsldScript = clazz.newInstance();
             dsldScript.setBinding(new DSLDScriptBinding());
             result = dsldScript.run();
         } catch (UnsupportedDSLVersion e) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
+            }
         } catch (Exception e) {
             GroovyDSLCoreActivator.logException(e);
         }
-        GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
+        if (event != null) {
+            GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
+        }
         return result;
     }
 
@@ -199,8 +213,10 @@ public class DSLDScriptExecutor {
             factory.registerLocalPointcut((String) nameAndClosure[0], (Closure) nameAndClosure[1]);
             return nameAndClosure[1];
         } else {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot register custom pointcut for " + 
-                    (args instanceof Object[] ? Arrays.toString((Object[]) args) : args));
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot register custom pointcut for " + 
+                        (args instanceof Object[] ? Arrays.toString((Object[]) args) : args));
+            }
             return null;
         }
     }

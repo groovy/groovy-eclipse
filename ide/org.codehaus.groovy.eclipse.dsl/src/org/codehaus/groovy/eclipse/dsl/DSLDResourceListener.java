@@ -72,8 +72,10 @@ public class DSLDResourceListener implements IResourceChangeListener {
                         // just in case nature has been removed for this project
                         !GroovyNature.hasGroovyNature(project)) {
                     // no longer managing state for this project
-                    GroovyLogManager.manager.log(TraceCategory.DSL, 
-                            "Deleting DSL context for: " + project.getName());
+                    if (GroovyLogManager.manager.hasLoggers()) {
+                        GroovyLogManager.manager.log(TraceCategory.DSL, 
+                                "Deleting DSL context for: " + project.getName());
+                    }
                     contextStoreManager.clearDSLDStore(project);
                     return false;
                 } else if (! contextStoreManager.hasDSLDStoreFor(project) &&
@@ -98,7 +100,9 @@ public class DSLDResourceListener implements IResourceChangeListener {
                     DSLDStore store = contextStoreManager.getDSLDStore(project);
                     Assert.isNotNull(store, "Context store should not be null");
                     
-                    GroovyLogManager.manager.log(TraceCategory.DSL, "Processing " + file.getName());
+                    if (GroovyLogManager.manager.hasLoggers()) {
+                        GroovyLogManager.manager.log(TraceCategory.DSL, "Processing " + file.getName());
+                    }
                     // this file has been changed or deleted.  Either way, must start by purging
                     // if this file diden't exist in the past, then this is a no-op
                     store.purgeFileFromStore(file);
