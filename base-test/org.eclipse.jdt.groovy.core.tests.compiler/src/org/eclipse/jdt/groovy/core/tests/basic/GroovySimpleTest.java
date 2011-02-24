@@ -202,6 +202,19 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n");
     }
     
+    public void testStaticProperty() {
+    	this.runConformTest(new String[]{
+    			"A.groovy",
+    			"class Super {" +
+    			"  def static getSql() { return 'abc'; }\n" +
+    			"}\n"+
+    			"class Sub extends Super {\n" +
+    			"  def static m() {\n" +
+    			"    sql.charAt(0)\n"+
+    			"  }" +
+    			"}\n"},"");
+    }
+    
 
     /**
      * This test is looking at what happens when a valid type is compiled ahead of two problem types (problematic
