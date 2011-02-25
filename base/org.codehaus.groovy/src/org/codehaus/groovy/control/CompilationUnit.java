@@ -679,21 +679,14 @@ public class CompilationUnit extends ProcessingUnit {
 //                    continue;
 //                }
             	
-            	// Since the variable scope visitor produces errors, if it runs twice it produces them twice
-            	if (vsvrun && source.getErrorCollector().hasErrors()) {
-            		return;
-            	}
                 VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(source);
                 scopeVisitor.visitClass(node);
-            	vsvrun=true;
 
                 resolveVisitor.startResolving(node, source);
             }
 
         }
     };
-
-    private boolean vsvrun = false;
 
     private PrimaryClassNodeOperation staticImport = new PrimaryClassNodeOperation() {
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
