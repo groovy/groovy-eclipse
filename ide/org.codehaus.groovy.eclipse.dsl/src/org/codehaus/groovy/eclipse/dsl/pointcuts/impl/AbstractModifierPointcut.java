@@ -82,6 +82,6 @@ public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
     
     @Override
     public String verify() {
-        return getArgumentValues().length > 0 ? "This pointcu does not take any arguments." : null;
+        return getArgumentValues().length > 0 ? "This pointcut does not take any arguments." : null;
     }
 }
