@@ -1,18 +1,13 @@
-/*
- * Copyright 2003-2010 the original author or authors.
+/*******************************************************************************
+ * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * Contributors:
+ *      Andrew Eisenberg - Initial implemenation
+ *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
@@ -45,7 +40,8 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
         this.filterBy = filterBy;
     }
 
-    public final BindingSet matches(GroovyDSLDContext pattern) {
+    @Override
+    public BindingSet matches(GroovyDSLDContext pattern) {
         
         List<T> outerList = filterOuterBindingByType(pattern);
         if (outerList == null || outerList.size() == 0) {
@@ -55,7 +51,7 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
         Object first = getFirstArgument();
         if (first instanceof IPointcut) {
             pattern.setOuterPointcutBinding(reduce(outerList));
-            return ((IPointcut) first).matches(pattern);
+            return matchOnPointcutArgument((IPointcut) first, pattern);
         } else {
             Object filtered = filterResult(outerList, pattern);
             if (filtered != null) {
@@ -126,7 +122,7 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
     @Override
     public String verify() {
         String hasOneOrNoArgs = hasOneOrNoArgs();
-        if (hasOneOrNoArgs != null) {
+        if (hasOneOrNoArgs != null || this.getArgumentValues().length == 0) {
             return hasOneOrNoArgs;
         }
         String oneStringOrOnePointcutArg = oneStringOrOnePointcutArg();

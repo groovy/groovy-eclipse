@@ -45,6 +45,10 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.jdt.patch">
 			</fileset>
 		</copy>
+		<copy todir="${featuresDestDir}/org.codehaus.groovy.dsl.feature">
+			<fileset dir="${workspaceDirIdeTest}/Feature org.codehaus.groovy.dsl.feature">
+			</fileset>
+		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.alltests.feature">
 			<fileset dir="${workspaceDirIdeTest}/Feature org.codehaus.groovy.alltests.feature">
 			</fileset>
@@ -149,6 +153,11 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.dsl">
+			<fileset dir="${workspaceDirIde}/org.codehaus.groovy.eclipse.dsl">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
 
   	<!-- IDE Test Plugins -->
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.alltests">
@@ -188,6 +197,11 @@
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.quickfix.test">
 			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.quickfix.test">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.dsl.test">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.dsl.test">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>

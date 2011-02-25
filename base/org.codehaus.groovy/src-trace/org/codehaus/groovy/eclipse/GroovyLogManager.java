@@ -169,12 +169,12 @@ public class GroovyLogManager {
         this.useDefaultLogger = useDefaultLogger;
     }
     
-    public void logException(Throwable t) {
+    public void logException(TraceCategory cat, Throwable t) {
         if (hasLoggers()) {
             // only log if logger is available, otherwise, ignore
             StringWriter writer = new StringWriter();
             t.printStackTrace(new PrintWriter(writer));
-            log(TraceCategory.DSL, "Exception caught.\n" +
+            log(cat, "Exception caught.\n" +
                     writer.getBuffer());
         }
     }

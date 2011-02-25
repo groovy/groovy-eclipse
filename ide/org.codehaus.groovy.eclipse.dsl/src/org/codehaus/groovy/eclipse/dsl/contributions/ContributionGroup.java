@@ -1,18 +1,13 @@
-/*
- * Copyright 2003-2010 the original author or authors.
+/*******************************************************************************
+ * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * Contributors:
+ *      Andrew Eisenberg - Initial implemenation
+ *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
 import groovy.lang.Closure;
@@ -100,12 +95,7 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
                 this.currentType = pattern.getCurrentType();
                 contributionClosure.call();
             } catch (Exception e) {
-                if (GroovyLogManager.manager.hasLoggers()) {
-                    StringWriter writer = new StringWriter();
-                    e.printStackTrace(new PrintWriter(writer));
-                    GroovyLogManager.manager.log(TraceCategory.DSL, "Exception caught.\n" +
-                            writer.getBuffer());
-                }
+                GroovyLogManager.manager.logException(TraceCategory.DSL, e);
             } finally {
                 result = contributions;
                 this.contributions = null;
@@ -130,9 +120,14 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
      */
     void method(Map<String, Object> args) {
         String name = asString(args.get("name"));
-        String returnType = asString(args.get("type"));
-        String declaringType = asString(args.get("declaringType")); // might be
-        Object value = args.get("provider");
+        
+        Object value = args.get("type");
+        String returnType = value == null ? "java.lang.Object" : asString(value);
+        
+        value = args.get("declaringType");
+        String declaringType = value == null ? currentType.getName() : asString(value);
+        
+        value = args.get("provider");
         String provider = value == null ? this.provider : asString(value); // might be null
         value = args.get("doc");
         String doc = value == null ? null : asString(value); // might be null
@@ -145,7 +140,10 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
             params = new ParameterContribution[paramsMap.size()];
             int i = 0;
             for (Entry<Object, Object> entry : paramsMap.entrySet()) {
-                params[i++] = new ParameterContribution(asString(entry.getKey()), asString(entry.getValue()));
+                value = entry.getValue();
+                String type = value == null ? "java.lang.Object" : asString(value);
+                
+                params[i++] = new ParameterContribution(asString(entry.getKey()), type);
             }
         } else {
             params = NO_PARAMS;
@@ -181,10 +179,14 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
      */
     void property(Map<String, Object> args) {
         String name = asString(args.get("name"));
-        String type = asString(args.get("type"));
-        String declaringType = asString(args.get("declaringType")); // might be null
-        declaringType = declaringType == null ? currentType.getName() : declaringType;
-        Object value = args.get("provider");
+        
+        Object value = args.get("type");
+        String type = value == null ? "java.lang.Object" : asString(value);
+        
+        value = args.get("declaringType");
+        String declaringType = value == null ? currentType.getName() : asString(value);
+        
+        value = args.get("provider");
         String provider = value == null ? this.provider : asString(value); // might be null
         String doc = asString(args.get("doc")); // might be null
         boolean isStatic = isStatic(args);
@@ -224,7 +226,8 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
         } else {
             // invalid
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot invoke delegatesTo() on an invalid object: " + expr);
+                GroovyLogManager.manager.log(TraceCategory.DSL, 
+                        "Cannot invoke delegatesTo() on an invalid object: " + expr);
             }
             return;
         }
@@ -298,7 +301,8 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
      */
     private String asString(Object value) {
         if (value == null) {
-            return "null";
+//            return "null";
+            return null;
         } else if (value instanceof String) {
             return (String) value;
         } else if (value instanceof ClassNode) {

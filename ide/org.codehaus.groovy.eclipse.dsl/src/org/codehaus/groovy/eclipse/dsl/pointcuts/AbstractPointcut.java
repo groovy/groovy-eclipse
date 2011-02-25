@@ -1,18 +1,13 @@
-/*
- * Copyright 2003-2010 the original author or authors.
+/*******************************************************************************
+ * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * Contributors:
+ *      Andrew Eisenberg - Initial implemenation
+ *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import groovy.lang.Closure;
@@ -27,7 +22,8 @@ import org.eclipse.core.resources.IProject;
 
 
 /**
- * 
+ * Abstract implementation of the Pointcut.  Most concrete instances will only 
+ * accept one argument.  
  * @author andrew
  * @created Nov 17, 2010
  */
@@ -65,7 +61,7 @@ public abstract class AbstractPointcut implements IPointcut {
         elements.add(null, argument);
     }
     
-    
+    public abstract BindingSet matches(GroovyDSLDContext pattern);
     
     public final void addArgument(String name, Object argument) {
         if (name == null) {
@@ -79,6 +75,25 @@ public abstract class AbstractPointcut implements IPointcut {
         elements.add(name, argument);
     }
     
+    /**
+     * matches on the pointct passed in and also
+     * binds the argument to the argument name if 
+     * a name exists.
+     * @param argument
+     * @param pattern
+     * @return
+     */
+    protected BindingSet matchOnPointcutArgument(
+            IPointcut argument, GroovyDSLDContext pattern) {
+        BindingSet set = argument.matches(pattern);
+        String bindName = getFirstArgumentName();
+        if (set != null && bindName != null) {
+            Object val = set.getDefaultBinding();
+            set.addBinding(bindName, val);
+        }
+        return set;
+    }
+
     public final Object getFirstArgument() {
         if (elements.size > 0) {
             return elements.elementAt(0);
@@ -101,6 +116,10 @@ public abstract class AbstractPointcut implements IPointcut {
         } else {
             return null;
         }
+    }
+    
+    public final String getNameForArgument(Object arg) {
+        return elements.nameOf(arg);
     }
     
     public IPointcut normalize() {

@@ -1,18 +1,13 @@
-/*
- * Copyright 2003-2009 the original author or authors.
+/*******************************************************************************
+ * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * Contributors:
+ *      Andrew Eisenberg - Initial implemenation
+ *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
 import junit.framework.Test;
@@ -75,16 +70,28 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         pc = (IPointcut) firstArgument;
     }
     
-    public void testInvalidPointcutCreation1() throws Exception {
+    public void testValidPointcutCreation1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType()");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
+        assertNull(pc.verify());
+    }
+    
+    public void testInvalidPointcutCreation1() throws Exception {
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("fileExtension()");
+        assertTrue("Should have been a currentType pointcut", pc instanceof FileExtensionPointcut);
         assertEquals("Expecting 1 argument, but found 0.  Consider using '&' or '|' to connect arguments.", pc.verify());
+    }
+
+    public void testValidPointcutCreation2() throws Exception {
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(annotatedBy()))");
+        assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
+        assertNull(pc.verify());
     }
     
     public void testInvalidPointcutCreation2() throws Exception {
-        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(annotatedBy()))");
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(isStatic(\"foo\")))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertEquals("This pointcut supports exactly one argument of type Pointcut or String or Class.  Consider using '&' or '|' to connect arguments.", pc.verify());
+        assertEquals("This pointcut does not take any arguments.", pc.verify());
     }
     
     public void testAnd1() throws Exception {
@@ -152,8 +159,14 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals("Should have 3 argument", 3, pc.getArgumentValues().length);
     }
     
-    public void testInvalidAnd1() throws Exception {
+    public void testValidAnd1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\") & currentType()");
+        assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
+        assertNull(pc.verify());
+    }
+
+    public void testInvalidAnd1() throws Exception {
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\") & fileExtension()");
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
         assertEquals("Expecting 1 argument, but found 0.  Consider using '&' or '|' to connect arguments.", pc.verify());
     }
@@ -271,11 +284,11 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
 
         assertEquals(FindPropertyPointcut.class, pc.getArgumentValues()[0].getClass());
-        assertEquals(StaticPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1].getClass());
-        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1]).getArgumentValues().length);
+        assertEquals(StaticPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[0].getClass());
+        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[0]).getArgumentValues().length);
         
         assertEquals(NamePointcut.class, pc.getArgumentValues()[1].getClass());
-        assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0].equals("yes"));
+        assertEquals("yes", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0]);
     }
     
     public void testEnclosing2() throws Exception {
@@ -289,11 +302,11 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
         
         assertEquals(FindPropertyPointcut.class, pc.getArgumentValues()[0].getClass());
-        assertEquals(PublicPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1].getClass());
-        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1]).getArgumentValues().length);
+        assertEquals(PublicPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[0].getClass());
+        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[0]).getArgumentValues().length);
         
         assertEquals(NamePointcut.class, pc.getArgumentValues()[1].getClass());
-        assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0].equals("yes"));
+        assertEquals("yes", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0]);
     }
     
     public void testEnclosing3() throws Exception {
@@ -307,11 +320,11 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
         
         assertEquals(FindPropertyPointcut.class, pc.getArgumentValues()[0].getClass());
-        assertEquals(PrivatePointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1].getClass());
-        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1]).getArgumentValues().length);
+        assertEquals(PrivatePointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[0].getClass());
+        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[0]).getArgumentValues().length);
         
         assertEquals(NamePointcut.class, pc.getArgumentValues()[1].getClass());
-        assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0].equals("yes"));
+        assertEquals("yes", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0]);
     }
     
     public void testEnclosing4() throws Exception {
@@ -325,11 +338,11 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
         
         assertEquals(FindPropertyPointcut.class, pc.getArgumentValues()[0].getClass());
-        assertEquals(FinalPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1].getClass());
-        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[1]).getArgumentValues().length);
+        assertEquals(FinalPointcut.class, ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[0].getClass());
+        assertEquals("Expecting no arguments", 0, ((IPointcut) ((IPointcut) pc.getArgumentValues()[0]).getArgumentValues()[0]).getArgumentValues().length);
         
         assertEquals(NamePointcut.class, pc.getArgumentValues()[1].getClass());
-        assertEquals("java.lang.String", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0].equals("yes"));
+        assertEquals("yes", ((IPointcut) pc.getArgumentValues()[1]).getArgumentValues()[0]);
     }
     
     public void testBindAndFileExtension() throws Exception {

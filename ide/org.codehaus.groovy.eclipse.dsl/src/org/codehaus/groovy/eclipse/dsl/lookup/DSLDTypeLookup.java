@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *      Andrew Eisenberg - Initial implemenation
+ *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.lookup;
 
 import java.util.List;
@@ -27,9 +37,6 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     private GroovyDSLDContext initialPattern;
     
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "DSL Type lookup created for " + unit.getElementName());
-        }
         try {
             // FIXADE better error handling
             initialPattern = new GroovyDSLDContext(unit);
@@ -51,7 +58,8 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
             TypeAndDeclaration td = elt.lookupType(name, declaringType, initialPattern.resolver);
             if (td != null) {
                 if (GroovyLogManager.manager.hasLoggers()) {
-                    GroovyLogManager.manager.log(TraceCategory.DSL, "DSL match found for " + name + " in " + elt.contributionName());
+                    GroovyLogManager.manager.log(TraceCategory.DSL, 
+                            "Match found for " + name + " in " + elt.contributionName());
                 }
                 return td;
             }

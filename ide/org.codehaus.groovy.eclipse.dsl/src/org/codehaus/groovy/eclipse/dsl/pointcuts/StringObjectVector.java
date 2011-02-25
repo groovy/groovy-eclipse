@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *     IBM Corporation - initial API and implementation
+ *      Andrew Eisenberg - Initial implemenation
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
@@ -123,5 +123,22 @@ public final class StringObjectVector {
         String[] res = new String[size];
         System.arraycopy(this.names, 0, res, 0, size);
         return res;
+    }
+
+    /**
+     * finds the name of the given argument, or null
+     * if doesn't exist.  Also will return null if the argument
+     * has no name.  Uses == , not {@link #equals(Object)}
+     * 
+     * @param arg
+     * @return
+     */
+    public String nameOf(Object arg) {
+        for (int i = 0; i < size; i++ ) {
+            if (elements[i] == arg) {
+                return names[i];
+            }
+        }
+        return null;
     }
 }
