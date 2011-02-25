@@ -202,6 +202,25 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n");
     }
     
+    public void testGenericParamUsage() {
+    	this.runConformTest(new String[]{
+    			"A.groovy",
+    			"class Foo {\n"+
+    			"  public void m(List<String> ls) {}\n"+
+    			"}"},"");
+    }
+    
+    public void testGenericParamUsage2() {
+    	this.runConformTest(new String[]{
+    			"A.groovy",
+    		    "class Inferer {\n"+
+    			"\n"+
+    			"public void m(List<String> ls) {\n"+
+    			"	}\n"+
+    			"}\n"
+    			},"");
+    }
+    
     public void testStaticProperty() {
     	this.runConformTest(new String[]{
     			"A.groovy",
@@ -3045,6 +3064,11 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},
 		"----------\n" + 
 		"1. ERROR in Moo.groovy (at line 4)\n" + 
+		"	final moo = processMoo(moo)\n" + 
+		"	      ^\n" + 
+		"Groovy:The current scope already contains a variable of the name moo\n" + 
+		"----------\n"+
+		"2. ERROR in Moo.groovy (at line 4)\n" + 
 		"	final moo = processMoo(moo)\n" + 
 		"	      ^\n" + 
 		"Groovy:The current scope already contains a variable of the name moo\n" + 
