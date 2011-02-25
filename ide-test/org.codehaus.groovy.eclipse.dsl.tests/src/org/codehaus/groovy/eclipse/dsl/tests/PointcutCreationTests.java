@@ -91,7 +91,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testInvalidPointcutCreation2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(isStatic(\"foo\")))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertEquals("This pointcut does not take any arguments.", pc.verify());
+        assertEquals("This pointcut supports exactly one argument of type Pointcut or String.  Consider using '&' or '|' to connect arguments.", pc.verify());
     }
     
     public void testAnd1() throws Exception {
