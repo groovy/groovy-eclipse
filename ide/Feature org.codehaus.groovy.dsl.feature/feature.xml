@@ -10,7 +10,7 @@
         Andrew Eisenberg - modified for Groovy Eclipse 2.0
  -->
 <feature
-      id="org.codehaus.groovy.alltests.feature"
+      id="org.codehaus.groovy.dsl.feature"
       label="%featureName"
       version="2.1.2.qualifier"
       provider-name="%Codehaus.org">
