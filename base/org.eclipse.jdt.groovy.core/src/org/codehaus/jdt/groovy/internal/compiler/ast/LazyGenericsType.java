@@ -115,18 +115,38 @@ public class LazyGenericsType extends GenericsType {
 	// return super.toStructureString();
 	// }
 
+	// private ClassNode configureTypeVariableReference(TypeVariable tv) {
+	// ClassNode cn = ClassHelper.makeWithoutCaching(tv.getName());
+	// cn.setGenericsPlaceHolder(true);
+	// ClassNode cn2 = ClassHelper.makeWithoutCaching(tv.getName());
+	// cn2.setGenericsPlaceHolder(true);
+	// GenericsType[] gts = new GenericsType[]{new GenericsType(cn2)};
+	// cn.setGenericsTypes(gts);
+	// cn.setRedirect(ClassHelper.OBJECT_TYPE);
+	// return cn;
+	// }
+
 	private void ensureInitialized() {
 		if (!initialized) {
+			ClassNode cn = ClassHelper.makeWithoutCaching(name);
+			cn.setGenericsPlaceHolder(true);
+			ClassNode cn2 = ClassHelper.makeWithoutCaching(name);
+			cn2.setGenericsPlaceHolder(true);
+			GenericsType[] gts = new GenericsType[] { new GenericsType(cn2) };
+			cn.setGenericsTypes(gts);
+			cn.setRedirect(ClassHelper.OBJECT_TYPE);
+			type = cn;
 			if (tvBinding.firstBound == null) {
 				type = ClassHelper.OBJECT_TYPE;
 			} else {
-				type = ClassHelper.OBJECT_TYPE;
+				// type = ClassHelper.OBJECT_TYPE;
+
 				// new ClassNode(Object.class);
 				// resolver.convertToClassNode(tvBinding.firstBound);
 				// GenericsType gt = new GenericsType();
 				// gt.setName(name);
 				// type.setGenericsTypes(new GenericsType[] { gt });
-				type.setRedirect(ClassHelper.OBJECT_TYPE);
+				// type.setRedirect(ClassHelper.OBJECT_TYPE);
 				ClassNode firstBoundType = resolver.convertToClassNode(tvBinding.firstBound);
 				TypeBinding[] otherUpperBounds = tvBinding.otherUpperBounds();
 				if (otherUpperBounds.length == 0) {
