@@ -200,8 +200,8 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
-		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.dsl.test">
-			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.dsl.test">
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.dsl.tests">
+			<fileset dir="${workspaceDirIdeTest}/org.codehaus.groovy.eclipse.dsl.tests">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
