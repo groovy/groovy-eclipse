@@ -29,17 +29,17 @@
 
    <requires>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.codehaus.groovy" version="1.6.7" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.core" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.codehaus.groovy" version="1.7.5" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.eclipse.jdt.groovy.core"/>
-      <import plugin="org.eclipse.core.resources" version="3.6.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.codehaus.groovy.eclipse.codebrowsing" version="2.1.2" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui" version="3.6.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.ui" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.jdt.ui"/>
       <import plugin="org.codehaus.groovy.eclipse.codeassist.completion"/>
-      <import plugin="org.codehaus.groovy.eclipse.ui" version="2.1.2" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jface.text" version="3.6.1" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.ide" version="3.6.1" match="greaterOrEqual"/>
+      <import plugin="org.codehaus.groovy.eclipse.ui"/>
+      <import plugin="org.eclipse.jface.text"/>
+      <import plugin="org.eclipse.ui.ide"/>
    </requires>
 
    <plugin
