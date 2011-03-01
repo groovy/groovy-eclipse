@@ -15,12 +15,17 @@ import groovy.lang.GroovyClassLoader;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.JarFile;
 
+import org.apache.xbean.classloader.NonLockingJarFileClassLoader;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
@@ -85,8 +90,7 @@ public class GroovyParser {
 
 		PathLoaderPair(String classpath) {
 			this.classpath = classpath;
-			this.groovyClassLoader = new GroovyClassLoader();
-			configureClasspath(groovyClassLoader, classpath);
+			this.groovyClassLoader = new GroovyClassLoader(createConfigureLoader(classpath));
 		}
 	}
 
@@ -287,27 +291,87 @@ public class GroovyParser {
 
 	}
 
-	// FIXASC perf ok?
-	private static void configureClasspath(GroovyClassLoader gcl, String path) {
-		if (path != null) {
-			if (path.indexOf(File.pathSeparator) != -1) {
-				int pos = 0;
-				while (pos != -1) {
-					int nextSep = path.indexOf(File.pathSeparator, pos);
-					if (nextSep == -1) {
-						// last piece
-						String p = path.substring(pos);
-						gcl.addClasspath(p);
-						pos = -1;
-					} else {
-						String p = path.substring(pos, nextSep);
-						gcl.addClasspath(p);
-						pos = nextSep + 1;
-					}
-				}
-			} else {
-				gcl.addClasspath(path);
+	// // FIXASC perf ok?
+	// private static void configureClasspath(URLClassLoader gcl, String path) {
+	// if (path != null) {
+	// if (path.indexOf(File.pathSeparator) != -1) {
+	// int pos = 0;
+	// while (pos != -1) {
+	// int nextSep = path.indexOf(File.pathSeparator, pos);
+	// if (nextSep == -1) {
+	// // last piece
+	// String p = path.substring(pos);
+	// gcl.addClasspath(p);
+	// pos = -1;
+	// } else {
+	// String p = path.substring(pos, nextSep);
+	// gcl.addClasspath(p);
+	// pos = nextSep + 1;
+	// }
+	// }
+	// } else {
+	// gcl.addClasspath(path);
+	// }
+	// }
+	// }
+
+	private static boolean NONLOCKING = false;
+
+	static {
+		try {
+			boolean value = System.getProperty("greclipse.nonlocking", "false").equalsIgnoreCase("true");
+			NONLOCKING = value;
+			if (value) {
+				System.out.println("property set: greclipse.nonlocking: will try to avoid locking jars");
 			}
+		} catch (Throwable t) {
+		}
+	}
+
+	private static URLClassLoader createLoader(URL[] urls, ClassLoader parent) {
+		if (NONLOCKING) {
+			return new NonLockingJarFileClassLoader("AST Transform loader", urls, parent);
+		} else {
+			return new URLClassLoader(urls, parent);
+		}
+	}
+
+	private static URLClassLoader createConfigureLoader(String path) {
+		if (path == null) {
+			return createLoader(null, Thread.currentThread().getContextClassLoader());
+		}
+		List<URL> urls = new ArrayList<URL>();
+		if (path.indexOf(File.pathSeparator) != -1) {
+			int pos = 0;
+			while (pos != -1) {
+				int nextSep = path.indexOf(File.pathSeparator, pos);
+				if (nextSep == -1) {
+					// last piece
+					addNewURL(path.substring(pos), urls);
+					pos = -1;
+				} else {
+					addNewURL(path.substring(pos, nextSep), urls);
+					pos = nextSep + 1;
+				}
+			}
+		} else {
+			addNewURL(path, urls);
+		}
+		return createLoader(urls.toArray(new URL[urls.size()]), Thread.currentThread().getContextClassLoader());
+	}
+
+	private static void addNewURL(String path, List<URL> existingURLs) {
+		try {
+			File f = new File(path);
+			URL newURL = f.toURI().toURL();
+			for (URL url : existingURLs) {
+				if (url.equals(newURL)) {
+					return;
+				}
+			}
+			existingURLs.add(newURL);
+		} catch (MalformedURLException e) {
+			// It was a busted URL anyway
 		}
 	}
 

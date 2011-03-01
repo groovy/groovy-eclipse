@@ -17,3 +17,5 @@ Export-Package: org.codehaus.jdt.groovy.internal.compiler.ast,
  org.eclipse.jdt.groovy.core,
  org.eclipse.jdt.groovy.core.util,
  org.eclipse.jdt.groovy.search
+Bundle-ClassPath: nlcl.jar,
+ .
