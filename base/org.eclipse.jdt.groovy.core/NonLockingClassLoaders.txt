@@ -1,0 +1,5 @@
+Groovy-Eclipse is using this code to enable non-locking jar support:
+
+git clone https://github.com/philwebb/nonlocking-xbean-classloader.git
+
+First cloned Feb-28-2011.  Built into nlcl.jar and nlcl-src.jar which are included in the org.eclipse.jdt.groovy.core plugin
