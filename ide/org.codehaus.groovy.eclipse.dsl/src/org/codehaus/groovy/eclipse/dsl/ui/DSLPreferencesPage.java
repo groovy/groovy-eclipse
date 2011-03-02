@@ -8,10 +8,18 @@
  * Contributors:
  *      Andrew Eisenberg - Initial implemenation
  *******************************************************************************/
-package org.codehaus.groovy.eclipse.dsl;
+package org.codehaus.groovy.eclipse.dsl.ui;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.codehaus.groovy.eclipse.dsl.DSLDStore;
+import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
+import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
+import org.codehaus.groovy.eclipse.dsl.DisabledScriptsCache;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.earlystartup.InitializeAllDSLDs;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
@@ -29,16 +37,22 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.layout.PixelConverter;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
+import org.eclipse.jface.viewers.ICheckStateListener;
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
@@ -46,21 +60,67 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     
     private static final IWorkspaceRoot ROOT = ResourcesPlugin.getWorkspace().getRoot();
 
-    private final String[] LABELS = { "Edit...", "Recompile Scripts", "Refresh List" };
+    private final String[] LABELS = { "Edit...", "Recompile Scripts", "Refresh List", "Check All", "Uncheck All" };
     private final int IDX_EDIT = 0;
     private final int IDX_RECOMPILE = 1;
     private final int IDX_REFRESH = 2;
+    private final int IDX_CHECK_ALL = 3;
+    private final int IDX_UNCHECK_ALL= 4;
     
+    private final class CheckStateListener implements ICheckStateListener {
+
+        public void checkStateChanged(CheckStateChangedEvent event) {
+            Object element = event.getElement();
+            if (element instanceof ProjectContextKey) {
+                ProjectContextKey key = (ProjectContextKey) element;
+                key.isChecked = event.getChecked();
+            } else if (element instanceof String) {
+                ProjectContextKey[] children = elementsMap.get(element);
+                for (ProjectContextKey child : children) {
+                    child.isChecked = event.getChecked();
+                }
+            }
+        }
+        
+    }
+    
+    /**
+     * A {@link TreeListDialogField} that uses check boxes
+     * @author andrew
+     * @created Feb 26, 2011
+     */
+    private final class CheckedTreeListDialogField extends TreeListDialogField {
+        private ContainerCheckedTreeViewer checkboxViewer;
+        
+        private CheckedTreeListDialogField(ITreeListAdapter adapter,
+                String[] buttonLabels, ILabelProvider lprovider) {
+            super(adapter, buttonLabels, lprovider);
+        }
+
+        protected TreeViewer createTreeViewer(Composite parent) {
+            Tree tree= new Tree(parent, getTreeStyle() | SWT.CHECK);
+            tree.setFont(parent.getFont());
+            checkboxViewer = new ContainerCheckedTreeViewer(tree);
+            checkboxViewer.addCheckStateListener(new CheckStateListener());
+            return checkboxViewer;
+        }
+        
+        void setChecked(Object child, boolean newState) {
+            checkboxViewer.setChecked(child, newState);
+        }
+    }
+
     class ProjectContextKey {
         final String projectName;
         final String dslFileName;
+        boolean isChecked;  // set later
         public ProjectContextKey(String projectName, String dslFileName) {
             this.projectName = projectName;
             this.dslFileName = dslFileName;
         }
     }
     
-    class DSLLabel extends LabelProvider {
+    class DSLLabelProvider extends LabelProvider {
 
         WorkbenchLabelProvider provider = new WorkbenchLabelProvider();
         
@@ -89,7 +149,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         }
     }
     
-    class Adapter implements ITreeListAdapter {
+    class DSLListAdapter implements ITreeListAdapter {
 
         public void customButtonPressed(TreeListDialogField field, int index) {
             if (index == IDX_EDIT) {
@@ -101,6 +161,12 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             } else if (index == IDX_REFRESH) {
                 // refresh
                 refresh();
+            } else if (index == IDX_CHECK_ALL) {
+                // check all
+                checkAll(true);
+            } else if (index == IDX_UNCHECK_ALL) {
+                // uncheck all
+                checkAll(false);
             }
         }
 
@@ -120,20 +186,10 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
 
         public Object[] getChildren(TreeListDialogField field, Object element) {
             if (element instanceof String) {
-                IProject project = toProject(element);
-                if (project != null) {
-                    DSLDStore store = manager.getDSLDStore(project);
-                    if (store != null) {
-                        String[] keys = store.getAllContextKeys();
-                        ProjectContextKey[] pck = new ProjectContextKey[keys.length];
-                        for (int i = 0; i < pck.length; i++) {
-                            pck[i] = new ProjectContextKey((String) element, keys[i]); 
-                        }
-                        return pck;
-                    }
-                }
+                return elementsMap.get(element);
+            } else {
+                return null;
             }
-            return null;
         }
 
         public Object getParent(TreeListDialogField field, Object element) {
@@ -150,28 +206,31 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     }
 
     
+    DisabledScriptsCache cache;
     
-    private TreeListDialogField tree;
+    Map<String, ProjectContextKey[]> elementsMap;
     
-    private final DSLDStoreManager manager;
+    private CheckedTreeListDialogField tree;
+    
+    private DSLDStoreManager manager;
 
     private IWorkbenchPage page;
     
     public DSLPreferencesPage() {
-        manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
     }
 
     public DSLPreferencesPage(String title) {
         super(title);
-        manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
     }
 
     public DSLPreferencesPage(String title, ImageDescriptor image) {
         super(title, image);
-        manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
     }
 
     public void init(IWorkbench workbench) {
+        manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
+        cache = new DisabledScriptsCache();
+        elementsMap = new HashMap<String, DSLPreferencesPage.ProjectContextKey[]>();
         try {
             page = workbench.getActiveWorkbenchWindow().getActivePage();
         } catch (NullPointerException e) {
@@ -188,11 +247,13 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         Composite composite= new Composite(parent, SWT.NONE);
         composite.setFont(parent.getFont());
         
-        tree = new TreeListDialogField(new Adapter(), LABELS, new DSLLabel());
-        refresh();
+        tree = new CheckedTreeListDialogField(new DSLListAdapter(), LABELS, new DSLLabelProvider());
+        tree.setTreeExpansionLevel(2);
         LayoutUtil.doDefaultLayout(composite, new DialogField[] { tree }, true, SWT.DEFAULT, SWT.DEFAULT);
+        
         LayoutUtil.setHorizontalGrabbing(tree.getTreeControl(null));
 
+        refresh();
         int buttonBarWidth= converter.convertWidthInCharsToPixels(24);
         tree.setButtonsMinWidth(buttonBarWidth);
             
@@ -218,6 +279,8 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             return null;
         }
     }
+    
+    
     
     protected boolean canEdit() {
         List<?> selected = tree.getSelectedElements();
@@ -246,11 +309,68 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     }
 
     protected void refresh() {
-        tree.setElements(manager.getAllStores());
+        List<String> allStores = manager.getAllStores();
+        elementsMap.clear();
+        for (String element : allStores) {
+            IProject project = toProject(element);
+            if (project != null) {
+                DSLDStore store = manager.getDSLDStore(project);
+                if (store != null) {
+                    String[] keys = store.getAllContextKeys();
+                    ProjectContextKey[] pck = new ProjectContextKey[keys.length];
+                    for (int i = 0; i < pck.length; i++) {
+                        pck[i] = new ProjectContextKey(element, keys[i]); 
+                        pck[i].isChecked = ! cache.isDisabled(pck[i].dslFileName);
+                    }
+                    elementsMap.put(element, pck);
+                }
+            }
+        }
+
+        tree.setElements(allStores);
         tree.refresh();
+        for (ProjectContextKey[] keys : elementsMap.values()) {
+            for (ProjectContextKey key : keys) {
+                tree.setChecked(key, key.isChecked);
+            }
+        }
+    }
+    
+    void checkAll(boolean newState) {
+        for (ProjectContextKey[] keys : elementsMap.values()) {
+            for (ProjectContextKey key : keys) {
+                key.isChecked = newState;
+                tree.setChecked(key, key.isChecked);
+            }
+        }
+        
+    }
+
+    protected void storeChecks() {
+        List<String> unchecked = new ArrayList<String>();
+        for (ProjectContextKey[] keys : elementsMap.values()) {
+            for (ProjectContextKey key : keys) {
+                if (! key.isChecked) {
+                    unchecked.add(key.dslFileName);
+                }
+            }
+        }
+        DSLPreferences.setDisabledScripts(unchecked.toArray(new String[0]));
     }
     
     protected void recompile() {
         new InitializeAllDSLDs().initializeAll();
+    }
+    
+    @Override
+    protected void performDefaults() {
+        super.performDefaults();
+        checkAll(true);
+    }
+
+    @Override
+    public boolean performOk() {
+        storeChecks();
+        return super.performOk();
     }
 }

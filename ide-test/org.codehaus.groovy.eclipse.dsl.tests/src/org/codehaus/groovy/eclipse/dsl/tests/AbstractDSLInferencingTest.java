@@ -22,6 +22,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
+import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
@@ -88,12 +89,20 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     protected void assertDSLStore(int expectedNumDslFiles, Map<String, List<String>> allExpectedPointcuts, Map<String, Integer> expectedContributionCounts) {
         DSLDStoreManager manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
         DSLDStore store = manager.getDSLDStore(project);
+        Set<String> disabledScripts = DSLPreferences.getDisabledScriptsAsSet();
+
         String[] keys = store.getAllContextKeys();
         Arrays.sort(keys);
         assertEquals(expectedNumDslFiles, keys.length);
         int i = 0;
         for (String key : keys) {
             assertEquals(project.getFullPath() + "/dsl" + i++ + ".dsld", key);
+            
+            // check to see if the file is disabled.
+            if (disabledScripts.contains(key)) {
+                continue;
+            }
+            
             // now check the pointcuts in this script
             Set<IPointcut> pcs = ((Map<String, Set<IPointcut>>) ReflectionUtils.getPrivateField(DSLDStore.class, "keyContextMap", store)).get(key);
             List<String> expectedPcs = allExpectedPointcuts.get(key);
@@ -101,7 +110,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
                 assertTrue("Didn't find expected Pointcut " + pc + " in\n" + expectedPcs, expectedPcs.contains(createSemiUniqueName(pc)));
                 
                 // now check the contributions for each pointcut
-                List<IContributionGroup> group = ((Map<IPointcut, List<IContributionGroup>>) ReflectionUtils.getPrivateField(DSLDStore.class, "contextContributionMap", store)).get(pc);
+                List<IContributionGroup> group = ((Map<IPointcut, List<IContributionGroup>>) ReflectionUtils.getPrivateField(DSLDStore.class, "pointcutContributionMap", store)).get(pc);
                 int groupSize = group.size();
                 int expectedSize = expectedContributionCounts.get(createSemiUniqueName(pc));
                 assertEquals("Didn't find expected number of contributions for " + pc, expectedSize, groupSize);

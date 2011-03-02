@@ -87,7 +87,7 @@
          point="org.eclipse.ui.preferencePages">
       <page
             category="org.codehaus.groovy.eclipse.preferences"
-            class="org.codehaus.groovy.eclipse.dsl.DSLPreferencesPage"
+            class="org.codehaus.groovy.eclipse.dsl.ui.DSLPreferencesPage"
             id="org.codehaus.groovy.eclipse.dsl.preferences"
             name="DSL descriptor language">
       </page>

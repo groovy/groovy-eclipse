@@ -23,6 +23,7 @@ import junit.framework.TestSuite;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
+import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
@@ -230,7 +231,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                         new String[] { createSemiUniqueName(CurrentTypePointcut.class, 0) }),
         
                 createExpectedContributionCount(
-                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0) },
+                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0)},
                         new Integer[] { 1 }
         ));
         
@@ -247,5 +248,47 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                         createSemiUniqueName(FindFieldPointcut.class, 0) },
                         new Integer[] { 1, 1 }));
 
+    }
+    
+    public void testDisabled1() throws Exception {
+        createDsls("currentType().accept { }", "findField().accept { }");
+        assertDSLStore(2, 
+                createExpectedPointcuts(
+                        new String[] { createSemiUniqueName(CurrentTypePointcut.class, 0) },
+                        new String[] { createSemiUniqueName(FindFieldPointcut.class, 1) }),
+        
+                createExpectedContributionCount(
+                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0),
+                                createSemiUniqueName(FindFieldPointcut.class, 1)},
+                        new Integer[] { 1, 1 }
+        ));
+
+        // disable script
+        DSLPreferences.setDisabledScripts(new String[] { project.getFile("dsl0.dsld").getFullPath().toPortableString() });
+        
+        assertDSLStore(
+                2,
+                createExpectedPointcuts(new String[] {},
+                        new String[] {
+                        createSemiUniqueName(FindFieldPointcut.class, 1) }),
+
+                createExpectedContributionCount(new String[] {
+                        createSemiUniqueName(FindFieldPointcut.class, 1) },
+                        new Integer[] { 1 }));
+        
+        // re-enable script
+        DSLPreferences.setDisabledScripts(new String[] { });
+
+        createDsls("currentType().accept { }", "findField().accept { }");
+        assertDSLStore(2, 
+                createExpectedPointcuts(
+                        new String[] { createSemiUniqueName(CurrentTypePointcut.class, 0) },
+                        new String[] { createSemiUniqueName(FindFieldPointcut.class, 1) }),
+        
+                createExpectedContributionCount(
+                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0),
+                                createSemiUniqueName(FindFieldPointcut.class, 1)},
+                        new Integer[] { 1, 1 }
+        ));
     }
 }

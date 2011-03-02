@@ -28,49 +28,49 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.eclipse.core.resources.IFile;
 
 /**
- * Stores the contexts for a single project
+ * Stores the pointcuts for a single project
  * @author andrew
  * @created Nov 17, 2010
  */
 public class DSLDStore {
 
-    private final Map<IPointcut, List<IContributionGroup>> contextContributionMap;  // maps contexts to their contributors
-    private final Map<String, Set<IPointcut>> keyContextMap;  // maps unique keys (such as script names) to all the contexts that they produce
+    private final Map<IPointcut, List<IContributionGroup>> pointcutContributionMap;  // maps pointcuts to their contributors
+    private final Map<String, Set<IPointcut>> keyContextMap;  // maps unique keys (such as script names) to all the pointcuts that they produce
     public DSLDStore() {
-        contextContributionMap = new HashMap<IPointcut, List<IContributionGroup>>();
+        pointcutContributionMap = new HashMap<IPointcut, List<IContributionGroup>>();
         keyContextMap = new HashMap<String, Set<IPointcut>>();
     }
     
-    public void addContributionGroup(IPointcut context, IContributionGroup contribution) {
-        List<IContributionGroup> contributions = contextContributionMap.get(context);
+    public void addContributionGroup(IPointcut pointcut, IContributionGroup contribution) {
+        List<IContributionGroup> contributions = pointcutContributionMap.get(pointcut);
         if (contributions == null) {
             contributions = new ArrayList<IContributionGroup>();
-            contextContributionMap.put(context, contributions);
+            pointcutContributionMap.put(pointcut, contributions);
         }
         contributions.add(contribution);
         
-        String identifier = context.getContainerIdentifier();
-        Set<IPointcut> contexts = keyContextMap.get(identifier);
-        if (contexts == null) {
-            contexts = new HashSet<IPointcut>();
-            keyContextMap.put(identifier, contexts);
+        String identifier = pointcut.getContainerIdentifier();
+        Set<IPointcut> pointcuts = keyContextMap.get(identifier);
+        if (pointcuts == null) {
+            pointcuts = new HashSet<IPointcut>();
+            keyContextMap.put(identifier, pointcuts);
         }
-        contexts.add(context);
+        pointcuts.add(pointcut);
     }
     
     
     public void purgeIdentifier(String identifier) {
-        Set<IPointcut> contexts = keyContextMap.remove(identifier);
-        if (contexts != null) {
-            for (IPointcut context : contexts) {
-                contextContributionMap.remove(context);
+        Set<IPointcut> pointcuts = keyContextMap.remove(identifier);
+        if (pointcuts != null) {
+            for (IPointcut pointcut : pointcuts) {
+                pointcutContributionMap.remove(pointcut);
             }
         }
     }
     
     public void purgeAll() {
         keyContextMap.clear();
-        contextContributionMap.clear();
+        pointcutContributionMap.clear();
     }
 
     /**
@@ -84,7 +84,7 @@ public class DSLDStore {
      */
     public DSLDStore createSubStore(GroovyDSLDContext pattern) {
         DSLDStore subStore = new DSLDStore();
-        for (Entry<IPointcut, List<IContributionGroup>> entry : contextContributionMap.entrySet()) {
+        for (Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
             if (entry.getKey().fastMatch(pattern)) {
                 subStore.addAllContributions(entry.getKey(), entry.getValue());
             }
@@ -92,44 +92,48 @@ public class DSLDStore {
         return subStore;
     }
 
-    public void addAllContributions(IPointcut context, List<IContributionGroup> contributions) {
-        List<IContributionGroup> existing = contextContributionMap.get(context);
+    public void addAllContributions(IPointcut pointcut, List<IContributionGroup> contributions) {
+        List<IContributionGroup> existing = pointcutContributionMap.get(pointcut);
         if (existing == null) {
-            contextContributionMap.put(context, contributions);
+            pointcutContributionMap.put(pointcut, contributions);
         } else {
             existing.addAll(contributions);
         }
     }
-    public void addAllContexts(List<IPointcut> contexts, IContributionGroup contribution) {
-        for (IPointcut context : contexts) {
-            addContributionGroup(context, contribution);
+    public void addAllContexts(List<IPointcut> pointcuts, IContributionGroup contribution) {
+        for (IPointcut pointcut : pointcuts) {
+            addContributionGroup(pointcut, contribution);
         }
     }
     
     
     public void purgeFileFromStore(IFile file) {
         if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Purging context for DSL file " + file);
+            GroovyLogManager.manager.log(TraceCategory.DSL, "Purging pointcut for DSL file " + file);
         }
-        Set<IPointcut> contexts = keyContextMap.remove(convertToIdentifier(file));
-        if (contexts != null) {
-            for (IPointcut context : contexts) {
-                contextContributionMap.remove(context);
+        Set<IPointcut> pointcuts = keyContextMap.remove(convertToIdentifier(file));
+        if (pointcuts != null) {
+            for (IPointcut pointcut : pointcuts) {
+                pointcutContributionMap.remove(pointcut);
             }
         }
     }
 
     /**
      * Find all contributions for this pattern and this declaring type
+     * @param disabledScripts TODO
      * @return
      */
-    public List<IContributionElement> findContributions(GroovyDSLDContext pattern) {
+    public List<IContributionElement> findContributions(GroovyDSLDContext pattern, Set<String> disabledScripts) {
         List<IContributionElement> elts = new ArrayList<IContributionElement>();
-        for (Entry<IPointcut, List<IContributionGroup>> entry : contextContributionMap.entrySet()) {
-            BindingSet matches = entry.getKey().matches(pattern);
-            if (matches != null) {
-                for (IContributionGroup group : entry.getValue()) {
-                    elts.addAll(group.getContributions(pattern, matches));
+        for (Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
+            IPointcut pointcut = entry.getKey();
+            if (! disabledScripts.contains(pointcut.getContainerIdentifier())) {
+                BindingSet matches = pointcut.matches(pattern);
+                if (matches != null) {
+                    for (IContributionGroup group : entry.getValue()) {
+                        elts.addAll(group.getContributions(pattern, matches));
+                    }
                 }
             }
         }

@@ -16,6 +16,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
+import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionElement;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -53,7 +54,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         initialPattern.setTargetType(declaringType);
         // don't know about closure or annotated scopes
         // would be nice to do a succeed-fast approach here rather than trolling through all
-        List<IContributionElement> elts = store.findContributions(initialPattern);
+        List<IContributionElement> elts = store.findContributions(initialPattern, DSLPreferences.getDisabledScriptsAsSet());
         for (IContributionElement elt : elts) {
             TypeAndDeclaration td = elt.lookupType(name, declaringType, initialPattern.resolver);
             if (td != null) {
