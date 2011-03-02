@@ -319,6 +319,7 @@ public class GroovyParser {
 
 	static {
 		try {
+			System.out.println("Checking property greclipse.nonlocking:");
 			boolean value = System.getProperty("greclipse.nonlocking", "false").equalsIgnoreCase("true");
 			NONLOCKING = value;
 			if (value) {
