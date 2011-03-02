@@ -11,6 +11,7 @@
  *******************************************************************************/
 package org.codehaus.groovy.m2eclipse;
 
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.project.MavenProject;
@@ -66,7 +67,7 @@ public class GroovyProjectConfigurator extends AbstractProjectConfigurator
             	}
             }
 
-            if (sourceType == SourceType.TEST || sourceType == sourceType.BOTH) {
+            if (sourceType == SourceType.TEST || sourceType == SourceType.BOTH) {
 	            IPath testPath = projectPath.append("src/test/groovy"); //$NON-NLS-1$
 	            IPath testOutPath = projectPath.append("target/test-classes"); //$NON-NLS-1$
 	            if (!hasEntry(javaProject, testPath)) {
@@ -104,6 +105,14 @@ public class GroovyProjectConfigurator extends AbstractProjectConfigurator
         Plugin plugin = getGMavenPlugin(mavenProject);
         SourceType result = null;
 
+        if (plugin == null) {
+            // look to see if there is the maven-compiler-plugin
+            // with a compilerId of the groovy eclipse compiler
+            if (compilerPluginUsesGroovyEclipseAdapter(mavenProject)) {
+                return SourceType.NONE;
+            }
+        }
+        
         if (plugin != null && plugin.getExecutions() != null
                 && !plugin.getExecutions().isEmpty()) {
         	result = SourceType.NONE;
@@ -141,6 +150,19 @@ public class GroovyProjectConfigurator extends AbstractProjectConfigurator
             p = mavenProject.getPlugin("org.codehaus.groovy.maven:gmaven-plugin"); //$NON-NLS-1$
         }
         return p;
+    }
+    
+    private boolean compilerPluginUsesGroovyEclipseAdapter(MavenProject mavenProject) {
+        for (Plugin buildPlugin : mavenProject.getBuildPlugins()) {
+            if ("maven-compiler-plugin".equals(buildPlugin.getArtifactId()) && "org.apache.maven.plugins".equals(buildPlugin.getGroupId())) {
+                for (Dependency dependency : buildPlugin.getDependencies()) {
+                    if ("groovy-eclipse-compiler".equals(dependency.getArtifactId()) && "org.codehaus.groovy".equals(dependency.getGroupId())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
     
     private static final String COMPILE = "compile";
