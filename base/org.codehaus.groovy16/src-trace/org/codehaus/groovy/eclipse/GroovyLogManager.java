@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -166,5 +168,16 @@ public class GroovyLogManager {
     public void setUseDefaultLogger(boolean useDefaultLogger) {
         this.useDefaultLogger = useDefaultLogger;
     }
+    
+    public void logException(Throwable t) {
+        if (hasLoggers()) {
+            // only log if logger is available, otherwise, ignore
+            StringWriter writer = new StringWriter();
+            t.printStackTrace(new PrintWriter(writer));
+            log(TraceCategory.DSL, "Exception caught.\n" +
+                    writer.getBuffer());
+        }
+    }
+
     
 }
