@@ -109,6 +109,12 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
      *         location of {@link #variable}
      */
     private boolean interestingElement(IJavaElement enclosingElement) {
+        // the clinit is always interesting since the clinit contains static
+        // initializers
+        if (enclosingElement.getElementName().equals("<clinit>")) {
+            return true;
+        }
+
         if (start >= 0 && end >= 0 && enclosingElement instanceof ISourceReference) {
             try {
                 ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();

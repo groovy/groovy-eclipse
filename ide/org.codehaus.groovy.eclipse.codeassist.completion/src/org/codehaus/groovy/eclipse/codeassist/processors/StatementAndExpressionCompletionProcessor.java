@@ -220,6 +220,11 @@ public class StatementAndExpressionCompletionProcessor extends
          *         {@link #nodeToLookFor}
          */
         private boolean interestingElement(IJavaElement enclosingElement) {
+            // the clinit is always interesting since the clinit contains static initializers
+            if (enclosingElement.getElementName().equals("<clinit>")) {
+                return true;
+            }
+
             if (enclosingElement instanceof ISourceReference) {
                 try {
                     ISourceRange range = ((ISourceReference) enclosingElement)
@@ -319,13 +324,16 @@ public class StatementAndExpressionCompletionProcessor extends
                 groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass,
                         Collections.singleton(VariableScope.DGM_CLASS_NODE), context.completionExpression, false));
             }
-            completionType = null;
+            completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
+                    : context.unit.getModuleNode().getScriptClassDummy();
+
             isStatic = false;
         }
 
         // get proposals from providers
         try {
-            context.currentScope = requestor.currentScope;
+            context.currentScope = requestor.currentScope != null ? requestor.currentScope
+                    : createTopLevelScope(completionType);
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
             for (IProposalProvider provider : providers) {
                 try {
@@ -388,8 +396,17 @@ public class StatementAndExpressionCompletionProcessor extends
     }
 
     /**
-     * When completing an expression, use the completion type found by the requestor.
-     * Otherwise, use the current type
+     * @param completionType
+     * @return
+     */
+    protected VariableScope createTopLevelScope(ClassNode completionType) {
+        VariableScope scope = new VariableScope(null, completionType, false);
+        return scope;
+    }
+
+    /**
+     * When completing an expression, use the completion type found by the requestor. Otherwise, use
+     * the current type
      * @param requestor
      * @return
      */

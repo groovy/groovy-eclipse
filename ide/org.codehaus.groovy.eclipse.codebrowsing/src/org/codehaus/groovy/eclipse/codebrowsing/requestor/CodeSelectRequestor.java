@@ -147,6 +147,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * @return true iff enclosingElement's source location contains the source location of {@link #nodeToLookFor} 
      */
     private boolean interestingElement(IJavaElement enclosingElement) {
+        // the clinit is always interesting since the clinit contains static initializers
+        if (enclosingElement.getElementName().equals("<clinit>")) {
+            return true;
+        }
+        
         if (enclosingElement instanceof ISourceReference) {
             try {
                 ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();

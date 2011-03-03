@@ -96,6 +96,12 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
      *         location of {@link #selectedText}
      */
     private boolean interestingElement(IJavaElement enclosingElement) {
+        // the clinit is always interesting since the clinit contains static
+        // initializers
+        if (enclosingElement.getElementName().equals("<clinit>")) {
+            return true;
+        }
+
         if (enclosingElement instanceof ISourceReference) {
             try {
                 ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();

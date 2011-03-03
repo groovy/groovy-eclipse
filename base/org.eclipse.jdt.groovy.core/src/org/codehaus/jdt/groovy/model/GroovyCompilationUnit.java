@@ -16,6 +16,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
@@ -182,6 +184,11 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
 			if (!isOnBuildPath()) {
 				return false;
+			}
+
+			if (GroovyLogManager.manager.hasLoggers()) {
+				GroovyLogManager.manager.log(TraceCategory.COMPILER, "Build Structure starting for " + this.name);
+				GroovyLogManager.manager.logStart("Build structure: " + name + " : " + Thread.currentThread().getName());
 			}
 
 			CompilationUnitElementInfo unitInfo = (CompilationUnitElementInfo) info;
@@ -363,6 +370,10 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			return unitInfo.isStructureKnown();
 		} finally {
 			depth.set(depth.get() - 1);
+			if (GroovyLogManager.manager.hasLoggers()) {
+				GroovyLogManager.manager.logEnd("Build structure: " + name + " : " + Thread.currentThread().getName(),
+						TraceCategory.COMPILER);
+			}
 		}
 	}
 
@@ -450,9 +461,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	}
 
 	/**
-	 * Only returns a resolver if this is a working copy
-	 * and the DSL bundle is available (that is the only bundle that requires
-	 * this method)
+	 * Only returns a resolver if this is a working copy and the DSL bundle is available (that is the only bundle that requires this
+	 * method)
 	 * 
 	 * @return a {@link JDTResolver} for this unit
 	 */

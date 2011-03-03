@@ -18,11 +18,21 @@ import org.eclipse.jface.text.ITextViewer;
  * If this hover is used, then due to ordering problems with content assist
  * hovers,
  * this hover will override the variable info hover.
- * 
+ *
  * @author andrew
  * @created Dec 1, 2010
  */
 public class GroovyExtraInformationHover extends JavadocHover {
+
+    private final boolean alwaysReturnInformation;
+
+    public GroovyExtraInformationHover() {
+        alwaysReturnInformation = false;
+    }
+
+    public GroovyExtraInformationHover(boolean alwaysReturnInformation) {
+        this.alwaysReturnInformation = alwaysReturnInformation;
+    }
 
     @Override
     public Object getHoverInfo2(ITextViewer textViewer, IRegion hoverRegion) {
@@ -46,7 +56,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         if (elements != null && elements.length == 1) {
             if (elements[0] instanceof IGroovyResolvedElement) {
                 IGroovyResolvedElement resolvedElt = (IGroovyResolvedElement) elements[0];
-                if (resolvedElt.getExtraDoc() != null && resolvedElt.getExtraDoc().length() > 0) {
+                if (alwaysReturnInformation || (resolvedElt.getExtraDoc() != null && resolvedElt.getExtraDoc().length() > 0)) {
                     return true;
                 }
             }

@@ -186,7 +186,11 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                 .getInformationProvider(IDocument.DEFAULT_CONTENT_TYPE);
         JavaTypeHover implementation = (JavaTypeHover) ReflectionUtils.getPrivateField(JavaInformationProvider.class,
                 "fImplementation", provider);
-        GroovyExtraInformationHover hover = new GroovyExtraInformationHover();
+        // when the extra information is invoked from this way, always return
+        // some information since there is no BestMatchHover to fall back on
+        // This hover is typically invoked when pressing F2.
+        // Hovers that are invoked through a mouse, use a BestMatchHover.
+        GroovyExtraInformationHover hover = new GroovyExtraInformationHover(true);
         hover.setEditor(this.getEditor());
         ReflectionUtils.setPrivateField(JavaTypeHover.class, "fJavadocHover", implementation, hover);
         return informationPresenter;
