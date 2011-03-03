@@ -30,7 +30,14 @@ public interface ITypeRequestor {
 	 * Specifies whether the visit should continue, the branch should be canceled, or the entire visit should be stopped
 	 */
 	public static enum VisitStatus {
-		CONTINUE(0), CANCEL_BRANCH(1), STOP_VISIT(2);
+		/** continue to the next ASTNode */
+		CONTINUE(0),
+		/** Don't visit any of this ASTNode's children */
+		CANCEL_BRANCH(1),
+		/** Stop visiting the enclosing memebr declaration (ie- type, field or method) */
+		CANCEL_MEMBER(2),
+		/** Completely end the visit */
+		STOP_VISIT(3);
 
 		int val;
 

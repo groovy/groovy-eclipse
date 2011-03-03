@@ -107,6 +107,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	public class VisitCompleted extends RuntimeException {
 		private static final long serialVersionUID = 1L;
+
+		public final VisitStatus status;
+
+		public VisitCompleted(VisitStatus status) {
+			super();
+			this.status = status;
+		}
+
 	}
 
 	private final GroovyCompilationUnit unit;
@@ -123,8 +131,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private IJavaElement enclosingElement;
 	private ASTNode enclosingDeclarationNode;
 	private BinaryExpression enclosingAssignment;
-
-	private boolean rethrowVisitComplete = false;
 
 	/**
 	 * The head of the stack is the current property/attribute/methodcall/binary expression being visited. This stack is used so we
@@ -163,7 +169,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		this.requestor = requestor;
 		enclosingElement = unit;
-		rethrowVisitComplete = true;
 		VariableScope topLevelScope = new VariableScope(null, enclosingDeclarationNode, false);
 		scopes.push(topLevelScope);
 
@@ -186,6 +191,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			scopes.pop();
 
 		} catch (VisitCompleted vc) {
+			// can ignore
 		} catch (Exception e) {
 			Util.log(e, "Error performing search for " + unit.getElementName());
 		}
@@ -199,8 +205,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitJDT(IType type, ITypeRequestor requestor) {
 		IJavaElement oldEnclosing = enclosingElement;
 		ASTNode oldEnclosingNode = enclosingDeclarationNode;
-		boolean oldRethrow = rethrowVisitComplete;
-		rethrowVisitComplete = true;
 		enclosingElement = type;
 		ClassNode node = findClassWithName(createName(type));
 		if (node == null) {
@@ -251,13 +255,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 
 		} catch (VisitCompleted vc) {
-			if (oldRethrow) {
+			if (vc.status == VisitStatus.STOP_VISIT) {
 				throw vc;
 			}
 		} finally {
 			enclosingElement = oldEnclosing;
 			enclosingDeclarationNode = oldEnclosingNode;
-			rethrowVisitComplete = oldRethrow;
 			scopes.pop();
 		}
 	}
@@ -327,7 +330,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		try {
 			visitField(fieldNode);
 		} catch (VisitCompleted vc) {
-			if (rethrowVisitComplete) {
+			if (vc.status == VisitStatus.STOP_VISIT) {
 				throw vc;
 			}
 		} finally {
@@ -350,7 +353,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				try {
 					visitConstructorOrMethod(lazyMethod, lazyMethod instanceof ConstructorNode);
 				} catch (VisitCompleted vc) {
-					if (rethrowVisitComplete) {
+					if (vc.status == VisitStatus.STOP_VISIT) {
 						throw vc;
 					}
 				} finally {
@@ -378,7 +381,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		try {
 			visitConstructorOrMethod(methodNode, method.isConstructor());
 		} catch (VisitCompleted vc) {
-			if (rethrowVisitComplete) {
+			if (vc.status == VisitStatus.STOP_VISIT) {
 				throw vc;
 			}
 		} catch (JavaModelException e) {
@@ -414,8 +417,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				break;
 			case CANCEL_BRANCH:
 				return;
+			case CANCEL_MEMBER:
 			case STOP_VISIT:
-				throw new VisitCompleted();
+				throw new VisitCompleted(status);
 		}
 
 		if (!node.isEnum()) {
@@ -509,8 +513,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				super.visitField(node);
 			case CANCEL_BRANCH:
 				return;
+			case CANCEL_MEMBER:
 			case STOP_VISIT:
-				throw new VisitCompleted();
+				throw new VisitCompleted(status);
 		}
 	}
 
@@ -547,8 +552,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				// fall through
 			case CANCEL_BRANCH:
 				return;
+			case CANCEL_MEMBER:
 			case STOP_VISIT:
-				throw new VisitCompleted();
+				throw new VisitCompleted(status);
 		}
 	}
 
@@ -625,8 +631,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				// fall through
 			case CANCEL_BRANCH:
 				return;
+			case CANCEL_MEMBER:
 			case STOP_VISIT:
-				throw new VisitCompleted();
+				throw new VisitCompleted(status);
 		}
 	}
 
@@ -670,9 +677,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				case CONTINUE:
 					continue;
 				case CANCEL_BRANCH:
+					// assume that import statements are not interesting
 					return;
+				case CANCEL_MEMBER:
 				case STOP_VISIT:
-					throw new VisitCompleted();
+					throw new VisitCompleted(status);
 			}
 		}
 	}
@@ -691,9 +700,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				return true;
 			case CANCEL_BRANCH:
 				return false;
+			case CANCEL_MEMBER:
 			case STOP_VISIT:
 			default:
-				throw new VisitCompleted();
+				throw new VisitCompleted(status);
 		}
 
 	}
@@ -744,8 +754,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					propertyExpressionType.push(result.type);
 				}
 				return false;
+			case CANCEL_MEMBER:
 			case STOP_VISIT:
-				throw new VisitCompleted();
+				throw new VisitCompleted(status);
 		}
 		// won't get here
 		return false;
@@ -780,8 +791,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 						break;
 					case CANCEL_BRANCH:
 						return false;
+					case CANCEL_MEMBER:
 					case STOP_VISIT:
-						throw new VisitCompleted();
+						throw new VisitCompleted(status);
 				}
 
 				// visit the parameter type
@@ -1450,8 +1462,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				break;
 			case CANCEL_BRANCH:
 				return;
+			case CANCEL_MEMBER:
 			case STOP_VISIT:
-				throw new VisitCompleted();
+				throw new VisitCompleted(status);
 		}
 	}
 

@@ -32,6 +32,7 @@ public class AllBrowsingTests {
         suite.addTestSuite(FindAllOccurrencesVisitorTests.class);
         suite.addTestSuite(ASTFragmentTests.class);
         suite.addTestSuite(IsSameExpressionTests.class);
+        suite.addTestSuite(PartialVisitTest.class);
         return suite;
     }
 }

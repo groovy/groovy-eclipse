@@ -497,7 +497,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
         // now try to infer the variable types
         InferParameterAndReturnTypesRequestor inferRequestor = new InferParameterAndReturnTypesRequestor(actualParameters,
-                returnParameters);
+                returnParameters, selectedText);
         TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
         visitor.visitCompilationUnit(inferRequestor);
 

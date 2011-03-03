@@ -39,6 +39,8 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
@@ -77,6 +79,12 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
             IJavaElement enclosingElement) {
+        
+        // check to see if the enclosing element does not enclose the nodeToLookFor
+        if (! interestingElement(enclosingElement)) {
+            return VisitStatus.CANCEL_MEMBER;
+        }
+        
         if (node instanceof ImportNode) {
             node = ((ImportNode) node).getType();
             if (node == null) {
@@ -131,6 +139,23 @@ public class CodeSelectRequestor implements ITypeRequestor {
             return VisitStatus.STOP_VISIT;
         }
         return VisitStatus.CONTINUE;
+    }
+
+
+    /**
+     * @param enclosingElement
+     * @return true iff enclosingElement's source location contains the source location of {@link #nodeToLookFor} 
+     */
+    private boolean interestingElement(IJavaElement enclosingElement) {
+        if (enclosingElement instanceof ISourceReference) {
+            try {
+                ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
+                return range.getOffset() <= nodeToLookFor.getStart() && range.getOffset() + range.getLength() >= nodeToLookFor.getEnd();
+            } catch (JavaModelException e) {
+                Util.log(e);
+            }
+        }
+        return false;
     }
 
 

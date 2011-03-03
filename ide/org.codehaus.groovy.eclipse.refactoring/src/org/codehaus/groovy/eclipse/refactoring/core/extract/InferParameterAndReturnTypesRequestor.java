@@ -24,10 +24,15 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.ISourceReference;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  *
@@ -39,7 +44,10 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
 
     private Map<Variable, ClassNode> inferredTypes;
 
-    public InferParameterAndReturnTypesRequestor(List<Variable> actualParameters, Set<Variable> returnParameters) {
+    private final Region selectedText;
+
+    public InferParameterAndReturnTypesRequestor(List<Variable> actualParameters, Set<Variable> returnParameters,
+            Region selectedText) {
         inferredTypes = new HashMap<Variable, ClassNode>();
         for (Variable variable : actualParameters) {
             inferredTypes.put(variable, null);
@@ -47,9 +55,16 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
         for (Variable variable : returnParameters) {
             inferredTypes.put(variable, null);
         }
+        this.selectedText = selectedText;
     }
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+        // check to see if the enclosing element does not enclose the
+        // nodeToLookFor
+        if (!interestingElement(enclosingElement)) {
+            return VisitStatus.CANCEL_MEMBER;
+        }
+
         if (node instanceof Variable) {
             if (inferredTypes.containsKey(node)) {
                 inferredTypes.put((Variable) node, extractType(result));
@@ -74,4 +89,23 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
     public Map<Variable, ClassNode> getInferredTypes() {
         return inferredTypes;
     }
+
+    /**
+     * @param enclosingElement
+     * @return true iff enclosingElement's source location contains the source
+     *         location of {@link #selectedText}
+     */
+    private boolean interestingElement(IJavaElement enclosingElement) {
+        if (enclosingElement instanceof ISourceReference) {
+            try {
+                ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
+                return range.getOffset() <= selectedText.getOffset()
+                        && range.getOffset() + range.getLength() >= selectedText.getEnd();
+            } catch (JavaModelException e) {
+                Util.log(e);
+            }
+        }
+        return false;
+    }
+
 }

@@ -47,6 +47,9 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.ISourceReference;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -54,6 +57,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
+import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -109,6 +113,11 @@ public class StatementAndExpressionCompletionProcessor extends
 
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
+
+            // check to see if the enclosing element does not enclose the nodeToLookFor
+            if (!interestingElement(enclosingElement)) {
+                return VisitStatus.CANCEL_MEMBER;
+            }
 
             if (node instanceof ClassNode) {
                 ClassNode clazz = (ClassNode) node;
@@ -203,6 +212,26 @@ public class StatementAndExpressionCompletionProcessor extends
                 }
             }
             return isNotExpressionAndStatement(completionNode, node) && completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd();
+        }
+
+        /**
+         * @param enclosingElement
+         * @return true iff enclosingElement's source location contains the source location of
+         *         {@link #nodeToLookFor}
+         */
+        private boolean interestingElement(IJavaElement enclosingElement) {
+            if (enclosingElement instanceof ISourceReference) {
+                try {
+                    ISourceRange range = ((ISourceReference) enclosingElement)
+                            .getSourceRange();
+                    return range.getOffset() <= completionNode.getStart()
+                            && range.getOffset() + range.getLength() >= completionNode
+                                    .getEnd();
+                } catch (JavaModelException e) {
+                    Util.log(e);
+                }
+            }
+            return false;
         }
 
         private boolean isNotExpressionAndStatement(ASTNode thisNode, ASTNode otherNode) {

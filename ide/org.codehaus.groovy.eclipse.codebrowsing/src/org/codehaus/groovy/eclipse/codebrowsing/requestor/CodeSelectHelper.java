@@ -52,7 +52,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                         return returnThisNode(unit, nodeToLookFor);
                     }
                     
-                    CodeSelectRequestor requestor = new CodeSelectRequestor(nodeToLookFor, unit);
+                    CodeSelectRequestor requestor = createRequestor(unit, nodeToLookFor);
                     TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
                     visitor.visitCompilationUnit(requestor);
                     return requestor.getRequestedElement() != null ? new IJavaElement[] { requestor.getRequestedElement() } : new IJavaElement[0];
@@ -64,6 +64,17 @@ public class CodeSelectHelper implements ICodeSelectHelper {
             }
         }
         return new IJavaElement[0];
+    }
+
+    /**
+     * Allow sub-classes to provide their own requestor
+     * @param unit
+     * @param nodeToLookFor
+     * @return
+     */
+    protected CodeSelectRequestor createRequestor(GroovyCompilationUnit unit,
+            ASTNode nodeToLookFor) {
+        return new CodeSelectRequestor(nodeToLookFor, unit);
     }
     
     public ASTNode selectASTNode(GroovyCompilationUnit unit, int start, int length) {
@@ -83,7 +94,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                         return ((ClassNode) nodeToLookFor).redirect();
                     }
                     
-                    CodeSelectRequestor requestor = new CodeSelectRequestor(nodeToLookFor, unit);
+                    CodeSelectRequestor requestor = createRequestor(unit, nodeToLookFor);
                     TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
                     visitor.visitCompilationUnit(requestor);
                     return requestor.getRequestedNode();

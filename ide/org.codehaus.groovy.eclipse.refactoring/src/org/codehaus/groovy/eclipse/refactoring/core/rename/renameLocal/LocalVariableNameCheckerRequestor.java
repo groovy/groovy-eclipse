@@ -20,8 +20,12 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.ISourceReference;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Checks to make sure that a rename request for a local variable is not shadowing an existing name
@@ -31,6 +35,11 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
 
     private final Variable variable;
+
+    private final int start;
+
+    private final int end;
+
     private final String newName;
     private boolean shadowing = false;
     private boolean variableFound = false;
@@ -38,10 +47,25 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
     public LocalVariableNameCheckerRequestor(Variable variable, String newName) {
         this.variable = variable;
         this.newName = newName;
+
+        if (variable instanceof ASTNode) {
+            ASTNode v = (ASTNode) variable;
+            start = v.getStart();
+            end = v.getEnd();
+        } else {
+            start = end = -1;
+        }
     }
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
             IJavaElement enclosingElement) {
+
+        // check to see if the enclosing element does not enclose the
+        // nodeToLookFor
+        if (!interestingElement(enclosingElement)) {
+            return VisitStatus.CANCEL_MEMBER;
+        }
+
         // only start looking for shadows when we've hit the variable that we are renaming
         if (!variableFound) {
             if (node == variable) {
@@ -63,7 +87,7 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
                 }
             }
         }
-        
+
         if (node instanceof ConstantExpression) {
             ConstantExpression con = (ConstantExpression) node;
             if (con.getText().equals(variable.getName()) && result.declaration != variable) {
@@ -71,11 +95,29 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
                 return VisitStatus.STOP_VISIT;
             }
         }
-        
+
         return VisitStatus.CONTINUE;
     }
-    
+
     public boolean isShadowing() {
         return shadowing;
     }
+
+    /**
+     * @param enclosingElement
+     * @return true iff enclosingElement's source location contains the source
+     *         location of {@link #variable}
+     */
+    private boolean interestingElement(IJavaElement enclosingElement) {
+        if (start >= 0 && end >= 0 && enclosingElement instanceof ISourceReference) {
+            try {
+                ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
+                return range.getOffset() <= start && range.getOffset() + range.getLength() >= end;
+            } catch (JavaModelException e) {
+                Util.log(e);
+            }
+        }
+        return false;
+    }
+
 }
