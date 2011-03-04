@@ -37,7 +37,24 @@ public class InferencingCompletionTests extends CompletionTestCase {
         "    t.st\n" +
         "  }" +
         "}";
+    
+    private static final String CONTENTS_GETAT1 = 
+    		"class GetAt {\n" +
+    		"  String getAt(foo) { }\n" +
+    		"}\n" +
+    		"\n" +
+    		"new GetAt()[0].star\n" +
+    		"GetAt g\n" +
+    		"g[0].star";
 
+    private static final String CONTENTS_GETAT2 = 
+        "class GetAt {\n" +
+        "}\n" +
+        "\n" +
+        "new GetAt()[0].star\n" +
+        "GetAt g\n" +
+        "g[0].star";
+    
     private static final String CONTENTS_CLOSURE = "def file = new File(\"/tmp/some-file.txt\")\ndef writer = file.newWriter()\nnew URL(url).eachLine { line ->\nwriter.close()\n}";
     public void testInferenceOfLocalStringInMethod() throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS, getIndexOf(CONTENTS, "s.st"));
@@ -61,4 +78,22 @@ public class InferencingCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_CLOSURE, getIndexOf(CONTENTS_CLOSURE, "writer.clos"));
         proposalExists(proposals, "close", 1);
     }
+    
+    public void testGetAt1() throws Exception {
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_GETAT1, getIndexOf(CONTENTS_GETAT1, ")[0].star"));
+        proposalExists(proposals, "startsWith", 2);
+    }
+    public void testGetAt2() throws Exception {
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_GETAT1, getIndexOf(CONTENTS_GETAT1, "g[0].star"));
+        proposalExists(proposals, "startsWith", 2);
+    }
+    public void testGetAt3() throws Exception {
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_GETAT2, getIndexOf(CONTENTS_GETAT2, ")[0].star"));
+        proposalExists(proposals, "startsWith", 0);
+    }
+    public void testGetAt4() throws Exception {
+        ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_GETAT2, getIndexOf(CONTENTS_GETAT2, "g[0].star"));
+        proposalExists(proposals, "startsWith", 0);
+    }
+    
 }

@@ -145,8 +145,22 @@ public class StatementAndExpressionCompletionProcessor extends
                 maybeRememberLHSType(result);
                 resultingType = result.type;
                 if (derefList) {
-                    for (int i = 0; i < derefCount; i++) {
-                        resultingType = VariableScope.deref(resultingType);
+
+                    // GRECLIPSE-742: does the LHS type have a 'getAt' method?
+                    boolean getAtFound = false;
+                    List<MethodNode> getAts = resultingType.getMethods("getAt");
+                    for (MethodNode getAt : getAts) {
+                        if (getAt.getParameters() != null
+                                && getAt.getParameters().length == 1) {
+                            resultingType = getAt.getReturnType();
+                            getAtFound = true;
+                        }
+                    }
+
+                    if (!getAtFound) {
+                        for (int i = 0; i < derefCount; i++) {
+                            resultingType = VariableScope.deref(resultingType);
+                        }
                     }
                 }
                 categories = result.scope.getCategoryNames();

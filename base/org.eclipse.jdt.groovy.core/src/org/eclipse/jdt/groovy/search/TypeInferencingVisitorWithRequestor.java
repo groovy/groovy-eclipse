@@ -677,9 +677,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				case CONTINUE:
 					continue;
 				case CANCEL_BRANCH:
+				case CANCEL_MEMBER:
 					// assume that import statements are not interesting
 					return;
-				case CANCEL_MEMBER:
 				case STOP_VISIT:
 					throw new VisitCompleted(status);
 			}
@@ -1668,6 +1668,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		switch (op) {
 
 			case '[':
+				// GRECLIPSE-742: does the LHS type have a 'getAt' method?
+				List<MethodNode> getAts = lhs.getMethods("getAt");
+				for (MethodNode getAt : getAts) {
+					if (getAt.getParameters() != null && getAt.getParameters().length == 1) {
+						return getAt.getReturnType();
+					}
+				}
+
 				// deref...get component type of lhs
 				return VariableScope.deref(lhs);
 			case '-':

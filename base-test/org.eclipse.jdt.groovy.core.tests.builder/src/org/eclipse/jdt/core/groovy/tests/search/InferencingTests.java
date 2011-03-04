@@ -429,4 +429,43 @@ public class InferencingTests extends AbstractInferencingTest {
         int end = start + "'${print}'".length();
         assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
+    
+    private static final String CONTENTS_GETAT1 = 
+        "class GetAt {\n" +
+        "  String getAt(foo) { }\n" +
+        "}\n" +
+        "\n" +
+        "new GetAt()[0].startsWith()\n" +
+        "GetAt g\n" +
+        "g[0].startsWith()";
+
+    private static final String CONTENTS_GETAT2 = 
+        "class GetAt {\n" +
+        "}\n" +
+        "\n" +
+        "new GetAt()[0].startsWith()\n" +
+        "GetAt g\n" +
+        "g[0].startsWith()";
+
+    
+    public void testGetAt1() throws Exception {
+        int start = CONTENTS_GETAT1.indexOf("startsWith");
+        int end = start + "startsWith".length();
+        assertDeclaringType(CONTENTS_GETAT1, start, end, "java.lang.String");
+    }
+    public void testGetAt2() throws Exception {
+        int start = CONTENTS_GETAT1.lastIndexOf("startsWith");
+        int end = start + "startsWith".length();
+        assertDeclaringType(CONTENTS_GETAT1, start, end, "java.lang.String");
+    }
+    public void testGetAt3() throws Exception {
+        int start = CONTENTS_GETAT2.indexOf("startsWith");
+        int end = start + "startsWith".length();
+        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt");
+    }
+    public void testGetAt4() throws Exception {
+        int start = CONTENTS_GETAT2.lastIndexOf("startsWith");
+        int end = start + "startsWith".length();
+        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt");
+    }
 }
