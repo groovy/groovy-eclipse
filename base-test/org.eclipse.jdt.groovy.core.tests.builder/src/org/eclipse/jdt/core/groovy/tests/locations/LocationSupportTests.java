@@ -21,6 +21,8 @@ import junit.framework.TestCase;
 import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
@@ -222,9 +224,7 @@ public class LocationSupportTests extends TestCase {
         
     }
     
-    // GRECLIPSE-805
-    // not working yet
-    public void _testUnicodeEscapes1() throws Exception {
+    public void testUnicodeEscapes1() throws Exception {
         String escapeSequence = "/*\\u00E9*/ ";
         String content = escapeSequence + "def x = 7";
         
@@ -240,5 +240,45 @@ public class LocationSupportTests extends TestCase {
         assertEquals(escapeSequence.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
         assertEquals(content.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
         
+    }
+    public void testUnicodeEscapes2() throws Exception {
+        String escapeSequence = "/*\\u00E9*/ ";
+        String content = escapeSequence + "\n\n\ndef x = 7";
+        
+        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        sourceUnit.parse();
+        sourceUnit.completePhase();
+        sourceUnit.convert();
+        ModuleNode module = sourceUnit.getAST();
+        
+        // now check locations
+        assertEquals(0, module.getStart());
+        assertEquals(content.length(), module.getEnd());
+        assertEquals(content.indexOf("def"), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
+        assertEquals(content.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
+        
+    }
+    public void testUnicodeEscapes3() throws Exception {
+        String escapeSequence = "/*\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9*/";
+        String content = escapeSequence + "\n\n\ndef /*\\u00E9*/x = /*\\u00E9*/7";
+        
+        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        sourceUnit.parse();
+        sourceUnit.completePhase();
+        sourceUnit.convert();
+        ModuleNode module = sourceUnit.getAST();
+        
+        // now check locations
+        assertEquals(0, module.getStart());
+        assertEquals(content.length(), module.getEnd());
+        assertEquals(content.indexOf("def"), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
+        assertEquals(content.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
+        
+        // inside the assignment
+        DeclarationExpression decl = (DeclarationExpression) ((ExpressionStatement) module.getStatementBlock().getStatements().get(0)).getExpression();
+        assertEquals(content.indexOf('x'), decl.getLeftExpression().getStart());
+        assertEquals(content.indexOf('x')+1, decl.getLeftExpression().getEnd());
+        assertEquals(content.indexOf('7'), decl.getRightExpression().getStart());
+        assertEquals(content.indexOf('7')+1, decl.getRightExpression().getEnd());
     }
 }

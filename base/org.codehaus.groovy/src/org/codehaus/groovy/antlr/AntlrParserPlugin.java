@@ -88,8 +88,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         // TODO find a way to inject any GroovyLexer/GroovyRecognizer
 
+        // GRECLIPSE: start
+        /* old {
         UnicodeEscapingReader unicodeReader = new UnicodeEscapingReader(reader,sourceBuffer);
         GroovyLexer lexer = new GroovyLexer(unicodeReader);
+        } */
+        // GRECLIPSE-805 Support for unicode escape sequences
+        UnicodeEscapingReader unicodeReader = new UnicodeEscapingReader(reader,sourceBuffer);
+        GroovyLexer lexer = new GroovyLexer(new UnicodeLexerSharedInputState(unicodeReader));
+        // end
         unicodeReader.setLexer(lexer);
         GroovyRecognizer parser = GroovyRecognizer.make(lexer);
         parser.setSourceBuffer(sourceBuffer);

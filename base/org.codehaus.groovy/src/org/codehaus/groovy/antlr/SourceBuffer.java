@@ -30,6 +30,9 @@ public class SourceBuffer {
     private StringBuffer current;
     // GRECLIPSE: start
     private final List<Integer> lineEndings;
+
+    // GRECLIPSE-805 Support for unicode escape sequences
+    private UnicodeUnescaper unescaper;
     // end
 
     public SourceBuffer() {
@@ -38,6 +41,7 @@ public class SourceBuffer {
         // GRECLIPSE: start
         lineEndings = new ArrayList<Integer>();
         lineEndings.add(0);
+        unescaper = new NoEscaper();
         // end
 
         current = new StringBuffer();
@@ -116,6 +120,10 @@ public class SourceBuffer {
     } 
     }*/
     // newcode:
+    public void setUnescaper(UnicodeUnescaper unescaper) {
+        this.unescaper = unescaper;
+    }
+    
     private boolean prevWasCarriageReturn = false;
     private int col = 0;
     // FIXASC tidy this up, looks slow
@@ -128,21 +136,21 @@ public class SourceBuffer {
         	if (!prevWasCarriageReturn) {
 	            current = new StringBuffer();
 	            lines.add(current);
-	            lineEndings.add(col);
+	            lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
         	} else {
         		// \r\n was found
         		// back out previous line and add a \n to the line
         		current = new StringBuffer();
         		((StringBuffer) lines.get(lines.size()-1)).append('\n');
         		lineEndings.remove(lineEndings.size()-1);
-        		lineEndings.add(col);
+        		lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
         	}
         }
         // handle carriage returns as well as newlines
         if (c == '\r') {
         	current = new StringBuffer();
         	lines.add(current);
-        	lineEndings.add(col);
+        	lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
         	
         	// this may be a \r\n, but may not be
         	prevWasCarriageReturn = true;
@@ -152,10 +160,10 @@ public class SourceBuffer {
     }
     
     public LocationSupport getLocationSupport() {
-    	lineEndings.add(col); // last line ends wherever it ends...
+    	lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends wherever it ends...
     	int[] lineEndingsArray = new int[lineEndings.size()];
     	for (int i=0,max=lineEndings.size();i<max;i++) {
-    		lineEndingsArray[i] = ((Integer)lineEndings.get(i)).intValue();
+    		lineEndingsArray[i] = lineEndings.get(i).intValue();
     	}
     	return new LocationSupport(lineEndingsArray);
     }

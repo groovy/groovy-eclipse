@@ -50,8 +50,15 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
 
 		setController(sourceUnit);
 
-		UnicodeEscapingReader unicodeReader = new UnicodeEscapingReader(reader, sourceBuffer);
-		GroovyLexer lexer = new GroovyLexer(unicodeReader);
+        // GRECLIPSE: start
+        /* old {
+        UnicodeEscapingReader unicodeReader = new UnicodeEscapingReader(reader,sourceBuffer);
+        GroovyLexer lexer = new GroovyLexer(unicodeReader);
+        } */
+		// GRECLIPSE-805 Support for unicode escape sequences
+		UnicodeEscapingReader unicodeReader = new UnicodeEscapingReader(reader,sourceBuffer);
+        GroovyLexer lexer = new GroovyLexer(new UnicodeLexerSharedInputState(unicodeReader));
+        // end
 		unicodeReader.setLexer(lexer);
 		GroovyRecognizer parser = GroovyRecognizer.make(lexer);
 		parser.setSourceBuffer(sourceBuffer);
