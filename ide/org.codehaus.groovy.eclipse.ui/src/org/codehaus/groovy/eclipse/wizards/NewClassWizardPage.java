@@ -115,7 +115,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
                 } catch (JavaModelException e) {
                     // can ignore
                 }
-                if (type != null) {
+                if (type != null && type.getPackageFragment().equals(pack)) {
                     status.setError(NewWizardMessages.NewTypeWizardPage_error_TypeNameExists);
                 }
             }
