@@ -59,6 +59,8 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
+import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
@@ -71,6 +73,7 @@ import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
 import org.eclipse.jdt.ui.PreferenceConstants;
+import org.eclipse.jdt.ui.actions.AddGetterSetterAction;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
 import org.eclipse.jdt.ui.actions.RefactorActionGroup;
@@ -277,7 +280,6 @@ public class GroovyEditor extends CompilationUnitEditor {
      *
      * Changes marked with // GROOVY
      */
-    @SuppressWarnings("unchecked")
     private class GroovyBracketInserter implements VerifyKeyListener, ILinkedModeListener {
 
         private boolean fCloseBrackets= true;
@@ -746,7 +748,20 @@ public class GroovyEditor extends CompilationUnitEditor {
         markAsSelectionDependentAction(INDENT_ON_TAB, true);
 
         // now remove some actions:
+        // GRECLIPSE-966 must dispose action to avoid memory leak
+        AddGetterSetterAction agsa = (AddGetterSetterAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class,
+                "fAddGetterSetter", group);
+        if (agsa != null) {
+            ReflectionUtils.setPrivateField(AddGetterSetterAction.class, "fEditor", agsa, null);
+        }
         ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fAddGetterSetter", group, null);
+
+        AllCleanUpsAction acua = (AllCleanUpsAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class, "fCleanUp", group);
+        // GRECLIPSE-966 must dispose action to avoid memory leak
+        if (acua != null) {
+            acua.dispose();
+            ReflectionUtils.setPrivateField(CleanUpAction.class, "fEditor", acua, null);
+        }
         ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fCleanUp", group, new NoopCleanUpsAction(getEditorSite()));
 
         // remove most refactorings since they are not yet really supported
@@ -864,7 +879,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     @Override
     public Object getAdapter(Class required) {
         if (IResource.class == required || IFile.class == required) {
