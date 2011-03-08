@@ -14,61 +14,66 @@
     limitations under the License.
  -->
 <project name="Build Facade" default="groovy-main" basedir=".">
-	<property file="build_local.properties" />
-	<import file="build-files/build_shared.xml"/>
   
-	  <target name="-build.internal">
-  		<property name="buildResultsDirectory" value="${buildDirectory}/results" />
+	<target name="-find.pdebuild.home" description="Locate the precise version of pde being used">
+		<files includes="${eclipseDir}/plugins/org.eclipse.pde.build_*/scripts" id="pdebuild.folder" />
+		<property name="pdebuild.home" value="${toString:pdebuild.folder}" />
+		<echo message="pdebuild.home=${pdebuild.home}" />
+	</target>
 
-  		<java classname="org.eclipse.equinox.launcher.Main" fork="true"
-  			errorproperty="is.build.error"
-  			resultproperty="java.result">
-  			<arg value="-application"/>
-  			<arg value="org.eclipse.ant.core.antRunner"/>
-  			<arg value="-f"/>
-  			<arg value="${eclipseDir}/plugins/org.eclipse.pde.build_3.4.1.R34x_v20081217/scripts/build.xml"/>
-  			<!--<arg value="-verbose"/>-->
-  			<jvmarg value="-DworkDir=${workDir}"/>
-  			<jvmarg value="-DbuildHome=${buildHome}"/>
-  			<jvmarg value="-Dbuilder=${buildHome}/build-files"/>
-  			<jvmarg value="-DbuildDirectory=${buildDirectory}"/>
-  			<jvmarg value="-DbuildResultsDirectory=${buildDirectory}/results"/>
-  			<jvmarg value="-DpluginPath=${eclipse.installation.dir}/eclipse/plugins"/>
-  			<jvmarg value="-DbaseLocation=${buildDirectory}"/>
-  			<jvmarg value="-DbuildType=N"/>
-  			<jvmarg value="-DbuildProperties=${buildHome}/build-files/build.properties"/>
-  			<jvmarg value="-DworkspaceDirBase=${workspaceDirBase}"/>
-  			<jvmarg value="-DworkspaceDirBaseTest=${workspaceDirBaseTest}"/>
-  			<jvmarg value="-DworkspaceDirIde=${workspaceDirIde}"/>
-  			<jvmarg value="-DworkspaceDirIdeTest=${workspaceDirIdeTest}"/>
-  			<jvmarg value="-DskipFetch=true"/>
-  			<!-- uncomment to enable debug messages for pde core -->
-  			<!--<jvmarg value="-Dosgi.debug=${buildHome}/build-files/debug_options.properties"/>-->
-  			<jvmarg value="-Dversion.full=${version.full}"/>
-  			<jvmarg value="-Dversion.qualifier=${forceContextQualifier}"/>
-  			<jvmarg value="-DforceContextQualifier=${forceContextQualifier}"/>
-    	
-  		 	<classpath>
-	    		<fileset dir="${eclipseDir}/plugins">
-    	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
-    	    </fileset>
-    	  </classpath>
-			</java>
-	  	
-	  	<fail message="Failed because of: ${is.build.error}">
-	      <condition>
-	         <not>
-	           <equals arg1="${java.result}" arg2="0"/>
-	         </not>
-	       </condition>
-	  	</fail>
-    </target>
+  <target name="groovy-main" depends="-properties,-find.pdebuild.home" description="Runs the build.  This is the main entry point for the script">
+		<property name="buildResultsDirectory" value="${buildDirectory}/results" />
+
+		<java classname="org.eclipse.equinox.launcher.Main" fork="true"
+			errorproperty="is.build.error"
+			resultproperty="java.result">
+			<arg value="-application"/>
+			<arg value="org.eclipse.ant.core.antRunner"/>
+			<arg value="-f"/>
+			<arg value="${pdebuild.home}/build.xml"/>
+			<!--<arg value="-verbose"/>-->
+			<jvmarg value="-DworkDir=${workDir}"/>
+			<jvmarg value="-DbuildHome=${buildHome}"/>
+			<jvmarg value="-Dbuilder=${buildHome}/build-files"/>
+			<jvmarg value="-DbuildDirectory=${buildDirectory}"/>
+			<jvmarg value="-DbuildResultsDirectory=${buildDirectory}/results"/>
+			<jvmarg value="-DpluginPath=${eclipse.installation.dir}/eclipse/plugins"/>
+			<jvmarg value="-DbaseLocation=${buildDirectory}"/>
+			<jvmarg value="-DbuildType=N"/>
+			<jvmarg value="-DbuildProperties=${buildHome}/build-files/build.properties"/>
+			<jvmarg value="-DworkspaceDirBase=${workspaceDirBase}"/>
+			<jvmarg value="-DworkspaceDirBaseTest=${workspaceDirBaseTest}"/>
+			<jvmarg value="-DworkspaceDirIde=${workspaceDirIde}"/>
+			<jvmarg value="-DworkspaceDirIdeTest=${workspaceDirIdeTest}"/>
+			<jvmarg value="-DskipFetch=true"/>
+			<!-- uncomment to enable debug messages for pde core -->
+			<!--<jvmarg value="-Dosgi.debug=${buildHome}/build-files/debug_options.properties"/>-->
+			<jvmarg value="-Dversion.full=${version.full}"/>
+			<jvmarg value="-Dversion.qualifier=${forceContextQualifier}"/>
+			<jvmarg value="-DforceContextQualifier=${forceContextQualifier}"/>
+  	
+		 	<classpath>
+    		<fileset dir="${eclipseDir}/plugins">
+  	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
+  	    </fileset>
+  	  </classpath>
+		</java>
+  	
+  	<fail message="Failed because of: ${is.build.error}">
+      <condition>
+         <not>
+           <equals arg1="${java.result}" arg2="0"/>
+         </not>
+       </condition>
+  	</fail>
+  </target>
 
   				
-  	<target name="-properties" description="Creates required properties">		
-		
-		<!-- versioning -->
-		<property name="build.version" value="HEAD"/>
+	<import file="build-files/build_shared.xml"/>
+ 	<target name="-properties" description="Creates required properties">		
+ 		<property file="build_local.properties" />
+
+		<!-- version identifier -->
 		<tstamp>
 			<format property="tstampQual" pattern="yyyyMMdd-HH00" locale="en,US" timezone="America/Vancouver"/>
 		</tstamp>
@@ -89,53 +94,22 @@
 
 		        
 
-		<!-- includes -->
-		<property file="build_local.properties" />
-		
-		<!-- set defaults -->
-		<property name="buildTarget" value="main"/>
-		
 		<!-- check if clean should be called -->
 		<condition property="is.clean">
-			<and>
 			<not>
 				<isset property="do.not.clean"/>
 			</not>			
-			<or>
-				<equals arg1="main" arg2="${buildTarget}" trim="true"/>
-		   	<equals arg1="fetch" arg2="${buildTarget}" trim="true"/>
-			</or>
-			</and>
 		</condition>
-		<property name="no.rcp.build" value="true"/>
 	</target>
 		
-	<target name="-clean" if="is.clean">
+	<target name="-clean" if="is.clean" description="Cleans the build directory if is.clean is set to true">
 		<echo level="info" message="Cleaning directory ${buildDirectory}"/>
 		<delete dir="${buildDirectory}" verbose="false"/>
 		<mkdir dir="${buildDirectory}"/>
 	</target>
 	
 	<target name="-build" depends="-properties,-clean">
-		<property name="no.rcp.build" value="true"/>
 		<antcall target="unpack.eclipse"/>
 		<antcall target="-build.internal"/>
-	</target>
-	
-	
-	<target name="groovy-main" description="Run the main target of customTargets.xml. Return status 0,1,2 for Success, Build Failure and Test Failure">
-		<property name="buildTarget" value="main"/>
-		<antcall target="-build"/>
-	</target>
-	
-
-	<target name="buildProperties" description="Print out derived properties for the current build." depends="-properties">
-		<fail message="You have to set the property 'buildPropertiesFile' if calling buildProperties" unless="buildPropertiesFile"/>
-		<condition property="subdir" value="nightly" else="releases">
-			<equals arg1="${buildType}" arg2="N"/>
-		</condition>
-		<echo file="${buildPropertiesFile}">relativeServerResultsDir: ${subdir}
-version.full: ${version.full}
-version.qualifier: ${version.qualifier}</echo>
 	</target>
 </project>

@@ -24,6 +24,18 @@
 
   <target name="copyToBuildDirectory"
   	description="Copies from the workspace to the build directory when not fetching from svn">
+  	
+  	<!-- JDT Patch components-->
+  	<copy todir="${featuresDestDir}/org.codehaus.groovy.jdt.patch">
+			<fileset dir="${workspaceDirJdtPatch}/Feature org.codehaus.groovy.jdt.patch">
+			</fileset>
+		</copy>
+		<copy todir="${pluginsDestDir}/org.eclipse.jdt.core">
+			<fileset dir="${workspaceDirJdtPatch}/org.eclipse.jdt.core">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
+
   	<!-- Features -->
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.eclipse.feature">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.eclipse.feature">
@@ -39,10 +51,6 @@
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy17.feature">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy17.feature">
-			</fileset>
-		</copy>
-  	<copy todir="${featuresDestDir}/org.codehaus.groovy.jdt.patch">
-			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.jdt.patch">
 			</fileset>
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.dsl.feature">
@@ -66,11 +74,6 @@
 		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy16">
 			<fileset dir="${workspaceDirBase}/org.codehaus.groovy16">
-					<exclude name="**/bin"/>
-			</fileset>
-		</copy>
-		<copy todir="${pluginsDestDir}/org.eclipse.jdt.core">
-			<fileset dir="${workspaceDirBase}/org.eclipse.jdt.core">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>

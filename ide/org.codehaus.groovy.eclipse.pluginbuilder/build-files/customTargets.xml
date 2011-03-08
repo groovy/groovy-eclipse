@@ -18,26 +18,6 @@
 	</taskdef>
 	
 	
-	<condition property="isNightlyBuild">
-		<equals arg1="${buildType}" arg2="N" />
-	</condition>
-	<condition property="isNightlyOrIntegrationBuild">
-		<or>
-			<equals arg1="${buildType}" arg2="N" />
-			<equals arg1="${buildType}" arg2="I" />
-		</or>
-	</condition>
-	
-	<property name="buildLabel" value="${buildType}-${version.full}" />
-	<property name="buildId" value="${version.full}" />
-	
-	<condition property="isCVSOrCopy" value="true">
-		<or>
-			<equals arg1="${pluginbuilder.is.cvs}" arg2="true"/>
-			<equals arg1="${pluginbuilder.is.copy}" arg2="true"/>
-		</or>
-	</condition>
-	
 	<import file="copyAllProjects.xml"/>
 	
 	<import file="allElements.xml" />
@@ -50,7 +30,7 @@
 	<!-- Check out map files from correct repository -->
 	<!-- Replace values for cvsRoot, package and mapVersionTag as desired. -->
 	<!-- ===================================================================== -->
-	<target name="getMapFiles" if="isCVSOrCopy">
+	<target name="getMapFiles">
 	</target>
 
 	
@@ -214,8 +194,6 @@
   	<!-- fix feature patch version -->
   	<!-- Ensure that feature patch can be installed on multiple versions of Eclipse -->
   	<!-- See http://aniefer.blogspot.com/2009/06/patching-features-part-2.html -->
-  	<property name="orig.jdt.feature.version.range" value="[3.6.0.v20100124-2000-7z8WFRAFMTdeCo0y7FJt1Zi45027,3.6.0.v20100124-2000-7z8WFRAFMTdeCo0y7FJt1Zi45027]"/>  	
-  		<property name="new.jdt.feature.version.range" value="[3.6.0,3.7.0)"/>
   	<replace file="${updateSiteDir}/content.xml" summary="yes"
 	    token="${orig.jdt.feature.version.range}" value="${new.jdt.feature.version.range}"/>
 
