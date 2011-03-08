@@ -39,7 +39,7 @@
           target: -init                      
     - - - - - - - - - - - - - - - - - -->
   <target name="-init">
-  	<property file="../build_local.properties"/>
+  	<property file="../build_local_${eclipse.target.version}.properties"/>
   	<property file="${buildDirectory}/finalPluginsVersions.properties"/>
   </target>
 

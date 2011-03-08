@@ -127,7 +127,7 @@
 	<!-- Create update site  -->
 	<!-- ==================================================== -->
   <property name="updateSiteDir" value="${buildDirectory}/updateSite"/>
-	<property file="${buildHome}/build_local.properties"/>
+	<property file="${buildHome}/build_local_${eclipse.target.version}.properties"/>
   <target name="createUpdateSite">
 
 	  <!-- Create the directory structure -->

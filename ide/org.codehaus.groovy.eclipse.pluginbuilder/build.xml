@@ -21,7 +21,7 @@
 		<echo message="pdebuild.home=${pdebuild.home}" />
 	</target>
 
-  <target name="groovy-main" depends="-properties,-find.pdebuild.home" description="Runs the build.  This is the main entry point for the script">
+  <target name="groovy-main" depends="-properties,unpack.eclipse,-find.pdebuild.home" description="Runs the build.  This is the main entry point for the script">
 		<property name="buildResultsDirectory" value="${buildDirectory}/results" />
 
 		<java classname="org.eclipse.equinox.launcher.Main" fork="true"
@@ -45,6 +45,7 @@
 			<jvmarg value="-DworkspaceDirBaseTest=${workspaceDirBaseTest}"/>
 			<jvmarg value="-DworkspaceDirIde=${workspaceDirIde}"/>
 			<jvmarg value="-DworkspaceDirIdeTest=${workspaceDirIdeTest}"/>
+			<jvmarg value="-Declipse.target.version=${eclipse.target.version}"/>
 			<jvmarg value="-DskipFetch=true"/>
 			<!-- uncomment to enable debug messages for pde core -->
 			<!--<jvmarg value="-Dosgi.debug=${buildHome}/build-files/debug_options.properties"/>-->
@@ -71,7 +72,7 @@
   				
 	<import file="build-files/build_shared.xml"/>
  	<target name="-properties" description="Creates required properties">		
- 		<property file="build_local.properties" />
+ 		<property file="build_local_${eclipse.target.version}.properties" />
 
 		<!-- version identifier -->
 		<tstamp>
@@ -108,8 +109,4 @@
 		<mkdir dir="${buildDirectory}"/>
 	</target>
 	
-	<target name="-build" depends="-properties,-clean">
-		<antcall target="unpack.eclipse"/>
-		<antcall target="-build.internal"/>
-	</target>
 </project>

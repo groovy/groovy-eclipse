@@ -28,7 +28,7 @@
 		 sets property archive.location to the archive path in download cache.
 	 -->
 	<target name="-set.archive.location" if="pluginbuilder.is.server">
-		<!-- set default, useful for server where pluginbuilder.eclipse.url.default can be specified in build_local.properties --> 
+		<!-- set default, useful for server where pluginbuilder.eclipse.url.default can be specified in build_local_e3x.properties --> 
 		<property name="pluginbuilder.eclipse.url" value="${pluginbuilder.eclipse.url.default}"/>
 		<condition property="archive.url" value="${feature.url}" else="${pluginbuilder.eclipse.url}">
 				<isset property="feature.url"/>

@@ -15,7 +15,7 @@
 	<import file="../get-dependencies.xml" />
 
 	<target name="-init">
-	<property file="../../build_local.properties" />
+	<property file="../../build_local_${eclipse.target.version}.properties" />
 	<property file="run-tests.properties" />
 		<antcall target="-installTestEclipseHost" />
 	</target>

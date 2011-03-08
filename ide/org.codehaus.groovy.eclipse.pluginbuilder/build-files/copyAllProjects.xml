@@ -14,7 +14,7 @@
     limitations under the License.
  -->
 <!-- Copies all projects from workspace to the build directory -->
-<!-- Uses two properties that are specified in build_local.properties-->
+<!-- Uses two properties that are specified in build_local_e3x.properties-->
 <!-- workspaceDirXXX : the directory to copy *from* -->
 <!-- buildDirectory : the directory to copy *to* -->
 <project name="Copy">
