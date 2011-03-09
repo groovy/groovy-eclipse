@@ -158,7 +158,7 @@
   	
   	<!-- replace version numbers.  all features use same versions and qualifiers, so just replace all with same version # -->
   	<property file="${buildDirectory}/finalFeaturesVersions.ANY_ANY_ANY.properties"/>
-  	<replace file="${updateSiteDir}/site.xml" summary="yes" failOnNoReplacements="true"
+  	<replace file="${updateSiteDir}/site.xml" summary="yes"
 	    token="0.0.0.qualifier" value="${org.codehaus.groovy.eclipse.feature}"/>
     	
   	<!-- Generate metadata -->
@@ -200,7 +200,7 @@
   		<replacefilter token="${orig.jdt.feature.version.range}" property="new.jdt.feature.version.range"/>
 		</replace>
 		-->
-  	<replace file="${updateSiteDir}/content.xml" summary="yes" failOnNoReplacements="true"
+  	<replace file="${updateSiteDir}/content.xml" summary="yes"
 	    token="${orig.jdt.feature.version.range}" value="${new.jdt.feature.version.range}"/>
 
   	<echo message="Replace in file ${updateSiteDir}/content.xml attempted on tokens:"/>
