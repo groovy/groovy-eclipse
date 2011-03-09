@@ -197,6 +197,9 @@
   	<replace file="${updateSiteDir}/content.xml" summary="yes"
 	    token="${orig.jdt.feature.version.range}" value="${new.jdt.feature.version.range}"/>
 
+  	<echo message="Replace attempted on tokens:"/>
+  	<echo message="orig.jdt.feature.version.range=${orig.jdt.feature.version.range}"/>
+  	<echo message="new.jdt.feature.version.range=${new.jdt.feature.version.range}"/>
   	
   	<!-- Zip up the update site -->
 		<zip destfile="${updateSiteDir}/../groovy-update-site-${org.codehaus.groovy.eclipse.feature}.zip">
