@@ -21,7 +21,10 @@
 		<echo message="pdebuild.home=${pdebuild.home}" />
 	</target>
 
-  <target name="groovy-main" depends="-properties,unpack.eclipse,-find.pdebuild.home" description="Runs the build.  This is the main entry point for the script">
+  <target name="groovy-main" depends="-properties,-clean,unpack.eclipse,-find.pdebuild.home,-build" description="Runs the build.  This is the main entry point for the script">
+  </target>
+	
+	<target name="-build">
 		<property name="buildResultsDirectory" value="${buildDirectory}/results" />
 
 		<java classname="org.eclipse.equinox.launcher.Main" fork="true"
