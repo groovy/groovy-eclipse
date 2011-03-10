@@ -15,8 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.core.search;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.TreeSet;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -24,6 +25,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -43,7 +45,12 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
 
     public FindAllReferencesRequestor(AnnotatedNode declaration) {
         this.declaration = declaration;
-        this.references = new ArrayList<ASTNode>(10);
+        this.references = new TreeSet<ASTNode>(new Comparator<ASTNode>() {
+
+            public int compare(ASTNode o1, ASTNode o2) {
+                return o1.getStart() - o2.getStart();
+            }
+        });
     }
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
@@ -66,6 +73,11 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
 
                 maybeDeclaration = ((ClassNode) maybeDeclaration).redirect();
             }
+
+            if (maybeDeclaration instanceof PropertyNode && ((PropertyNode) maybeDeclaration).getField() != null) {
+                maybeDeclaration = ((PropertyNode) maybeDeclaration).getField();
+            }
+
             if (isEquivalent(maybeDeclaration)) {
                 references.add(node);
             }

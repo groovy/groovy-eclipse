@@ -81,7 +81,36 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int fourth = contents.indexOf("int", third+1);
         
         doTest(contents, second, length, first, length, second, length, third, length, fourth, length);
-    }        
+    }
+    
+    
+    public void testFindProperty() throws Exception {
+        String contents = "class X {\n" + 
+        		"def foo\n" + 
+        		"}\n" + 
+        		"new X().foo\n" +
+        		"new X().foo()\n";  // require a new line here or else Occurrence finding will crash.  See Bug 339614
+        
+        int length = "foo".length(); 
+        int first = contents.indexOf("foo");
+        int second = contents.indexOf("foo", first+1);
+        int third = contents.indexOf("foo", second+1);
+        doTest(contents, second, length, first, length, second, length, third, length);
+    }
+    
+    public void testFindField() throws Exception {
+        String contents = "class X {\n" + 
+                "public def foo\n" + 
+                "}\n" + 
+                "new X().foo\n" +
+                "new X().foo()\n";  // require a new line here or else Occurrence finding will crash.  See Bug 339614
+
+        int length = "foo".length(); 
+        int first = contents.indexOf("foo");
+        int second = contents.indexOf("foo", first+1);
+        int third = contents.indexOf("foo", second+1);
+        doTest(contents, second, length, first, length, second, length, third, length);
+    }
     
     public void testFindDGMOccurrences1() throws Exception {
         String contents = "print 'print'\n'$print'\n'${print}'";
