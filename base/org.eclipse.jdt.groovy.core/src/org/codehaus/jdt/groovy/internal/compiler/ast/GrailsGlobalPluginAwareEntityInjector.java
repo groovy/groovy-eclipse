@@ -63,6 +63,10 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 			return;
 		}
 		try {
+			if (classNode.isAnnotationDefinition()) {
+				return;
+			}
+
 			String sourcePathString = sourceUnit.getName();
 			IPath sourcePath = new Path(sourcePathString);
 			PluginInfo info = getInfo(sourcePath);
