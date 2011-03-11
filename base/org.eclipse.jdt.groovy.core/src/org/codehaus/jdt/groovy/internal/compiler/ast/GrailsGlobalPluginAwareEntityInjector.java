@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -24,7 +25,7 @@ import org.eclipse.core.runtime.Path;
  */
 public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOperation {
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	private static void debug(String msg) {
 		System.out.println(msg);
@@ -66,12 +67,17 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 				return;
 			}
 
+			if (!isFirstClassInModule(classNode)) {
+				// The Grails version of the transform only walk the first class in a module
+				return;
+			}
+
 			String sourcePathString = sourceUnit.getName();
 			IPath sourcePath = new Path(sourcePathString);
 			PluginInfo info = getInfo(sourcePath);
 			if (info != null) {
 				if (DEBUG) {
-					debug("APPLY transform: " + sourcePath);
+					debug("APPLY transform: " + classNode);
 				}
 
 				// The transform should be applied. (code below lifted from
@@ -94,13 +100,24 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 				classNode.addAnnotation(annotationNode);
 			} else {
 				if (DEBUG) {
-					debug("SKIP transform: " + sourcePath);
+					debug("SKIP transform: " + classNode);
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			broken = true;
 		}
+	}
+
+	private boolean isFirstClassInModule(ClassNode classNode) {
+		ModuleNode module = classNode.getModule();
+		if (module != null) {
+			List<ClassNode> classes = module.getClasses();
+			if (classes != null && classes.size() > 0) {
+				return classes.get(0) == classNode;
+			}
+		}
+		return false;
 	}
 
 	public static PluginInfo getInfo(IPath sourcePath) {
@@ -138,6 +155,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 
 	/**
 	 * Find position of the dash separating plugin name from version.
+	 * 
 	 * @return position of dash or -1 if dash not found.
 	 */
 	private static int findVersionDash(String pluginNameAndVersion) {
