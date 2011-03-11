@@ -175,8 +175,13 @@ class GroovyClassFile extends ClassFile {
 		throw new ImmutableException();
 	}
 
-	@Override
+	// For 3.6:
 	public void completeMethodInfo(int methodAttributeOffset, int attributeNumber) {
+		throw new ImmutableException();
+	}
+	
+	// For 3.7
+	public void completeMethodInfo(MethodBinding methodBinding, int methodAttributeOffset, int attributeNumber) {
 		throw new ImmutableException();
 	}
 
@@ -190,13 +195,21 @@ class GroovyClassFile extends ClassFile {
 		throw new ImmutableException();
 	}
 
-	@Override
+	// these two for 3.6
 	public int generateMethodInfoAttribute(MethodBinding methodBinding, AnnotationMethodDeclaration declaration) {
 		throw new ImmutableException();
 	}
 
-	@Override
 	public int generateMethodInfoAttribute(MethodBinding methodBinding) {
+		throw new ImmutableException();
+	}
+	
+	// these two for 3.7
+	public int generateMethodInfoAttributes(MethodBinding methodBinding, AnnotationMethodDeclaration declaration) {
+		throw new ImmutableException();
+	}
+
+	public int generateMethodInfoAttributes(MethodBinding methodBinding) {
 		throw new ImmutableException();
 	}
 
