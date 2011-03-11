@@ -39,9 +39,13 @@ public void acceptConstructorReference(char[] typeName, int argCount, int source
  */
 public void acceptFieldReference(char[] fieldName, int sourcePosition) {}
 /**
- * acceptImport method comment.
+ * acceptImport method comment. 3.7 variant
  */
 public void acceptImport(int declarationStart, int declarationEnd, int nameStart, int nameEnd, char[][] tokens, boolean onDemand, int modifiers) {}
+/**
+ * acceptImport method comment. 3.6 variant
+ */
+public void acceptImport(int declarationStart, int declarationEnd, char[][] tokens, boolean onDemand, int modifiers) {}
 /**
  * acceptLineSeparatorPositions method comment.
  */
