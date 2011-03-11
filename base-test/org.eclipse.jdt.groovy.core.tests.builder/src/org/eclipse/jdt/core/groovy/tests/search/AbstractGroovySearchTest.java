@@ -275,11 +275,18 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         String className = "First";
         String matchedVarName = "xxx";
         GroovyCompilationUnit unit = createUnit(className, contents);
+        // Will need to call via reflection so can work on either.
+        // 3.6 version:
         ILocalVariable var = new LocalVariable((JavaElement) unit.getType(
                 className).getChildren()[offsetInParent], matchedVarName,
                 declStart, declStart + matchedVarName.length(),
                 declStart, declStart + matchedVarName.length(),
-                Signature.SIG_INT, new Annotation[0]);
+        // 3.7 version - two extra trailing parameters:
+//        ILocalVariable var = new LocalVariable((JavaElement) unit.getType(
+//                className).getChildren()[offsetInParent], matchedVarName,
+//                declStart, declStart + matchedVarName.length(),
+//                declStart, declStart + matchedVarName.length(),
+//                Signature.SIG_INT, new Annotation[0],0,false);
         SearchPattern pattern = SearchPattern.createPattern(var, IJavaSearchConstants.REFERENCES);
         
         checkLocalVarMatches(contents, matchName, pattern, unit, matchLocations);

@@ -347,8 +347,8 @@ public void test009() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=88187
 public void test010() {
 	Map customOptions = getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
-	customOptions.put(CompilerOptions.OPTION_ReportInvalidAnnotation, CompilerOptions.WARNING);
+//	customOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
+//	customOptions.put(CompilerOptions.OPTION_ReportInvalidAnnotation, CompilerOptions.WARNING);
 	this.runNegativeTest(
 		new String[] {
             "X.java",

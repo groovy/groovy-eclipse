@@ -41,7 +41,7 @@ public void acceptFieldReference(char[] fieldName, int sourcePosition) {}
 /**
  * acceptImport method comment.
  */
-public void acceptImport(int declarationStart, int declarationEnd, char[][] tokens, boolean onDemand, int modifiers) {}
+public void acceptImport(int declarationStart, int declarationEnd, int nameStart, int nameEnd, char[][] tokens, boolean onDemand, int modifiers) {}
 /**
  * acceptLineSeparatorPositions method comment.
  */

@@ -90,7 +90,7 @@ public void acceptFieldReference(char[] fieldName, int sourcePosition) {}
  */
 public void acceptImport(
 	int declarationStart, 
-	int declarationEnd, 
+	int declarationEnd, int nameStart, int nameEnd, 
 	char[][] tokens, 
 	boolean onDemand,
 	int modifiers) {

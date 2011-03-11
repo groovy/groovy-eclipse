@@ -173,7 +173,7 @@ public class SelectionJavadocTest extends AbstractSelectionTest {
 		optionsMap.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
 		optionsMap.put(CompilerOptions.OPTION_ReportInvalidJavadoc, CompilerOptions.WARNING);
 		optionsMap.put(CompilerOptions.OPTION_ReportInvalidJavadocTags, CompilerOptions.ENABLED);
-		optionsMap.put(CompilerOptions.OPTION_ReportMissingJavadoc, CompilerOptions.WARNING);
+//		optionsMap.put(CompilerOptions.OPTION_ReportMissingJavadoc, CompilerOptions.WARNING);
 	    return optionsMap;
     }
 
