@@ -280,7 +280,8 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         ILocalVariable var = new LocalVariable((JavaElement) unit.getType(
                 className).getChildren()[offsetInParent], matchedVarName,
                 declStart, declStart + matchedVarName.length(),
-                declStart, declStart + matchedVarName.length(),Signature.SIG_INT);
+                declStart, declStart + matchedVarName.length(),
+                Signature.SIG_INT, new Annotation[0]);
         // 3.7 version - two extra trailing parameters:
 //        ILocalVariable var = new LocalVariable((JavaElement) unit.getType(
 //                className).getChildren()[offsetInParent], matchedVarName,
