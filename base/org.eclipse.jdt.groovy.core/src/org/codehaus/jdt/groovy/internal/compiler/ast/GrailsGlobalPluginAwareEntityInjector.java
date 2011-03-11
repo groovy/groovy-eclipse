@@ -25,7 +25,7 @@ import org.eclipse.core.runtime.Path;
  */
 public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOperation {
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
 	private static void debug(String msg) {
 		System.out.println(msg);
