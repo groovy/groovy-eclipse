@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.Path;
  * 
  * @author Kris De Volder
  */
-@SuppressWarnings("restriction")
 public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOperation {
 
 	private static final boolean DEBUG = false;
@@ -120,7 +119,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 			String link = sourcePath.segment(1);
 			if (link.equals(".link_to_grails_plugins")) { // Same as in JDT SourceFile
 				String pluginNameAndVersion = sourcePath.segment(2);
-				int split = pluginNameAndVersion.lastIndexOf('-');
+				int split = findVersionDash(pluginNameAndVersion);
 				if (split >= 0) {
 					if ("test".equals(sourcePath.segment(3))) {
 						// Exclude "test" folder in plugins
@@ -137,4 +136,15 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 		return null;
 	}
 
+	/**
+	 * Find position of the dash separating plugin name from version.
+	 * @return position of dash or -1 if dash not found.
+	 */
+	private static int findVersionDash(String pluginNameAndVersion) {
+		int split = pluginNameAndVersion.lastIndexOf('-');
+		if (pluginNameAndVersion.endsWith("-SNAPSHOT")) {
+			split = pluginNameAndVersion.lastIndexOf('-', split - 1);
+		}
+		return split;
+	}
 }
