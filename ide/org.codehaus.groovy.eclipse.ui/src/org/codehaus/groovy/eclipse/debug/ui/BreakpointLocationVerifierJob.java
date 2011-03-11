@@ -32,6 +32,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -137,11 +139,15 @@ public class BreakpointLocationVerifierJob extends Job {
         int start = node.getNameStart();
         int end = node.getNameEnd();
         if (fType != null) {
-            BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
+            IJavaElement elt = fType.getTypeRoot().getElementAt(start);
+            if (elt != null) {
+                IMethod method = (IMethod) elt;
+                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
+                BreakpointUtils.addJavaBreakpointAttributes(newAttributes, method);
+                JDIDebugModel.createMethodBreakpoint(fResource, typeName, node.getName(), createMethodSignature(node), true, false,
+                        false, node.getLineNumber(), start, end, 0, true, newAttributes);
+            }
         }
-        JDIDebugModel.createMethodBreakpoint(fResource, typeName, node.getName(), createMethodSignature(node), true, false, false,
-                node.getLineNumber(), start, end, 0,
-                true, newAttributes);
     }
 
     private String createMethodSignature(MethodNode node) {

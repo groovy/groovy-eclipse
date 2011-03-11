@@ -146,6 +146,11 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
             declaration = ((ClassNode) declaration).redirect();
         }
 
+        if (declaration instanceof PropertyNode && ((PropertyNode) declaration).getField() != null) {
+            // make sure we are using the associated field node because property nodes are never the declaration
+            declaration = ((PropertyNode) declaration).getField();
+        }
+
         if (declaration instanceof JDTNode) {
             return ((JDTNode) declaration).isDeprecated();
         } else if (declaration instanceof ClassNode || declaration instanceof FieldNode || declaration instanceof MethodNode) {
