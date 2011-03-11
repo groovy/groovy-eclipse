@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.jdt.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="3.7.0.qualifier"/>
+                <message_argument value="3.7.0.v_B35"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/CompilationUnit.java" type="org.eclipse.jdt.core.dom.CompilationUnit">
+        <filter id="1160773636">
+            <message_arguments>
+                <message_argument value="CompilationUnit(AST)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1227882500">
+            <message_arguments>
+                <message_argument value="accept0(ASTVisitor)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="groovy/org/codehaus/jdt/groovy/integration/EventHandler.java" type="org.codehaus.jdt.groovy.integration.EventHandler">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.codehaus.jdt.groovy.integration.EventHandler"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="groovy/org/codehaus/jdt/groovy/integration/LanguageSupport.java" type="org.codehaus.jdt.groovy.integration.LanguageSupport">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.codehaus.jdt.groovy.integration.LanguageSupport"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="groovy/org/codehaus/jdt/groovy/integration/LanguageSupportFactory.java" type="org.codehaus.jdt.groovy.integration.LanguageSupportFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.codehaus.jdt.groovy.integration.LanguageSupportFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/util/CompilerUtils.java" type="org.eclipse.jdt.core.util.CompilerUtils">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.util.CompilerUtils"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>
