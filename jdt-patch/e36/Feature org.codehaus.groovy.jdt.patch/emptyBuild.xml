@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<project name="empty" basedir="." default="empty">
+
+<project name="empty" basedir="." default="empty" 
+				description="This is an empty buld script that is used by bamboo" >
 	<target name="empty">
 	</target>
 </project>
