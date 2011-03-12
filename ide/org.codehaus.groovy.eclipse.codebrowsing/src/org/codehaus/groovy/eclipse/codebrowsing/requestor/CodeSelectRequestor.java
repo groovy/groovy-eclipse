@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -272,8 +273,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
             IJavaElement enclosingElement, Variable var) {
         ASTNode node = (ASTNode) var;
         ClassNode type = result.type != null ? result.type : var.getType();
-        return new LocalVariable((JavaElement) enclosingElement, var.getName(), node.getStart(), node.getEnd()-1, node.getStart(), node.getEnd()-1, 
-                Signature.createTypeSignature(createGenericsAwareName(type, true), false), new Annotation[0]);
+        
+        // be compatible between 3.6 and 3.7+
+        return ReflectionUtils.createLocalVariable(enclosingElement, var.getName(), node.getStart(), Signature.createTypeSignature(createGenericsAwareName(type, true), false));
     }
 
 

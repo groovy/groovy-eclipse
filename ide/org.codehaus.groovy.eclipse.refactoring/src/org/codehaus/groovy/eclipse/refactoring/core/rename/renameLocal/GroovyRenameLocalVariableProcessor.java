@@ -43,13 +43,11 @@ import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.LocalVariableReferenceRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.core.JavaElement;
-import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
 import org.eclipse.jdt.internal.corext.refactoring.base.JavaStatusContext;
 import org.eclipse.jdt.internal.corext.refactoring.rename.JavaRenameProcessor;
@@ -66,12 +64,12 @@ import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.TextEditGroup;
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Apr 1, 2010
  */
 public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
-    
+
     GroovyCompilationUnit unit;
     Variable variable;  // initially null
     CompilationUnitChange change;  // initially null
@@ -111,7 +109,7 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         mods.rename(localVariable, new RenameArguments(getNewElementName(), true));
         return mods;
     }
-    
+
     @Override
     protected RefactoringStatus doCheckFinalConditions(IProgressMonitor pm,
             CheckConditionsContext context) throws CoreException,
@@ -146,26 +144,26 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         if (type != null) {
             IField maybeShadows = type.getField(getNewElementName());
             if (maybeShadows.exists()) {
-                return RefactoringStatus.createWarningStatus("Warning: new variable name " + 
+                return RefactoringStatus.createWarningStatus("Warning: new variable name " +
                         getNewElementName() + " shadows a field in " + type.getElementName());
             }
         }
-        
+
         LocalVariableNameCheckerRequestor requestor = new LocalVariableNameCheckerRequestor(variable, getNewElementName());
         TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
         visitor.visitCompilationUnit(requestor);
         if (requestor.isShadowing()) {
             IJavaElement parent = localVariable.getParent();
             if (parent instanceof IMethod) {
-                return RefactoringStatus.createWarningStatus("Warning: new variable name " + 
+                return RefactoringStatus.createWarningStatus("Warning: new variable name " +
                         getNewElementName() + " shadows a variable in " + localVariable.getParent().getElementName(),
                         JavaStatusContext.create((IMethod) parent));
             } else {
-                return RefactoringStatus.createWarningStatus("Warning: new variable name " + 
+                return RefactoringStatus.createWarningStatus("Warning: new variable name " +
                         getNewElementName() + " shadows a variable in " + localVariable.getParent().getElementName());
             }
         }
-        
+
         return new RefactoringStatus();
     }
 
@@ -196,12 +194,13 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         return localVariable.getElementName();
     }
     public Object getNewElement() throws CoreException {
-        return new LocalVariable((JavaElement) localVariable.getParent(), getNewElementName(), 
-                localVariable.getSourceRange().getOffset(), localVariable.getSourceRange().getOffset()+localVariable.getSourceRange().getLength(), 
-                localVariable.getNameRange().getOffset(), localVariable.getNameRange().getOffset()+localVariable.getNameRange().getLength(), 
-                localVariable.getTypeSignature(), new Annotation[0]);
+
+        // be compatible between 3.6 and 3.7+
+        return ReflectionUtils.createLocalVariable(localVariable.getParent(), getNewElementName(), localVariable.getNameRange()
+                .getOffset(), localVariable.getTypeSignature());
+
     }
-    
+
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor pm)
             throws CoreException, OperationCanceledException {
@@ -211,7 +210,7 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         }
         return new RefactoringStatus();
     }
-    
+
     @Override
     public Change createChange(IProgressMonitor pm) throws CoreException,
             OperationCanceledException {
@@ -236,7 +235,7 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         }
         return true;
     }
-    
+
     private List<IRegion> findReferences() {
         if (variable == null) {
             try {
@@ -249,12 +248,12 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
         visitor.visitCompilationUnit(requestor);
         return requestor.getReferences();
-        
+
     }
 
     /**
      * @return
-     * @throws JavaModelException 
+     * @throws JavaModelException
      */
     private Variable findVariable() throws JavaModelException {
         ISourceRange sourceRange = localVariable.getSourceRange();
@@ -262,7 +261,7 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         ASTNode node = findLocalVar.doVisit(unit.getModuleNode());
         return node instanceof Variable ? (Variable) node : null;
     }
-    
+
     private CompilationUnitChange createEdits(List<IRegion> references) {
         TextEdit[] allEdits= new TextEdit[references.size()];
         int index = 0;

@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -273,90 +274,19 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     }
     
     
-    protected void doTestForVarReferences(String contents, int offsetInParent, String matchName, int declStart, MatchRegion[] matchLocations) {
+    protected void doTestForVarReferences(String contents, int offsetInParent, String matchName, int declStart, MatchRegion[] matchLocations) throws JavaModelException {
         String className = "First";
         String matchedVarName = "xxx";
         GroovyCompilationUnit unit = createUnit(className, contents);
         // Will need to call via reflection so can work on either.
         // 3.6 version:
-        ILocalVariable var = createLocalVariable(offsetInParent, declStart, className,
-                matchedVarName, unit);
+        ILocalVariable var = ReflectionUtils.createLocalVariable(unit.getType(className).getChildren()[offsetInParent], matchedVarName, declStart, Signature.SIG_INT);
         SearchPattern pattern = SearchPattern.createPattern(var, IJavaSearchConstants.REFERENCES);
         
         checkLocalVarMatches(contents, matchName, pattern, unit, matchLocations);
     }
 
-    /**
-     * @param offsetInParent
-     * @param declStart
-     * @param className
-     * @param matchedVarName
-     * @param unit
-     * @return
-     */
-    protected LocalVariable createLocalVariable(int offsetInParent,
-            int declStart, String className, String matchedVarName,
-            GroovyCompilationUnit unit) {
-        // 3.7 version - two extra trailing parameters:
-//      LocalVariable var = new LocalVariable((JavaElement) unit.getType(
-//              className).getChildren()[offsetInParent], matchedVarName,
-//              declStart, declStart + matchedVarName.length(),
-//              declStart, declStart + matchedVarName.length(),
-//              Signature.SIG_INT, new Annotation[0],0,false);
 
-        
-//        LocalVariable localVariable = new LocalVariable((JavaElement) unit.getType(
-//                className).getChildren()[offsetInParent], matchedVarName,
-//                declStart, declStart + matchedVarName.length(),
-//                declStart, declStart + matchedVarName.length(),
-//                Signature.SIG_INT, new Annotation[0]);
-        
-        LocalVariable localVariable;
-        try {
-            // 3.6 variant
-            Constructor<LocalVariable> cons = LocalVariable.class
-                    .getConstructor(
-                            JavaElement.class,
-                            String.class,
-                            int.class,
-                            int.class,
-                            int.class,
-                            int.class,
-                            String.class,
-                            org.eclipse.jdt.internal.compiler.ast.Annotation[].class);
-            localVariable = cons.newInstance(unit.getType(
-                    className).getChildren()[offsetInParent], matchedVarName,
-                    declStart, declStart + matchedVarName.length(),
-                    declStart, declStart + matchedVarName.length(),
-                    Signature.SIG_INT, new Annotation[0]);
-            return localVariable;
-        } catch (Exception e) {
-            // 3.7 variant
-            try {
-                Constructor<LocalVariable> cons = LocalVariable.class
-                        .getConstructor(
-                                JavaElement.class,
-                                String.class,
-                                int.class,
-                                int.class,
-                                int.class,
-                                int.class,
-                                String.class,
-                                org.eclipse.jdt.internal.compiler.ast.Annotation[].class,
-                                int.class, 
-                                boolean.class);
-                localVariable = cons.newInstance(unit.getType(
-                        className).getChildren()[offsetInParent], matchedVarName,
-                        declStart, declStart + matchedVarName.length(),
-                        declStart, declStart + matchedVarName.length(),
-                        Signature.SIG_INT, new Annotation[0], 0, false);
-                return localVariable;
-            } catch (Exception e1) {
-                fail("Could not create local variable.  Reason: " + e1.getMessage());
-                return null;
-            }
-        }
-    }
     
     
 

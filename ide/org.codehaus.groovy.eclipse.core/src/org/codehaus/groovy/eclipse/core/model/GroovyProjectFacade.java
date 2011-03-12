@@ -42,8 +42,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.internal.core.JavaElement;
-import org.eclipse.jdt.internal.core.LocalVariable;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.SourceType;
 /**
  * @author Andrew Eisenberg
@@ -95,11 +94,12 @@ public class GroovyProjectFacade {
 
              if (node instanceof DeclarationExpression) {
                  int end = node.getEnd();
-                 return new LocalVariable(
-                         (JavaElement) elt, ((DeclarationExpression) node).getVariableExpression().getName(),
-                         start, end, start, end,
-                         Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType().getName(), false),
-                         new org.eclipse.jdt.internal.compiler.ast.Annotation[0]);
+
+                // Local variable signature has changed between 3.6 and 3.7, use
+                // reflection to create.
+                return ReflectionUtils.createLocalVariable(elt, ((DeclarationExpression) node).getVariableExpression().getName(),
+                        start, Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType()
+                                .getName(), false));
              } else {
                  return elt;
              }
@@ -136,9 +136,9 @@ public class GroovyProjectFacade {
     /**
      * If this fully qualified name is in a groovy file, then return the
      * classnode
-     * 
+     *
      * If this is not a groovy file, then return null
-     * 
+     *
      * @param name
      * @return
      */
