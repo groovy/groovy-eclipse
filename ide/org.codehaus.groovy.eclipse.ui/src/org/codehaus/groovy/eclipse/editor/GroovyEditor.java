@@ -592,7 +592,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         return (GroovyConfiguration) getSourceViewerConfiguration();
     }
 
-    private void installSemanticHighlighting() {
+    protected void installSemanticHighlighting() {
         try {
             fSemanticManager.uninstall();
             semanticReconciler = new GroovySemanticReconciler();
