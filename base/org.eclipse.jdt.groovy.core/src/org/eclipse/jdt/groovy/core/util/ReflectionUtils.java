@@ -136,16 +136,16 @@ public class ReflectionUtils {
 			// 3.6 variant
 			Constructor<LocalVariable> cons = LocalVariable.class.getConstructor(JavaElement.class, String.class, int.class,
 					int.class, int.class, int.class, String.class, Annotation[].class);
-			localVariable = cons.newInstance(parent, varName, start, start + varName.length(), start, start + varName.length(),
-					returnTypeSignature, new Annotation[0]);
+			localVariable = cons.newInstance(parent, varName, start, start + varName.length() - 1, start, start + varName.length()
+					- 1, returnTypeSignature, new Annotation[0]);
 			return localVariable;
 		} catch (Exception e) {
 			// 3.7 variant
 			try {
 				Constructor<LocalVariable> cons = LocalVariable.class.getConstructor(JavaElement.class, String.class, int.class,
 						int.class, int.class, int.class, String.class, Annotation[].class, int.class, boolean.class);
-				localVariable = cons.newInstance(parent, varName, start, start + varName.length(), start, start + varName.length(),
-						returnTypeSignature, new Annotation[0], 0, false);
+				localVariable = cons.newInstance(parent, varName, start, start + varName.length() - 1, start,
+						start + varName.length() - 1, returnTypeSignature, new Annotation[0], 0, false);
 				return localVariable;
 			} catch (Exception e1) {
 				Activator.getDefault().getLog()

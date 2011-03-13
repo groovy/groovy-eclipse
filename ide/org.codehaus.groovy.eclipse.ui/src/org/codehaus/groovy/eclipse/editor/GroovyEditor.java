@@ -592,7 +592,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         return (GroovyConfiguration) getSourceViewerConfiguration();
     }
 
-    protected void installSemanticHighlighting() {
+    private void installGroovySemanticHighlighting() {
         try {
             fSemanticManager.uninstall();
             semanticReconciler = new GroovySemanticReconciler();
@@ -605,7 +605,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    private void uninstallSemanticHighlighting() {
+    private void uninstallGroovySemanticHighlighting() {
         if (semanticHighlightingInstalled()) {
             try {
                 semanticReconciler.uninstall();
@@ -626,7 +626,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     @Override
     public void dispose() {
         super.dispose();
-        uninstallSemanticHighlighting();
+        uninstallGroovySemanticHighlighting();
 
         ISourceViewer sourceViewer= getSourceViewer();
         if (sourceViewer instanceof ITextViewerExtension) {
@@ -903,7 +903,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     public void createPartControl(Composite parent) {
         super.createPartControl(parent);
         unsetJavaBreakpointUpdater();
-        installSemanticHighlighting();
+        installGroovySemanticHighlighting();
 
         IPreferenceStore preferenceStore = getPreferenceStore();
 
@@ -947,14 +947,14 @@ public class GroovyEditor extends CompilationUnitEditor {
     protected void doSetInput(IEditorInput input) throws CoreException {
         boolean wasInstalled = semanticHighlightingInstalled();
         if (wasInstalled) {
-            uninstallSemanticHighlighting();
+            uninstallGroovySemanticHighlighting();
         }
         internalInput = input;
         super.doSetInput(input);
         unsetJavaBreakpointUpdater();
         internalInput = null;
         if (wasInstalled) {
-            installSemanticHighlighting();
+            installGroovySemanticHighlighting();
         }
     }
 
