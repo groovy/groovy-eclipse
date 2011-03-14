@@ -1717,6 +1717,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// * start at the opening brace and end at the closing brace
 		// except that scripts do not have a name, use the start instead
+		// FIXADE this is not exactly right since getNameEnd() comes before extends and implements clauses
 		typeDeclaration.bodyStart = Math.max(classNode.getNameEnd(), classNode.getStart());
 
 		// seems to be the same as declarationSourceEnd
@@ -1746,7 +1747,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		ctorDeclaration.modifiersSourceStart = ctorNode.getStart();
 
 		// opening bracket
-		ctorDeclaration.bodyStart = ctorNode.getNameEnd();
+		ctorDeclaration.bodyStart =
+		// try for opening bracket
+		ctorNode.getCode() != null ? ctorNode.getCode().getStart() :
+		// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
+				ctorNode.getNameEnd();
 
 		// closing bracket or ';' same as declarationSourceEnd
 		ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
@@ -1772,8 +1777,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		methodDeclaration.modifiersSourceStart = methodNode.getStart();
 
 		// opening bracket
+		methodDeclaration.bodyStart =
+		// try for opening bracket
+		methodNode.getCode() != null ? methodNode.getCode().getStart() :
 		// run() method for script has no opening bracket
-		methodDeclaration.bodyStart = Math.max(methodNode.getNameEnd(), methodNode.getStart());
+		// also need to handle abstract methods
+				Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
 		// closing bracket or ';' same as declarationSourceEnd
 		methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
