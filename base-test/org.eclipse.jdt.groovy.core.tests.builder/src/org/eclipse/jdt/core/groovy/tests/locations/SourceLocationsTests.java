@@ -11,6 +11,8 @@
 
 package org.eclipse.jdt.core.groovy.tests.locations;
 
+import java.util.List;
+
 import junit.framework.Test;
 
 import org.eclipse.core.resources.IFile;
@@ -18,12 +20,21 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.BodyDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.groovy.tests.builder.GroovierBuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.core.CompilationUnit;
@@ -36,6 +47,8 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
  * markers /*m1e* / /*f1e* / /*t1e* / indicate end of method, field and type
  * markers /*m1sn* / /*f1sn* / /*t1sn* / indicate start of method, field and type names
  * markers /*m1en* / /*f1en* / /*t1en* / indicate end of method, field and type names
+ * markers /*m1sb* / indicate the start of a method body
+ * NOTE: the start of a type body is not being calculated correctly  
  * 
  * @author Andrew Eisenberg
  * @created Jun 29, 2009
@@ -54,22 +67,33 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	public void testSourceLocations() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) {\n"+
+		"   /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\");\n"+
 		"   }/*m0e*/\n"+
-		"   /*f0s*/int /*f0sn*/x/*f0en*/ = 9/*f0e*/;\n"+
+		"   /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/;\n"+
 		"}/*t0e*/\n";
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
+	}
+	public void testSourceLocationsNoSemiColons() throws Exception {
+	    String source = "package p1;\n"+
+	    "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n"+
+	    "   /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n"+
+	    "      System.out.println(\"Hello world\");\n"+
+	    "   }/*m0e*/\n"+
+	    "   /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/\n"+
+	    "}/*t0e*/\n";
+	    ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+	    assertUnitWithSingleType(source, unit);
 	}
 
 	public void testSourceLocationsNoModifiers() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/def /*m0sn*/main/*m0en*/(String[] args) {\n"+
+		"   /*m0s*/def /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
-		"   /*f0s*/def /*f0sn*/x/*f0en*//*f0e*/\n"+
+		"   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
 		"}/*t0e*/\n";
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
@@ -87,7 +111,7 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	public void testSourceLocationsNoParameterTypes() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/def /*m0sn*/main/*m0en*/(args, fargs, blargs) {\n"+
+		"   /*m0s*/def /*m0sn*/main/*m0en*/(args, fargs, blargs) /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
 		"}/*t0e*/\n";
@@ -98,13 +122,13 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	public void testSourceLocationsNoParameters() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/def /*m0sn*/main/*m0en*/() {\n"+
+		"   /*m0s*/def /*m0sn*/main/*m0en*/() /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
-		"   /*m1s*/def /*m1sn*/main2/*m1en*/() {\n"+
+		"   /*m1s*/def /*m1sn*/main2/*m1en*/() /*m1sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m1e*/\n"+
-		"   /*m2s*/def /*m2sn*/main3/*m2en*/() {\n"+
+		"   /*m2s*/def /*m2sn*/main3/*m2en*/() /*m2sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m2e*/\n"+
 		"}/*t0e*/\n";
@@ -115,10 +139,10 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	public void testSourceLocationsDefaultParameters() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/def /*m0sn*/main/*m0en*/(args = \"hi!\") {\n"+
+		"   /*m0s*/def /*m0sn*/main/*m0en*/(args = \"hi!\") /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
-		"   /*m1s*/def /*m1sn*/main2/*m1en*/(args = \"hi!\", blargs = \"bye\") {\n"+
+		"   /*m1s*/def /*m1sn*/main2/*m1en*/(args = \"hi!\", blargs = \"bye\") /*m1sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m1e*/\n"+
 		"}/*t0e*/\n";
@@ -129,10 +153,10 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	public void testSourceLocationsConstructor() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/public /*m0sn*/Hello/*m0en*/() {\n"+
+		"   /*m0s*/public /*m0sn*/Hello/*m0en*/() /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
-		"   /*f0s*/def /*f0sn*/x/*f0en*//*f0e*/\n"+
+		"   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
 		"}/*t0e*/\n";
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
@@ -141,10 +165,10 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	public void testSourceLocationsConstructorWithParam() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(String x) {\n"+
+		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(String x) /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
-		"   /*f0s*/def /*f0sn*/x/*f0en*//*f0e*/\n"+
+		"   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
 		"}/*t0e*/\n";
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
@@ -153,10 +177,10 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	public void testSourceLocationsConstructorWithParamNoType() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(x) {\n"+
+		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(x) /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
-		"   /*f0s*/def /*f0sn*/x/*f0en*//*f0e*/\n"+
+		"   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
 		"}/*t0e*/\n";
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
@@ -165,10 +189,10 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	public void testSourceLocationsConstructorWithDefaultParam() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\") {\n"+
+		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\") /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
-		"   /*f0s*/def /*f0sn*/x/*f0en*//*f0e*/\n"+
+		"   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
 		"}/*t0e*/\n";
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
@@ -225,10 +249,10 @@ public class SourceLocationsTests extends GroovierBuilderTests {
     public void testSourceLocationsConstructorWithDefaultParams() throws Exception {
 		String source = "package p1;\n"+
 		"/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\", String blargs = \"8\") {\n"+
+		"   /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\", String blargs = \"8\") /*m0sb*/{\n"+
 		"      System.out.println(\"Hello world\")\n"+
 		"   }/*m0e*/\n"+
-		"   /*f0s*/def /*f0sn*/x/*f0en*//*f0e*/\n"+
+		"   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
 		"}/*t0e*/\n";
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
@@ -239,26 +263,34 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 	private void assertUnitWithSingleType(String source, ICompilationUnit unit)
 			throws Exception, JavaModelException {
 		assertUnit(unit, source);
+		
+		ASTParser newParser = ASTParser.newParser(AST.JLS3);
+		newParser.setSource(unit);
+        org.eclipse.jdt.core.dom.CompilationUnit ast = (org.eclipse.jdt.core.dom.CompilationUnit) newParser.createAST(null);
 		int maxLength = ((CompilationUnit) unit).getContents().length-1;
 		IType decl = unit.getTypes()[0];
-		assertDeclaration(decl, 0, source, maxLength);
-		IMethod[] methods = decl.getMethods();
-		for (int i = 0, j= 0; i < methods.length; i++) {
+		AbstractTypeDeclaration typeDecl = (AbstractTypeDeclaration) ast.types().get(0);
+        assertDeclaration(decl, typeDecl, 0, source, maxLength);
+		IJavaElement[] children = decl.getChildren();
+		List<BodyDeclaration> bodyDecls = typeDecl.bodyDeclarations(); 
+		for (int i = 0, j= 0, k = 0, l = 0; i < children.length; i++, j++, l++) {
 			// look for method variants that use default params
-			if (i > 0 && !methods[i].getElementName().equals(methods[i-1].getElementName())) {
-				j++;
+			if (i > 0 && (children[i] instanceof IMethod) && children[i].getElementName().equals(children[i-1].getElementName())) {
+				j--;
 			}
-			assertDeclaration(methods[i], j, source, maxLength);
-		}
-		IField[] fields = decl.getFields();
-		for (int i = 0; i < fields.length; i++) {
-			assertDeclaration(fields[i], i, source, maxLength);
+			// check for multiple declaration fragments inside a field declaration
+			// start locations and end locations for fragments are not calculated entirely correctly
+			// the first fragment has a start and end of the entire declaration
+			// the subsequent fragments have a start at the name start and an end after the fragment's optional expression (or the name end if there is none.
+			// so, here check to see if the name start and source start are the same.  If so, then this is a second fragment
+
+			assertDeclaration((IMember) children[i], bodyDecls.get(i), j, source, maxLength);
 		}
 	}
 
 
 
-	private void assertDeclaration(IMember decl, int occurrence, String source, int maxLength) throws Exception {
+	private void assertDeclaration(IMember decl, BodyDeclaration bd, int methodNumber, String source, int maxLength) throws Exception {
 		char astKind;
  		if (decl instanceof IMethod) {
 			astKind = 'm';
@@ -268,10 +300,10 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 			astKind = 't';
 		}
 		
-		String startTag = "/*" + astKind + occurrence + "s*/";
+		String startTag = "/*" + astKind + methodNumber + "s*/";
 		int start = source.indexOf(startTag) + startTag.length();
 		
-		String endTag = "/*" + astKind + occurrence + "e*/";
+		String endTag = "/*" + astKind + methodNumber + "e*/";
 		int end = Math.min(source.indexOf(endTag) + endTag.length(), maxLength);
 
 		boolean ignore = false;
@@ -286,12 +318,19 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 			ISourceRange declRange = decl.getSourceRange();
 			assertEquals(decl + "\nhas incorrect source start value", start, declRange.getOffset());
 			assertEquals(decl + "\nhas incorrect source end value", end, declRange.getOffset() + declRange.getLength());
+			
+			// now check the AST
+            assertEquals(bd + "\nhas incorrect source start value", start, bd.getStartPosition());
+            int sourceEnd = bd.getStartPosition() + bd.getLength();
+            // It seems like field declarations should not include the trailing ';' in their source end if one exists 
+            if (bd instanceof FieldDeclaration) sourceEnd --;  
+            assertEquals(bd + "\nhas incorrect source end value", end, sourceEnd);
 		}
 		
-		String nameStartTag = "/*" + astKind + occurrence + "sn*/";
+		String nameStartTag = "/*" + astKind + methodNumber + "sn*/";
 		int nameStart = source.indexOf(nameStartTag) + nameStartTag.length();
 		
-		String nameEndTag = "/*" + astKind + occurrence + "en*/";
+		String nameEndTag = "/*" + astKind + methodNumber + "en*/";
 		int nameEnd = source.indexOf(nameEndTag);
 		// because the name of the constructor is not stored in the Antlr AST, 
 		// we calculate offsets of the constructor name by looking at the end
@@ -303,6 +342,29 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 		ISourceRange nameDeclRange = decl.getNameRange();
 		assertEquals(decl + "\nhas incorrect source start value", nameStart, nameDeclRange.getOffset());
 		assertEquals(decl + "\nhas incorrect source end value", nameEnd, nameDeclRange.getOffset() + nameDeclRange.getLength());
+		
+        // now check the AST
+		if (bd instanceof FieldDeclaration) {
+		    FieldDeclaration fd = (FieldDeclaration) bd;
+		    SimpleName name = ((VariableDeclarationFragment) fd.fragments().get(0)).getName();
+            assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
+		    assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
+		}
+		if (bd instanceof MethodDeclaration) {
+		    MethodDeclaration md = (MethodDeclaration) bd;
+            SimpleName name = md.getName();
+            assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
+            assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
+		}
+		
+		
+		if (decl.getElementType() == IJavaElement.METHOD) {
+		    // body start is only calculated for methods
+		    String bodyStartTag = "/*" + astKind + methodNumber + "sb*/";
+		    int bodyStart = source.indexOf(bodyStartTag) + bodyStartTag.length();
+            MethodDeclaration md = (MethodDeclaration) bd;
+            assertEquals(bd + "\nhas incorrect body start value", bodyStart, md.getBody().getStartPosition());
+		}
 	}
 	
 	private void assertUnit(ICompilationUnit unit, String source) throws Exception {

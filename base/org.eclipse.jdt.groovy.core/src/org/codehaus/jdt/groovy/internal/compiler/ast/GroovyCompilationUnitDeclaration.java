@@ -1252,7 +1252,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			if (ii == null) {
 				throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not...");
 			} else {
-				return TypeReference.baseTypeReference(ii, dim);
+				TypeReference baseTypeReference = TypeReference.baseTypeReference(ii, dim);
+				baseTypeReference.sourceStart = start;
+				baseTypeReference.sourceEnd = start + componentType.getName().length();
+				return baseTypeReference;
 			}
 		}
 		if (dim == 0) {
