@@ -244,12 +244,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 
 				// visit synthetic default constructor...this is where the object initializers are stuffed
-				if (!type.getMethod("<init>", new String[0]).exists()) {
-					ConstructorNode defConstructor = findDefaultConstructor(node);
-					if (defConstructor != null) {
-						visitConstructorOrMethod(defConstructor, true);
-					}
-				}
+				// if (!type.getMethod("<init>", new String[0]).exists()) {
+				// ConstructorNode defConstructor = findDefaultConstructor(node);
+				// if (defConstructor != null) {
+				// visitConstructorOrMethod(defConstructor, true);
+				// }
+				// }
+
 			} catch (JavaModelException e) {
 				Util.log(e, "Error getting children of " + type.getFullyQualifiedName());
 			}
@@ -510,7 +511,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				if (fieldType != node.getDeclaringClass()) {
 					visitClassReference(fieldType);
 				}
-				super.visitField(node);
+				visitAnnotations(node);
+				// GRECLIPSE-1008 : do not visit the initialization here. this already happens in the default constructor
+				Expression init = node.getInitialExpression();
+				if (init != null)
+					init.visit(this);
 			case CANCEL_BRANCH:
 				return;
 			case CANCEL_MEMBER:

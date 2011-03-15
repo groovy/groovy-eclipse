@@ -14,6 +14,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.FinalPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PrivatePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PublicPointcut;
@@ -52,14 +53,13 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testPointcutCreation1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\")");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         assertEquals("java.lang.String", pc.getFirstArgument());
     }
-
     public void testPointcutCreation2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(annotatedBy(\"java.lang.String\")))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
 
         Object firstArgument = pc.getFirstArgument();
         assertTrue(firstArgument instanceof FindFieldPointcut);
@@ -73,31 +73,31 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testValidPointcutCreation1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType()");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
     }
     
     public void testInvalidPointcutCreation1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("fileExtension()");
         assertTrue("Should have been a currentType pointcut", pc instanceof FileExtensionPointcut);
-        assertEquals("Expecting 1 argument, but found 0.  Consider using '&' or '|' to connect arguments.", pc.verify());
+        assertInvalidPointcut("Expecting 1 argument, but found 0.  Consider using '&' or '|' to connect arguments.", pc);
     }
 
     public void testValidPointcutCreation2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(annotatedBy()))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
     }
     
     public void testInvalidPointcutCreation2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(isStatic(\"foo\")))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
-        assertEquals("This pointcut supports exactly one argument of type Pointcut or String.  Consider using '&' or '|' to connect arguments.", pc.verify());
+        assertInvalidPointcut("This pointcut does not take any arguments.", pc);
     }
     
     public void testAnd1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\")");
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -111,7 +111,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testAnd2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\") & currentType(\"java.lang.String\")");
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -128,7 +128,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testAnd3() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("(currentType(\"java.lang.String\") & currentType(\"java.lang.String\")) & currentType(\"java.lang.String\")");
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -145,7 +145,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testAnd4() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & (currentType(\"java.lang.String\") & currentType(\"java.lang.String\"))");
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -162,19 +162,19 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testValidAnd1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\") & currentType()");
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
     }
 
     public void testInvalidAnd1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\") & fileExtension()");
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
-        assertEquals("Expecting 1 argument, but found 0.  Consider using '&' or '|' to connect arguments.", pc.verify());
+        assertInvalidPointcut("Expecting 1 argument, but found 0.  Consider using '&' or '|' to connect arguments.", pc);
     }
     
     public void testOr1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") | currentType(\"java.lang.String\")");
         assertEquals("Should have been an and pointcut", OrPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -188,7 +188,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testOr2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") | currentType(\"java.lang.String\") | currentType(\"java.lang.String\")");
         assertEquals("Should have been an and pointcut", OrPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -205,7 +205,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testOr3() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("(currentType(\"java.lang.String\") | currentType(\"java.lang.String\")) | currentType(\"java.lang.String\")");
         assertEquals("Should have been an and pointcut", OrPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -222,7 +222,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testOr4() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") | (currentType(\"java.lang.String\") | currentType(\"java.lang.String\"))");
         assertEquals("Should have been an and pointcut", OrPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -239,7 +239,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testOrAnd1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") | currentType(\"java.lang.String\") & currentType(\"java.lang.String\")");
         assertEquals("Should have been an or pointcut", OrPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals(CurrentTypePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("java.lang.String", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
@@ -259,7 +259,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testAndOr1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\") | currentType(\"java.lang.String\")");
         assertEquals("Should have been an or pointcut", OrPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         assertEquals("Should have 2 arguments", 2, pc.getArgumentValues().length);
         
         assertEquals(AndPointcut.class, pc.getArgumentValues()[0].getClass());
@@ -277,7 +277,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     public void testEnclosing1() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingClass(findProperty(isStatic()) & name(\"yes\"))");
         assertEquals("Should have been an enclosingClass pointcut", EnclosingClassPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getFirstArgument().getClass());
         pc = (IPointcut) pc.getFirstArgument();
@@ -295,7 +295,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         // a meaningless pointcut
         IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingField(findProperty(isPublic()) & name(\"yes\"))");
         assertEquals("Should have been an enclosingField pointcut", EnclosingFieldPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getFirstArgument().getClass());
         pc = (IPointcut) pc.getFirstArgument();
@@ -313,7 +313,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         // a meaningless pointcut
         IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingMethod(findProperty(isPrivate()) & name(\"yes\"))");
         assertEquals("Should have been an enclosingMethod pointcut", EnclosingMethodPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getFirstArgument().getClass());
         pc = (IPointcut) pc.getFirstArgument();
@@ -331,7 +331,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         // a meaningless pointcut
         IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingScript(findProperty(isFinal()) & name(\"yes\"))");
         assertEquals("Should have been an enclosingScript pointcut", EnclosingScriptPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getFirstArgument().getClass());
         pc = (IPointcut) pc.getFirstArgument();
@@ -350,7 +350,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals(BindPointcut.class, pc.getClass());
         assertEquals(FileExtensionPointcut.class, pc.getFirstArgument().getClass());
         assertEquals("b", pc.getFirstArgumentName());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         assertEquals("fdafdsfds", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
         
     }
@@ -360,7 +360,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals(BindPointcut.class, pc.getClass());
         assertEquals(ProjectNaturePointcut.class, pc.getFirstArgument().getClass());
         assertEquals("b", pc.getFirstArgumentName());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         assertEquals("fdafdsfds", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
         
     }
@@ -369,7 +369,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("bind(fileExtension(\"fdafdsfds\") )");
         assertEquals(BindPointcut.class, pc.getClass());
         assertEquals(FileExtensionPointcut.class, pc.getFirstArgument().getClass());
-        assertEquals("bind requires a named argument", pc.verify());
+        assertInvalidPointcut("bind requires a named argument", pc);
         assertEquals("fdafdsfds", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
         
     }
@@ -380,14 +380,14 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals(BindPointcut.class, pc.getClass());
         assertEquals("b", pc.getFirstArgumentName());
         assertEquals(FileExtensionPointcut.class, pc.getFirstArgument().getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         assertEquals("fdafdsfds", ((IPointcut) pc.getFirstArgument()).getFirstArgument());
     }
     
     public void testVariable2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("def x = fileExtension(\"fdafdsfds\")\nx & x");
         assertEquals(AndPointcut.class, pc.getClass());
-        assertNull(pc.verify());
+        assertValidPointcut(pc);
         assertEquals(FileExtensionPointcut.class, pc.getArgumentValues()[0].getClass());
         assertEquals(FileExtensionPointcut.class, pc.getArgumentValues()[1].getClass());
         assertEquals("fdafdsfds", ((IPointcut) pc.getArgumentValues()[0]).getFirstArgument());
@@ -399,5 +399,29 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         		"registerPointcut('mine', { pattern -> null })\n" +
         		"mine()");
         assertEquals("org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut", pc.getClass().getName());
+    }
+    /**
+     * @param pc
+     * @throws PointcutVerificationException
+     */
+    protected void assertValidPointcut(IPointcut pc)
+            throws PointcutVerificationException {
+        try {
+            pc.verify();
+        } catch (PointcutVerificationException e) {
+            fail("Unexpected invalid pointcut: " + e.getPointcutMessage());
+        }
+    }
+    
+    protected void assertInvalidPointcut(String expectedMessage, IPointcut pc) {
+        try {
+            pc.verify();
+            fail("Expected invalid pointcut, but wasn't\n" +  pc);
+        } catch (PointcutVerificationException e) {
+            if (! e.getMessage().equals(expectedMessage)) {
+                fail("Unexpected message on invalid pointcut:\nExpected: " + expectedMessage + "\nBut was:\n"
+                        + e.getPointcutMessage());
+            }
+        }
     }
 }

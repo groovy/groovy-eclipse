@@ -31,6 +31,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
@@ -148,7 +149,7 @@ public class DSLDScriptExecutor {
         this.project = project;
     }
 
-    public Object executeScript(IFile scriptFile) {
+    public Object executeScript(IStorage scriptFile) {
         scriptName = scriptFile.getFullPath().toPortableString();
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
@@ -188,7 +189,7 @@ public class DSLDScriptExecutor {
         return result;
     }
 
-    public String getContents(IFile file) throws IOException, CoreException {
+    public String getContents(IStorage file) throws IOException, CoreException {
         BufferedReader br= new BufferedReader(new InputStreamReader(file.getContents()));
 
         StringBuffer sb= new StringBuffer(300);

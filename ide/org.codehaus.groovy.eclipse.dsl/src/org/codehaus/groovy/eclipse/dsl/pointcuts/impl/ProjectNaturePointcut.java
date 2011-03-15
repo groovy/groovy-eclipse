@@ -13,6 +13,7 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IProject;
 
 /**
@@ -45,15 +46,15 @@ public class ProjectNaturePointcut extends AbstractPointcut {
     }
     
     @Override
-    public String verify() {
+    public void verify() throws PointcutVerificationException {
         String maybeStatus = allArgsAreStrings();
         if (maybeStatus != null) {
-            return maybeStatus;
+            throw new PointcutVerificationException(maybeStatus, this);
         }
         maybeStatus = hasOneArg();
         if (maybeStatus != null) {
-            return maybeStatus;
+            throw new PointcutVerificationException(maybeStatus, this);
         }
-        return super.verify();
+        super.verify();
     }
 }

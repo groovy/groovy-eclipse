@@ -10,8 +10,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -20,23 +20,28 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
+import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 
 public class RefreshDSLDJob extends Job {
     
     public class DSLDResourceVisitor implements IResourceVisitor {
     
         private final IProject project;
-        private final List<IFile> dsldFiles;
+        private final Set<IStorage> dsldFiles;
         public DSLDResourceVisitor(IProject project) {
             this.project = project;
-            this.dsldFiles = new ArrayList<IFile>();
+            this.dsldFiles = new HashSet<IStorage>();
         }
     
         public boolean visit(IResource resource) throws CoreException {
@@ -46,21 +51,59 @@ public class RefreshDSLDJob extends Job {
             }
             if (resource.getType() == IResource.FILE) {
                 IFile file = (IFile) resource;
-                String extension = file.getFileExtension();
-                if (extension != null && extension.equals("dsld")) {
+                if (isDSLD(file)) {
                     dsldFiles.add(file);
                 }
             }
             return true;
         }
     
-        public List<IFile> findFiles() {
+        public Set<IStorage> findFiles() {
             try {
+                // first look for files in the project
                 project.accept(this);
+
+                // now look for files in class folders of the project
+                findDSLDsInLibraries();
             } catch (CoreException e) {
                 GroovyDSLCoreActivator.logException(e);
             }
+            
             return dsldFiles;
+        }
+
+        /**
+         * @throws JavaModelException
+         */
+        protected void findDSLDsInLibraries() throws JavaModelException {
+            IJavaProject javaProject = JavaCore.create(project);
+            for (IPackageFragmentRoot root : javaProject.getPackageFragmentRoots()) {
+                IPackageFragment frag = root.getPackageFragment("dsld");
+                if (frag.exists()) {
+                    Object[] resources = frag.getNonJavaResources();
+                    for (Object resource : resources) {
+                        if (resource instanceof IStorage) {
+                            IStorage file = (IStorage) resource;
+                            if (isDSLD(file)) {
+                                dsldFiles.add(file);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * @param file
+         */
+        protected boolean isDSLD(IStorage file) {
+            if (file instanceof IFile) {
+                IFile iFile = (IFile) file;
+                return !iFile.isDerived() && "dsld".equals(iFile.getFileExtension());
+            } else {
+                String name = file.getName();
+                return name != null && name.endsWith(".dsld");
+            }
         }
     
     }
@@ -137,7 +180,7 @@ public class RefreshDSLDJob extends Job {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Finding inferencing DSL scripts");
         }
         monitor.subTask("Finding inferencing DSL scripts");
-        List<IFile> findGDSLFiles = new DSLDResourceVisitor(project).findFiles();
+        Set<IStorage> findGDSLFiles = new DSLDResourceVisitor(project).findFiles();
         
         if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;
@@ -146,7 +189,7 @@ public class RefreshDSLDJob extends Job {
         
         // now add the rest
         DSLDScriptExecutor executor = new DSLDScriptExecutor(JavaCore.create(project));
-        for (IFile file : findGDSLFiles) {
+        for (IStorage file : findGDSLFiles) {
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.DSL, "Processing " + file.getName());
             }

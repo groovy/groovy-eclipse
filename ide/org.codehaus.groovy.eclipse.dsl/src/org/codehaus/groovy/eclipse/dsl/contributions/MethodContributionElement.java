@@ -121,4 +121,8 @@ public class MethodContributionElement implements IContributionElement {
     public String description() {
         return "Method: " + declaringType + "." + methodName + "(..)";
     }
+    
+    public String getDeclaringTypeName() {
+        return declaringType;
+    }
 }

@@ -14,6 +14,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
 /**
  * Takes two or more elements and 
@@ -65,12 +66,12 @@ public class AndPointcut extends AbstractPointcut {
     }
 
     @Override
-    public String verify() {
+    public void verify() throws PointcutVerificationException {
         String allArgsArePointcuts = allArgsArePointcuts();
         if (allArgsArePointcuts == null) {
-            return super.verify();
+            super.verify();
         } else {
-            return allArgsArePointcuts;
+            throw new PointcutVerificationException(allArgsArePointcuts, this);
         }
     }
     

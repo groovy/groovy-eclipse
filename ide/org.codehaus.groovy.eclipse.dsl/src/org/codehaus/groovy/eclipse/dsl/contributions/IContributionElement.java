@@ -29,4 +29,5 @@ public interface IContributionElement {
     TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver);
     String contributionName();
     String description();
+    String getDeclaringTypeName();
 }

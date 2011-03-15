@@ -20,6 +20,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
 /**
  * An abstract pointcut that filters the value of {@link GroovyDSLDContext#getOuterPointcutBinding()}.
@@ -120,15 +121,16 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
      * Expecting one argument that can either be a string or another pointcut
      */
     @Override
-    public String verify() {
-        String hasOneOrNoArgs = hasOneOrNoArgs();
-        if (hasOneOrNoArgs != null || this.getArgumentValues().length == 0) {
-            return hasOneOrNoArgs;
-        }
+    public void verify() throws PointcutVerificationException {
+        super.verify();
+
         String oneStringOrOnePointcutArg = oneStringOrOnePointcutArg();
-        if (oneStringOrOnePointcutArg == null) {
-            return super.verify();
+        if (oneStringOrOnePointcutArg != null) {
+            String hasNoArgs = hasNoArgs();
+            if (hasNoArgs != null) {
+                throw new PointcutVerificationException(
+                        "This pointcut expects either no arguments or 1 String or 1 pointcut argument", this);
+            }
         }
-        return oneStringOrOnePointcutArg;
     }
 }

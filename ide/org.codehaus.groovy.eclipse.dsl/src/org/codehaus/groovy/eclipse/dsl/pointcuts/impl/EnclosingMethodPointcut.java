@@ -15,6 +15,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
 /**
  * Tests that the type being analyzed matches.  The match can
@@ -57,11 +58,11 @@ public class EnclosingMethodPointcut extends AbstractPointcut {
      * expecting one arg that is either a string or a pointcut or a class
      */
     @Override
-    public String verify() {
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutArg();
-        if (oneStringOrOnePointcutArg == null) {
-            return super.verify();
+    public void verify() throws PointcutVerificationException {
+        String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
+        if (oneStringOrOnePointcutArg != null) {
+            throw new PointcutVerificationException(oneStringOrOnePointcutArg, this);
         }
-        return oneStringOrOnePointcutArg;
+        super.verify();
     }
 }

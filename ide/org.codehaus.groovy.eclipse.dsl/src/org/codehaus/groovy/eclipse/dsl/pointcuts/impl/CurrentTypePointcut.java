@@ -14,6 +14,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
 /**
  * Tests that the type being analyzed matches.  The match can
@@ -61,11 +62,14 @@ public class CurrentTypePointcut extends AbstractPointcut {
      * expecting one arg that is either a string or a pointcut or a class, or no arguments
      */
     @Override
-    public String verify() {
+    public void verify() throws PointcutVerificationException {
         String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
-        if (oneStringOrOnePointcutArg == null || getArgumentValues().length == 0) {
-            return super.verify();
+        String argNumber = hasOneOrNoArgs();
+        
+        if (oneStringOrOnePointcutArg == null || argNumber == null) {
+            super.verify();
+            return;
         }
-        return oneStringOrOnePointcutArg;
+        throw new PointcutVerificationException("This pointcut expects either no arguments or 1 String or 1 pointcut argument", this);
     }
 }

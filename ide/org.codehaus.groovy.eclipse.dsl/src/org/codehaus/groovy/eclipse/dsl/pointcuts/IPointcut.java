@@ -88,11 +88,7 @@ public interface IPointcut {
      */
     void addArgument(Object argument);
     
-    /**
-     * verifies the integrety of this pointcut.  eg- Are the correct number of arguments set, are the proper names available?
-     * @return  null if everything's OK, or a String specifying the problem otherwise.
-     */
-    String verify();
+    void verify() throws PointcutVerificationException;
     
     
     Object getFirstArgument();

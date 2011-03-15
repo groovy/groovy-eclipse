@@ -12,8 +12,10 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import groovy.lang.Closure;
 
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
-import org.codehaus.groovy.eclipse.dsl.contributions.ContributionGroup;
+import org.codehaus.groovy.eclipse.dsl.contributions.DSLContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
@@ -49,8 +51,10 @@ public abstract class AbstractPointcut implements IPointcut {
         this.containerIdentifier = containerIdentifier;
     }
     
-    public String verify() {
-        return invalidArguments ? "Cannot mix named and unnamed arguments" : null;
+    public void verify() throws PointcutVerificationException {
+        if (invalidArguments) {
+            throw new PointcutVerificationException("Cannot mix named and unnamed arguments", this);
+        }
     }
     
     public final void addArgument(Object argument) {
@@ -148,19 +152,30 @@ public abstract class AbstractPointcut implements IPointcut {
     }
     
     public void accept(Closure contributionGroupClosure) {
-        IContributionGroup group = new ContributionGroup(contributionGroupClosure);
+        IContributionGroup group = new DSLContributionGroup(contributionGroupClosure);
         if (project != null) {
-            // register this pointcut and group for the given project
-            GroovyDSLCoreActivator.getDefault().getContextStoreManager()
+            try {
+                this.verify();
+                // register this pointcut and group for the given project
+                GroovyDSLCoreActivator.getDefault().getContextStoreManager()
                     .getDSLDStore(project).addContributionGroup(this, group);
+                
+            } catch (PointcutVerificationException e) {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.DSL, "Ignoring invalid pointcut");
+                    GroovyLogManager.manager.log(TraceCategory.DSL, e.getPointcutMessage());
+                    GroovyLogManager.manager.logException(TraceCategory.DSL, e);
+                }
+            }
         }
     }
     
     /**
      * A standard verification that checks to see that all args are pointcuts.
      * @return null if all args are pointcuts, error status otherwise
+     * @throws PointcutVerificationException 
      */
-    protected final String allArgsArePointcuts() {
+    protected final String allArgsArePointcuts() throws PointcutVerificationException {
         for (Object arg : elements.getElements()) {
             if (arg == null) {
                 continue;
@@ -168,10 +183,7 @@ public abstract class AbstractPointcut implements IPointcut {
             if (! (arg instanceof IPointcut)) {
                 return "All arguments should be pointcuts";
             } else {
-                String res = ((IPointcut) arg).verify();
-                if (res != null) {
-                    return res;
-                }
+                ((IPointcut) arg).verify();
             }
         }
         return null;
@@ -217,6 +229,14 @@ public abstract class AbstractPointcut implements IPointcut {
         }
     }
     
+    protected final String hasNoArgs() {
+        if (elements.getElements().length == 0) {
+            return null;
+        } else {
+            return "Expecting no arguments, but found " + elements.getElements().length + ".  Consider using '&' or '|' to connect arguments.";
+        }
+    }
+    
     protected final String allArgsAreStrings() {
         for (Object arg : elements.getElements()) {
             if (arg == null) {
@@ -229,7 +249,7 @@ public abstract class AbstractPointcut implements IPointcut {
         return null;
     }
     
-    protected final String oneStringOrOnePointcutArg() {
+    protected final String oneStringOrOnePointcutArg() throws PointcutVerificationException {
         String maybeStatus = allArgsAreStrings();
         String maybeStatus2 = allArgsArePointcuts(); 
         if (maybeStatus != null && maybeStatus2 != null) {
@@ -242,7 +262,7 @@ public abstract class AbstractPointcut implements IPointcut {
         return null;
     }
     
-    protected final String oneStringOrOnePointcutOrOneClassArg() {
+    protected final String oneStringOrOnePointcutOrOneClassArg() throws PointcutVerificationException {
         String maybeStatus = allArgsAreStrings();
         String maybeStatus2 = allArgsArePointcuts(); 
         String maybeStatus3 = allArgsAreClasses(); 

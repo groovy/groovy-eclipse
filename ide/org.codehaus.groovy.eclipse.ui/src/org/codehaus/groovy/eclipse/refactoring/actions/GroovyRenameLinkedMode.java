@@ -15,8 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
@@ -140,6 +142,18 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
             if (occurrences.length == 0) {
                 return;
             }
+
+            // now just in case some source locations are not correct (eg-
+            // accessing a getter method as a non-getter property), remove all
+            // that do not have the same source length as the original
+            int nameLength = finder.getElementName().length();
+            List<OccurrenceLocation> newOccurrences = new ArrayList<OccurrenceLocation>(occurrences.length);
+            for (OccurrenceLocation occurrence : occurrences) {
+                if (occurrence.getLength() == nameLength) {
+                    newOccurrences.add(occurrence);
+                }
+            }
+            occurrences = newOccurrences.toArray(new OccurrenceLocation[0]);
 
             // sort for iteration order, starting with the node @ offset
             Arrays.sort(occurrences, new Comparator<OccurrenceLocation>() {

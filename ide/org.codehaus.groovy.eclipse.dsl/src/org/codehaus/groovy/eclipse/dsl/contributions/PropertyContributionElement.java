@@ -94,4 +94,8 @@ public class PropertyContributionElement implements IContributionElement {
     public String description() {
         return "Property: " + declaringType + "." + propName;
     }
+    
+    public String getDeclaringTypeName() {
+        return declaringType;
+    }
 }

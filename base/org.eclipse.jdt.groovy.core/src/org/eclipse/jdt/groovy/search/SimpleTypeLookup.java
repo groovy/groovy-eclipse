@@ -524,6 +524,9 @@ public class SimpleTypeLookup implements ITypeLookup {
 		// now try to resolve generics
 		ClassNode unresolvedType = resolvedType.redirect();
 		ClassNode resolvedTypeOfDeclaration;
+
+		// GRECLIPSE-997: travel up the hierarchy and look for more generics
+		// also look for generics on methods...
 		GenericsType[] resolvedGenerics = resolvedType.getGenericsTypes();
 		GenericsType[] unresolvedGenerics = unresolvedType.getGenericsTypes();
 		if (resolvedGenerics != null && unresolvedGenerics != null) {

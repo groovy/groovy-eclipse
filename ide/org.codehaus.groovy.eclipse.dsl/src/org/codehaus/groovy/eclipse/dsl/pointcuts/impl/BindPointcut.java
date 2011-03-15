@@ -14,6 +14,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
 /**
  * The bind() pointcut takes a named argument where the argument is another pointcut.
@@ -38,21 +39,17 @@ public class BindPointcut extends AbstractPointcut {
     }
     
     @Override
-    public String verify() {
-        String status = super.verify();
-        if (status != null) {
-            return status;
+    public void verify() throws PointcutVerificationException {
+        super.verify();
+        Object arg = getFirstArgument();
+        if (arg instanceof IPointcut) {
+            String name = getFirstArgumentName();
+            if (name == null) {
+                throw new PointcutVerificationException("bind requires a named argument", this);
+            }                
+            ((IPointcut) arg).verify();
         } else {
-            Object arg = getFirstArgument();
-            if (arg instanceof IPointcut) {
-                String name = getFirstArgumentName();
-                if (name == null) {
-                    return "bind requires a named argument";
-                }                
-                return ((IPointcut) arg).verify();
-            } else {
-                return "A pointcut is required as the single argument to bind";
-            }
+            throw new PointcutVerificationException("A pointcut is required as the single argument to bind", this);
         }
     }
 

@@ -15,6 +15,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -81,7 +82,9 @@ public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
     }
     
     @Override
-    public String verify() {
-        return getArgumentValues().length > 0 ? "This pointcut does not take any arguments." : null;
+    public void verify() throws PointcutVerificationException {
+        if(getArgumentValues().length > 0) {
+            throw new PointcutVerificationException("This pointcut does not take any arguments.", this);
+        }
     }
 }
