@@ -9,9 +9,13 @@ import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -72,7 +76,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
     @Override
     protected Control createContents(Composite parent) {
-        Composite page = new Composite(parent, SWT.NONE);
+        final Composite page = new Composite(parent, SWT.NONE);
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         layout.marginHeight = 0;
@@ -131,6 +135,38 @@ public class CompilerPreferencesPage extends PreferencePage implements
         Label compilerVersion = new Label(page, SWT.LEFT | SWT.WRAP);
         compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
 
+
+       Button switchTo = new Button(page, SWT.PUSH);
+        switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
+        switchTo.addSelectionListener(new SelectionListener() {
+
+        public void widgetSelected(SelectionEvent e) {
+            Shell shell = page.getShell();
+            boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?",
+                    "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
+                    " the compiler will be changed and Eclipse will be restarted.\n\n" +
+                    "Make sure all your work is saved before clicking \"Yes\".");
+
+                if (result) {
+                    // change compiler
+                    IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
+                    if (status == Status.OK_STATUS) {
+                        restart(shell);
+                    } else {
+                        ErrorDialog error = new ErrorDialog(shell,
+                                "Error occurred", "Error occurred when trying to enable Groovy " + CompilerUtils.getOtherVersion(),
+                                status, IStatus.ERROR);
+                        error.open();
+                    }
+                }
+
+            }
+
+            public void widgetDefaultSelected(SelectionEvent e) {
+
+            }
+        });
+
         Link moreInfoLink = new Link(page, SWT.BORDER);
         moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
                 false));
@@ -149,15 +185,15 @@ public class CompilerPreferencesPage extends PreferencePage implements
      * borrowed from {@link OpenWorkspaceAction}
      */
     protected void restart(Shell shell) {
-        String command_line = buildCommandLine(shell);
-        if (command_line == null) {
-            return;
-        }
-
+        // String command_line = buildCommandLine(shell);
+        // if (command_line == null) {
+        // return;
+        // }
+        //
+        // System.out.println("Restart command line begin:\n " + command_line);
+        // System.out.println("Restart command line end");
+        // System.setProperty(PROP_EXIT_DATA, command_line);
         System.setProperty(PROP_EXIT_CODE, Integer.toString(24));
-        System.setProperty(PROP_EXIT_DATA, command_line);
-        System.out.println("Restart command line begin:\n " + command_line);
-        System.out.println("Restart command line end");
         Workbench.getInstance().restart();
 
     }
@@ -172,7 +208,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
      * @return a string of command line options or null on error
      */
     private String buildCommandLine(Shell shell) {
-        String property = System.getProperty(PROP_VM);
+        String property = FrameworkProperties.getProperty(PROP_VM);
         if (property == null) {
             MessageDialog
                     .openError(

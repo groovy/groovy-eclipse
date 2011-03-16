@@ -186,9 +186,6 @@ public class CompilerUtils {
                 }
             }
 
-            // set to refresh packages on startup
-//            GroovyActivator.getDefault().setRefreshOnStartup(true);
-
             Bundle[] toDisable = Platform.getBundles("org.codehaus.groovy", (toVersion17 ? version16 : version17));
             Bundle toEnable  = toVersion17 ? getHighestVersion(state, 7) : getHighestVersion(state, 6);
 
@@ -200,13 +197,13 @@ public class CompilerUtils {
             }
 
             for (Bundle bundle : toDisable) {
-                bundle.stop();
+                // bundle.stop();
                 if (!toVersion17) {
                     DisabledInfo info = createDisabledInfo(state, bundle.getBundleId());
                     Platform.getPlatformAdmin().addDisabledInfo(info);
                 }
             }
-            toEnable.start(Bundle.START_ACTIVATION_POLICY);
+            // toEnable.start(Bundle.START_ACTIVATION_POLICY);
 
 //            // Force a package refresh at startup
 //            // add the JVM argument to refresh packages on startup
