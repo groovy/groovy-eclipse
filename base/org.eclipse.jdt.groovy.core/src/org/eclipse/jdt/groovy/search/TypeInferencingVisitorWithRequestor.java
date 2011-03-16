@@ -244,12 +244,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 
 				// visit synthetic default constructor...this is where the object initializers are stuffed
-				// if (!type.getMethod("<init>", new String[0]).exists()) {
-				// ConstructorNode defConstructor = findDefaultConstructor(node);
-				// if (defConstructor != null) {
-				// visitConstructorOrMethod(defConstructor, true);
-				// }
-				// }
+				// this constructor has no JDT counterpart since it doesn't exist in the source code
+				if (!type.getMethod(type.getElementName(), new String[0]).exists()) {
+					ConstructorNode defConstructor = findDefaultConstructor(node);
+					if (defConstructor != null) {
+						visitConstructorOrMethod(defConstructor, true);
+					}
+				}
 
 			} catch (JavaModelException e) {
 				Util.log(e, "Error getting children of " + type.getFullyQualifiedName());

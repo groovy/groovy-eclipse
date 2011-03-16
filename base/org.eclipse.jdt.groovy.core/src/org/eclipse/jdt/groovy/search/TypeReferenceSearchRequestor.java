@@ -16,6 +16,9 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -35,6 +38,7 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.search.matching.JavaSearchPattern;
 import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jface.text.Position;
 
 /**
  * @author Andrew Eisenberg
@@ -49,6 +53,8 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 	private final String simpleName;
 	private final boolean isCaseSensitive;
 	private final boolean isCamelCase;
+
+	private final Set<Position> acceptedPositions = new HashSet<Position>();
 
 	@SuppressWarnings("nls")
 	public TypeReferenceSearchRequestor(TypeReferencePattern pattern, SearchRequestor requestor, SearchParticipant participant) {
@@ -145,12 +151,19 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 					}
 
 					if (start >= 0 && end >= 0) {
-						SearchMatch match = new TypeReferenceMatch(enclosingElement, getAccuracy(result.confidence), start, end
-								- start, false, participant, enclosingElement.getResource());
-						try {
-							requestor.acceptSearchMatch(match);
-						} catch (CoreException e) {
-							Util.log(e, "Error accepting search match for " + enclosingElement); //$NON-NLS-1$
+						// don't want to double accept nodes. This could happen with field and object initializers can get pushed
+						// into multiple
+						// constructors
+						Position position = new Position(start, end - start);
+						if (!acceptedPositions.contains(position)) {
+							SearchMatch match = new TypeReferenceMatch(enclosingElement, getAccuracy(result.confidence), start, end
+									- start, false, participant, enclosingElement.getResource());
+							try {
+								requestor.acceptSearchMatch(match);
+								acceptedPositions.add(position);
+							} catch (CoreException e) {
+								Util.log(e, "Error accepting search match for " + enclosingElement); //$NON-NLS-1$
+							}
 						}
 					}
 				}

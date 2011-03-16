@@ -16,6 +16,9 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -35,6 +38,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
 import org.eclipse.jdt.internal.core.search.matching.VariablePattern;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jface.text.Position;
 
 /**
  * @author Andrew Eisenberg
@@ -51,6 +55,8 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 	private final boolean writeAccess;
 	private final boolean findDeclarations;
 	private final boolean findReferences;
+
+	private final Set<Position> acceptedPositions = new HashSet<Position>();
 
 	@SuppressWarnings("nls")
 	public FieldReferenceSearchRequestor(FieldPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
@@ -113,24 +119,30 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		}
 
 		if (doCheck && end > 0) {
-			// GRECLIPSE-540 still unresolved is that all field and variable references are considered reads. We don't know about
-			// writes
-			boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
-			if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess))) {
-				SearchMatch match = null;
-				if (isDeclaration && findDeclarations) {
-					match = new FieldDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
-							- start, participant, enclosingElement.getResource());
-				} else if (!isDeclaration && findReferences) {
-					match = new FieldReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
-							- start, !isAssignment, isAssignment, false, participant, enclosingElement.getResource());
-				}
-				if (match != null) {
-					try {
-						requestor.acceptSearchMatch(match);
-					} catch (CoreException e) {
-						Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
-								+ enclosingElement.getResource());
+			// don't want to double accept nodes. This could happen with field and object initializers can get pushed into multiple
+			// constructors
+			Position position = new Position(start, end - start);
+			if (!acceptedPositions.contains(position)) {
+				boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
+				// GRECLIPSE-540 still unresolved is that all field and variable references are considered reads. We don't know
+				// about writes
+				if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess))) {
+					SearchMatch match = null;
+					if (isDeclaration && findDeclarations) {
+						match = new FieldDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
+								end - start, participant, enclosingElement.getResource());
+					} else if (!isDeclaration && findReferences) {
+						match = new FieldReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
+								end - start, !isAssignment, isAssignment, false, participant, enclosingElement.getResource());
+					}
+					if (match != null) {
+						try {
+							requestor.acceptSearchMatch(match);
+							acceptedPositions.add(position);
+						} catch (CoreException e) {
+							Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
+									+ enclosingElement.getResource());
+						}
 					}
 				}
 			}

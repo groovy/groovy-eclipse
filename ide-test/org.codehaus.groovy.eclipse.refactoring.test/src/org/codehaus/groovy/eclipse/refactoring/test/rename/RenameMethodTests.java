@@ -109,6 +109,15 @@ public class RenameMethodTests extends RefactoringTest {
     public void test9() throws Exception{
         helper2();
     }
+    public void testInitializer1() throws Exception {
+        helper2();
+    }
+    public void testInitializer2() throws Exception {
+        helper2();
+    }
+    public void testInitializer3() throws Exception {
+        helper2();
+    }
 	
 	public void testDelegate1() throws Exception {
 	    helperDelegate();

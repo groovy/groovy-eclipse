@@ -16,6 +16,9 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -35,6 +38,7 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jface.text.Position;
 
 /**
  * @author Andrew Eisenberg
@@ -52,6 +56,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	private final boolean findReferences;
 	private char[][] parameterQualifications;
 	private char[][] parameterSimpleNames;
+
+	private final Set<Position> acceptedPositions = new HashSet<Position>();
 
 	public MethodReferenceSearchRequestor(MethodPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
 		this.requestor = requestor;
@@ -116,22 +122,28 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		}
 
 		if (doCheck) {
-			boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
-			if (isCompleteMatch) {
-				SearchMatch match = null;
-				if (isDeclaration && findDeclarations) {
-					match = new MethodDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
-							end - start, participant, enclosingElement.getResource());
-				} else if (!isDeclaration && findReferences) {
-					match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end
-							- start, isConstructorCall, false, false, false, participant, enclosingElement.getResource());
-				}
-				if (match != null) {
-					try {
-						requestor.acceptSearchMatch(match);
-					} catch (CoreException e) {
-						Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
-								+ enclosingElement.getResource());
+			// don't want to double accept nodes. This could happen with field and object initializers can get pushed into multiple
+			// constructors
+			Position position = new Position(start, end - start);
+			if (!acceptedPositions.contains(position)) {
+				boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
+				if (isCompleteMatch) {
+					SearchMatch match = null;
+					if (isDeclaration && findDeclarations) {
+						match = new MethodDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch),
+								start, end - start, participant, enclosingElement.getResource());
+					} else if (!isDeclaration && findReferences) {
+						match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
+								end - start, isConstructorCall, false, false, false, participant, enclosingElement.getResource());
+					}
+					if (match != null) {
+						try {
+							requestor.acceptSearchMatch(match);
+							acceptedPositions.add(position);
+						} catch (CoreException e) {
+							Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
+									+ enclosingElement.getResource());
+						}
 					}
 				}
 			}

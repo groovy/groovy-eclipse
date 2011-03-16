@@ -74,8 +74,6 @@ public class RefactoringTestSetup extends AbstractRefactoringTestSetup {
 
 	protected void setUp() throws Exception {
 		super.setUp();
-		if (JavaPlugin.getActivePage() != null)
-			JavaPlugin.getActivePage().close(); // Closed perspective is NOT restored in tearDown()!
 
 		if (fgJavaTestProject != null && fgJavaTestProject.exists()) {
 			int breakpointTarget= 0; breakpointTarget++;

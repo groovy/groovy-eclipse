@@ -38,8 +38,8 @@ public class AbstractRefactoringTestSetup extends TestSetup {
 	protected void setUp() throws Exception {
 		super.setUp();
 		fWasAutobuild= CoreUtility.setAutoBuilding(false);
-		if (JavaPlugin.getActivePage() != null)
-			JavaPlugin.getActivePage().close();
+//		if (JavaPlugin.getActivePage() != null)
+//			JavaPlugin.getActivePage().close();
 
 		Hashtable options= TestOptions.getDefaultOptions();
 		options.put(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB);
