@@ -65,7 +65,6 @@ import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.RegexExpression;
 import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.SpreadMapExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -1330,13 +1329,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
-	@Override
-	public void visitRegexExpression(RegexExpression node) {
-		boolean shouldContinue = handleExpression(node);
-		if (shouldContinue) {
-			super.visitRegexExpression(node);
-		}
-	}
 
 	@Override
 	public void visitShortTernaryExpression(ElvisOperatorExpression node) {
