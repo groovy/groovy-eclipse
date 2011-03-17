@@ -74,11 +74,15 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyCompilationUnitDeclaration.defaultCheckGenerics=true;
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
-		groovyLevel=17;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.8.jar");
+		groovyLevel=18;
+    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.0-rc-2.jar");
     	if (groovyJar==null) {
-    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-    		groovyLevel=16;
+        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.8.jar");
+        	groovyLevel=17;
+        	if (groovyJar==null) {
+	    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
+	    		groovyLevel=16;
+        	}
     	}
 	}
 
@@ -105,11 +109,15 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	groovyLevel=17;
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.8.jar");
+        	groovyLevel=18;
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.0-rc-2.jar");
         	if (groovyJar==null) {
-        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-        		groovyLevel=16;
+        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.8.jar");
+        		groovyLevel=17;
+            	if (groovyJar==null) {
+            		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
+            		groovyLevel=16;
+            	}
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
         	URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
@@ -316,12 +324,26 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 
     public void testStaticOuter_GRE944() {
+    	if (groovyLevel<18) {
 	    	this.runConformTest(new String[]{
 	    			"A.groovy",
 	    			"static class A {\n"+
 	    			"  public static void main(String[]argv) {print 'abc';}\n"+
 	    			"}\n",
 	    	},"abc");
+    	} else {
+	    	this.runNegativeTest(new String[]{
+	    			"A.groovy",
+	    			"static class A {\n"+
+	    			"  public static void main(String[]argv) {print 'abc';}\n"+
+	    			"}\n",
+	    	},"----------\n" + 
+			"1. ERROR in A.groovy (at line 1)\n" + 
+			"	static class A {\n" + 
+			"	 ^\n" + 
+			"Groovy:The class \'A\' has an incorrect modifier static.\n" + 
+			"----------\n");
+    	}
     }
     
     public void testCrashRatherThanError_GRE986() {
@@ -515,6 +537,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     }
 
     public void testStaticOuter_GRE944_2() {
+    	if (groovyLevel<18) {
 	    	this.runConformTest(new String[]{
 	    			"B.java",
 	    			"public class B {\n"+
@@ -529,6 +552,27 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"  }\n"+
 	    			"}\n",
 	    	},"abcd");
+    	} else {
+    		this.runNegativeTest(new String[]{
+	    			"B.java",
+	    			"public class B {\n"+
+	    			"  public static void main(String[] argv) {\n" +
+	    			"    new A.C().foo();\n" +
+	    			"  }\n" +
+	    			"}\n",
+	    			"A.groovy",
+	    			"static class A {\n"+
+	    			"  static class C {\n"+
+	    			"  public void foo() {print 'abcd';}\n"+
+	    			"  }\n"+
+	    			"}\n",
+	    	},"----------\n" + 
+			"1. ERROR in A.groovy (at line 1)\n" + 
+			"	static class A {\n" + 
+			"	 ^\n" + 
+			"Groovy:The class \'A\' has an incorrect modifier static.\n" + 
+			"----------\n");
+    	}
     }
     
     public void testEnumStatic_GRE974() {
@@ -800,6 +844,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     
     public void testNewRuleInLatestGroovy() {
 //    	if (isGroovy16()) { // FIXASC should also break in 17b2
+    	if (groovyLevel<18) {
+    		// Why no duplicate type exception here on < 1.8? (Move enum and Move for script name)
 	    	this.runNegativeTest(new String[]{
 	    			"Move.groovy",
 	    			"enum Move { ROCK, PAPER, SCISSORS }\n"+
@@ -816,7 +862,24 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"	^\n" + 
 			"Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" + 
 			"----------\n");
-//    	}
+    	} else {
+	    	this.runNegativeTest(new String[]{
+	    			"Move2.groovy",
+	    			"enum Move { ROCK, PAPER, SCISSORS }\n"+
+					"\n"+
+					"final static BEATS = [\n"+
+					"   [Move.ROCK,     Move.SCISSORS],\n"+
+					"   [Move.PAPER,    Move.ROCK],\n"+
+					"   [Move.SCISSORS, Move.PAPER]\n"+
+					"].asImmutable()"
+	    	},
+	    	"----------\n" + 
+			"1. ERROR in Move2.groovy (at line 3)\n" + 
+			"	final static BEATS = [\n" + 
+			"	^\n" + 
+			"Groovy:Variable definition has an incorrect modifier \'static\'.\n" + 
+			"----------\n");
+    	}
     }
 	
 	// WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
@@ -3199,26 +3262,45 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	//    def x
 	//        ^
 	public void testInvalidScripts_GRE323_2() {
-		this.runNegativeTest(new String[] {
-			"One.groovy",
-			"def moo(closure) {\n" + 
-			"  closure();\n" + 
-			"}\n" + 
-			"\n" + 
-			"moo {\n" + 
-			"  final session2 = null\n" + 
-		    "  \n" + 
-			"  // Define scenarios\n" + 
-			"  def secBoardRep = session2.\n" + 
-			"  def x\n" + 
-			"}\n"
-		},
-		"----------\n" + 
-		"1. ERROR in One.groovy (at line 10)\n" + 
-		"	def x\n" + 
-		"	    ^\n" + 
-		"Groovy:expecting \'}\', found \'x\' @ line 10, column 7.\n" + 
-		"----------\n");		
+		if (groovyLevel<18) {
+			this.runNegativeTest(new String[] {
+				"One.groovy",
+				"def moo(closure) {\n" + 
+				"  closure();\n" + 
+				"}\n" + 
+				"\n" + 
+				"moo {\n" + 
+				"  final session2 = null\n" + 
+			    "  \n" + 
+				"  // Define scenarios\n" + 
+				"  def secBoardRep = session2.\n" + 
+				"  def x\n" + 
+				"}\n"
+			},
+			"----------\n" + 
+			"1. ERROR in One.groovy (at line 10)\n" + 
+			"	def x\n" + 
+			"	    ^\n" + 
+			"Groovy:expecting \'}\', found \'x\' @ line 10, column 7.\n" + 
+			"----------\n");
+		} else {
+			// command expression syntax now allows this but it looks weird as 
+			this.runConformTest(new String[] {
+					"One.groovy",
+					"def moo(closure) {\n" + 
+					"  closure();\n" + 
+					"}\n" + 
+					"\n" + 
+					"moo {\n" + 
+					"  final session2 = null\n" + 
+				    "  \n" + 
+					"  // Define scenarios\n" + 
+					"  def secBoardRep = session2.\n" + 
+					"  def x\n" + 
+					"}\n"
+				},
+				"");	
+		}
 	}
 	
 	// removed surrounding method
@@ -3392,26 +3474,43 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testInvalidScripts_GRE323_6() {
-		this.runNegativeTest(new String[] {
-			"Six.groovy",
-			"def moo(closure) {\n" + 
-			"  closure();\n" + 
-			"}\n" + 
-			"\n" + 
-			"moo {\n" + 
-			"  final session2 = [\"def\": { println \"DEF\" }]\n" + 
-		    "  \n" + 
-		    "  final x = 1\n"+
-			"  // Define scenarios\n" + 
-			"  final y = session2.def x\n" + 
-			"}\n"
-		},
-		"----------\n" + 
-		"1. ERROR in Six.groovy (at line 10)\n" + 
-		"	final y = session2.def x\n" + 
-		"	                       ^\n" + 
-		"Groovy:expecting \'}\', found \'x\' @ line 10, column 26.\n" + 
-		"----------\n");		
+		if (groovyLevel<18) {
+			this.runNegativeTest(new String[] {
+				"Six.groovy",
+				"def moo(closure) {\n" + 
+				"  closure();\n" + 
+				"}\n" + 
+				"\n" + 
+				"moo {\n" + 
+				"  final session2 = [\"def\": { println \"DEF\" }]\n" + 
+			    "  \n" + 
+			    "  final x = 1\n"+
+				"  // Define scenarios\n" + 
+				"  final y = session2.def x\n" + 
+				"}\n"
+			},
+			"----------\n" + 
+			"1. ERROR in Six.groovy (at line 10)\n" + 
+			"	final y = session2.def x\n" + 
+			"	                       ^\n" + 
+			"Groovy:expecting \'}\', found \'x\' @ line 10, column 26.\n" + 
+			"----------\n");		
+		} else {
+			this.runConformTest(new String[] {
+					"Six.groovy",
+					"def moo(closure) {\n" + 
+					"  closure();\n" + 
+					"}\n" + 
+					"\n" + 
+					"moo {\n" + 
+					"  final session2 = [\"def\": { println \"DEF\" }]\n" + 
+				    "  \n" + 
+				    "  final x = 1\n"+
+					"  // Define scenarios\n" + 
+					"  final y = session2.def x\n" + 
+					"}\n"
+				},"DEF");		
+		}
 	}
 	
 	public void testBridgeMethods_GRE336() {
@@ -4176,7 +4275,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		
 		expectedOutput = 
 			//"  // Method descriptor #18 (Ljava/lang/String;)V\n" + 
-			"  // Stack: 3, Locals: 3\n" + 
+			(groovyLevel<18?
+			"  // Stack: 3, Locals: 3\n":
+			"  // Stack: 2, Locals: 4\n")+
 			"  @p.Anno\n" + 
 			"  public X(java.lang.String s);\n";
 		checkDisassemblyFor("p/X.class", expectedOutput);		
@@ -5093,7 +5194,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"2. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
 			"	      ^\n" +
-			"Groovy:Only classes can be used for attribute 'value' in @p.Anno\n" +
+			(groovyLevel<18?
+			"Groovy:Only classes can be used for attribute 'value' in @p.Anno\n":
+			"Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n"
+		    )+
 			"----------\n");
 	}
 	
@@ -7712,7 +7816,11 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		String expectedContents = 
 			"// Compiled from Foo.groovy (version 1.5 : 49.0, no super bit)\n" + 
 			"public abstract @interface A extends java.lang.annotation.Annotation {\n" + 
-			"}";
+			(groovyLevel<18?"":
+				"\n"+
+				"  Inner classes:\n" + 
+				"    [inner class info: #9 A$1, outer class info: #2 A\n" + 
+				"     inner name: #10 1, accessflags: 4128 default]\n" )+"}";
 		checkDisassemblyFor("A.class",expectedContents);
 	
 	}
