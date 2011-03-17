@@ -69,7 +69,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         }
     }
     
-    private SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit, boolean forceWorkingCopy) {
+    protected SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit, boolean forceWorkingCopy) {
         try {
             if (forceWorkingCopy) {
                 unit.becomeWorkingCopy(null);

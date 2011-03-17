@@ -20,6 +20,7 @@ import junit.framework.Test;
 /**
  * 
  * @author Andrew Eisenberg
+ * @author Andy Clement
  * @created Sep 10, 2010
  */
 public class GenericInferencingTests extends AbstractInferencingTest {
@@ -473,4 +474,17 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
+    
+//    // Checking form of ClassNodes - how does it compare between us and groovy
+//    public void testOne() throws Exception {
+//    	String contents = "class MyType<TT> { }";
+//    	String toFind = "MyType";
+//        int start = contents.lastIndexOf(toFind);
+//        int end = start + toFind.length();
+//    	GroovyCompilationUnit unit = createUnit("Search",contents);
+//	    SearchRequestor requestor = doVisit(start, end, unit, false);
+//	    
+//	    assertNotNull("Did not find expected ASTNode", requestor.node);
+//	    System.out.println(requestor.node);
+//    }
 }
