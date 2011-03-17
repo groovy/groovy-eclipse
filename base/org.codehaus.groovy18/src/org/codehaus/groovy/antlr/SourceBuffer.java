@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2007 the original author or authors.
+ * Copyright 2003-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,28 +23,29 @@ import java.util.List;
  * held within itself.
  *
  * @author <a href="mailto:groovy@ross-rayner.com">Jeremy Rayner</a>
+ * @author Andrew Eisenberg
+ * @author Andy Clement
  * @version $Revision: 7922 $
  */
 public class SourceBuffer {
-    private final List lines;
-    private StringBuffer current;
+    private final List<StringBuilder> lines;
+    private StringBuilder current;
     // GRECLIPSE: start
     private final List<Integer> lineEndings;
 
     // GRECLIPSE-805 Support for unicode escape sequences
-    private UnicodeUnescaper unescaper;
+    private UnicodeEscapingReader unescaper;
     // end
 
     public SourceBuffer() {
-        lines = new ArrayList();
+        lines = new ArrayList<StringBuilder>();
         //lines.add(new StringBuffer()); // dummy row for position [0] in the List
         // GRECLIPSE: start
         lineEndings = new ArrayList<Integer>();
         lineEndings.add(0);
         unescaper = new NoEscaper();
         // end
-
-        current = new StringBuffer();
+        current = new StringBuilder();
         lines.add(current);
     }
 
@@ -77,7 +78,7 @@ public class SourceBuffer {
         // obtain the snippet from the buffer within specified bounds
         StringBuffer snippet = new StringBuffer();
         for (int i = startLine - 1; i < endLine;i++) {
-            String line = ((StringBuffer)lines.get(i)).toString();
+            String line = (lines.get(i)).toString();
             if (startLine == endLine) {
                 // reset any out of bounds requests (again)
                 if (startColumn > line.length()) { startColumn = line.length();}
@@ -120,8 +121,8 @@ public class SourceBuffer {
     } 
     }*/
     // newcode:
-    public void setUnescaper(UnicodeUnescaper unescaper) {
-        this.unescaper = unescaper;
+    public void setUnescaper(UnicodeEscapingReader unicodeEscapingReader) {
+        this.unescaper = unicodeEscapingReader;
     }
     
     private boolean prevWasCarriageReturn = false;
@@ -134,24 +135,23 @@ public class SourceBuffer {
         }
         if (c == '\n') {
         	if (!prevWasCarriageReturn) {
-	            current = new StringBuffer();
+	            current = new StringBuilder();
 	            lines.add(current);
 	            lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
         	} else {
         		// \r\n was found
         		// back out previous line and add a \n to the line
-        		current = new StringBuffer();
-        		((StringBuffer) lines.get(lines.size()-1)).append('\n');
+        		current = new StringBuilder();
+        		lines.get(lines.size()-1).append('\n');
         		lineEndings.remove(lineEndings.size()-1);
         		lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
         	}
         }
         // handle carriage returns as well as newlines
         if (c == '\r') {
-        	current = new StringBuffer();
+        	current = new StringBuilder();
         	lines.add(current);
         	lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
-        	
         	// this may be a \r\n, but may not be
         	prevWasCarriageReturn = true;
         } else {
@@ -160,7 +160,7 @@ public class SourceBuffer {
     }
     
     public LocationSupport getLocationSupport() {
-    	lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends wherever it ends...
+    	lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends where the data runs out
     	int[] lineEndingsArray = new int[lineEndings.size()];
     	for (int i=0,max=lineEndings.size();i<max;i++) {
     		lineEndingsArray[i] = lineEndings.get(i).intValue();

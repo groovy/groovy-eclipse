@@ -18,7 +18,6 @@ package org.codehaus.groovy.antlr;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.text.BadLocationException;
 
 /**
  * @author Andrew Eisenberg

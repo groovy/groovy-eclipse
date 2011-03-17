@@ -198,8 +198,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     public String getPackageName() {
-    	// GRECLIPSE: start: was getName();
-        return packageNode == null ? null : packageNode.getPackageName();
+        return packageNode == null ? null : packageNode.getName();
     }
 
     public PackageNode getPackage() {
@@ -217,7 +216,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     public boolean hasPackageName(){
-        return packageNode != null && packageNode.getPackageName()/* GRECLIPSE: was getName();*/ != null;
+        return packageNode != null && packageNode.getName()!= null;
     }
 
     public boolean hasPackage(){

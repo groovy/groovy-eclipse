@@ -65,5 +65,4 @@ public class TaskEntry {
 		return task.toString();
 	}
 
-
 }

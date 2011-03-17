@@ -7,8 +7,7 @@
 // groovy/tags/GROOVY_1_5_6/src/main/org/codehaus/groovy/antlr/groovy.g
 
 header {
-package org.codehaus.groovy.internal.antlr.parser;
-import org.codehaus.groovy.antlr.*;
+package org.codehaus.groovy.antlr;
 import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;

@@ -111,11 +111,9 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
         initContextClassLoader = false;
 
         ModuleNode mn = (ModuleNode) nodes[0];
-
         // GRECLIPSE: start
         if (mn==null) {
-        	// able to stop this being called in the first place?
-        	// assert: code has other errors == true
+        	// If the compilation had earlier problems, there may not be a ModuleNode to process
         	return;
         }
         // end
