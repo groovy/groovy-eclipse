@@ -28,24 +28,24 @@ import org.eclipse.jdt.core.tests.util.Util;
  * Basic tests for the builder - compiling and running some very simple java and groovy code
  */
 public class BasicGroovyBuildTests extends GroovierBuilderTests {
-	
+
 	public BasicGroovyBuildTests(String name) {
 		super(name);
 	}
-	
+
 	public static Test suite() {
 		return buildTestSuite(BasicGroovyBuildTests.class);
 	}
-	
+
 	// build hello world and run it
 	public void testBuildJavaHelloWorld() throws JavaModelException {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -57,52 +57,52 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"   }\n"+
 			"}\n"
 			);
-			
+
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("p1.Hello");
 		expectingNoProblems();
 		executeClass(projectPath, "p1.Hello", "Hello world", "");
 
 	}
-	
+
 	// Activate when identified script recognition does not damage performance
-//	public void testScriptSupport() throws Exception {
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//		env.addGroovyJars(projectPath);
-//		fullBuild(projectPath); 
-//		
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//		
+	// public void testScriptSupport() throws Exception {
+	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	// env.addGroovyJars(projectPath);
+	// fullBuild(projectPath);
+	//
+	// // remove old package fragment root so that names don't collide
+	//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	//
 //		// The fact that this is 'scripts' should cause us to suppress the .class file
-//		IPath root = env.addPackageFragmentRoot(projectPath, "scripts"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		env.addGroovyClass(root, "p1", "Hello",
-//			"package p1;\n"+
-//			"public class Hello {\n"+
-//			"   public static void main(String[] args) {\n"+
-//			"      System.out.println(\"Hello world\");\n"+
-//			"   }\n"+
-//			"}\n"
-//			);
-//			
-//		incrementalBuild(projectPath);
-//		// No compiled output as it was a script
-//		expectingCompiledClassesV("");
-//		expectingNoProblems();
-//	}
+	//		IPath root = env.addPackageFragmentRoot(projectPath, "scripts"); //$NON-NLS-1$
+	//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	//
+	// env.addGroovyClass(root, "p1", "Hello",
+	// "package p1;\n"+
+	// "public class Hello {\n"+
+	// "   public static void main(String[] args) {\n"+
+	// "      System.out.println(\"Hello world\");\n"+
+	// "   }\n"+
+	// "}\n"
+	// );
+	//
+	// incrementalBuild(projectPath);
+	// // No compiled output as it was a script
+	// expectingCompiledClassesV("");
+	// expectingNoProblems();
+	// }
 
 	public void testTypeDuplication_GRE796_1() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -121,15 +121,16 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		incrementalBuild(projectPath);
 		expectingOnlySpecificProblemFor(pathToSecond, new Problem("/Project/src2/p/Foo.groovy", "The type Foo is already defined", pathToSecond, 17,20, 40, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+
 	public void testVarargs_GRE925() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -137,7 +138,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"class SubTest extends Test {\n"+
 				" void method(String[] x) { super.method(x); }\n"+
 				"}");
-		
+
 		env.addClass(root, "", "Test",
 				"class Test {\n"+
 				"  void method(String[] x) {}\n"+
@@ -145,21 +146,19 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"}");
 
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("Test","SubTest");
+		expectingCompiledClassesV("Test", "SubTest");
 		expectingNoProblems();
 	}
-	
 
-	
 	public void testSlowAnotherAttempt_GRE870() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -730,7 +729,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		"}\n");
 
 		// TODO how to create a reliable timed test? This should take about 2-3seconds, not > 10 - at least on my machine ;)
-		
+
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		incrementalBuild(projectPath);
@@ -738,17 +737,16 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingCompiledClassesV("a.b.c.d.e.f.Helper1,a.b.c.d.e.f.Helper2,a.b.c.d.e.f.Helper3,a.b.c.d.e.f.Helper4,a.b.c.d.e.f.Helper5,a.b.c.d.e.f.Helper6,a.b.c.d.e.f.Helper7,a.b.c.d.e.f.Helper8,a.b.c.d.e.f.Helper9,a.b.c.d.e.f.HelperBase,a.b.c.d.e.f.SomeHelper,a.b.c.d.e.f.SomeTests");
 
 	}
-	
-	
+
 	public void testSlow_GRE870() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -773,7 +771,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			);
 
 		// TODO could guard on this test requiring execution in less than 2mins...
-		
+
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		incrementalBuild(projectPath);
@@ -781,16 +779,16 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingCompiledClassesV("Foo");
 
 	}
-	
+
 	public void testReallySlow_GRE870() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -849,10 +847,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"\n"+
 				"class Test1 {}\n"
 
-			);
+		);
 
 		// TODO could guard on this test requiring execution in less than 2mins...
-		
+
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		incrementalBuild(projectPath);
@@ -866,10 +864,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -889,16 +887,15 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingOnlySpecificProblemFor(pathToSecond, new Problem("/Project/src2/p/Foo.groovy", "The type Foo is already defined", pathToSecond, 0, 0, 40, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	
 	public void testClosureBasics() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -912,12 +909,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"  print it*2\n"+
 				"}\n"
 				);
-		
+
 		// three classes created for that:
-		// GroovyClass(name=Coroutine bytes=6372), 
-		// GroovyClass(name=Coroutine$_run_closure1 bytes=2875), 
+		// GroovyClass(name=Coroutine bytes=6372),
+		// GroovyClass(name=Coroutine$_run_closure1 bytes=2875),
 		// GroovyClass(name=Coroutine$_iterate_closure2 bytes=3178)
-			
+
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("Coroutine","Coroutine$_run_closure1","Coroutine$_iterate_closure2");
 		expectingNoProblems();
@@ -929,10 +926,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -941,21 +938,21 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"package q\n"+
 				"class X {}"
 				);
-		
+
 		incrementalBuild(projectPath);
 
 		expectingOnlySpecificProblemFor(path, new Problem("p/X", "The declared package \"q\" does not match the expected package \"p\"", path, 8,9, 60, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$		
 	}
-	
+
 	public void testPackageNames_GRE342_2() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -964,21 +961,21 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"package p.s.r.q\n"+
 				"class X {}"
 				);
-		
+
 		incrementalBuild(projectPath);
 
 		expectingOnlySpecificProblemFor(path, new Problem("p/q/r/X", "The declared package \"p.s.r.q\" does not match the expected package \"p.q.r\"", path, 8, 15, 60, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$		
 	}
-	
+
 	public void testPackageNames_GRE342_3() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -986,23 +983,22 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.addGroovyClass(root, "p.q.r", "X",
 				"print 'abc'"
 				);
-		
+
 		incrementalBuild(projectPath);
 
 		expectingNoProblems();
 		executeClass(projectPath, "X", "abc", "");
 	}
 
-	
 	public void testClosureIncremental() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1019,12 +1015,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"  print it*2\n"+
 				"  }\n"+
 				"}\n");
-		
+
 		// FIXASC this variant of the above seemed to crash groovy:
-//				"def run(n) \n"+
-//				"  OtherGroovy.iterate (3) {\n"+
-//				"  print it*2\n"+
-//				"  }\n");
+		// "def run(n) \n"+
+		// "  OtherGroovy.iterate (3) {\n"+
+		// "  print it*2\n"+
+		// "  }\n");
 
 		env.addGroovyClass(root, "pkg", "OtherGroovy",
 				"def static iterate(Integer n, closure) {\n"+
@@ -1037,7 +1033,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingCompiledClassesV("OtherGroovy","OtherGroovy$_iterate_closure1","Runner","Runner$_run_closure1","Launch");
 		expectingNoProblems();
 		executeClass(projectPath, "Launch", "2468", "");
-		
+
 		// modify the body of the closure
 		env.addGroovyClass(root, "", "Runner",
 				"def static run(int n) { \n"+
@@ -1047,7 +1043,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"}\n");
 
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("Runner","Runner$_run_closure1");
+		expectingCompiledClassesV("Runner", "Runner$_run_closure1");
 		expectingNoProblems();
 		executeClass(projectPath, "Launch", "1234", "");
 
@@ -1071,15 +1067,14 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"    closure(it);\n" +
 				"  }\n"+
 				"}\n");
-		
+
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("OtherGroovy","OtherGroovy$_iterate_closure1", "Runner","Runner$_run_closure1");
 		expectingNoProblems();
 		executeClass(projectPath, "Launch", "12345678", "");
 
 	}
-	
-	
+
 	// http://jira.codehaus.org/browse/GRECLIPSE-558
 	/**
 	 * The aim of this test is to verify the processing in ASTTransformationCollectorCodeVisitor - to check it finds everything it expects.
@@ -1121,6 +1116,139 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "MyTest", "success", null);
 	}
 	
+/*
+	public void testGpp1() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addJar(projectPath, "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
+		env.addJar(projectPath, "lib/junit4_4.5.0.jar"); //$NON-NLS-1$
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "MyTest",
+				"import org.junit.runner.RunWith\n"+
+				"import spock.lang.Specification \n"+
+				"import spock.lang.Sputnik;\n"+
+				"\n"+
+				"@Typed class Foo {\n"+
+				"	private final WeakValueMap<String,Class> cache\n"+
+				"	\n"+
+				"	public x(String name) {\n"+
+				"		def res = cache.get(name).get()\n"+
+				"		foo(res)\n"+
+				"	}\n"+
+				"	\n"+
+				"	public void foo(Class c) {\n"+
+				"	}\n"+
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Inferer");
+	}
+	
+	
+	// First groovy++ test
+	public void testGpp2() throws Exception {
+		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addJar(projectPath,"lib/groovypp-0.4.170.jar"); //$NON-NLS-1$
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "Inferer",
+				"@Typed \n"+
+				"class Inferer {\n" + 
+				"  public void m(List<String> ls) {\n"+
+				"	 for (l in ls) {\n"+
+				"	   foo(l) \n"+
+				"    }\n" + 
+				"  }\n"+
+				"  public void foo(String s) {}\n" +
+				"}");
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Inferer");
+	}
+
+	public void testGppExternalizable() throws Exception {
+		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addJar(projectPath,libGroovypp); 
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		// This type should be affected by the Serial transformation in gpp
+		// that adds read/write external methods
+		env.addGroovyClass(root, "", "Pairy",
+				"class Pairy<T1,T2> implements Externalizable {\n" + 
+				"  T1 first\n"+
+				"  T2 second\n"+
+				"}\n"
+				);
+
+		env.addGroovyClass(root, "", "PairyUse",
+				"class PairyUse {\n" + 
+				"  def m() {\n"+
+				"    Pairy<UUID,Object> pairy\n"+
+				"  }\n"+
+				"}\n"
+				);
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Pairy","PairyUse");
+	}
+	
+	public void testGppTrait1() throws Exception {
+		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+//		env.addJar(projectPath,libGroovypp); 
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		// This type should be affected by the Serial transformation in gpp
+		// that adds read/write external methods
+		env.addGroovyClass(root, "", "Pairy",
+				"import org.mbte.groovypp.runtime.HasDefaultImplementation;\n"+
+				"\n"+
+				"public interface Delegating extends Cloneable {\n"+
+				"    public Object clone() throws CloneNotSupportedException;\n"+
+				"}\n"+
+				"abstract static class ApplyOp implements Delegating {\n"+
+				"}\n"
+				);
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Delegating","Delegating$TraitImpl");
+	}
+	*/
 	/**
 	 * Testing that the transform occurs on an incremental change.  The key thing being looked
 	 * at here is that the incremental change is not directly to a transformed file but to
@@ -1130,13 +1258,13 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-		env.addJar(projectPath,"lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
-	    env.addJar(projectPath,"lib/junit4_4.5.0.jar"); //$NON-NLS-1$
+		env.addJar(projectPath, "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
+		env.addJar(projectPath, "lib/junit4_4.5.0.jar"); //$NON-NLS-1$
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1157,7 +1285,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"    \n"+
 				"}" 
 				);
-		
+
 		env.addGroovyClass(root, "", "Foobar",
 				"class Foobar {\n"+
 				"\n"+
@@ -1168,13 +1296,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				);
 		incrementalBuild(projectPath);
 		expectingNoProblems();
-		expectingCompiledClassesV("Foobar","FoobarSpec");
-		
-		
+		expectingCompiledClassesV("Foobar", "FoobarSpec");
+
 		IPath workspacePath = env.getWorkspaceRootPath();
 		File f = new File(workspacePath.append(env.getOutputLocation(projectPath)).toOSString(),"FoobarSpec.class");
 		long filesize = f.length(); // this is 9131 for groovy 1.7.0
-		
+
 		env.addGroovyClass(root, "", "Foobar",
 				"class Foobar {\n"+
 				"\n"+
@@ -1185,12 +1312,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				);
 		incrementalBuild(projectPath);
 		expectingNoProblems();
-		expectingCompiledClassesV("Foobar","FoobarSpec");
+		expectingCompiledClassesV("Foobar", "FoobarSpec");
 
 		long filesizeNow = f.length(); // drops to 7002 if transform did not run
-		assertEquals(filesize,filesizeNow);
+		assertEquals(filesize, filesizeNow);
 	}
-	
+
 	/**
 	 * Also found through this issue, FoobarSpec not getting a rebuild when Foobar changes.  This test is currently
 	 * having a reference from foobarspec>foobar by having a field of type Foobar.  If that is removed, even though
@@ -1201,13 +1328,13 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-		env.addJar(projectPath,"lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
-	    env.addJar(projectPath,"lib/junit4_4.5.0.jar"); //$NON-NLS-1$
+		env.addJar(projectPath, "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
+		env.addJar(projectPath, "lib/junit4_4.5.0.jar"); //$NON-NLS-1$
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1227,7 +1354,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"    \n"+
 				"}" 
 				);
-		
+
 		env.addGroovyClass(root, "", "Foobar",
 				"class Foobar {\n"+
 				"\n"+
@@ -1238,13 +1365,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				);
 		incrementalBuild(projectPath);
 		expectingNoProblems();
-		expectingCompiledClassesV("Foobar","FoobarSpec");
-		
-		
-//		IPath workspacePath = env.getWorkspaceRootPath();
+		expectingCompiledClassesV("Foobar", "FoobarSpec");
+
+		// IPath workspacePath = env.getWorkspaceRootPath();
 //		File f = new File(workspacePath.append(env.getOutputLocation(projectPath)).toOSString(),"FoobarSpec.class");
-//		long filesize = f.length(); // this is 9131 for groovy 1.7.0
-		
+		// long filesize = f.length(); // this is 9131 for groovy 1.7.0
+
 		env.addGroovyClass(root, "", "Foobar",
 				"class Foobar {\n"+
 				"\n"+
@@ -1255,24 +1381,22 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				);
 		incrementalBuild(projectPath);
 		expectingNoProblems();
-		expectingCompiledClassesV("Foobar","FoobarSpec");
+		expectingCompiledClassesV("Foobar", "FoobarSpec");
 
 //		long filesizeNow = f.length(); // drops to 7002 if transform did not run
-//		assertEquals(filesize,filesizeNow);
+		// assertEquals(filesize,filesizeNow);
 	}
-	
-			
-	
+
 	// build .groovy file hello world then run it
 	public void testBuildGroovyHelloWorld() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1284,13 +1408,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"   }\n"+
 			"}\n"
 			);
-		
+
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("p1.Hello");
 		expectingNoProblems();
 		executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
 	}
-
 
 	// use funky main method
 	public void testBuildGroovyHelloWorld2() throws Exception {
@@ -1298,10 +1421,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1313,7 +1436,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"   }\n"+
 			"}\n"
 			);
-		
+
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("p1.Hello");
 		expectingNoProblems();
@@ -1321,17 +1444,17 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	}
 
 	public void testGenericMethods() throws Exception {
-		IPath projectPath = env.addProject("Project","1.5"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
+
 		env.addClass(root, "", "Foo",
 			"public class Foo<T> {\n"+
 			"   public void m() {\n"+
@@ -1346,9 +1469,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"   }\n"+
 			"}\n"
 			);
-		
+
 		incrementalBuild(projectPath);
-//		expectingCompiledClassesV("Foo","Bar");
+		// expectingCompiledClassesV("Foo","Bar");
 		expectingNoProblems();
 	}
 
@@ -1357,10 +1480,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1373,54 +1496,53 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"   }\n"+
 			"}\n"
 			);
-		
+
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("p1.Hello");
 		expectingNoProblems();
 		executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
-//		IJavaProject javaProject = env.getJavaProject(projectPath);
+		// IJavaProject javaProject = env.getJavaProject(projectPath);
 //		IJavaElement pkgFragmentRoot = javaProject.findElement(new Path("p1/Hello.groovy"));
-//		System.out.println("A>"+pkgFragmentRoot);
+		// System.out.println("A>"+pkgFragmentRoot);
 //		IJavaElement cu = find(pkgFragmentRoot, "Hello");cu.getAdapter(adapter)
-//		System.out.println(cu);
+		// System.out.println(cu);
 	}
-	
-//	private IJavaElement find(IJavaElement pkgFragmentRoot,String name) {
-//		try {
-//			IJavaElement[] kids = ((JavaElement)pkgFragmentRoot).getChildren();
-//			return findChild(kids,name,0);
-//		} catch (JavaModelException e) {
-//			e.printStackTrace();
-//			return null;
-//		}
-//	}
-	
-//	private IJavaElement findChild(IJavaElement[] kids, String name, int depth) throws JavaModelException {
-//		if (depth>10) return null;
-//		for (IJavaElement kid: kids) {
-//			System.out.println(kid.getElementName());
-//			if (kid.getElementName().equals(name)) {
-//				return kid;
-//	 		}
-//			IJavaElement found = findChild(((JavaElement)kid).getChildren(),name,depth+1);
-//			if (found!=null) {
-//				return found;
-//			}
-//		}
-//		return null;
-//	}
 
-	
+	// private IJavaElement find(IJavaElement pkgFragmentRoot,String name) {
+	// try {
+	// IJavaElement[] kids = ((JavaElement)pkgFragmentRoot).getChildren();
+	// return findChild(kids,name,0);
+	// } catch (JavaModelException e) {
+	// e.printStackTrace();
+	// return null;
+	// }
+	// }
+
+//	private IJavaElement findChild(IJavaElement[] kids, String name, int depth) throws JavaModelException {
+	// if (depth>10) return null;
+	// for (IJavaElement kid: kids) {
+	// System.out.println(kid.getElementName());
+	// if (kid.getElementName().equals(name)) {
+	// return kid;
+	// }
+//			IJavaElement found = findChild(((JavaElement)kid).getChildren(),name,depth+1);
+	// if (found!=null) {
+	// return found;
+	// }
+	// }
+	// return null;
+	// }
+
 	// build .groovy file hello world then run it
 	public void testBuildGroovy2() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1429,22 +1551,21 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"interface Hello extends java.util.List {\n"+
 			"}\n"
 			);
-		
+
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("p1.Hello");
 		expectingNoProblems();
 	}
 
-	
 	public void testIncrementalCompilationTheBasics() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1463,9 +1584,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"   public int run() { return 12; }\n"+
 			"}\n"
 			);
-			
+
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("pkg.Hello","pkg.GHello");
+		expectingCompiledClassesV("pkg.Hello", "pkg.GHello");
 		expectingNoProblems();
 		executeClass(projectPath, "pkg.Hello", "12", "");
 
@@ -1489,20 +1610,20 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"}\n"
 				);
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("pkg.GHello","pkg.Hello");
+		expectingCompiledClassesV("pkg.GHello", "pkg.Hello");
 		expectingNoProblems();
 
 	}
 
 	public void testIncrementalGenericsAndBinaryTypeBindings_GRE566() throws Exception {
-		IPath projectPath = env.addProject("GRE566","1.5"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("GRE566", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1536,11 +1657,11 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"class GExtender extends Jaas{\n"+
 			"}\n"
 			);
-			
+
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("pkg.Event","pkg.EventImpl","pkg.Intface","pkg.Jaas","pkg.GExtender");
 		expectingNoProblems();
-		
+
 		env.addGroovyClass(root, "pkg", "GExtender",
 				"package pkg\n"+
 				"class GExtender extends Jaas{\n"+
@@ -1557,10 +1678,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1579,9 +1700,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			"   }\n"+
 			"}\n"
 			);
-			
+
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("pkg.Hello","pkg.GHello");
+		expectingCompiledClassesV("pkg.Hello", "pkg.GHello");
 		expectingNoProblems();
 		executeClass(projectPath, "pkg.GHello", "12", "");
 
@@ -1605,21 +1726,21 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"}\n"
 				);
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("pkg.GHello","pkg.Hello");
+		expectingCompiledClassesV("pkg.GHello", "pkg.Hello");
 		expectingNoProblems();
 		executeClass(projectPath, "pkg.GHello", "abc", "");
 
 	}
-	
+
 	public void testInnerClasses_GRE339() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
@@ -1632,9 +1753,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.addGroovyClass(root, "", "script",
 			"print Outer.Inner.VAR\n"
 			);
-			
+
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("Outer","Outer$Inner","script");
+		expectingCompiledClassesV("Outer", "Outer$Inner", "script");
 		expectingNoProblems();
 		executeClass(projectPath, "script", "value", "");
 
@@ -1652,66 +1773,64 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 
 	// TODO test for this - package disagrees with file, shouldn't npe in binding locating code
-//	env.addGroovyClass(root, "pkg", "GHello",
-//		"package p1;\n"+
-//		"public class GHello {\n"+
-//		"   public int run() { return 12; }\n"+
-//		"}\n"
-//		);
-
+	// env.addGroovyClass(root, "pkg", "GHello",
+	// "package p1;\n"+
+	// "public class GHello {\n"+
+	// "   public int run() { return 12; }\n"+
+	// "}\n"
+	// );
 
 	public void testSimpleTaskMarkerInSingleLineComment() throws Exception {
 		Hashtable options = JavaCore.getOptions();
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
+
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
+				"package p; \n" + //$NON-NLS-1$
 			"class C {\n"+
 			"//todo nothing\n"+ //$NON-NLS-1$  // 24>36 'todo nothing'
 			"\n"+
 			"//tooo two\n"+ //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
-		
+						"}"); //$NON-NLS-1$
+
 		fullBuild(projectPath);
 
 		Problem[] rootProblems = env.getProblemsFor(pathToA);
-		for (int i=0;i<rootProblems.length;i++) {
+		for (int i = 0; i < rootProblems.length; i++) {
 			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]"+rootProblems[i].getEnd());
 		}
 		// positions should be from the first character of the tag to the character after the last in the text
 		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		JavaCore.setOptions(options);
 	}
-	
-	private String toTask(String tasktag,String message) {
-		return tasktag+message;
+
+	private String toTask(String tasktag, String message) {
+		return tasktag + message;
 	}
 
 	public void testSimpleTaskMarkerInSingleLineCommentEndOfClass() throws Exception {
 		Hashtable options = JavaCore.getOptions();
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-
 
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -1720,18 +1839,18 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
+				"package p; \n" + //$NON-NLS-1$
 			"class C {\n"+
 			"//topo nothing\n"+ //$NON-NLS-1$ '/' is 22 'n' is 29 'g' is 35
 			"\n"+
 			"//todo two\n"+ //$NON-NLS-1$ '/' is 38 't' is 45 'o' is 47
-			"}"); //$NON-NLS-1$
-		
+						"}"); //$NON-NLS-1$
+
 		fullBuild(projectPath);
 
 		Problem[] rootProblems = env.getProblemsFor(pathToA);
 		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","two"), pathToA, 40, 48, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		JavaCore.setOptions(options);
 	}
 
@@ -1740,13 +1859,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
 		newOptions.put(JavaCore.COMPILER_TASK_CASE_SENSITIVE, JavaCore.DISABLED); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-
 
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -1755,21 +1873,21 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
+				"package p; \n" + //$NON-NLS-1$
 			"class C {\n"+
 			"//TODO nothing\n"+ //$NON-NLS-1$ '/' is 22 'n' is 29 'g' is 35
 			"\n"+
 			"//topo two\n"+ //$NON-NLS-1$ '/' is 38 't' is 45 'o' is 47
-			"}"); //$NON-NLS-1$
-		
+						"}"); //$NON-NLS-1$
+
 		fullBuild(projectPath);
 
 		Problem[] rootProblems = env.getProblemsFor(pathToA);
-		for (int i=0;i<rootProblems.length;i++) {
+		for (int i = 0; i < rootProblems.length; i++) {
 			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]"+rootProblems[i].getEnd());
 		}
 		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		JavaCore.setOptions(options);
 	}
 
@@ -1777,13 +1895,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		Hashtable options = JavaCore.getOptions();
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-
 
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -1792,33 +1909,32 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"/*  todo nothing */\n"+ //$NON-NLS-1$ 
-			"public class A {\n"+ //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
-		
+				"package p; \n" + //$NON-NLS-1$
+						"/*  todo nothing */\n" + //$NON-NLS-1$ 
+						"public class A {\n" + //$NON-NLS-1$
+						"}"); //$NON-NLS-1$
+
 		fullBuild(projectPath);
 
 		Problem[] rootProblems = env.getProblemsFor(pathToA);
-		for (int i=0;i<rootProblems.length;i++) {
+		for (int i = 0; i < rootProblems.length; i++) {
 			System.out.println(i+"  "+rootProblems[i]+ "["+rootProblems[i].getMessage()+"]");
 		}
 		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing"), pathToA, 16, 29, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		JavaCore.setOptions(options);
 	}
-	
+
 	public void testTaskMarkerInMultiLineButNoText() throws Exception {
 		Hashtable options = JavaCore.getOptions();
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-
 
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -1827,20 +1943,20 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"/*  todo\n" + //$NON-NLS-1$
-			" */\n"+ //$NON-NLS-1$ 
-			"public class A {\n"+ //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
-		
+				"package p; \n" + //$NON-NLS-1$
+						"/*  todo\n" + //$NON-NLS-1$
+						" */\n" + //$NON-NLS-1$ 
+						"public class A {\n" + //$NON-NLS-1$
+						"}"); //$NON-NLS-1$
+
 		fullBuild(projectPath);
 
 		Problem[] rootProblems = env.getProblemsFor(pathToA);
-		for (int i=0;i<rootProblems.length;i++) {
+		for (int i = 0; i < rootProblems.length; i++) {
 			System.out.println(i+"  "+rootProblems[i]+" ["+rootProblems[i].getMessage()+"]");
 		}
 		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo",""), pathToA, 16, 20, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		JavaCore.setOptions(options);
 	}
 
@@ -1848,13 +1964,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		Hashtable options = JavaCore.getOptions();
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-
 
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -1863,36 +1978,35 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"/*  \n" + //$NON-NLS-1$  12
-			" * todo nothing *\n" + //$NON-NLS-1$  17
-			" */\n"+ //$NON-NLS-1$ 
-			"public class A {\n"+ //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
-		
+				"package p; \n" + //$NON-NLS-1$
+						"/*  \n" + //$NON-NLS-1$  12
+						" * todo nothing *\n" + //$NON-NLS-1$  17
+						" */\n" + //$NON-NLS-1$ 
+						"public class A {\n" + //$NON-NLS-1$
+						"}"); //$NON-NLS-1$
+
 		fullBuild(projectPath);
 
 		Problem[] rootProblems = env.getProblemsFor(pathToA);
-		for (int i=0;i<rootProblems.length;i++) {
+		for (int i = 0; i < rootProblems.length; i++) {
 			System.out.println(i+"  "+rootProblems[i]+" ["+rootProblems[i].getMessage()+"]");
 		}
 		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing *"), pathToA, 20, 34, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 
 		JavaCore.setOptions(options);
 	}
-	
+
 	// task marker inside a multi line comment inside a class
 	public void testTaskMarkerInMultiLineInsideClass() throws Exception {
 		Hashtable options = JavaCore.getOptions();
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-
 
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -1901,24 +2015,23 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$ -- \n is 11
-			"public class A {\n"+ //$NON-NLS-1$ -- \n is 28 
-			"   /*  \n" + //$NON-NLS-1$ -- \n is 36
-			" * todo nothing *\n" + //$NON-NLS-1$ 
-			" */\n"+ //$NON-NLS-1$ 
-			"}"); //$NON-NLS-1$
-		
+				"package p; \n" + //$NON-NLS-1$ -- \n is 11
+						"public class A {\n" + //$NON-NLS-1$ -- \n is 28 
+						"   /*  \n" + //$NON-NLS-1$ -- \n is 36
+						" * todo nothing *\n" + //$NON-NLS-1$ 
+						" */\n" + //$NON-NLS-1$ 
+						"}"); //$NON-NLS-1$
+
 		fullBuild(projectPath);
 
 		Problem[] rootProblems = env.getProblemsFor(pathToA);
-		for (int i=0;i<rootProblems.length;i++) {
-			System.out.println(i+"  "+rootProblems[i]);
+		for (int i = 0; i < rootProblems.length; i++) {
+			System.out.println(i + "  " + rootProblems[i]);
 		}
 		expectingOnlySpecificProblemFor(pathToA, new Problem("A", toTask("todo","nothing *"), pathToA, 40, 54, -1, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 
 		JavaCore.setOptions(options);
 	}
-
 
 	// Testing tag priority
 	public void testTaskMarkerMixedPriorities() throws Exception {
@@ -1926,9 +2039,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
 		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -1940,16 +2053,16 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"//TODO normal\n"+ //$NON-NLS-1$
-			"public class A {\n"+ //$NON-NLS-1$
-			"	public void foo() {\n"+ //$NON-NLS-1$
-			"		//FIXME high\n"+ //$NON-NLS-1$
-			"	}\n"+ //$NON-NLS-1$
-			"	public void foo2() {\n"+ //$NON-NLS-1$
-			"		//XXX low\n"+ //$NON-NLS-1$
-			"	}\n"+ //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
+				"package p; \n" + //$NON-NLS-1$
+						"//TODO normal\n" + //$NON-NLS-1$
+						"public class A {\n" + //$NON-NLS-1$
+						"	public void foo() {\n" + //$NON-NLS-1$
+						"		//FIXME high\n" + //$NON-NLS-1$
+						"	}\n" + //$NON-NLS-1$
+						"	public void foo2() {\n" + //$NON-NLS-1$
+						"		//XXX low\n" + //$NON-NLS-1$
+						"	}\n" + //$NON-NLS-1$
+						"}"); //$NON-NLS-1$
 
 		fullBuild(projectPath);
 		IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -1986,9 +2099,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
 		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -2000,10 +2113,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
+				"package p; \n" + //$NON-NLS-1$
 			"// TODO FIXME need to review the loop TODO should be done\n" + //$NON-NLS-1$
-			"public class A {\n" + //$NON-NLS-1$
-			"}");
+						"public class A {\n" + //$NON-NLS-1$
+						"}");
 
 		fullBuild(projectPath);
 		IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -2034,15 +2147,15 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		}
 		JavaCore.setOptions(options);
 	}
-	
+
 	public void testTaskMarkerMultipleOnOneLineInMLComment() throws Exception {
 		Hashtable options = JavaCore.getOptions();
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
 		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -2054,10 +2167,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
+				"package p; \n" + //$NON-NLS-1$
 			"/* TODO FIXME need to review the loop TODO should be done */\n" + //$NON-NLS-1$
-			"public class A {\n" + //$NON-NLS-1$
-			"}");
+						"public class A {\n" + //$NON-NLS-1$
+						"}");
 
 		fullBuild(projectPath);
 		IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -2095,9 +2208,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
 		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
-		
+
 		JavaCore.setOptions(newOptions);
-		
+
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -2109,10 +2222,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"// TODO TODO need to review the loop\n" + //$NON-NLS-1$
-			"public class A {\n" + //$NON-NLS-1$
-			"}");
+				"package p; \n" + //$NON-NLS-1$
+						"// TODO TODO need to review the loop\n" + //$NON-NLS-1$
+						"public class A {\n" + //$NON-NLS-1$
+						"}");
 
 		fullBuild(projectPath);
 		IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -2136,424 +2249,416 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		}
 		JavaCore.setOptions(options);
 	}
-	
+
 	public void testCopyGroovyResourceNonGroovyProject_GRECLIPSE653() throws Exception {
-        IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-        env.removeGroovyNature("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.removeGroovyNature("Project");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+				"package p; \n" + //$NON-NLS-1$
+						"class C { }"); //$NON-NLS-1$
 
-        IPath pathToA = env.addGroovyClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-            "package p; \n"+ //$NON-NLS-1$
-            "class C { }"); //$NON-NLS-1$
-        
-        fullBuild(projectPath);
-        
-        // groovy file should be copied as-is
+		fullBuild(projectPath);
+
+		// groovy file should be copied as-is
         IPath pathToABin = output.append(pathToA.removeFirstSegments(pathToA.segmentCount()-2));
         assertTrue("File should exist " + pathToABin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToABin).exists());
         
-        
-        // now check that works for incremental
-        IPath pathToB = env.addGroovyClass(root, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-                "package p; \n"+ //$NON-NLS-1$
-                "class D { }"); //$NON-NLS-1$
-        incrementalBuild(projectPath);
 
-        // groovy file should be copied as-is
+		// now check that works for incremental
+		IPath pathToB = env.addGroovyClass(root, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
+				"package p; \n" + //$NON-NLS-1$
+						"class D { }"); //$NON-NLS-1$
+		incrementalBuild(projectPath);
+
+		// groovy file should be copied as-is
         IPath pathToBBin = output.append(pathToB.removeFirstSegments(pathToB.segmentCount()-2));
         assertTrue("File should exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
-        
-        
-        // now check that bin file is deleted when deleted in source
-        IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
-        bFile.delete(true, null);
-        incrementalBuild(projectPath);
+
+		// now check that bin file is deleted when deleted in source
+		IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
+		bFile.delete(true, null);
+		incrementalBuild(projectPath);
         assertFalse("File should not exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
-    }
+	}
 	public void testCopyResourceNonGroovyProject_GRECLIPSE653() throws Exception {
-        IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-        env.removeGroovyNature("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.removeGroovyNature("Project");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath pathToA = env.addFile(root, "A.txt", "A"); //$NON-NLS-1$ //$NON-NLS-2$
 
-        IPath pathToA = env.addFile(root, "A.txt", "A"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        fullBuild(projectPath);
-        
-        // file should be copied as-is
+		fullBuild(projectPath);
+
+		// file should be copied as-is
         IPath pathToABin = output.append(pathToA.removeFirstSegments(pathToA.segmentCount()-1));
         assertTrue("File should exist " + pathToABin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToABin).exists());
         
-        
-        // now check that works for incremental
-        IPath pathToB = env.addFile(root, "B.txt", "B"); //$NON-NLS-1$ //$NON-NLS-2$
-        incrementalBuild(projectPath);
 
-        // groovy file should be copied as-is
+		// now check that works for incremental
+		IPath pathToB = env.addFile(root, "B.txt", "B"); //$NON-NLS-1$ //$NON-NLS-2$
+		incrementalBuild(projectPath);
+
+		// groovy file should be copied as-is
         IPath pathToBBin = output.append(pathToB.removeFirstSegments(pathToB.segmentCount()-1));
         assertTrue("File should exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
-        
-        
-        // now check that bin file is deleted when deleted in source
-        IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
-        bFile.delete(true, null);
-        incrementalBuild(projectPath);
+
+		// now check that bin file is deleted when deleted in source
+		IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
+		bFile.delete(true, null);
+		incrementalBuild(projectPath);
         assertFalse("File should not exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
 	}
+
 	public void testCopyResourceGroovyProject_GRECLIPSE653() throws Exception {
-        IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-        env.addGroovyNature("Project");
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addGroovyNature("Project");
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		IPath output = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-        IPath pathToA = env.addFile(root, "A.txt", "A"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        fullBuild(projectPath);
-        
-        // groovy file should be copied as-is
+		IPath pathToA = env.addFile(root, "A.txt", "A"); //$NON-NLS-1$ //$NON-NLS-2$
+
+		fullBuild(projectPath);
+
+		// groovy file should be copied as-is
         IPath pathToABin = output.append(pathToA.removeFirstSegments(pathToA.segmentCount()-1));
         assertTrue("File should exist " + pathToABin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToABin).exists());
-        
-        
-        // now check that works for incremental
-        IPath pathToB = env.addFile(root, "B.txt", "B"); //$NON-NLS-1$ //$NON-NLS-2$
-        incrementalBuild(projectPath);
 
-        // groovy file should be copied as-is
+		// now check that works for incremental
+		IPath pathToB = env.addFile(root, "B.txt", "B"); //$NON-NLS-1$ //$NON-NLS-2$
+		incrementalBuild(projectPath);
+
+		// groovy file should be copied as-is
         IPath pathToBBin = output.append(pathToB.removeFirstSegments(pathToB.segmentCount()-1));
         assertTrue("File should exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
-        
-        
-        // now check that bin file is deleted when deleted in source
-        IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
-        bFile.delete(true, null);
-        incrementalBuild(projectPath);
+
+		// now check that bin file is deleted when deleted in source
+		IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
+		bFile.delete(true, null);
+		incrementalBuild(projectPath);
         assertFalse("File should not exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
 	}
-	
-	
-	
-//	
-//	/*
-//	 * Ensures that a task tag is not user editable
+
+	//
+	// /*
+	// * Ensures that a task tag is not user editable
 //	 * (regression test for bug 123721 two types of 'remove' for TODO task tags)
-//	 */
-//	public void testTags3() throws CoreException {
-//		Hashtable options = JavaCore.getOptions();
-//
-//		try {
-//			Hashtable newOptions = JavaCore.getOptions();
-//			newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
-//			newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
-//
-//			JavaCore.setOptions(newOptions);
-//
-//			IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//			env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//			// remove old package fragment root so that names don't collide
-//			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//
-//			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//			IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-//				"package p; \n"+ //$NON-NLS-1$
-//				"// TODO need to review\n" + //$NON-NLS-1$
-//				"public class A {\n" + //$NON-NLS-1$
-//				"}");
-//
-//			fullBuild(projectPath);
-//			IMarker[] markers = env.getTaskMarkersFor(pathToA);
+	// */
+	// public void testTags3() throws CoreException {
+	// Hashtable options = JavaCore.getOptions();
+	//
+	// try {
+	// Hashtable newOptions = JavaCore.getOptions();
+	//			newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
+	//			newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW"); //$NON-NLS-1$
+	//
+	// JavaCore.setOptions(newOptions);
+	//
+	//			IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	//
+	// // remove old package fragment root so that names don't collide
+	//			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	//
+	//			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+	//			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	//
+	//			IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+	//				"package p; \n"+ //$NON-NLS-1$
+	//				"// TODO need to review\n" + //$NON-NLS-1$
+	//				"public class A {\n" + //$NON-NLS-1$
+	// "}");
+	//
+	// fullBuild(projectPath);
+	// IMarker[] markers = env.getTaskMarkersFor(pathToA);
 //			assertEquals("Marker should not be editable", Boolean.FALSE, markers[0].getAttribute(IMarker.USER_EDITABLE));
-//		} finally {
-//			JavaCore.setOptions(options);
-//		}
-//	}
-//	
-//	/*
-//	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
-//	 */
-//	public void testUnusedImport() throws Exception {
-//		Hashtable options = JavaCore.getOptions();
-//		Hashtable newOptions = JavaCore.getOptions();
-//		newOptions.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.WARNING);
-//		
-//		JavaCore.setOptions(newOptions);
-//		
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		env.addClass(root, "util", "MyException", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package util;\n" + 
-//			"public class MyException extends Exception {\n" + 
-//			"	private static final long serialVersionUID = 1L;\n" +
-//			"}"
-//		); //$NON-NLS-1$
-//
-//		env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p;\n" + 
-//			"import util.MyException;\n" + 
-//			"public class Test {\n" + 
-//			"	/**\n" + 
-//			"	 * @throws MyException\n" + 
-//			"	 */\n" + 
-//			"	public void bar() {\n" + 
-//			"	}\n" + 
-//			"}"
-//		);
-//
-//		fullBuild(projectPath);
-//		expectingNoProblems();
-//		
-//		JavaCore.setOptions(options);
-//	}
-//	
-//	/*
-//	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
-//	 */
-//	public void test98667() throws Exception {
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//		
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//		
-//		env.addClass(root, "p1", "Aaa$Bbb$Ccc", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p1;\n" + //$NON-NLS-1$ 
-//			"\n" +  //$NON-NLS-1$
-//			"public class Aaa$Bbb$Ccc {\n" + //$NON-NLS-1$ 
-//			"}" //$NON-NLS-1$
-//		);
-//			
-//		fullBuild(projectPath);
-//		expectingNoProblems();
-//	}
-//
-//	/**
+	// } finally {
+	// JavaCore.setOptions(options);
+	// }
+	// }
+	//
+	// /*
+	// * http://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
+	// */
+	// public void testUnusedImport() throws Exception {
+	// Hashtable options = JavaCore.getOptions();
+	// Hashtable newOptions = JavaCore.getOptions();
+	// newOptions.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.WARNING);
+	//
+	// JavaCore.setOptions(newOptions);
+	//
+	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	//
+	// // remove old package fragment root so that names don't collide
+	//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	//
+	//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+	//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	//
+	//		env.addClass(root, "util", "MyException", //$NON-NLS-1$ //$NON-NLS-2$
+	// "package util;\n" +
+	// "public class MyException extends Exception {\n" +
+	// "	private static final long serialVersionUID = 1L;\n" +
+	// "}"
+	//		); //$NON-NLS-1$
+	//
+	//		env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
+	// "package p;\n" +
+	// "import util.MyException;\n" +
+	// "public class Test {\n" +
+	// "	/**\n" +
+	// "	 * @throws MyException\n" +
+	// "	 */\n" +
+	// "	public void bar() {\n" +
+	// "	}\n" +
+	// "}"
+	// );
+	//
+	// fullBuild(projectPath);
+	// expectingNoProblems();
+	//
+	// JavaCore.setOptions(options);
+	// }
+	//
+	// /*
+	// * http://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
+	// */
+	// public void test98667() throws Exception {
+	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	//
+	// // remove old package fragment root so that names don't collide
+	//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	//
+	//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+	//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	//
+	//		env.addClass(root, "p1", "Aaa$Bbb$Ccc", //$NON-NLS-1$ //$NON-NLS-2$
+	//			"package p1;\n" + //$NON-NLS-1$ 
+	//			"\n" +  //$NON-NLS-1$
+	//			"public class Aaa$Bbb$Ccc {\n" + //$NON-NLS-1$ 
+	//			"}" //$NON-NLS-1$
+	// );
+	//
+	// fullBuild(projectPath);
+	// expectingNoProblems();
+	// }
+	//
+	// /**
 //	 * @bug 164707: ArrayIndexOutOfBoundsException in JavaModelManager if source level == 6.0
 //	 * @test Ensure that AIIOB does not longer happen with invalid source level string
-//	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=164707"
-//	 */
-//	public void testBug164707() throws Exception {
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		IJavaProject javaProject = env.getJavaProject(projectPath); 
-//		javaProject.setOption(JavaCore.COMPILER_SOURCE, "invalid");
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//		fullBuild(projectPath);
-//		expectingNoProblems();
-//	}
-//
-//	/**
-//	 * @bug 75471: [prefs] no re-compile when loading settings
+	// * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=164707"
+	// */
+	// public void testBug164707() throws Exception {
+	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// IJavaProject javaProject = env.getJavaProject(projectPath);
+	// javaProject.setOption(JavaCore.COMPILER_SOURCE, "invalid");
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	// fullBuild(projectPath);
+	// expectingNoProblems();
+	// }
+	//
+	// /**
+	// * @bug 75471: [prefs] no re-compile when loading settings
 //	 * @test Ensure that changing project preferences is well taking into account while rebuilding project
-//	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=75471"
-//	 */
-//	public void _testUpdateProjectPreferences() throws Exception {
-//		
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		env.addClass(root, "util", "MyException", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package util;\n" + 
-//			"public class MyException extends Exception {\n" + 
-//			"	private static final long serialVersionUID = 1L;\n" +
-//			"}"
-//		); //$NON-NLS-1$
-//
-//		IPath cuPath = env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p;\n" + 
-//			"import util.MyException;\n" + 
-//			"public class Test {\n" + 
-//			"}"
-//		);
-//
-//		fullBuild(projectPath);
-//		expectingSpecificProblemFor(
-//			projectPath,
-//			new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
-//
-//		IJavaProject project = env.getJavaProject(projectPath);
-//		project.setOption(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
-//		incrementalBuild(projectPath);
-//		expectingNoProblems();
-//	}
-//	public void _testUpdateWkspPreferences() throws Exception {
-//		
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		env.addClass(root, "util", "MyException", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package util;\n" + 
-//			"public class MyException extends Exception {\n" + 
-//			"	private static final long serialVersionUID = 1L;\n" +
-//			"}"
-//		); //$NON-NLS-1$
-//
-//		IPath cuPath = env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p;\n" + 
-//			"import util.MyException;\n" + 
-//			"public class Test {\n" + 
-//			"}"
-//		);
-//
-//		fullBuild();
-//		expectingSpecificProblemFor(
-//			projectPath,
-//			new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
-//
-//		// Save preference
-//		JavaModelManager manager = JavaModelManager.getJavaModelManager();
-//		IEclipsePreferences preferences = manager.getInstancePreferences();
+	// * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=75471"
+	// */
+	// public void _testUpdateProjectPreferences() throws Exception {
+	//
+	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	//
+	// // remove old package fragment root so that names don't collide
+	//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	//
+	//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+	//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	//
+	//		env.addClass(root, "util", "MyException", //$NON-NLS-1$ //$NON-NLS-2$
+	// "package util;\n" +
+	// "public class MyException extends Exception {\n" +
+	// "	private static final long serialVersionUID = 1L;\n" +
+	// "}"
+	//		); //$NON-NLS-1$
+	//
+	//		IPath cuPath = env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
+	// "package p;\n" +
+	// "import util.MyException;\n" +
+	// "public class Test {\n" +
+	// "}"
+	// );
+	//
+	// fullBuild(projectPath);
+	// expectingSpecificProblemFor(
+	// projectPath,
+	//			new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
+	//
+	// IJavaProject project = env.getJavaProject(projectPath);
+	// project.setOption(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
+	// incrementalBuild(projectPath);
+	// expectingNoProblems();
+	// }
+	// public void _testUpdateWkspPreferences() throws Exception {
+	//
+	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	//
+	// // remove old package fragment root so that names don't collide
+	//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	//
+	//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+	//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	//
+	//		env.addClass(root, "util", "MyException", //$NON-NLS-1$ //$NON-NLS-2$
+	// "package util;\n" +
+	// "public class MyException extends Exception {\n" +
+	// "	private static final long serialVersionUID = 1L;\n" +
+	// "}"
+	//		); //$NON-NLS-1$
+	//
+	//		IPath cuPath = env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
+	// "package p;\n" +
+	// "import util.MyException;\n" +
+	// "public class Test {\n" +
+	// "}"
+	// );
+	//
+	// fullBuild();
+	// expectingSpecificProblemFor(
+	// projectPath,
+	//			new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
+	//
+	// // Save preference
+	// JavaModelManager manager = JavaModelManager.getJavaModelManager();
+	// IEclipsePreferences preferences = manager.getInstancePreferences();
 //		String unusedImport = preferences.get(JavaCore.COMPILER_PB_UNUSED_IMPORT, null);
-//		try {
-//			// Modify preference
-//			preferences.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
-//			incrementalBuild();
-//			expectingNoProblems();
-//		}
-//		finally {
-//			if (unusedImport == null) {
-//				preferences.remove(JavaCore.COMPILER_PB_UNUSED_IMPORT);
-//			} else {
-//				preferences.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, unusedImport);
-//			}
-//		}
-//	}
-//
-//	public void testTags4() throws Exception {
-//		Hashtable options = JavaCore.getOptions();
-//		Hashtable newOptions = JavaCore.getOptions();
-//		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO!,TODO,TODO?"); //$NON-NLS-1$
-//		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "HIGH,NORMAL,LOW"); //$NON-NLS-1$
-//		
-//		JavaCore.setOptions(newOptions);
-//		
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//	
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//	
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//	
-//		IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-//			"package p; \n"+ //$NON-NLS-1$
-//			"// TODO! TODO? need to review the loop\n" + //$NON-NLS-1$
-//			"public class A {\n" + //$NON-NLS-1$
-//			"}");
-//	
-//		fullBuild(projectPath);
-//		IMarker[] markers = env.getTaskMarkersFor(pathToA);
-//		assertEquals("Wrong size", 2, markers.length);
-//	
-//		try {
-//			IMarker marker = markers[1];
-//			Object priority = marker.getAttribute(IMarker.PRIORITY);
-//			String message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertEquals("Wrong message", "TODO? need to review the loop", message);
-//			assertNotNull("No task priority", priority);
+	// try {
+	// // Modify preference
+	// preferences.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
+	// incrementalBuild();
+	// expectingNoProblems();
+	// }
+	// finally {
+	// if (unusedImport == null) {
+	// preferences.remove(JavaCore.COMPILER_PB_UNUSED_IMPORT);
+	// } else {
+	// preferences.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, unusedImport);
+	// }
+	// }
+	// }
+	//
+	// public void testTags4() throws Exception {
+	// Hashtable options = JavaCore.getOptions();
+	// Hashtable newOptions = JavaCore.getOptions();
+	//		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO!,TODO,TODO?"); //$NON-NLS-1$
+	//		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "HIGH,NORMAL,LOW"); //$NON-NLS-1$
+	//
+	// JavaCore.setOptions(newOptions);
+	//
+	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	//
+	// // remove old package fragment root so that names don't collide
+	//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	//
+	//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+	//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	//
+	//		IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+	//			"package p; \n"+ //$NON-NLS-1$
+	//			"// TODO! TODO? need to review the loop\n" + //$NON-NLS-1$
+	//			"public class A {\n" + //$NON-NLS-1$
+	// "}");
+	//
+	// fullBuild(projectPath);
+	// IMarker[] markers = env.getTaskMarkersFor(pathToA);
+	// assertEquals("Wrong size", 2, markers.length);
+	//
+	// try {
+	// IMarker marker = markers[1];
+	// Object priority = marker.getAttribute(IMarker.PRIORITY);
+	// String message = (String) marker.getAttribute(IMarker.MESSAGE);
+	// assertEquals("Wrong message", "TODO? need to review the loop", message);
+	// assertNotNull("No task priority", priority);
 //			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_LOW), priority);
-//	
-//			marker = markers[0];
-//			priority = marker.getAttribute(IMarker.PRIORITY);
-//			message = (String) marker.getAttribute(IMarker.MESSAGE);
-//			assertEquals("Wrong message", "TODO! need to review the loop", message);
-//			assertNotNull("No task priority", priority);
+	//
+	// marker = markers[0];
+	// priority = marker.getAttribute(IMarker.PRIORITY);
+	// message = (String) marker.getAttribute(IMarker.MESSAGE);
+	// assertEquals("Wrong message", "TODO! need to review the loop", message);
+	// assertNotNull("No task priority", priority);
 //			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH), priority);
-//		} catch (CoreException e) {
-//			assertTrue(false);
-//		}
-//		JavaCore.setOptions(options);
-//	}
-	
+	// } catch (CoreException e) {
+	// assertTrue(false);
+	// }
+	// JavaCore.setOptions(options);
+	// }
 
 	// When a groovy file name clashes with an existing type
-//	public void testBuildClash() throws Exception {
-//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//		env.addGroovyJars(projectPath);
-//		fullBuild(projectPath);
-//		
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-//		
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-//
-//		env.addGroovyClass(root, "", "Stack",
-//			"class StackTester {\n"+
-//			"   def o = new Stack();\n"+
-//			"   public static void main(String[] args) {\n"+
-//			"      System.out.println('>>'+new StackTester().o.getClass());\n"+
-//			"      System.out.println(\"Hello world\");\n"+
-//			"   }\n"+
-//			"}\n"
-//			);
-//			
-//		incrementalBuild(projectPath);
-//		expectingCompiledClassesV("StackTester");
-//		expectingNoProblems();
-//		executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" + 
-//				"Hello world\r\n", "");
-//		
-//
-//		env.addGroovyClass(root, "", "Stack",
-//			"class StackTester {\n"+
-//			"   def o = new Stack();\n"+
-//			"   public static void main(String[] args) {\n"+
-//			"      System.out.println('>>'+new StackTester().o.getClass());\n"+
-//			"      System.out.println(\"Hello world\");\n"+
-//			"   }\n"+
-//			"}\n"
-//			);
-//
-//		incrementalBuild(projectPath);
-//		expectingCompiledClassesV("StackTester");
-//		expectingNoProblems();
-//		executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" + 
-//				"Hello world\r\n", "");
-//	}
-	
+	// public void testBuildClash() throws Exception {
+	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	// env.addExternalJars(projectPath, Util.getJavaClassLibs());
+	// env.addGroovyJars(projectPath);
+	// fullBuild(projectPath);
+	//
+	// // remove old package fragment root so that names don't collide
+	//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	//
+	//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+	//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	//
+	// env.addGroovyClass(root, "", "Stack",
+	// "class StackTester {\n"+
+	// "   def o = new Stack();\n"+
+	// "   public static void main(String[] args) {\n"+
+	// "      System.out.println('>>'+new StackTester().o.getClass());\n"+
+	// "      System.out.println(\"Hello world\");\n"+
+	// "   }\n"+
+	// "}\n"
+	// );
+	//
+	// incrementalBuild(projectPath);
+	// expectingCompiledClassesV("StackTester");
+	// expectingNoProblems();
+	// executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" +
+	// "Hello world\r\n", "");
+	//
+	//
+	// env.addGroovyClass(root, "", "Stack",
+	// "class StackTester {\n"+
+	// "   def o = new Stack();\n"+
+	// "   public static void main(String[] args) {\n"+
+	// "      System.out.println('>>'+new StackTester().o.getClass());\n"+
+	// "      System.out.println(\"Hello world\");\n"+
+	// "   }\n"+
+	// "}\n"
+	// );
+	//
+	// incrementalBuild(projectPath);
+	// expectingCompiledClassesV("StackTester");
+	// expectingNoProblems();
+	// executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" +
+	// "Hello world\r\n", "");
+	// }
+
 }
