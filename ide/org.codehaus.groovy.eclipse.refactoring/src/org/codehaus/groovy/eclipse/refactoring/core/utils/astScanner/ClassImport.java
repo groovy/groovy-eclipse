@@ -40,7 +40,7 @@ public class ClassImport extends RefactoringImportNode {
     
     @Override
     public String getText() {
-		if (ImportResolver.isExplizitAlias(this)) {
+		if (ImportResolver.isExplicitAlias(this)) {
 			return "import " + newClassName + " as " + newAlias;
 		}
         return "import " + newClassName;

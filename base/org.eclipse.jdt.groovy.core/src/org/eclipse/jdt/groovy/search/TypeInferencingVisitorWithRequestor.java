@@ -52,6 +52,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
+import org.codehaus.groovy.ast.expr.EmptyExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
@@ -931,6 +932,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
+	// Groovy 1.8+ only
+	// @Override
+	public void visitEmptyExpression(EmptyExpression node) {
+		handleExpression(node);
+	}
+
 	@Override
 	public void visitBytecodeExpression(BytecodeExpression node) {
 		boolean shouldContinue = handleExpression(node);
@@ -1328,7 +1335,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			super.visitRangeExpression(node);
 		}
 	}
-
 
 	@Override
 	public void visitShortTernaryExpression(ElvisOperatorExpression node) {

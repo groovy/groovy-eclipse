@@ -437,14 +437,12 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                                         && enclosingTypeNames.length != 0) {
                                     fullyQualifiedEnclosingTypeOrPackageName = CharOperation
                                             .concat(packageName,
-                                                    flatEnclosingTypeNames,
-                                                    '.');
+                                                    flatEnclosingTypeNames, '.');
                                 } else {
                                     fullyQualifiedEnclosingTypeOrPackageName = packageName;
                                 }
                             }
-                            if (CharOperation
-                                    .equals(
+                            if (CharOperation.equals(
                                             fullyQualifiedEnclosingTypeOrPackageName,
                                             importFlatName)) {
                                 // assume not static import
@@ -579,12 +577,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
     @SuppressWarnings("deprecation")
     private void initializeImportCaches() {
         importCachesInitialized = true;
-        List<String> importPackages = (List<String>) module
-                .getImportPackages();
+        List<ImportNode> importPackages = (List<ImportNode>) module
+                .getStarImports();
         onDemandimports = new char[importPackages.size()+DEFAULT_GROOVY_ON_DEMAND_IMPORTS.length][];
         int i = 0;
-        for (String importPackage : importPackages) {
-            onDemandimports[i++] = importPackage.toCharArray();
+        for (ImportNode importPackage : importPackages) {
+            char[] onDemand = importPackage.getPackageName().toCharArray();
+            // remove trailing '.'
+            int length = onDemand.length;
+            if (length > 0 && onDemand[length - 1] == '.') {
+                onDemand = CharOperation.subarray(onDemand, 0, length - 1);
+            }
+            onDemandimports[i++] = onDemand;
         }
         for (char[] defaultOnDemand : DEFAULT_GROOVY_ON_DEMAND_IMPORTS) {
             onDemandimports[i++] = defaultOnDemand;

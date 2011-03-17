@@ -292,4 +292,9 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
     public void visitBytecodeExpression(BytecodeExpression cle) {
     }
+    
+    // GRECLIPSE start: empty
+    public void visitEmptyExpression(EmptyExpression expression) {
+    }
+    // GRECLIPSE end
 }

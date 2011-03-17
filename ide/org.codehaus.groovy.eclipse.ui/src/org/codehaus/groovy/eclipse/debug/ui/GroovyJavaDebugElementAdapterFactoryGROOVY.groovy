@@ -35,7 +35,7 @@ import org.eclipse.jdt.debug.core.IJavaStackFrame;
  * @author Andrew Eisenberg
  * @created Jan 27, 2010
  */
-class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
+class GroovyJavaDebugElementAdapterFactoryGROOVY implements IAdapterFactory {
     
     JavaDebugElementAdapterFactory containedFactory = new JavaDebugElementAdapterFactory()
     
@@ -57,7 +57,7 @@ class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
     static connect() {
         // first remove the JDI adapter if one exists.
         removeJDIAdapter()
-        Platform.adapterManager.registerAdapters new GroovyJavaDebugElementAdapterFactory(), IJavaStackFrame
+        Platform.adapterManager.registerAdapters new GroovyJavaDebugElementAdapterFactoryGROOVY(), IJavaStackFrame
         fgLPFrame.connect()
     }
     

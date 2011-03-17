@@ -41,7 +41,6 @@ import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.RegexExpression;
 import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.SpreadMapExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -128,8 +127,6 @@ public class IsSameExpression {
             return visit((PropertyExpression) left, (PropertyExpression) right);
         } else if (left instanceof RangeExpression) {
             return visit((RangeExpression) left, (RangeExpression) right);
-        } else if (left instanceof RegexExpression) {
-            return visit((RegexExpression) left, (RegexExpression) right);
         } else if (left instanceof SpreadExpression) {
             return visit((SpreadExpression) left, (SpreadExpression) right);
         } else if (left instanceof SpreadMapExpression) {
@@ -202,11 +199,6 @@ public class IsSameExpression {
 
     private boolean visit(SpreadMapExpression left, SpreadMapExpression right) {
         return isSame(left.getExpression(), right.getExpression());
-    }
-
-
-    private boolean visit(RegexExpression left, RegexExpression right) {
-        return isSame(left.getRegex(), right.getRegex());
     }
 
 

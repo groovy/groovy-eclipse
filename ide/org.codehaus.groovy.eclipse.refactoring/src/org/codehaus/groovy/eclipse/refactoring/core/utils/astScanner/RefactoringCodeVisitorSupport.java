@@ -62,7 +62,6 @@ import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.RegexExpression;
 import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.SpreadMapExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -142,23 +141,22 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 	private void analyseStaticFieldImport() {
 		//visit static imports like import java.lang.Math.cos
 
-		Collection<String> staticImportAliases = rootNode.getStaticImportAliases().keySet();
-		for(String aliasOrField : staticImportAliases) {
-			ClassNode type = (ClassNode)rootNode.getStaticImportAliases().get(aliasOrField);
-			String fieldName = rootNode.getStaticImportFields().get(aliasOrField).toString();
-			StaticFieldImport staticAliasImport = new StaticFieldImport(type,aliasOrField,fieldName);
-			staticAliasImport.setSourcePosition(type);
+        for (Entry<String, ImportNode> aliasOrField : rootNode.getStaticImports().entrySet()) {
+            StaticFieldImport staticAliasImport = new StaticFieldImport(aliasOrField.getValue().getType(), aliasOrField.getKey(),
+                    aliasOrField.getValue().getFieldName());
+            staticAliasImport.setSourcePosition(aliasOrField.getValue());
 			visitStaticFieldImport(staticAliasImport);
 		}
 	}
 
 	private void analyseStaticClassImport() {
 		//visit static imports like import java.lang.Math.*
-		Collection<ClassNode> staticImportClasses = rootNode.getStaticImportClasses().values();
+        Collection<ImportNode> staticImportClasses = rootNode.getStaticImports().values();
 
-		for(ClassNode staticClass : staticImportClasses) {
-			StaticClassImport staticClassImport = new StaticClassImport(staticClass);
-			staticClassImport.setSourcePosition(staticClass);
+		for (ImportNode staticImp : staticImportClasses) {
+            ClassNode type = staticImp.getType();
+            StaticClassImport staticClassImport = new StaticClassImport(type);
+            staticClassImport.setSourcePosition(type);
 			visitStaticClassImport(staticClassImport);
 		}
 	}
@@ -600,13 +598,6 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 	public void visitRangeExpression(RangeExpression expression) {
 		analyzeNode(expression);
 		super.visitRangeExpression(expression);
-		clear(expression);
-	}
-
-	@Override
-	public void visitRegexExpression(RegexExpression expression) {
-		analyzeNode(expression);
-		super.visitRegexExpression(expression);
 		clear(expression);
 	}
 

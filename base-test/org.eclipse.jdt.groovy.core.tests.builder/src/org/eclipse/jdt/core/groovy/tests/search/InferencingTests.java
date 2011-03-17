@@ -16,6 +16,8 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
+
 import junit.framework.Test;
 
 /**
@@ -133,12 +135,20 @@ public class InferencingTests extends AbstractInferencingTest {
     
     public void testRangeExpression1() throws Exception {
         String contents = "0 .. 5";
-        assertType(contents, "java.util.List<java.lang.Integer>");
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            assertType(contents, "java.util.List<java.lang.Integer>");
+        } else {
+            assertType(contents, "java.util.List<int>");
+        }
     }
     
     public void testRangeExpression2() throws Exception {
         String contents = "0 ..< 5";
-        assertType(contents, "java.util.List<java.lang.Integer>");
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            assertType(contents, "java.util.List<java.lang.Integer>");
+        } else {
+            assertType(contents, "java.util.List<int>");
+        }
     }
     
     public void testClassReference1() throws Exception {

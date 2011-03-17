@@ -37,6 +37,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -74,16 +75,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyCompilationUnitDeclaration.defaultCheckGenerics=true;
 		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
-		groovyLevel=18;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.0-rc-2.jar");
-    	if (groovyJar==null) {
-        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.8.jar");
-        	groovyLevel=17;
-        	if (groovyJar==null) {
-	    		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-	    		groovyLevel=16;
-        	}
-    	}
 	}
 
 	public static Class testClass() {
@@ -96,8 +87,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		GroovyParser.debugRequestor = null; 
 	}
 
-	protected int groovyLevel;
-	
 	/** 
      * Include the groovy runtime jars on the classpath that is used.
      * Other classpath issues can be seen in TestVerifier/VerifyTests and only when
@@ -109,14 +98,11 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	groovyLevel=18;
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.0-rc-2.jar");
         	if (groovyJar==null) {
         		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.8.jar");
-        		groovyLevel=17;
             	if (groovyJar==null) {
             		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-            		groovyLevel=16;
             	}
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
@@ -137,14 +123,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         return newcps;
     }
     
-    protected boolean isGroovy16() {
-    	return groovyLevel==16;
-    }
-    
     // demonstrates the incorrect use of closure syntax on groovy 1.6 that compiles OK.
     // On 1.7 it is recognized as incorrect (it is too similar to the inner class syntax)
     public void testClosureSyntax() {
-    	if (isGroovy16()) {
+    	if (GroovyUtils.isGroovy16()) {
 	    	this.runConformTest(new String[]{
 		    	"Foo.groovy",
 		    	"class A {\n"+
@@ -324,7 +306,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 
     public void testStaticOuter_GRE944() {
-    	if (groovyLevel<18) {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
 	    	this.runConformTest(new String[]{
 	    			"A.groovy",
 	    			"static class A {\n"+
@@ -537,7 +519,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     }
 
     public void testStaticOuter_GRE944_2() {
-    	if (groovyLevel<18) {
+    	if (GroovyUtils.GROOVY_LEVEL<18) {
 	    	this.runConformTest(new String[]{
 	    			"B.java",
 	    			"public class B {\n"+
@@ -844,7 +826,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     
     public void testNewRuleInLatestGroovy() {
 //    	if (isGroovy16()) { // FIXASC should also break in 17b2
-    	if (groovyLevel<18) {
+    	if (GroovyUtils.GROOVY_LEVEL<18) {
     		// Why no duplicate type exception here on < 1.8? (Move enum and Move for script name)
 	    	this.runNegativeTest(new String[]{
 	    			"Move.groovy",
@@ -3262,7 +3244,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	//    def x
 	//        ^
 	public void testInvalidScripts_GRE323_2() {
-		if (groovyLevel<18) {
+		if (GroovyUtils.GROOVY_LEVEL<18) {
 			this.runNegativeTest(new String[] {
 				"One.groovy",
 				"def moo(closure) {\n" + 
@@ -3474,7 +3456,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testInvalidScripts_GRE323_6() {
-		if (groovyLevel<18) {
+		if (GroovyUtils.GROOVY_LEVEL<18) {
 			this.runNegativeTest(new String[] {
 				"Six.groovy",
 				"def moo(closure) {\n" + 
@@ -4275,7 +4257,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		
 		expectedOutput = 
 			//"  // Method descriptor #18 (Ljava/lang/String;)V\n" + 
-			(groovyLevel<18?
+			(GroovyUtils.GROOVY_LEVEL<18?
 			"  // Stack: 3, Locals: 3\n":
 			"  // Stack: 2, Locals: 4\n")+
 			"  @p.Anno\n" + 
@@ -5187,14 +5169,14 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"1. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
 			"	      ^\n" +
-			(isGroovy16()?
+			(GroovyUtils.isGroovy16()?
 			"Groovy:unable to find class for enum\n":
 			"Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n") +
 			"----------\n" +
 			"2. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
 			"	      ^\n" +
-			(groovyLevel<18?
+			(GroovyUtils.GROOVY_LEVEL<18?
 			"Groovy:Only classes can be used for attribute 'value' in @p.Anno\n":
 			"Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n"
 		    )+
@@ -7816,7 +7798,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		String expectedContents = 
 			"// Compiled from Foo.groovy (version 1.5 : 49.0, no super bit)\n" + 
 			"public abstract @interface A extends java.lang.annotation.Annotation {\n" + 
-			(groovyLevel<18?"":
+			(GroovyUtils.GROOVY_LEVEL<18?"":
 				"\n"+
 				"  Inner classes:\n" + 
 				"    [inner class info: #9 A$1, outer class info: #2 A\n" + 

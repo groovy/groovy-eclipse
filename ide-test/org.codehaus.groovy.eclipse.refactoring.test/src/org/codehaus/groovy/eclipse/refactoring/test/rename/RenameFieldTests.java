@@ -149,6 +149,18 @@ public class RenameFieldTests extends RefactoringTest {
         helper2(true);
     }
 
+    public void testInitializer1() throws Exception {
+        helper2();
+    }
+
+    public void testInitializer2() throws Exception {
+        helper2();
+    }
+
+    public void testInitializer3() throws Exception {
+        helper2();
+    }
+
     public void test1() throws Exception {
         helper2();
     }
@@ -174,15 +186,6 @@ public class RenameFieldTests extends RefactoringTest {
         helper2();
     }
     public void test9() throws Exception {
-        helper2();
-    }
-    public void testInitializer1() throws Exception {
-        helper2();
-    }
-    public void testInitializer2() throws Exception {
-        helper2();
-    }
-    public void testInitializer3() throws Exception {
         helper2();
     }
     public void testScript1() throws Exception {

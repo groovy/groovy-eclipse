@@ -44,7 +44,7 @@
          version="0.0.0"/>
 
    <includes
-         id="org.codehaus.groovy16.feature"
+         id="org.codehaus.groovy18.feature"
          version="0.0.0"/>
 
    <includes

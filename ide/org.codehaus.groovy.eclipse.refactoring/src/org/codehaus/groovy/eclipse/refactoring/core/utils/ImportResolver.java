@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -20,6 +20,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.utils;
 
 import java.util.Collection;
 import java.util.List;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -30,7 +31,7 @@ public class ImportResolver {
 
 	/**
 	 * Evaluates, if a Class must be written with or without package or even as alias
-	 * 
+	 *
 	 * @param root ModuleNode to get the imports
 	 * @param classType type to evaluate
 	 * @param resolve considering default imports
@@ -39,47 +40,49 @@ public class ImportResolver {
 	public static String getResolvedClassName(ModuleNode root, ClassNode classType, boolean defaultImports) {
 		String alias = ImportResolver.asAlias(root, classType);
 		if (alias.equals("")) {
-			List<ImportNode> imports = root.getImports();
-			//check if class is imported as class like foo.Bar
-	    	for (ImportNode importNode :imports) {
-	    		//if Class is imported write class without package
-	    		if (importNode.getType().getName().equals(classType.getName())) {
-	    			return classType.getNameWithoutPackage();
-	    		}
-	    	}
-	    	//check if class is imported as package like foo.* and class is in package foo
-	    	List<String> packageImports = root.getImportPackages();
-	    	for (String packageName : packageImports) {
-	    		//if Class is imported write class without package
-	    		String classPackage = classType.getPackageName() + ".";
-	    		if (packageName.equals(classPackage)) {
-	    			return classType.getNameWithoutPackage();
-	    		}
-	    	}
-	    	
-	    	//check if it was a static import as package like java.lang.Math.PI
-	    	if (root.getStaticImportAliases().values().contains(classType)) {
-	    		return classType.getNameWithoutPackage();
-	    	}
-	    	
-	    	//check if it was a static import as package like java.lang.Math.*
-	    	if (root.getStaticImportClasses().values().contains(classType)) {
-	    		return classType.getNameWithoutPackage();
-	    	}
-	    	
+
+            // check if class is imported as class like foo.Bar
+            ImportNode found = findImportNodeForClass(classType, root.getImports());
+            if (found != null) {
+                return found.getType().getNameWithoutPackage();
+            }
+
+            // check if it was a static import as package like java.lang.Math.*
+            found = findImportNodeForClass(classType, root.getStaticStarImports().values());
+            if (found != null) {
+                return found.getType().getNameWithoutPackage();
+            }
+
+            // check if it was a static import as package like java.lang.Math.PI
+            found = findImportNodeForClass(classType, root.getStaticImports().values());
+            if (found != null) {
+                return found.getType().getNameWithoutPackage();
+            }
+
 	    	//check if class is in own package
+            String packageNameWithDot = classType.getPackageName() + ".";
 	    	if (root.hasPackageName()) {
-	        	if (root.getPackageName().equals(classType.getPackageName() + ".")) {
+                if (root.getPackageName().equals(packageNameWithDot)) {
 	        		return classType.getNameWithoutPackage();
 	        	}
 	    	}
-	    	
+
+            // check if class is imported as package like foo.* and class is in
+            // package foo
+            List<ImportNode> packageImports = root.getStarImports();
+            for (ImportNode imp : packageImports) {
+                // if Class is imported write class without package
+                if (imp.getPackageName().equals(packageNameWithDot)) {
+                    return classType.getNameWithoutPackage();
+                }
+            }
+
 	    	if (defaultImports) {
 	        	//check if class is imported with the default imports
 	        	//DEFAULT_IMPORTS = {"java.lang.", "java.io.", "java.net.", "java.util.", "groovy.lang.", "groovy.util."}
 	        	for (String packageName : ResolveVisitor.DEFAULT_IMPORTS ) {
 	        		//if Class is imported write class without package
-	        		if (packageName.equals(classType.getPackageName() + ".")) {
+                    if (packageName.equals(packageNameWithDot)) {
 	        			return classType.getNameWithoutPackage();
 	        		}
 	        	}
@@ -99,36 +102,30 @@ public class ImportResolver {
         return alias;
 	}
 
+    private static ImportNode findImportNodeForClass(ClassNode toFind, Collection<ImportNode> imports) {
+        for (ImportNode imp : imports) {
+            if (imp.getType() != null && imp.getType().getName().equals(toFind.getName())) {
+                return imp;
+            }
+        }
+        return null;
+    }
+
 	/**
 	 * Evaluates if there is an alias for the type
-	 * 
+	 *
 	 * @param root ModuleNode to get the imports
 	 * @param classType type to evalueate
 	 * @return the alias or an empty string if there is no alias
 	 */
 	public static String asAlias(ModuleNode root, ClassNode type) {
 		//Test if class that is represented in ClassNode is imported with Alias
-		List<ImportNode> imports = root.getImports();
-		for (ImportNode importNode :imports) {
-			if (ImportResolver.isExplizitAlias(importNode)) {
-				if (importNode.getType().getName().equals(type.getName())) {
-					return importNode.getAlias();
-				}
-			}
-		}
-		
-		//Test if class that is represented in ClassNode is static imported with Alias
-		Collection<String> staticImportKeys = root.getStaticImportAliases().keySet();
-		for (String possibleAlias : staticImportKeys) {
-			//if Class is imported write class without package
-			if (root.getStaticImportAliases().values().contains(type)) {
-				String fieldName = (String)root.getStaticImportFields().get(possibleAlias);
-	    		if (!fieldName.equals(possibleAlias)) {
-	    			return possibleAlias;
-	    		} 
-			}
-		}
-		return "";
+        ImportNode imp = findImportNodeForClass(type, root.getImports());
+        if (imp != null && isExplicitAlias(imp)) {
+            return imp.getAlias();
+        }
+
+        return "";
 	}
 
 	/**
@@ -137,35 +134,30 @@ public class ImportResolver {
 	 * @param importNode node to check
 	 * @return true when an alias is used otherwise false
 	 */
-	public static boolean isExplizitAlias(ImportNode importNode) {
+    public static boolean isExplicitAlias(ImportNode importNode) {
 		return !importNode.getType().getNameWithoutPackage().equals(importNode.getAlias());
 	}
 
 	/**
 	 * Findout if a PropertyExpression can be printed just as field that was imported
-	 * 
+	 *
 	 * @param root ModuleNode to get the Imports
 	 * @param type package that is imported
-	 * @param possibleField  
+	 * @param possibleField
 	 * @return possibleField if it's imported as filed or empty string if not
 	 */
 	public static String asFieldName(ModuleNode root, ClassNode type, String possibleField) {
 		//Test if class that is represented in ClassNode is static imported with Alias
-		Collection<String> staticImportKeys = root.getStaticImportAliases().keySet();
-		for (String key : staticImportKeys) {
-			//if Class is imported write class without package
-			if (root.getStaticImportAliases().values().contains(type)) {
-				String fieldName = (String)root.getStaticImportFields().get(key);
-	    		if (fieldName != null) {
-	    			return fieldName;
-	    		}
-			}
-		}
-		
-	   	if (root.getStaticImportClasses().values().contains(type)) {
-	   		if (possibleField != null) {
-	   			return possibleField;
-	   		}
+        ImportNode imp = root.getStaticImports().get(possibleField);
+        if (imp != null && imp.getType() != null && imp.getType().getName().equals(type.getName())) {
+            return possibleField;
+        }
+
+		// check to see if class is imported as 'import static
+        // com.foo.MyClass.*'
+        imp = findImportNodeForClass(type, root.getStaticStarImports().values());
+        if (imp != null) {
+            return possibleField;
 		}
 		return "";
 	}

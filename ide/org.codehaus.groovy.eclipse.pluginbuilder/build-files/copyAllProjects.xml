@@ -45,8 +45,8 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.headless.feature">
 			</fileset>
 		</copy>
-		<copy todir="${featuresDestDir}/org.codehaus.groovy16.feature">
-			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy16.feature">
+		<copy todir="${featuresDestDir}/org.codehaus.groovy18.feature">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy18.feature">
 			</fileset>
 		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy17.feature">
@@ -72,8 +72,8 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
-		<copy todir="${pluginsDestDir}/org.codehaus.groovy16">
-			<fileset dir="${workspaceDirBase}/org.codehaus.groovy16">
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy18">
+			<fileset dir="${workspaceDirBase}/org.codehaus.groovy18">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>

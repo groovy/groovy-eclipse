@@ -52,7 +52,6 @@ import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.RegexExpression;
 import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.SpreadMapExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -423,12 +422,6 @@ public class LexicalClassVisitor {
         public void visitFieldExpression(FieldExpression node) {
             maybeAddNode(node);
             super.visitFieldExpression(node);
-        }
-
-        @Override
-        public void visitRegexExpression(RegexExpression node) {
-            maybeAddNode(node);
-            super.visitRegexExpression(node);
         }
 
         @Override

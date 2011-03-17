@@ -22,9 +22,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
 
 import org.codehaus.groovy.antlr.LineColumn;
@@ -73,7 +74,6 @@ import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.RegexExpression;
 import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.SpreadMapExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -227,16 +227,16 @@ public class ASTWriter extends CodeVisitorSupport implements
 			groovyCode.append(packageName.substring(0, packageName.length() - 1));
 		}
 		//write importPackage like import test.*
-		printStarImports();
+        printImports(root.getStarImports());
 
 		//write imports like import test.TestClass
-		printClassImport();
+        printImports(root.getImports());
 
 		//write imports like import static java.lang.Math.PI
-		printStaticClassImports();
+        printImports(root.getStaticImports().values());
 
 		//write imports like import static java.lang.Math.*
-		printStaticStarImports();
+        printImports(root.getStaticStarImports().values());
 
 		//write Statements that are not inside a class
 		if (!root.getStatementBlock().isEmpty()) {
@@ -257,95 +257,15 @@ public class ASTWriter extends CodeVisitorSupport implements
 		postVisitStatement(root);
 	}
 
-	/**
-	 * write imports like import static java.lang.Math.*
-	 */
-	@SuppressWarnings("deprecation")
-    private void printStaticStarImports() {
-		if (!root.getStaticImportClasses().isEmpty()) {
-			Iterator iter = root.getStaticImportClasses().values().iterator();
-			while (iter.hasNext()) {
-				groovyCode.append("import static ");
-				ClassNode packageName = (ClassNode)iter.next();
-				groovyCode.append(packageName.getName());
-				groovyCode.append(".*");
-				if (iter.hasNext()) {
-					insertLineFeed();
-					lineOfPreviousNode++;
-				}
-			}
-		}
-	}
-
-	/**
-	 * write imports like import static java.lang.Math.PI
-	 */
-	@SuppressWarnings("deprecation")
-    private void printStaticClassImports() {
-		if (!root.getStaticImportAliases().isEmpty()) {
-			Iterator iter = root.getStaticImportAliases().keySet().iterator();
-			while (iter.hasNext()) {
-				String key = (String)iter.next();
-				//preVisitStatement(importNode); cause importNode has wrong LineInfos
-				groovyCode.append("import static ");
-				ClassNode packageName = (ClassNode)root.getStaticImportAliases().get(key);
-				groovyCode.append(packageName.getName());
-				groovyCode.append(".");
-				String fieldName = root.getStaticImportFields().get(key).toString();
-				groovyCode.append(fieldName);
-				if (!fieldName.equals(key)) {
-					groovyCode.append(" as ");
-					groovyCode.append(key);
-				}
-				if (iter.hasNext()) {
-					insertLineFeed();
-					lineOfPreviousNode++;
-				}
-				//postVisitStatement(importNode); cause importNode has wrong LineInfos
-			}
-		}
-	}
-
-	/**
-	 * write imports like import test.TestClass
-	 */
-	private void printClassImport() {
-		if (!root.getImports().isEmpty()) {
-			Iterator iter = root.getImports().iterator();
-			while (iter.hasNext()) {
-				ImportNode importNode = (ImportNode)iter.next();
-				//preVisitStatement(importNode); cause importNode has wrong LineInfos
-				groovyCode.append("import ");
-				groovyCode.append(importNode.getType().getName());
-				if (ImportResolver.isExplizitAlias(importNode)) {
-					groovyCode.append(" as ");
-					groovyCode.append(importNode.getAlias());
-				}
-				if (iter.hasNext()) {
-					insertLineFeed();
-					lineOfPreviousNode++;
-				}
-				//postVisitStatement(importNode); cause importNode has wrong LineInfos
-			}
-		}
-	}
-
-	/**
-	 * write importPackage like import test.*
-	 */
-	private void printStarImports() {
-		if (!root.getImportPackages().isEmpty()) {
-			Iterator iter = root.getImportPackages().iterator();
-			while (iter.hasNext()) {
-				groovyCode.append("import ");
-				groovyCode.append((String)iter.next());
-				groovyCode.append("*");
-				if (iter.hasNext()) {
-					insertLineFeed();
-					lineOfPreviousNode++;
-				}
-			}
-		}
+    private void printImports(Collection<ImportNode> imports) {
+        for (Iterator<ImportNode> impIter = imports.iterator(); impIter.hasNext();) {
+            ImportNode imp = impIter.next();
+            groovyCode.append(imp.getText());
+            if (impIter.hasNext()) {
+                insertLineFeed();
+                lineOfPreviousNode++;
+            }
+        }
 	}
 
     public void visitClass(ClassNode node) {
@@ -391,6 +311,8 @@ public class ASTWriter extends CodeVisitorSupport implements
         node.visitContents(this);
         postVisitStatementCloseBlock(node);
         postVisitStatement(node);
+
+        // Object initializers don't exist at this point
         /*List list = node.getObjectInitializerStatements();
         for (Iterator iter = list.iterator(); iter.hasNext();) {
             Statement element = (Statement) iter.next();
@@ -424,9 +346,9 @@ public class ASTWriter extends CodeVisitorSupport implements
 
     public void visitAnnotations(AnnotatedNode node) {
     	boolean first = true;
-        List annotionMap = node.getAnnotations();
+        List<AnnotationNode> annotionMap = node.getAnnotations();
         if (annotionMap.isEmpty()) return;
-        Iterator it = annotionMap.iterator();
+        Iterator<AnnotationNode> it = annotionMap.iterator();
         while (it.hasNext()) {
             AnnotationNode an = (AnnotationNode) it.next();
 
@@ -441,9 +363,8 @@ public class ASTWriter extends CodeVisitorSupport implements
             groovyCode.append(an.getClassNode().getNameWithoutPackage());
             //skip builtin properties
             if (an.isBuiltIn()) continue;
-            for (Iterator iter = an.getMembers().entrySet().iterator(); iter.hasNext();) {
-                Map.Entry member = (Map.Entry) iter.next();
-                Expression memberValue = (Expression) member.getValue();
+            for (Entry<String, Expression> member : an.getMembers().entrySet()) {
+                Expression memberValue = member.getValue();
                 preVisitExpression(memberValue);
             	if (first) {
             		first = false;
@@ -865,10 +786,11 @@ public class ASTWriter extends CodeVisitorSupport implements
         groovyCode.append("switch (");
         statement.getExpression().visit(this);
         groovyCode.append(")");
-        List list = statement.getCaseStatements();
-        for (Iterator iter = list.iterator(); iter.hasNext(); ) {
-            CaseStatement caseStatement = (CaseStatement) iter.next();
-            caseStatement.visit(this);
+        List<CaseStatement> list = statement.getCaseStatements();
+        if (list != null) {
+            for (CaseStatement caseStatement : list) {
+                caseStatement.visit(this);
+            }
         }
         statement.getDefaultStatement().visit(this);
         postVisitStatementCloseBlock(statement);
@@ -897,10 +819,11 @@ public class ASTWriter extends CodeVisitorSupport implements
         preVisitStatement(statement);
         groovyCode.append("try");
         statement.getTryStatement().visit(this);
-        List list = statement.getCatchStatements();
-        for (Iterator iter = list.iterator(); iter.hasNext(); ) {
-            CatchStatement catchStatement = (CatchStatement) iter.next();
-            catchStatement.visit(this);
+        List<CatchStatement> list = statement.getCatchStatements();
+        if (list != null) {
+            for (CatchStatement catchStatement : list) {
+                catchStatement.visit(this);
+            }
         }
         /* if a finally statement is written
          * doesn't matter if the finally statement is empty
@@ -1107,8 +1030,10 @@ public class ASTWriter extends CodeVisitorSupport implements
     public void visitMapExpression(MapExpression expression) {
     	boolean isMapList = !(expression instanceof NamedArgumentListExpression);
     	preVisitExpression(expression);
-    	List mapEntries = expression.getMapEntryExpressions();
-    	if(isMapList)groovyCode.append("[");
+        List<MapEntryExpression> mapEntries = expression.getMapEntryExpressions();
+        if (isMapList) {
+            groovyCode.append("[");
+        }
     	if (!mapEntries.isEmpty()) {
     		visitListOfExpressions(mapEntries,",");
     	} else {
@@ -1387,22 +1312,15 @@ public class ASTWriter extends CodeVisitorSupport implements
     }
 
     @Override
-    public void visitRegexExpression(RegexExpression expression) {
-    	preVisitExpression(expression);
-    	printExpression("/", expression, "/");
-    	postVisitExpression(expression);
-    }
-
-    @Override
     public void visitGStringExpression(GStringExpression expression) {
     	preVisitExpression(expression);
-		List values = expression.getValues();
-		Iterator it = values.iterator();
+        List<Expression> values = expression.getValues();
+        Iterator<Expression> it = values.iterator();
 		LineColumn coords = new LineColumn(expression.getLineNumber(), expression.getColumnNumber());
 		String stringMarker = ASTWriterHelper.getStringMarker(currentDocument, coords);
 		groovyCode.append(stringMarker);
-    	for (Object stringExpression : expression.getStrings()) {
-    		((Expression)stringExpression).visit(this);
+        for (ConstantExpression stringExpression : expression.getStrings()) {
+            stringExpression.visit(this);
     		if (it.hasNext()) {
     			visitValueInGString(it);
     		}
@@ -1425,8 +1343,8 @@ public class ASTWriter extends CodeVisitorSupport implements
      * The AST writer needs to read the inputfile to determine
      * how to user wrote his GString
      */
-	private void visitValueInGString(Iterator it) {
-		Expression valueExpression = (Expression)it.next();
+    private void visitValueInGString(Iterator<Expression> it) {
+        Expression valueExpression = it.next();
 		LineColumn coords = new LineColumn(valueExpression.getLineNumber(), valueExpression.getColumnNumber());
 		char firstChar = FilePartReader.readForwardFromCoordinate(currentDocument,coords).charAt(0);
 		groovyCode.append("$");
@@ -1439,10 +1357,10 @@ public class ASTWriter extends CodeVisitorSupport implements
 		}
 	}
 
-    protected void visitListOfExpressions(List list, String separator) {
+    protected void visitListOfExpressions(List<? extends Expression> list, String separator) {
         if (list==null) return;
-        for (Iterator iter = list.iterator(); iter.hasNext(); ) {
-            Expression expression = (Expression) iter.next();
+        for (Iterator<? extends Expression> iterator = list.iterator(); iterator.hasNext();) {
+            Expression expression = iterator.next();
             preVisitExpression(expression);
             if (getParent() instanceof ArrayExpression) {
             	groovyCode.append("[");
@@ -1450,7 +1368,7 @@ public class ASTWriter extends CodeVisitorSupport implements
             expression.visit(this);
             if (getParent() instanceof ArrayExpression) {
             	groovyCode.append("]");
-            } else if (iter.hasNext()) {
+            } else if (iterator.hasNext()) {
             	groovyCode.append(separator + " ");
             }
             postVisitExpression(expression);

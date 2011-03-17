@@ -53,7 +53,6 @@ import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.RegexExpression;
 import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.SpreadMapExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -462,14 +461,6 @@ public class FindSurroundingNode extends ASTNodeFinder {
         nodeStack.push(factory.createFragment(node));
         check(node);
         super.visitRangeExpression(node);
-        nodeStack.pop();
-    }
-
-    @Override
-    public void visitRegexExpression(RegexExpression node) {
-        nodeStack.push(factory.createFragment(node));
-        check(node);
-        super.visitRegexExpression(node);
         nodeStack.pop();
     }
 

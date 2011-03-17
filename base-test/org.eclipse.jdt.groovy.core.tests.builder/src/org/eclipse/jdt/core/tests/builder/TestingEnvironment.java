@@ -60,7 +60,7 @@ import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.JavaProject;
 
 public class TestingEnvironment {
-	
+    
 	private boolean fIsOpen = false;
 
 	private IWorkspace fWorkspace = null;
@@ -76,6 +76,7 @@ public class TestingEnvironment {
 			handleCoreException(e);
 		}
 	}
+	
 	
 	/**
 	 * Removes groovy nature from project and keeps only the JavaNature

@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
+
 import junit.framework.Test;
 
 /**
@@ -46,7 +48,11 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
     
     public void testList4() throws Exception {
-        assertType("[ 1 ]", "java.util.List<java.lang.Integer>");
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            assertType("[ 1 ]", "java.util.List<java.lang.Integer>");
+        } else {
+            assertType("[ 1 ]", "java.util.List<int>");
+        }
     }
     
     public void testList5() throws Exception {
@@ -62,7 +68,11 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "iterator";
         int start = contents.indexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Iterator<java.lang.Integer>");
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            assertType(contents, start, end, "java.util.Iterator<java.lang.Integer>");
+        } else {
+            assertType(contents, start, end, "java.util.Iterator<int>");
+        }
     }
     
     public void testList7() throws Exception {
@@ -128,7 +138,11 @@ public class GenericInferencingTests extends AbstractInferencingTest {
 
     public void testMap7() throws Exception {
         String contents = "[ 1:1 ]";
-        assertType(contents, "java.util.Map<java.lang.Integer,java.lang.Integer>");
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            assertType(contents, "java.util.Map<java.lang.Integer,java.lang.Integer>");
+        } else {
+            assertType(contents, "java.util.Map<int,int>");
+        }
     }
     
     public void testMap8() throws Exception {
@@ -136,7 +150,11 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "entrySet";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.Integer,java.lang.Integer>>");
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.Integer,java.lang.Integer>>");
+        } else {
+            assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<int,int>>");
+        }
     }
     
 
@@ -145,7 +163,12 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "f";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Integer>");
+        // FIXADE I'm surprised that the results in 1.7 and 1.8 are the same
+//        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Integer>");
+//        } else {
+//            assertType(contents, start, end, "java.util.Map<int,int>");
+//        }
     }
 
     

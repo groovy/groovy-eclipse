@@ -29,11 +29,6 @@
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy17.feature" />
 		</ant>
-		<echo message="Delegating to org.codehaus.groovy16.feature"/>
-		<ant antfile="${genericTargets}" target="${target}">
-			<property name="type" value="feature" />
-			<property name="id" value="org.codehaus.groovy16.feature" />
-		</ant>
 		<echo message="Delegating to org.codehaus.groovy.jdt.patch"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
@@ -63,6 +58,11 @@
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.eclipse.sdk" />
+		</ant>
+		<echo message="Delegating to org.codehaus.groovy18.feature"/>
+		<ant antfile="${genericTargets}" target="${target}">
+			<property name="type" value="feature" />
+			<property name="id" value="org.codehaus.groovy18.feature" />
 		</ant>
 	</target>
 
@@ -104,8 +104,8 @@
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
-	<target name="assemble.org.codehaus.groovy16.feature">
-		<echo message="Assembling org.codehaus.groovy16.feature"/>
+	<target name="assemble.org.codehaus.groovy18.feature">
+		<echo message="Assembling org.codehaus.groovy18.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>

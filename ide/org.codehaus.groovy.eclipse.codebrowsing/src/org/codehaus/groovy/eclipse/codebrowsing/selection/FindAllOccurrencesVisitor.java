@@ -51,7 +51,6 @@ import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.RegexExpression;
 import org.codehaus.groovy.ast.expr.SpreadExpression;
 import org.codehaus.groovy.ast.expr.SpreadMapExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -434,14 +433,6 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         fragment.accept(fragmentMatcher);
         if (!fragmentMatcher.matchWasFound())
             super.visitRangeExpression(expression);
-    }
-
-    @Override
-    public void visitRegexExpression(RegexExpression expression) {
-        IASTFragment fragment = factory.createFragment(expression);
-        fragment.accept(fragmentMatcher);
-        if (!fragmentMatcher.matchWasFound())
-            super.visitRegexExpression(expression);
     }
 
     @Override
