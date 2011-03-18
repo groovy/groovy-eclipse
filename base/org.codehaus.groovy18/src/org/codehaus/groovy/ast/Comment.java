@@ -15,22 +15,24 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a comment in groovy source. Subtypes are single line or multi line
+ * Represents a comment in groovy source. Subtypes are single line or multi line.
+ * Contains factory methods called from the parser (GroovyRecognizer) that build the
+ * comment subtypes.
  * 
  * @author Andy Clement
  */
 public abstract class Comment {
 
-	protected static final int BLOCK = 0;
-	protected static final int LINE = 1;
-	protected static final int JAVADOC = 2;
-	
 	protected static final boolean debug = false;
 
-	protected String comment;
+	protected static final int BLOCK = 0; // text surrounded by /* .. */
+	protected static final int LINE = 1; // text prefixed with //
+	protected static final int JAVADOC = 2; // text surrounded by /** .. */
 	
+	protected String comment;
 	private int kind;
 
+	// Start/Ends for line/columns
 	// Lines are from 1..N
 	// Columns are from 1..N
 	public int sline, scol, eline, ecol;
