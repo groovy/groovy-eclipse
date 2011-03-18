@@ -30,14 +30,14 @@ class TreeNodeFactory {
         org.codehaus.groovy.ast.VariableScope,
         org.codehaus.groovy.control.SourceUnit,
     ]
-    
+
     static NULL_VALUE = new Object()
-    
+
     static ITreeNode createTreeNode(ITreeNode parent, Object value, String displayName) {
         if (value == null) {
             value = NULL_VALUE }
         // The displayName attributes are set after the constructor in the code below because
-        //  displayName relies on the value object being set before it.  Since groovy does not 
+        //  displayName relies on the value object being set before it.  Since groovy does not
         //  honor the order of the attributes in the constructor declaration, value is null when
         //  setDisplayName() is called and the ASTViewer becomes frustrating.
         if (value instanceof ASTNode || forceDefaultNode.contains(value.class)) {
@@ -57,7 +57,7 @@ class TreeNodeFactory {
 class StringUtil {
     static String toString(Object o) {
         return o.toString() }
-    
+
     static String toString(Class cls) {
         // If o is Integer, then Integer.toString() tries to call either of the static toString() methods of Integer.
         // There may be other classes with static toString(args) methods.
@@ -67,35 +67,36 @@ class StringUtil {
 
 abstract class TreeNode implements ITreeNode {
     static final ITreeNode[] NO_CHILDREN = new ITreeNode[0]
-    
+
     ITreeNode parent
     Object value
     String displayName
     Boolean leaf
     ITreeNode[] children = null
-    
+
     void setDisplayName(String name) {
         def mappedName = MapTo.names(value)
-        if (mappedName) { name = "$name - $mappedName" }
+        if (mappedName) {
+            name = "$name - $mappedName" }
         displayName = name }
-    
+
     ITreeNode[] getChildren() {
         if (children == null) {
             children = loadChildren()
             if (children == null) {
                 children = NO_CHILDREN } }
         return children }
-    
+
     boolean isLeaf() {
         if (leaf == null) {
             if (children == null) {
                 children = loadChildren() }
             leaf = children.length == 0 }
         return leaf }
-    
+
     abstract ITreeNode[] loadChildren() }
 
-class DefaultTreeNode extends TreeNode {	
+class DefaultTreeNode extends TreeNode {
     ITreeNode[] loadChildren() {
         def methods = value.class.getMethods()
         methods = methods?.findAll { (it.name.startsWith('get') && it.getParameterTypes().length == 0) || it.name.equals("redirect") }
@@ -109,12 +110,15 @@ class DefaultTreeNode extends TreeNode {
             } catch (NullPointerException e) {
                 // For some reason ClassNode.getAbstractMethods() has a problem - ClassNode.superclass is null.
                 return null
+            } catch (ClassCastException e) {
+                // DeclarationExpression.getTupleExpression() will return a CCE on Groovy 18+ if the expression is not a Tuple expression
+                return null
             } }
         // Make sure there are no nulls from the above exception handling.
         children = children?.findAll { it != null }
         if (children == null) {
             children = NO_CHILDREN }
-        
+
         return children } }
 
 // This includes object arrays.
@@ -134,15 +138,18 @@ class AtomTreeNode implements ITreeNode {
     ITreeNode parent
     Object value
     String displayName
-    
-    boolean isLeaf() { return true }
-    
-    ITreeNode[] getChildren() { return NO_CHILDREN }
-    
+
+    boolean isLeaf() {
+        return true }
+
+    ITreeNode[] getChildren() {
+        return NO_CHILDREN }
+
     void setDisplayName(String name) {
         def mappedName = MapTo.names(value)
-        if (mappedName) { name = "$name - $mappedName" }
-        
+        if (mappedName) {
+            name = "$name - $mappedName" }
+
         if (value instanceof String) {
             displayName = "$name : '${StringUtil.toString(value)}'".toString() } else {
             def valueName = StringUtil.toString(value)

@@ -857,7 +857,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE: start
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = nameStart + name.length()-1;
+        int nameEnd = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumnLast())-1;
         // end
         node = node.getNextSibling();
         

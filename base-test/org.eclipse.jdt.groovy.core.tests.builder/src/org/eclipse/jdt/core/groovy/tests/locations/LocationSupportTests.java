@@ -20,6 +20,7 @@ import junit.framework.TestCase;
 
 import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
@@ -147,6 +148,25 @@ public class LocationSupportTests extends TestCase {
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, ((ASTNode) module.getMethods().get(0)).getStart());
+        assertEquals(content.indexOf('x'), module.getMethods().get(0).getNameStart());
+        assertEquals(content.indexOf('x') + "x".length() - 1, module.getMethods().get(0).getNameEnd());
+        assertEquals(content.length(), ((ASTNode) module.getMethods().get(0)).getEnd());
+    }
+    
+    public void testParserSourceLocationsMethod2() throws Exception {
+        String content = "def \"x   \"    () { \n\n\n\n\n\n\n}";
+        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        sourceUnit.parse();
+        sourceUnit.completePhase();
+        sourceUnit.convert();
+        ModuleNode module = sourceUnit.getAST();
+        
+        // now check locations
+        assertEquals(0, module.getStart());
+        assertEquals(content.length(), module.getEnd());
+        assertEquals(0, ((ASTNode) module.getMethods().get(0)).getStart());
+        assertEquals(content.indexOf("\"x   \""), (module.getMethods().get(0)).getNameStart());
+        assertEquals(content.indexOf("\"x   \"")+"\"x   \"".length() - 1, (module.getMethods().get(0)).getNameEnd());
         assertEquals(content.length(), ((ASTNode) module.getMethods().get(0)).getEnd());
     }
     
