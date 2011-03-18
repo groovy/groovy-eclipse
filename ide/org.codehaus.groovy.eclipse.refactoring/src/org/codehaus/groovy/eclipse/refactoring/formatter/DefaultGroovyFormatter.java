@@ -23,7 +23,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
+import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -296,22 +296,20 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	public Token getTokenAfterParenthesis(int index) {
 	    int i = index;
 		int countParenthesis = 1;
-		while (tokens.get(i).getType() != GroovyTokenTypes.LPAREN) {
+        while (tokens.get(i).getType() != GroovyTokenTypeBridge.LPAREN) {
 			i++;
 		}
 		i++;
 		while (countParenthesis > 0 && i < tokens.size()-1) {
-			switch (tokens.get(i).getType()) {
-				case GroovyTokenTypes.LPAREN:
+            int ttype = tokens.get(i).getType();
+            if (ttype == GroovyTokenTypeBridge.LPAREN) {
 					countParenthesis++;
-					break;
-				case GroovyTokenTypes.RPAREN:
+            } else if (ttype == GroovyTokenTypeBridge.RPAREN) {
 					countParenthesis--;
-					break;
 			}
 			i++;
 		}
-		if (tokens.get(i).getType() == GroovyTokenTypes.LCURLY ||
+        if (tokens.get(i).getType() == GroovyTokenTypeBridge.LCURLY ||
 		        i >= tokens.size()) {
 			return null;
 		}
@@ -367,7 +365,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 		int type;
 		do {
 			type = tokens.get(++currentPos).getType();
-		} while ((type == GroovyTokenTypes.WS || (type == GroovyTokenTypes.NLS && !includingNLS))
+        } while ((type == GroovyTokenTypeBridge.WS || (type == GroovyTokenTypeBridge.NLS && !includingNLS))
 				&& currentPos < tokens.size() - 2);
 		return currentPos;
 	}
@@ -395,7 +393,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 		int type;
 		do {
 			type = tokens.get(--currentPos).getType();
-		} while ((type == GroovyTokenTypes.NLS && !includingNLS)
+        } while ((type == GroovyTokenTypeBridge.NLS && !includingNLS)
 				&& currentPos >= 0);
 		return currentPos;
 	}

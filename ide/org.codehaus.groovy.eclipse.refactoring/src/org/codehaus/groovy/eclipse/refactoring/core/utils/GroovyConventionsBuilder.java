@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.eclipse.refactoring.Activator;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -39,16 +39,16 @@ import antlr.TokenStreamException;
 /**
  * @author Klenk Michael mklenk@hsr.ch
  * @author Kempf Martin
- * 
+ *
  * Class used to verify user input (making sure that no keywords etc are being used)
  */
 public final class GroovyConventionsBuilder {
-	
+
 	public static final String CLASS = "class";
 	public static final String VARIABLE = "variable";
 	public static final String METHOD = "method";
 	public static final String FIELD = "field";
-	
+
 	private List<String> names = new ArrayList<String>();
 	private String element;
 	private MultiStatus state = new MultiStatus(Activator.PLUGIN_ID, IStatus.OK, "", null);
@@ -58,13 +58,13 @@ public final class GroovyConventionsBuilder {
 		this.element = element;
 		validateNotNull();
 	}
-	
+
 	public GroovyConventionsBuilder(List<String> names, String element) {
 		this.names = names;
 		this.element = element;
 		validateNotNull();
 	}
-	
+
 	public GroovyConventionsBuilder validateUpperCase(int status) {
 		//warning if lower case
 		for (String name : names) {
@@ -75,7 +75,7 @@ public final class GroovyConventionsBuilder {
 		}
 		return this;
 	}
-	
+
 	public GroovyConventionsBuilder validateLowerCase(int status) {
 		//warning if upper case
 		for (String name : names) {
@@ -86,23 +86,23 @@ public final class GroovyConventionsBuilder {
 		}
 		return this;
 	}
-	
+
 	public GroovyConventionsBuilder validateGroovyIdentifier() {
 		// Test if the first and only Token is an Identifier
 		for (String name : names) {
 			List<Token> tokenList = tokenizeString(name);
-			if (!(tokenList.size() == 1 && tokenList.get(0).getType() == GroovyTokenTypes.IDENT)) {
+            if (!(tokenList.size() == 1 && tokenList.get(0).getType() == GroovyTokenTypeBridge.IDENT)) {
 				state.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
 						MessageFormat.format("''{0}'' is not a valid Groovy identifier", name)));
 			}
 		}
 		return this;
 	}
-	
+
 	public IStatus done() {
 		return state;
 	}
-	
+
 	private void validateNotNull() {
 		for (String name : names) {
 			if(name.length() == 0) {

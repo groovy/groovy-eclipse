@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
+import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -86,7 +86,7 @@ public class GroovyBeautifier {
             Token lastToken = null;
             try {
                 lastToken = tokens.getLastNonWhitespaceTokenBefore(node.getEnd() - 1);
-                if (lastToken == null || lastToken.getType() == GroovyTokenTypes.STRING_CTOR_START) {
+                if (lastToken == null || lastToken.getType() == GroovyTokenTypeBridge.STRING_CTOR_START) {
                     //This means we are inside a GString and we won't apply edits here so skip this
                     continue;
                 }
@@ -106,7 +106,7 @@ public class GroovyBeautifier {
                     Expression exp = exps.get(i);
                     Token before = tokens.getLastTokenBefore(exp.getStart());
                     try {
-                        while (before.getType() != GroovyTokenTypes.LBRACK && before.getType() != GroovyTokenTypes.COMMA) {
+                        while (before.getType() != GroovyTokenTypeBridge.LBRACK && before.getType() != GroovyTokenTypeBridge.COMMA) {
                             before = tokens.getLastTokenBefore(before);
                         }
                         replaceWhiteSpaceAfter(edits, before, formatter.getNewLine());
@@ -122,16 +122,16 @@ public class GroovyBeautifier {
                     Expression exp = exps.get(i);
                     Token before = tokens.getLastTokenBefore(exp.getStart());
                     try {
-                        while (before.getType() != GroovyTokenTypes.LBRACK && before.getType() != GroovyTokenTypes.COMMA) {
+                        while (before.getType() != GroovyTokenTypeBridge.LBRACK && before.getType() != GroovyTokenTypeBridge.COMMA) {
                             before = tokens.getLastTokenBefore(before);
                         }
-                        replaceWhiteSpaceAfter(edits, before, before.getType() == GroovyTokenTypes.LBRACK ? "" : " ");
+                        replaceWhiteSpaceAfter(edits, before, before.getType() == GroovyTokenTypeBridge.LBRACK ? "" : " ");
                     } catch (BadLocationException e) {
                         Util.log(e);
                     }
                 }
                 replaceWhiteSpaceAfter(edits, lastToken,
-                        lastToken.getType() == GroovyTokenTypes.SL_COMMENT ? formatter.getNewLine() : "");
+                        lastToken.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
             }
         }
     }
@@ -159,7 +159,7 @@ public class GroovyBeautifier {
     }
 
     private boolean isWhiteSpace(int type) {
-        return type == GroovyTokenTypes.WS || type == GroovyTokenTypes.NLS;
+        return type == GroovyTokenTypeBridge.WS || type == GroovyTokenTypeBridge.NLS;
     }
 
     private boolean hasClosureElement(ListExpression node) {
@@ -177,12 +177,14 @@ public class GroovyBeautifier {
 		for(ASTNode node : scanner.getMatchedNodes().keySet()) {
 			ClosureExpression clExp = ((ClosureExpression)node);
 
-			int posClStart = formatter.getPosOfToken(GroovyTokenTypes.LCURLY,clExp.getLineNumber(),clExp.getColumnNumber(),"{");
-			int posCLEnd = formatter.getPosOfToken(GroovyTokenTypes.RCURLY,clExp.getLastLineNumber(),clExp.getLastColumnNumber()-1,"}");
+            int posClStart = formatter.getPosOfToken(GroovyTokenTypeBridge.LCURLY, clExp.getLineNumber(), clExp.getColumnNumber(),
+                    "{");
+            int posCLEnd = formatter.getPosOfToken(GroovyTokenTypeBridge.RCURLY, clExp.getLastLineNumber(),
+                    clExp.getLastColumnNumber() - 1, "}");
 
 			if(posCLEnd == -1) {
 				int positionLastTokenOfClosure = formatter.getPosOfToken(clExp.getLastLineNumber(), clExp.getLastColumnNumber());
-				while(formatter.getTokens().get(positionLastTokenOfClosure).getType() != GroovyTokenTypes.RCURLY) {
+                while (formatter.getTokens().get(positionLastTokenOfClosure).getType() != GroovyTokenTypeBridge.RCURLY) {
 					positionLastTokenOfClosure--;
 				}
 				posCLEnd = positionLastTokenOfClosure;
@@ -198,7 +200,7 @@ public class GroovyBeautifier {
 				int posParamDelim = posClStart;
 				if(clExp.getParameters() != null && clExp.getParameters().length > 0) {
 					// Position Parameters on same Line
-					posParamDelim = formatter.getPosOfNextTokenOfType(posClStart, GroovyTokenTypes.CLOSABLE_BLOCK_OP);
+                    posParamDelim = formatter.getPosOfNextTokenOfType(posClStart, GroovyTokenTypeBridge.CLOSABLE_BLOCK_OP);
 					replaceNLSWithSpace(edits, posClStart, posParamDelim);
 				}
 				// combine closure with only one statments with less than 5 tokens to one line
@@ -207,14 +209,16 @@ public class GroovyBeautifier {
                     ignoreToken.add(formatter.getTokens().get(posCLEnd));
 				} else {
                     // check if there is a linebreak after the parameters
-                    if (posParamDelim > 0 && formatter.getNextTokenIncludingNLS(posParamDelim).getType() != GroovyTokenTypes.NLS) {
+                    if (posParamDelim > 0
+                            && formatter.getNextTokenIncludingNLS(posParamDelim).getType() != GroovyTokenTypeBridge.NLS) {
                         addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posParamDelim)), formatter
                                 .getNewLine()), edits);
                     } else {
                         // If there are no parameters check if the first
                         // statement
                         // is on the next line
-                        if (posParamDelim == 0 && formatter.getNextTokenIncludingNLS(posClStart).getType() != GroovyTokenTypes.NLS) {
+                        if (posParamDelim == 0
+                                && formatter.getNextTokenIncludingNLS(posClStart).getType() != GroovyTokenTypeBridge.NLS) {
                             addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posClStart)), formatter
                                     .getNewLine()), edits);
                         }
@@ -232,21 +236,20 @@ public class GroovyBeautifier {
         int p = startPos + 1;
         while (p < endPos) {
             Token token = formatter.getTokens().get(p);
-            switch (token.getType()) {
-                case GroovyTokenTypes.NLS:
-                    if (fromToken == null)
-                        fromToken = token;
-                    break;
-                case GroovyTokenTypes.SL_COMMENT:
+            int ttype = token.getType();
+            if (ttype == GroovyTokenTypeBridge.NLS) {
+                if (fromToken == null)
+                    fromToken = token;
+            } else {
+                if (ttype == GroovyTokenTypeBridge.SL_COMMENT) {
                     ++p; // next token will be skipped whether it is a NLS or
                          // not!
-                default:
-                    if (fromToken != null) {
-                        // replace NLS tokens from fromToken up to current token
-                        replaceFromTo(fromToken, token, " ", container);
-                        fromToken = null;
-                    }
-                    break;
+                }
+                if (fromToken != null) {
+                    // replace NLS tokens from fromToken up to current token
+                    replaceFromTo(fromToken, token, " ", container);
+                    fromToken = null;
+                }
             }
             ++p;
 		}
@@ -301,8 +304,8 @@ public class GroovyBeautifier {
 			if(ignoreToken.contains(token))
 				continue;
 
-            switch (formatter.getTokens().get(i).getType()) {
-				case GroovyTokenTypes.LCURLY:
+            int ttype = formatter.getTokens().get(i).getType();
+            if (ttype == GroovyTokenTypeBridge.LCURLY) {
                     KlenkDocumentScanner tokens = formatter.getTokens();
 					if(skipNextNLS){skipNextNLS = false; break;}
 					addEdit(lCurlyCorrector.correctLineWrap(i,token),edits);
@@ -320,22 +323,23 @@ public class GroovyBeautifier {
                         Token nextToken = tokens.getNextToken(token);
                         if (nextToken != null) {
                             int type = nextToken.getType();
-                            if (type != GroovyTokenTypes.NLS) {
+                            if (type != GroovyTokenTypeBridge.NLS) {
                                 int start = tokens.getEnd(token);
                                 int end = tokens.getOffset(nextToken);
                                 addEdit(new ReplaceEdit(start, end - start, formatter.getNewLine()), edits);
                             }
                         }
                     }
-					break;
-				case GroovyTokenTypes.RCURLY:
-					if(skipNextNLS){skipNextNLS = false; break;}
-					addEdit(rCurlyCorrector.correctLineWrap(i,token),edits);
-					break;
-				case GroovyTokenTypes.NLS:
-					break;
-				case GroovyTokenTypes.SL_COMMENT:
-					skipNextNLS = true;
+            } else if (ttype == GroovyTokenTypeBridge.RCURLY) {
+                if (skipNextNLS) {
+                    skipNextNLS = false;
+                } else {
+                    addEdit(rCurlyCorrector.correctLineWrap(i, token), edits);
+                }
+            } else if (ttype == GroovyTokenTypeBridge.NLS) {
+                // nothing
+            } else if (ttype == GroovyTokenTypeBridge.SL_COMMENT) {
+                skipNextNLS = true;
 			}
 		}
 	}

@@ -19,7 +19,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
+import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyDocumentScanner;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -50,7 +50,7 @@ public class GroovyDocumentScannerTests extends TestCase {
 
         int expect = 0;
         Token token = scanner.getLastToken();
-        assertEquals(GroovyTokenTypes.EOF, token.getType());
+        assertEquals(GroovyTokenTypeBridge.EOF, token.getType());
         while (token!=null) {
             assertEquals(expected[expect++], token.getText());
             token = scanner.getLastTokenBefore(token);

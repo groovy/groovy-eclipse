@@ -20,8 +20,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Vector;
 
+import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.text.BadLocationException;
@@ -85,13 +85,13 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
         tokenLines = new Vector<Vector<Token>>();
         Vector<Token> line = new Vector<Token>();
         try {
-            while ((token = stream.nextToken()).getType() != GroovyTokenTypes.EOF) {
-                if (token.getType() != GroovyTokenTypes.WS) {
+            while ((token = stream.nextToken()).getType() != GroovyTokenTypeBridge.EOF) {
+                if (token.getType() != GroovyTokenTypeBridge.WS) {
                     // Ignore Tokens inside a String
-                    if (token.getType() == GroovyTokenTypes.STRING_CTOR_START) {
+                    if (token.getType() == GroovyTokenTypeBridge.STRING_CTOR_START) {
                         tokens.add(token);
                         Token prevToken = token;
-                        inner: while ((token = stream.nextToken()).getType() != GroovyTokenTypes.STRING_CTOR_END) {
+                        inner: while ((token = stream.nextToken()).getType() != GroovyTokenTypeBridge.STRING_CTOR_END) {
                             if (equalTokens(prevToken, token)) {
                                 break inner;
                             }
@@ -100,7 +100,7 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
                     }
                     tokens.add(token);
                     line.add(token);
-                    if (token.getType() == GroovyTokenTypes.NLS) {
+                    if (token.getType() == GroovyTokenTypeBridge.NLS) {
                         tokenLines.add(line);
                         line = new Vector<Token>();
                     }

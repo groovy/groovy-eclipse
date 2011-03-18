@@ -18,8 +18,8 @@ package org.codehaus.groovy.eclipse.refactoring.formatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.antlr.GroovySourceToken;
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.groovy.core.util.GroovyScanner;
@@ -104,7 +104,7 @@ public class GroovyDocumentScanner implements IDocumentListener {
             do {
                 t = nextToken();
                 result.add(t);
-            } while (t.getType() != GroovyTokenTypes.EOF);
+            } while (t.getType() != GroovyTokenTypeBridge.EOF);
         } catch (Exception e) {
             if (logLimit-- > 0) {
                 Util.log(e);
@@ -148,7 +148,7 @@ public class GroovyDocumentScanner implements IDocumentListener {
         if (TOKEN_POSITION_ASSERTS) {
             // These asserts should give some confidence we compute
             // positions correctly.
-            if (token.getType() == GroovyTokenTypes.EOF) {
+            if (token.getType() == GroovyTokenTypeBridge.EOF) {
                 // EOF token is an exception, it is not actually in the
                 // document so its position info doesn't seem to obey these
                 // assumptions.
@@ -158,7 +158,7 @@ public class GroovyDocumentScanner implements IDocumentListener {
                 Assert.isTrue(col >= 0);
                 Assert.isTrue(col < document.getLineLength(line), "Token: " + token);
                 Assert.isTrue(offset < document.getLength());
-                if (token.getType() == GroovyTokenTypes.IDENT) {
+                if (token.getType() == GroovyTokenTypeBridge.IDENT) {
                     // Don't check this for other tokens, because the Antlr
                     // token's
                     // "getText()" method doesn't always return the actual text
@@ -402,7 +402,7 @@ public class GroovyDocumentScanner implements IDocumentListener {
      */
     private boolean isWhitespace(Token result) {
         int type = result.getType();
-        return type == GroovyTokenTypes.WS || type == GroovyTokenTypes.NLS;
+        return type == GroovyTokenTypeBridge.WS || type == GroovyTokenTypeBridge.NLS;
     }
 
 }

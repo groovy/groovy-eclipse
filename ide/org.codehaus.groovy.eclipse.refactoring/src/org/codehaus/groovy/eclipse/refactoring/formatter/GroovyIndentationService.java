@@ -15,16 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.EOF;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.LBRACK;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.LCURLY;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.LPAREN;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.NLS;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.RBRACK;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.RCURLY;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.RPAREN;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.STRING_CTOR_END;
-import static org.codehaus.groovy.internal.antlr.parser.GroovyTokenTypes.STRING_CTOR_START;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.EOF;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LBRACK;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LCURLY;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LPAREN;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.NLS;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.RBRACK;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.RCURLY;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.RPAREN;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_END;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_START;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
+import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.IJavaProject;
@@ -147,7 +147,7 @@ public class GroovyIndentationService {
      * after a closing brace, paren etc.
      * <p>
      * The arguments should be Token type constants from the
-     * {@link GroovyTokenTypes} class.
+     * {@link GroovyTokenTypeBridge} class.
      */
     private static void openClosePair(int opener, int closer) {
         Assert.isTrue(!closer2opener.containsKey(closer));
@@ -210,7 +210,7 @@ public class GroovyIndentationService {
         if (indentLevel < orgIndentLevel) {
             // Jumping back from indentation is more complex.
             Token lastToken = tokens.get(tokens.size() - 1);
-            if (lastToken.getType() == GroovyTokenTypes.NLS)
+            if (lastToken.getType() == GroovyTokenTypeBridge.NLS)
                 lastToken = getTokenBefore(d, lastToken);
             if (isCloserOfPair(lastToken)) {
                 // A somewhat better strategy for newline after closing
