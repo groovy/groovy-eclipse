@@ -70,7 +70,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
     public CompilerPreferencesPage() {
         super("Compiler");
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
-        isGroovy17Disabled = CompilerUtils.isGroovy17DisabledOrMissing();
+        isGroovy17Disabled = CompilerUtils.isGroovy18DisabledOrMissing();
     }
 
 
