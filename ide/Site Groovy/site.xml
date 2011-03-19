@@ -9,20 +9,11 @@
    <feature url="features/org.codehaus.groovy.eclipse.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>
-   <feature url="features/org.codehaus.groovy.jdt.patch_0.0.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="0.0.0.qualifier" patch="true">
-   </feature>
+   <feature url="features/org.codehaus.groovy.jdt.patch_0.0.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="0.0.0.qualifier" patch="true"/>
    <feature url="features/org.codehaus.groovy18.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy18.feature" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.eclipse"/>
    </feature>
-   <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="0.0.0.qualifier">
-   </feature>
-   <!--
-   <category-def name="org.codehaus.groovy.compilers" label="Groovy Compilers">
-      <description>
-         The features that provide multiple versions of the Groovy compiler. 
-         (Automatically included when installing the Groovy-Eclipse plugin)
-      </description>
-   </category-def>
-   -->
+   <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="0.0.0.qualifier"/>
    <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
       <description>
          Optional feature that provides source code for the Groovy-Eclipse plugin

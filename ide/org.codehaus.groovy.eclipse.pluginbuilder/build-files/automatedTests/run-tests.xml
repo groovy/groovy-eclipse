@@ -97,7 +97,10 @@
 			<property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=128M"/>
 		</ant>
 	</target>
+<!-- disable 1.8 tests
 	<target name="run" depends="-init,-runTestSuite,-init18,-runTestSuite18" description="Run manually defined tests and create a report.">
+	-->
+	<target name="run" depends="-init,-runTestSuite" description="Run manually defined tests and create a report.">
 	</target>
 
 </project>

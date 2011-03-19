@@ -194,12 +194,6 @@
   	<!-- fix feature patch version -->
   	<!-- Ensure that feature patch can be installed on multiple versions of Eclipse -->
   	<!-- See http://aniefer.blogspot.com/2009/06/patching-features-part-2.html -->
-  	<!--
-  	<replace  file="${updateSiteDir}/content.xml" summary="yes" 
-	  		propertyfile="${buildHome}/build_local_${eclipse.target.version}.properties">
-  		<replacefilter token="${orig.jdt.feature.version.range}" property="new.jdt.feature.version.range"/>
-		</replace>
-		-->
   	<replace file="${updateSiteDir}/content.xml" summary="yes"
 	    token="${orig.jdt.feature.version.range}" value="${new.jdt.feature.version.range}"/>
 
