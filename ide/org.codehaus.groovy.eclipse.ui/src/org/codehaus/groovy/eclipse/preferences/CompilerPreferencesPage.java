@@ -185,14 +185,14 @@ public class CompilerPreferencesPage extends PreferencePage implements
      * borrowed from {@link OpenWorkspaceAction}
      */
     protected void restart(Shell shell) {
-        // String command_line = buildCommandLine(shell);
-        // if (command_line == null) {
-        // return;
-        // }
-        //
-        // System.out.println("Restart command line begin:\n " + command_line);
-        // System.out.println("Restart command line end");
-        // System.setProperty(PROP_EXIT_DATA, command_line);
+        String command_line = buildCommandLine(shell);
+        if (command_line == null) {
+            return;
+        }
+
+        System.out.println("Restart command line begin:\n " + command_line);
+        System.out.println("Restart command line end");
+        System.setProperty(PROP_EXIT_DATA, command_line);
         System.setProperty(PROP_EXIT_CODE, Integer.toString(24));
         Workbench.getInstance().restart();
 
