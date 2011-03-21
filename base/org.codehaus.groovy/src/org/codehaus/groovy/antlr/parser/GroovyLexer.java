@@ -1759,7 +1759,7 @@ tryAgain:
 		
 		match("/*");
 		if ( inputState.guessing==0 ) {
-			parser.startComment(inputState.getLine(),inputState.getColumn()-2);
+			if (parser!=null) {parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
 		}
 		{
 		_loop642:
@@ -1801,7 +1801,7 @@ inputState.guessing--;
 		match("*/");
 		if ( inputState.guessing==0 ) {
 			
-			parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+			if (parser!=null) {parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));}
 			if (!whitespaceIncluded)  _ttype = Token.SKIP; 
 			
 		}

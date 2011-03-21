@@ -3893,7 +3893,7 @@ options {
     paraphrase="a comment";
 }
     :   "/*"
-      { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+      { if (parser!=null) {parser.startComment(inputState.getLine(),inputState.getColumn()-2); }}
         (   /*  '\r' '\n' can be matched in one alternative or by matching
                 '\r' in one iteration and '\n' in another. I am trying to
                 handle any flavor of newline that comes in, but the language
@@ -3911,7 +3911,7 @@ options {
         )*
         "*/"
         { 
-          parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+          if (parser!=null) {parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));}
           if (!whitespaceIncluded)  $setType(Token.SKIP); 
         }
     ;
