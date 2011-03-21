@@ -15,11 +15,13 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -84,19 +86,37 @@ public class CompilerPreferencesPage extends PreferencePage implements
         page.setLayout(layout);
         page.setFont(parent.getFont());
 
+        // Groovy compiler
+        createCompilerSection(page);
 
-        // section on Groovy classpath container
+        // Groovy script folder
+        scriptFolderSelector = new ScriptFolderSelectorPreferences(page);
+        scriptFolderSelector.createListContents();
+
+        // Groovy classpath container
+        createClasspathContainerSection(page);
+
+        return page;
+    }
+
+
+    /**
+     * @param parent
+     * @param page
+     */
+    protected void createClasspathContainerSection(final Composite page) {
         Label gccLabel = new Label(page, SWT.WRAP);
         gccLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
         gccLabel.setText("Groovy Classpath Container:");
+        gccLabel.setFont(getBoldFont(page));
 
         Composite gccPage = new Composite(page, SWT.NONE | SWT.BORDER);
-        layout = new GridLayout();
+        GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         layout.marginHeight = 3;
         layout.marginWidth = 3;
         gccPage.setLayout(layout);
-        gccPage.setFont(parent.getFont());
+        gccPage.setFont(page.getFont());
         gccPage.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
         groovyLibButt = new Button(gccPage, SWT.CHECK);
@@ -127,16 +147,33 @@ public class CompilerPreferencesPage extends PreferencePage implements
         classpathLabel2.setText("Perform this action if there are changes to ~/.groovy/lib "
                 + "that should be reflected in your projects' classpaths.");
         classpathLabel2.setLayoutData(gd);
+    }
 
-        scriptFolderSelector = new ScriptFolderSelectorPreferences(page);
+    /**
+     * @param parent
+     * @param page
+     */
+    protected void createCompilerSection(final Composite page) {
+        Label compilerLabel = new Label(page, SWT.WRAP);
+        compilerLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+        compilerLabel.setText("Groovy Compiler settings:");
+        compilerLabel.setFont(getBoldFont(page));
 
-        scriptFolderSelector.createListContents();
+        Composite compilerPage = new Composite(page, SWT.NONE | SWT.BORDER);
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 1;
+        layout.marginHeight = 3;
+        layout.marginWidth = 3;
+        compilerPage.setLayout(layout);
+        compilerPage.setFont(page.getFont());
+        compilerPage.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-        Label compilerVersion = new Label(page, SWT.LEFT | SWT.WRAP);
+
+        Label compilerVersion = new Label(compilerPage, SWT.LEFT | SWT.WRAP);
         compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
 
 
-       Button switchTo = new Button(page, SWT.PUSH);
+        Button switchTo = new Button(compilerPage, SWT.PUSH);
         switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
         switchTo.addSelectionListener(new SelectionListener() {
 
@@ -167,18 +204,25 @@ public class CompilerPreferencesPage extends PreferencePage implements
             }
         });
 
-        Link moreInfoLink = new Link(page, SWT.BORDER);
+        Link moreInfoLink = new Link(compilerPage, 0);
         moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
                 false));
         moreInfoLink
-                .setText("<a href=\"http://docs.codehaus.org/display/GROOVY/Compiler+Switching+within+Groovy-Eclipse\">Information on how to switch to "
-                        + CompilerUtils.getOtherVersion() + "...</a>");
+                .setText("<a href=\"http://docs.codehaus.org/display/GROOVY/Compiler+Switching+within+Groovy-Eclipse\">See here</a> for more information"
+                        + "on compiler switching (opens a broswer window).");
         moreInfoLink.addListener (SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
                 openUrl(event.text);
             }
         });
-        return page;
+    }
+
+    /**
+     * @param page
+     * @return
+     */
+    private Font getBoldFont(Composite page) {
+        return JFaceResources.getFontRegistry().getBold(JFaceResources.DIALOG_FONT);
     }
 
     /**

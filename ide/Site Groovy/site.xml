@@ -11,7 +11,7 @@
    </feature>
    <feature url="features/org.codehaus.groovy.jdt.patch_0.0.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="0.0.0.qualifier" patch="true"/>
    <feature url="features/org.codehaus.groovy18.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy18.feature" version="0.0.0.qualifier">
-      <category name="org.codehaus.groovy.eclipse"/>
+      <category name="org.codehaus.groovy.compilers"/>
    </feature>
    <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="0.0.0.qualifier"/>
    <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
@@ -19,12 +19,14 @@
          Optional feature that provides source code for the Groovy-Eclipse plugin
       </description>
    </category-def>
-   <category-def name="org.codehaus.groovy.eclipse" label="Groovy-Eclipse">
+   <category-def name="org.codehaus.groovy.eclipse" label="Groovy-Eclipse (Required)">
       <description>
-         The features that provide Groovy support for Eclipse.  If you are looking for
-         for the Groovy Compiler features or the JDT core patch feature, *deselect* 
-         Group Items by Category.  These sub-features are automatically included in the 
-         main Groovy-Eclipse feature, but can be installed stand-alone if required.
+         The required feature that provides Groovy support in Eclipse.
+      </description>
+   </category-def>
+   <category-def name="org.codehaus.groovy.compilers" label="Extra Groovy compilers (Optional)">
+      <description>
+         The Groovy 1.7 compiler is installed automatically, but you may optionally want to install the Groovy 1.8 compiler as well.
       </description>
    </category-def>
 </site>

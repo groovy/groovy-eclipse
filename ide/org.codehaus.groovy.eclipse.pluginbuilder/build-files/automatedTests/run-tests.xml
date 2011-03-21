@@ -22,7 +22,6 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 		<property file="../../build_local_${eclipse.target.version}.properties" />
 		<property file="run-tests.properties" />
 		<property name="updateSiteURL" value="file:${buildDirectory}/updateSite"/>
-		<antcall target="-installTestEclipseHost" />
 
 		<echo message="Installing plug-ins for testing" />
 		

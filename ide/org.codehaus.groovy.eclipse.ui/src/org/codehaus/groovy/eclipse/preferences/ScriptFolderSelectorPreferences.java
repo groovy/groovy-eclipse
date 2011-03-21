@@ -35,6 +35,7 @@ import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -133,8 +134,12 @@ public class ScriptFolderSelectorPreferences {
     }
 
     public ListDialogField createListContents() {
+        Label label = new Label(parent, SWT.WRAP);
+        label.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
+        label.setText("Groovy Script Folders:");
+        label.setFont(JFaceResources.getFontRegistry().getBold(JFaceResources.DIALOG_FONT));
 
-        Composite inner = new Composite(parent, SWT.NONE);
+        Composite inner = new Composite(parent, SWT.BORDER);
         inner.setFont(parent.getFont());
         GridLayout layout = new GridLayout();
         layout.marginHeight = 3;
@@ -143,9 +148,6 @@ public class ScriptFolderSelectorPreferences {
         inner.setLayout(layout);
         inner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-        Label label = new Label(inner, SWT.WRAP);
-        label.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
-        label.setText("Groovy Script Folders:");
 
         disableButton = new BooleanFieldEditor(Activator.GROOVY_SCRIPT_FILTERS_ENABLED,
  "Enable script folder support",
@@ -155,7 +157,7 @@ public class ScriptFolderSelectorPreferences {
         disableButton.load();
 
         // inner composite contains the dialog itself
-        final Composite innerInner = new Composite(inner, SWT.NONE | SWT.BORDER);
+        final Composite innerInner = new Composite(inner, SWT.NONE);
         innerInner.setFont(parent.getFont());
         layout = new GridLayout();
         layout.marginHeight = 3;
