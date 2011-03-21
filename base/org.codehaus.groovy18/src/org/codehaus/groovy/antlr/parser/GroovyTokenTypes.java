@@ -1,6 +1,7 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyRecognizer.java"$
 
-package org.codehaus.groovy.antlr;
+package org.codehaus.groovy.antlr.parser;
+import org.codehaus.groovy.antlr.*;
 import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
@@ -215,6 +216,7 @@ public interface GroovyTokenTypes {
 	int DOLLAR = 202;
 	int WS = 203;
 	int ONE_NL = 204;
+	int ONE_NL_KEEP = 225;
 	int SL_COMMENT = 205;
 	int ML_COMMENT = 206;
 	int STRING_CH = 207;
@@ -235,5 +237,4 @@ public interface GroovyTokenTypes {
 	int EXPONENT = 222;
 	int FLOAT_SUFFIX = 223;
 	int BIG_SUFFIX = 224;
-	int ONE_NL_KEEP = 225;
 }

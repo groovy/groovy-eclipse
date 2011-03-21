@@ -1,6 +1,7 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyLexer.java"$
 
-package org.codehaus.groovy.antlr;
+package org.codehaus.groovy.antlr.parser;
+import org.codehaus.groovy.antlr.*;
 import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
@@ -1736,7 +1737,9 @@ tryAgain:
 		
 		match("//");
 		if ( inputState.guessing==0 ) {
-			parser.startComment(inputState.getLine(),inputState.getColumn()-2);
+			if (parser!=null) {
+			parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+			
 		}
 		{
 		_loop653:
@@ -1753,8 +1756,9 @@ tryAgain:
 		} while (true);
 		}
 		if ( inputState.guessing==0 ) {
-			
+			if (parser!=null) {
 			parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+			}
 			if (!whitespaceIncluded)  _ttype = Token.SKIP; 
 			
 		}
@@ -1772,7 +1776,7 @@ tryAgain:
 		
 		match("/*");
 		if ( inputState.guessing==0 ) {
-			parser.startComment(inputState.getLine(),inputState.getColumn()-2);
+			if (parser!=null) { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
 		}
 		{
 		_loop663:
@@ -1814,7 +1818,9 @@ inputState.guessing--;
 		match("*/");
 		if ( inputState.guessing==0 ) {
 			
+			if (parser!=null) {
 			parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+			}
 			if (!whitespaceIncluded)  _ttype = Token.SKIP; 
 			
 		}

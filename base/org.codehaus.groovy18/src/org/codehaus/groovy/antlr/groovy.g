@@ -7,7 +7,8 @@
 // groovy/tags/GROOVY_1_5_6/src/main/org/codehaus/groovy/antlr/groovy.g
 
 header {
-package org.codehaus.groovy.antlr;
+package org.codehaus.groovy.antlr.parser;
+import org.codehaus.groovy.antlr.*;
 import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
@@ -3917,15 +3918,18 @@ options {
     paraphrase="a single line comment";
 }
     :   "//"
-      { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+      { if (parser!=null) {
+           parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+        }
         (
             options {  greedy = true;  }:
             // '\uffff' means the EOF character.
             // This will fix the issue GROOVY-766 (infinite loop).
             ~('\n'|'\r'|'\uffff')
         )*
-        {
-          parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+        { if (parser!=null) {
+              parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+          }
           if (!whitespaceIncluded)  $setType(Token.SKIP); 
         }
         //This might be significant, so don't swallow it inside the comment:
@@ -3954,7 +3958,7 @@ options {
     paraphrase="a comment";
 }
     :   "/*"
-      { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+      { if (parser!=null) { parser.startComment(inputState.getLine(),inputState.getColumn()-2); } }
         (   /*  '\r' '\n' can be matched in one alternative or by matching
                 '\r' in one iteration and '\n' in another. I am trying to
                 handle any flavor of newline that comes in, but the language
@@ -3972,7 +3976,9 @@ options {
         )*
         "*/"
         { 
-          parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+          if (parser!=null) {
+               parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
+          }
           if (!whitespaceIncluded)  $setType(Token.SKIP); 
         }
     ;

@@ -22,8 +22,8 @@ import java.util.Map;
 
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.antlr.GroovyLexer;
-import org.codehaus.groovy.antlr.GroovyRecognizer;
+import org.codehaus.groovy.antlr.parser.GroovyLexer;
+import org.codehaus.groovy.antlr.parser.GroovyRecognizer;
 import org.codehaus.groovy.syntax.SyntaxException;
 
 import antlr.RecognitionException;

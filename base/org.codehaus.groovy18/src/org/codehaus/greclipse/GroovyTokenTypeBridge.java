@@ -1,6 +1,6 @@
 package org.codehaus.greclipse;
 
-import org.codehaus.groovy.antlr.GroovyTokenTypes;
+import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 
 /**
  * This class contains copies of the {@link GroovyTokenTypes} constants in static non-final
