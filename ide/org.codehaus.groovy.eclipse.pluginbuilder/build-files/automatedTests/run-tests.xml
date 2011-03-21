@@ -19,19 +19,17 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 	<import file="../get-dependencies.xml" />
 
 	<target name="-init">
-	<property file="../../build_local_${eclipse.target.version}.properties" />
-	<property file="run-tests.properties" />
+		<property file="../../build_local_${eclipse.target.version}.properties" />
+		<property file="run-tests.properties" />
+		<property name="updateSiteURL" value="file:${buildDirectory}/updateSite"/>
 		<antcall target="-installTestEclipseHost" />
-	</target>
 
-	<target name="-installTestEclipseHost" description="Install Eclipse and all required plug-ins for testing" unless="isEclipseInstallationAvailable">
 		<echo message="Installing plug-ins for testing" />
 		
 		<unzip dest="${test.eclipse.base}">
 			<fileset dir="." includes="eclipse-test-framework*.zip" />
 		</unzip>
 		
-		<property name="updateSiteURL" value="file:${buildDirectory}/updateSite"/>
 		<echo message="Update site url = ${updateSiteURL}"/>
 		<!-- Install Groovy Eclipse -->
 		<install-bundle 
