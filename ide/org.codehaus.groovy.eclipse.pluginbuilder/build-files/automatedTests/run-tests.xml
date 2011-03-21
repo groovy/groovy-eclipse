@@ -9,6 +9,10 @@
         Unattributed        - Initial API and implementation
         Andrew Eisenberg - modified for Groovy Eclipse 2.0
  -->
+<!--
+To get good coverage while at the same time not taking a tremendously long time to build, 
+we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Eclipse 3.7 build  
+-->
 <project name="Run automated Tests" default="run" basedir=".">
 
 	<import file="../build_shared.xml" />
@@ -45,7 +49,7 @@
 			<property name="data-dir" value="${test.workspace} -clean" />
 			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
     	<property name="classname" value="org.codehaus.groovy.alltests.AllGroovyTests" />
-    	<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.AllGroovyTests17.xml" />
+    	<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.AllGroovyTests.xml" />
 			<property name="eclipse-home" value="${test.eclipse.host}" />
 			<property name="arch" value="${test_arch}"/>
 			<property name="os" value="${test_os}"/>
@@ -56,7 +60,7 @@
 			<property name="data-dir" value="${test.workspace} -clean" />
 			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
     	<property name="classname" value="org.codehaus.groovy.alltests.GroovyJDTTests" />
-    	<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.GroovyJDTTests17.xml" />
+    	<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.GroovyJDTTests.xml" />
 			<property name="eclipse-home" value="${test.eclipse.host}" />
 			<property name="arch" value="${test_arch}"/>
 			<property name="os" value="${test_os}"/>
@@ -66,41 +70,32 @@
 	</target>
 
 	
-  <target name="-init18" description="Installs the 1.8 compiler into the test eclipse">
+	<!--
+	Only init18 on Eclipse 3.7
+	-->
+  <target name="-init18" depends="should-run-18-tests" description="Installs the 1.8 compiler into the test eclipse" if="run-18">
 		<install-bundle 
 			eclipse.loc="${test.eclipse.base}/eclipse" 
 			updatesite.url="${updateSiteURL}" 
 			feature.id="org.codehaus.groovy18.feature" />
   </target>
 
-	<target name="-runTestSuite18">
-		<ant target="ui-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
-			<property name="data-dir" value="${test.workspace}18 -clean" />
-			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
-    	<property name="classname" value="org.codehaus.groovy.alltests.AllGroovyTests" />
-    	<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.AllGroovyTests18.xml" />
-			<property name="eclipse-home" value="${test.eclipse.host}" />
-			<property name="arch" value="${test_arch}"/>
-			<property name="os" value="${test_os}"/>
-			<property name="ws" value="${test_ws}"/>
-			<property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=128M"/>
-		</ant>
-		<ant target="core-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
-			<property name="data-dir" value="${test.workspace}18 -clean" />
-			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
-    	<property name="classname" value="org.codehaus.groovy.alltests.GroovyJDTTests" />
-    	<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.GroovyJDTTests18.xml" />
-			<property name="eclipse-home" value="${test.eclipse.host}" />
-			<property name="arch" value="${test_arch}"/>
-			<property name="os" value="${test_os}"/>
-			<property name="ws" value="${test_ws}"/>
-			<property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=128M"/>
-		</ant>
-	</target>
-<!-- disable 1.8 tests
-	<target name="run" depends="-init,-runTestSuite,-init18,-runTestSuite18" description="Run manually defined tests and create a report.">
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: should-run-18-tests   
+          sets the property if e37 is the target eclipse                   
+         - - - - - - - - - - - - - - - - - -->
+    <target name="should-run-18-tests">
+    	<condition property="run-18">
+      	<equals arg1="${eclipse.target.version}" arg2="e37"/>
+      </condition>
+    </target>
+
+	
+	<!--
+	To get good coverage while at the same time not taking a tremendously long time to build, 
+	we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Eclipse 3.7 build  
 	-->
-	<target name="run" depends="-init,-runTestSuite" description="Run manually defined tests and create a report.">
+	<target name="run" depends="-init,-init18,-runTestSuite" description="Run manually defined tests and create a report.">
 	</target>
 
 </project>
