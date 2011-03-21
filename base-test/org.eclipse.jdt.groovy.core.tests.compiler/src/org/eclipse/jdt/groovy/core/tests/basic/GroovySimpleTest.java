@@ -20,6 +20,7 @@ import java.util.Map;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -302,6 +303,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"	                                                  ^\n" + 
     			"Groovy:\"httpClientControl.demand.generalConnection((1..1))\" is a method call expression, but it should be a variable expression at line: 1 column: 50. File: A.groovy @ line 1, column 50.\n" + 
     			"----------\n");
+    }
+    
+    public void testTokens() {
+    	if (GroovyTokenTypes.ONE_NL_KEEP<GroovyTokenTypes.BIG_SUFFIX) {
+    		fail("Reorder tokens to make the new one last!");
+    	}
     }
 
 
