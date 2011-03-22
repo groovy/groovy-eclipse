@@ -45,6 +45,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -344,13 +345,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     private StringBuilder createUniqueKeyForMethod(MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
         StringBuilder sb = new StringBuilder();
-        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));  // won't resolve type params
+        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
         sb.append('.').append(node.getName());
         sb.append('(');
         if (node.getParameters() != null) {
             for (Parameter param : node.getParameters()) {
                 ClassNode paramType = param.getType() != null ? param.getType() : VariableScope.OBJECT_CLASS_NODE;
-                sb.append(createUniqueKeyForClass(paramType, resolvedDeclaringType));  // won't resolve type params
+                sb.append(createUniqueKeyForClass(paramType, resolvedDeclaringType));
             }
         }
         sb.append(')');
@@ -360,7 +361,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     
     private StringBuilder createUniqueKeyForField(FieldNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
         StringBuilder sb = new StringBuilder();
-        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));  // won't resolve type params
+        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
         sb.append('.').append(node.getName()).append(')');
         sb.append(createUniqueKeyForResolvedClass(resolvedType));
         return sb;
@@ -368,7 +369,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     
     private StringBuilder createUniqueKeyForGeneratedAccessor(MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IField actualField) {
         StringBuilder sb = new StringBuilder();
-        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));  // won't resolve type params
+        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
         sb.append('.').append(actualField.getElementName()).append(')');
         sb.append(createUniqueKeyForResolvedClass(resolvedType));
         return sb;
@@ -379,20 +380,28 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
     
     // tries to resolve any type parameters in unresolvedType based on those in resolvedDeclaringType
-    private StringBuilder createUniqueKeyForClass(ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
-        // first try to resolve generics
-        ClassNode unresolvedDeclaringType = resolvedDeclaringType.redirect();
-        ClassNode resolvedType;
-        GenericsType[] resolvedGenerics = resolvedDeclaringType.getGenericsTypes();
-        GenericsType[] unresolvedGenerics = unresolvedDeclaringType.getGenericsTypes();
-        if (resolvedGenerics != null && unresolvedGenerics != null) {
-            resolvedType = VariableScope.resolveTypeParameterization(resolvedGenerics, unresolvedGenerics,
-                    VariableScope.clone(unresolvedType));
-        } else {
-            resolvedType = unresolvedType;
-        }
-        return createUniqueKeyForResolvedClass(resolvedType);
+    private StringBuilder createUniqueKeyForClass(ClassNode unresolvedDeclaringType, ClassNode resolvedDeclaringType) {
+        // first try to resolve type parameters of the declaring type
+    	GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedDeclaringType, unresolvedDeclaringType);
+    	ClassNode resolvedType = VariableScope.resolveTypeParameterization(mapper, unresolvedDeclaringType);
+    	return createUniqueKeyForResolvedClass(resolvedType);
     }
+    	
+    	
+//    private StringBuilder createUniqueKeyForClassOLD(ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
+//    	ClassNode unresolvedDeclaringType = resolvedDeclaringType.redirect();
+//        ClassNode resolvedType;
+//        GenericsType[] resolvedGenerics = resolvedDeclaringType.getGenericsTypes();
+//        GenericsType[] unresolvedGenerics = unresolvedDeclaringType.getGenericsTypes();
+//        if (resolvedGenerics != null && unresolvedGenerics != null) {
+//        	
+//            resolvedType = VariableScope.resolveTypeParameterization(resolvedGenerics, unresolvedGenerics,
+//                    VariableScope.clone(unresolvedType));
+//        } else {
+//            resolvedType = unresolvedType;
+//        }
+//        return createUniqueKeyForResolvedClass(resolvedType);
+//    }
     
     private boolean doTest(ASTNode node) {
         return node.getClass() == nodeToLookFor.getClass() && nodeToLookFor.getStart() == node.getStart() && nodeToLookFor.getEnd() == node.getEnd();

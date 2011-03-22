@@ -19,7 +19,9 @@ package org.eclipse.jdt.groovy.search;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXACT;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
+import static org.eclipse.jdt.groovy.search.VariableScope.NO_GENERICS;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -328,10 +330,11 @@ public class SimpleTypeLookup implements ITypeLookup {
 			@SuppressWarnings("cast")
 			MapEntryExpression entry = (MapEntryExpression) node.getMapEntryExpressions().get(0);
 			ClassNode map = VariableScope.clone(VariableScope.MAP_CLASS_NODE);
-			map.getGenericsTypes()[0].setType(entry.getKeyExpression().getType());
-			map.getGenericsTypes()[0].setName(entry.getKeyExpression().getType().getName());
-			map.getGenericsTypes()[1].setType(entry.getValueExpression().getType());
-			map.getGenericsTypes()[1].setName(entry.getValueExpression().getType().getName());
+			GenericsType[] unresolvedGenericsForMap = unresolvedGenericsForType(map);
+			unresolvedGenericsForMap[0].setType(entry.getKeyExpression().getType());
+			unresolvedGenericsForMap[0].setName(entry.getKeyExpression().getType().getName());
+			unresolvedGenericsForMap[1].setType(entry.getValueExpression().getType());
+			unresolvedGenericsForMap[1].setName(entry.getValueExpression().getType().getName());
 			return map;
 		}
 		return VariableScope.clone(VariableScope.MAP_CLASS_NODE);
@@ -349,16 +352,18 @@ public class SimpleTypeLookup implements ITypeLookup {
 			TupleExpression tuple = (TupleExpression) node;
 			if (tuple.getExpressions().size() > 0) {
 				ClassNode list = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
-				list.getGenericsTypes()[0].setType(tuple.getExpression(0).getType());
-				list.getGenericsTypes()[0].setName(tuple.getExpression(0).getType().getName());
+				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
+				unresolvedGenericsForList[0].setType(tuple.getExpression(0).getType());
+				unresolvedGenericsForList[0].setName(tuple.getExpression(0).getType().getName());
 				return list;
 			}
 		} else if (node instanceof ListExpression) {
 			ListExpression listExpr = (ListExpression) node;
 			if (listExpr.getExpressions().size() > 0) {
 				ClassNode list = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
-				list.getGenericsTypes()[0].setType(listExpr.getExpression(0).getType());
-				list.getGenericsTypes()[0].setName(listExpr.getExpression(0).getType().getName());
+				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
+				unresolvedGenericsForList[0].setType(listExpr.getExpression(0).getType());
+				unresolvedGenericsForList[0].setName(listExpr.getExpression(0).getType().getName());
 				return list;
 			}
 		} else if (node instanceof RangeExpression) {
@@ -366,8 +371,9 @@ public class SimpleTypeLookup implements ITypeLookup {
 			Expression expr = rangeExpr.getFrom() != null ? rangeExpr.getFrom() : rangeExpr.getTo();
 			if (expr != null) {
 				ClassNode list = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
-				list.getGenericsTypes()[0].setType(expr.getType());
-				list.getGenericsTypes()[0].setName(expr.getType().getName());
+				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
+				unresolvedGenericsForList[0].setType(expr.getType());
+				unresolvedGenericsForList[0].setName(expr.getType().getName());
 				return list;
 			}
 		}
@@ -503,12 +509,11 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 	/**
 	 * @param declaration the declaration to look up
-	 * @param resolvedGenerics any resolved type parameters available
-	 * @param unresolvedGenerics the unresolved variants of the generic parameters
-	 * @return
+	 * @param resolvedType the unredirected type that declares this declaration somewhere in its hierarchy
+	 * @return class node with generics replaced by actual types
 	 */
 	private ClassNode typeFromDeclaration(ASTNode declaration, ClassNode resolvedType) {
-		ClassNode typeOfDeclaration;
+		ClassNode typeOfDeclaration, declaringType = declaringTypeFromDeclaration(declaration, resolvedType);
 		if (declaration instanceof FieldNode) {
 			typeOfDeclaration = ((FieldNode) declaration).getType();
 		} else if (declaration instanceof MethodNode) {
@@ -522,21 +527,46 @@ public class SimpleTypeLookup implements ITypeLookup {
 		}
 
 		// now try to resolve generics
-		ClassNode unresolvedType = resolvedType.redirect();
-		ClassNode resolvedTypeOfDeclaration;
-
-		// GRECLIPSE-997: travel up the hierarchy and look for more generics
-		// also look for generics on methods...
-		GenericsType[] resolvedGenerics = resolvedType.getGenericsTypes();
-		GenericsType[] unresolvedGenerics = unresolvedType.getGenericsTypes();
-		if (resolvedGenerics != null && unresolvedGenerics != null) {
-			resolvedTypeOfDeclaration = VariableScope.resolveTypeParameterization(resolvedGenerics, unresolvedGenerics,
-					VariableScope.clone(typeOfDeclaration));
-		} else {
-			resolvedTypeOfDeclaration = null;
-		}
-		return resolvedTypeOfDeclaration != null ? resolvedTypeOfDeclaration : typeOfDeclaration;
+		// travel up the hierarchy and look for more generics
+		// also look for generics on methods...(not doing this yet...)
+		GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedType, declaringType);
+		ClassNode resolvedTypeOfDeclaration = VariableScope.resolveTypeParameterization(mapper,
+				VariableScope.clone(typeOfDeclaration));
+		return resolvedTypeOfDeclaration;
 	}
+
+	protected GenericsType[] unresolvedGenericsForType(ClassNode unresolvedType) {
+		ClassNode candidate = unresolvedType;
+		GenericsType[] gts = candidate.getGenericsTypes();
+		gts = gts == null ? NO_GENERICS : gts;
+		List<GenericsType> allGs = new ArrayList<GenericsType>(2);
+		while (candidate != null) {
+			gts = candidate.getGenericsTypes();
+			gts = gts == null ? NO_GENERICS : gts;
+			for (GenericsType gt : gts) {
+				allGs.add(gt);
+			}
+			candidate = candidate.getSuperClass();
+		}
+		return allGs.toArray(NO_GENERICS);
+	}
+
+	// FIXADE consider deleting
+	// protected GenericsType[] resolvedGenericsForType(ClassNode unresolvedType) {
+	// ClassNode candidate = unresolvedType;
+	// GenericsType[] gts = candidate.getGenericsTypes();
+	// gts = gts == null ? NO_GENERICS : gts;
+	// List<GenericsType> allGs = new ArrayList<GenericsType>(2);
+	// while (candidate != null) {
+	// gts = candidate.getGenericsTypes();
+	// gts = gts == null ? NO_GENERICS : gts;
+	// for (GenericsType gt : gts) {
+	// allGs.add(gt);
+	// }
+	// candidate = candidate.getUnresolvedSuperClass();
+	// }
+	// return allGs.toArray(NO_GENERICS);
+	// }
 
 	/**
 	 * Looks for the named member in the declaring type. Also searches super types. The result can be a field, method, or property

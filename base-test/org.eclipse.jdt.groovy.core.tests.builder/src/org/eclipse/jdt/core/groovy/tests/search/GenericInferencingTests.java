@@ -498,16 +498,101 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
     
-//    // Checking form of ClassNodes - how does it compare between us and groovy
-//    public void testOne() throws Exception {
-//    	String contents = "class MyType<TT> { }";
-//    	String toFind = "MyType";
-//        int start = contents.lastIndexOf(toFind);
-//        int end = start + toFind.length();
-//    	GroovyCompilationUnit unit = createUnit("Search",contents);
-//	    SearchRequestor requestor = doVisit(start, end, unit, false);
-//	    
-//	    assertNotNull("Did not find expected ASTNode", requestor.node);
-//	    System.out.println(requestor.node);
-//    }
+    // See GRECLIPSE-997
+    public void testNestedGenerics1() throws Exception {
+        String contents = "class MyMap extends HashMap<String,Class> { }\n" +
+        		"MyMap m\n" +
+        		"m.get()";
+        String toFind = "get";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Class");
+    }
+    
+    // See GRECLIPSE-997
+    public void testNestedGenerics2() throws Exception {
+        String contents = "class MyMap extends HashMap<String,Class> { }\n" +
+                "MyMap m\n" +
+                "m.entrySet()";
+        String toFind = "entrySet";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Class>>");
+    }
+    
+    // See GRECLIPSE-997
+    public void testNestedGenerics3() throws Exception {
+        String contents = "import java.lang.ref.WeakReference\n" +
+        		"class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
+        "MyMap<String,Class> m\n" +
+        "m.entrySet()";
+        String toFind = "entrySet";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
+    }
+    // See GRECLIPSE-997
+    public void testNestedGenerics4() throws Exception {
+        String contents = "import java.lang.ref.WeakReference\n" +
+        "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
+        "class MySubMap extends MyMap<String,Class>{ }\n" +
+        "MySubMap m\n" +
+        "m.entrySet()";
+        String toFind = "entrySet";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
+    }
+    
+    // See GRECLIPSE-997
+    public void testNestedGenerics5() throws Exception {
+        String contents = "import java.lang.ref.WeakReference\n" +
+        "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
+        "class MySubMap<L> extends MyMap<String,Class>{ \n" +
+        "  Map<L,Class> val\n" +
+        "}\n" +
+        "MySubMap<Integer> m\n" +
+        "m.val";
+        String toFind = "val";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Class>");
+    }
+    
+    // See GRECLIPSE-997
+    public void testNestedGenerics6() throws Exception {
+        String contents = "import java.lang.ref.WeakReference\n" +
+        "class MyMap<K,V> extends HashMap<K,WeakReference<List<K>>>{ }\n" +
+        "class MySubMap extends MyMap<String,Class>{ }\n" +
+        "MySubMap m\n" +
+        "m.entrySet()";
+        String toFind = "entrySet";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.util.List<java.lang.String>>>>");
+    }
+
+    // See GRECLIPSE-997
+    public void testNestedGenerics7() throws Exception {
+        String contents = "class MyMap<K,V> extends HashMap<V,K>{ }\n" +
+        "MyMap<Integer,Class> m\n" +
+        "m.get";
+        String toFind = "get";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    // See GRECLIPSE-997
+    public void testNestedGenerics8() throws Exception {
+        String contents = "class MyMap<K,V> extends HashMap<K,V>{\n" +
+        		"Map<V,Class<K>> val}\n" +
+        "MyMap<Integer,Class> m\n" +
+        "m.val";
+        String toFind = "val";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
+    }
+    
 }

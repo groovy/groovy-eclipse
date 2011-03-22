@@ -1120,9 +1120,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			typeToResolve = VariableScope.clone(typeToResolve);
 			// }
 			ClassNode unresolvedCollectionType = collectionType.redirect();
-			GenericsType[] unresolvedGenerics = unresolvedCollectionType.getGenericsTypes();
-			GenericsType[] resolvedGenerics = collectionType.getGenericsTypes();
-			ClassNode resolved = VariableScope.resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, typeToResolve);
+			GenericsMapper mapper = GenericsMapper.gatherGenerics(collectionType, unresolvedCollectionType);
+			ClassNode resolved = VariableScope.resolveTypeParameterization(mapper, typeToResolve);
 
 			// the first type parameter of resolvedReturn should be what we want
 			GenericsType[] resolvedReturnGenerics = resolved.getGenericsTypes();

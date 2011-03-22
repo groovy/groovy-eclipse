@@ -350,6 +350,8 @@ public class VariableScope {
 	 * @param type
 	 * @return the resolved class node, or null if there was nothing to resolve
 	 */
+	@Deprecated
+	// FIXADE this method should be removed and the other variant should be used.
 	public static ClassNode resolveTypeParameterization(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics,
 			ClassNode type) {
 
@@ -403,6 +405,61 @@ public class VariableScope {
 		return type;
 	}
 
+	public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode typeToParameterize) {
+		if (!mapper.hasGenerics()) {
+			return typeToParameterize;
+		}
+		GenericsType[] typesToParameterize = typeToParameterize.getGenericsTypes();
+		if (typesToParameterize == null) {
+			return typeToParameterize;
+		}
+		// try to match
+		for (int i = 0; i < typesToParameterize.length; i++) {
+			GenericsType genericsToParameterize = typesToParameterize[i];
+
+			if (genericsToParameterize instanceof LazyGenericsType) {
+				// LazyGenericsType is immutable
+				// shouldn't get here...log error and continue
+				Util.log(
+						new RuntimeException(),
+						"Found a JDTClassNode while resolving type parameters.  " //$NON-NLS-1$
+								+ "This shouldn't happen.  Not trying to resolve any further " + "and continuing.  Type: " + typeToParameterize); //$NON-NLS-1$ //$NON-NLS-2$
+				continue;
+			}
+
+			// recur down the type parameter
+			resolveTypeParameterization(mapper, genericsToParameterize.getType());
+
+			String toParameterizeName = genericsToParameterize.getName();
+			ClassNode resolved = mapper.findParameter(toParameterizeName, genericsToParameterize.getType());
+			// we have a match, three possibilities, this type is the resolved type parameter of a generic type (eg-
+			// Iterator<E> --> Iterator<String>)
+			// or it is the resolution of a type parameter itself (eg- E --> String)
+			// or it is a substitution of one type parameter for another (eg- List<T> --> List<E>, where T comes from
+			// the declaring type)
+			// if this parameter exists in the redirect, then it is the former, if not, then check the redirect for type
+			// parameters
+			if (typeParameterExistsInRedirected(typeToParameterize, toParameterizeName)) {
+				// we have: Iterator<E> --> Iterator<String>
+				typeToParameterize.getGenericsTypes()[i].setType(resolved);
+				genericsToParameterize.setName(genericsToParameterize.getType().getName());
+				genericsToParameterize.setUpperBounds(null);
+				genericsToParameterize.setLowerBound(null);
+			} else {
+				// E --> String
+				// no need to recur since this is the resolution of a type parameter
+				typeToParameterize = resolved;
+
+				// I *think* this means we are done.
+				// I *think* this can only be reached when typesToParameterize.length == 1
+				break;
+			}
+		}
+		return typeToParameterize;
+	}
+
+	static final public GenericsType[] NO_GENERICS = new GenericsType[0];
+
 	/**
 	 * @param type
 	 * @param toParameterizeName
@@ -414,11 +471,6 @@ public class VariableScope {
 		if (genericsTypes != null) {
 			// I don't *think* we need to check here. if any type parameter exists in the redirect, then we are parameterizing
 			return true;
-			// for (GenericsType gt : genericsTypes) {
-			// if (gt.getName().equals(toParameterizeName)) {
-			// return true;
-			// }
-			// }
 		}
 		return false;
 	}

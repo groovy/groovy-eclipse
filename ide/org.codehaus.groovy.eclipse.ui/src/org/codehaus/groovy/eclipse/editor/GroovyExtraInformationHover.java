@@ -1,13 +1,17 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.debug.ui.JavaDebugHover;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocBrowserInformationControlInput;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.ui.IEditorPart;
 
 /**
  * Overrides the JavadocHover to allow Groovy elements to contribute custom
@@ -26,16 +30,50 @@ public class GroovyExtraInformationHover extends JavadocHover {
 
     private final boolean alwaysReturnInformation;
 
+    private final JavaDebugHover debugHover;
+
     public GroovyExtraInformationHover() {
         alwaysReturnInformation = false;
+        this.debugHover = new JavaDebugHover();
     }
 
     public GroovyExtraInformationHover(boolean alwaysReturnInformation) {
         this.alwaysReturnInformation = alwaysReturnInformation;
+        this.debugHover = new JavaDebugHover();
+    }
+
+    @Override
+    public void setEditor(IEditorPart editor) {
+        super.setEditor(editor);
+        debugHover.setEditor(editor);
     }
 
     @Override
     public Object getHoverInfo2(ITextViewer textViewer, IRegion hoverRegion) {
+        IEditorPart editor = getEditor();
+        if (editor == null) {
+            return null;
+        }
+        IFile file = (IFile) editor.getEditorInput().getAdapter(IFile.class);
+        if (file == null) {
+            return null;
+        }
+        if (!ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
+            return null;
+        }
+
+        // first check to see if there would be a debug hover
+        // if so, don't do any more work
+        if (!alwaysReturnInformation) {
+            // Object o = new Object();
+            Object o = debugHover.getHoverInfo2(textViewer, hoverRegion);
+            if (o != null) {
+                // don't actually return anything since we
+                // want the real debug hover to do the actual work
+                return null;
+            }
+        }
+
         IJavaElement[] elements= getJavaElementsAt(textViewer, hoverRegion);
         if (shouldComputeHover(elements)) {
             // might be null and if so, punt to the JavadocHover
@@ -54,9 +92,12 @@ public class GroovyExtraInformationHover extends JavadocHover {
      */
     private boolean shouldComputeHover(IJavaElement[] elements) {
         if (elements != null && elements.length == 1) {
+            if (alwaysReturnInformation) {
+                return true;
+            }
             if (elements[0] instanceof IGroovyResolvedElement) {
                 IGroovyResolvedElement resolvedElt = (IGroovyResolvedElement) elements[0];
-                if (alwaysReturnInformation || (resolvedElt.getExtraDoc() != null && resolvedElt.getExtraDoc().length() > 0)) {
+                if ((resolvedElt.getExtraDoc() != null && resolvedElt.getExtraDoc().length() > 0)) {
                     return true;
                 }
             }
@@ -76,7 +117,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         hover = ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", new Class[] { IJavaElement[].class,
                 ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class }, this, new Object[] { elements,
                 getEditorInputJavaElement(), hoverRegion, null });
-        if (hover instanceof JavadocBrowserInformationControlInput) {
+        if (hover instanceof JavadocBrowserInformationControlInput && elements[0] instanceof IGroovyResolvedElement) {
             JavadocBrowserInformationControlInput input = (JavadocBrowserInformationControlInput) hover;
             hover = new JavadocBrowserInformationControlInput((JavadocBrowserInformationControlInput) input.getPrevious(),
                     input.getElement(), wrapHTML(input, (IGroovyResolvedElement) elements[0]), input.getLeadingImageWidth());

@@ -231,7 +231,11 @@ public class ASTVariableScanner {
                 return;
             }
 			Variable var = expression.getAccessedVariable();
-            if (var != null && !(var instanceof FieldNode)) {
+            if (var != null && !(var instanceof FieldNode)
+            // sometimes the 'it' variable has already been stored, but
+            // sometimes it hasn't
+            // so, must explicitly check for it.
+                    && !var.getName().equals("it")) {
                 if (!declaredInblockVariables.contains(var) && !declaredVariables.contains(var)) {
                     usedVariables.add(var);
 				}
