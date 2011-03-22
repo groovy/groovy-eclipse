@@ -378,31 +378,19 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private StringBuilder createUniqueKeyForResolvedClass(ClassNode resolvedType) {
         return new StringBuilder(Signature.createTypeSignature(createGenericsAwareName(resolvedType, false/*fully qualified*/), true/*must resolve*/).replace('.', '/'));
     }
-    
-    // tries to resolve any type parameters in unresolvedType based on those in resolvedDeclaringType
-    private StringBuilder createUniqueKeyForClass(ClassNode unresolvedDeclaringType, ClassNode resolvedDeclaringType) {
-        // first try to resolve type parameters of the declaring type
-    	GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedDeclaringType, unresolvedDeclaringType);
-    	ClassNode resolvedType = VariableScope.resolveTypeParameterization(mapper, unresolvedDeclaringType);
+    /**
+     * tries to resolve any type parameters in unresolvedType based on those in resolvedDeclaringType 
+     * @param unresolvedType unresolved type whose type parameters need to be resolved
+     * @param resolvedDeclaringType the resolved type that is the context in which to resolve it.
+     * @return
+     */
+    private StringBuilder createUniqueKeyForClass(ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
+        
+    	GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedDeclaringType, resolvedDeclaringType.redirect());
+    	ClassNode resolvedType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(unresolvedType));
     	return createUniqueKeyForResolvedClass(resolvedType);
     }
     	
-    	
-//    private StringBuilder createUniqueKeyForClassOLD(ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
-//    	ClassNode unresolvedDeclaringType = resolvedDeclaringType.redirect();
-//        ClassNode resolvedType;
-//        GenericsType[] resolvedGenerics = resolvedDeclaringType.getGenericsTypes();
-//        GenericsType[] unresolvedGenerics = unresolvedDeclaringType.getGenericsTypes();
-//        if (resolvedGenerics != null && unresolvedGenerics != null) {
-//        	
-//            resolvedType = VariableScope.resolveTypeParameterization(resolvedGenerics, unresolvedGenerics,
-//                    VariableScope.clone(unresolvedType));
-//        } else {
-//            resolvedType = unresolvedType;
-//        }
-//        return createUniqueKeyForResolvedClass(resolvedType);
-//    }
-    
     private boolean doTest(ASTNode node) {
         return node.getClass() == nodeToLookFor.getClass() && nodeToLookFor.getStart() == node.getStart() && nodeToLookFor.getEnd() == node.getEnd();
     }
