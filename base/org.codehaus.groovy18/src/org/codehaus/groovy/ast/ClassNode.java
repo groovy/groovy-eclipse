@@ -154,6 +154,21 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private ClassNode superClass;
     protected boolean isPrimaryNode;
     protected List<InnerClassNode> innerClasses;
+    
+    private int bitflags = 0x0000;
+    private static final int BIT_INCONSISTENT_HIERARCHY = 0x0001;
+    
+    public boolean hasInconsistentHierarchy() {
+    	return ((redirect().bitflags) & BIT_INCONSISTENT_HIERARCHY)!=0;
+    }
+    public void setHasInconsistentHierarchy(boolean b) {
+    	ClassNode redirect = redirect();
+    	if (b) {
+    		redirect.bitflags|=BIT_INCONSISTENT_HIERARCHY;
+    	} else {
+    		redirect.bitflags&=~BIT_INCONSISTENT_HIERARCHY;
+    	}
+    }
 
     /**
      * The ASTTransformations to be applied to the Class
@@ -404,6 +419,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public ClassNode[] getInterfaces() {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
+        if (hasInconsistentHierarchy()) {
+        	return EMPTY_ARRAY;
+        }
         if (redirect!=null) return redirect().getInterfaces();
         return interfaces;
     }
@@ -1026,6 +1044,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (!lazyInitDone && !isResolved()) {
             throw new GroovyBugError("ClassNode#getSuperClass for "+getName()+" called before class resolving");
         }
+        if (hasInconsistentHierarchy()) {
+        	return ClassHelper.OBJECT_TYPE;
+        }
         ClassNode sn = redirect().getUnresolvedSuperClass();
         if (sn!=null) sn=sn.redirect();
         return sn;
@@ -1035,7 +1056,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return getUnresolvedSuperClass(true);
     }
 
-    public ClassNode getUnresolvedSuperClass(boolean useRedirect) {
+    public ClassNode getUnresolvedSuperClass(boolean useRedirect) { 
+    	if (hasInconsistentHierarchy()) {
+	    	return ClassHelper.OBJECT_TYPE;
+	    }
         if (!useRedirect) return superClass;
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         return redirect().superClass;
@@ -1050,6 +1074,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public ClassNode [] getUnresolvedInterfaces(boolean useRedirect) {
+        if (hasInconsistentHierarchy()) {
+        	return EMPTY_ARRAY;
+        }
         if (!useRedirect) return interfaces;
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         return redirect().interfaces;

@@ -937,30 +937,96 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 //			null);	
 	}
 	
+	public void testRecursion_GR531() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"class XXX extends XXX {\n" + 
+			"}\n",
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	class XXX extends XXX {\n" + 
+		"	 ^\n" + 
+		"Groovy:Cyclic inheritance involving XXX in class XXX\n" + 
+		"----------\n" + 
+		"2. ERROR in XXX.groovy (at line 1)\n" + 
+		"	class XXX extends XXX {\n" + 
+		"	                  ^^^\n" + 
+		"Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" + 
+		"----------\n");		
+	}
 
-//	// fails on 1.7b2
-//	public void testRecursion_GR531() {
-//		this.runConformTest(new String[] {
-//			"XXX.groovy",
-//			"class XXX extends XXX {\n" + 
-////			"  public static void main(String[] argv) {\n"+
-////			"    print \"success\"\n" + 
-////			"  }\n"+
-//			"}\n",
-//		},"success");		
-//	}
-//
-//	// fails on 1.6.5 and 1.7b2
-//	public void testRecursion_GR531_2() {
-//		this.runConformTest(new String[] {
-//			"XXX.groovy",
-//			"class XXX extends XXX {\n" + 
-//			"  public static void main(String[] argv) {\n"+
-//			"    print \"success\"\n" + 
-//			"  }\n"+
-//			"}\n",
-//		},"success");		
-//	}
+	public void testRecursion_GR531_2() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"class XXX extends XXX {\n" + 
+			"  public static void main(String[] argv) {\n"+
+			"    print \"success\"\n" + 
+			"  }\n"+
+			"}\n",
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	class XXX extends XXX {\n" + 
+		"	 ^\n" + 
+		"Groovy:Cyclic inheritance involving XXX in class XXX\n" + 
+		"----------\n" + 
+		"2. ERROR in XXX.groovy (at line 1)\n" + 
+		"	class XXX extends XXX {\n" + 
+		"	                  ^^^\n" + 
+		"Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" + 
+		"----------\n");		
+	}
+	
+	public void testRecursion_GR531_3() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"class XXX extends YYY {\n" + 
+			"  public static void main(String[] argv) {\n"+
+			"    print \"success\"\n" + 
+			"  }\n"+
+			"}\n",
+			"YYY.groovy",
+			"class YYY extends XXX {\n" + 
+			"  public static void main(String[] argv) {\n"+
+			"    print \"success\"\n" + 
+			"  }\n"+
+			"}\n"
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	class XXX extends YYY {\n" + 
+		"	      ^^^\n" + 
+		"The hierarchy of the type XXX is inconsistent\n" + 
+		"----------\n" + 
+		"----------\n" + 
+		"1. ERROR in YYY.groovy (at line 1)\n" + 
+		"	class YYY extends XXX {\n" + 
+		"	 ^\n" + 
+		"Groovy:Cyclic inheritance involving YYY in class YYY\n" + 
+		"----------\n" + 
+		"2. ERROR in YYY.groovy (at line 1)\n" + 
+		"	class YYY extends XXX {\n" + 
+		"	                  ^^^\n" + 
+		"Cycle detected: a cycle exists in the type hierarchy between YYY and XXX\n" + 
+		"----------\n");		
+	}
+
+	public void testRecursion_GR531_4() {
+		this.runNegativeTest(new String[] {
+			"XXX.groovy",
+			"interface XXX extends XXX {\n" + 
+			"}\n",
+		},"----------\n" + 
+		"1. ERROR in XXX.groovy (at line 1)\n" + 
+		"	interface XXX extends XXX {\n" + 
+		"	 ^\n" + 
+		"Groovy:Cyclic inheritance involving XXX in interface XXX\n" + 
+		"----------\n" + 
+		"2. ERROR in XXX.groovy (at line 1)\n" + 
+		"	interface XXX extends XXX {\n" + 
+		"	                      ^^^^\n" + 
+		"Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" + 
+		"----------\n");		
+	}
+
 
 //	public void testTargetMetaAnnotation() {
 //		this.runNegativeTest(new String[] {
