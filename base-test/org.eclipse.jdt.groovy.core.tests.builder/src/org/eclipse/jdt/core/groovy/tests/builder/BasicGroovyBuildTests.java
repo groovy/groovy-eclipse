@@ -12,6 +12,7 @@ package org.eclipse.jdt.core.groovy.tests.builder;
 
 import java.io.File;
 import java.util.Hashtable;
+import java.util.StringTokenizer;
 
 import junit.framework.Test;
 
@@ -23,6 +24,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.core.util.CompilerUtils;
 
 /**
  * Basic tests for the builder - compiling and running some very simple java and groovy code
@@ -36,13 +38,162 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	public static Test suite() {
 		return buildTestSuite(BasicGroovyBuildTests.class);
 	}
+	
+	/**
+	 * Testing that the classpath computation works for multi dependent projects.  This classpath
+	 * will be used for the ast transform loader.
+	 */
+	public void testMultiProjectDependenciesAndAstTransformClasspath() throws JavaModelException {
+
+		// Construct ProjectA
+		IPath projectAPath = env.addProject("ProjectA"); //$NON-NLS-1$
+		env.addExternalJars(projectAPath, Util.getJavaClassLibs());
+		fullBuild(projectAPath);		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectAPath, ""); //$NON-NLS-1$
+		IPath rootA = env.addPackageFragmentRoot(projectAPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectAPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(rootA, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String[] args) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
+			);
+		
+		// Construct ProjectB
+		IPath projectBPath = env.addProject("ProjectB"); //$NON-NLS-1$
+		env.addExternalJars(projectBPath, Util.getJavaClassLibs());
+		fullBuild(projectBPath);		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectBPath, ""); //$NON-NLS-1$
+		IPath rootB = env.addPackageFragmentRoot(projectBPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectBPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(rootB, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String[] args) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
+			);
+		
+		env.addRequiredProject(projectBPath, projectAPath,new IPath[]{}/*include all*/, new IPath[]{}/*exclude none*/, true);
+		
+		// Construct ProjectC
+		IPath projectCPath = env.addProject("ProjectC"); //$NON-NLS-1$
+		env.addExternalJars(projectCPath, Util.getJavaClassLibs());
+		fullBuild(projectCPath);		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectCPath, ""); //$NON-NLS-1$
+		IPath rootC = env.addPackageFragmentRoot(projectCPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectCPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(rootC, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String[] args) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
+			);
+		env.addRequiredProject(projectCPath, projectBPath,new IPath[]{}/*include all*/, new IPath[]{}/*exclude none*/, true);
+
+		// Construct ProjectD
+		IPath projectDPath = env.addProject("ProjectD"); //$NON-NLS-1$
+		env.addExternalJars(projectDPath, Util.getJavaClassLibs());
+		fullBuild(projectDPath);		
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectDPath, ""); //$NON-NLS-1$
+		IPath rootD = env.addPackageFragmentRoot(projectDPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectDPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(rootD, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String[] args) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
+			);
+		env.addRequiredProject(projectDPath, projectCPath,new IPath[]{}/*include all*/, new IPath[]{}/*exclude none*/, true);
+
+
+//		incrementalBuild(projectAPath);
+//		expectingCompiledClassesV("p1.Hello");
+//		expectingNoProblems();
+//		executeClass(projectAPath, "p1.Hello", "Hello world", "");
+		
+		incrementalBuild(projectDPath);
+		expectingCompiledClassesV("p1.Hello");
+		expectingNoProblems();
+		executeClass(projectDPath, "p1.Hello", "Hello world", "");
+
+		String classpathForProjectD = CompilerUtils.calculateClasspath(env.getJavaProject(projectDPath));
+		
+		StringTokenizer st = new StringTokenizer(classpathForProjectD,File.pathSeparator);
+		// look at how project A and B manifest in this classpath
+		boolean foundAndCheckedA = false;
+		boolean foundAndCheckedB = false;
+		boolean foundAndCheckedC = false;
+		while (st.hasMoreElements()) {
+			String pathElement = st.nextToken();
+			
+			// ProjectA is on ProjectDs classpath indirectly.  It is on ProjectBs classpath and re-exported
+			if (pathElement.indexOf("ProjectA")!=-1) {
+				// System.out.println("ProjectA element is ["+pathElement+"]");
+				if (pathElement.indexOf("ProjectA")==1) {
+					fail("Path element looks incorrect.  Path for ProjectA should be an absolute location, not ["+pathElement+"]");
+				}
+				if (!pathElement.endsWith("bin")) {
+					fail("Expected pathelement to end with the output folder 'bin', but it did not: ["+pathElement+"]");
+				}
+				foundAndCheckedA = true;
+			}
+			
+			// ProjectB is on ProjectDs classpath indirectly.  It is on ProjectCs classpath and re-exported
+			if (pathElement.indexOf("ProjectB")!=-1) {
+				System.out.println("ProjectB element is ["+pathElement+"]");
+				if (pathElement.indexOf("ProjectB")==1) {
+					fail("Path element looks incorrect.  Path for ProjectB should be an absolute location, not ["+pathElement+"]");
+				}
+				if (!pathElement.endsWith("bin")) {
+					fail("Expected pathelement to end with the output folder 'bin', but it did not: ["+pathElement+"]");
+				}
+				foundAndCheckedB = true;
+			}
+			// ProjectB is directly on ProjectCs classpath
+			if (pathElement.indexOf("ProjectC")!=-1) {
+				System.out.println("ProjectC element is ["+pathElement+"]");
+				if (pathElement.indexOf("ProjectC")==1) {
+					fail("Path element looks incorrect.  Path for ProjectC should be an absolute location, not ["+pathElement+"]");
+				}
+				if (!pathElement.endsWith("bin")) {
+					fail("Expected pathelement to end with the output folder 'bin', but it did not: ["+pathElement+"]");
+				}
+				foundAndCheckedC = true;
+			}
+		}
+		if (!foundAndCheckedC) {
+			fail("Unable to check entry for ProjectC in the classpath, didn't find it:\n"+classpathForProjectD);
+		}
+		if (!foundAndCheckedB) {
+			fail("Unable to check entry for ProjectB in the classpath, didn't find it:\n"+classpathForProjectD);
+		}
+		if (!foundAndCheckedA) {
+			fail("Unable to check entry for ProjectA in the classpath, didn't find it:\n"+classpathForProjectD);
+		}
+		//System.out.println(">>"+classpathForProjectD);
+	}
 
 	// build hello world and run it
 	public void testBuildJavaHelloWorld() throws JavaModelException {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
-
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
 

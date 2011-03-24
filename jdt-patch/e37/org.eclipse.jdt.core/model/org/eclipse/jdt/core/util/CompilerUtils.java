@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.PropertyResourceBundle;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -192,9 +195,10 @@ public class CompilerUtils {
 		return realLocation;
 	}
 	
-	private static String calculateClasspath(IJavaProject javaProject) {
+	// public for testing
+	public static String calculateClasspath(IJavaProject javaProject) {
 		try {
-			StringBuffer path = new StringBuffer();
+			Set accumulatedPathEntries = new LinkedHashSet();
 			IProject project = javaProject.getProject();
 			String projectName = project.getName();
 			IPath defaultOutputPath = javaProject.getOutputLocation();
@@ -213,15 +217,15 @@ public class CompilerUtils {
 					// javaProject path is f:\grails\grails
 					IPath cpePath = cpe.getPath();
 					String pathElement = null;
-					String prefix = cpePath.segment(0);
-					if (prefix.equals(projectName)) {
+					String segmentZero = cpePath.segment(0);
+					if (segmentZero.equals(projectName)) {
 						pathElement = project.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
 					} else {
 						
 						// for GRECLIPSE-917.  Entry is something like /SomeOtherProject/foo/bar/doodah.jar
 						if (cpe.getEntryKind()==IClasspathEntry.CPE_LIBRARY) {
 							try {
-								IProject iproject = project.getWorkspace().getRoot().getProject(prefix);
+								IProject iproject = project.getWorkspace().getRoot().getProject(segmentZero);
 								if (iproject!=null) {
 									IFile ifile = iproject.getFile(cpePath.removeFirstSegments(1));
 									IPath ipath = (ifile==null?null:ifile.getRawLocation());
@@ -232,29 +236,8 @@ public class CompilerUtils {
 							}
 						}
 						if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
-							// the classpath entry is a dependency on another project - we need the output folders of that project
-							IProject iproject = project.getWorkspace().getRoot().getProject(prefix);
-							IJavaProject ijp = JavaCore.create(iproject);
-							pathElement = pathToString(ijp.getOutputLocation(),iproject);
-                            
-                            // Look for exported entries from the 'other project'
-                            IClasspathEntry[] otherCpes = ijp.getResolvedClasspath(true);
-                            if (otherCpes!=null) {
-                                for (int j=0;j<otherCpes.length;j++) {
-                                    if (otherCpes[j].isExported()) {
-                                        IPath otherCpePath = otherCpes[j].getPath();
-                                        String otherPathElement = null;
-                                        if (otherCpePath.segment(0)!=null && otherCpePath.segment(0).equals(iproject.getName())) {
-                                            otherPathElement = iproject.getFile(otherCpePath.removeFirstSegments(1)).getRawLocation().toOSString();
-                                        } else {
-                                            otherPathElement = otherCpePath.toOSString();
-                                        }
-                                        path.append(otherPathElement);
-                                        path.append(File.pathSeparator);
-//                                      System.out.println("exported from other project is "+otherCpePath);
-                                    }
-                                }
-                            }
+							// the classpath entry is a dependency on another project
+							computeDependenciesFromProject(project,segmentZero,accumulatedPathEntries);
                             // FIXASC this ought to also allow for separate output folders in the project we depend upon *sigh*
 							// FIXASC what does all this look like for batch compilation?  Should it be passed in rather than computed here
 						} else {
@@ -263,12 +246,18 @@ public class CompilerUtils {
 							}
 						}
 					}
- 					path.append(pathElement);
-					path.append(File.pathSeparator);
+					if (pathElement!=null) {
+						accumulatedPathEntries.add(pathElement);
+					}
 				}
-				path.append(defaultOutputLocation); // for picking up transforms built earlier in the process
-				path.append(File.pathSeparator);
-				String classpath = path.toString();
+				accumulatedPathEntries.add(defaultOutputLocation);
+				StringBuilder sb = new StringBuilder();
+				Iterator iter = accumulatedPathEntries.iterator();
+				while (iter.hasNext()) {
+					sb.append((String)iter.next());
+					sb.append(File.pathSeparator);
+				}
+				String classpath = sb.toString();
 //				System.out.println("Project classpath for '"+projectName+"' is "+classpath);
 				return classpath;
 			}
@@ -277,6 +266,55 @@ public class CompilerUtils {
 			jme.printStackTrace();
 		}
 		return ""; //$NON-NLS-1$
+	}
+
+	/**
+	 * Determine the exposed (exported) dependencies from the project named 'otherProject' and add them to the accumulatedPathEntries String Set.
+	 * This will include the output location of the project plus other kinds of entry that are re-exported.  If dependent on another project
+	 * and that project is re-exported, the method will recurse.
+	 * 
+	 * @param baseProject the original project for which the classpath is being computed
+	 * @param otherProject a project something in the dependency chain for the original project
+	 * @param accumulatedPathEntries a String set of classpath entries, into which new entries should be added
+	 */
+	private static void computeDependenciesFromProject(IProject baseProject, String otherProject, Set accumulatedPathEntries) throws JavaModelException {
+		 
+		// First the output location for the project:
+		IProject iproject = baseProject.getWorkspace().getRoot().getProject(otherProject);
+		IJavaProject ijp = JavaCore.create(iproject);
+		accumulatedPathEntries.add(pathToString(ijp.getOutputLocation(),iproject));
+	        
+        // Look for exported entries from otherProject
+        IClasspathEntry[] cpes = ijp.getResolvedClasspath(true);
+        if (cpes!=null) {
+        	for (int j=0;j<cpes.length;j++) {
+        		IClasspathEntry cpe = cpes[j];
+				if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+					continue;
+				}
+                if (cpe.isExported()) {
+                	// TODO should quickly dismiss source entries? others?
+                    IPath cpePath = cpes[j].getPath();
+                    String segmentZero = cpePath.segment(0);
+                    if (segmentZero!=null && segmentZero.equals(otherProject)) {
+						accumulatedPathEntries.add(iproject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString());
+					} else {
+	                    if (cpe.getEntryKind()==IClasspathEntry.CPE_PROJECT) {
+	                    	// segmentZero is a project name
+	    					computeDependenciesFromProject(baseProject, segmentZero, accumulatedPathEntries);
+	                    } else {
+	                        String otherPathElement = null;
+		                    if (segmentZero!=null && segmentZero.equals(iproject.getName())) {
+		                        otherPathElement = iproject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
+		                    } else {
+		                        otherPathElement = cpePath.toOSString();
+		                    }
+		                    accumulatedPathEntries.add(otherPathElement);
+	                    } 
+					}
+                }
+            }
+        }
 	}
 	
 
