@@ -141,9 +141,17 @@ public class GroovyCompletionProposalComputer implements
             if (factories != null) {
                 SearchableEnvironment nameEnvironment = createSearchableEnvironment(javaContext);
 
-                for (IGroovyCompletionProcessorFactory factory : factories) {
-                    IGroovyCompletionProcessor processor = factory.createProcessor(assistContext, javaContext, nameEnvironment);
-                    proposals.addAll(processor.generateProposals(monitor));
+                try {
+                    for (IGroovyCompletionProcessorFactory factory : factories) {
+                        IGroovyCompletionProcessor processor = factory
+                                .createProcessor(assistContext, javaContext,
+                                        nameEnvironment);
+                        proposals.addAll(processor.generateProposals(monitor));
+                    }
+                } finally {
+                    if (nameEnvironment != null) {
+                        nameEnvironment.cleanup();
+                    }
                 }
             }
         }

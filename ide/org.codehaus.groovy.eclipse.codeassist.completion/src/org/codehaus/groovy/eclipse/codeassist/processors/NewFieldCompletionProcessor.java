@@ -19,6 +19,7 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -31,14 +32,14 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
 
 /**
- * Adds a list of new field proposals.  All field proposals
- * are dynamically typed static fields with an initializer of a closure.
- * Contributors should extend the
+ * Adds a list of new field proposals. All field proposals are dynamically typed static or
+ * non-static fields with an initializer of a closure. Contributors should extend the
  *
  *
  * @author Andrew Eisenberg
@@ -46,27 +47,61 @@ import org.eclipse.swt.graphics.Image;
  */
 public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcessor {
     static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
-
         NewGroovyFieldCompletionProposal(String fieldName,
-                int replacementOffset, int replacementLength, int relevance) {
-            super(createReplacementString(fieldName), replacementOffset, replacementLength, createImage(),
-                    createDisplayString(fieldName), relevance);
+                int replacementOffset, int replacementLength, int relevance,
+                boolean isStatic, boolean useKeywordBeforeReplacement) {
+            super(createReplacementString(fieldName, isStatic),
+                    replacementOffset, replacementLength,
+                    createImage(isStatic), createDisplayString(fieldName,
+                            isStatic, useKeywordBeforeReplacement), relevance);
         }
 
         // can we do better with the initializer?
-        static String createReplacementString(String fieldName) {
-            return "static " + fieldName + " = null";
+        static String createReplacementString(String fieldName, boolean isStatic) {
+            if (isStatic) {
+                return "static " + fieldName + " = null";
+            } else {
+                return "def " + fieldName;
+            }
         }
 
-        static Image createImage() {
+        static Image createImage(boolean isStatic) {
             CompletionProposal dummy = CompletionProposal.create(CompletionProposal.FIELD_REF, -1);
-            dummy.setFlags(Flags.AccStatic);
+            if (isStatic) {
+                dummy.setFlags(Flags.AccStatic);
+            }
             return ProposalUtils.getImage(dummy);
         }
-        static StyledString createDisplayString(String fieldName) {
+
+        static StyledString createDisplayString(String fieldName,
+                boolean isStatic, boolean useKeywordBeforeReplacement) {
             StyledString ss = new StyledString();
-            ss.append(fieldName);
-            ss.append(" - New static field", StyledString.QUALIFIER_STYLER);
+
+            // use a different styled string depending on the completion context
+            // if the context completion node is a field, then must include the field modifier
+            // if not, then don't include it.
+            // this is because the display string must match the replacement otherwise no
+            // replacement occurs.
+            if (useKeywordBeforeReplacement) {
+                if (isStatic) {
+                    ss.append("static ", StyledString
+                            .createColorRegistryStyler(
+                                    JFacePreferences.HYPERLINK_COLOR, null));
+                } else {
+                    ss.append("def ", StyledString.createColorRegistryStyler(
+                            JFacePreferences.HYPERLINK_COLOR, null));
+                }
+            }
+
+            if (isStatic) {
+                ss.append(fieldName);
+                ss.append(" - New static property",
+                        StyledString.QUALIFIER_STYLER);
+            } else {
+                ss.append(fieldName);
+                ss.append(" - New property", StyledString.QUALIFIER_STYLER);
+            }
+
             return ss;
         }
     }
@@ -111,10 +146,27 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
     private ICompletionProposal createProposal(String fieldName,
             ContentAssistContext context, IType enclosingType) {
         int relevance = Relevance.VERY_HIGH.getRelavance();
-        return new NewGroovyFieldCompletionProposal(fieldName,
-                context.completionLocation
-                        - context.completionExpression.length(),
-                context.completionExpression.length(), relevance);
+        boolean isStatic;
+        if (fieldName.startsWith(IProposalProvider.NONSTATIC_FIELD)) {
+            fieldName = fieldName.substring(IProposalProvider.NONSTATIC_FIELD
+                    .length());
+            isStatic = false;
+        } else {
+            isStatic = true;
+        }
+
+        // use keyword replacement if the def/static keyword isn't already there (or partially
+        // there)
+        boolean useKeywordBeforeReplacement = (context.completionNode instanceof FieldNode)
+                || "def".startsWith(context.completionExpression)
+                || "static".startsWith(context.completionExpression);
+        int replaceStart = context.completionNode instanceof FieldNode ? context.completionNode
+                .getStart() + 1 : context.completionLocation;
+        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart
+                - context.completionExpression.length(),
+                context.completionExpression.length(), relevance, isStatic,
+                useKeywordBeforeReplacement);
+
     }
 
 

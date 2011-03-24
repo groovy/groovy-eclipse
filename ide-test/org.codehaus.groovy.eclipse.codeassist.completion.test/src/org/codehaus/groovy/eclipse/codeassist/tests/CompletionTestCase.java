@@ -67,6 +67,9 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
     
     protected IPath createGenericProject() throws Exception {
+        if (genericProjectExists()) {
+            return env.getProject("Project").getFullPath();
+        }
         IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
         // remove old package fragment root so that names don't collide
         env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -120,7 +123,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         
         IJavaCompletionProposalComputer computer = computerClass.newInstance();
         List<ICompletionProposal> proposals = computer.computeCompletionProposals(context, null);
-        editor.close(false);
+//        editor.close(false);
         return proposals.toArray(new ICompletionProposal[proposals.size()]);
     }
     
@@ -274,6 +277,12 @@ public abstract class CompletionTestCase extends BuilderTests {
         unit.becomeWorkingCopy(null);
         
         // intermitent failures on build server.  proposals not found, so perform this part in a loop
+        return createProposalsAtOffset(unit, completionOffset);
+        
+    }
+
+    protected ICompletionProposal[] createProposalsAtOffset(
+            ICompilationUnit unit, int completionOffset) throws Exception {
         int count = 0;
         int maxCount = 15;
         ICompletionProposal[] proposals;
@@ -294,7 +303,6 @@ public abstract class CompletionTestCase extends BuilderTests {
         } while ((proposals == null || proposals.length == 0) && count < maxCount);
 
         return proposals;
-        
     }
     
     protected ICompletionProposal[] orderByRelevance(ICompletionProposal[] proposals) {
