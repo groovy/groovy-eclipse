@@ -502,6 +502,17 @@ public class VariableScope {
 	 * @return a copy of this type
 	 */
 	public static ClassNode clone(ClassNode type) {
+		return cloneInternal(type, 0);
+	}
+
+	/**
+	 * Internal variant of clone that ensures stack recursion never gets too large
+	 * 
+	 * @param type
+	 * @param depth TODO
+	 * @return
+	 */
+	private static ClassNode cloneInternal(ClassNode type, int depth) {
 		if (type == null) {
 			return null;
 		}
@@ -517,11 +528,18 @@ public class VariableScope {
 			newType.setInterfaces(newIFaces);
 		}
 		newType.setSourcePosition(type);
+
+		// set an arbitrary depth to return from
+		// ensures that improperly set up generics do not lead to infinite recursion
+		if (depth > 10) {
+			return type;
+		}
+
 		GenericsType[] origgts = type.getGenericsTypes();
 		if (origgts != null) {
 			GenericsType[] newgts = new GenericsType[origgts.length];
 			for (int i = 0; i < origgts.length; i++) {
-				newgts[i] = clone(origgts[i]);
+				newgts[i] = clone(origgts[i], depth);
 			}
 			newType.setGenericsTypes(newgts);
 		}
@@ -531,18 +549,19 @@ public class VariableScope {
 	/**
 	 * Create a copy of this {@link GenericsType}
 	 * 
-	 * @param origgt
+	 * @param origgt the original {@link GenericsType} to copy
+	 * @param depth prevent infinite recursion on bad generics
 	 * @return a copy
 	 */
-	public static GenericsType clone(GenericsType origgt) {
+	private static GenericsType clone(GenericsType origgt, int depth) {
 		GenericsType newgt = new GenericsType();
-		newgt.setType(clone(origgt.getType()));
-		newgt.setLowerBound(clone(origgt.getLowerBound()));
+		newgt.setType(cloneInternal(origgt.getType(), depth + 1));
+		newgt.setLowerBound(cloneInternal(origgt.getLowerBound(), depth + 1));
 		ClassNode[] oldUpperBounds = origgt.getUpperBounds();
 		if (oldUpperBounds != null) {
 			ClassNode[] newUpperBounds = new ClassNode[oldUpperBounds.length];
 			for (int i = 0; i < newUpperBounds.length; i++) {
-				newUpperBounds[i] = clone(oldUpperBounds[i]);
+				newUpperBounds[i] = cloneInternal(oldUpperBounds[i], depth + 1);
 			}
 			newgt.setUpperBounds(newUpperBounds);
 		}
