@@ -73,7 +73,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
 		// don't do constructor calls. They are found through the class node inside of it
 		if (node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode
-				|| node instanceof AnnotationNode || node instanceof ConstructorNode) {
+				|| node instanceof AnnotationNode /* || node instanceof ConstructorNode */) {
 
 			// the type variable may not have correct source location
 			ClassNode type;
@@ -110,9 +110,9 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 						ClassNode classNode = (ClassNode) node;
 						if (classNode.getNameEnd() > 0) {
 							// we are actually dealing with a declaration
-							start = classNode.getNameStart();
-							end = classNode.getNameEnd() + 1;
-							startEndFound = true;
+							// start = classNode.getNameStart();
+							// end = classNode.getNameEnd() + 1;
+							// startEndFound = true;
 						} else if (classNode.redirect() == classNode) {
 							// this is a script declaration... ignore
 							start = end = -1;

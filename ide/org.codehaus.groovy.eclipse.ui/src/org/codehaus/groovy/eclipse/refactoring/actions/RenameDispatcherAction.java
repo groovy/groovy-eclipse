@@ -21,10 +21,12 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.CandidateCollector;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.ISourceReference;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
@@ -47,6 +49,14 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
 			try {
 			    ISourceReference target = dispatcher.getRefactoringTarget();
 			    if (target instanceof IMember || target instanceof ILocalVariable) {
+
+                    if (target instanceof IType) {
+                        ICompilationUnit compilationUnit = ((IType) target).getCompilationUnit();
+                        if (compilationUnit != null
+                                && compilationUnit.getElementName().startsWith(((IType) target).getElementName() + ".")) {
+                            target = compilationUnit;
+                        }
+                    }
                     IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
                     boolean lightweight = store.getBoolean(PreferenceConstants.REFACTOR_LIGHTWEIGHT);
                     if (lightweight) {

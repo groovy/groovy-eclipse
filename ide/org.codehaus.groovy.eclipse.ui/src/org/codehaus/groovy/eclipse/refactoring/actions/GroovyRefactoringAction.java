@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -37,7 +37,7 @@ import org.eclipse.ui.PlatformUI;
 
 /**
  * @author reto kleeb
- * 
+ *
  */
 public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionDelegate, IEditorActionDelegate {
 
@@ -51,18 +51,19 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 		gcu = editor.getGroovyCompilationUnit();
 		if (gcu != null) {
     		if (gcu.getModuleNode() == null) {
-    			displayErrorDialog("Cannot find Module Node for " + gcu.getElementName());
+                displayErrorDialog("Cannot find ModuleNode for " + gcu.getElementName());
     			return false;
     		}
-    		return PlatformUI.getWorkbench().saveAllEditors(true);
+            return true;
+            // return PlatformUI.getWorkbench().saveAllEditors(true);
 		}
 		return false;
 	}
 
 	protected void displayErrorDialog(String message) {
 	    ErrorDialog error = new ErrorDialog(
-	            editor.getSite().getShell(), "Groovy Refactoring error", message, 
-	            new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message), 
+	            editor.getSite().getShell(), "Groovy Refactoring error", message,
+	            new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message),
 	            IStatus.ERROR | IStatus.WARNING);
 		error.open();
 	}
@@ -76,16 +77,16 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 	protected GroovyEditor getEditor() {
         return editor;
     }
-	
+
 	protected ITextSelection getSelection() {
         return selection;
     }
-	
+
 	protected GroovyCompilationUnit getUnit() {
         return gcu;
     }
-	
-	
+
+
 	public void init(IWorkbenchWindow window) {
 	}
 

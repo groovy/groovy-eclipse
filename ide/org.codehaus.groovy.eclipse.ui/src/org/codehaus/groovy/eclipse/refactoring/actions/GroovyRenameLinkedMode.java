@@ -34,6 +34,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.refactoring.reorg.RenameLinkedMode;
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.LinkedNamesAssistProposal.DeleteBlockingExitPolicy;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IEditingSupport;
@@ -186,6 +187,15 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
                 fLinkedPositionGroup.addPosition(linkedPosition);
             }
 
+            // can't do anything if no linked positions are found
+            if (fLinkedPositionGroup.isEmpty()) {
+                IStatusLineManager status = getStatusLineManager();
+                if (status != null) {
+                    status.setErrorMessage("No positions found.  Cannot do refactoring...");
+                }
+                return;
+            }
+
             LinkedModeModel fLinkedModeModel = new LinkedModeModel();
             setLinkedModeModel(fLinkedModeModel);
             fLinkedModeModel.addGroup(fLinkedPositionGroup);
@@ -282,5 +292,16 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
     private void doDoRename(boolean showPreview) {
         ReflectionUtils.executePrivateMethod(RenameLinkedMode.class, "doRename", new Class[] { boolean.class }, this,
                 new Object[] { showPreview });
+    }
+
+    private IStatusLineManager getStatusLineManager() {
+        if (editor != null) {
+            try {
+                return editor.getEditorSite().getActionBars().getStatusLineManager();
+            } catch (NullPointerException e) {
+                // can ignore
+            }
+        }
+        return null;
     }
 }
