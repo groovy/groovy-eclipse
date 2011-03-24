@@ -162,7 +162,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		boolean alreadyHasProblems = compilationResult.hasProblems();
 		// Our replacement error collector doesn't cause an exception, instead they are checked for post 'compile'
 		try {
-			groovyCompilationUnit.compile(phase);
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			try {
+				Thread.currentThread().setContextClassLoader(groovyCompilationUnit.getTransformLoader());
+				groovyCompilationUnit.compile(phase);
+			} finally {
+				Thread.currentThread().setContextClassLoader(cl);
+			}
 			if (groovySourceUnit.getErrorCollector().hasErrors()) {
 				recordProblems(groovySourceUnit.getErrorCollector().getErrors());
 				return false;
@@ -1606,6 +1612,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			int eoffset = -1;
 			if (message instanceof ExceptionMessage) {
 				ExceptionMessage em = (ExceptionMessage) message;
+				sev |= ProblemSeverities.Error;
 				if (em.getCause() instanceof RuntimeParserException) {
 					RuntimeParserException rpe = (RuntimeParserException) em.getCause();
 					sev |= ProblemSeverities.Error;
