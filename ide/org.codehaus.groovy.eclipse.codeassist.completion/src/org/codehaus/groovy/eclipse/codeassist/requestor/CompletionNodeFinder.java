@@ -347,32 +347,33 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         if (node.isStatic() && !node.hasInitialExpression()) {
             return;
         }
+        currentDeclaration = node.getDeclaringClass();
         createContext(node, node.getDeclaringClass(), CLASS_BODY);
-        createNullContext();
     }
 
     @Override
     public void visitProperty(PropertyNode node) {
-        if (!doTest(node)) {
-            return;
-        }
-
-        currentDeclaration = node;
-        ClassNode type = node.getType();
-        if (type != null && doTest(type)) {
-            createContext(null, node.getDeclaringClass(), CLASS_BODY);
-        }
-        blockStack.push(node);
-        super.visitProperty(node);
-        blockStack.pop();
-
-        // do not create a null context here.
-        // in this case, the static initializer has moved to the <clinit> method
-        if (node.isStatic() && !node.hasInitialExpression()) {
-            return;
-        }
-
-        createNullContext();
+        // FIXADE should not visit properties. Consider deleting
+        // if (!doTest(node)) {
+        // return;
+        // }
+        //
+        // currentDeclaration = node;
+        // ClassNode type = node.getType();
+        // if (type != null && doTest(type)) {
+        // createContext(null, node.getDeclaringClass(), CLASS_BODY);
+        // }
+        // blockStack.push(node);
+        // super.visitProperty(node);
+        // blockStack.pop();
+        //
+        // // do not create a null context here.
+        // // in this case, the static initializer has moved to the <clinit> method
+        // if (node.isStatic() && !node.hasInitialExpression()) {
+        // return;
+        // }
+        //
+        // createNullContext();
     }
 
 

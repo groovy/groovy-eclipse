@@ -157,16 +157,19 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
 
         // use keyword replacement if the def/static keyword isn't already there (or partially
         // there)
-        boolean useKeywordBeforeReplacement = (context.completionNode instanceof FieldNode)
-                || "def".startsWith(context.completionExpression)
-                || "static".startsWith(context.completionExpression);
+        boolean useKeywordBeforeReplacement = context.completionExpression
+                .length() > 0
+                && ((context.completionNode instanceof FieldNode)
+                        || "def".startsWith(context.completionExpression) || "static"
+                        .startsWith(context.completionExpression));
         int replaceStart = context.completionNode instanceof FieldNode ? context.completionNode
                 .getStart() + 1 : context.completionLocation;
-        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart
-                - context.completionExpression.length(),
-                context.completionExpression.length(), relevance, isStatic,
-                useKeywordBeforeReplacement);
 
+        int replaceLength = context.completionLocation - replaceStart
+                + context.completionExpression.length();
+        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart
+                - context.completionExpression.length(), replaceLength,
+                relevance, isStatic, useKeywordBeforeReplacement);
     }
 
 
