@@ -344,7 +344,9 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
         // do not create a null context here.
         // in this case, the static initializer has moved to the <clinit> method
-        if (node.isStatic() && !node.hasInitialExpression()) {
+        // the end and name end comparison checks to see if there is extra
+        // text after the name that constitutes an initializdr
+        if (node.isStatic() && node.getEnd() > node.getNameEnd() + 1) {
             return;
         }
         currentDeclaration = node.getDeclaringClass();

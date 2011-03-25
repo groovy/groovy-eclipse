@@ -514,7 +514,7 @@ public class VariableScope {
 	 */
 	private static ClassNode cloneInternal(ClassNode type, int depth) {
 		if (type == null) {
-			return null;
+			return type;
 		}
 		ClassNode newType;
 		newType = type.getPlainNodeReference();
@@ -529,10 +529,10 @@ public class VariableScope {
 		}
 		newType.setSourcePosition(type);
 
-		// set an arbitrary depth to return from
+		// See GRECLIPSE-1024 set an arbitrary depth to return from
 		// ensures that improperly set up generics do not lead to infinite recursion
 		if (depth > 10) {
-			return type;
+			return newType;
 		}
 
 		GenericsType[] origgts = type.getGenericsTypes();
@@ -561,7 +561,12 @@ public class VariableScope {
 		if (oldUpperBounds != null) {
 			ClassNode[] newUpperBounds = new ClassNode[oldUpperBounds.length];
 			for (int i = 0; i < newUpperBounds.length; i++) {
-				newUpperBounds[i] = cloneInternal(oldUpperBounds[i], depth + 1);
+				// avoid infinite recursion of Enum<E extends Enum<?>>
+				if (oldUpperBounds[i].getName().equals(newgt.getType().getName())) {
+					newUpperBounds[i] = VariableScope.OBJECT_CLASS_NODE;
+				} else {
+					newUpperBounds[i] = cloneInternal(oldUpperBounds[i], depth + 1);
+				}
 			}
 			newgt.setUpperBounds(newUpperBounds);
 		}

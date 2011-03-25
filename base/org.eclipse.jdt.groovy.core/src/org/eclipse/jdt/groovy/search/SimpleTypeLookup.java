@@ -529,7 +529,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 		// now try to resolve generics
 		// travel up the hierarchy and look for more generics
 		// also look for generics on methods...(not doing this yet...)
-		GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedType, declaringType);
+		GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedType, declaringType.redirect());
 		ClassNode resolvedTypeOfDeclaration = VariableScope.resolveTypeParameterization(mapper,
 				VariableScope.clone(typeOfDeclaration));
 		return resolvedTypeOfDeclaration;

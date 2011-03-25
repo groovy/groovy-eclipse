@@ -155,20 +155,28 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
             isStatic = true;
         }
 
-        // use keyword replacement if the def/static keyword isn't already there (or partially
-        // there)
+        // use keyword replacement if the def/static keyword is completely or partially present
         boolean useKeywordBeforeReplacement = context.completionExpression
                 .length() > 0
                 && ((context.completionNode instanceof FieldNode)
                         || "def".startsWith(context.completionExpression) || "static"
                         .startsWith(context.completionExpression));
-        int replaceStart = context.completionNode instanceof FieldNode ? context.completionNode
-                .getStart() + 1 : context.completionLocation;
 
-        int replaceLength = context.completionLocation - replaceStart
-                + context.completionExpression.length();
-        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart
-                - context.completionExpression.length(), replaceLength,
+        // replace start is either the start of the field node (if using keyword replacement),
+        // or it is the completion location - the length of the existing part of the expression
+        int replaceStart = context.completionNode instanceof FieldNode ? context.completionNode
+                .getStart() : context.completionLocation
+                - context.completionExpression.length();
+
+        // the completion length is the length of the bit of text that will be replaced
+        // this is either the completion expression length or the difference between the
+        // start of the field node and the completion location
+        int replaceLength = context.completionNode instanceof FieldNode ? context.completionLocation
+                - replaceStart
+                : context.completionExpression.length();
+
+        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart,
+                replaceLength,
                 relevance, isStatic, useKeywordBeforeReplacement);
     }
 

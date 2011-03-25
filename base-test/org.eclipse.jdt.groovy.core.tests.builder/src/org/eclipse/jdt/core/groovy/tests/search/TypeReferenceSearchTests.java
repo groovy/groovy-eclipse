@@ -123,18 +123,13 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         String firstContents = "class First { First x }";
         String secondContents = "class Second extends First {}";
         List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
-        assertEquals("Should find First 3 times", 3, matches.size());
+        assertEquals("Should find First 2 times", 2, matches.size());
         SearchMatch match = matches.get(0);
         int start = match.getOffset();
         int end = start + match.getLength();
         assertEquals("Invalid location", "First", firstContents.substring(start, end));
 
         match = matches.get(1);
-        start = match.getOffset();
-        end = start + match.getLength();
-        assertEquals("Invalid location", "First", firstContents.substring(start, end));
-
-        match = matches.get(2);
         start = match.getOffset();
         end = start + match.getLength();
         assertEquals("Invalid location", "First", secondContents.substring(start, end));

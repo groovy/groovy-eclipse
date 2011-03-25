@@ -34,6 +34,29 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     public GenericInferencingTests(String name) {
         super(name);
     }
+    
+    
+    public void testEnum1() throws Exception {
+        String contents = 
+                "Blah<Some> farb\n" + 
+        		"farb.something().AA.other\n" + 
+        		"enum Some {\n" + 
+        		"    AA(List)\n" + 
+        		"    public final Class<List<String>> other\n" + 
+        		"    public Some(Class<List<String>> other) {\n" + 
+        		"        this.other = other\n" + 
+        		"    }\n" + 
+        		"}\n" + 
+        		"class Blah<K> {\n" + 
+        		"    K something() {\n" + 
+        		"    }\n" + 
+        		"}";
+        
+        int start = contents.indexOf("other");
+        int end = start + "other".length();
+        assertType(contents, start, end, "java.lang.Class<java.util.List<java.lang.String>>");
+        
+    }
 
     public void testList1() throws Exception {
         assertType("new LinkedList<String>()", "java.util.LinkedList<java.lang.String>");
