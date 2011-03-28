@@ -557,7 +557,6 @@ public class JDTResolver extends ResolveVisitor {
 	@Override
 	protected boolean commencingResolution() {
 		GroovyTypeDeclaration gtDeclaration = scopes.get(this.currentClass);
-		activeScope = null;
 		if (gtDeclaration == null) {
 			if (haveBeenResolved.contains(currentClass)) {
 				// already resolved!
@@ -568,6 +567,7 @@ public class JDTResolver extends ResolveVisitor {
 			geb.printStackTrace();
 			throw geb;
 		}
+		activeScope = null;
 		if (gtDeclaration.scope == null) {
 			// The scope may be null if there were errors in the code - let's not freak out the user here
 			if (gtDeclaration.hasErrors()) {
