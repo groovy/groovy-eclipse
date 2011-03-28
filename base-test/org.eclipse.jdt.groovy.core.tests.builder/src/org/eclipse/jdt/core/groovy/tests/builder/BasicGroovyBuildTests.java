@@ -16,6 +16,9 @@ import java.util.StringTokenizer;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -2508,6 +2511,29 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		incrementalBuild(projectPath);
         assertFalse("File should not exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
 	}
+	
+	// currently failing
+	public void _testNoDoubleResolve() throws Exception {
+	    IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        env.addGroovyNature("Project");
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        IPath output = env.setOutputFolder(projectPath, "bin");
+
+        IPath unitPath = env.addGroovyClass(projectPath.append("src"), "p", "Groov", "package p\n");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) env.getJavaProject("Project").findType("p.Groov").getCompilationUnit();
+        unit.becomeWorkingCopy(null);
+        JDTResolver resolver = unit.getResolver();
+        resolver.currentClass = unit.getModuleNode().getScriptClassDummy();
+        ClassNode url = resolver.resolve("java.net.URL");
+        assertNotNull("Should have found the java.net.URL ClassNode", url);
+        assertEquals("Wrong classnode found", "java.net.URL", url.getName());
+    }
 
 	//
 	// /*
