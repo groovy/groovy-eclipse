@@ -30,7 +30,6 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
@@ -55,6 +54,7 @@ public class DSLDScriptExecutor {
         
     }
     
+    @SuppressWarnings("rawtypes")
     private final class RegisterClosure extends Closure {
         private static final long serialVersionUID = 1162731585734041055L;
 
@@ -92,6 +92,7 @@ public class DSLDScriptExecutor {
             }
         }
 
+        @SuppressWarnings("rawtypes")
         @Override
         public Object getVariable(String name) {
             if ("registerPointcut".equals(name)) {
@@ -152,41 +153,55 @@ public class DSLDScriptExecutor {
     public Object executeScript(IStorage scriptFile) {
         scriptName = scriptFile.getFullPath().toPortableString();
         String event = null;
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "About to compile script for " + scriptFile);
-            event = "Script creation for " + scriptFile;
-            GroovyLogManager.manager.logStart(event);
-        }
-        factory = new PointcutFactory(scriptName, project.getProject());
-        Object result = null;
         try {
-            String scriptContents = getContents(scriptFile);
-            Class<Script> clazz = null;
-            try {
-                clazz = gcl.parseClass(scriptContents, scriptName);
-            } catch (Exception e) {
-                if (GroovyLogManager.manager.hasLoggers()) {
-                    StringWriter writer = new StringWriter();
-                    e.printStackTrace(new PrintWriter(writer));
-                    GroovyLogManager.manager.log(TraceCategory.DSL, "Attempted to compile " + scriptName + "but failed because:\n" +
-                            writer.getBuffer());
-                }
-                return result;
-            }
-            Script dsldScript = clazz.newInstance();
-            dsldScript.setBinding(new DSLDScriptBinding());
-            result = dsldScript.run();
-        } catch (UnsupportedDSLVersion e) {
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
+                GroovyLogManager.manager.log(TraceCategory.DSL, "About to compile script for " + scriptFile);
+                event = "Script creation for " + scriptFile;
+                GroovyLogManager.manager.logStart(event);
             }
-        } catch (Exception e) {
-            GroovyDSLCoreActivator.logException(e);
+            factory = new PointcutFactory(scriptName, project.getProject());
+            Object result = null;
+            try {
+                String scriptContents = getContents(scriptFile);
+                Class<Script> clazz = null;
+                try {
+                    clazz = gcl.parseClass(scriptContents, scriptName);
+                } catch (Exception e) {
+                    if (GroovyLogManager.manager.hasLoggers()) {
+                        StringWriter writer = new StringWriter();
+                        e.printStackTrace(new PrintWriter(writer));
+                        GroovyLogManager.manager.log(TraceCategory.DSL, "Attempted to compile " + scriptName + "but failed because:\n" +
+                                writer.getBuffer());
+                    }
+                    return result;
+                }
+                
+                
+                if (!Script.class.isAssignableFrom(clazz)) {
+                    // might be some strange compile error
+                    // or a class is accidentally defined
+                    if (GroovyLogManager.manager.hasLoggers()) {
+                        GroovyLogManager.manager.log(TraceCategory.DSL, "Class " + scriptName + " is not a script.  Can't execute as DSLD.");
+                    }
+                    return result;
+                }
+                Script dsldScript = clazz.newInstance();
+                dsldScript.setBinding(new DSLDScriptBinding());
+                result = dsldScript.run();
+            } catch (UnsupportedDSLVersion e) {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
+                }
+            } catch (Exception e) {
+                // log this exception both to the event logger and to the error log
+                GroovyDSLCoreActivator.logException(e);
+            }
+            return result;
+        } finally {
+            if (event != null) {
+                GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
+            }
         }
-        if (event != null) {
-            GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
-        }
-        return result;
     }
 
     public String getContents(IStorage file) throws IOException, CoreException {
@@ -203,6 +218,7 @@ public class DSLDScriptExecutor {
         return sb.toString();
     }
 
+    @SuppressWarnings("rawtypes")
     protected Object tryRegister(Object args) {
         Object[] nameAndClosure = extractArgsForRegister(args);
         if (nameAndClosure != null) {
@@ -294,7 +310,7 @@ public class DSLDScriptExecutor {
                 } else if (groovyEclipseVersion == null) {
                     throw new UnsupportedDSLVersion("Could not find a Groovy-Eclipse version.  Expected: " + groovyEclipseVersion);
                 }
-            } else if ("grailsTooling".equals(entry.getKey())) {
+            } else if ("grailsTooling".equals(entry.getKey()) || "sts".equals(entry.getKey())) {
                 if (grailsToolingVersion != null && v.compareTo(grailsToolingVersion) > 0) {
                     throw new UnsupportedDSLVersion("Invalid Grails Tooling version.  Expected: " + v + " Installed: " + grailsToolingVersion);
                 } else if (grailsToolingVersion == null) {

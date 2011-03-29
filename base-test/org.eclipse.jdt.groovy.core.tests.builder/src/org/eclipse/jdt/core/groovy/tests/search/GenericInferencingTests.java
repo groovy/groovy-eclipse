@@ -186,7 +186,8 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "f";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        // FIXADE I'm surprised that the results in 1.7 and 1.8 are the same
+        // I'm surprised that the results in 1.7 and 1.8 are the same
+        // But I think it is because java.lang.Integer is declared explicitly
 //        if (GroovyUtils.GROOVY_LEVEL < 18) {
             assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Integer>");
 //        } else {

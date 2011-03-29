@@ -13,47 +13,49 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
 /**
- * Tests that the file currently being checked is in the given source folder
- * The result is cached in the pattern providing a fail/succeed fast strategy.
- * 
- * Argument should be the workspace relative path to the source folder, using '/'
- * as a path separator.
+ * Negates the pointcut that this one encloses
  * @author andrew
  * @created Feb 10, 2011
  */
-public class SourceFolderPointcut extends AbstractPointcut {
+public class NotPointcut extends AbstractPointcut {
 
-    public SourceFolderPointcut(String containerIdentifier) {
+    public NotPointcut(String containerIdentifier) {
         super(containerIdentifier);
     }
 
     @Override
     public BindingSet matches(GroovyDSLDContext pattern) {
-        if (pattern.fileName != null && pattern.fileName.startsWith((String) getFirstArgument())) {
-            return new BindingSet().addDefaultBinding(pattern.fileName);
+        BindingSet matches = matchOnPointcutArgument((IPointcut) getFirstArgument(), pattern);
+        if (matches == null) {
+            String bindName = getFirstArgumentName();
+            matches = new BindingSet(new Object());
+            if (bindName != null) {
+                // do we really need to bind to a name here?
+                matches.addBinding(bindName, matches.getDefaultBinding());
+            }
+            return matches; 
         } else {
             return null;
         }
     }
+
+    public IPointcut normalize() {
+        ((IPointcut) getFirstArgument()).normalize();
+        return super.normalize();
+    }
     
     @Override
-    public boolean fastMatch(GroovyDSLDContext pattern) {
-        return matches(pattern) != null;
-    }
-
-    @Override
     public void verify() throws PointcutVerificationException {
-        String maybeStatus = allArgsAreStrings();
-        if (maybeStatus != null) {
-            throw new PointcutVerificationException(maybeStatus, this);
-        }
-        maybeStatus = hasOneArg();
-        if (maybeStatus != null) {
-            throw new PointcutVerificationException(maybeStatus, this);
-        }
         super.verify();
+        Object arg = getFirstArgument();
+        if (arg instanceof IPointcut) {
+            ((IPointcut) arg).verify();
+        } else {
+            throw new PointcutVerificationException("A pointcut is required as the single argument to the 'not' pointcut", this);
+        }
     }
 }

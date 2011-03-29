@@ -10,42 +10,41 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
-import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 
 /**
- * Tests that the type being analyzed matches.  The match can
- * either be a string match (ie - the type name),
- * or it can pass the current type to a containing pointcut
+ * Tests that the enclosing call matches the name passed in as an argument
  * @author andrew
  * @created Feb 10, 2011
  */
-public class EnclosingFieldPointcut extends AbstractPointcut {
+public class EnclosingCallNamePointcut extends AbstractPointcut {
 
-    public EnclosingFieldPointcut(String containerIdentifier) {
+    public EnclosingCallNamePointcut(String containerIdentifier) {
         super(containerIdentifier);
     }
 
     @Override
     public BindingSet matches(GroovyDSLDContext pattern) {
-        FieldNode enclosing = pattern.getCurrentScope().getEnclosingFieldDeclaration();
+        CallAndType enclosing = pattern.getCurrentScope().getEnclosingMethodCallExpression();
         if (enclosing == null) {
             return null;
         }
         
         Object firstArgument = getFirstArgument();
+        String methodName = enclosing.call.getMethodAsString();
         if (firstArgument instanceof String) {
-            if (enclosing.getName().equals(firstArgument)) {
-                return new BindingSet().addDefaultBinding(enclosing);
+            if (methodName.equals(firstArgument)) {
+                return new BindingSet().addDefaultBinding(methodName);
             } else {
                 return null;
             }
         } else {
-            pattern.setOuterPointcutBinding(enclosing);
+            pattern.setOuterPointcutBinding(methodName);
             BindingSet matches = matchOnPointcutArgument((IPointcut) firstArgument, pattern);
             if (matches != null) {
                 matches.addDefaultBinding(enclosing);
@@ -55,7 +54,7 @@ public class EnclosingFieldPointcut extends AbstractPointcut {
     }
 
     /**
-     * expecting one arg that is either a string or a pointcut or a class
+     * expecting one arg that is either a string or a pointcut
      */
     @Override
     public void verify() throws PointcutVerificationException {

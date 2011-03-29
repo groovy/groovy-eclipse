@@ -11,10 +11,7 @@
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
 import groovy.lang.Closure;
-import groovy.lang.GroovyObjectSupport;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +52,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * The closure that comes from the GDSL script.
      * It's delegate is set to <code>this</code>.
      */
+    @SuppressWarnings("rawtypes")
     private final Closure contributionClosure;
 
 
@@ -70,7 +68,7 @@ public class DSLContributionGroup extends ContributionGroup {
 
     private ClassNode currentType;
 
-    public DSLContributionGroup(Closure contributionClosure) {
+    public DSLContributionGroup(@SuppressWarnings("rawtypes") Closure contributionClosure) {
         this.contributionClosure = contributionClosure;
         
         if (contributionClosure != null) {
@@ -254,7 +252,7 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     /**
-     * Invoked by the closure to determing the type of the expression if know.
+     * Invoked by the closure to determing the type of the expression if known.
      * Only Expressions that have already been visited will have a type. Returns
      * {@link ClassHelper#DYNAMIC_TYPE} if nothing is found.
      */

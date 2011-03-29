@@ -25,18 +25,20 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
  * @created Feb 11, 2011
  */
 public class UserExtensiblePointcut extends AbstractPointcut {
+    @SuppressWarnings("rawtypes")
     private Closure closure;
 
     public UserExtensiblePointcut(String containerIdentifier) {
         super(containerIdentifier);
     }
 
+    @SuppressWarnings("rawtypes")
     public UserExtensiblePointcut(String containerIdentifier, Closure closure) {
         super(containerIdentifier);
         this.closure = closure;
     }
 
-    public void setClosure(Closure closure) {
+    public void setClosure(@SuppressWarnings("rawtypes") Closure closure) {
         this.closure = closure;
     }
     

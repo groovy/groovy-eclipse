@@ -18,6 +18,7 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.DSLContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NotPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
 import org.eclipse.core.resources.IProject;
 
@@ -151,7 +152,7 @@ public abstract class AbstractPointcut implements IPointcut {
         this.project = project;
     }
     
-    public void accept(Closure contributionGroupClosure) {
+    public void accept(@SuppressWarnings("rawtypes") Closure contributionGroupClosure) {
         IContributionGroup group = new DSLContributionGroup(contributionGroupClosure);
         if (project != null) {
             try {
@@ -304,16 +305,24 @@ public abstract class AbstractPointcut implements IPointcut {
         return orPointcut;
     }
 
+    protected IPointcut bitwiseNegate() {
+        AbstractPointcut notPointcut = new NotPointcut(containerIdentifier);
+        notPointcut.setProject(project);
+        notPointcut.addArgument(getFirstArgumentName(), getFirstArgument());
+        return notPointcut;
+    }
+
+    
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("AbstractPointcut [getClass()=");
+        builder.append("AbstractPointcut [\n  getClass()=");
         builder.append(getClass());
-        builder.append(", containerIdentifier=");
+        builder.append("\n  containerIdentifier=");
         builder.append(containerIdentifier);
-        builder.append(", elements=");
+        builder.append("\n  elements=");
         builder.append(elements);
-        builder.append("]");
+        builder.append("\n]");
         return builder.toString();
     }
     

@@ -31,6 +31,12 @@ public class BindingSet {
     public BindingSet(Object defaultBinding) {
         addDefaultBinding(defaultBinding);
     }
+    public BindingSet(String name, Object defaultBinding) {
+        if (name != null) {
+            addBinding(name, defaultBinding);
+        }
+        addDefaultBinding(defaultBinding);
+    }
 
     public BindingSet addBinding(String name, Object value) {
         bindings.put(name, value);

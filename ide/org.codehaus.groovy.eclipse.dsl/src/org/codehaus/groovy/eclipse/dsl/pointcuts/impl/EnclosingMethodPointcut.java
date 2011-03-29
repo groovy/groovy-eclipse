@@ -59,7 +59,7 @@ public class EnclosingMethodPointcut extends AbstractPointcut {
      */
     @Override
     public void verify() throws PointcutVerificationException {
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
+        String oneStringOrOnePointcutArg = oneStringOrOnePointcutArg();
         if (oneStringOrOnePointcutArg != null) {
             throw new PointcutVerificationException(oneStringOrOnePointcutArg, this);
         }

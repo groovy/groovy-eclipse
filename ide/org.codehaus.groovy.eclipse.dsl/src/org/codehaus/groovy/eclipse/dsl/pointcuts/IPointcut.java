@@ -104,7 +104,7 @@ public interface IPointcut {
      * The pointcut and the contribution group are registered in the {@link DSLDStore}
      * @param contributionGroupClosure the closure that will be used by an {@link IContributionGroup}
      */
-    void accept(Closure contributionGroupClosure);
+    void accept(@SuppressWarnings("rawtypes") Closure contributionGroupClosure);
 
     /**
      * Do a fast match on this pattern.  Return false, if there is no way that any pattern that is contained inside
