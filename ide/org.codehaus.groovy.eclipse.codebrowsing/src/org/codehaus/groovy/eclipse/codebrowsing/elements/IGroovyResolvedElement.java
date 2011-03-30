@@ -15,11 +15,19 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.elements;
 
+import org.codehaus.groovy.ast.ASTNode;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ISourceReference;
+
 /**
  * Allows Groovy elements to provide customized Javadoc hovers.
  * @author Andrew Eisenberg
  * @created Nov 22, 2010
  */
-public interface IGroovyResolvedElement {
+public interface IGroovyResolvedElement extends IJavaElement, ISourceReference {
     String getExtraDoc();
+    String getKey();
+    
+    String getInferredElementName();
+    ASTNode getInferredElement();
 }

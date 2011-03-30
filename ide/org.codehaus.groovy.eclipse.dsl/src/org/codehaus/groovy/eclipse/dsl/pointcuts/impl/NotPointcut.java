@@ -44,7 +44,7 @@ public class NotPointcut extends AbstractPointcut {
     }
 
     public IPointcut normalize() {
-        ((IPointcut) getFirstArgument()).normalize();
+//        ((IPointcut) getFirstArgument()).normalize();
         return super.normalize();
     }
     

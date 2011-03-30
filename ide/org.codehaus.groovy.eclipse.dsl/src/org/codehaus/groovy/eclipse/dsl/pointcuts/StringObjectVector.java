@@ -42,6 +42,9 @@ public final class StringObjectVector {
 		this.elements[this.size++] = newElement;
 	}
 
+	public void setElement(Object newElement, int index) {
+		this.elements[index] = newElement;
+	}
 
 	/**
 	 * Equality check

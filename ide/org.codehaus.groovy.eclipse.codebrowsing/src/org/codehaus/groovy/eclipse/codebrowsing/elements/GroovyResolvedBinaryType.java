@@ -15,6 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.elements;
 
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Variable;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.ResolvedBinaryType;
 
@@ -27,14 +31,31 @@ import org.eclipse.jdt.internal.core.ResolvedBinaryType;
 public class GroovyResolvedBinaryType extends ResolvedBinaryType implements IGroovyResolvedElement {
 
     private final String extraDoc;
+    private ASTNode inferredElement;
     
     public GroovyResolvedBinaryType(JavaElement parent, String name,
-            String uniqueKey, String extraDoc) {
+            String uniqueKey, String extraDoc, ASTNode inferredElement) {
         super(parent, name, uniqueKey);
         this.extraDoc = extraDoc;
+        this.inferredElement = inferredElement;
     }
 
     public String getExtraDoc() {
         return extraDoc;
+    }
+    public String getInferredElementName() {
+        if (inferredElement instanceof Variable) {
+            return ((Variable) inferredElement).getName();
+        } else if (inferredElement instanceof MethodNode) {
+            return ((MethodNode) inferredElement).getName();
+        } else if (inferredElement instanceof ClassNode) {
+            return ((ClassNode) inferredElement).getName();
+        } else {
+            return inferredElement.getText();
+        }
+    }
+
+    public ASTNode getInferredElement() {
+        return inferredElement;
     }
 }

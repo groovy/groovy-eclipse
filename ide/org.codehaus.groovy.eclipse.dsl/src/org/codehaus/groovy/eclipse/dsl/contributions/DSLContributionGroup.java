@@ -205,6 +205,10 @@ public class DSLContributionGroup extends ContributionGroup {
         delegatesTo(this.resolver.resolve(className));
     }
 
+    void delegatesTo(Class<?> clazz) {
+        delegatesTo(this.resolver.resolve(clazz.getCanonicalName()));
+    }
+    
     /**
      * invoked by the closure
      * takes an expression and adds all members of its type to the augmented

@@ -50,6 +50,8 @@ public class EnclosingClassPointcut extends AbstractPointcut {
             } else {
                 return null;
             }
+        } else if (firstArgument == null) {
+            return new BindingSet(enclosing);
         } else {
             pattern.setOuterPointcutBinding(enclosing);
             BindingSet matches = matchOnPointcutArgument((IPointcut) firstArgument, pattern);
@@ -61,13 +63,14 @@ public class EnclosingClassPointcut extends AbstractPointcut {
     }
 
     /**
-     * expecting one arg that is either a string or a pointcut or a class
+     * expecting no args or one arg that is either a string or a pointcut or a class
      */
     @Override
     public void verify() throws PointcutVerificationException {
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
-        if (oneStringOrOnePointcutArg != null) {
-            throw new PointcutVerificationException(oneStringOrOnePointcutArg, this);
+        String hasOneOrNoArgs = hasOneOrNoArgs();
+        if (hasOneOrNoArgs != null) {
+            
+            throw new PointcutVerificationException(hasOneOrNoArgs, this);
         }
         super.verify();
     }

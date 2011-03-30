@@ -240,31 +240,36 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         
         String uniqueKey = createUniqueKey(declaration, result.type, result.declaringType, maybeRequested);
+        IJavaElement candidate;
+        
+        // Create the Groovy Resolved Element, which is like a resolved element, but contains extraDoc, as
+        // well as the inferred declaration (which may not be the same as the actual declaration)
         switch (maybeRequested.getElementType()) {
             case IJavaElement.FIELD:
                 if (maybeRequested.isReadOnly()) {
-                    requestedElement = new GroovyResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc);
+                    candidate = new GroovyResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, result.declaration);
                 } else {
-                    requestedElement = new GroovyResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc);
+                    candidate = new GroovyResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, result.declaration);
                 }
                 break;
             case IJavaElement.METHOD:
                 if (maybeRequested.isReadOnly()) {
-                    requestedElement = new GroovyResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc);
+                    candidate = new GroovyResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, result.declaration);
                 } else {
-                    requestedElement = new GroovyResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc);
+                    candidate = new GroovyResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, result.declaration);
                 }
                 break;
             case IJavaElement.TYPE:
                 if (maybeRequested.isReadOnly()) {
-                    requestedElement = new GroovyResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc);
+                    candidate = new GroovyResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, result.declaration);
                 } else {
-                    requestedElement = new GroovyResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc);
+                    candidate = new GroovyResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, result.declaration);
                 }
                 break;
             default:
-                requestedElement = maybeRequested;
+                candidate = maybeRequested;
         }
+        requestedElement = candidate;
         return requestedElement;
     }
 

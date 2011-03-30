@@ -1,5 +1,13 @@
 package org.codehaus.groovy.eclipse.editor;
 
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IJavaElement;
@@ -120,17 +128,102 @@ public class GroovyExtraInformationHover extends JavadocHover {
         if (hover instanceof JavadocBrowserInformationControlInput && elements[0] instanceof IGroovyResolvedElement) {
             JavadocBrowserInformationControlInput input = (JavadocBrowserInformationControlInput) hover;
             hover = new JavadocBrowserInformationControlInput((JavadocBrowserInformationControlInput) input.getPrevious(),
-                    input.getElement(), wrapHTML(input, (IGroovyResolvedElement) elements[0]), input.getLeadingImageWidth());
+                    input.getElement(), wrapHTML(input, (IGroovyResolvedElement) elements[0]),
+                    input.getLeadingImageWidth());
         }
         return hover;
     }
 
+
     protected String wrapHTML(JavadocBrowserInformationControlInput input, IGroovyResolvedElement elt) {
-        if (elt.getExtraDoc() != null) {
-            return input.getHtml() + elt.getExtraDoc();
+        // only use a preamble if the name of the inferred element is not the
+        // same as the resolved element.
+        String preamble;
+        if (!elt.getElementName().equals(elt.getInferredElementName())) {
+            preamble = createLabel(elt.getInferredElement());
         } else {
-            return input.getHtml();
+            preamble = "";
         }
+        if (elt.getExtraDoc() != null) {
+            return preamble + elt.getExtraDoc() + "\n<br><hr/><br>\n" + input.getHtml();
+        } else {
+            return preamble + input.getHtml();
+        }
+    }
+
+    /**
+     * @param inferredElement
+     * @return
+     */
+    private String createLabel(ASTNode inferredElement) {
+        if (inferredElement instanceof PropertyNode) {
+            inferredElement = ((PropertyNode) inferredElement).getField();
+        }
+        String label;
+        if (inferredElement instanceof ClassNode) {
+            label = createClassLabel((ClassNode) inferredElement);
+        } else if (inferredElement instanceof MethodNode) {
+            label = createMethodLabel((MethodNode) inferredElement);
+        } else if (inferredElement instanceof FieldNode) {
+            label = createFieldLabel((FieldNode) inferredElement);
+        } else {
+            label = inferredElement.getText();
+        }
+        return "<b>" + label + "</b><br>\n";
+    }
+
+    private String createFieldLabel(FieldNode node) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(createClassLabel(node.getType()));
+        sb.append(" ");
+        sb.append(createClassLabel(node.getDeclaringClass()));
+        sb.append(".");
+        sb.append(node.getName());
+        return sb.toString();
+    }
+
+    private String createMethodLabel(MethodNode node) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(createClassLabel(node.getReturnType()));
+        sb.append(" ");
+        sb.append(createClassLabel(node.getDeclaringClass()));
+        sb.append(".");
+        sb.append(node.getName());
+        sb.append("(");
+        Parameter[] params = node.getParameters();
+        if (params != null) {
+            for (int i = 0; i < params.length; i++) {
+                sb.append(createClassLabel(params[i].getType()));
+                sb.append(" " + params[i].getName());
+                if (i < params.length - 1) {
+                    sb.append(", ");
+                }
+            }
+        }
+        sb.append(")");
+
+        return sb.toString();
+    }
+
+    private String createClassLabel(ClassNode node) {
+        StringBuilder sb = new StringBuilder();
+        node = node.redirect();
+        if (ClassHelper.DYNAMIC_TYPE == node) {
+            return "def";
+        }
+        sb.append(node.getNameWithoutPackage());
+        GenericsType[] genericsTypes = node.getGenericsTypes();
+        if (genericsTypes != null && genericsTypes.length > 0) {
+            sb.append(" <");
+            for (int i = 0; i < genericsTypes.length; i++) {
+                sb.append(genericsTypes[i].getName());
+                if (i < genericsTypes.length - 1) {
+                    sb.append(", ");
+                }
+            }
+            sb.append("> ");
+        }
+        return sb.toString();
     }
 
 }

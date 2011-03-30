@@ -50,12 +50,35 @@ public class OrPointcut extends AbstractPointcut {
         return bindings;
     }
 
+    /**
+     * Flatten all contained 'or' pointcuts into the top level (but only if they are unnamed) 
+     */
     public IPointcut normalize() {
-        Object[] args = getArgumentValues();
-        for (Object arg : args) {
-            ((IPointcut) arg).normalize();
+        IPointcut newPointcut = super.normalize();
+        
+        if (newPointcut instanceof OrPointcut) {
+            OrPointcut newOr = (OrPointcut) newPointcut;
+            OrPointcut newNewOr = new OrPointcut(getContainerIdentifier());
+            // flatten the ands
+            for (int i = 0; i < newOr.getArgumentValues().length; i++) {
+                String name = newOr.getArgumentNames()[i];
+                Object argument = newOr.getArgumentValues()[i];
+                if (argument instanceof OrPointcut && name == null) {
+                    OrPointcut other = (OrPointcut) argument;
+                    Object[] argumentValues = other.getArgumentValues();
+                    String[] argumentNames = other.getArgumentNames();
+                    int argCount = argumentNames.length;
+                    for (int j = 0; j < argCount; j++) {
+                        newNewOr.addArgument(argumentNames[j], argumentValues[j]);
+                    } 
+                } else {
+                    newNewOr.addArgument(name, argument);
+                }
+            }
+            return newNewOr;
+        } else {
+            return newPointcut;
         }
-        return super.normalize();
     }
 
     @Override
@@ -68,18 +91,18 @@ public class OrPointcut extends AbstractPointcut {
         }
     }
     
-    @Override
-    protected IPointcut or(IPointcut other) {
-        if (other instanceof OrPointcut) {
-            Object[] argumentValues = other.getArgumentValues();
-            String[] argumentNames = other.getArgumentNames();
-            int argCount = argumentNames.length;
-            for (int i = 0; i < argCount; i++) {
-                this.addArgument(argumentNames[i], argumentValues[i]);
-            }
-        } else {
-            addArgument(other);
-        }
-        return this;
-    }
+//    @Override
+//    protected IPointcut or(IPointcut other) {
+//        if (other instanceof OrPointcut) {
+//            Object[] argumentValues = other.getArgumentValues();
+//            String[] argumentNames = other.getArgumentNames();
+//            int argCount = argumentNames.length;
+//            for (int i = 0; i < argCount; i++) {
+//                this.addArgument(argumentNames[i], argumentValues[i]);
+//            }
+//        } else {
+//            addArgument(other);
+//        }
+//        return this;
+//    }
 }
