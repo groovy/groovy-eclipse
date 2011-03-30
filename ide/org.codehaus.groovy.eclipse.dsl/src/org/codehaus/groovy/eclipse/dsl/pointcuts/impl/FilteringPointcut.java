@@ -64,7 +64,7 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
     
     protected Object filterResult(List<T> results, GroovyDSLDContext context) {
         Object o = getFirstArgument();
-        String firstArg = o instanceof String ? (String) o : null;
+        String firstArg = asString(o);
         List<T> filtered = new ArrayList<T>(results.size());
         for (T obj : results) {
             T maybe = filterObject(obj, context, firstArg);
@@ -73,6 +73,21 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
             }
         }
         return reduce(filtered);
+    }
+
+    /**
+     * @param o
+     * @return
+     */
+    protected String asString(Object o) {
+        if (o instanceof String) {
+            return (String) o;
+        } else if (o instanceof Class) {
+            return ((Class<?>) o).getName();
+        } else if (o instanceof ClassNode) {
+            return ((ClassNode) o).getName();
+        }
+        return null;
     }
 
     protected Object reduce(List<T> filtered) {
@@ -124,7 +139,7 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
     public void verify() throws PointcutVerificationException {
         super.verify();
 
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutArg();
+        String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
         if (oneStringOrOnePointcutArg != null) {
             String hasNoArgs = hasNoArgs();
             if (hasNoArgs != null) {

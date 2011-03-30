@@ -1247,11 +1247,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				addCategoryToBeDeclared(catNode);
 			}
 			scope.setEnclosingMethodCall(call);
-			try {
-				node.getArguments().visit(this);
-			} finally {
-				scope.setEnclosingMethodCall(origEnclosing);
-			}
+			node.getArguments().visit(this);
+			scope.setEnclosingMethodCall(origEnclosing);
 			if (isObjectExpression(node)) {
 				// returns true if this method call expression is the property field of another property expression
 				objectExpressionType.push(propType);

@@ -82,11 +82,10 @@ public class OrPointcut extends AbstractPointcut {
     }
 
     @Override
-    public void verify() throws PointcutVerificationException{
+    public void verify() throws PointcutVerificationException {
+        // don't call super
         String allArgsArePointcuts = allArgsArePointcuts();
-        if (allArgsArePointcuts == null) {
-            super.verify();
-        } else {
+        if (allArgsArePointcuts != null) {
             throw new PointcutVerificationException(allArgsArePointcuts, this);
         }
     }

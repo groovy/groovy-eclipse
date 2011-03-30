@@ -185,7 +185,9 @@ public class PointcutFactory {
         @SuppressWarnings("rawtypes")
         Closure c = localRegistry.get(name);
         if (c != null) {
-            return new UserExtensiblePointcut(uniqueID, c);
+            UserExtensiblePointcut userExtensiblePointcut = new UserExtensiblePointcut(uniqueID, c);
+            userExtensiblePointcut.setProject(project);
+            return userExtensiblePointcut;
         } 
         
         Class<? extends IPointcut> pc = registry.get(name);

@@ -90,10 +90,9 @@ public class AndPointcut extends AbstractPointcut {
 
     @Override
     public void verify() throws PointcutVerificationException {
+        // don't call super
         String allArgsArePointcuts = allArgsArePointcuts();
-        if (allArgsArePointcuts == null) {
-            super.verify();
-        } else {
+        if (allArgsArePointcuts != null) {
             throw new PointcutVerificationException(allArgsArePointcuts, this);
         }
     }

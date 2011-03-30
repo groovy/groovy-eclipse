@@ -36,8 +36,6 @@ public abstract class AbstractPointcut implements IPointcut {
     
     private StringObjectVector elements = new StringObjectVector(1);
     
-    private boolean invalidArguments = false;
-    
     private IProject project;
     
     public AbstractPointcut(String containerIdentifier) {
@@ -53,16 +51,13 @@ public abstract class AbstractPointcut implements IPointcut {
     }
     
     public void verify() throws PointcutVerificationException {
-        if (invalidArguments) {
-            throw new PointcutVerificationException("Cannot mix named and unnamed arguments", this);
+        // most pointcuts can't have more than one argument
+        if (elements.size > 1) {
+            throw new PointcutVerificationException("Can't have more than one argument to this pointcut", this);
         }
     }
     
     public final void addArgument(Object argument) {
-        // Cannot mix named and unnamed args
-        if (elements.size > 0 && !elements.containsName(null)) {
-            invalidArguments = true;
-        }
         elements.add(null, argument);
     }
     
@@ -72,10 +67,6 @@ public abstract class AbstractPointcut implements IPointcut {
         if (name == null) {
             addArgument(argument);
             return;
-        }
-        // Cannot mix named and unnamed args
-        if (elements.size >= 1 && elements.containsName(null)) {
-            invalidArguments = true;
         }
         elements.add(name, argument);
     }
