@@ -19,13 +19,11 @@ import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
@@ -67,6 +65,8 @@ public class DSLContributionGroup extends ContributionGroup {
     private Map<String, Object> bindings;
 
     private ClassNode currentType;
+    
+    private Map<String, Object> wormhole;
 
     public DSLContributionGroup(@SuppressWarnings("rawtypes") Closure contributionClosure) {
         this.contributionClosure = contributionClosure;
@@ -90,6 +90,7 @@ public class DSLContributionGroup extends ContributionGroup {
                 this.resolver = pattern.resolver;
                 this.bindings = matches.getBindings();
                 this.currentType = pattern.getCurrentType();
+                this.wormhole = scope.getWormhole();
                 contributionClosure.call();
             } catch (Exception e) {
                 GroovyLogManager.manager.logException(TraceCategory.DSL, e);
@@ -100,6 +101,7 @@ public class DSLContributionGroup extends ContributionGroup {
                 this.resolver = null;
                 this.bindings = null;
                 this.currentType = null;
+                this.wormhole = null;
             }
         return result;
         }
@@ -108,6 +110,15 @@ public class DSLContributionGroup extends ContributionGroup {
     
     @Override
     public Object getProperty(String property) {
+        if ("wormhole".equals(property)) {
+            return wormhole;
+        } else if ("currentNode".equals(property)) {
+            return scope.getCurrentNode();
+        } else if ("enclosingNode".equals(property)) {
+            return scope.getEnclosingNode();
+        } else if ("currentType".equals(property)) {
+            return currentType;
+        }
         return bindings.get(property);
     }
     
@@ -178,7 +189,7 @@ public class DSLContributionGroup extends ContributionGroup {
         String name = asString(args.get("name"));
         
         Object value = args.get("type");
-        String type = value == null ? "java.lang.Object" : asString(value);
+        String type = value == null ? NO_TYPE : asString(value);
         
         value = args.get("declaringType");
         String declaringType = value == null ? currentType.getName() : asString(value);
@@ -188,7 +199,7 @@ public class DSLContributionGroup extends ContributionGroup {
         String doc = asString(args.get("doc")); // might be null
         boolean isStatic = isStatic(args);
         if (!scope.isStatic() || (scope.isStatic() && isStatic)) {
-            contributions.add(new PropertyContributionElement(name == null ? NO_NAME : name, type == null ? NO_TYPE : type,
+            contributions.add(new PropertyContributionElement(name == null ? NO_NAME : name, type,
                     declaringType, isStatic, provider, doc));
         }
     }
@@ -216,9 +227,7 @@ public class DSLContributionGroup extends ContributionGroup {
      */
     void delegatesTo(AnnotatedNode expr) {
         ClassNode type;
-        if (expr instanceof Expression) {
-            type = queryType((Expression) expr);
-        } else if (expr instanceof ClassNode) {
+        if (expr instanceof ClassNode) {
             type = (ClassNode) expr;
         } else if (expr instanceof FieldNode) {
             type = ((FieldNode) expr).getType();
@@ -253,15 +262,6 @@ public class DSLContributionGroup extends ContributionGroup {
         } else {
             return new ParameterContribution[0];
         }
-    }
-
-    /**
-     * Invoked by the closure to determing the type of the expression if known.
-     * Only Expressions that have already been visited will have a type. Returns
-     * {@link ClassHelper#DYNAMIC_TYPE} if nothing is found.
-     */
-    ClassNode queryType(Expression expr) {
-        return scope.queryExpressionType(expr);
     }
 
     

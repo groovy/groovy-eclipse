@@ -30,15 +30,18 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * <li>Singleton
  * <li>Delegate
  * </ul>
- * 
+ *
+ * FIXADE This class will no longer be needed when DSL support becomes
+ * available.
+ *
  * @author Andrew Eisenberg
  * @created Apr 12, 2010
  */
 public class StandardASTTransformInference extends AbstractSimplifiedTypeLookup
         implements ITypeLookup {
-    
+
     private Map<String, BuiltInASTTransform[]> annotationCache;
-    
+
     public void initialize(GroovyCompilationUnit unit,
             VariableScope topLevelScope) {
         annotationCache = new HashMap<String, BuiltInASTTransform[]>();

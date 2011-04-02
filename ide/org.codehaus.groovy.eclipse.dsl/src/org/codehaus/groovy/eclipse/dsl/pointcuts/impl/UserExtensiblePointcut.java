@@ -12,6 +12,10 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import groovy.lang.Closure;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
@@ -35,11 +39,12 @@ public class UserExtensiblePointcut extends AbstractPointcut {
     @SuppressWarnings("rawtypes")
     public UserExtensiblePointcut(String containerIdentifier, Closure closure) {
         super(containerIdentifier);
-        this.closure = closure;
+        setClosure(closure);
     }
 
     public void setClosure(@SuppressWarnings("rawtypes") Closure closure) {
         this.closure = closure;
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
     }
     
     @Override
@@ -48,28 +53,38 @@ public class UserExtensiblePointcut extends AbstractPointcut {
             return null;
         }
         try {
-            Object firstArgument = getFirstArgument();
-            if (firstArgument instanceof IPointcut) {
-               BindingSet set = matchOnPointcutArgument((IPointcut) firstArgument, pattern);
-               if (set != null) {
-                   firstArgument = set.getDefaultBinding();
-               }
+            // iterate through all named pointcut arguments and replace the values
+            // with the default binding
+            Map<String,Object> args = namedArgumentsAsMap();
+            Map<String,Object> newMap = new HashMap<String, Object>(args.size(), 1.0f);
+            for (Entry<String, Object> entry : args.entrySet()) {
+                if (entry.getValue() instanceof IPointcut) {
+                    BindingSet set = matchOnPointcutArgument((IPointcut) entry.getValue(), pattern);
+                    if (set != null) {
+                        newMap.put(entry.getKey(), set.getDefaultBinding());
+                    } else {
+                        newMap.put(entry.getKey(), null);
+                    }
+                }
             }
             closure.setDelegate(pattern);
-            closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-            Object result;
-            if (firstArgument == null) {
-                result = closure.call();
-            } else {
-                result = closure.call(firstArgument);
-            }
+            Object result = closure.call(newMap);
             if (result == null) {
                 return null;
-            } else if (result instanceof BindingSet) {
-                return (BindingSet) result;
-            } else {
-                return new BindingSet(result);
             }
+            
+            BindingSet resultSet;
+            if (result instanceof BindingSet) {
+                resultSet = (BindingSet) result;
+            } else {
+                resultSet = new BindingSet(result);
+            }
+            
+            // now add all of the values from the map args
+            resultSet.combineBindings(newMap);
+            
+            return resultSet;
+            
         } catch (Exception e) {
             GroovyLogManager.manager.logException(TraceCategory.DSL, e);
             return null;

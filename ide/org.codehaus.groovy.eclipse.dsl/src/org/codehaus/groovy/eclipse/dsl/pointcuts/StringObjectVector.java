@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Borrowed from JDT and adapted
  * 
@@ -24,6 +27,9 @@ public final class StringObjectVector {
 	public int maxSize;
 	private String[] names;
 	private Object[] elements;
+
+	// cached map
+    private Map<String, Object> cachedMap;
 
 	public StringObjectVector(int initialSize) {
 		this.maxSize = initialSize > 0 ? initialSize : INITIAL_SIZE;
@@ -40,10 +46,12 @@ public final class StringObjectVector {
 		}
 		this.names[this.size] = newName;
 		this.elements[this.size++] = newElement;
+        cachedMap = null;
 	}
 
 	public void setElement(Object newElement, int index) {
 		this.elements[index] = newElement;
+		cachedMap = null;
 	}
 
 	/**
@@ -103,11 +111,9 @@ public final class StringObjectVector {
 	}
 
 	public String toString() {
-
-		String s = ""; //$NON-NLS-1$
-		for (int i = 0; i < this.size; i++)
-			s += this.names[i] + ":" + this.elements[i].toString() + "\n"; //$NON-NLS-1$
-		return s;
+	    StringBuilder sb = new StringBuilder();
+	    formattedString(sb, 0);
+	    return sb.toString();
 	}
 
     public String nameAt(int index) {
@@ -143,5 +149,36 @@ public final class StringObjectVector {
             }
         }
         return null;
+    }
+    
+    Map<String, Object> asMap() {
+        if (cachedMap == null) {
+            cachedMap = new HashMap<String, Object>();
+            for (int i = 0; i < this.size; i++) {
+                if (names[i] != null) {
+                    cachedMap.put(names[i], elements[i]);
+                }
+            }
+        }
+        return cachedMap;
+    }
+
+    void formattedString(StringBuilder sb, int indent) {
+        String spaces = AbstractPointcut.spaces(indent);
+        if (this.size > 0) {
+            sb.append(spaces + "\n");
+            for (int i = 0; i < this.size; i++) {
+                sb.append(spaces);
+                if (this.names[i] != null) {
+                    sb.append(this.names[i]).append(" = ");
+                }
+                if (this.elements[i] instanceof AbstractPointcut) {
+                    ((AbstractPointcut) this.elements[i]).formatedString(sb, indent+2);
+                } else {
+                    sb.append(this.elements[i]);
+                }
+            }
+        } else {
+        }
     }
 }

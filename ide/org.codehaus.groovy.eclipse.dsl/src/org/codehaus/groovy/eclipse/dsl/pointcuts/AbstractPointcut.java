@@ -12,6 +12,9 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import groovy.lang.Closure;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
@@ -20,7 +23,9 @@ import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NotPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
+import org.codehaus.groovy.util.StringUtil;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.compiler.CharOperation;
 
 
 
@@ -319,16 +324,28 @@ public abstract class AbstractPointcut implements IPointcut {
     
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("IPointcut [\n  getClass()=");
-        builder.append(getClass().getSimpleName());
-        builder.append("\n  containerIdentifier=");
-        builder.append(containerIdentifier);
-        builder.append("\n  elements=");
-        builder.append(elements);
-        builder.append("\n]");
-        return builder.toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("(" + containerIdentifier + ")\n");
+        formatedString(sb, 2);
+        return sb.toString();
     }
     
+    protected void formatedString(StringBuilder sb, int indent) {
+        sb.append(getClass().getSimpleName());
+        elements.formattedString(sb, indent+2);
+        sb.append("\n");
+    }
+    
+    static String spaces(int indent) {
+        StringBuilder sb = new StringBuilder(indent+2);
+        for (int i = 0; i < indent; i++) {
+            sb.append(' ');
+        }
+        return sb.toString();
+    }
+    
+    protected Map<String, Object> namedArgumentsAsMap() {
+        return elements.asMap();
+    }
     
 }

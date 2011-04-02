@@ -148,6 +148,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private Stack<ClassNode> propertyExpressionType;
 
 	/**
+	 * Keeps track of the type of the declaring type of the property field corresponding to each frame of the property expression.
+	 * Only makes sense for PropertyExpression and MethodCallExpression
+	 */
+	private Stack<ClassNode> propertyExpressionDeclaringType;
+
+	/**
 	 * Use factory to instantiate
 	 */
 	TypeInferencingVisitorWithRequestor(GroovyCompilationUnit unit, ITypeLookup[] lookups) {
@@ -159,6 +165,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		propertyExpression = new Stack<ASTNode>();
 		objectExpressionType = new Stack<ClassNode>();
 		propertyExpressionType = new Stack<ClassNode>();
+		propertyExpressionDeclaringType = new Stack<ClassNode>();
 	}
 
 	public void visitCompilationUnit(ITypeRequestor requestor) {
@@ -744,20 +751,22 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 		result.enclosingAssignment = enclosingAssignment;
 		VisitStatus status = handleRequestor(node, requestor, result);
+
 		switch (status) {
 			case CONTINUE:
 				if (isObjectExpression(node)) {
 					objectExpressionType.push(result.type);
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
+					propertyExpressionDeclaringType.push(result.declaringType);
 				}
-				scope.recordExpressionType(node, result.type);
 				return true;
 			case CANCEL_BRANCH:
 				if (isObjectExpression(node)) {
 					objectExpressionType.push(result.type);
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
+					propertyExpressionDeclaringType.push(result.declaringType);
 				}
 				return false;
 			case CANCEL_MEMBER:
@@ -817,6 +826,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitVariableExpression(VariableExpression node) {
+		scopes.peek().setCurrentNode(node);
+
 		// VariableExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
 		Object maybeAnnotatedNode = node;
 		if (maybeAnnotatedNode instanceof AnnotatedNode) {
@@ -831,6 +842,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (shouldContinue) {
 			super.visitVariableExpression(node);
 		}
+		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
@@ -899,6 +911,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		// the declaration itself is the property node
 		ClassNode propType = propertyExpressionType.pop();
+		// don't care about the declaring type
+		propertyExpressionDeclaringType.pop();
 
 		if (shouldContinue) {
 			toVisitSecond.visit(this);
@@ -1162,10 +1176,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitConstantExpression(ConstantExpression node) {
+		scopes.peek().setCurrentNode(node);
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			super.visitConstantExpression(node);
 		}
+		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
@@ -1209,48 +1225,59 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitMapEntryExpression(MapEntryExpression node) {
+		scopes.peek().setCurrentNode(node);
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			super.visitMapEntryExpression(node);
 		}
+		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
 	public void visitMapExpression(MapExpression node) {
+		scopes.peek().setCurrentNode(node);
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			super.visitMapExpression(node);
 		}
+		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
 	public void visitMethodCallExpression(MethodCallExpression node) {
+		scopes.peek().setCurrentNode(node);
 		propertyExpression.push(node);
 		node.getObjectExpression().visit(this);
 
-		VariableScope scope = scopes.peek();
-		CallAndType origEnclosing = scope.getEnclosingMethodCallExpression();
-		CallAndType call = new CallAndType(node,
-				objectExpressionType.isEmpty() ? ((AnnotatedNode) this.enclosingDeclarationNode).getDeclaringClass()
-						: objectExpressionType.peek());
 		boolean shouldContinue = handleExpression(node);
 		// boolean shouldContinue = true;
 		if (shouldContinue) {
 			node.getMethod().visit(this);
-			// this is the type of this property expression
+			// this is the inferred return type of this method
+			// must pop now before visiting any other nodes
 			ClassNode propType = propertyExpressionType.pop();
 
+			// this is the inferred declaring type of this method
+			ClassNode propDeclaringType = propertyExpressionDeclaringType.pop();
+			CallAndType call = new CallAndType(node, propDeclaringType);
+
+			// don't care about this
 			propertyExpression.pop();
 
 			ClassNode catNode = isCategoryDeclaration(node);
 			if (catNode != null) {
 				addCategoryToBeDeclared(catNode);
 			}
-			scope.setEnclosingMethodCall(call);
+			VariableScope scope = scopes.peek();
+
+			// remember that we are inside a method call while analyzing the arguments
+			scope.addEnclosingMethodCall(call);
 			node.getArguments().visit(this);
-			scope.setEnclosingMethodCall(origEnclosing);
+
+			scope.forgetEnclosingMethodCall();
+
+			// returns true if this method call expression is the property field of another property expression
 			if (isObjectExpression(node)) {
-				// returns true if this method call expression is the property field of another property expression
 				objectExpressionType.push(propType);
 			}
 		} else {
@@ -1259,6 +1286,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// not popped earlier because the method field of the expression was not examined
 			objectExpressionType.pop();
 		}
+		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
@@ -1308,14 +1336,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 		if (shouldContinue) {
 			node.getProperty().visit(this);
+
+			// don't care about either of these
+			propertyExpressionDeclaringType.pop();
+			propertyExpression.pop();
+
 			// this is the type of this property expression
 			ClassNode propType = propertyExpressionType.pop();
-
-			propertyExpression.pop();
 			if (isObjectExpression(node)) {
 				// returns true if this property expression is the property field of another property expression
 				objectExpressionType.push(propType);
 			}
+
 		} else {
 			propertyExpression.pop();
 
@@ -1341,6 +1373,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		// the declaration itself is the property node
 		ClassNode exprType = propertyExpressionType.pop();
+		propertyExpressionDeclaringType.pop();
 		propertyExpression.pop();
 
 		if (shouldContinue) {
@@ -1391,6 +1424,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		// the declaration itself is the property node
 		ClassNode exprType = propertyExpressionType.pop();
+
+		// don't care about these
+		propertyExpressionDeclaringType.pop();
 		propertyExpression.pop();
 
 		if (shouldContinue) {

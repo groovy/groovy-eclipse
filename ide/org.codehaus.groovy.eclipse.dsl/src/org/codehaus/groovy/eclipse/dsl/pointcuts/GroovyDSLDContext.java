@@ -11,6 +11,7 @@
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -61,7 +62,7 @@ public class GroovyDSLDContext {
     /** the type of the expression currently being analyzed */
     private ClassNode targetType;
     
-    /** */
+    /** cached type hierarchy for checking type matches (consider caching more) */
     private Set<ClassNode> cachedHierarchy;
     
     /** used for passing state from an outer pointcut to an inner pointcut*/

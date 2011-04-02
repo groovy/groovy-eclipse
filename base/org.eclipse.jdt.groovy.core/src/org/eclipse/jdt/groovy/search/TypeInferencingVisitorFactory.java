@@ -35,10 +35,7 @@ public class TypeInferencingVisitorFactory {
 	/**
 	 * Create a new {@link TypeInferencingVisitorWithRequestor}
 	 * 
-	 * @param typeRequestor
-	 * @param possibleMatch
-	 * @param pattern
-	 * @param requestor
+	 * @param possibleMatch corresponds to the compilation unit to be inferred
 	 * @return a fully configured {@link TypeInferencingVisitorWithRequestor}
 	 */
 	public TypeInferencingVisitorWithRequestor createVisitor(PossibleMatch possibleMatch) {
@@ -51,8 +48,8 @@ public class TypeInferencingVisitorFactory {
 								.getProject()));
 				return visitor;
 			} else {
-				Util.log(new RuntimeException(), "Attempted to do a groovy visit on a non-groovy file: "
-						+ new String(possibleMatch.getFileName()));
+				Util.log(new RuntimeException(),
+						"Attempted to do a groovy visit on a non-groovy file: " + new String(possibleMatch.getFileName())); //$NON-NLS-1$
 			}
 		} catch (Exception e) {
 			Util.log(e, "Exception when creating TypeInferencingVisitorWithRequestor for " + possibleMatch.document.getPath()); //$NON-NLS-1$
@@ -72,10 +69,10 @@ public class TypeInferencingVisitorFactory {
 			lookupsList.add(new CategoryTypeLookup());
 			lookupsList.add(new SimpleTypeLookup());
 			lookupsList.add(0, new InferenceByAssignmentStatement());
-			lookups = (ITypeLookup[]) lookupsList.toArray(new ITypeLookup[0]);
+			lookups = lookupsList.toArray(new ITypeLookup[0]);
 
 		} catch (CoreException e) {
-			Util.log(e, "Exception creating type lookups for project " + project.getName() + ".  Using default instead");
+			Util.log(e, "Exception creating type lookups for project " + project.getName() + ".  Using default instead"); //$NON-NLS-1$ //$NON-NLS-2$
 			lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new CategoryTypeLookup(), new SimpleTypeLookup() };
 		}
 		return lookups;

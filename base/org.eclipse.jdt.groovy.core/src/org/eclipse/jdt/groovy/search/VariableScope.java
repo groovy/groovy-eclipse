@@ -18,7 +18,6 @@ package org.eclipse.jdt.groovy.search;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -37,7 +37,6 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
@@ -106,6 +105,20 @@ public class VariableScope {
 		public final ClassNode declaringType;
 	}
 
+	/**
+	 * Contains state that is shared amongst {@link VariableScope}s
+	 */
+	private class SharedState {
+		/**
+		 * this field stores values that need to get passed between parts of the file to another
+		 */
+		final Map<String, Object> wormhole = new HashMap<String, Object>();
+		/**
+		 * the enclosing method call is the one where there are the current node is part of an argument list
+		 */
+		final Stack<CallAndType> enclosingCallStack = new Stack<VariableScope.CallAndType>();
+	}
+
 	public static ClassNode NO_CATEGORY = null;
 
 	/**
@@ -114,18 +127,18 @@ public class VariableScope {
 	private VariableScope parent;
 
 	/**
+	 * Shared with parent scopes
+	 */
+	private SharedState shared;
+
+	/**
 	 * AST node for this scope, typically, a block, closure, or body declaration
 	 */
-	private ASTNode enclosingNode;
+	private ASTNode scopeNode;
 
 	private Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
 
 	private boolean isStaticScope;
-
-	/**
-	 * the enclosing method call is the one where there are the current node is part of an argument list
-	 */
-	private CallAndType enclosingMethodCall;
 
 	private final ClosureExpression enclosingClosure;
 
@@ -134,10 +147,18 @@ public class VariableScope {
 	 */
 	private ClassNode categoryBeingDeclared;
 
+	/**
+	 * Node currently being evaluated, or null if none
+	 * 
+	 * FIXADE consider moving this to the shared state
+	 */
+	private Stack<ASTNode> nodeStack;
+
 	public VariableScope(VariableScope parent, ASTNode enclosingNode, boolean isStatic) {
 		this.parent = parent;
-		this.enclosingNode = enclosingNode;
+		this.scopeNode = enclosingNode;
 
+		this.nodeStack = new Stack<ASTNode>();
 		// this scope is considered static if in a static method, or
 		// it's parent is static
 		this.isStaticScope = isStatic || (parent != null && parent.isStaticScope);
@@ -145,6 +166,50 @@ public class VariableScope {
 			this.enclosingClosure = (ClosureExpression) enclosingNode;
 		} else {
 			this.enclosingClosure = null;
+		}
+
+		if (parent != null) {
+			this.shared = parent.shared;
+		} else {
+			this.shared = new SharedState();
+		}
+	}
+
+	/**
+	 * Back door for storing and retrieving objects between lookup locations
+	 * 
+	 * @return the wormhole object
+	 */
+	public Map<String, Object> getWormhole() {
+		return shared.wormhole;
+	}
+
+	public ASTNode getEnclosingNode() {
+		if (nodeStack.size() > 1) {
+			ASTNode current = nodeStack.pop();
+			ASTNode enclosing = nodeStack.peek();
+			nodeStack.push(current);
+			return enclosing;
+		} else {
+			return null;
+		}
+	}
+
+	public void setCurrentNode(ASTNode currentNode) {
+		nodeStack.push(currentNode);
+	}
+
+	public void forgetCurrentNode() {
+		if (!nodeStack.isEmpty()) {
+			nodeStack.pop();
+		}
+	}
+
+	public ASTNode getCurrentNode() {
+		if (!nodeStack.isEmpty()) {
+			return nodeStack.peek();
+		} else {
+			return null;
 		}
 	}
 
@@ -188,7 +253,7 @@ public class VariableScope {
 	 */
 	public VariableInfo lookupName(String name) {
 		if ("super".equals(name)) { //$NON-NLS-1$
-			VariableInfo var = lookupName("this");
+			VariableInfo var = lookupName("this"); //$NON-NLS-1$
 			if (var != null) {
 				ClassNode superType = var.declaringType.getSuperClass();
 				return new VariableInfo(superType, superType);
@@ -225,8 +290,8 @@ public class VariableScope {
 	}
 
 	public ModuleNode getEnclosingModuleNode() {
-		if (enclosingNode instanceof ModuleNode) {
-			return (ModuleNode) enclosingNode;
+		if (scopeNode instanceof ModuleNode) {
+			return (ModuleNode) scopeNode;
 		} else if (parent != null) {
 			return parent.getEnclosingModuleNode();
 		} else {
@@ -235,8 +300,8 @@ public class VariableScope {
 	}
 
 	public ClassNode getEnclosingTypeDeclaration() {
-		if (enclosingNode instanceof ClassNode) {
-			return (ClassNode) enclosingNode;
+		if (scopeNode instanceof ClassNode) {
+			return (ClassNode) scopeNode;
 		} else if (parent != null) {
 			return parent.getEnclosingTypeDeclaration();
 		} else {
@@ -245,8 +310,8 @@ public class VariableScope {
 	}
 
 	public FieldNode getEnclosingFieldDeclaration() {
-		if (enclosingNode instanceof FieldNode) {
-			return (FieldNode) enclosingNode;
+		if (scopeNode instanceof FieldNode) {
+			return (FieldNode) scopeNode;
 		} else if (parent != null) {
 			return parent.getEnclosingFieldDeclaration();
 		} else {
@@ -255,8 +320,8 @@ public class VariableScope {
 	}
 
 	public MethodNode getEnclosingMethodDeclaration() {
-		if (enclosingNode instanceof FieldNode) {
-			return (MethodNode) enclosingNode;
+		if (scopeNode instanceof FieldNode) {
+			return (MethodNode) scopeNode;
 		} else if (parent != null) {
 			return parent.getEnclosingMethodDeclaration();
 		} else {
@@ -624,40 +689,37 @@ public class VariableScope {
 	 * </pre>
 	 */
 	public List<CallAndType> getAllEnclosingMethodCallExpressions() {
-		List<CallAndType> list;
-		if (parent == null) {
-			list = new ArrayList<CallAndType>();
-		} else {
-			list = parent.getAllEnclosingMethodCallExpressions();
-			if (enclosingMethodCall != null) {
-				list.add(enclosingMethodCall);
-			}
-		}
-		return list;
+		return shared.enclosingCallStack;
 	}
 
 	public CallAndType getEnclosingMethodCallExpression() {
-		if (parent != null && enclosingMethodCall == null) {
-			return parent.getEnclosingMethodCallExpression();
+		if (shared.enclosingCallStack.isEmpty()) {
+			return null;
+		} else {
+			return shared.enclosingCallStack.peek();
 		}
-		return enclosingMethodCall;
 	}
 
-	public void setEnclosingMethodCall(CallAndType enclosingMethodCall) {
-		this.enclosingMethodCall = enclosingMethodCall;
+	public void addEnclosingMethodCall(CallAndType enclosingMethodCall) {
+		shared.enclosingCallStack.push(enclosingMethodCall);
 	}
 
-	// this is the expression cache. I don't know if I like this.
-	// records the type of all expressions that were seen so far by this scope
-	private final Map<Expression, ClassNode> expressionTypeCache = new HashMap<Expression, ClassNode>();
-
-	public void recordExpressionType(Expression expr, ClassNode type) {
-		expressionTypeCache.put(expr, type);
+	public void forgetEnclosingMethodCall() {
+		shared.enclosingCallStack.pop();
 	}
 
-	public ClassNode queryExpressionType(Expression expr) {
-		return expressionTypeCache.get(expr);
-	}
+	// FIXADE disable expression recording until we know that we need it.
+	// // this is the expression cache. I don't know if I like this.
+	// // records the type of all expressions that were seen so far by this scope
+	// private final Map<Expression, ClassNode> expressionTypeCache = new HashMap<Expression, ClassNode>();
+	//
+	// public void recordExpressionType(Expression expr, ClassNode type) {
+	// expressionTypeCache.put(expr, type);
+	// }
+	//
+	// public ClassNode queryExpressionType(Expression expr) {
+	// return expressionTypeCache.get(expr);
+	// }
 
 	/**
 	 * @return

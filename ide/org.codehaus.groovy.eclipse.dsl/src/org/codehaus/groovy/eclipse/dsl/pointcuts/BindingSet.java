@@ -202,4 +202,8 @@ public class BindingSet {
     public int size() {
         return bindings.size();
     }
+
+    public void combineBindings(Map<String, Object> newMap) {
+        bindings.putAll(newMap);
+    }
 }

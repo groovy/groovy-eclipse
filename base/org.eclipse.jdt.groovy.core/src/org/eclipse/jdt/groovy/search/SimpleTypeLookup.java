@@ -161,7 +161,15 @@ public class SimpleTypeLookup implements ITypeLookup {
 			if (var instanceof DynamicVariable) {
 				// search type hierarchy for declaration
 				ASTNode declaration = findDeclaration(var.getName(), scope.getEnclosingTypeDeclaration());
-				ClassNode type = declaringTypeFromDeclaration(declaration, var.getType());
+				ClassNode type;
+				if (declaration == null) {
+					// this is a dynamic variable that doesn't seem to have a declaration
+					// it might be an unknown and a mistake, but it could also be declared by 'this'
+					VariableInfo info = scope.lookupName("this");
+					type = info == null ? VariableScope.OBJECT_CLASS_NODE : info.declaringType;
+				} else {
+					type = declaringTypeFromDeclaration(declaration, var.getType());
+				}
 				confidence[0] = TypeConfidence.findLessPrecise(confidence[0], INFERRED);
 				return type;
 			} else if (var instanceof FieldNode) {
@@ -416,6 +424,9 @@ public class SimpleTypeLookup implements ITypeLookup {
 			type = varInfo.type;
 			realDeclaringType = varInfo.declaringType;
 			declaration = varInfo.declaringType;
+		} else if (name.equals("call")) {
+			// assume that this is a synthetic call method for calling a closure
+			declaration = realDeclaringType = declaringType;
 		} else {
 			realDeclaringType = declaringType;
 			confidence = UNKNOWN;

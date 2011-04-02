@@ -27,8 +27,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AnnotatedByPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallDeclaringTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallNamePointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallReturnTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingClassPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingClosurePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingFieldPointcut;
@@ -45,6 +45,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ProjectNaturePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfFilePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.VariableExpressionPointcut;
 import org.eclipse.core.resources.IProject;
 
 /**
@@ -80,6 +81,11 @@ public class PointcutFactory {
                 createDoc("Attempts to match on the declared type of the current expression.", 
                 "A String, Class, or ClassNode to match against.  Alternatively, another pointcut can be passed in to match against", 
                 "the current type as a ClassNode if there is a match with the argument"));
+        registerGlobalPointcut("currentTypeIsEnclosingType", CurrentTypePointcut.class, 
+                createDoc("Matches when the current type being inferred is the same as the enclosing type declaration.  " +
+                		"This happens on references to <code>this</code> or when inferencing is occurring in the new statement position.", 
+                        "No args", 
+                        "the current type as a ClassNode if there is a match."));
 
         // filtering pointcuts
         registerGlobalPointcut("annotatedBy", AnnotatedByPointcut.class, 
@@ -95,6 +101,8 @@ public class PointcutFactory {
                 "Eg- If the surrounding pointcut passes in a type, then the value returned will be all fields in that type that match the contained pointcut, or that have the specified name." +
                 "  If the surrounding pointcut passes in a list of AnnotatedNodes, thne the result will be a sublist of those " +
                 "annotated nodes containing only nodes with the correct annotation."));
+        registerGlobalPointcut("variableExpression", VariableExpressionPointcut.class, createDoc("Matches when the current node being evaluated is a VariableExpression",
+                "Variable name", "The matchd variable expression"));
         registerGlobalPointcut("findMethod", FindMethodPointcut.class, createDoc("Matches when the containing pointcut passes in a type that has a method " +
                 "specified by the argument in this pointcut.", "A String corresponding to a method name.  Alternatively, a pointcut, such as annotatedBy, wich " +
                 "would return all fields with the given annotation",
@@ -132,7 +140,7 @@ public class PointcutFactory {
         registerGlobalPointcut("enclosingField", EnclosingFieldPointcut.class, createDoc("Matches if the current inferencing location is inside of a field declaration.", "A string or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing field is performed.", "The matched FieldNode or null if there was no match"));
         registerGlobalPointcut("enclosingMethod", EnclosingMethodPointcut.class, createDoc("Matches if the current inferencing location is inside of a field declaration.", "A string or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing methoid is performed.", "The matched MethodNode or null if there was no match"));
         registerGlobalPointcut("enclosingCallName", EnclosingCallNamePointcut.class, createDoc("Matches on the name of the enclosing method call.  The current inferencing location is enclosed by a method call if it is in the argument list of a method call", "The method name to match on", "The name of the method that was matched."));
-        registerGlobalPointcut("enclosingCallReturnType", EnclosingCallReturnTypePointcut.class, createDoc("Matches on the declaring type of the enclosing method call.  The current inferencing location is enclosed by a method call if it is in the argument list of a method call.", "The declaring type of the method to match on.   This could be a string, Class, ClassNode, or a pointcut.", "The declaring type of the method that was matched."));
+        registerGlobalPointcut("enclosingCallDeclaringType", EnclosingCallDeclaringTypePointcut.class, createDoc("Matches on the declaring type of the enclosing method call.  The current inferencing location is enclosed by a method call if it is in the argument list of a method call.", "The declaring type of the method to match on.   This could be a string, Class, ClassNode, or a pointcut.", "The declaring type of the method that was matched."));
         registerGlobalPointcut("enclosingClosure", EnclosingClosurePointcut.class, createDoc("Matches if the inferencing location is inside of a ClosureExpression. A synonnym for <code>inClosure</code>.", "none", "A ClosureExpression corresponding to the lexically closest enclosing closure."));
         registerGlobalPointcut("inClosure", EnclosingClosurePointcut.class, createDoc("Matches if the inferencing location is inside of a ClosureExpression. A synonnym for <code>enclosingClosure</code>.", "none", "A ClosureExpression corresponding to the lexically closest enclosing closure."));  // synonym
         

@@ -45,7 +45,6 @@ public class DSLDProposalProvider implements IProposalProvider {
         List<IContributionElement> contributions;
         List<IGroovyProposal> proposals = new ArrayList<IGroovyProposal>();
         try {
-            // FIXADE better error handling
             DSLDStore store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(context.unit.getJavaProject());
             GroovyDSLDContext pattern = new GroovyDSLDContext(context.unit);
             pattern.setCurrentScope(context.currentScope);

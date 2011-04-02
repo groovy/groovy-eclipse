@@ -11,6 +11,7 @@
 package org.codehaus.groovy.eclipse.dsl.lookup;
 
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
@@ -35,28 +36,28 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITypeLookup {
 
     private DSLDStore store;
-    private GroovyDSLDContext initialPattern;
+    private GroovyDSLDContext pattern;
+    private Set<String> disabledScriptsAsSet;
     
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+
+        disabledScriptsAsSet = DSLPreferences.getDisabledScriptsAsSet();
         try {
-            // FIXADE better error handling
-            initialPattern = new GroovyDSLDContext(unit);
+            pattern = new GroovyDSLDContext(unit);
         } catch (CoreException e) {
             GroovyDSLCoreActivator.logException(e);
         }
         store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(unit.getJavaProject());
-        store = store.createSubStore(initialPattern);
+        store = store.createSubStore(pattern);
     }
 
     @Override
     protected TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope) {
-        initialPattern.setCurrentScope(scope);
-        initialPattern.setTargetType(declaringType);
-        // don't know about closure or annotated scopes
-        // would be nice to do a succeed-fast approach here rather than trolling through all
-        List<IContributionElement> elts = store.findContributions(initialPattern, DSLPreferences.getDisabledScriptsAsSet());
+        pattern.setCurrentScope(scope);
+        pattern.setTargetType(declaringType);
+        List<IContributionElement> elts = store.findContributions(pattern, disabledScriptsAsSet);
         for (IContributionElement elt : elts) {
-            TypeAndDeclaration td = elt.lookupType(name, declaringType, initialPattern.resolver);
+            TypeAndDeclaration td = elt.lookupType(name, declaringType, pattern.resolver);
             if (td != null) {
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.DSL, 

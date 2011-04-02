@@ -13,6 +13,7 @@ package org.codehaus.groovy.eclipse.dsl;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,7 +38,8 @@ public class DSLDStore {
     private final Map<IPointcut, List<IContributionGroup>> pointcutContributionMap;  // maps pointcuts to their contributors
     private final Map<String, Set<IPointcut>> keyContextMap;  // maps unique keys (such as script names) to all the pointcuts that they produce
     public DSLDStore() {
-        pointcutContributionMap = new HashMap<IPointcut, List<IContributionGroup>>();
+        // use linked hash map because order matters
+        pointcutContributionMap = new LinkedHashMap<IPointcut, List<IContributionGroup>>();
         keyContextMap = new HashMap<String, Set<IPointcut>>();
     }
     
@@ -121,13 +123,15 @@ public class DSLDStore {
 
     /**
      * Find all contributions for this pattern and this declaring type
-     * @param disabledScripts TODO
-     * @return
+     * @param pattern The pattern to match against
+     * @param disabledScripts The set of scripts that are disabled and should be ignored
+     * @return The set of contributions applicable for the pattern
      */
     public List<IContributionElement> findContributions(GroovyDSLDContext pattern, Set<String> disabledScripts) {
         List<IContributionElement> elts = new ArrayList<IContributionElement>();
         for (Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
             IPointcut pointcut = entry.getKey();
+            pattern.setOuterPointcutBinding(null);
             if (! disabledScripts.contains(pointcut.getContainerIdentifier())) {
                 BindingSet matches = pointcut.matches(pattern);
                 if (matches != null) {

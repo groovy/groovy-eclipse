@@ -44,6 +44,10 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
     @Override
     public BindingSet matches(GroovyDSLDContext pattern) {
         
+        // Get outer binding
+        // Filter by type of outer binding
+        // Filter by argument (either pointcut arg or string arg)
+        
         List<T> outerList = filterOuterBindingByType(pattern);
         if (outerList == null || outerList.size() == 0) {
             return null;
