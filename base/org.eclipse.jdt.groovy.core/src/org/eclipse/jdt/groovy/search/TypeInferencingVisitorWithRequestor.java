@@ -752,13 +752,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		result.enclosingAssignment = enclosingAssignment;
 		VisitStatus status = handleRequestor(node, requestor, result);
 
+		// when there is a category method, we don't want to store it
+		// as the declaring type since this will mess things up inside closures
+		ClassNode rememberedDeclaringType = result.declaringType;
+		if (scope.getCategoryNames().contains(rememberedDeclaringType)) {
+			rememberedDeclaringType = objectExprType;
+		}
 		switch (status) {
 			case CONTINUE:
 				if (isObjectExpression(node)) {
 					objectExpressionType.push(result.type);
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
-					propertyExpressionDeclaringType.push(result.declaringType);
+					propertyExpressionDeclaringType.push(rememberedDeclaringType);
 				}
 				return true;
 			case CANCEL_BRANCH:
@@ -766,7 +772,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					objectExpressionType.push(result.type);
 				} else if (isProperty(node)) {
 					propertyExpressionType.push(result.type);
-					propertyExpressionDeclaringType.push(result.declaringType);
+					propertyExpressionDeclaringType.push(rememberedDeclaringType);
 				}
 				return false;
 			case CANCEL_MEMBER:
