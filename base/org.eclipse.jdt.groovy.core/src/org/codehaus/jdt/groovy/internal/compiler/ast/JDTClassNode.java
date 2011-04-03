@@ -11,7 +11,6 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
@@ -148,8 +147,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			if (lazyInitDone) {
 				return;
 			}
-			initialize();
 			lazyInitDone = true;
+			initialize();
 		}
 	}
 
@@ -601,26 +600,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		throw new GroovyBugError("JDTClassNode.getTypeClass() cannot locate class for " + getName() + " using transform loader "
 				+ transformLoader);
 	}
-/*
-	public ClassNode makeArray() {
-		// if (redirect != null) {
-		// ClassNode res = redirect().makeArray();
-		// res.componentType = this;
-		// return res;
-		// }
-		ClassNode cn;
-		if (getTypeClass() != null) {
-			Class ret = Array.newInstance(clazz, 0).getClass();
-			// don't use the ClassHelper here!
-			cn = new ClassNode(ret, this);
-		} else {
-			cn = new ClassNode(this);
-		}
-		return cn;
-	}
-
-	public void setPrimaryNode(boolean b) {
-		this.isPrimaryNode = b;
-	}
-	*/
+	/*
+	 * public ClassNode makeArray() { // if (redirect != null) { // ClassNode res = redirect().makeArray(); // res.componentType =
+	 * this; // return res; // } ClassNode cn; if (getTypeClass() != null) { Class ret = Array.newInstance(clazz, 0).getClass(); //
+	 * don't use the ClassHelper here! cn = new ClassNode(ret, this); } else { cn = new ClassNode(this); } return cn; }
+	 * 
+	 * public void setPrimaryNode(boolean b) { this.isPrimaryNode = b; }
+	 */
 }
