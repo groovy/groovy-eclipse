@@ -203,6 +203,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			rd.lazyClassInit();
 			return;
 		}
+
 		resolver.pushTypeGenerics(getGenericsTypes());
 		if (!jdtBinding.isInterface()) {
 			ReferenceBinding superClass = jdtBinding.superclass();
