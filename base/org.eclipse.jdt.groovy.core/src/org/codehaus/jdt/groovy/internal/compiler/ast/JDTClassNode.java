@@ -77,6 +77,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	// The binding which this JDTClassNode represents
 	ReferenceBinding jdtBinding;
 
+	private boolean beingInitialized = false;
+
 	// The resolver instance involved at the moment
 	JDTResolver resolver;
 
@@ -147,8 +149,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			if (lazyInitDone) {
 				return;
 			}
-			lazyInitDone = true;
 			initialize();
+			lazyInitDone = true;
 		}
 	}
 
@@ -198,28 +200,36 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	 */
 	// FIXASC confusing (and problematic?) that the superclass is setup after the generics information
 	void initialize() {
-		if (jdtBinding instanceof ParameterizedTypeBinding) {
-			ClassNode rd = redirect();
-			rd.lazyClassInit();
-			return;
-		}
-
-		resolver.pushTypeGenerics(getGenericsTypes());
-		if (!jdtBinding.isInterface()) {
-			ReferenceBinding superClass = jdtBinding.superclass();
-			if (superClass != null) {
-				setUnresolvedSuperClass(resolver.convertToClassNode(superClass));
+		try {
+			if (beingInitialized) {
+				return;
 			}
-		}
+			beingInitialized = true;
+			if (jdtBinding instanceof ParameterizedTypeBinding) {
+				ClassNode rd = redirect();
+				rd.lazyClassInit();
+				return;
+			}
 
-		ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
-		ClassNode[] interfaces = new ClassNode[superInterfaceBindings.length];
-		for (int i = 0; i < superInterfaceBindings.length; i++) {
-			interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
+			resolver.pushTypeGenerics(getGenericsTypes());
+			if (!jdtBinding.isInterface()) {
+				ReferenceBinding superClass = jdtBinding.superclass();
+				if (superClass != null) {
+					setUnresolvedSuperClass(resolver.convertToClassNode(superClass));
+				}
+			}
+
+			ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
+			ClassNode[] interfaces = new ClassNode[superInterfaceBindings.length];
+			for (int i = 0; i < superInterfaceBindings.length; i++) {
+				interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
+			}
+			setInterfaces(interfaces);
+			initializeMembers();
+			resolver.popTypeGenerics();
+		} finally {
+			beingInitialized = false;
 		}
-		setInterfaces(interfaces);
-		initializeMembers();
-		resolver.popTypeGenerics();
 	}
 
 	private void initializeMembers() {
