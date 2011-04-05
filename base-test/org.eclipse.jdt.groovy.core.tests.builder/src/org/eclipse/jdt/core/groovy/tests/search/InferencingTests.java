@@ -391,7 +391,72 @@ public class InferencingTests extends AbstractInferencingTest {
         int end = start + "Baz".length();
         assertType(contents, start, end, "Baz");
     }
-    
+    // the declaring type of things inside of a closure should be the declaring 
+    // type of the method that calls the closure
+    public void testInClosureDeclaringType1() throws Exception {
+        String contents = 
+                "class Baz {\n" +
+        		"  def method() { }\n" +
+        		"  Integer other() { }\n" +
+        		"}\n" +
+        		"class Bar extends Baz {\n" +
+                "  def other(x) { }\n" +
+                "}\n" +
+        		"new Bar().method {\n " +
+        		"  other\n" +
+        		"}";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        assertDeclaringType(contents, start, end, "Baz");
+    }
+    // Unknown references should have the declaring type of the closure
+    public void testInClosureDeclaringType2() throws Exception {
+        String contents = 
+                "class Baz {\n" +
+                "  def method() { }\n" +
+                "}\n" +
+                "class Bar extends Baz {\n" +
+                "}\n" +
+                "new Bar().method {\n " +
+                "  other\n" +
+                "}";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+        assertDeclaringType(contents, start, end, "Baz");
+    }
+    // Unknown references should have the declaring type of the enclosing method
+    public void testInClassDeclaringType1() throws Exception {
+        String contents = 
+                "class Baz {\n" +
+                "  def method() {\n" +
+                "    other\n" +
+                "  }\n" +
+                "}";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+        assertDeclaringType(contents, start, end, "Baz");
+    }
+    // Unknown references should have the declaring type of the enclosing closure
+    public void testInClassDeclaringType2() throws Exception {
+        String contents = 
+            "class Baz {\n" +
+            "  def method = {\n" +
+            "    other\n" +
+            "  }\n" +
+            "}";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+        assertDeclaringType(contents, start, end, "Baz");
+    }
+    // Unknown references should have the declaring type of the enclosing closure
+    public void testInScriptDeclaringType() throws Exception {
+        String contents = 
+            "other\n";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+        assertDeclaringType(contents, start, end, "Search");
+    }
     public void testStaticImports1() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.NULL_ATTRIBUTE_VALUE\n" + 
                           "NULL_ATTRIBUTE_VALUE";

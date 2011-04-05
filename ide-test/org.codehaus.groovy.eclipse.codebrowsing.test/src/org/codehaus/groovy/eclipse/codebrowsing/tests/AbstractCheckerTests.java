@@ -27,7 +27,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
 import org.codehaus.groovy.eclipse.test.TestProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.tests.util.TestCase;
+import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 
 /**
  *

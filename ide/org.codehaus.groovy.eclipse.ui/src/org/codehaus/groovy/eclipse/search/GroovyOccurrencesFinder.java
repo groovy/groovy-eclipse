@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper;
 import org.codehaus.groovy.eclipse.core.search.FindAllReferencesRequestor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -112,6 +113,12 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
             } else if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) {
                 ClassNode c = (ClassNode) node;
                 occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, K_OCCURRENCE,
+                        "Occurrence of ''" + getElementName() + "''");
+            } else if (node instanceof StaticMethodCallExpression) {
+                // special case...for static method calls, the start and end are
+                // of the entire expression, but we just want the name.
+                StaticMethodCallExpression smce = (StaticMethodCallExpression) node;
+                occurrenceLocation = new OccurrenceLocation(smce.getStart(), smce.getMethod().length(), K_OCCURRENCE,
                         "Occurrence of ''" + getElementName() + "''");
             } else {
                 occurrenceLocation = new OccurrenceLocation(node.getStart(), node.getLength(), K_OCCURRENCE, "Occurrence of ''"

@@ -105,6 +105,26 @@ public class TestingEnvironment {
             handleCoreException(e);
         }
     }
+    
+    /** 
+     * Adds the specified nature to the project
+     * @param projectName
+     * @param natureId
+     */
+    public void addNature(String projectName, String natureId) {
+        try {
+            IProject project = getProject(projectName);
+            IProjectDescription description = project.getDescription();
+            String[] existingNatures = description.getNatureIds();
+            String[] newNatures = new String[existingNatures.length + 1];
+            System.arraycopy(existingNatures, 0, newNatures, 0, existingNatures.length);
+            newNatures[existingNatures.length] = natureId;
+            description.setNatureIds(newNatures);
+            project.setDescription(description, null);
+        } catch (CoreException e) {
+            handleCoreException(e);
+        }
+    }
 
 	/** Adds a binary class with the given contents to the
 	 * given package in the workspace.  The package is created
@@ -1220,5 +1240,7 @@ public void cleanBuild() {
         addExternalJar(projectPath, GroovyActivator.GROOVY_JAR_URL.getFile());
         addExternalJar(projectPath, GroovyActivator.ASM_JAR_URL.getFile());
     }   
-
+    public void addJUnitJar(IPath projectPath) throws Exception {
+        addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.codehaus.groovy.eclipse.core.test").getEntry("lib/junit-4.3.1.jar")).getFile());
+    }
 }

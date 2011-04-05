@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractGroovySearchTest;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 
 /**
@@ -118,8 +119,72 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int length2 = "'$print'".length();
         int length3 = "'${print}'".length();
         doTest(contents, contents.indexOf("print"), 1, contents.indexOf("print"), length, contents.lastIndexOf("'$print'"), length2, contents.lastIndexOf("'${print}'"), length3);
-    }        
+    }
     
+    // GRECLIPSE-1031
+    public void testFindStaticMethods() throws Exception {
+        String contents = 
+            "class Static {\n" +
+        	"  static staticMethod()  { staticMethod }\n" +
+        	"  static { staticMethod }\n" +
+        	"  { staticMethod }\n" +
+        	"  def t = staticMethod()\n" +
+        	"  def x() { " +
+        	"    def a = staticMethod() \n" +
+        	"    def b = staticMethod \n" +
+        	"    Static.staticMethod 3, 4, 5\n" +
+        	"    Static.staticMethod(3, 4, 5) \n" +
+        	"  }\n" +
+        	"}";
+        
+        String methName = "staticMethod";
+        int len = methName.length();
+        
+        int start = contents.indexOf(methName);
+        int start1 = contents.indexOf(methName);
+        int start2 = contents.indexOf(methName, start1 + 1);
+        int start3 = contents.indexOf(methName, start2 + 1);
+        int start4 = contents.indexOf(methName, start3 + 1);
+        int start5 = contents.indexOf(methName, start4 + 1);
+        int start6 = contents.indexOf(methName, start5 + 1);
+        int start7 = contents.indexOf(methName, start6 + 1);
+        int start8 = contents.indexOf(methName, start7 + 1);
+        int start9 = contents.indexOf(methName, start8 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len, start7, len, start8, len, start9, len);
+    }
+
+    
+    // GRECLIPSE-1031
+    // Groovy 1.8 specific test
+    public void testFindStaticMethods18() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL > 17) {
+            String contents = 
+                "class Static {\n" +
+                "  static staticMethod(nuthin)  { }\n" +
+                "  def x() {\n" +
+                "    def z = staticMethod 3\n" +
+                "    def a = staticMethod 3, 4, 5\n" +
+                "    def b = staticMethod(3, 4, 5) \n" +
+                "    def c = Static.staticMethod 3, 4, 5\n" +
+                "    def d = Static.staticMethod(3, 4, 5) \n" +
+                "  }\n" +
+                "}";
+            
+            String methName = "staticMethod";
+            int len = methName.length();
+            
+            int start = contents.indexOf(methName);
+            int start1 = contents.indexOf(methName);
+            int start2 = contents.indexOf(methName, start1 + 1);
+            int start3 = contents.indexOf(methName, start2 + 1);
+            int start4 = contents.indexOf(methName, start3 + 1);
+            int start5 = contents.indexOf(methName, start4 + 1);
+            doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len);
+        } else {
+            System.out.println("testFindStaticMethods18 is disabled when Groovy level is not 1.8 or higher");
+        }
+    }
+
     private void doTest(String contents, int start, int length, int ... expected) throws JavaModelException {
         GroovyCompilationUnit unit = createUnit("Occurrences", contents);
         try {

@@ -22,7 +22,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jdt.groovy.core;bundle-version="2.1.3",
  org.codehaus.groovy.eclipse.core.test;bundle-version="2.1.3",
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.1.3",
- org.codehaus.groovy.eclipse.codebrowsing.test;bundle-version="2.1.3"
+ org.codehaus.groovy.eclipse.codebrowsing.test;bundle-version="2.1.3",
+ org.eclipse.jdt.groovy.core.tests.builder;bundle-version="3.3.100"
 Import-Package: org.codehaus.groovy.eclipse.core.compiler,
  org.eclipse.jdt.core.refactoring.descriptors
 Bundle-ActivationPolicy: lazy
