@@ -42,9 +42,24 @@ public abstract class AbstractPointcut implements IPointcut {
     private StringObjectVector elements = new StringObjectVector(1);
     
     private IProject project;
+
+    private String pointcutName;
     
-    public AbstractPointcut(String containerIdentifier) {
+    public AbstractPointcut(String containerIdentifier, String pointcutName) {
         this.containerIdentifier = containerIdentifier;
+        this.pointcutName = pointcutName;
+    }
+    
+    public String getPointcutName() {
+        return pointcutName;
+    }
+    
+    public void setPointcutName(String pointcutName) {
+        this.pointcutName = pointcutName;
+    }
+    
+    public String getPointcutDebugName() {
+        return pointcutName + " (" + getClass().getSimpleName() + ")";
     }
     
     public String getContainerIdentifier() {
@@ -164,7 +179,10 @@ public abstract class AbstractPointcut implements IPointcut {
                 // potentially creates a copy of the original pointcut
                 IPointcut normalized = this.normalize();
 
-                
+
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.DSL, "Registering pointcut:\n" + this.toString());
+                }
                 // register this pointcut and group for the given project
                 GroovyDSLCoreActivator.getDefault().getContextStoreManager()
                     .getDSLDStore(p).addContributionGroup(normalized, group);
@@ -300,14 +318,14 @@ public abstract class AbstractPointcut implements IPointcut {
 
     
     protected IPointcut and(IPointcut other) {
-        AbstractPointcut andPointcut = new AndPointcut(containerIdentifier);
+        AbstractPointcut andPointcut = new AndPointcut(containerIdentifier, "and");
         andPointcut.setProject(project);
         andPointcut.addArgument(this);
         andPointcut.addArgument(other);
         return andPointcut;
     }
     protected IPointcut or(IPointcut other) {
-        AbstractPointcut orPointcut = new OrPointcut(containerIdentifier);
+        AbstractPointcut orPointcut = new OrPointcut(containerIdentifier, "or");
         orPointcut.setProject(project);
         orPointcut.addArgument(this);
         orPointcut.addArgument(other);
@@ -315,7 +333,7 @@ public abstract class AbstractPointcut implements IPointcut {
     }
 
     protected IPointcut bitwiseNegate() {
-        AbstractPointcut notPointcut = new NotPointcut(containerIdentifier);
+        AbstractPointcut notPointcut = new NotPointcut(containerIdentifier, "not");
         notPointcut.setProject(project);
         notPointcut.addArgument(this);
         return notPointcut;
@@ -331,7 +349,7 @@ public abstract class AbstractPointcut implements IPointcut {
     }
     
     protected void formatedString(StringBuilder sb, int indent) {
-        sb.append(getClass().getSimpleName());
+        sb.append(getPointcutDebugName());
         elements.formattedString(sb, indent+2);
         sb.append("\n");
     }

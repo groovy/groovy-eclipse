@@ -42,7 +42,7 @@ public class PointcutVerificationException extends Exception {
      * @return
      */
     public String getPointcutMessage() {
-        return "Invalid Pointcut: " + pointcut.getClass().getCanonicalName() + 
+        return "Invalid Pointcut: " + pointcut.getPointcutDebugName() + 
                "\nin: " + pointcut.getContainerIdentifier() + 
                "\nreason: " + getMessage();
     }

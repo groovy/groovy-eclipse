@@ -41,8 +41,14 @@ public class GroovyDSLDContext {
      * Shoud not use this constructor.  It is only for testing
      */
     @Deprecated
-    public GroovyDSLDContext(String[] projectNatures, String fileName) {
-        this.fileName = fileName;
+    public GroovyDSLDContext(String[] projectNatures, String fullPathName) {
+        this.fullPathName = fullPathName;
+        if (fullPathName != null) {
+            int lastDot = fullPathName.lastIndexOf('/');
+            this.simpleFileName = fullPathName.substring(lastDot+1);
+        } else {
+            this.simpleFileName = null;
+        }
         this.projectNatures = projectNatures;
     }
     
@@ -55,8 +61,14 @@ public class GroovyDSLDContext {
      * This value does not change once it is set since inferencing happens on 
      * a per-file basis
      */
-    public final String fileName;
+    public final String fullPathName;
 
+    /**
+     * This value does not change once it is set since inferencing happens on 
+     * a per-file basis
+     */
+    public final String simpleFileName;
+    
     private VariableScope currentScope;
     
     /** the type of the expression currently being analyzed */
@@ -156,7 +168,7 @@ public class GroovyDSLDContext {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("ContextPattern [fileName=");
-        builder.append(fileName);
+        builder.append(fullPathName);
         builder.append(", targetType=");
         builder.append(targetType);
         builder.append(", currentScope=");

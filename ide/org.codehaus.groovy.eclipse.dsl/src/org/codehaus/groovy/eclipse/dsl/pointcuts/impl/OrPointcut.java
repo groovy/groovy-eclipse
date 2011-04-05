@@ -23,8 +23,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class OrPointcut extends AbstractPointcut {
 
-    public OrPointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public OrPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     public BindingSet matches(GroovyDSLDContext pattern) {
@@ -58,7 +58,7 @@ public class OrPointcut extends AbstractPointcut {
         
         if (newPointcut instanceof OrPointcut) {
             OrPointcut newOr = (OrPointcut) newPointcut;
-            OrPointcut newNewOr = new OrPointcut(getContainerIdentifier());
+            OrPointcut newNewOr = new OrPointcut(getContainerIdentifier(), "or");
             // flatten the ands
             for (int i = 0; i < newOr.getArgumentValues().length; i++) {
                 String name = newOr.getArgumentNames()[i];

@@ -36,8 +36,8 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
 
     private final Class<T> filterBy;
     
-    public FilteringPointcut(String containerIdentifier, Class<T> filterBy) {
-        super(containerIdentifier);
+    public FilteringPointcut(String containerIdentifier, String pointcutName, Class<T> filterBy) {
+        super(containerIdentifier, pointcutName);
         this.filterBy = filterBy;
     }
 

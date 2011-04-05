@@ -24,8 +24,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class AnnotatedByPointcut extends FilteringPointcut<AnnotatedNode> {
 
-    public AnnotatedByPointcut(String containerIdentifier) {
-        super(containerIdentifier, AnnotatedNode.class);
+    public AnnotatedByPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName, AnnotatedNode.class);
     }
     
     protected AnnotatedNode filterObject(AnnotatedNode result, GroovyDSLDContext context, String firstArgAsString) {

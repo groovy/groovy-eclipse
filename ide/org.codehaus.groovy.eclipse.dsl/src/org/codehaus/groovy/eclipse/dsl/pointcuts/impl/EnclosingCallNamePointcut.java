@@ -29,8 +29,8 @@ import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
  */
 public class EnclosingCallNamePointcut extends AbstractPointcut {
 
-    public EnclosingCallNamePointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public EnclosingCallNamePointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     @Override

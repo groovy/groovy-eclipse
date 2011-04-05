@@ -29,8 +29,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class VariableExpressionPointcut extends FilteringPointcut<Expression> {
 
-    public VariableExpressionPointcut(String containerIdentifier) {
-        super(containerIdentifier, Expression.class);
+    public VariableExpressionPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName, Expression.class);
     }
 
 

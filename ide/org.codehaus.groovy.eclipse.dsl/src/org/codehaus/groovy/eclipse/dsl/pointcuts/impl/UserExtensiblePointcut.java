@@ -32,13 +32,13 @@ public class UserExtensiblePointcut extends AbstractPointcut {
     @SuppressWarnings("rawtypes")
     private Closure closure;
 
-    public UserExtensiblePointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public UserExtensiblePointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     @SuppressWarnings("rawtypes")
-    public UserExtensiblePointcut(String containerIdentifier, Closure closure) {
-        super(containerIdentifier);
+    public UserExtensiblePointcut(String containerIdentifier, String pointcutName, Closure closure) {
+        super(containerIdentifier, pointcutName);
         setClosure(closure);
     }
 

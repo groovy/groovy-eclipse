@@ -26,40 +26,40 @@ import org.objectweb.asm.Opcodes;
 public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
     
     public static class FinalPointcut extends AbstractModifierPointcut {
-        public FinalPointcut(String containerIdentifier) {
-            super(containerIdentifier, Opcodes.ACC_FINAL);
+        public FinalPointcut(String containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Opcodes.ACC_FINAL);
         }
     }
 
     public static class StaticPointcut extends AbstractModifierPointcut {
-        public StaticPointcut(String containerIdentifier) {
-            super(containerIdentifier, Opcodes.ACC_STATIC);
+        public StaticPointcut(String containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Opcodes.ACC_STATIC);
         }
     }
     
     public static class PublicPointcut extends AbstractModifierPointcut {
-        public PublicPointcut(String containerIdentifier) {
-            super(containerIdentifier, Opcodes.ACC_PUBLIC);
+        public PublicPointcut(String containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Opcodes.ACC_PUBLIC);
         }
     }
     
     public static class PrivatePointcut extends AbstractModifierPointcut {
-        public PrivatePointcut(String containerIdentifier) {
-            super(containerIdentifier, Opcodes.ACC_PRIVATE);
+        public PrivatePointcut(String containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Opcodes.ACC_PRIVATE);
         }
     }
     
     public static class SynchronizedPointcut extends AbstractModifierPointcut {
-        public SynchronizedPointcut(String containerIdentifier) {
-            super(containerIdentifier, Opcodes.ACC_SYNCHRONIZED);
+        public SynchronizedPointcut(String containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Opcodes.ACC_SYNCHRONIZED);
         }
     }
     
 
     private final int modifier;
     
-    public AbstractModifierPointcut(String containerIdentifier, int modifier) {
-        super(containerIdentifier, AnnotatedNode.class);
+    public AbstractModifierPointcut(String containerIdentifier, String pointcutName, int modifier) {
+        super(containerIdentifier, pointcutName, AnnotatedNode.class);
         this.modifier = modifier;
     }
 

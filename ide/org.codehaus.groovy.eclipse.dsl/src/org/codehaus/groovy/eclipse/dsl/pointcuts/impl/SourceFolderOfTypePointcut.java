@@ -32,14 +32,14 @@ import org.eclipse.jdt.core.compiler.CharOperation;
  */
 public class SourceFolderOfTypePointcut extends AbstractPointcut {
 
-    public SourceFolderOfTypePointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public SourceFolderOfTypePointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     @Override
     public BindingSet matches(GroovyDSLDContext pattern) {
         if (extractFileName(pattern.getCurrentType(), pattern).startsWith((String) getFirstArgument())) {
-            return new BindingSet().addDefaultBinding(pattern.fileName);
+            return new BindingSet().addDefaultBinding(pattern.fullPathName);
         } else {
             return null;
         }
@@ -66,7 +66,7 @@ public class SourceFolderOfTypePointcut extends AbstractPointcut {
             // check if this type is in the current file 
             ModuleNode module = pattern.getCurrentScope().getEnclosingTypeDeclaration().getModule();
             if (module != null && module.getClasses().contains(redirect)) {
-                return pattern.fileName;
+                return pattern.fullPathName;
             }
         }
         

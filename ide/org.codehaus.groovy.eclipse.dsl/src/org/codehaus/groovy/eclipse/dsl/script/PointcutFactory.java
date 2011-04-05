@@ -35,6 +35,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingFieldPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingMethodPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingScriptPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FileExtensionPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FileNamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindMethodPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
@@ -146,6 +147,7 @@ public class PointcutFactory {
         
         // structural pointcuts
         registerGlobalPointcut("fileExtension", FileExtensionPointcut.class, createDoc("Matches on the file extension of the file being inferred.", "The file extension without the '.'", "The full file name being matched, or null if there was no match."));
+        registerGlobalPointcut("fileName", FileNamePointcut.class, createDoc("Matches on the simple file name of the file being inferred.", "The file name to match. Should include the file extension, but not the path.", "The simple file name that was matched, or null if there was no match."));
         registerGlobalPointcut("nature", ProjectNaturePointcut.class, createDoc("Matches on the Eclipse project nature for the current project.  " +
         		"For example:<blockquote>Groovy proejcts: <code>org.eclipse.jdt.groovy.core.groovyNature</code><br>" +
         		"Grails project: <code>com.springsource.sts.grails.core.nature</code></blockquote>", "The name of the project nature to check", 
@@ -193,7 +195,7 @@ public class PointcutFactory {
         @SuppressWarnings("rawtypes")
         Closure c = localRegistry.get(name);
         if (c != null) {
-            UserExtensiblePointcut userExtensiblePointcut = new UserExtensiblePointcut(uniqueID, c);
+            UserExtensiblePointcut userExtensiblePointcut = new UserExtensiblePointcut(uniqueID, name, c);
             userExtensiblePointcut.setProject(project);
             return userExtensiblePointcut;
         } 
@@ -201,14 +203,15 @@ public class PointcutFactory {
         Class<? extends IPointcut> pc = registry.get(name);
         if (pc != null) {
             try {
-                // try the one arg constructor and the no-arg constructor
+                // try the two arg constructor and the no-arg constructor
                 try {
-                    IPointcut p = pc.getConstructor(String.class).newInstance(uniqueID);
+                    IPointcut p = pc.getConstructor(String.class, String.class).newInstance(uniqueID, name);
                     p.setProject(project);
                     return p;
                 } catch (NoSuchMethodException e) {
                     IPointcut p = pc.getConstructor(String.class).newInstance();
                     if (p instanceof AbstractPointcut) {
+                        ((AbstractPointcut) p).setPointcutName(name);
                         ((AbstractPointcut) p).setContainerIdentifier(uniqueID);
                         p.setProject(project);
                         return p;

@@ -226,6 +226,30 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesTo(AnnotatedNode expr) {
+        internalDelegatesTo(expr, false);
+    }
+
+    void delegatesToUseNamedArgs(String className) {
+        delegatesToUseNamedArgs(this.resolver.resolve(className));
+    }
+    
+    void delegatesToUseNamedArgs(Class<?> clazz) {
+        delegatesToUseNamedArgs(this.resolver.resolve(clazz.getCanonicalName()));
+    }
+    
+    /**
+     * invoked by the closure
+     * takes an expression and adds all members of its type to the augmented
+     * class reference.
+     */
+    void delegatesToUseNamedArgs(AnnotatedNode expr) {
+        internalDelegatesTo(expr, true);
+    }
+    
+    /**
+     * @param expr
+     */
+    private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs) {
         ClassNode type;
         if (expr instanceof ClassNode) {
             type = (ClassNode) expr;
@@ -246,7 +270,7 @@ public class DSLContributionGroup extends ContributionGroup {
                 if (!(method instanceof ConstructorNode)) {
                     contributions.add(new MethodContributionElement(method.getName(), toParameterContribution(method
                             .getParameters()), method.getReturnType().getName(), type.getName(), method.isStatic(), provider,
-                            null, false));
+                            null, useNamedArgs));
                 }
             }
         }

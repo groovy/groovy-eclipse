@@ -117,4 +117,16 @@ public interface IPointcut {
      * @return
      */
     boolean fastMatch(GroovyDSLDContext pattern);
+    
+    /**
+     * User-readable name of the pointcut
+     * @return
+     */
+    String getPointcutName();
+    
+    /**
+     * Extended name printed out during errors
+     * @return
+     */
+    String getPointcutDebugName();
 }

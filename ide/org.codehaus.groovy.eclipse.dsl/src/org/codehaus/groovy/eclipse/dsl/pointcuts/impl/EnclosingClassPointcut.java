@@ -26,8 +26,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class EnclosingClassPointcut extends AbstractPointcut {
 
-    public EnclosingClassPointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public EnclosingClassPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     @Override

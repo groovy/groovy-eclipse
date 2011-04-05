@@ -23,8 +23,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class NotPointcut extends AbstractPointcut {
 
-    public NotPointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public NotPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     @Override

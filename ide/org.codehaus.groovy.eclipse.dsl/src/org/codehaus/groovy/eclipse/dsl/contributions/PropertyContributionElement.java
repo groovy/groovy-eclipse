@@ -48,7 +48,7 @@ public class PropertyContributionElement implements IContributionElement {
         this.declaringType = declaringType;
         
         this.provider = provider == null ? GROOVY_DSL_PROVIDER : provider;
-        this.doc = doc == null ? NO_DOC + provider : doc;
+        this.doc = doc == null ? NO_DOC + this.provider : doc;
     }
 
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {

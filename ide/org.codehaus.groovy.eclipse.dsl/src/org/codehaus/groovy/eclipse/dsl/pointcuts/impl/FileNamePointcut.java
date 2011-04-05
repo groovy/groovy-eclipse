@@ -14,37 +14,35 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
-import org.eclipse.core.resources.IProject;
 
 /**
- * Tests that the {@link IProject} that contains the current pattern has a nature of the specified type.
- * This pointcut should be optimized so that it runs before any others in an 'and' or 'or' clause.  Also, its result should be cached in the 
- * pattern providing a fail/succeed fast strategy.
+ * Tests that the current file matches the name passed in.
+ * 
+ * Argument should be the full file name including extendion, but not the path.
  * 
  * @author andrew
- * @created Feb 10, 2011
+ * @created Apr 5, 2011
  */
-public class ProjectNaturePointcut extends AbstractPointcut {
+public class FileNamePointcut extends AbstractPointcut {
 
-    public ProjectNaturePointcut(String containerIdentifier, String pointcutName) {
+    public FileNamePointcut(String containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 
     @Override
     public BindingSet matches(GroovyDSLDContext pattern) {
-    	for (String nature : pattern.projectNatures) {
-            if (nature.equals(getFirstArgument())) {
-                return new BindingSet().addDefaultBinding(nature);
-            }
+        if (pattern.simpleFileName != null && pattern.simpleFileName.equals(getFirstArgument())) {
+            return new BindingSet().addDefaultBinding(pattern.simpleFileName);
+        } else {
+            return null;
         }
-    	return null;
     }
-
+    
     @Override
     public boolean fastMatch(GroovyDSLDContext pattern) {
         return matches(pattern) != null;
     }
-    
+
     @Override
     public void verify() throws PointcutVerificationException {
         String maybeStatus = allArgsAreStrings();

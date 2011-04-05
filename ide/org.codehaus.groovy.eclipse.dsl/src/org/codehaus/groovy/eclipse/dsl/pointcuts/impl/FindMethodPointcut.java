@@ -26,8 +26,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class FindMethodPointcut extends FilteringPointcut<MethodNode> {
 
-    public FindMethodPointcut(String containerIdentifier) {
-        super(containerIdentifier, MethodNode.class);
+    public FindMethodPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName, MethodNode.class);
     }
 
 

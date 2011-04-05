@@ -23,8 +23,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class AndPointcut extends AbstractPointcut {
 
-    public AndPointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public AndPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class AndPointcut extends AbstractPointcut {
         
         if (newPointcut instanceof AndPointcut) {
         	AndPointcut newAnd = (AndPointcut) newPointcut;
-        	AndPointcut newNewAnd = new AndPointcut(getContainerIdentifier());
+        	AndPointcut newNewAnd = new AndPointcut(getContainerIdentifier(), "and");
         	// flatten the ands
         	for (int i = 0; i < newAnd.getArgumentValues().length; i++) {
                 String name = newAnd.getArgumentNames()[i];

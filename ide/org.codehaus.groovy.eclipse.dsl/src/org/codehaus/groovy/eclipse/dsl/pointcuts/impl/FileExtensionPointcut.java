@@ -25,14 +25,14 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class FileExtensionPointcut extends AbstractPointcut {
 
-    public FileExtensionPointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public FileExtensionPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     @Override
     public BindingSet matches(GroovyDSLDContext pattern) {
-        if (pattern.fileName != null && pattern.fileName.endsWith("." + (String) getFirstArgument())) {
-            return new BindingSet().addDefaultBinding(pattern.fileName);
+        if (pattern.fullPathName != null && pattern.fullPathName.endsWith("." + (String) getFirstArgument())) {
+            return new BindingSet().addDefaultBinding(pattern.fullPathName);
         } else {
             return null;
         }

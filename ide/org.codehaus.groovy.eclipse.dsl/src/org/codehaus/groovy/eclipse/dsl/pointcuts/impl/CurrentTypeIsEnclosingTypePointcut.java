@@ -30,8 +30,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
 
-    public CurrentTypeIsEnclosingTypePointcut(String containerIdentifier) {
-        super(containerIdentifier);
+    public CurrentTypeIsEnclosingTypePointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName);
     }
 
     @Override

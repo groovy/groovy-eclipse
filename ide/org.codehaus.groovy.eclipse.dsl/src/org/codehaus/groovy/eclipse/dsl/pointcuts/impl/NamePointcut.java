@@ -23,8 +23,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class NamePointcut extends FilteringPointcut<Object> {
 
-    public NamePointcut(String containerIdentifier) {
-        super(containerIdentifier, Object.class);
+    public NamePointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName, Object.class);
     }
     
     protected Object filterObject(Object result, GroovyDSLDContext context, String firstArgAsString) {

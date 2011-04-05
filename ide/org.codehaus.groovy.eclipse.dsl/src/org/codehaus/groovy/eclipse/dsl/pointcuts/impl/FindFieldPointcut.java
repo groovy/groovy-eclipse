@@ -26,8 +26,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
 
-    public FindFieldPointcut(String containerIdentifier) {
-        super(containerIdentifier, FieldNode.class);
+    public FindFieldPointcut(String containerIdentifier, String pointcutName) {
+        super(containerIdentifier, pointcutName, FieldNode.class);
     }
 
 
