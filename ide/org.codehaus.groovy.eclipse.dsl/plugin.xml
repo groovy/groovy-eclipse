@@ -23,14 +23,14 @@
          point="org.eclipse.ui.commands">
       <command
             categoryId="org.codehaus.groovy.eclipse.dsl.command.category"
-            description="Refresh GDSL files for the given project"
+            description="Refresh DSLD files for the given project"
             id="org.codehaus.groovy.eclipse.dsl.command.refresh"
-            name="Refresh GDSLs">
+            name="Refresh DSLDs">
       </command>
       <category
-            description="Commands related to GDSL management"
+            description="Commands related to DSLD management"
             id="org.codehaus.groovy.eclipse.dsl.command.category"
-            name="GDSL-related commands">
+            name="DSLD-related commands">
       </category>
    </extension>
    <extension
@@ -55,7 +55,7 @@
                definitionId="org.codehaus.groovy.eclipse.dsl.command.refresh"
                enablesFor="+"
                id="org.codehaus.groovy.eclipse.dsl.action1"
-               label="Refresh GDSL files"
+               label="Refresh DSLD files"
                menubarPath="groovy/dsl"
                tooltip="Refresh Groovy DSLs for currentl selected Groovy Project(s)">
          </action>
@@ -79,7 +79,7 @@
             base-type="org.eclipse.jdt.groovy.core.groovySource"
             file-extensions="dsld"
             id="org.codehaus.groovy.eclipse.dsl.dsld"
-            name="Groovy Inferencing DSL file"
+            name="Groovy DSL Descriptor file"
             priority="high">
       </content-type>
    </extension>
@@ -89,7 +89,7 @@
             category="org.codehaus.groovy.eclipse.preferences"
             class="org.codehaus.groovy.eclipse.dsl.ui.DSLPreferencesPage"
             id="org.codehaus.groovy.eclipse.dsl.preferences"
-            name="DSL descriptor language">
+            name="DSLD">
       </page>
    </extension>
 </plugin>

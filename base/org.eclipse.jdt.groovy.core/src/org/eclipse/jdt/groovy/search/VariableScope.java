@@ -409,67 +409,6 @@ public class VariableScope {
 		}
 	}
 
-	/**
-	 * @param resolvedGenerics
-	 * @param unresolvedGenerics
-	 * @param type
-	 * @return the resolved class node, or null if there was nothing to resolve
-	 */
-	@Deprecated
-	// FIXADE this method should be removed and the other variant should be used.
-	public static ClassNode resolveTypeParameterization(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics,
-			ClassNode type) {
-
-		if (isValidGenerics(resolvedGenerics, unresolvedGenerics, type)) {
-			GenericsType[] typesToParameterize = type.getGenericsTypes();
-
-			// try to match
-			outer: for (int i = 0; i < typesToParameterize.length; i++) {
-				GenericsType typeToParameterize = typesToParameterize[i];
-
-				if (typeToParameterize instanceof LazyGenericsType) {
-					// LazyGenericsType is immutable
-					// shouldn't get here...log error and continue
-					Util.log(new RuntimeException(), "Found a JDTClassNode while resolving type parameters.  " //$NON-NLS-1$
-							+ "This shouldn't happen.  Not trying to resolve any further " + "and continuing.  Type: " + type); //$NON-NLS-1$ //$NON-NLS-2$
-					continue;
-				}
-
-				// recur down the type parameter
-				resolveTypeParameterization(resolvedGenerics, unresolvedGenerics, typeToParameterize.getType());
-
-				String toParameterizeName = typeToParameterize.getName();
-				for (int j = 0; j < unresolvedGenerics.length; j++) {
-					if (toParameterizeName.equals(unresolvedGenerics[j].getName())) {
-						// we have a match, three possibilities, this type is the resolved type parameter of a generic type (eg-
-						// Iterator<E> --> Iterator<String>)
-						// or it is the resolution of a type parameter itself (eg- E --> String)
-						// or it is a substitution of one type parameter for another (eg- List<T> --> List<E>, where T comes from
-						// the declaring type)
-						// if this parameter exists in the redirect, then it is the former, if not, then check the redirect for type
-						// parameters
-						if (typeParameterExistsInRedirected(type, toParameterizeName)) {
-							// we have: Iterator<E> --> Iterator<String>
-							type.getGenericsTypes()[i].setType(resolvedGenerics[j].getType());
-							typeToParameterize.setName(typeToParameterize.getType().getName());
-							typeToParameterize.setUpperBounds(null);
-							typeToParameterize.setLowerBound(null);
-						} else {
-							// E --> String
-							// no need to recur since this is the resolution of a type parameter
-							type = resolvedGenerics[j].getType();
-
-							// I *think* this means we are done.
-							// I *think* this can only be reached when typesToParameterize.length == 1
-							break outer;
-						}
-					}
-				}
-			}
-		}
-		return type;
-	}
-
 	public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode typeToParameterize) {
 		if (!mapper.hasGenerics()) {
 			return typeToParameterize;
@@ -573,8 +512,8 @@ public class VariableScope {
 	/**
 	 * Internal variant of clone that ensures stack recursion never gets too large
 	 * 
-	 * @param type
-	 * @param depth TODO
+	 * @param type class to clone
+	 * @param depth prevent recursion
 	 * @return
 	 */
 	private static ClassNode cloneInternal(ClassNode type, int depth) {
@@ -708,22 +647,6 @@ public class VariableScope {
 		shared.enclosingCallStack.pop();
 	}
 
-	// FIXADE disable expression recording until we know that we need it.
-	// // this is the expression cache. I don't know if I like this.
-	// // records the type of all expressions that were seen so far by this scope
-	// private final Map<Expression, ClassNode> expressionTypeCache = new HashMap<Expression, ClassNode>();
-	//
-	// public void recordExpressionType(Expression expr, ClassNode type) {
-	// expressionTypeCache.put(expr, type);
-	// }
-	//
-	// public ClassNode queryExpressionType(Expression expr) {
-	// return expressionTypeCache.get(expr);
-	// }
-
-	/**
-	 * @return
-	 */
 	public boolean isTopLevel() {
 		return parent == null;
 	}

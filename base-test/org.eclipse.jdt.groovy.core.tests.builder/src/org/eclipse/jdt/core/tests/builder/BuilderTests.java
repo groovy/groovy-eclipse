@@ -10,28 +10,22 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests;
-import org.eclipse.jdt.core.groovy.tests.locations.LocationSupportTests;
-import org.eclipse.jdt.core.groovy.tests.locations.SourceLocationsTests;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.TestVerifier;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.Compiler;
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 
 /**
  * Base class for Java image builder tests
@@ -472,6 +466,8 @@ public class BuilderTests extends TestCase {
 	 */
 	protected void setUp() throws Exception {
 		super.setUp();
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
 
 		debugRequestor = new EfficiencyCompilerRequestor();
 		Compiler.DebugRequestor = debugRequestor;
@@ -487,6 +483,23 @@ public class BuilderTests extends TestCase {
 	 */
 	protected void tearDown() throws Exception {
 		env.resetWorkspace();
+        ICompilationUnit[] wcs = new ICompilationUnit[0];
+        int i = 0;
+        do {
+            wcs = JavaCore.getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY);
+            for (ICompilationUnit workingCopy : wcs) {
+                try {
+                    workingCopy.discardWorkingCopy();
+                    workingCopy.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            i++;
+            if (i > 20) {
+                fail("Could not delete working copies " + wcs);
+            }
+        } while (wcs.length > 0);
 		JavaCore.setOptions(JavaCore.getDefaultOptions());
 		super.tearDown();
 	}
@@ -518,75 +531,4 @@ public class BuilderTests extends TestCase {
 		return allProblems;
 	}
 
-	private static Class[] getAllTestClasses() {
-		Class[] classes = new Class[] {
-				BasicGroovyBuildTests.class,
-				SourceLocationsTests.class,
-				LocationSupportTests.class
-//			AbstractMethodTests.class,
-//			BasicBuildTests.class,
-//			BuildpathTests.class,
-//			CopyResourceTests.class,
-//			DependencyTests.class,
-//			ErrorsTests.class,
-//			EfficiencyTests.class,
-//			ExecutionTests.class,
-//			IncrementalTests.class,
-//			MultiProjectTests.class,
-//			MultiSourceFolderAndOutputFolderTests.class,
-//			OutputFolderTests.class,
-//			PackageTests.class,
-//			StaticFinalTests.class,
-//			GetResourcesTests.class,
-		};
-
-//		if ((AbstractCompilerTest.getPossibleComplianceLevels()  & AbstractCompilerTest.F_1_5) != 0) {
-//			int length = classes.length;
-//			System.arraycopy(classes, 0, classes = new Class[length+3], 0, length);
-//			classes[length++] = Java50Tests.class;
-//            classes[length++] = PackageInfoTest.class;
-//            classes[length++] = ParticipantBuildTests.class;
-//        }
-		return classes;
-	}
-
-	public static Test suite() {
-		TestSuite suite = new TestSuite(BuilderTests.class.getName());
-
-		// Hack to load all classes before computing their suite of test cases
-		// this allow to reset test cases subsets while running all Builder tests...
-		Class[] classes = getAllTestClasses();
-
-		// Reset forgotten subsets of tests
-		TestCase.TESTS_PREFIX = null;
-		TestCase.TESTS_NAMES = null;
-		TestCase.TESTS_NUMBERS = null;
-		TestCase.TESTS_RANGE = null;
-		TestCase.RUN_ONLY_ID = null;
-
-		/* tests */
-		for (int i = 0, length = classes.length; i < length; i++) {
-			Class clazz = classes[i];
-			Method suiteMethod;
-			try {
-				suiteMethod = clazz.getDeclaredMethod("suite", new Class[0]);
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-				continue;
-			}
-			Object test;
-			try {
-				test = suiteMethod.invoke(null, new Object[0]);
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-				continue;
-			} catch (InvocationTargetException e) {
-				e.printStackTrace();
-				continue;
-			}
-			suite.addTest((Test) test);
-		}
-
-		return suite;
-	}
 }
