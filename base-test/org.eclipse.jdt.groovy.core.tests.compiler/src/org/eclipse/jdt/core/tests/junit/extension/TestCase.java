@@ -10,25 +10,32 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.junit.extension;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.util.*;
-
-import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.compiler.batch.Main;
-import org.eclipse.test.performance.Performance;
-import org.eclipse.test.performance.PerformanceTestCase;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.StringTokenizer;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.ComparisonFailure;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-public class TestCase extends PerformanceTestCase {
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.batch.Main;
+
+public class TestCase extends junit.framework.TestCase {
 
 	// Filters
 	public static final String METHOD_PREFIX = "test";
@@ -258,7 +265,7 @@ protected void assumeEquals(String msg, String expected, String actual) {
 	try {
 		assertStringEquals(msg, expected, actual, false);
 	} catch (ComparisonFailure cf) {
-		System.out.println("Failure while running test "+Performance.getDefault().getDefaultScenarioId(this)+"!!!");
+		System.out.println("Failure while running test "+this.getName()+"!!!");
 		System.out.println("Actual output is:");
 		System.out.println(Util.displayString(cf.getActual(), 2));
 		System.out.println();
@@ -725,11 +732,6 @@ private static boolean verifyLogDir(File logDir) {
 	return false;
 }
 
-public void assertPerformance() {
-	// make it public to avoid compiler warning about synthetic access
-	super.assertPerformance();
-}
-
 
 /**
  * Clean test before run it.
@@ -760,9 +762,6 @@ protected void clean() {
 	}
 }
 
-public void commitMeasurements() {
-	super.commitMeasurements();
-}
 
 /**
  * Return whether current test is on a new {@link Test test} class or not.
@@ -836,14 +835,6 @@ private String format(long number) {
 	return buffer.toString();
 }
 
-public void startMeasuring() {
-	// make it public to avoid compiler warning about synthetic access
-	super.startMeasuring();
-}
-public void stopMeasuring() {
-	// make it public to avoid compiler warning about synthetic access
-	super.stopMeasuring();
-}
 
 protected void tearDown() throws Exception {
 	super.tearDown();
