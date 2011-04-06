@@ -92,4 +92,19 @@
             name="DSLD">
       </page>
    </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            category="org.codehaus.groovy.eclipse"
+            class="org.codehaus.groovy.eclipse.dsl.ui.NewDSLDWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            icon="icons/GROOVY.png"
+            id="org.codehaus.groovy.eclipse.dsld.newDsldWizard"
+            name="Groovy DSL Descriptor"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective">
+         <description>
+            Create a new DSL descriptor file.
+         </description>
+      </wizard>
+   </extension>
 </plugin>
