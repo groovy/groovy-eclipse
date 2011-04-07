@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractConstantAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractLocalAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractMethodAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyTabAction;
+import org.codehaus.groovy.eclipse.editor.actions.IGroovyEditorActionDefinitionIds;
 import org.codehaus.groovy.eclipse.editor.highlighting.GroovySemanticReconciler;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatGroovyAction;
@@ -792,8 +793,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 
         // use our Rename action instead
         GroovyRenameAction renameAction = new GroovyRenameAction(this);
-        renameAction
-                .setActionDefinitionId(IJavaEditorActionDefinitionIds.RENAME_ELEMENT);
+        renameAction.setActionDefinitionId(IGroovyEditorActionDefinitionIds.GROOVY_RENAME_ACTION);
         setAction("RenameElement", renameAction); //$NON-NLS-1$
         replaceRefactoringAction("fRenameAction", renameAction);
 

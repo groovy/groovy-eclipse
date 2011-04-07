@@ -41,7 +41,7 @@
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
             id="org.codehaus.groovy.eclipse.refactoring.command.rename"
-            name="Rename Variable...">
+            name="Rename - Refactoring">
       </command>
       <command
             categoryId="org.codehaus.groovy.eclipse.editor.category.source"
@@ -62,20 +62,60 @@
             commandId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+I">
-      </key>
+            sequence="M2+M3+I"/>
+      <!--Undefine and redefine for carbon so as not to compete with special characters -->
+      <key
+            platform="carbon"
+            sequence="M2+M3+I"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            commandId=""
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+            platform="carbon"
+            sequence="COMMAND+ALT+I"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+
       <key
             commandId="org.codehaus.groovy.eclipse.refactoring.command.rename"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+R">
-      </key>
+            sequence="M2+M3+R"/>
+      <!--Undefine and redefine for carbon so as not to compete with special characters -->
+      <key
+            platform="carbon"
+            sequence="M2+M3+R"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            commandId=""
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+            platform="carbon"
+            sequence="COMMAND+ALT+R"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.rename"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+
+
+
       <key
             commandId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+M">
-      </key>
+            sequence="M2+M3+M"/>
+      <!--Undefine and redefine for carbon so as not to compete with special characters -->
+      <key
+            platform="carbon"
+            sequence="M2+M3+M"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            commandId=""
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+            platform="carbon"
+            sequence="COMMAND+ALT+M"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            commandId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
       <!-- 
       		We don't need the formatting and indentation commands since they are provided by the GroovyEditor
       		and use the commandId for the Java Editor variants of the command
