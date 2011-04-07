@@ -235,6 +235,9 @@ public class TestProject {
             InputStream contents) throws JavaModelException {
         IFile file = folder.getFile(new Path(name));
         try {
+            if (file.exists()) {
+                file.delete(true, null);
+            }
             file.create(contents, IResource.FORCE, null);
 
         } catch (CoreException e) {

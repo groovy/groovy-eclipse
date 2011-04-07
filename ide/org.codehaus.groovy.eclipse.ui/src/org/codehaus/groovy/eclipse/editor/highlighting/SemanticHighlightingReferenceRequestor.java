@@ -23,6 +23,7 @@ import java.util.TreeSet;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -81,9 +82,6 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
 
             // don't continue if we have an unknown reference
             return VisitStatus.CANCEL_BRANCH;
-        } else if (node instanceof ConstantExpression && node.getStart() < contents.length && contents[node.getStart()] == '/') {
-            Position p = getPosition(node);
-            pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
         } else if (node instanceof AnnotatedNode && isDeprecated(result.declaration)) {
             Position p = getPosition(node);
             pos = new HighlightedTypedPosition(p, HighlightKind.DEPRECATED);
@@ -101,6 +99,14 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
             } else {
                 pos = new HighlightedTypedPosition(p, HighlightKind.METHOD);
             }
+        } else if (node instanceof ConstantExpression && node.getStart() < contents.length) {
+            if (contents[node.getStart()] == '/') {
+                Position p = getPosition(node);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+            } else if (isNumber(((ConstantExpression) node).getType())) {
+                Position p = getPosition(node);
+                pos = new HighlightedTypedPosition(p, HighlightKind.NUMBER);
+            }
         }
 
         if (pos != null && (pos.getOffset() > 0 || pos.getLength() > 1)) {
@@ -108,6 +114,10 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
         }
 
         return VisitStatus.CONTINUE;
+    }
+
+    private boolean isNumber(ClassNode type) {
+        return ClassHelper.isNumberType(type) || type == ClassHelper.BigDecimal_TYPE || type == ClassHelper.BigInteger_TYPE;
     }
 
     private Position getPosition(ASTNode node) {

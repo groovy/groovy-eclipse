@@ -22,12 +22,14 @@ import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPo
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_METHOD;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_FIELD;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.UNKNOWN;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.NUMBER;
 
 import java.util.Arrays;
 import java.util.Comparator;
 
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition;
+import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -100,6 +102,74 @@ public class SemanticHighlightingTests extends EclipseTestCase {
                 new HighlightedTypedPosition(contents.lastIndexOf("x"), "x".length(), DEPRECATED));
     }
     
+    public void testNumberWithSuffic() throws Exception {
+        String contents = "11";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1I";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1i";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1L";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1l";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1G";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1g";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1D";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1d";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1F";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        contents = "1f";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+        
+        // source locations for '-' and '+' are incorrect
+        // this appears to be a groovy problem
+//        contents = "-1";
+//        assertHighlighting(contents, 
+//                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+//        contents = "+1";
+//        assertHighlighting(contents, 
+//                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+    }
+    
+    public void testOctal() throws Exception {
+        String contents = "01";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+    }
+    
+    public void testHex() throws Exception {
+        String contents = "0x1fff";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+    }
+    
+    public void testExponent() throws Exception {
+        String contents = "1.23e-23";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+    }
+    
+    public void testDecimal() throws Exception {
+        String contents = "8881.23";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(0, contents.length(), NUMBER));
+    }
     
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) throws Exception {
         GroovyCompilationUnit unit = openFile(contents);

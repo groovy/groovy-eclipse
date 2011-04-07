@@ -77,6 +77,7 @@ import org.eclipse.text.edits.TextEdit;
  * </p>
  * @since 3.2
  */
+@SuppressWarnings("rawtypes")
 public final class ImportRewrite {
 
 	/**
@@ -174,7 +175,8 @@ public final class ImportRewrite {
 	 * @return the created import rewriter.
 	 * @throws JavaModelException thrown when the compilation unit could not be accessed.
 	 */
-	public static ImportRewrite create(ICompilationUnit cu, boolean restoreExistingImports) throws JavaModelException {
+    @SuppressWarnings("unchecked")
+    public static ImportRewrite create(ICompilationUnit cu, boolean restoreExistingImports) throws JavaModelException {
 		if (cu == null) {
 			throw new IllegalArgumentException("Compilation unit must not be null"); //$NON-NLS-1$
 		}
@@ -205,7 +207,8 @@ public final class ImportRewrite {
 	 * @return the created import rewriter.
 	 * @throws IllegalArgumentException thrown when the passed AST is null or was not created from a compilation unit.
 	 */
-	public static ImportRewrite create(CompilationUnit astRoot, boolean restoreExistingImports) {
+    @SuppressWarnings("unchecked")
+    public static ImportRewrite create(CompilationUnit astRoot, boolean restoreExistingImports) {
 		if (astRoot == null) {
 			throw new IllegalArgumentException("AST must not be null"); //$NON-NLS-1$
 		}
@@ -469,6 +472,7 @@ public final class ImportRewrite {
 	 * @return returns a type to which the type binding can be assigned to. The returned type contains is unqualified
 	 * when an import could be added or was already known. It is fully qualified, if an import conflict prevented the import.
 	 */
+    @SuppressWarnings("unchecked")
 	public Type addImportFromSignature(String typeSig, AST ast, ImportRewriteContext context) {
 		if (typeSig == null || typeSig.length() == 0) {
 			throw new IllegalArgumentException("Invalid type signature: empty or null"); //$NON-NLS-1$
@@ -708,6 +712,7 @@ public final class ImportRewrite {
 	 * @return returns a type to which the type binding can be assigned to. The returned type contains is unqualified
 	 * when an import could be added or was already known. It is fully qualified, if an import conflict prevented the import.
 	 */
+    @SuppressWarnings("unchecked")
 	public Type addImport(ITypeBinding binding, AST ast, ImportRewriteContext context) {
 		if (binding.isPrimitive()) {
 			return ast.newPrimitiveType(PrimitiveType.toCode(binding.getName()));
@@ -906,6 +911,7 @@ public final class ImportRewrite {
 	 * @return returns either the simple member name if the import was successful or else the qualified name if
 	 * an import conflict prevented the import.
 	 */
+    @SuppressWarnings("unchecked")
 	public String addStaticImport(String declaringTypeName, String simpleName, boolean isField, ImportRewriteContext context) {
 		String key = declaringTypeName + '.' + simpleName;
 		if (declaringTypeName.indexOf('.') == -1) {
@@ -954,6 +960,7 @@ public final class ImportRewrite {
 		return typeName;
 	}
 
+    @SuppressWarnings("unchecked")
 	private void addEntry(String entry) {
 		this.existingImports.add(entry);
 
@@ -969,6 +976,7 @@ public final class ImportRewrite {
 		this.addedImports.add(entry);
 	}
 
+    @SuppressWarnings("unchecked")
 	private boolean removeEntry(String entry) {
 		if (this.existingImports.remove(entry)) {
 			if (this.addedImports != null) {
@@ -1164,6 +1172,7 @@ public final class ImportRewrite {
 	}
 
 
+    @SuppressWarnings("unchecked")
 	private static String[] filterFromList(List imports, char prefix) {
 		if (imports == null) {
 			return CharOperation.NO_STRINGS;
@@ -1180,6 +1189,7 @@ public final class ImportRewrite {
 
     // GRECLIPSE allow aliases to be added to imports, but only if they already
     // exist
+    @SuppressWarnings("unchecked")
     public void addAlias(String importName, String aliasName) {
         int index = addedImports.indexOf(importName);
         if (index >= 0) {

@@ -47,6 +47,7 @@ import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MultiTextEdit;
 
+@SuppressWarnings("rawtypes")
 public final class ImportRewriteAnalyzer {
 
 	private final ICompilationUnit compilationUnit;
@@ -71,7 +72,7 @@ public final class ImportRewriteAnalyzer {
 
 	private static final String JAVA_LANG= "java.lang"; //$NON-NLS-1$
 
-	public ImportRewriteAnalyzer(
+    public ImportRewriteAnalyzer(
 			ICompilationUnit cu,
 			CompilationUnit root,
 			String[] importOrder,
@@ -122,11 +123,13 @@ public final class ImportRewriteAnalyzer {
 		return 1;
 	}
 
-	private boolean insertSpaceBeforeSemicolon() {
+    @SuppressWarnings("unused")
+    private boolean insertSpaceBeforeSemicolon() {
 		return JavaCore.INSERT.equals(this.compilationUnit.getJavaProject().getOption(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_SEMICOLON, true));
 	}
 
-	private void addPreferenceOrderHolders(PackageEntry[] preferenceOrder) {
+    @SuppressWarnings("unchecked")
+    private void addPreferenceOrderHolders(PackageEntry[] preferenceOrder) {
 		if (this.packageEntries.isEmpty()) {
 			// all new: copy the elements
 			for (int i= 0; i < preferenceOrder.length; i++) {
@@ -241,6 +244,7 @@ public final class ImportRewriteAnalyzer {
 		return decl.isOnDemand() ? name + ".*": name; //$NON-NLS-1$
 	}
 
+    @SuppressWarnings("unchecked")
 	private void addExistingImports(CompilationUnit root) {
 		List/*ImportDeclaration*/ decls= root.imports();
 		if (decls.isEmpty()) {
@@ -503,6 +507,7 @@ public final class ImportRewriteAnalyzer {
 	}
 
 
+    @SuppressWarnings("unchecked")
 	private void sortIn(String typeContainerName, ImportDeclEntry decl, boolean isStatic) {
 		PackageEntry bestMatch= findBestMatch(typeContainerName, isStatic);
 		if (bestMatch == null) {
@@ -563,6 +568,7 @@ public final class ImportRewriteAnalyzer {
 		}
 	}
 
+    @SuppressWarnings("unchecked")
 	public MultiTextEdit getResultingEdits(IProgressMonitor monitor) throws JavaModelException {
 		if (monitor == null) {
 			monitor= new NullProgressMonitor();
@@ -732,6 +738,7 @@ public final class ImportRewriteAnalyzer {
 		return -1;
 	}
 
+    @SuppressWarnings("unchecked")
 	private Set evaluateStarImportConflicts(IProgressMonitor monitor) throws JavaModelException {
 		//long start= System.currentTimeMillis();
 
@@ -793,6 +800,7 @@ public final class ImportRewriteAnalyzer {
 		return onDemandConflicts;
 	}
 
+    @SuppressWarnings("unchecked")
 	private String getNewImportString(String importName, boolean isStatic, String lineDelim) {
 		StringBuffer buf= new StringBuffer();
 		buf.append("import "); //$NON-NLS-1$
@@ -814,6 +822,7 @@ public final class ImportRewriteAnalyzer {
 		return buf.toString();
 	}
 
+    @SuppressWarnings("unchecked")
 	private String[] getNewImportStrings(PackageEntry packageEntry, boolean isStatic, String lineDelim) {
 		boolean isStarImportAdded = false;
 		List allImports = new ArrayList();
@@ -987,6 +996,7 @@ public final class ImportRewriteAnalyzer {
 			return cmp;
 		}
 
+        @SuppressWarnings("unchecked")
 		public void sortIn(ImportDeclEntry imp) {
 			String fullImportName= imp.getElementName();
 			int insertPosition= -1;
@@ -1010,6 +1020,7 @@ public final class ImportRewriteAnalyzer {
 		}
 
 
+        @SuppressWarnings("unchecked")
 		public void add(ImportDeclEntry imp) {
 			this.importEntries.add(imp);
 		}
@@ -1144,10 +1155,12 @@ public final class ImportRewriteAnalyzer {
 		}
 	}
 
+    @SuppressWarnings("unchecked")
 	public String[] getCreatedImports() {
 	    return (String[]) this.importsCreated.toArray(new String[this.importsCreated.size()]);
 	}
 
+    @SuppressWarnings("unchecked")
 	public String[] getCreatedStaticImports() {
 	    return (String[]) this.staticImportsCreated.toArray(new String[this.staticImportsCreated.size()]);
 	}

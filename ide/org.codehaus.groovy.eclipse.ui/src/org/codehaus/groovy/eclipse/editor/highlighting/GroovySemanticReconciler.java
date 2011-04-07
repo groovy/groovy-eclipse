@@ -76,6 +76,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     private HighlightingStyle staticMethodRefHighlighting;
 
+    private HighlightingStyle numberRefHighlighting;
     private SemanticHighlightingPresenter presenter;
 
     /**
@@ -88,14 +89,18 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     public GroovySemanticReconciler() {
         RGB rgbString = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
+        RGB rgbNumber = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
+                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR);
         RGB rgbField = findRGB("semanticHighlighting.field.color", new RGB(0, 0, 192));
         RGB rgbMethod = findRGB("semanticHighlighting.method.color", new RGB(0, 0, 0));
         GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
-        Color colorRegex = colorManager.getColor(rgbString);
+        Color regexColor = colorManager.getColor(rgbString);
         Color fieldColor = colorManager.getColor(rgbField);
         Color methodColor = colorManager.getColor(rgbMethod);
+        Color numberColor = colorManager.getColor(rgbNumber);
         undefinedRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, TextAttribute.UNDERLINE), true);
-        regexRefHighlighting = new HighlightingStyle(new TextAttribute(colorRegex, null, SWT.ITALIC), true);
+        regexRefHighlighting = new HighlightingStyle(new TextAttribute(regexColor, null, SWT.ITALIC), true);
+        numberRefHighlighting = new HighlightingStyle(new TextAttribute(numberColor), true);
         deprecatedRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, TextAttribute.STRIKETHROUGH), true);
         fieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor), true);
         staticFieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor, null, SWT.ITALIC), true);
@@ -184,6 +189,8 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         switch (pos.kind) {
             case UNKNOWN:
                 return new HighlightedPosition(pos.offset, pos.length, undefinedRefHighlighting, this);
+            case NUMBER:
+                return new HighlightedPosition(pos.offset, pos.length, numberRefHighlighting, this);
             case REGEX:
                 return new HighlightedPosition(pos.offset, pos.length, regexRefHighlighting, this);
             case DEPRECATED:

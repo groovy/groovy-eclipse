@@ -242,7 +242,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 				return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, confidence, scope);
 			} else if (constExpr.isEmptyStringExpression()) {
 				return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
-			} else if (ClassHelper.isNumberType(nodeType)) {
+			} else if (ClassHelper.isNumberType(nodeType) || nodeType == ClassHelper.BigDecimal_TYPE
+					|| nodeType == ClassHelper.BigInteger_TYPE) {
 				return new TypeLookupResult(nodeType, null, null, confidence, scope);
 			} else {
 				// there is a possibility that this is a constant expression inside a GString.
