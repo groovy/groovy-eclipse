@@ -150,7 +150,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             pm.beginTask("", 6); //$NON-NLS-1$
 
             IASTFragment expr = getSelectedFragment();
-            if (expr.getStart() != start || expr.getLength() != length) {
+            if (expr == null || expr.getStart() != start || expr.getLength() != length) {
                 return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit,
                         new SourceRange(start, length)));
             }

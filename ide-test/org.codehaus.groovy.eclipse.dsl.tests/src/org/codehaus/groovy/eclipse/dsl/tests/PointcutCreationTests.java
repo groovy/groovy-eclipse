@@ -110,6 +110,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testAnd2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & currentType(\"java.lang.String\") & currentType(\"java.lang.String\")");
+        pc = pc.normalize();
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         
@@ -127,6 +128,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testAnd3() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("(currentType(\"java.lang.String\") & currentType(\"java.lang.String\")) & currentType(\"java.lang.String\")");
+        pc = pc.normalize();
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         
@@ -144,6 +146,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testAnd4() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") & (currentType(\"java.lang.String\") & currentType(\"java.lang.String\"))");
+        pc = pc.normalize();
         assertEquals("Should have been an and pointcut", AndPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         
@@ -187,6 +190,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testOr2() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") | currentType(\"java.lang.String\") | currentType(\"java.lang.String\")");
+        pc = pc.normalize();
         assertEquals("Should have been an and pointcut", OrPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         
@@ -204,6 +208,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testOr3() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("(currentType(\"java.lang.String\") | currentType(\"java.lang.String\")) | currentType(\"java.lang.String\")");
+        pc = pc.normalize();
         assertEquals("Should have been an and pointcut", OrPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         
@@ -221,6 +226,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testOr4() throws Exception {
         IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(\"java.lang.String\") | (currentType(\"java.lang.String\") | currentType(\"java.lang.String\"))");
+        pc = pc.normalize();
         assertEquals("Should have been an and pointcut", OrPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         

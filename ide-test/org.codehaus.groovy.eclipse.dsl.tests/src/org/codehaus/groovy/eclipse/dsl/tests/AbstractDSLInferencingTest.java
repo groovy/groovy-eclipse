@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +29,7 @@ import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 
@@ -81,6 +85,14 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         env.removeFile(project.getFile("dsl" + fileNum + ".dsld").getFullPath());
     }
 
+    protected String[] createDSLsFromFiles(String ... fileNames) throws IOException {
+        String[] dslContents = new String[fileNames.length];
+        for (int i = 0; i < fileNames.length; i++) {
+            dslContents[i] = GroovyDSLDTestsActivator.getDefault().getTestResourceContents(fileNames[i]);
+        }
+        return createDsls(dslContents);
+    }
+    
     /**
      * @param expectedNumDslFiles  number of dsl files currently registered
      * @param allExpectedPointcuts map: dsl file name -> all pointcuts in that file 

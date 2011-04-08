@@ -17,7 +17,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 
 /**
- * Interface representing a contribution to a set of GDSL {@link IPointcut}s.
+ * Interface representing a contribution to a set of DSLD {@link IPointcut}s.
  * @author andrew
  * @created Nov 17, 2010
  */

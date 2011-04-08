@@ -27,24 +27,24 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
- * Handles updates and changes of GDSL files
+ * Handles updates and changes of DSLD files
  * Things that need to get handled:
  * 
  * Project deletion or close: flush the context
- * Project creation, or groovy nature added: refresh GDSLs for project
- * GDSL script added: update that script from context
- * GDSL script deleted: remove that script from context
- * GDSL script changed: first remove and then re-add to context
+ * Project creation, or groovy nature added: refresh DSLDs for project
+ * DSLD script added: update that script from context
+ * DSLD script deleted: remove that script from context
+ * DSLD script changed: first remove and then re-add to context
  * 
  * @author andrew
  * @created Nov 25, 2010
  */
 public class DSLDResourceListener implements IResourceChangeListener {
 
-    private class GDSLChangeResourceDeltaVisitor implements IResourceDeltaVisitor {
+    private class DSLDChangeResourceDeltaVisitor implements IResourceDeltaVisitor {
         private final int eventType;
         
-        private GDSLChangeResourceDeltaVisitor(int eventType) {
+        private DSLDChangeResourceDeltaVisitor(int eventType) {
             this.eventType = eventType;
         }
 
@@ -90,7 +90,7 @@ public class DSLDResourceListener implements IResourceChangeListener {
                 // at this point, we know that we are in a groovy project
                 
                 IFile file = (IFile) deltaResource;
-                if (isGDSLFile(file)) {
+                if (isDSLDFile(file)) {
                     IProject project = file.getProject();
                     DSLDStore store = contextStoreManager.getDSLDStore(project);
                     Assert.isNotNull(store, "Context store should not be null");
@@ -125,7 +125,7 @@ public class DSLDResourceListener implements IResourceChangeListener {
             case IResourceChangeEvent.POST_CHANGE:
                 try {
                     if (event.getDelta() != null) {
-                        event.getDelta().accept(new GDSLChangeResourceDeltaVisitor(event.getType()));
+                        event.getDelta().accept(new DSLDChangeResourceDeltaVisitor(event.getType()));
                     }
                 } catch (CoreException e) {
                     GroovyDSLCoreActivator.logException(e);
@@ -137,7 +137,7 @@ public class DSLDResourceListener implements IResourceChangeListener {
      * @param file
      * @return
      */
-    public boolean isGDSLFile(IFile file) {
+    public boolean isDSLDFile(IFile file) {
         String fileExtension = file.getFileExtension();
         return fileExtension != null && fileExtension.equals("dsld");
     }

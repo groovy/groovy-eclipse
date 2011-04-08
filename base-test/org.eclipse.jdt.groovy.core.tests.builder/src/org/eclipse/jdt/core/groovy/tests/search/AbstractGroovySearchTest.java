@@ -79,6 +79,11 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     protected IProject project;
     protected TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
 
+    /**
+     * Controls the file extension of the files that are created by this test class
+     */
+    protected String defaultFileExtension = "groovy";
+    
     public AbstractGroovySearchTest(String name) {
         super(name);
     }
@@ -101,6 +106,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
                 units[i].discardWorkingCopy();
             }
         }
+        defaultFileExtension = "groovy";
     }
     
 
@@ -125,7 +131,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     }
 
     protected GroovyCompilationUnit createUnit(String name, String contents) {
-    	IPath path = env.addGroovyClass(project.getFolder("src").getFullPath(), name, contents);
+    	IPath path = env.addGroovyClassExtension(project.getFolder("src").getFullPath(), name, contents, defaultFileExtension);
     	fullBuild(project.getFullPath());
     	return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
@@ -135,6 +141,10 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         return JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
     
+    protected ICompilationUnit createJavaUnit(String pack, String name, String contents) {
+        IPath path = env.addClass(project.getFolder("src").getFullPath(), pack, name, contents);
+        return JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+    }
     
 
     protected GroovyCompilationUnit createUnit(String pkg, String name, String contents) throws CoreException {
@@ -142,7 +152,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         if (!folder.exists()) {
             folder.create(true, true, null);
         }
-        IPath path = env.addGroovyClass(folder.getFullPath(), name, contents);
+        IPath path = env.addGroovyClassExtension(folder.getFullPath(), name, contents, defaultFileExtension);
         return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
     

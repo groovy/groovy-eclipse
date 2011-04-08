@@ -19,7 +19,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.IStartup;
 
 /**
- * Initializes all GDSL scripts in the workspace on startup
+ * Initializes all DSLD scripts in the workspace on startup
  * This will start the Groovy plugin if any groovy projects are found
  * @author andrew
  * @created Nov 25, 2010

@@ -10,6 +10,14 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -56,5 +64,32 @@ public class GroovyDSLDTestsActivator extends AbstractUIPlugin {
 	public static GroovyDSLDTestsActivator getDefault() {
 		return plugin;
 	}
+	
+    public InputStream getTestResourceStream(String fileName) throws IOException {
+        IPath path= new Path("testResources").append(fileName);
+        URL url= new URL(getBundle().getEntry("/"), path.toString());
+        return url.openStream();
+    }
+
+    public String getTestResourceContents(String fileName) throws IOException {
+        InputStream stream = getTestResourceStream(fileName);
+        return getContents(stream);
+    }
+    
+    public String getContents(InputStream in) throws IOException {
+        BufferedReader br= new BufferedReader(new InputStreamReader(in));
+
+        StringBuffer sb= new StringBuffer(300);
+        try {
+            int read= 0;
+            while ((read= br.read()) != -1)
+                sb.append((char) read);
+        } finally {
+            br.close();
+        }
+        return sb.toString();
+    }
+
+
 
 }

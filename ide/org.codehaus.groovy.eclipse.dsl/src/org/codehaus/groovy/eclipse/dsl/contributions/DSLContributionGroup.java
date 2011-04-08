@@ -47,7 +47,7 @@ public class DSLContributionGroup extends ContributionGroup {
     private static final String NO_NAME = "";
 
     /**
-     * The closure that comes from the GDSL script.
+     * The closure that comes from the DSLD script.
      * It's delegate is set to <code>this</code>.
      */
     @SuppressWarnings("rawtypes")

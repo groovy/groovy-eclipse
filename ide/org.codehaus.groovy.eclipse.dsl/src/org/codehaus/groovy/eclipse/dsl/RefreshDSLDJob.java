@@ -111,7 +111,7 @@ public class RefreshDSLDJob extends Job {
     private final IProject project;
 
     public RefreshDSLDJob(IProject project) {
-        super("Refresh GDSL scripts for " + project.getName());
+        super("Refresh DSLD scripts for " + project.getName());
         this.project = project;
     }
 
@@ -131,7 +131,7 @@ public class RefreshDSLDJob extends Job {
             return Status.CANCEL_STATUS;
         }
         
-        monitor.beginTask("Refreshing GDSL files", 9);
+        monitor.beginTask("Refreshing DSLD files", 9);
         
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Cancelling previous refresh jobs");
@@ -180,7 +180,7 @@ public class RefreshDSLDJob extends Job {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Finding inferencing DSL scripts");
         }
         monitor.subTask("Finding inferencing DSL scripts");
-        Set<IStorage> findGDSLFiles = new DSLDResourceVisitor(project).findFiles();
+        Set<IStorage> findDSLDFiles = new DSLDResourceVisitor(project).findFiles();
         
         if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;
@@ -189,7 +189,7 @@ public class RefreshDSLDJob extends Job {
         
         // now add the rest
         DSLDScriptExecutor executor = new DSLDScriptExecutor(JavaCore.create(project));
-        for (IStorage file : findGDSLFiles) {
+        for (IStorage file : findDSLDFiles) {
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.DSL, "Processing " + file.getName());
             }

@@ -38,7 +38,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 /**
- * Executes a GDSL script and collects the results
+ * Executes a DSLD script and collects the results
  * @author andrew
  * @created Nov 17, 2010
  */

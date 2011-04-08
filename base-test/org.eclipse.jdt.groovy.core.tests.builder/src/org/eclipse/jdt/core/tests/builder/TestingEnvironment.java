@@ -177,16 +177,32 @@ public class TestingEnvironment {
 		return classPath;
 	}
 	
+    /** Adds a groovy class with the given contents to the given
+     * package in the workspace.  The package is created
+     * if necessary.  If a class with the same name already
+     * exists, it is replaced.  A workspace must be open,
+     * and the given class name must not end with ".java".
+     * Returns the path of the added class.
+     */
+	public IPath addGroovyClass(IPath packagePath, String className, String contents) {
+	    return addGroovyClassExtension(packagePath, className, contents, null);
+	}
+
+	
 	/** Adds a groovy class with the given contents to the given
 	 * package in the workspace.  The package is created
 	 * if necessary.  If a class with the same name already
 	 * exists, it is replaced.  A workspace must be open,
 	 * and the given class name must not end with ".java".
 	 * Returns the path of the added class.
+	 * @param fileExtension file extension of the groovy class to create (without a '.')
 	 */
-	public IPath addGroovyClass(IPath packagePath, String className, String contents) {
+	public IPath addGroovyClassExtension(IPath packagePath, String className, String contents, String fileExtension) {
 		checkAssertion("a workspace must be open", fIsOpen); //$NON-NLS-1$
-		IPath classPath = packagePath.append(className + ".groovy"); //$NON-NLS-1$
+		if (fileExtension == null) {
+		    fileExtension = "groovy";
+		}
+		IPath classPath = packagePath.append(className + "." + fileExtension); //$NON-NLS-1$
 		try {
 			createFile(classPath, contents.getBytes("UTF8")); //$NON-NLS-1$
 		} catch (UnsupportedEncodingException e) {
@@ -195,6 +211,8 @@ public class TestingEnvironment {
 		}
 		return classPath;
 	}
+	
+
 	
 	/** Adds a class with the given contents to the given
 	 * package in the workspace.  The package is created
@@ -213,21 +231,34 @@ public class TestingEnvironment {
 		return addClass(packageFragmentRootPath, className, contents);
 	}
 
+	
+    /** Adds a groovy class with the given contents to the given
+     * package in the workspace.  The package is created
+     * if necessary.  If a class with the same name already
+     * exists, it is replaced.  A workspace must be open,
+     * and the given class name must not end with ".java".
+     * Returns the path of the added class.
+     */
+	public IPath addGroovyClass(IPath packageFragmentRootPath, String packageName, String className, String contents) {
+	    return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, null);
+	}
+
 	/** Adds a groovy class with the given contents to the given
 	 * package in the workspace.  The package is created
 	 * if necessary.  If a class with the same name already
 	 * exists, it is replaced.  A workspace must be open,
 	 * and the given class name must not end with ".java".
 	 * Returns the path of the added class.
+     * @param fileExtension file extension of the groovy class to create (without a '.')
 	 */
-	public IPath addGroovyClass(IPath packageFragmentRootPath, String packageName, String className, String contents) {
+	public IPath addGroovyClassExtension(IPath packageFragmentRootPath, String packageName, String className, String contents, String fileExtension) {
 		/* make sure the package exists */
 		if(packageName != null && packageName.length() >0){
 			IPath packagePath = addPackage(packageFragmentRootPath, packageName);
 
-			return addGroovyClass(packagePath, className, contents);
+			return addGroovyClassExtension(packagePath, className, contents, null);
 		}
-		return addGroovyClass(packageFragmentRootPath, className, contents);
+		return addGroovyClassExtension(packageFragmentRootPath, className, contents, null);
 	}
 
 /** 

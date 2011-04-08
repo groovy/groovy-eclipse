@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
+import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
  * @author Andrew Eisenberg
@@ -109,8 +110,34 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             sb.append("ASTNode: " + requestor.node + "\n");
             fail(sb.toString());
         }
+        
+        if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Confidence: UNKNOWN.\n");
+            sb.append("Expected: " + expectedDeclaringType + "\n");
+            sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
+            sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
+            sb.append("ASTNode: " + requestor.node + "\n");
+            fail(sb.toString());
+        }
     }
-
+    
+    protected void assertUnknownConfidence(String contents, int exprStart, int exprEnd,
+            String expectedDeclaringType, boolean forceWorkingCopy) {
+        GroovyCompilationUnit unit = createUnit("Search", contents);
+        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
+        
+        assertNotNull("Did not find expected ASTNode", requestor.node);
+        if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Expecting unknown confidentce, but was " + requestor.result.confidence + ".\n");
+            sb.append("Expected: " + expectedDeclaringType + "\n");
+            sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
+            sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
+            sb.append("ASTNode: " + requestor.node + "\n");
+            fail(sb.toString());
+        }
+    }
     protected String printTypeName(ClassNode type) {
         return type != null ? type.getName() + printGenerics(type) : "null";
     }
