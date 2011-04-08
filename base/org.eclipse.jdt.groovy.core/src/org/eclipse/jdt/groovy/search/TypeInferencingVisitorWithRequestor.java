@@ -665,7 +665,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			TypeLookupResult result = null;
 			IJavaElement oldEnclosingElement = enclosingElement;
 			// FIXADE this will not work for static or * imports
-			if (imp.getType() != null) {
+			ClassNode type = imp.getType();
+			if (type != null) {
 				enclosingElement = unit.getImport(imp.getClassName());
 				if (!enclosingElement.exists()) {
 					enclosingElement = oldEnclosingElement;
@@ -685,9 +686,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 			VisitStatus status = handleRequestor(imp, requestor, result);
+
 			enclosingElement = oldEnclosingElement;
 			switch (status) {
 				case CONTINUE:
+					try {
+						if (type != null) {
+							visitClassReference(type);
+						}
+					} catch (VisitCompleted e) {
+						if (e.status == VisitStatus.STOP_VISIT) {
+							throw e;
+						}
+					}
 					continue;
 				case CANCEL_BRANCH:
 				case CANCEL_MEMBER:

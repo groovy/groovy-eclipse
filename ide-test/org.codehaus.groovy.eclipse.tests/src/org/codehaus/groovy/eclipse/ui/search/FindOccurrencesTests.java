@@ -162,11 +162,13 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
                 "class Static {\n" +
                 "  static staticMethod(nuthin)  { }\n" +
                 "  def x() {\n" +
-                "    def z = staticMethod 3\n" +
+                "    def z = staticMethod \n" +
                 "    def a = staticMethod 3, 4, 5\n" +
                 "    def b = staticMethod(3, 4, 5) \n" +
                 "    def c = Static.staticMethod 3, 4, 5\n" +
                 "    def d = Static.staticMethod(3, 4, 5) \n" +
+                "    // this one is commented out because of GRECLIPSE-4761" +
+                "    // def z = staticMethod 3\n" +
                 "  }\n" +
                 "}";
             
@@ -179,12 +181,141 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
             int start3 = contents.indexOf(methName, start2 + 1);
             int start4 = contents.indexOf(methName, start3 + 1);
             int start5 = contents.indexOf(methName, start4 + 1);
-            doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len);
+            int start6 = contents.indexOf(methName, start5 + 1);
+            doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len);
         } else {
             System.out.println("testFindStaticMethods18 is disabled when Groovy level is not 1.8 or higher");
         }
     }
 
+    // GRECLIPSE-1023
+    public void testInnerClass() throws Exception {
+        String contents = 
+            "class Other2 {\n" + 
+            "        class Inner { }\n" + 
+            "        Other2.Inner f\n" + 
+            "        Inner g\n" + 
+            "}";
+        
+        String className = "Inner";
+        int len = className.length();
+        int start = contents.indexOf(className);
+        int start1 = contents.indexOf(className);
+        int start2 = contents.indexOf(className, start1 + 1);
+        int start3 = contents.indexOf(className, start2 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start3, len);
+    }
+
+    // GRECLIPSE-1023
+    // try different starting point
+    public void testInnerClass2() throws Exception {
+        String contents = 
+            "class Other2 {\n" + 
+            "        class Inner { }\n" + 
+            "        Other2.Inner f\n" + 
+            "        Inner g\n" + 
+            "}";
+        
+        String className = "Inner";
+        int len = className.length();
+        int start1 = contents.indexOf(className);
+        int start2 = contents.indexOf(className, start1 + 1);
+        int start3 = contents.indexOf(className, start2 + 1);
+        int start = start2;
+        doTest(contents, start, len, start1, len, start2, len, start3, len);
+    }
+
+    // GRECLIPSE-1023
+    // try different starting point
+    public void testInnerClass3() throws Exception {
+        String contents = 
+            "class Other2 {\n" + 
+            "        class Inner { }\n" + 
+            "        Other2.Inner f\n" + 
+            "        Inner g\n" + 
+            "}";
+        
+        String className = "Inner";
+        int len = className.length();
+        int start1 = contents.indexOf(className);
+        int start2 = contents.indexOf(className, start1 + 1);
+        int start3 = contents.indexOf(className, start2 + 1);
+        int start = start3;
+        doTest(contents, start, len, start1, len, start2, len, start3, len);
+    }
+    
+    // GRECLIPSE-1023
+    // inner class in other file
+    public void testInnerClass4() throws Exception {
+        createUnit("Other",  
+                "class Other {\n" + 
+                "  class Inner { }\n" + 
+                "}");
+        String contents = 
+            "import Other.Inner\n" +
+            "Other.Inner f\n" + 
+            "Inner g";
+        
+        String className = "Inner";
+        int len = className.length();
+        int start1 = contents.indexOf(className);
+        int start2 = contents.indexOf(className, start1 + 1);
+        int start3 = contents.indexOf(className, start2 + 1);
+        int start = start1;
+        doTest(contents, start, len, start1, len, start2, len, start3, len);
+    }
+ 
+    
+    public void testGenerics1() throws Exception {
+        String contents = "import javax.swing.text.html.HTML\n" + 
+        		"Map<HTML, ? extends HTML> h\n" + 
+        		"HTML i";
+        
+        String name = "HTML";
+        int len = name.length();
+        
+        int start1 = contents.indexOf(name);
+        int start2 = contents.indexOf(name, start1 + 1);
+        int start3 = contents.indexOf(name, start2 + 1);
+        int start4 = contents.indexOf(name, start3 + 1);
+        int start = start1;
+        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len);
+    }
+    
+    // As before but use a different starting point
+    public void testGenerics2() throws Exception {
+        String contents = "import javax.swing.text.html.HTML\n" + 
+        "Map<HTML, ? extends HTML> h\n" + 
+        "HTML i";
+        
+        String name = "HTML";
+        int len = name.length();
+        
+        int start1 = contents.indexOf(name);
+        int start2 = contents.indexOf(name, start1 + 1);
+        int start3 = contents.indexOf(name, start2 + 1);
+        int start4 = contents.indexOf(name, start3 + 1);
+        int start = start2;
+        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len);
+    }
+    
+    // As before but use a different starting point
+    public void testGenerics3() throws Exception {
+        String contents = "import javax.swing.text.html.HTML\n" + 
+        "Map<HTML, ? extends HTML> h\n" + 
+        "HTML i";
+        
+        String name = "HTML";
+        int len = name.length();
+        
+        int start1 = contents.indexOf(name);
+        int start2 = contents.indexOf(name, start1 + 1);
+        int start3 = contents.indexOf(name, start2 + 1);
+        int start4 = contents.indexOf(name, start3 + 1);
+        int start = start4;
+        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len);
+    }
+    
     private void doTest(String contents, int start, int length, int ... expected) throws JavaModelException {
         GroovyCompilationUnit unit = createUnit("Occurrences", contents);
         try {

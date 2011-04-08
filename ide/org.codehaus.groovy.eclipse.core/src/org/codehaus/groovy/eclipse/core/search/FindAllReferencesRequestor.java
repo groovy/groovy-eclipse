@@ -23,10 +23,12 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -104,7 +106,12 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                 return checkParamLength(maybeMethod, method) && maybeMethod.getName().equals(method.getName())
                         && maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) && checkParams(maybeMethod, method);
             }
+        }
 
+        // here check for inner class nodes
+        if ((maybeDeclaration instanceof InnerClassNode && declaration instanceof JDTClassNode)
+                || (declaration instanceof InnerClassNode && maybeDeclaration instanceof JDTClassNode)) {
+            return ((ClassNode) maybeDeclaration).getName().equals(((ClassNode) declaration).getName());
         }
         return false;
 

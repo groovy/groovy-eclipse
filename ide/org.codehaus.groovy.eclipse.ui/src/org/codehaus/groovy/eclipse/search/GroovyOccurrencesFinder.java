@@ -31,6 +31,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper;
 import org.codehaus.groovy.eclipse.core.search.FindAllReferencesRequestor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
@@ -69,7 +70,10 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
 
     private String internalGetElementName() {
         if (nodeToLookFor instanceof ClassNode) {
-            return ((ClassNode) nodeToLookFor).getNameWithoutPackage();
+            // handle any potential inner classes
+            String name = ((ClassNode) nodeToLookFor).getNameWithoutPackage();
+            int lastDollar = name.lastIndexOf('$');
+            return name.substring(lastDollar + 1);
         } else if (nodeToLookFor instanceof MethodNode) {
             return ((MethodNode) nodeToLookFor).getName();
         } else if (nodeToLookFor instanceof FieldNode) {
@@ -111,6 +115,7 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
                 occurrenceLocation = new OccurrenceLocation(start, length, K_OCCURRENCE, "Occurrence of ''" + getElementName()
                         + "''");
             } else if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) {
+                // class declaration
                 ClassNode c = (ClassNode) node;
                 occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, K_OCCURRENCE,
                         "Occurrence of ''" + getElementName() + "''");
@@ -121,12 +126,34 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
                 occurrenceLocation = new OccurrenceLocation(smce.getStart(), smce.getMethod().length(), K_OCCURRENCE,
                         "Occurrence of ''" + getElementName() + "''");
             } else {
-                occurrenceLocation = new OccurrenceLocation(node.getStart(), node.getLength(), K_OCCURRENCE, "Occurrence of ''"
+                SourceRange range = getSourceRange(node);
+
+                occurrenceLocation = new OccurrenceLocation(range.getOffset(), range.getLength(), K_OCCURRENCE, "Occurrence of ''"
                         + getElementName() + "''");
             }
             locations[i++] = occurrenceLocation;
         }
         return locations;
+    }
+
+    private SourceRange getSourceRange(org.codehaus.groovy.ast.ASTNode node) {
+        if (node instanceof ClassNode) {
+            // handle inner classes referenced semi-qualified
+            String semiQualifiedName = ((ClassNode) node).getName();
+            if (semiQualifiedName.contains("$")) {
+                // it is semiqualified if the length is larger than the name
+                String name = getElementName();
+                if (name.length() < node.getLength() - 1) {
+                    // we know that the name is semiqualified
+                    // find the simple name inside the semi-qualified name
+                    int simpleNameStart = semiQualifiedName.indexOf(name);
+                    if (simpleNameStart >= 0) {
+                        return new SourceRange(node.getStart() + simpleNameStart, name.length());
+                    }
+                }
+            }
+        }
+        return new SourceRange(node.getStart(), node.getLength());
     }
 
     private Collection<org.codehaus.groovy.ast.ASTNode> internalFindOccurences() {
