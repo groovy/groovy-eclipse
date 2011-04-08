@@ -667,7 +667,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// FIXADE this will not work for static or * imports
 			ClassNode type = imp.getType();
 			if (type != null) {
-				enclosingElement = unit.getImport(imp.getClassName());
+				enclosingElement = unit.getImport(imp.getClassName().replace('$', '.'));
 				if (!enclosingElement.exists()) {
 					enclosingElement = oldEnclosingElement;
 				}

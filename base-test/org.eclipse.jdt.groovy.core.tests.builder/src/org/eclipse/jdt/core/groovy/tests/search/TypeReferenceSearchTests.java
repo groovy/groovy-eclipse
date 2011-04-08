@@ -137,13 +137,56 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
     
     /**
      * GRECLIPSE-628
-     * @throws Exception
      */
     public void testShouldntFindClassDeclarationInScript() throws Exception {
         String firstContents = "print 'me'";
         String secondContents = "print 'me'";
         List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
         assertEquals("Should find no matches", 0, matches.size());
+    }
+    
+    public void testInnerTypes1() throws Exception {
+        String firstContents = 
+            "class Other {\n" + 
+            "        class First { }\n" + 
+            "}";
+        
+        String secondContents = 
+            "import Other.First\n" + 
+            "Map<First, ? extends First> h\n" + 
+            "Other.First j\n" + 
+            "First i";
+        
+        String name = "First";
+        int len = name.length();
+        
+        List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
+        assertEquals("Wrong number of matches found:\n" + matches, 5, matches.size());
+        
+        int start = secondContents.indexOf("First");
+        SearchMatch match = matches.get(0);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(1);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(2);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(3);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(4);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
     }
     
     

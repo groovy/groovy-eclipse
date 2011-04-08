@@ -55,6 +55,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 	private final boolean isCamelCase;
 
 	private final Set<Position> acceptedPositions = new HashSet<Position>();
+	private char[] cachedContents;
 
 	@SuppressWarnings("nls")
 	public TypeReferenceSearchRequestor(TypeReferencePattern pattern, SearchRequestor requestor, SearchParticipant participant) {
@@ -213,12 +214,12 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 	}
 
 	private boolean qualifiedNameMatches(String qualifiedName) {
-		String newName = qualifiedName;
-		if (isCaseSensitive && !isCamelCase) {
+		String newName = qualifiedName.replace('$', '.');
+		// don't do * matching or camel case matching yet
+		if (!isCaseSensitive /* && !isCamelCase */) {
 			newName = newName.toLowerCase();
 		}
-		// don't do * matching or camel case matching yet
-		if (qualifiedName.equals(qualifier + simpleName)) {
+		if (newName.equals(qualifier + simpleName)) {
 			return true;
 		}
 		return false;
@@ -237,7 +238,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 
 	/**
 	 * THe problem that this method gets around is that we can't tell exactly what the text is and exactly where or if there is a
-	 * match in the source location. For example, in the text, they type can be fully qualified, or array, or coming from an alias,
+	 * match in the source location. For example, in the text, the type can be fully qualified, or array, or coming from an alias,
 	 * or a bound type parameter. On top of that, some source locations are off by one. All these will have location relative to the
 	 * offset provided in the start and end fields of the {@link ClassNode}.
 	 * 
@@ -247,21 +248,27 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 	 */
 	private StartEnd getMatchLocation(ClassNode node, IJavaElement elt, int maybeStart, int maybeEnd) {
 		CompilationUnit unit = (CompilationUnit) elt.getAncestor(IJavaElement.COMPILATION_UNIT);
-		if (unit != null) {
-			char[] contents = unit.getContents();
+		if (unit != null && cachedContents == null) {
+			cachedContents = unit.getContents();
+		}
+
+		if (cachedContents != null) {
 			int nameLength = maybeEnd - maybeStart;
 			int start = -1;
 			int end = -1;
 			String name = node.getName();
+			// handle inner types here
+			int dollarIndex = name.lastIndexOf('$');
+			name = name.substring(dollarIndex + 1);
 			if (name.length() <= nameLength) {
 				// might be a qualified name
-				start = CharOperation.indexOf(name.toCharArray(), contents, true, maybeStart, maybeEnd + 1);
+				start = CharOperation.indexOf(name.toCharArray(), cachedContents, true, maybeStart, maybeEnd + 1);
 				end = start + name.length();
 			}
 			if (start == -1) {
 				// check for simple name
 				String nameWithoutPackage = node.getNameWithoutPackage();
-				start = CharOperation.indexOf(nameWithoutPackage.toCharArray(), contents, true, maybeStart, maybeEnd + 1);
+				start = CharOperation.indexOf(nameWithoutPackage.toCharArray(), cachedContents, true, maybeStart, maybeEnd + 1);
 				end = start + nameWithoutPackage.length();
 			}
 			if (start == -1) {

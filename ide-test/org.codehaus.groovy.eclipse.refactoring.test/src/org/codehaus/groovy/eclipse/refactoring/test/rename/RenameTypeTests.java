@@ -379,4 +379,7 @@ public class RenameTypeTests extends RefactoringTest {
         helper2("A", "B");
     }
 
+    public void testInner1() throws Exception {
+        helperWithTextual("Outer", "A", "B", "Outer", true, false);
+    }
 }

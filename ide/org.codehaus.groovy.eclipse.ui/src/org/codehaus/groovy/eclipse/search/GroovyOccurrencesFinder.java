@@ -139,7 +139,7 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
     private SourceRange getSourceRange(org.codehaus.groovy.ast.ASTNode node) {
         if (node instanceof ClassNode) {
             // handle inner classes referenced semi-qualified
-            String semiQualifiedName = ((ClassNode) node).getName();
+            String semiQualifiedName = ((ClassNode) node).getNameWithoutPackage();
             if (semiQualifiedName.contains("$")) {
                 // it is semiqualified if the length is larger than the name
                 String name = getElementName();

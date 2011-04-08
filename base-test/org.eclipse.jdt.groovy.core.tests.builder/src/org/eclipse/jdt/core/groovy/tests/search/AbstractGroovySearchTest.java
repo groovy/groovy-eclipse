@@ -165,20 +165,20 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         String firstClassName = "First";
         String secondClassName = "Second";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IType firstType = first.getType(firstClassName);
+        IType firstType = findType(firstClassName, first);
         SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
         
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
         IJavaElement firstMatchEnclosingElement;
         IJavaElement secondMatchEnclosingElement;
         if (contentsIsScript) {
-            firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
         } else {
             // if not a script, then the first match is always enclosed in the type, 
-            firstMatchEnclosingElement = second.getType(secondClassName);
+            firstMatchEnclosingElement = findType(secondClassName, second);
         }
         // match is enclosed in run method (for script), or x method for class
-        secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
+        secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
         
         checkMatches(secondContents, firstClassName, pattern, second,
                 firstMatchEnclosingElement, secondMatchEnclosingElement);
@@ -189,18 +189,18 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         String secondClassName = "Second";
         String matchedFieldName = "xxx";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IField firstField = first.getType(firstClassName).getField(matchedFieldName);
+        IField firstField = findType(firstClassName, first).getField(matchedFieldName);
         SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
         
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
         IJavaElement firstMatchEnclosingElement;
         IJavaElement secondMatchEnclosingElement;
         if (contentsIsScript) {
-            firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
-            secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
         } else {
-            firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
-            secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent+2];
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent+2];
         }
         // match is enclosed in run method (for script), or x method for class
         
@@ -214,12 +214,12 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         String secondClassName = "Second";
         String matchedFieldName = "xxx";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IField firstField = first.getType(firstClassName).getField(matchedFieldName);
+        IField firstField = findType(firstClassName, first).getField(matchedFieldName);
         SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
 
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
-        IJavaElement firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[0];
-        IJavaElement secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[0];
+        IJavaElement firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[0];
+        IJavaElement secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[0];
 
         checkMatches(secondContents, matchName, pattern, second,
                 firstMatchEnclosingElement, secondMatchEnclosingElement);
@@ -229,18 +229,18 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         String secondClassName = "Second";
         String matchedMethodName = "xxx";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IMethod firstField = first.getType(firstClassName).getMethod(matchedMethodName, new String[0]);
+        IMethod firstField = findType(firstClassName, first).getMethod(matchedMethodName, new String[0]);
         SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
         
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
         IJavaElement firstMatchEnclosingElement;
         IJavaElement secondMatchEnclosingElement;
         if (contentsIsScript) {
-            firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
-            secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
         } else {
-            firstMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent];
-            secondMatchEnclosingElement = second.getType(secondClassName).getChildren()[offsetInParent+2];
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent+2];
         }
         // match is enclosed in run method (for script), or x method for class
         
@@ -253,7 +253,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         String firstClassName = "First";
         String secondClassName = "Second";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IType firstType = first.getType(firstClassName);
+        IType firstType = findType(firstClassName, first);
         SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
         
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
@@ -272,6 +272,24 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         
         return searchRequestor.getMatches();
     }
+
+    private IType findType(String firstClassName, GroovyCompilationUnit first) {
+        IType type = first.getType(firstClassName);
+        if (! type.exists()) {
+            try {
+                IType[] allTypes = first.getAllTypes();
+                for (IType type2 : allTypes) {
+                    if (type2.getElementName().equals(firstClassName)) {
+                        return type2;
+                    }
+                }
+            } catch (JavaModelException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        return type;
+    }
     
     
     protected void doTestForVarReferences(String contents, int offsetInParent, String matchName, int declStart, MatchRegion[] matchLocations) throws JavaModelException {
@@ -280,7 +298,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         GroovyCompilationUnit unit = createUnit(className, contents);
         // Will need to call via reflection so can work on either.
         // 3.6 version:
-        ILocalVariable var = ReflectionUtils.createLocalVariable(unit.getType(className).getChildren()[offsetInParent], matchedVarName, declStart, Signature.SIG_INT);
+        ILocalVariable var = ReflectionUtils.createLocalVariable(findType(className, unit).getChildren()[offsetInParent], matchedVarName, declStart, Signature.SIG_INT);
         SearchPattern pattern = SearchPattern.createPattern(var, IJavaSearchConstants.REFERENCES);
         
         checkLocalVarMatches(contents, matchName, pattern, unit, matchLocations);
