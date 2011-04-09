@@ -324,8 +324,12 @@ public class TestProject {
     public IPackageFragmentRoot createOtherSourceFolder(String outPath) throws CoreException {
         return createSourceFolder("other", outPath);
     }
-    
+
     public IPackageFragmentRoot createSourceFolder(String path, String outPath) throws CoreException {
+        return createSourceFolder(path, outPath, null);
+    }
+    
+    public IPackageFragmentRoot createSourceFolder(String path, String outPath, IPath[] exclusionPattern) throws CoreException {
         IFolder folder = project.getFolder(path);
         if (!folder.exists()) {
             ensureExists(folder);
@@ -344,11 +348,8 @@ public class TestProject {
         IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
         IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
         System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
-        if (outPath == null) {
-            newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath());
-        } else {
-            newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath(), null, getProject().getFullPath().append(outPath).makeAbsolute());
-        }
+        IPath outPathPath = outPath == null ? null : getProject().getFullPath().append(outPath).makeAbsolute();
+        newEntries[oldEntries.length] = JavaCore.newSourceEntry(root.getPath(), exclusionPattern, outPathPath);
         javaProject.setRawClasspath(newEntries, null);
         return root;
 

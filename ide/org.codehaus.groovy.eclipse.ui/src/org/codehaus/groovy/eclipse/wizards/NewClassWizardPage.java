@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -28,9 +29,12 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogFieldGroup;
@@ -104,13 +108,13 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
             status.setError("Exception when accessing project natures for " + project.getElementName());
         }
 
+        String typeName = getTypeNameWithoutParameters();
         // must not exist as a .groovy file
         if (!isEnclosingTypeSelected()
                 && (status.getSeverity() < IStatus.ERROR)) {
             if (pack != null) {
                 IType type = null;
                 try {
-                    String typeName = getTypeNameWithoutParameters();
                     type = project.findType(pack.getElementName(), typeName);
                 } catch (JavaModelException e) {
                     // can ignore
@@ -120,6 +124,27 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
                 }
             }
         }
+
+        // lastly, check exclusion filters to see if Groovy files are allowed in
+        // the source folder
+        if (status.getSeverity() < IStatus.ERROR) {
+            try {
+                ClasspathEntry entry = (ClasspathEntry) ((IPackageFragmentRoot) pack.getParent()).getRawClasspathEntry();
+                if (entry != null) {
+                    char[][] inclusionPatterns = entry.fullInclusionPatternChars();
+                    char[][] exclusionPatterns = entry.fullExclusionPatternChars();
+                    if (Util.isExcluded(pack.getResource().getFullPath().append(getCompilationUnitName(typeName)),
+                            inclusionPatterns, exclusionPatterns, false)) {
+                        status.setError("Cannot create Groovy type because of exclusion patterns on the source folder.");
+                    }
+
+                }
+            } catch (JavaModelException e) {
+                status.setError(e.getLocalizedMessage());
+                GroovyCore.logException("Exception inside new Groovy class wizard", e);
+            }
+        }
+
         return status;
 	}
 

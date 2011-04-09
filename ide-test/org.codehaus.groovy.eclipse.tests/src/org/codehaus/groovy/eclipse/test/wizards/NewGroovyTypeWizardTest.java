@@ -24,9 +24,12 @@ import junit.framework.TestSuite;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.wizards.NewClassWizardPage;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
 import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType;
 
@@ -88,6 +91,16 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
 		assertStatus(IStatus.WARNING, "is not a groovy project.  Groovy Nature will be added to project upon completion.", wizardPage.getStatus());
 	}
 
+	public void testExclusionFilters() throws Exception {
+	    IPackageFragmentRoot root = fProject.createSourceFolder("other", null, new IPath[] { new Path("**/*.groovy")});
+	    IPackageFragment frag = root.createPackageFragment("p", true, null);
+	    NewClassWizardPage wizardPage= new NewClassWizardPage();
+	    wizardPage.setPackageFragmentRoot(root, true);
+	    wizardPage.setPackageFragment(frag, true);
+	    wizardPage.setTypeName("Nuthin", true);
+	    assertStatus(IStatus.ERROR, "Cannot create Groovy type because of exclusion patterns on the source folder.", wizardPage.getStatus());
+	}
+	
 	public void testDiscouraedDefaultPackage() throws Exception {
 	    GroovyRuntime.removeGroovyNature(fJProject.getProject());
 	    NewClassWizardPage wizardPage= new NewClassWizardPage();
