@@ -95,8 +95,14 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             String expectedDeclaringType) {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false);
     }
+    
     protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
             String expectedDeclaringType, boolean forceWorkingCopy) {
+        
+        assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, forceWorkingCopy, false);
+    }
+    protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
+            String expectedDeclaringType, boolean forceWorkingCopy, boolean expectingUnknown) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
         
@@ -105,20 +111,31 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             StringBuilder sb = new StringBuilder();
             sb.append("Expected declaring type not found.\n");
             sb.append("Expected: " + expectedDeclaringType + "\n");
-            sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
-            sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
+            sb.append("Found type: " + printTypeName(requestor.result.type) + "\n");
+            sb.append("Found declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
             fail(sb.toString());
         }
-        
-        if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Confidence: UNKNOWN.\n");
-            sb.append("Expected: " + expectedDeclaringType + "\n");
-            sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
-            sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
-            sb.append("ASTNode: " + requestor.node + "\n");
-            fail(sb.toString());
+        if (expectingUnknown) {
+            if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Confidence: " + requestor.result.confidence + " (but expecting UNKNOWN)\n");
+                sb.append("Expected: " + expectedDeclaringType + "\n");
+                sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
+                sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
+                sb.append("ASTNode: " + requestor.node + "\n");
+                fail(sb.toString());
+            }
+        } else {
+            if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Expected Confidence should not have been UNKNOWN, but it was.\n");
+                sb.append("Expected declaring type: " + expectedDeclaringType + "\n");
+                sb.append("Found type: " + printTypeName(requestor.result.type) + "\n");
+                sb.append("Found declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
+                sb.append("ASTNode: " + requestor.node + "\n");
+                fail(sb.toString());
+            }
         }
     }
     

@@ -423,7 +423,7 @@ public class InferencingTests extends AbstractInferencingTest {
                 "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
-        assertDeclaringType(contents, start, end, "Baz");
+        assertDeclaringType(contents, start, end, "Baz", true);
     }
     // Unknown references should have the declaring type of the enclosing method
     public void testInClassDeclaringType1() throws Exception {
@@ -435,7 +435,7 @@ public class InferencingTests extends AbstractInferencingTest {
                 "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
-        assertDeclaringType(contents, start, end, "Baz");
+        assertDeclaringType(contents, start, end, "Baz", true);
     }
     // Unknown references should have the declaring type of the enclosing closure
     public void testInClassDeclaringType2() throws Exception {
@@ -447,7 +447,7 @@ public class InferencingTests extends AbstractInferencingTest {
             "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
-        assertDeclaringType(contents, start, end, "Baz");
+        assertDeclaringType(contents, start, end, "Baz", true);
     }
     // Unknown references should have the declaring type of the enclosing closure
     public void testInScriptDeclaringType() throws Exception {
@@ -455,7 +455,7 @@ public class InferencingTests extends AbstractInferencingTest {
             "other\n";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
-        assertDeclaringType(contents, start, end, "Search");
+        assertDeclaringType(contents, start, end, "Search", true);
     }
     public void testStaticImports1() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.NULL_ATTRIBUTE_VALUE\n" + 
@@ -536,11 +536,13 @@ public class InferencingTests extends AbstractInferencingTest {
     public void testGetAt3() throws Exception {
         int start = CONTENTS_GETAT2.indexOf("startsWith");
         int end = start + "startsWith".length();
-        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt");
+        // expecting unknown confidence because getAt not explicitly defined
+        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", true);
     }
     public void testGetAt4() throws Exception {
         int start = CONTENTS_GETAT2.lastIndexOf("startsWith");
         int end = start + "startsWith".length();
-        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt");
+        // expecting unknown confidence because getAt not explicitly defined
+        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", true);
     }
 }

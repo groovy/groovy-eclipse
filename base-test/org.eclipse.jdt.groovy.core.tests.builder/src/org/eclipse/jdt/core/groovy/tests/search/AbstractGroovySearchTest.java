@@ -16,6 +16,12 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.core.search.IJavaSearchConstants.CLASS;
+import static org.eclipse.jdt.core.search.IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH;
+import static org.eclipse.jdt.core.search.SearchEngine.createJavaSearchScope;
+import static org.eclipse.jdt.core.search.SearchPattern.R_CASE_SENSITIVE;
+import static org.eclipse.jdt.core.search.SearchPattern.R_EXACT_MATCH;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -37,8 +43,10 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -258,8 +266,11 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
                 firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
     
-    
+
     protected List<SearchMatch> getAllMatches(String firstContents, String secondContents) throws JavaModelException {
+        return getAllMatches(firstContents, secondContents, false);
+    }
+    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, boolean waitForIndexer) throws JavaModelException {
         String firstClassName = "First";
         String secondClassName = "Second";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
@@ -268,6 +279,13 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
 
+        
+        // saves time if we don't wait
+        // only need to do this if we are referencing inner classes
+        if (waitForIndexer) {
+            waitForIndexer();
+        }
+        
         // search the first
         MockPossibleMatch match1 = new MockPossibleMatch(first);
         ITypeRequestor typeRequestor1 = new TypeRequestorFactory().createRequestor(match1, pattern, searchRequestor);
@@ -282,6 +300,16 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         
         return searchRequestor.getMatches();
     }
+    
+    @SuppressWarnings("deprecation")
+    private void waitForIndexer() throws JavaModelException {
+        final TypeNameRequestor requestor = new TypeNameRequestor() {};
+        new SearchEngine().searchAllTypeNames(null, null, R_EXACT_MATCH
+                | R_CASE_SENSITIVE, CLASS,
+                createJavaSearchScope(new IJavaElement[0]), requestor,
+                WAIT_UNTIL_READY_TO_SEARCH, null);
+    }
+
 
     private IType findType(String firstClassName, GroovyCompilationUnit first) {
         IType type = first.getType(firstClassName);

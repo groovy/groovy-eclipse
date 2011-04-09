@@ -160,7 +160,7 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         String name = "First";
         int len = name.length();
         
-        List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
+        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, true);
         assertEquals("Wrong number of matches found:\n" + matches, 5, matches.size());
         
         int start = secondContents.indexOf("First");
