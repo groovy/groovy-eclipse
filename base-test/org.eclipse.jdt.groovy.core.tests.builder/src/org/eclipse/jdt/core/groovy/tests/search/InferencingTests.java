@@ -545,4 +545,13 @@ public class InferencingTests extends AbstractInferencingTest {
         // expecting unknown confidence because getAt not explicitly defined
         assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", false, true);
     }
+    
+    // GRECLIPSE-1013
+    public void testCategoryMethodAsField() throws Exception {
+        String contents = "''.toURL().text";
+        
+        int textStart = contents.indexOf("text");
+        int textEnd = textStart + "text".length();
+        assertDeclaringType(contents, textStart, textEnd, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
 }

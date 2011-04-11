@@ -20,6 +20,9 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -78,5 +81,61 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
 
     public void setCurrentScope(VariableScope currentScope) {
         this.currentScope = currentScope;
+    }
+
+    /**
+     * Check to ensure that there is no field with a getter or setter name before creating the mock
+     * field
+     * @param declaringClass declaring type of the method
+     * @param methodName method to check for
+     */
+    protected boolean hasNoField(ClassNode declaringClass, String methodName) {
+        return declaringClass.getField(createMockFieldName(methodName)) == null
+                && declaringClass
+                        .getField(createCapitalMockFieldName(methodName)) == null;
+    }
+
+    protected FieldNode createMockField(MethodNode method) {
+        FieldNode field = new FieldNode(createMockFieldName(method.getName()),
+                method.getModifiers(), method.getReturnType(),
+                method.getDeclaringClass(), null);
+        field.setDeclaringClass(method.getDeclaringClass());
+        field.setSourcePosition(method);
+        return field;
+    }
+
+    protected boolean looselyMatchesGetterName(String prefix, String methodName) {
+        // fail fast if name is < 4 chars, it doesn't start with get or set, or
+        // its 4th char is lower case
+        if (methodName.length() < 4) {
+            return false;
+        } else if (!(methodName.startsWith("get") || methodName
+                .startsWith("set"))
+                || Character.isLowerCase(methodName.charAt(3))) {
+            return false;
+        }
+
+        String newName = createMockFieldName(methodName);
+        return ProposalUtils.looselyMatches(prefix, newName);
+    }
+
+    /**
+     * Create a name for a field if this is a getter or a setter method name
+     * @param methodName
+     * @return
+     */
+    protected String createMockFieldName(String methodName) {
+        return methodName.length() > 3 ? Character.toLowerCase(methodName
+                .charAt(3)) + methodName.substring(4) : "$$$$$";
+    }
+
+    /**
+     * Create a name for a field if this is a getter or a setter method name The resulting name is
+     * capitalized
+     * @param methodName
+     * @return
+     */
+    protected String createCapitalMockFieldName(String methodName) {
+        return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
     }
 }

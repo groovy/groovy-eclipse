@@ -57,21 +57,42 @@ public class CategoryTypeLookup implements ITypeLookup {
 			} else if (text.startsWith("$")) {
 				text = text.substring(1);
 			}
+			String getterName = createGetterName(text);
 			for (ClassNode category : categories) {
 				List<?> methods = category.getMethods(text); // use List<?> because groovy 1.6.5 does not
 				// have type parameters on this method
+
 				possibleMethods.addAll((Collection<? extends MethodNode>) methods);
+
+				// also check to see if the getter variant of any name is available
+				if (getterName != null) {
+					methods = category.getMethods(getterName);
+					possibleMethods.addAll((Collection<? extends MethodNode>) methods);
+				}
 			}
 			for (MethodNode methodNode : possibleMethods) {
 				Parameter[] params = methodNode.getParameters();
-				if (params != null && params.length > 0
-						&& isAssignableFrom(VariableScope.maybeConvertFromPrimitive(currentType), params[0].getType())) {
+				if (params != null && isAssignableFrom(VariableScope.maybeConvertFromPrimitive(currentType), params[0].getType())) {
 					// found it! There may be more, but this is good enough
 					ClassNode declaringClass = methodNode.getDeclaringClass();
 					return new TypeLookupResult(methodNode.getReturnType(), declaringClass, methodNode,
 							getConfidence(declaringClass), scope);
 				}
 			}
+		}
+		return null;
+	}
+
+	/**
+	 * Convert name into a getter
+	 * 
+	 * @param text
+	 * @return name with get prefixed in front of it and first char capitalized or null if this name already looks like a getter or
+	 *         setter
+	 */
+	private String createGetterName(String name) {
+		if (!name.startsWith("get") && !name.startsWith("set") && name.length() > 0) {
+			return "get" + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
 		}
 		return null;
 	}

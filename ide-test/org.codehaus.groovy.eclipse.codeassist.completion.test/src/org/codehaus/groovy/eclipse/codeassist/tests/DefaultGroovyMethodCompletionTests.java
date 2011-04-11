@@ -113,6 +113,14 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "startDaemon", 2);
     }
 
+    // tests GRECLIPSE-1013
+    public void testPopertyVariantOfDGM() throws Exception {
+        String contents = "''.toURL().text";
+        ICompilationUnit unit = createGroovyWithContents("Script", contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "toURL().t"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "text", 1);
+    }
+    
     
     private ICompilationUnit createJava() throws Exception {
         IPath projectPath = createGenericProject();
@@ -124,30 +132,24 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
     }
     
     private ICompilationUnit createGroovy() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "Class", CONTENTS);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
+        return createGroovyWithContents("Class", CONTENTS);
     }
     private ICompilationUnit createGroovyForScript() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "Script", SCRIPTCONTENTS);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
-    }
-    private ICompilationUnit createGroovyForClosure() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "Closure", CLOSURECONTENTS);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
+        return createGroovyWithContents("Script", SCRIPTCONTENTS);
     }
 
+    private ICompilationUnit createGroovyForClosure() throws Exception {
+        return createGroovyWithContents("Closure", CLOSURECONTENTS);
+    }
+
+    private ICompilationUnit createGroovyWithContents(String name, String contents) throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath src = projectPath.append("src");
+        IPath pathToJavaClass = env.addGroovyClass(src, name, contents);
+        incrementalBuild();
+        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
+        return unit;
+    }
     
 
 }

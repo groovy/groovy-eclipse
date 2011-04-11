@@ -25,7 +25,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
@@ -71,7 +70,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
 
                         // be careful not to add fields twice
                         alreadySeenFields.add(mockFieldName);
-                        if (hasNoField(method)) {
+                        if (hasNoField(method.getDeclaringClass(), method.getName())) {
                             GroovyFieldProposal fieldProposal = new GroovyFieldProposal(
                                     createMockField(method));
                             fieldProposal
@@ -94,47 +93,6 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         }
 
         return groovyProposals;
-    }
-
-    /**
-     * Check to ensure that there is no field with that name before creating
-     * the mock field
-     */
-    private boolean hasNoField(MethodNode method) {
-        return method.getDeclaringClass().getField(
-                createMockFieldName(method.getName())) == null
-                && method.getDeclaringClass().getField(
-                        createCapitalMockFieldName(method.getName())) == null;
-    }
-
-    private FieldNode createMockField(MethodNode method) {
-        FieldNode field = new FieldNode(createMockFieldName(method.getName()), method.getModifiers(), method.getReturnType(), method.getDeclaringClass(), null);
-        field.setDeclaringClass(method.getDeclaringClass());
-        field.setSourcePosition(method);
-        return field;
-    }
-
-    private boolean looselyMatchesGetterName(String prefix, String methodName) {
-        // fail fast if name is < 4 chars, it doesn't start with get or set, or
-        // its 4th char is lower case
-        if (methodName.length() < 4) {
-            return false;
-        } else if (!(methodName.startsWith("get") || methodName
-                .startsWith("set"))
-                || Character.isLowerCase(methodName.charAt(3))) {
-            return false;
-        }
-
-        String newName = createMockFieldName(methodName);
-        return ProposalUtils.looselyMatches(prefix, newName);
-    }
-
-    private String createMockFieldName(String methodName) {
-        return methodName.length() > 3 ? Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4) : "$$$$$";
-    }
-
-    private String createCapitalMockFieldName(String methodName) {
-        return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
     }
 
     private List<IGroovyProposal> getStaticImportProposals(String prefix,

@@ -41,30 +41,51 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         getAllSupersAsStrings(candidate, set);
         set.add("java.lang.Object");
         List<IGroovyProposal> groovyProposals =
-            findAllProposals(set, categories, prefix);
+ findAllProposals(set,
+                categories, prefix, candidate);
         return groovyProposals;
     }
 
     private List<IGroovyProposal> findAllProposals(
-            Set<String> set, Set<ClassNode> categories, String prefix) {
+Set<String> set,
+            Set<ClassNode> categories, String prefix, ClassNode declaringClass) {
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
+        Set<String> existingFieldProposals = new HashSet<String>();
         for (ClassNode category : categories) {
             List<MethodNode> allMethods = category.getAllDeclaredMethods();
             for (MethodNode method : allMethods) {
-                if (method.isStatic() && method.isPublic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
+
+                // need to check if the method is being accessed directly
+                // or as a property (eg- getText() --> text)
+                String methodName = method.getName();
+                if (method.isStatic() && method.isPublic()) {
                     Parameter[] params = method.getParameters();
-                    if (params != null && params.length > 0 && set.contains(params[0].getType().getName())) {
-                        GroovyCategoryMethodProposal methodProposal = new GroovyCategoryMethodProposal(method);
-                        methodProposal
-                                .setRelevanceMultiplier(isInterestingType(method
-                                        .getReturnType()) ? 101
-                                        : 1);
-                        groovyProposals.add(methodProposal);
+                    if (ProposalUtils.looselyMatches(prefix, methodName)) {
+                        if (params != null && params.length > 0
+                                && set.contains(params[0].getType().getName())) {
+                            GroovyCategoryMethodProposal methodProposal = new GroovyCategoryMethodProposal(
+                                    method);
+                            methodProposal
+                                    .setRelevanceMultiplier(isInterestingType(method
+                                            .getReturnType()) ? 101 : 1);
+                            groovyProposals.add(methodProposal);
+                        }
+                    } else if (params.length == 1
+                            && looselyMatchesGetterName(prefix, methodName)
+                            && !existingFieldProposals.contains(methodName)
+                            && hasNoField(declaringClass, methodName)) {
+                        // we are not handling setters...should we?
+                        // add property
+                        GroovyFieldProposal fieldProposal = new GroovyFieldProposal(
+                                createMockField(method));
+                        fieldProposal.setRelevanceMultiplier(1);
+                        groovyProposals.add(fieldProposal);
+                        existingFieldProposals.add(methodName);
                     }
+
                 }
             }
         }
         return groovyProposals;
     }
-
 }
