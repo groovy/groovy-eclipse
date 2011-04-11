@@ -24,27 +24,29 @@ public class PreferenceConstants {
         // uninstantiable
     }
 
-    public static final String GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR = "groovy.editor.highlight.gjdk.color";
+    public static final String GROOVY_EDITOR_HIGHLIGHT = "groovy.editor.highlight";
 
-	public static final String GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR = "groovy.editor.highlight.javakeywords.color";
+    public static final String GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".gjdk.color";
 
-	public static final String GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR = "groovy.editor.highlight.groovykeywords.color";
+	public static final String GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".javakeywords.color";
 
-	public static final String GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR = "groovy.editor.highlight.javatypes.color";
+	public static final String GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".groovykeywords.color";
 
-	public static final String GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR = "groovy.editor.highlight.strings.color";
+	public static final String GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".javatypes.color";
 
-	public static final String GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR = "groovy.editor.highlight.numbers.color";
+	public static final String GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".strings.color";
 
-    public static final String GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR = "groovy.editor.highlight.annotation.color";
+	public static final String GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".numbers.color";
 
-    public static final String GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR = "groovy.editor.highlight.bracket.color";
+    public static final String GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".annotation.color";
 
-    public static final String GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR = "groovy.editor.highlight.return.color";
+    public static final String GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".bracket.color";
 
-    public static final String GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR = "groovy.editor.highlight.operator.color";
+    public static final String GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".return.color";
 
-	public static final String GROOVY_EDITOR_DEFAULT_COLOR = "groovy.editor.highlight.default.color";
+    public static final String GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".operator.color";
+
+	public static final String GROOVY_EDITOR_DEFAULT_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".default.color";
 
     public static final String GROOVY_EDITOR_BOLD_SUFFIX = "_bold";
 

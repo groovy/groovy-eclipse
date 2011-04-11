@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2003-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR;
+import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR;
@@ -30,6 +32,8 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.eclipse.jdt.internal.ui.text.JavaColorManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 
 /**
  * @author Andrew Eisenberg
@@ -38,13 +42,32 @@ import org.eclipse.jface.preference.PreferenceConverter;
  */
 public class GroovyColorManager extends JavaColorManager {
 
+    private ColorPreferencesChangeListener changeListener;
+
+    private class ColorPreferencesChangeListener implements IPropertyChangeListener {
+
+        public void propertyChange(PropertyChangeEvent event) {
+            if (event.getProperty().startsWith(GROOVY_EDITOR_HIGHLIGHT)
+                    && !(event.getProperty().endsWith(GROOVY_EDITOR_BOLD_SUFFIX))) {
+                if (event.getNewValue() != event.getOldValue()) {
+                    unbindColor(event.getProperty());
+                }
+            }
+        }
+    }
 
     public GroovyColorManager() {
         super();
-
+        changeListener = new ColorPreferencesChangeListener();
+        GroovyPlugin.getDefault().getPreferenceStore().addPropertyChangeListener(changeListener);
         initialize();
     }
 
+    @Override
+    public void dispose() {
+        super.dispose();
+        GroovyPlugin.getDefault().getPreferenceStore().removePropertyChangeListener(changeListener);
+    }
     public void initialize() {
         bindColor(GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
                 PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR));
@@ -84,4 +107,5 @@ public class GroovyColorManager extends JavaColorManager {
     private IPreferenceStore getGroovyPreferenceStore() {
         return GroovyPlugin.getDefault().getPreferenceStore();
     }
+
 }
