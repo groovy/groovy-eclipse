@@ -46,10 +46,11 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
         char[] packageCompletionText = getPackageCompletionText(context.fullCompletionExpression);
         if(mightBePackage(packageCompletionText)) {
 
+            int expressionStart = context.completionLocation
+                    - context.fullCompletionExpression.trim().length();
             GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-                    context, getJavaContext(), context.completionLocation
-                            - context.fullCompletionExpression.trim().length(),
-                    context.completionExpression.length(),
+                    context, getJavaContext(), expressionStart,
+                    context.completionEnd - expressionStart,
                     getNameEnvironment().nameLookup, monitor);
             getNameEnvironment().findPackages(packageCompletionText, requestor);
             List<ICompletionProposal> typeProposals = requestor.processAcceptedPackages();

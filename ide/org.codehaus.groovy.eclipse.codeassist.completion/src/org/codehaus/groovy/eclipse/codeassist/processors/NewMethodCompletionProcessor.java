@@ -146,7 +146,8 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         createMethod(method, completion);
         proposal.setCompletion(completion.toString().toCharArray());
         proposal.setDeclarationKey(method.getDeclaringClass().getName().toCharArray());
-        proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionLocation);
+        proposal.setReplaceRange(context.completionLocation
+                - context.completionExpression.length(), context.completionEnd);
         proposal.setFlags(method.getModifiers());
         proposal.setRelevance(relevance);
 

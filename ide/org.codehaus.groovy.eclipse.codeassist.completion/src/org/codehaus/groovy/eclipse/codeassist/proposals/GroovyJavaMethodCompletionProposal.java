@@ -95,8 +95,15 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         super.apply(document, trigger, offset);
         int baseOffset= getReplacementOffset();
         String replacement= getReplacementString();
+        fSelectedRegion = new Region(baseOffset + replacement.length(), 0);
+    }
 
+
+    @Override
+    protected void setUpLinkedMode(IDocument document, char closingCharacter) {
         if (fArgumentOffsets != null && getTextViewer() != null) {
+            int baseOffset = getReplacementOffset();
+            String replacement = getReplacementString();
             try {
                 LinkedModeModel model= new LinkedModeModel();
                 for (int i= 0; i != fArgumentOffsets.length; i++) {
@@ -124,11 +131,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 JavaPlugin.log(e);
                 openErrorDialog(e);
             }
-        } else {
-            fSelectedRegion= new Region(baseOffset + replacement.length(), 0);
         }
     }
-
 
     /**
      * Groovify this replacement string
@@ -138,7 +142,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     @Override
     protected String computeReplacementString() {
         // with no arguments, there is nothing groovy to do.
-        if (!hasArgumentList()) {
+        if (!hasArgumentList() || !hasArgumentList()) {
             return super.computeReplacementString();
         }
 

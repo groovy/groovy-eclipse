@@ -33,7 +33,6 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
-import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
@@ -123,17 +122,21 @@ public class GroovyCompletionProposalComputer implements
             return Collections.EMPTY_LIST;
         }
 
-        String fullCompletionText = findCompletionText(context.getDocument(), context.getInvocationOffset());
+        int invocationOffset = context.getInvocationOffset();
+        IDocument document = context.getDocument();
+        String fullCompletionText = findCompletionText(document, invocationOffset);
         String[] completionExpressions = findCompletionExpression(fullCompletionText);
         if (completionExpressions == null) {
             completionExpressions = new String[] { "", "" };
         }
         String completionExpression = completionExpressions[1] == null ? completionExpressions[0]
                 : completionExpressions[1];
-        int supportingNodeEnd = findSupportingNodeEnd(context.getInvocationOffset(), fullCompletionText);
+        int supportingNodeEnd = findSupportingNodeEnd(invocationOffset, fullCompletionText);
+        int completionEnd = findCompletionEnd(document,
+                invocationOffset);
         CompletionNodeFinder finder = new CompletionNodeFinder(
-                context.getInvocationOffset(), supportingNodeEnd,
-                completionExpression, fullCompletionText);
+                invocationOffset, completionEnd,
+                supportingNodeEnd, completionExpression, fullCompletionText);
         ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         if (assistContext != null) {
@@ -163,45 +166,6 @@ public class GroovyCompletionProposalComputer implements
         return proposals;
     }
 
-    /**
-     * determine if the offset is the start of the first expression on the line.
-     * note that the algorithm here only checks whitespace and will not return
-     * true if there is a comment before the offset.
-     *
-     * @param invocationOffset
-     * @param document
-     * @return
-     */
-    private boolean isAtStartOfLine(int invocationOffset, IDocument document) {
-        int offset = invocationOffset - 1;
-        while (offset >= 0) {
-            char c = '\0';
-            try {
-                c = document.getChar(offset--);
-            } catch (BadLocationException e) {
-                GroovyCore.logException("Exception during content assist", e);
-                return false;
-            }
-            if (!Character.isWhitespace(c)) {
-                // something's here
-                return false;
-            }
-            switch (c) {
-                case '\n':
-                case '\r':
-                    return true;
-            }
-        }
-        // reached start of document...
-        return true;
-    }
-
-    /**
-     * @param context
-     * @param fullCompletionText
-     * @param completionExpressions
-     * @return
-     */
     private int findSupportingNodeEnd(int invocationOffset,
             String fullCompletionText) {
         String[] completionExpressions = new ExpressionFinder().splitForCompletionNoTrim(fullCompletionText);
@@ -248,6 +212,10 @@ public class GroovyCompletionProposalComputer implements
         return "";
     }
 
+    private int findCompletionEnd(IDocument doc, int offset) {
+        ISourceBuffer buffer = new DocumentSourceBuffer(doc);
+        return new ExpressionFinder().findTokenEnd(buffer, offset);
+    }
 
     private static final List<IContextInformation> NO_CONTEXTS= Collections.emptyList();
     public List<IContextInformation> computeContextInformation(

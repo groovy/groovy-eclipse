@@ -41,13 +41,23 @@ public class ContentAssistContext {
     public final int completionLocation;
 
     /**
-     * the phrase that is being completed. not null, but might be empty.
+     * The location of the end of the token being completed on.
+     *
+     * If the completion token is someTh^. then the completionEnd is the char offset of the 'h'. If
+     * the completion token is someTh^ing (ie- content assist after the 'h', but there is still more
+     * to the completion token) then the completionEnd is the location of the 'g'.
+     */
+    public final int completionEnd;
+
+    /**
+     * the phrase that is being completed. not null, but might be empty. if the full phrase is
+     * foo.bar.baz.someTh^, the completion expression will be someTh
      */
     public final String completionExpression;
 
     /**
-     * the full phrase of the entire statement being completed. ie- if the full
-     * phrase is foo.bar.baz.someTh^, the completion expression will be someTh
+     * the full phrase of the entire statement being completed. if the full phrase is
+     * foo.bar.baz.someTh^, then that will be the fullCompletionExpression
      */
     public final String fullCompletionExpression;
 
@@ -94,7 +104,8 @@ public class ContentAssistContext {
     		String completionExpression, String fullCompletionExpression, ASTNode completionNode,
  ASTNode containingCodeBlock,
             Expression lhsNode, ContentAssistLocation location,
-            GroovyCompilationUnit unit, AnnotatedNode containingDeclaration) {
+            GroovyCompilationUnit unit, AnnotatedNode containingDeclaration,
+            int completionEnd) {
         super();
         this.completionLocation = completionLocation;
         this.completionExpression = completionExpression;
@@ -105,6 +116,7 @@ public class ContentAssistContext {
         this.location = location;
         this.unit = unit;
         this.containingDeclaration = containingDeclaration;
+        this.completionEnd = completionEnd;
     }
 
     public IType getEnclosingType() {

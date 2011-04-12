@@ -840,9 +840,10 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
         proposal.setCompletion(new char[] { '(', ')' });
         proposal.setFlags(modifiers);
+
+        // looks strange, but this is just copying similar code in CompletionEngine.java
         proposal.setReplaceRange(this.offset + this.replaceLength, this.offset
-                + this.replaceLength); // replacement range is *after* the end
-                                       // of the type completion
+                + this.replaceLength);
         proposal.setTokenRange(this.offset, this.actualCompletionPosition);
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(typeModifiers);

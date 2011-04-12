@@ -93,8 +93,8 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
         InternalCompletionProposal proposal =  createProposal(CompletionProposal.KEYWORD, context.completionLocation);
         proposal.setName(keyword.toCharArray());
         proposal.setCompletion(keyword.toCharArray());
-        proposal.setReplaceRange(context.completionLocation,
-                context.completionLocation+context.completionExpression.length());
+        proposal.setReplaceRange(context.completionLocation
+                - context.completionExpression.length(), context.completionEnd);
 
         String completion= String.valueOf(proposal.getCompletion());
         int start= proposal.getReplaceStart();

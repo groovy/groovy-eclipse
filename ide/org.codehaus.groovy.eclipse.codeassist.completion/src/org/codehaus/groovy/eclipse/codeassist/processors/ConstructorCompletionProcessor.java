@@ -49,7 +49,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
                 - constructorCompletionText.length;
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
                 context, getJavaContext(), completionExprStart,
-                constructorCompletionText.length,
+                context.completionEnd - completionExprStart,
                 getNameEnvironment().nameLookup, monitor);
         getNameEnvironment().findConstructorDeclarations(
                 constructorCompletionText, true, requestor, monitor);

@@ -37,6 +37,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.BadLocationException;
 
 /**
  * @author Andrew Eisenberg
@@ -77,17 +78,13 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(
                 CompletionProposal.METHOD_REF, context.completionLocation);
 
-        proposal.setCompletion(completionName());
+        proposal.setCompletion(completionName(!isParens(context, javaContext)));
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
         proposal.setName(method.getName().toCharArray());
         proposal.setParameterNames(createParameterNames(context.unit));
         proposal.setParameterTypeNames(createParameterTypeNames(method));
-        // proposal.setReplaceRange(context.completionLocation -
-        // context.completionExpression.length(), context.completionLocation -
-        // context.completionExpression.length());
         proposal.setReplaceRange(context.completionLocation
-                - context.completionExpression.length(),
-                context.completionLocation);
+                - context.completionExpression.length(), context.completionEnd);
         proposal.setFlags(getModifiers());
         proposal.setAdditionalFlags(CompletionFlags.Default);
         char[] methodSignature = createMethodSignature();
@@ -118,6 +115,24 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                 groovyFormatterPrefs, contributor);
 
     }
+
+    /**
+     * @param context
+     * @param javaContext
+     * @return
+     * @throws BadLocationException
+     */
+    private boolean isParens(ContentAssistContext context,
+            JavaContentAssistInvocationContext javaContext) {
+        if (javaContext.getDocument().getLength() > context.completionEnd) {
+            try {
+                return javaContext.getDocument().getChar(context.completionEnd) == '(';
+            } catch (BadLocationException e) {
+                GroovyCore.logException("Exception during content assist", e);
+            }
+        }
+        return false;
+    }
     protected boolean shouldUseNamedArguments(IPreferenceStore prefs) {
         return (prefs
                 .getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS) && method instanceof ConstructorNode)
@@ -133,7 +148,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
 
-    protected char[] completionName() {
+    protected char[] completionName(boolean includeParens) {
         String name = method.getName();
         char[] nameArr = name.toCharArray();
         boolean hasWhitespace = false;
@@ -146,7 +161,14 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         if (hasWhitespace) {
             name = "\"" + name + "\"";
         }
-        return (name + "()").toCharArray();
+
+        // don't include parens if the char after the completionEnd is a paren (don't want to double
+        // insert)
+        if (includeParens) {
+            return (name + "()").toCharArray();
+        } else {
+            return name.toCharArray();
+        }
     }
 
     protected char[][] createParameterNames(ICompilationUnit unit) {

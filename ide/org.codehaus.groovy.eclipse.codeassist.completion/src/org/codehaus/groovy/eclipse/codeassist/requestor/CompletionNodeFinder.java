@@ -77,6 +77,8 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     private AnnotatedNode currentDeclaration;
 
     private int completionOffset;
+
+    private int completionEnd;
     private int supportingNodeEnd;
     private String completionExpression;
     private String fullCompletionExpression;
@@ -89,9 +91,11 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
      */
     private Expression lhsNode;
 
-    public CompletionNodeFinder(int completionOffset, int supportingNodeEnd,
+    public CompletionNodeFinder(int completionOffset, int completionEnd,
+            int supportingNodeEnd,
             String completionExpression, String fullCompletionExpression) {
         this.completionOffset = completionOffset;
+        this.completionEnd = completionEnd;
         this.supportingNodeEnd = supportingNodeEnd;
         this.completionExpression = completionExpression;
         this.fullCompletionExpression = fullCompletionExpression;
@@ -568,7 +572,8 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     private void createContext(ASTNode completionNode, ASTNode declaringNode, ContentAssistLocation location) {
         context = new ContentAssistContext(completionOffset,
                 completionExpression, fullCompletionExpression, completionNode,
-                declaringNode, lhsNode, location, unit, currentDeclaration);
+                declaringNode, lhsNode, location, unit, currentDeclaration,
+                completionEnd);
         throw new VisitCompleteException();
     }
 

@@ -127,7 +127,7 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
             }
         }
 
-        return false;
+        return true;
     }
 
     private boolean typeEquals(Parameter maybeParameter, Parameter parameter) {

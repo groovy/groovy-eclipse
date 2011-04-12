@@ -104,19 +104,46 @@ public class ExpressionFinder {
 		return "";
 	}
 
+
 	/**
-	 * Splits the given expression into two parts: the type evaluation part, and the code completion part.
-	 *
-	 * @param expression
-	 *            The expression returned by the {@link #findForCompletions(ISourceBuffer, int)} method.
-	 * @return A string pair, the expression to complete, and the prefix to be completed.<br>
-	 *         { "", "" } if no completion expression could be found
-	 *         String[0] is an expression .<br>
-	 *         String[1] is the empty string if the last character is a '.'.<br>
-	 *         String[1] is 'ident' if the expression ends with '.ident'.<br>
-	 *         String[1] is null if the expression itself is to be used for completion.
-	 *         Also, remove starting '$'.  These only occur when inside GStrings, and should not be completed against.
-	 */
+     * Finds the end of the String token that exists at initialOffset.
+     * searches the document for the next non-word character and returns that
+     * as the end
+     *
+     * @param buffer the document to search
+     * @param initialOffset the initial offset
+     * @return the offset of the first non-word character starting at
+     *         initialOffset
+     */
+    public int findTokenEnd(ISourceBuffer buffer, int initialOffset) {
+        int candidate = initialOffset;
+        while (buffer.length() > candidate) {
+            if (!Character.isJavaIdentifierPart(buffer.charAt(candidate))) {
+                break;
+            }
+            candidate++;
+        }
+        return candidate;
+    }
+
+    /**
+     * Splits the given expression into two parts: the type evaluation part, and
+     * the code completion part.
+     *
+     * @param expression
+     *            The expression returned by the
+     *            {@link #findForCompletions(ISourceBuffer, int)} method.
+     * @return A string pair, the expression to complete, and the prefix to be
+     *         completed.<br>
+     *         { "", "" } if no completion expression could be found
+     *         String[0] is an expression .<br>
+     *         String[1] is the empty string if the last character is a '.'.<br>
+     *         String[1] is 'ident' if the expression ends with '.ident'.<br>
+     *         String[1] is null if the expression itself is to be used for
+     *         completion.
+     *         Also, remove starting '$'. These only occur when inside GStrings,
+     *         and should not be completed against.
+     */
 	public String[] splitForCompletion(String expression) {
 	    String[] split = splitForCompletionNoTrim(expression);
 	    if (split[0] != null) {
@@ -175,14 +202,12 @@ public class ExpressionFinder {
         return ret;
 	}
 
-
-
-	/**
-	 * FIXADE only skip line breaks if the previous character is a '.' otherwise
-	 * line breaks should signify the end of the completion
-	 * For now, though we just ignore skipping all line breaks
-	 *
-	 */
+    /**
+     * FIXADE only skip line breaks if the previous character is a '.' otherwise
+     * line breaks should signify the end of the completion.
+     * For now, though we just ignore skipping all line breaks
+     *
+     */
 	private void skipLineBreaksAndComments(TokenStream stream)
 			throws TokenStreamException {
 		skipLineBreaks(stream);

@@ -79,7 +79,7 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(property.getDeclaringClass()));
         proposal.setRelevance(computeRelevance());
         int startIndex = context.completionLocation-context.completionExpression.length();
-        proposal.setReplaceRange(startIndex, context.completionLocation);
+        proposal.setReplaceRange(startIndex, context.completionEnd);
         return proposal;
     }
 }

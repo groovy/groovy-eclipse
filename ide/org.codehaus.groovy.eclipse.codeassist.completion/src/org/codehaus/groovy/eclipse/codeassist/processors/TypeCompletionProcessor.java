@@ -49,7 +49,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
         int expressionStart = findExpressionStart(context);
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
                 context, getJavaContext(), expressionStart,
-                context.completionExpression.length(),
+                context.completionEnd - expressionStart,
                 getNameEnvironment().nameLookup, monitor);
 
         getNameEnvironment().findTypes(toSearch.toCharArray(), true, // all member
