@@ -45,7 +45,7 @@ import antlr.Token;
  */
 public class GroovyIndentation {
 
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
 
     private void debug(String msg) {
         if (DEBUG) {
@@ -153,7 +153,7 @@ public class GroovyIndentation {
 
     /**
      * @param Zero-based line number in the formattedDocument
-     * @return Whether the line in the dcoument contains only whitespace.
+     * @return Whether the line in the document contains only whitespace.
      */
     private boolean isEmptyLine(int line) {
         try {
@@ -162,7 +162,8 @@ public class GroovyIndentation {
             int lineLen = d.getLineLength(line);
             String lineTxt = d.get(lineStart, lineLen);
             boolean result = lineTxt.trim().equals("");
-            debug("isEmptyLine(" + line + ") txt = '" + lineTxt + "'" + "=>" + result);
+            // debug("isEmptyLine(" + line + ") txt = '" + lineTxt + "'" + "=>"
+            // + result);
             return result;
         } catch (BadLocationException e) {
             return true; // Presumably the line is outside the document so its
