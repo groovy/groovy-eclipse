@@ -71,6 +71,8 @@
           id="GROOVY_SUPPORT"
           class="org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer"/>
    </extension>
+   <!--
+   Disabled now...to be overriden by DSLDs
    <extension
          point="org.eclipse.jdt.groovy.core.typeLookup">
       <lookup
@@ -80,4 +82,5 @@
          </appliesTo>
       </lookup>
    </extension>
+   -->
 </plugin>

@@ -17,8 +17,20 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
+import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.JavaProject;
+import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbench;
@@ -67,12 +79,67 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
         protected InputStream getInitialContents() {
             return new StringInputStream(
                     "// this is a DSLD file\n" +
-            		"// start off creating a customg DSL Descriptor for your Groovy DSL\n" +
+            		"// start off creating a custom DSL Descriptor for your Groovy DSL\n" +
             		"\n" +
             		"// The following snippet adds the 'newProp' property to all GroovyObjects\n" +
             		"// currentType('groovy.lang.GroovyObject').accept {\n" +
             		"//   property name : 'newProp', type : String, provider : 'Sample DSL', doc : 'This is a sample.  You should see this in content assist for GroovyObjects: <pre>newProp</pre>'\n" +
             		"// }\n");
+        }
+        
+        /**
+         * Check that containing project is a groovy project (if not---error).
+         * Check that containing folder is in a source folder (if not---warning).
+         */
+        @Override
+        protected boolean validatePage() {
+            if (!super.validatePage()) {
+                return false;
+            }
+            
+            IPath path = getContainerFullPath();
+            IProject project; 
+            if (path.segmentCount() > 1) {
+                IFolder folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(path);
+                project = folder.getProject();
+            } else if (path.segmentCount() == 1) {
+                project = ResourcesPlugin.getWorkspace().getRoot().getProject(path.lastSegment());
+            } else {
+                project = null;
+                setErrorMessage("No folder is selected");
+                return false;
+            }
+            if (!project.exists()) {
+                setErrorMessage("Project " + project.getName() + " does not exist.");
+                return false;
+            }
+            if (!GroovyNature.hasGroovyNature(project)) {
+                setErrorMessage("Project " + project.getName() + " is not a groovy project.");
+                return false;
+            }
+            
+            IJavaProject javaProject = JavaCore.create(project);
+            try {
+                // check that the folder is inside of a source folder
+                IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+                boolean inSourceFolder = false;
+                for (IClasspathEntry entry : rawClasspath) {
+                    IPath sourcePath = entry.getPath();
+                    if (sourcePath.isPrefixOf(path)) {
+                        inSourceFolder = true;
+                        break;
+                    }
+                }
+                if (!inSourceFolder) {
+                    setMessage("Path is not in a source folder.  It is significantly easier to edit DSLDs when they are in source folders", 
+                            IMessageProvider.WARNING);
+                }
+            } catch (JavaModelException e) {
+                GroovyCore.logException("Exception while creating DSLD file", e);
+                setErrorMessage(e.getMessage());
+                return false;
+            }
+            return true;
         }
     }
     

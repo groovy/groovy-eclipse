@@ -18,7 +18,9 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 
 /**
  * the match returns true if the pattern passed in has an annotated node that has an annotation 
- * with the supplied characteristics most likely, a name
+ * with the supplied characteristics most likely, a name.  This is similar to {@link FindAnnotationPointcut} on when it matches.
+ * However, the difference is that the matched results are the things that are annotated, rather than the annotations 
+ * 
  * @author andrew
  * @created Feb 11, 2011
  */

@@ -320,7 +320,7 @@ public class VariableScope {
 	}
 
 	public MethodNode getEnclosingMethodDeclaration() {
-		if (scopeNode instanceof FieldNode) {
+		if (scopeNode instanceof MethodNode) {
 			return (MethodNode) scopeNode;
 		} else if (parent != null) {
 			return parent.getEnclosingMethodDeclaration();

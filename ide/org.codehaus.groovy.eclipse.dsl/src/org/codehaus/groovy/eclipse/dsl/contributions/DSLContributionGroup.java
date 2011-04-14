@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
@@ -257,6 +258,8 @@ public class DSLContributionGroup extends ContributionGroup {
             type = ((FieldNode) expr).getType();
         } else if (expr instanceof MethodNode) {
             type = ((MethodNode) expr).getReturnType();
+        } else if (expr instanceof ClassExpression) {
+            type = ((ClassExpression) expr).getType();
         } else {
             // invalid
             if (GroovyLogManager.manager.hasLoggers()) {
