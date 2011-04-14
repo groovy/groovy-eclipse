@@ -31,6 +31,8 @@ import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractMethodAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyTabAction;
 import org.codehaus.groovy.eclipse.editor.actions.IGroovyEditorActionDefinitionIds;
 import org.codehaus.groovy.eclipse.editor.highlighting.GroovySemanticReconciler;
+import org.codehaus.groovy.eclipse.editor.outline.GroovyOutlinePage;
+import org.codehaus.groovy.eclipse.editor.outline.OutlineExtenderRegistry;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatKind;
@@ -64,6 +66,7 @@ import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
 import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
+import org.eclipse.jdt.internal.ui.javaeditor.JavaOutlinePage;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory;
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction;
@@ -126,6 +129,7 @@ import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel;
 import org.eclipse.ui.texteditor.ChainedPreferenceStore;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
+import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
 public class GroovyEditor extends CompilationUnitEditor {
     /**
@@ -840,14 +844,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         ReflectionUtils.setPrivateField(RefactorActionGroup.class, actionFieldName, group, newAction);
     }
 
-    /*
-     * Make accessible to source viewer
-     */
-    @Override
-    protected ITypeRoot getInputJavaElement() {
-        return super.getInputJavaElement();
-    }
-
     private IFile getFile() {
         IEditorInput input = getEditorInput();
         if (input instanceof FileEditorInput) {
@@ -862,7 +858,7 @@ public class GroovyEditor extends CompilationUnitEditor {
      * or returns null if the input is not a {@link GroovyCompilationUnit}.
      */
     public GroovyCompilationUnit getGroovyCompilationUnit() {
-        ITypeRoot root = getInputJavaElement();
+        ITypeRoot root = super.getInputJavaElement();
         if (root instanceof GroovyCompilationUnit) {
             return (GroovyCompilationUnit) root;
         } else {
@@ -886,7 +882,7 @@ public class GroovyEditor extends CompilationUnitEditor {
             return this.getFile();
         }
         if (GroovyCompilationUnit.class == required || ICompilationUnit.class == required || CompilationUnit.class == required) {
-            return this.getInputJavaElement();
+            return super.getInputJavaElement();
         }
 
         if (ModuleNode.class == required) {
@@ -1288,4 +1284,67 @@ public class GroovyEditor extends CompilationUnitEditor {
     public VerifyKeyListener getGroovyBracketInserter() {
         return groovyBracketInserter;
     }
+
+    /**
+     * outline management
+     */
+    private GroovyOutlinePage page;
+
+    /**
+     * Gets the outline page for this editor only if the outline page is an
+     * augmented {@link GroovyOutlinePage}.
+     *
+     * Otherwise returns null
+     *
+     * @return the {@link GroovyOutlinePage} or null
+     */
+    public GroovyOutlinePage getOutlinePage() {
+        if (page == null) {
+            IContentOutlinePage outlinePage = (IContentOutlinePage) getAdapter(IContentOutlinePage.class);
+            if (outlinePage instanceof GroovyOutlinePage) {
+                page = (GroovyOutlinePage) outlinePage;
+            }
+        }
+        return page;
+    }
+
+    // @Override
+    // protected ITypeRoot getInputJavaElement() {
+    // return page != null ? page.getOutlineCompilationUnit() :
+    // super.getInputJavaElement();
+    // }
+
+    @Override
+    protected void synchronizeOutlinePage(ISourceReference element, boolean checkIfOutlinePageActive) {
+        if (page != null) {
+            page.refresh();
+        }
+        super.synchronizeOutlinePage(element, checkIfOutlinePageActive);
+    }
+
+    @Override
+    protected ISourceReference computeHighlightRangeSourceReference() {
+        return page != null ? page.getOutlineElmenetAt(getCaretOffset()) : super.computeHighlightRangeSourceReference();
+    }
+
+    @Override
+    protected JavaOutlinePage createOutlinePage() {
+        OutlineExtenderRegistry outlineExtenderRegistry = GroovyPlugin.getDefault().getOutlineTools().getOutlineExtenderRegistry();
+
+        page = outlineExtenderRegistry.getGroovyOutlinePageForEditor(getGroovyCompilationUnit().getJavaProject().getProject(),
+                fOutlinerContextMenuId, this);
+        if (page != null) {
+            // don't call this since it will grab the GroovyCompilationUnit
+            // instead of the OCompilationUnit
+            // setOutlinePageInput(page, getEditorInput());
+            // FIXADE do we need to call
+            // page.getOutlineCompilationUnit().exists()?
+            page.setInput(page.getOutlineCompilationUnit());
+            return page;
+        } else {
+            return super.createOutlinePage();
+        }
+
+    }
+
 }

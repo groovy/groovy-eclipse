@@ -12,7 +12,18 @@
             natureID="org.codehaus.groovy.eclipse.tests.testNature2">
       </highlightingExtender>
    </extension>
-	<extension
+   <extension
+         point="org.codehaus.groovy.eclipse.ui.outlineExtension">
+      <highlightingExtender
+            extender="org.codehaus.groovy.eclipse.test.ui.OutlineExtender1"
+            natureID="org.codehaus.groovy.eclipse.tests.testNature1">
+      </highlightingExtender>
+      <highlightingExtender
+            extender="org.codehaus.groovy.eclipse.test.ui.OutlineExtender2"
+            natureID="org.codehaus.groovy.eclipse.tests.testNature2">
+      </highlightingExtender>
+   </extension>
+   <extension
          id="testNature1"
          name="Test1"
          point="org.eclipse.core.resources.natures">
@@ -21,8 +32,8 @@
                class="org.codehaus.groovy.eclipse.test.ui.Extender1">
          </run>
       </runtime>
-    </extension>
- <extension
+   </extension>
+   <extension
        id="testNature2"
        name="Test2"
        point="org.eclipse.core.resources.natures">

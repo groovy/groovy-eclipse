@@ -19,6 +19,7 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
 import org.codehaus.groovy.eclipse.debug.ui.GroovyDebugOptionsEnforcer;
 import org.codehaus.groovy.eclipse.debug.ui.GroovyJavaDebugElementAdapterFactory;
+import org.codehaus.groovy.eclipse.editor.GroovyOutlineTools;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.preferences.AskToConvertLegacyProjects;
 import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener;
@@ -76,6 +77,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	static boolean trace;
 
 	private GroovyTextTools textTools;
+
+    private GroovyOutlineTools outlineTools;
 
 	public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.ui";
 
@@ -180,6 +183,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
     public void start(BundleContext context) throws Exception {
 		super.start(context);
 		textTools = new GroovyTextTools();
+        outlineTools = new GroovyOutlineTools();
 		addMonospaceFontListener();
 		DelegatingCleanUpPostSaveListener.installCleanUp();
 
@@ -241,6 +245,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
 	    super.stop(context);
 	    textTools.dispose();
 	    textTools = null;
+        outlineTools.dispose();
+        outlineTools = null;
         DelegatingCleanUpPostSaveListener.uninstallCleanUp();
         removeMonospaceFontListener();
 
@@ -253,5 +259,9 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     public GroovyTextTools getTextTools() {
         return textTools;
+    }
+
+    public GroovyOutlineTools getOutlineTools() {
+        return outlineTools;
     }
 }
