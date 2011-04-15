@@ -126,7 +126,8 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 				boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
 				// GRECLIPSE-540 still unresolved is that all field and variable references are considered reads. We don't know
 				// about writes
-				if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess))) {
+				if (isCompleteMatch
+						&& ((isAssignment && writeAccess) || (!isAssignment && readAccess) || (isDeclaration && findDeclarations))) {
 					SearchMatch match = null;
 					if (isDeclaration && findDeclarations) {
 						match = new FieldDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
