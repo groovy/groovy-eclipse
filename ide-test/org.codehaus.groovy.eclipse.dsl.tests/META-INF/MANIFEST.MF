@@ -15,7 +15,6 @@ Require-Bundle: org.eclipse.ui,
  org.codehaus.groovy.eclipse.ui;bundle-version="2.1.3",
  org.eclipse.jdt.groovy.core.tests.builder,
  org.eclipse.jdt.groovy.core.tests.compiler,
- org.eclipse.test.performance,
  org.eclipse.jdt.groovy.core;bundle-version="2.1.3",
  org.eclipse.jdt.core,
  org.eclipse.core.resources

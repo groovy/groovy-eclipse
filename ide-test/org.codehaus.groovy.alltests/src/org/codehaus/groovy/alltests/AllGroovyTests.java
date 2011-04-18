@@ -17,6 +17,7 @@ import junit.framework.TestSuite;
 import org.codehaus.groovy.eclipse.codeassist.tests.AllCompletionTests;
 import org.codehaus.groovy.eclipse.codebrowsing.tests.AllBrowsingTests;
 import org.codehaus.groovy.eclipse.core.AllCoreTests;
+import org.codehaus.groovy.eclipse.dsl.tests.AllDSLTests;
 import org.codehaus.groovy.eclipse.junit.test.AllJUnitTests;
 import org.codehaus.groovy.eclipse.quickfix.test.AllQuickFixTests;
 import org.codehaus.groovy.eclipse.refactoring.test.AllRefactoringTests;
@@ -38,7 +39,7 @@ public class AllGroovyTests {
         suite.addTest(AllBrowsingTests.suite());
         suite.addTest(AllRefactoringTests.suite());
         suite.addTest(AllQuickFixTests.suite());
-//        suite.addTest(AllDSLTests.suite());
+        suite.addTest(AllDSLTests.suite());
         return suite;
     }
 }
