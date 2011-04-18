@@ -17,6 +17,7 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
 
 import junit.framework.Test;
 
@@ -125,7 +126,33 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
         super.doTestForTwoFieldReferencesInGString(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents,
                 "xxx");
     }
+
     
+    public void testFieldWritesInScript1() throws Exception {
+        doTestForTwoFieldWritesInScript(
+                "new First().xxx = 1\n" +
+                "new First().xxx\n" +
+                "def f = new First()\n" +
+                "def y = f.xxx\n" +
+        "f.xxx = 8");
+    }
+
+    public void testFieldReadsInScript1() throws Exception {
+        doTestForTwoFieldReadsInScript(
+                "new First().xxx\n" +
+                "new First().xxx = 1\n" +
+                "def f = new First()\n" +
+        "f.xxx = f.xxx");
+    }
+    
+    
+    private void doTestForTwoFieldWritesInScript(String secondContents) throws JavaModelException {
+        doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx", IJavaSearchConstants.WRITE_ACCESSES);
+    }
+    private void doTestForTwoFieldReadsInScript(String secondContents) throws JavaModelException {
+        doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx", IJavaSearchConstants.READ_ACCESSES);
+    }
+
     private void doTestForTwoFieldReferencesInScript(String secondContents) throws JavaModelException {
         doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx");
     }

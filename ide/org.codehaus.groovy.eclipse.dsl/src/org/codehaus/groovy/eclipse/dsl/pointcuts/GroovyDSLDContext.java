@@ -11,7 +11,6 @@
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;

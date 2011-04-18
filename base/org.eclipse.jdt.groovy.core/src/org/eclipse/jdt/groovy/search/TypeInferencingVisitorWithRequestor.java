@@ -919,8 +919,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		toVisitFirst.visit(this);
 
-		enclosingAssignment = oldEnclosingAssignment;
-
 		// must get this now, because this value is popped during handlExpreession.
 		ClassNode objExprType = objectExpressionType.peek();
 
@@ -933,6 +931,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		if (shouldContinue) {
 			toVisitSecond.visit(this);
+
 			propertyExpression.pop();
 
 			// returns true if this binary expression is the property part of another property expression
@@ -945,6 +944,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// not popped earlier because the method field of the expression was not examined
 			objectExpressionType.pop();
 		}
+		// put this in a finally block?
+		enclosingAssignment = oldEnclosingAssignment;
 	}
 
 	@Override

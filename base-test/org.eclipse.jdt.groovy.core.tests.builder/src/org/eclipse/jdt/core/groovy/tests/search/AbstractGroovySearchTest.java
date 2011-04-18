@@ -203,12 +203,15 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     }
 
     protected void doTestForTwoFieldReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName) throws JavaModelException {
+        doTestForTwoFieldReferences(firstContents, secondContents, contentsIsScript, offsetInParent, matchName, IJavaSearchConstants.REFERENCES);
+    }
+    protected void doTestForTwoFieldReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName, int searchFlags) throws JavaModelException {
         String firstClassName = "First";
         String secondClassName = "Second";
         String matchedFieldName = "xxx";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
         IField firstField = findType(firstClassName, first).getField(matchedFieldName);
-        SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
+        SearchPattern pattern = SearchPattern.createPattern(firstField, searchFlags);
         
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
         IJavaElement firstMatchEnclosingElement;
