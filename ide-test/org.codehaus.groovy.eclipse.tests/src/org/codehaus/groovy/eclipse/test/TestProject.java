@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
+import junit.framework.Assert;
+
 import org.apache.commons.io.IOUtils;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
@@ -433,11 +435,24 @@ public class TestProject {
         }
         InputStream stream = new ByteArrayInputStream(encoding == null ? contents.getBytes() : contents.getBytes(encoding));
         IFile file= project.getFile(new Path(name));
+        if (!file.getParent().exists()) {
+            createFolder(file.getParent());
+        }
         file.create(stream, true, null);
         return file;
     }
 
-	public IPackageFragmentRoot getSourceFolder() {
+    private void createFolder(IContainer parent) throws CoreException {
+        if (!parent.getParent().exists()) {
+            if (parent.getParent().getType() != IResource.FOLDER) {
+                Assert.fail("Project doesn't exist " + parent.getParent());
+            }
+            createFolder(parent.getParent());
+        }
+        ((IFolder) parent).create(true, true, null);
+    }
+
+    public IPackageFragmentRoot getSourceFolder() {
 		return sourceFolder;
 	}
 }

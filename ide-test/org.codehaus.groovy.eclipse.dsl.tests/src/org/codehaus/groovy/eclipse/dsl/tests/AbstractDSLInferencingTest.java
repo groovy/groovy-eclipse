@@ -29,6 +29,7 @@ import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
@@ -76,7 +77,11 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     protected String[] createDsls(int startWith, String ... dsls) {
         int i = startWith;
         for (String dsl : dsls) {
-            env.addFile(project.getFullPath(), "dsl" + i++ + ".dsld", dsl);
+            IPath path = env.addFile(project.getFullPath(), "dsl" + i++ + ".dsld", dsl);
+            IFile file = env.getWorkspace().getRoot().getFile(path);
+            if (!file.exists()) {
+                fail("File " + file + " just created, but doesn't exist");
+            }
         }
         return dsls;
     }
