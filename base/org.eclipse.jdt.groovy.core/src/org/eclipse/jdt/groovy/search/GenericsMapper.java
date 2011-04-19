@@ -6,6 +6,9 @@ import java.util.Stack;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * This class maps type parameter names to resolved types
@@ -45,7 +48,7 @@ public class GenericsMapper {
 				// now try to resolve the parameter in the context of the
 				// most recently visited type. If it doesn't exist, then
 				// default to the resovled type
-				resolved.put(ugts[i].getName(), mapper.resolveParameter(rgts[i]));
+				resolved.put(ugts[i].getName(), mapper.resolveParameter(rgts[i], 0));
 			}
 
 			mapper.allGenerics.push(resolved);
@@ -69,9 +72,17 @@ public class GenericsMapper {
 	 * level of the mapper
 	 * 
 	 * @param topGT
+	 * @param depth ensure that we don't recur forever, bottom out after a certain depth
 	 * @return
 	 */
-	ClassNode resolveParameter(GenericsType topGT) {
+	ClassNode resolveParameter(GenericsType topGT, int depth) {
+		if (depth > 10) {
+			// don't recur forever
+			Util.log(new Status(IStatus.WARNING, "org.eclipse.jdt.groovy.core",
+					"GRECLIPSE-1040: prevent infinite recursion when resolving type parameters on generics type: " + topGT));
+			return topGT.getType();
+		}
+
 		if (allGenerics.isEmpty()) {
 			return topGT.getType();
 		}
@@ -79,11 +90,11 @@ public class GenericsMapper {
 		ClassNode origType = findParameter(topGT.getName(), topGT.getType());
 
 		// now recur down all type parameters inside of this type
-		if (null != origType.getGenericsTypes()) {
+		if (origType.getGenericsTypes() != null) {
 			origType = VariableScope.clone(origType);
 			GenericsType[] genericsTypes = origType.getGenericsTypes();
 			for (GenericsType genericsType : genericsTypes) {
-				genericsType.setType(findParameter(genericsType.getName(), resolveParameter(genericsType)));
+				genericsType.setType(findParameter(genericsType.getName(), resolveParameter(genericsType, depth + 1)));
 				genericsType.setLowerBound(null);
 				genericsType.setUpperBounds(null);
 				genericsType.setName(genericsType.getType().getName());
