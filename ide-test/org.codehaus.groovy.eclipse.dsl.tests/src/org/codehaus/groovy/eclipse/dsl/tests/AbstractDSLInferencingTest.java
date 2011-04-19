@@ -31,7 +31,9 @@ import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 
 /**
@@ -106,6 +108,14 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
      * @param expectedContributionCounts map: pointcut name -> all contribution group associated with
      */
     protected void assertDSLStore(int expectedNumDslFiles, Map<String, List<String>> allExpectedPointcuts, Map<String, Integer> expectedContributionCounts) {
+        
+        // ensure that all DSLD refresh jobs are complete.
+        try {
+            Job.getJobManager().join(this.project, null);
+        } catch (OperationCanceledException e) {
+        } catch (InterruptedException e) {
+        }
+        
         DSLDStoreManager manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
         DSLDStore store = manager.getDSLDStore(project);
         Set<String> disabledScripts = DSLPreferences.getDisabledScriptsAsSet();
