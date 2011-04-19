@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
@@ -72,12 +73,8 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
 		// don't do constructor calls. They are found through the class node inside of it
-		if (node instanceof ClassExpression || node instanceof ClassNode || node instanceof AnnotationNode /*
-																											 * || node instanceof
-																											 * ImportNode || node
-																											 * instanceof
-																											 * ConstructorNode
-																											 */) {
+		if (node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode
+				|| node instanceof AnnotationNode /* || node instanceof ConstructorNode */) {
 
 			// the type variable may not have correct source location
 			ClassNode type;
@@ -104,10 +101,10 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 					int end = -1;
 
 					boolean startEndFound = false;
-					// don't do import nodes any more since we are now searching inside of their associated class node
-					/*
-					 * if (node instanceof ImportNode) { end = node.getEnd(); start = node.getStart(); } else
-					 */if (node instanceof ClassExpression) {
+					if (node instanceof ImportNode) {
+						end = node.getEnd();
+						start = node.getStart();
+					} else if (node instanceof ClassExpression) {
 						end = node.getEnd();
 						start = node.getStart();
 					} else if (node instanceof ClassNode) {

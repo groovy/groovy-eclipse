@@ -76,7 +76,9 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     }
     protected String[] createDsls(int startWith, String ... dsls) {
         int i = startWith;
+        System.out.println("Now creating " + dsls.length + " DSLD files.");
         for (String dsl : dsls) {
+            System.out.println("Creating:\n" + dsl + "\n");
             IPath path = env.addFile(project.getFullPath(), "dsl" + i++ + ".dsld", dsl);
             IFile file = env.getWorkspace().getRoot().getFile(path);
             if (!file.exists()) {

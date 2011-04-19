@@ -12,6 +12,8 @@ package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.io.IOException;
 
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -122,7 +124,12 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
      * @throws IOException
      */
     private void createMetaDSL() throws IOException {
-        createJavaUnit("p", "IPointcut", "package p;\npublic interface IPointcut { \n Object accept(groovy.lang.Closure<?> c);\n }");
+        // Closure uses a type parameter in Groovy 1.8, but not in 17
+        if (GroovyUtils.GROOVY_LEVEL > 17) {
+            createJavaUnit("p", "IPointcut", "package p;\npublic interface IPointcut { \n Object accept(groovy.lang.Closure<?> c);\n }");
+        } else {
+            createJavaUnit("p", "IPointcut", "package p;\npublic interface IPointcut { \n Object accept(groovy.lang.Closure c);\n }");
+        }
         defaultFileExtension = "dsld";
         createUnit("DSLD_meta_script", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("DSLD_meta_script.dsld"));
         env.fullBuild();
