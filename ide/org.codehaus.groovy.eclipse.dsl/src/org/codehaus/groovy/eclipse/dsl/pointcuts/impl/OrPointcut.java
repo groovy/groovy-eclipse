@@ -10,8 +10,10 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -27,28 +29,19 @@ public class OrPointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    @Override
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         Object[] args = getArgumentValues();
-        BindingSet bindings = null;
+        Collection<Object> result = new HashSet<Object>();
         for (Object arg : args) {
-            BindingSet other = ((IPointcut) arg).matches(pattern);
-            if (other != null) {
-                if (bindings == null) {
-                    bindings = other;
-                } else {
-                    bindings.combineBindings(other);
-                }
-                
-                // now check for binding
-                String name = getNameForArgument(arg);
-                if (name != null) {
-                    bindings.addBinding(name, other.getDefaultBinding());
-                }
+            Collection<?> intermediate = matchOnPointcutArgumentReturnInner((IPointcut) arg, pattern, ensureCollection(toMatch));
+            if (intermediate != null) {
+                result.addAll(intermediate);
             }
         }
-        // will be null if no clauses match
-        return bindings;
+        return result.size() > 0 ? result : null;
     }
+
 
     /**
      * Flatten all contained 'or' pointcuts into the top level (but only if they are unnamed) 

@@ -10,8 +10,10 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
@@ -30,9 +32,9 @@ public class FileNamePointcut extends AbstractPointcut {
     }
 
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         if (pattern.simpleFileName != null && pattern.simpleFileName.equals(getFirstArgument())) {
-            return new BindingSet().addDefaultBinding(pattern.simpleFileName);
+            return Collections.singleton(pattern.fullPathName);
         } else {
             return null;
         }
@@ -40,7 +42,7 @@ public class FileNamePointcut extends AbstractPointcut {
     
     @Override
     public boolean fastMatch(GroovyDSLDContext pattern) {
-        return matches(pattern) != null;
+        return matches(pattern, null) != null;
     }
 
     @Override

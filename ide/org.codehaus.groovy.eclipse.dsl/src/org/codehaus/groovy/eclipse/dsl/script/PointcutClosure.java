@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
  * @author andrew
  * @created Feb 11, 2011
  */
+// in Groovy 1.8, Closure uses a type parameter, but in 1.7 it does not
 public class PointcutClosure extends Closure {
     private static final long serialVersionUID = -2300392180869356706L;
     

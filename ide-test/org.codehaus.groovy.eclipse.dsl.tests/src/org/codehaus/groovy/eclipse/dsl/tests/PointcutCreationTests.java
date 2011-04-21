@@ -20,7 +20,6 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.P
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PublicPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.StaticPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AnnotatedByPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingClassPointcut;
@@ -28,6 +27,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingFieldPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingMethodPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingScriptPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FileExtensionPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindAnnotationPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NamePointcut;
@@ -66,7 +66,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         pc = (IPointcut) firstArgument;
         
         firstArgument = pc.getFirstArgument();
-        assertTrue(firstArgument instanceof AnnotatedByPointcut);
+        assertTrue(firstArgument instanceof FindAnnotationPointcut);
         pc = (IPointcut) firstArgument;
     }
     

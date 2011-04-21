@@ -6,43 +6,52 @@ import org.codehaus.groovy.ast.FieldNode;
 // fields is bound to a single FieldNode (if there is one delegate in the target type), 
 // or a list of FieldNodes if there are multiple.
 currentType(fields : findField(annotatedBy(Delegate))).accept {
-	// Hmmm... not entirely happy with this one since 
-	// we need to have an if statement.
-	// Should pointcuts always return lists?????
-	if (fields instanceof Collection) {
-		for (field in fields) {
-			delegatesTo(field.declaringType)
-		} 
-	} else if (fields instanceof FieldNode) {
-		delegatesTo fields 
+	for (field in fields) {
+		delegatesTo(field.declaringType)
 	} 
 }  
 
 // need to use a bind pointcut here since we want to bind to the outermost pointcut
 bind( type : currentType(annotatedBy(Singleton))).accept {
-	method name:"instance", type:type, isStatic:true, declaringType:type, doc:"Get the singleton instance of this Class"
+	method name:"flar", type:type, isStatic:true, declaringType:type, doc:"Get the singleton instance of this Class"
 }
 
 // this is an example of creating your own pointcut
 // Should return non-null if there is a match, or null if there is no match
 // 'it' is resolved to whatever the argument is
 registerPointcut("myPointcut", {
-	if (it instanceof ClassNode && it.isUsingGenerics()) {
-		return it.genericsTypes
-	} else {
-		return null
+	for (obj in accepted) {
+        println "This is obj : ${obj.name}"
+        if (obj.name == "java.lang.Integer") {
+            return obj
+        }
 	}
+    return null
 })
+
+registerPointcut("myPointcut2", {
+    for (obj in a1) {
+        for (obj2 in a2) {
+            if (obj.name == "java.lang.Integer" && obj2.name == "value") {
+                return [obj, obj2]
+            }
+        }
+    }
+})
+
 
 // As always, you can use a named argument to bind the match of a pointcut and have
 // it available inside the contribution group
 myPointcut(accepted: currentType()).accept {
 	property name:"phat", type: accepted
 }
+// As always, you can use a named argument to bind the match of a pointcut and have
+// it available inside the contribution group
+myPointcut2(a1: currentType("java.lang.Integer"), a2: findField("value")).accept {
+    property name: a2.iterator().next().name + a1.iterator().next().nameWithoutPackage
+}
 
 
 fileName("Byayy.groovy").accept {
-	
 	delegatesToUseNamedArgs(String)	
-	
 }

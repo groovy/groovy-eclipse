@@ -24,7 +24,6 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.P
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.StaticPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.SynchronizedPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AnnotatedByPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallDeclaringTypePointcut;
@@ -46,6 +45,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ProjectNaturePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfFilePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfTypePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SubTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.VariableExpressionPointcut;
 import org.eclipse.core.resources.IProject;
@@ -90,12 +90,13 @@ public class PointcutFactory {
                         "the current type as a ClassNode if there is a match."));
 
         // filtering pointcuts
-        registerGlobalPointcut("annotatedBy", AnnotatedByPointcut.class, 
+        registerGlobalPointcut("subType", SubTypePointcut.class, createDoc("", "", ""));
+        registerGlobalPointcut("annotatedBy", FindAnnotationPointcut.class, 
                 createDoc("Matches when the containing pointcut passes in an AnnotatedNode that is annotated " +
-        		"by the argument in this pointcut. Similar to the <code>findAnnotation</code> pointcut except that the returned value is the thing (or things) annotated.", "A String, Class, or ClassNode corresponding to an annotation", 
-        		"the thing or things annotated by the given annotation.  Eg- If the surrounding pointcut passes in a single field, then the value returned will be that field (if " +
-        		"the annotation matches), or null.  If the surrounding pointcut passes in a list of AnnotatedNodes, then the result will be a sublist of those " +
-        		"annotated nodes containing only nodes with the correct annotation."));
+                        "by the argument in this pointcut.  Similar to the <code>annotatedBy</code> pointcut except that the returned value is the annotation " +
+                        "(or annotations), rather than the thing annotated", "A String, Class, or ClassNode corresponding to an annotation", 
+                        "the annotations that are matched by the argument.  This will be <code>AnnotationNode</code> if a single annotations matches, " +
+                "or <code>List<AnnotationNode></code> if there are multiple matches"));
         registerGlobalPointcut("findAnnotation", FindAnnotationPointcut.class, 
                 createDoc("Matches when the containing pointcut passes in an AnnotatedNode that is annotated " +
                         "by the argument in this pointcut.  Similar to the <code>annotatedBy</code> pointcut except that the returned value is the annotation " +

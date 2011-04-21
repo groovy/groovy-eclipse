@@ -12,10 +12,10 @@ package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.io.IOException;
 
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 /**
  * Tests type inferencing that involve dsls
@@ -35,103 +35,35 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        createMetaDSL();
+        createDSL();
     }
     
-    public void testSimpleDSL() throws Exception {
-        assertType("foo", "java.lang.Object", true);
-        createDsls("currentType().accept { property ( name: \"foo\", type: Date ) }");
-        assertType("foo", "java.util.Date", true);
-        deleteDslFile(0);
-        assertType("foo", "java.lang.Object", true);
-    }
-    
-    public void testMetaDSL1() throws Exception {
-        assertType("currentType", "p.IPointcut", true);
-    }
-    public void testMetaDSL2() throws Exception {
-        assertType("registerPointcut", "java.lang.Object", true);
-    }
-    public void testMetaDSL3() throws Exception {
-        assertType("supportsVersion", "java.lang.Object", true);
-    }
-
-
-    public void testMetaDSL4() throws Exception {
-        String contents = 
-            "currentType().accept {\n" +
-            " method\n" +
-            // ignore since conflicts with Script.getProperty
-//            " property\n" +
-            " wormhole\n" +
-            " delegatesTo\n" +
-            " delegatesToUseNamedArgs\n" +
-            "}";
-        assertDSLType(contents, "method");
-//        assertDSLType(contents, "property");
-        assertDSLType(contents, "wormhole");
-        assertDSLType(contents, "delegatesTo");
-        assertDSLType(contents, "delegatesToUseNamedArgs");
-                
-    }
-
-    public void testMetaDSL5() throws Exception {
-        String contents = 
-            " method\n" +
-            // ignore since conflicts with Script.getProperty
-//            " property\n" +
-            " wormhole\n" +
-            " delegatesTo\n" +
-            " delegatesToUseNamedArgs\n";
-        assertUnknownDSLType(contents, "method");
-//        assertUnknownDSLType(contents, "property");
-        assertUnknownDSLType(contents, "wormhole");
-        assertUnknownDSLType(contents, "delegatesTo");
-        assertUnknownDSLType(contents, "delegatesToUseNamedArgs");
-                
-    }
-
-    public void testMetaDSL6() throws Exception {
-        defaultFileExtension = "groovy";
-        String contents = 
-            "currentType().accept {\n" +
-            " method\n" +
-            // ignore since conflicts with Script.getProperty
-//            " property\n" +
-            " wormhole\n" +
-            " delegatesTo\n" +
-            " delegatesToUseNamedArgs\n" +
-            "}";
-        assertUnknownDSLType(contents, "method");
-//        assertUnknownDSLType(contents, "property");
-        assertUnknownDSLType(contents, "wormhole");
-        assertUnknownDSLType(contents, "delegatesTo");
-        assertUnknownDSLType(contents, "delegatesToUseNamedArgs");
+    public void testSingleton() throws Exception {
         
     }
     
-    protected void assertDSLType(String contents, String name) {
-        assertDeclaringType(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
+    public void testRegisteredPointcut1() throws Exception {
+        String contents = "2.phat";
+        String name = "phat";
+        
+        assertDeclaringType(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "java.lang.Integer");
     }
     
-    protected void assertUnknownDSLType(String contents, String name) {
-        assertUnknownConfidence(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
+    public void testRegisteredPointcut2() throws Exception {
+        String contents = "2.valueInteger";
+        String name = "valueInteger";
+        
+        assertDeclaringType(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "java.lang.Integer");
     }
-    
     
 
     /**
      * @throws IOException
      */
-    private void createMetaDSL() throws IOException {
-        // Closure uses a type parameter in Groovy 1.8, but not in 17
-        if (GroovyUtils.GROOVY_LEVEL > 17) {
-            createJavaUnit("p", "IPointcut", "package p;\npublic interface IPointcut { \n Object accept(groovy.lang.Closure<?> c);\n }");
-        } else {
-            createJavaUnit("p", "IPointcut", "package p;\npublic interface IPointcut { \n Object accept(groovy.lang.Closure c);\n }");
-        }
+    private void createDSL() throws IOException {
         defaultFileExtension = "dsld";
-        createUnit("DSLD_meta_script", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("DSLD_meta_script.dsld"));
+        createUnit("SomeInterestingExamples", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("SomeInterestingExamples.dsld"));
+        defaultFileExtension = "groovy";
         env.fullBuild();
         expectingNoProblems();
     }

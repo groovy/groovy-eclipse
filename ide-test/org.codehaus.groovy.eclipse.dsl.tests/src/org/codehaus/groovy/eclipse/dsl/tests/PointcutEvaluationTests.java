@@ -10,9 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Stack;
 
 import junit.framework.Test;
@@ -26,8 +26,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
@@ -53,6 +51,7 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
         private final GroovyDSLDContext context;
         Stack<BindingSet> matches = new Stack<BindingSet>();
         BindingSet largestMatch = null;
+        Collection<?> largestMatchResult = null;
         
         public PointcutEvaluationRequestor(IPointcut toMatch, GroovyCompilationUnit unit) throws CoreException {
             super();
@@ -61,21 +60,29 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
         }
 
         private GroovyDSLDContext createContext(GroovyCompilationUnit unit) throws CoreException {
-            return new GroovyDSLDContext(unit);
+            GroovyDSLDContext context = new GroovyDSLDContext(unit);
+            context.resetBinding();
+            return context;
         }
 
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
             context.setCurrentScope(result.scope);
             context.setTargetType(result.type);
-            BindingSet set = toMatch.matches(context);
-            if (set != null) {
+            Collection<?> matchResult = toMatch.matches(context, result.type);
+            if (result != null) {
+                BindingSet set = context.getCurrentBinding();
                 matches.push(set);
                 if (largestMatch == null || largestMatch.size() <= set.size()) {
                     largestMatch = set;
+                    largestMatchResult = matchResult;
                 }
             }
             return VisitStatus.CONTINUE;
+        }
+        
+        Collection<?> getLargestMatchResult() {
+            return largestMatchResult;
         }
         
         BindingSet getLargestMatch() {
@@ -89,22 +96,18 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     }
 
     class BindingResult {
-        public BindingResult(String bindingName, Class<?> bindingType,
-                String bindingToString) {
+        public BindingResult(String bindingName, String bindingToString) {
             super();
-            this.bindingType = bindingType;
             this.bindingName = bindingName;
             this.bindingToString = bindingToString;
         }
-        final Class<?> bindingType;
         final String bindingName;
         final String bindingToString;
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append("BindingResult [bindingType=");
-            builder.append(bindingType);
-            builder.append(", bindingName=");
+            builder.append("BindingResult [");
+            builder.append("bindingName=");
             builder.append(bindingName);
             builder.append(", bindingToString=");
             builder.append(bindingToString);
@@ -118,206 +121,203 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     }
     
     public void testEvaluateTypeMethodField1() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(\"java.lang.Integer\")", ClassNode.class, "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(\"java.lang.Integer\")", "java.lang.Integer");
     }
 
     public void testEvaluateTypeMethodField2() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(findMethod(\"intValue\"))", ClassNode.class, "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(findMethod(\"intValue\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField3() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(findField(\"value\"))", ClassNode.class, "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(findField(\"value\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField4Fail() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(findField(\"notHere\"))", null, null);
+        doTestOfLastMatch("package p\n2", "currentType(findField(\"notHere\"))", null);
     }
     
     public void testEvaluateTypeMethodField5() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(findField(\"value\") & findMethod(\"intValue\"))", ClassNode.class, "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(findField(\"value\") & findMethod(\"intValue\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField5b() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", 
+        doTestOfLastMatch("package p\n2", 
                 
                 "def left = findField(\"value\")\n" +
                 "def right = findMethod(\"intValue\")\n" +
-                "currentType(left & right)", ClassNode.class, "java.lang.Integer");
+                "currentType(left & right)", "java.lang.Integer");
     }
 
     public void testEvaluateTypeMethodField5c() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", 
+        doTestOfLastMatch("package p\n2", 
                 
                 "def left = { findField(\"value\") }\n" +
                 "def right = { findMethod(\"intValue\") }\n" +
-                "currentType(left() & right())", ClassNode.class, "java.lang.Integer");
+                "currentType(left() & right())", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField6Fail_a() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(findField(\"notHere\") & findMethod(\"intValue\"))", null, null);
+        doTestOfLastMatch("package p\n2", "currentType(findField(\"notHere\") & findMethod(\"intValue\"))", null);
     }
 
     public void testEvaluateTypeMethodField6Fail_b() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(findMethod(\"intValue\") & findField(\"notHere\"))", null, null);
+        doTestOfLastMatch("package p\n2", "currentType(findMethod(\"intValue\") & findField(\"notHere\"))", null);
     }
     
     public void testEvaluateTypeMethodField6Fail_c() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", 
+        doTestOfLastMatch("package p\n2", 
                 "def left = findField(\"notHere\")\n" +
                 "def right = findMethod(\"intValue\")\n" +
-                "currentType(left & right)", null, null);
+                "currentType(left & right)", null);
     }
     
     public void testEvaluateTypeMethodField7a() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(findField(\"notHere\") | findMethod(\"intValue\"))", ClassNode.class, "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(findField(\"notHere\") | findMethod(\"intValue\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField7b() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(findMethod(\"intValue\") | findField(\"notHere\"))", ClassNode.class, "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(findMethod(\"intValue\") | findField(\"notHere\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField8() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(\"java.lang.Number\") | (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", ClassNode.class, "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(subType(\"java.lang.Number\")) | (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField8b() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "(currentType(findMethod(\"intValue\") & findField(\"notHere\"))) | currentType(\"java.lang.Number\") ", ClassNode.class, "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "(currentType(findMethod(\"intValue\") & findField(\"notHere\"))) | currentType(subType(\"java.lang.Number\")) ", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField9Fail_a() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(\"java.lang.Number.NOPE\") | (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", null, null);
+        doTestOfLastMatch("package p\n2", "currentType(\"java.lang.Number.NOPE\") | (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", null);
     }
     
     public void testEvaluateTypeMethodField9Fail_b() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "currentType(\"java.lang.Number\") & (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", null, null);
+        doTestOfLastMatch("package p\n2", "currentType(subType(\"java.lang.Number\")) & (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", null);
     }
     
     public void testAnnotation1() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo {}");
-        doTestOfLastDefaultBinding("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\"))", ClassNode.class, "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\"))", "p.Foo");
     }
 
     public void testAnnotation2() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t }");
-        doTestOfLastDefaultBinding("Foo", "currentType(findField(annotatedBy(\"java.lang.Deprecated\")))", ClassNode.class, "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(findField(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
     }
     
     public void testAnnotation3() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t() { } }");
-        doTestOfLastDefaultBinding("Foo", "currentType(findMethod(annotatedBy(\"java.lang.Deprecated\")))", ClassNode.class, "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(findMethod(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
     }
     
     public void testAnnotation4() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastDefaultBinding("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") & findField(\"f\") )", ClassNode.class, "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") & findField(\"f\") )", "p.Foo");
     }
 
     public void testAnnotation5() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastDefaultBinding("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") | findField(\"g\") )", ClassNode.class, "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") | findField(\"g\") )", "p.Foo");
     }
     
     public void testAnnotation6() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastDefaultBinding("Foo", "currentType( findField(\"g\") | annotatedBy(\"java.lang.Deprecated\") )", ClassNode.class, "p.Foo");
+        doTestOfLastMatch("Foo", "currentType( findField(\"g\") | annotatedBy(\"java.lang.Deprecated\") )", "p.Foo");
     }
     
     public void testAnnotation7Fail() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastDefaultBinding("Foo", "currentType( findField(\"g\") & annotatedBy(\"java.lang.Deprecated\") )", null, null);
+        doTestOfLastMatch("Foo", "currentType( findField(\"g\") & annotatedBy(\"java.lang.Deprecated\") )", null);
     }
     
     public void testAnnotation8() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
-        doTestOfLastDefaultBinding("Foo", "currentType( findField( annotatedBy(\"java.lang.Deprecated\") ) & findMethod( annotatedBy(\"java.lang.Deprecated\") ) )", 
-                ClassNode.class, "p.Foo");
+        doTestOfLastMatch("Foo", "currentType( findField( annotatedBy(\"java.lang.Deprecated\") ) & findMethod( annotatedBy(\"java.lang.Deprecated\") ) )", 
+                "p.Foo");
     }
     
     
     public void testEvaluateFileExtension1() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "fileExtension(\"groovy\")", String.class, "src/p/Unit.groovy");
+        doTestOfLastMatch("package p\n2", "fileExtension(\"groovy\")", "src/p/Unit.groovy");
     }
     
     public void testEvaluateFileExtension2Fail() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "fileExtension(\"invalid\")", null, null);
+        doTestOfLastMatch("package p\n2", "fileExtension(\"invalid\")", null);
     }
     
     public void testEvaluateNature1() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "nature(\"org.eclipse.jdt.groovy.core.groovyNature\")", String.class, "org.eclipse.jdt.groovy.core.groovyNature");
+        doTestOfLastMatch("package p\n2", "nature(\"org.eclipse.jdt.groovy.core.groovyNature\")", "org.eclipse.jdt.groovy.core.groovyNature");
     }
     
     public void testEvaluateNature2Fail() throws Exception {
-        doTestOfLastDefaultBinding("package p\n2", "nature(\"invalid\")", null, null);
+        doTestOfLastMatch("package p\n2", "nature(\"invalid\")", null);
     }
     
     public void testNamedBinding1() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"org.eclipse.jdt.groovy.core.groovyNature\") )", 
-                new BindingResult(null, String.class, "org.eclipse.jdt.groovy.core.groovyNature"),
-                new BindingResult("b", String.class, "org.eclipse.jdt.groovy.core.groovyNature"));
+                new BindingResult("b", "org.eclipse.jdt.groovy.core.groovyNature"));
     }
     
     public void testNamedBinding2() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( c : bind( b : nature(\"org.eclipse.jdt.groovy.core.groovyNature\") ) )", 
-                new BindingResult(null, String.class, "org.eclipse.jdt.groovy.core.groovyNature"),
-                new BindingResult("b", String.class, "org.eclipse.jdt.groovy.core.groovyNature"),
-                new BindingResult("c", String.class, "org.eclipse.jdt.groovy.core.groovyNature"));
+                new BindingResult("b", "org.eclipse.jdt.groovy.core.groovyNature"),
+                new BindingResult("c", "org.eclipse.jdt.groovy.core.groovyNature"));
     }
     
     public void testNamedBinding3() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"org.eclipse.jdt.groovy.core.groovyNature\") ) | " +
                 "bind( c : fileExtension(\"groovy\") )", 
-                new BindingResult(null, ArrayList.class, "org.eclipse.jdt.groovy.core.groovyNature, src/p/Unit.groovy"),
-                new BindingResult("b", String.class, "org.eclipse.jdt.groovy.core.groovyNature"),
-                new BindingResult("c", String.class, "src/p/Unit.groovy"));
+                new BindingResult("b", "org.eclipse.jdt.groovy.core.groovyNature"),
+                new BindingResult("c", "src/p/Unit.groovy"));
     }
     
     public void testNamedBinding4() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"org.eclipse.jdt.groovy.core.groovyNature\") ) & " +
                 "bind( c : fileExtension(\"groovy\") )", 
-                new BindingResult(null, ArrayList.class, "org.eclipse.jdt.groovy.core.groovyNature, src/p/Unit.groovy"),
-                new BindingResult("b", String.class, "org.eclipse.jdt.groovy.core.groovyNature"),
-                new BindingResult("c", String.class, "src/p/Unit.groovy"));
+                new BindingResult("b", "org.eclipse.jdt.groovy.core.groovyNature"),
+                new BindingResult("c", "src/p/Unit.groovy"));
     }
     
     public void testNamedBinding5() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"org.eclipse.jdt.groovy.core.groovyNature\") ) | " +
                 "bind( c : fileExtension(\"invalid\") )", 
-                new BindingResult(null, String.class, "org.eclipse.jdt.groovy.core.groovyNature"),
-                new BindingResult("b", String.class, "org.eclipse.jdt.groovy.core.groovyNature"));
+                new BindingResult("b", "org.eclipse.jdt.groovy.core.groovyNature"));
     }
     
-    public void testNamedBinding6Fail() throws Exception {
+    public void testNamedBinding6() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"invalid\") ) & " +
                 "bind( c : fileExtension(\"groovy\") )");
+    }
+
+    public void testNamedBinding6a() throws Exception {
+        doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"invalid\") ) | " +
+                "bind( c : fileExtension(\"groovy\") )", 
+                new BindingResult("c", "src/p/Unit.groovy"));
     }
 
     
     public void testTypesNamedBinding1() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : currentType(\"java.lang.Integer\") )", 
-                new BindingResult(null, ClassNode.class, "java.lang.Integer"),
-                new BindingResult("b", ClassNode.class, "java.lang.Integer"));
+                new BindingResult("b", "java.lang.Integer"));
     }
 
     public void testTypesNamedBinding2() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : currentType(\"java.lang.Integer\") ) | " +
                 "bind( c : fileExtension(\"invalid\") )", 
-                new BindingResult(null, ClassNode.class, "java.lang.Integer"),
-                new BindingResult("b", ClassNode.class, "java.lang.Integer"));
+                new BindingResult("b", "java.lang.Integer"));
     }
     
     public void testTypesNamedBinding3() throws Exception {
         doTestOfLastBindingSet("package p\n2", 
                 "bind( b : currentType(\"java.lang.Integer\") ) | " +
                 "bind( c : fileExtension(\"groovy\") )", 
-                new BindingResult(null, ArrayList.class, "java.lang.Integer, src/p/Unit.groovy"),
-                new BindingResult("b", ClassNode.class, "java.lang.Integer"),
-                new BindingResult("c", String.class, "src/p/Unit.groovy"));
+                new BindingResult("b", "java.lang.Integer"),
+                new BindingResult("c", "src/p/Unit.groovy"));
     }
     
     public void testTypesNamedBinding4() throws Exception {
         doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") ) )", 
-                new BindingResult(null, ClassNode.class, "java.lang.Integer"),
-                new BindingResult("b", FieldNode.class, "java.lang.Integer.value"));
+                new BindingResult("b", "java.lang.Integer.value"));
     }
 
     public void testTypesNamedBinding4Fail() throws Exception {
@@ -326,78 +326,143 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     
     public void testTypesNamedBinding5() throws Exception {
         doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") ) ) | currentType(bind( b : findMethod(\"intValue\") ) )", 
-                new BindingResult(null, ArrayList.class, "java.lang.Integer, java.lang.Integer"),
-                new BindingResult("b", MethodNode.class, "java.lang.Integer.intValue"));
+                new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"));
     }
 
     public void testTypesNamedBinding6() throws Exception {
         doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") ) | bind( b : findMethod(\"intValue\") ) )", 
-                new BindingResult(null, ClassNode.class, "java.lang.Integer"),
-                new BindingResult("b", MethodNode.class, "java.lang.Integer.intValue"));
+                new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"));
     }
     
     public void testTypesNamedBinding7() throws Exception {
         doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") | findMethod(\"intValue\") ) )", 
-                new BindingResult(null, ClassNode.class, "java.lang.Integer"),
-                new BindingResult("b", ArrayList.class, "java.lang.Integer.value, java.lang.Integer.intValue"));
+                new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"));
     }
     
     public void testTypesNamedBinding8() throws Exception {
         doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") & findMethod(\"intValue\") ) )", 
-                new BindingResult(null, ClassNode.class, "java.lang.Integer"),
-                new BindingResult("b", ArrayList.class, "java.lang.Integer.value, java.lang.Integer.intValue"));
+                new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"));
     }
     
     public void testTypesNamedBinding9() throws Exception {
         doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"invalid\") | findMethod(\"intValue\") ) )", 
-                new BindingResult(null, ClassNode.class, "java.lang.Integer"),
-                new BindingResult("b", MethodNode.class, "java.lang.Integer.intValue"));
+                new BindingResult("b", "java.lang.Integer.intValue"));
     }
     
     public void testTypesNamedBinding10Fail() throws Exception {
         doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"invalid\") & findMethod(\"intValue\") ) )");
     }
     
+
+    public void testTypesNamedBinding11() throws Exception {
+        doTestOfLastBindingSet("package p\n2", "currentType( bind( b : subType( Number) ) )", 
+                new BindingResult("b", "java.lang.Number"));
+    }
+
+    public void testTypesNamedBinding12() throws Exception {
+        doTestOfLastBindingSet("package p\n2", "bind( b : currentType( subType( Number) ) )", 
+                new BindingResult("b", "java.lang.Integer"));
+    }
+    
+    public void testTypesNamedBinding13() throws Exception {
+        createUnit("p", "Bar", "package p\n@Deprecated\nclass Foo {}\nclass Bar extends Foo { }");
+        doTestOfLastBindingSet("package p\nBar", "bind( b : currentType( subType( annotatedBy(Deprecated)) ) )", 
+                new BindingResult("b", "p.Bar"));
+    }
+    
+    public void testTypesNamedBinding14() throws Exception {
+        createUnit("p", "Bar", "package p\n@Deprecated\nclass Foo { }\nclass Bar extends Foo { }");
+        doTestOfLastBindingSet("package p\nBar", "currentType( bind( b : subType( annotatedBy(Deprecated)) ) )", 
+                new BindingResult("b", "p.Foo"));
+    }
+    
+    public void testTypesNamedBinding15() throws Exception {
+        createUnit("p", "Bar", "package p\n@Deprecated\nclass Foo { }\nclass Bar extends Foo { }");
+        doTestOfLastBindingSet("package p\nBar", "currentType( subType( bind( b : annotatedBy(Deprecated)) ) )", 
+                new BindingResult("b", "@java.lang.Deprecated"));
+    }
+    
+    public void testTypesNamedBinding16() throws Exception {
+        createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { }\nclass Bar extends Foo { }");
+        doTestOfLastBindingSet("package p\nFoo", "bind( b : currentType( subType( annotatedBy(Deprecated)) ) )", 
+                new BindingResult("b", "p.Foo"));
+    }
+    
+    public void testTypesNamedBinding17() throws Exception {
+        createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { }\nclass Bar extends Foo { }");
+        doTestOfLastBindingSet("package p\nFoo", "bind( b : subType( annotatedBy(Deprecated)) ) ", 
+                new BindingResult("b", "p.Foo"));
+    }
+    
+    public void testTypesNamedBinding18Fail() throws Exception {
+        doTestOfLastBindingSet("package p\n2", "bind( b : currentType( subType( annotatedBy(Deprecated)) ) )");
+    }
+    
+    public void testAnd1() throws Exception {
+        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) & bind( d : findMethod(\"intValue\")))))", "java.lang.Integer");
+        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) & bind( d : findMethod(\"intValue\")))))",
+                new BindingResult("a", "java.lang.Integer"),
+                new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"),
+                new BindingResult("c", "java.lang.Integer.value"),
+                new BindingResult("d", "java.lang.Integer.intValue"));
+    }
+    public void testAnd2() throws Exception {
+        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) & bind( d : findMethod(\"invalid\")))))", null);
+        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) & bind( d : findMethod(\"invalid\")))))",
+                new BindingResult("c", "java.lang.Integer.value"));
+    }
+    
+    public void testOr1() throws Exception {
+        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) | bind( d : findMethod(\"invalid\")))))", "java.lang.Integer");
+        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) | bind( d : findMethod(\"intValue\")))))",
+                new BindingResult("a", "java.lang.Integer"),
+                new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"),
+                new BindingResult("c", "java.lang.Integer.value"),
+                new BindingResult("d", "java.lang.Integer.intValue"));
+    }
+    public void testOr2() throws Exception {
+        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) | bind( d : findMethod(\"invalid\")))))", "java.lang.Integer");
+        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) | bind( d : findMethod(\"invalid\")))))",
+                new BindingResult("a", "java.lang.Integer"),
+                new BindingResult("b", "java.lang.Integer.value"),
+                new BindingResult("c", "java.lang.Integer.value"));
+    }
+    
+
     
     public void testAnnotationBinding1() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo {}");
         doTestOfLastBindingSet("Foo", "currentType(bind( b : annotatedBy(\"java.lang.Deprecated\")))",
-                new BindingResult(null, ClassNode.class, "p.Foo"),
-                new BindingResult("b", ClassNode.class, "p.Foo"));
+                new BindingResult("b", "@java.lang.Deprecated"));
     }
 
     public void testAnnotationBinding2() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t }");
         doTestOfLastBindingSet("Foo", "currentType(bind(b : findField(annotatedBy(\"java.lang.Deprecated\"))))",
-                new BindingResult(null, ClassNode.class, "p.Foo"),
-                new BindingResult("b", JDTFieldNode.class, "p.Foo.t"));
+                new BindingResult("b", "p.Foo.t"));
     }
     
     public void testAnnotationBinding3() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t() { } }");
         doTestOfLastBindingSet("Foo", "currentType(bind( b : findMethod(annotatedBy(\"java.lang.Deprecated\"))))",
-                new BindingResult(null, ClassNode.class, "p.Foo"),
-                new BindingResult("b", JDTMethodNode.class, "p.Foo.t"));
+                new BindingResult("b", "p.Foo.t"));
     }
     
     public void testAnnotationBinding4() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
         doTestOfLastBindingSet("Foo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") & findField(\"f\") ) )",
-                new BindingResult(null, ClassNode.class, "p.Foo"),
-                new BindingResult("b", ArrayList.class, "p.Foo, p.Foo.f"));
+                new BindingResult("b", "@java.lang.Deprecated, p.Foo.f"));
     }
 
     public void testAnnotationBinding5() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
         doTestOfLastBindingSet("Foo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") | findField(\"f\") ) )",
-                new BindingResult(null, ClassNode.class, "p.Foo"),
-                new BindingResult("b", ArrayList.class, "p.Foo, p.Foo.f"));
+                new BindingResult("b", "@java.lang.Deprecated, p.Foo.f"));
     }
     
     public void testAnnotationBinding6() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType( bind( b : findField(\"g\")) | annotatedBy(\"java.lang.Deprecated\") )", 
-                new BindingResult(null, ClassNode.class, "p.Foo"));
+        doTestOfLastBindingSet("Foo", "currentType( bind( b : findField(\"g\")) | annotatedBy(\"java.lang.Deprecated\") )");
     }
     
     public void testAnnotationBinding7Fail() throws Exception {
@@ -408,8 +473,13 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     public void testAnnotationBinding8() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
         doTestOfLastBindingSet("Foo", "currentType( bind( b : findField( annotatedBy(\"java.lang.Deprecated\") ) & findMethod( annotatedBy(\"java.lang.Deprecated\") ) ) )", 
-                new BindingResult(null, ClassNode.class, "p.Foo"),
-                new BindingResult("b", ArrayList.class, "p.Foo.f, p.Foo.g"));
+                new BindingResult("b", "p.Foo.f, p.Foo.g"));
+    }
+    
+    public void testAnnotationBinding9() throws Exception {
+        createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
+        doTestOfLastBindingSet("Foo", "currentType( findField( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) & findMethod( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) )", 
+                new BindingResult("b", "@java.lang.Deprecated, @java.lang.Deprecated"));
     }
     
 
@@ -424,42 +494,49 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     }
     
 
-    private void doTestOfLastDefaultBinding(String cuContents, String pointcutText, Class<?> type, String name) throws Exception {
-        doTestOfLastDefaultBinding("p", cuContents, pointcutText, type, name);
+    private void doTestOfLastMatch(String cuContents, String pointcutText, String name) throws Exception {
+        doTestOfLastMatch("p", cuContents, pointcutText, name);
     }
-    private void doTestOfLastDefaultBinding(String pkg, String cuContents, String pointcutText, Class<?> type, String name) throws Exception {
+    private void doTestOfLastMatch(String pkg, String cuContents, String pointcutText, String name) throws Exception {
         GroovyCompilationUnit unit = createUnit(pkg, "Unit", cuContents);
-        Object defaultBinding = evaluateForDefault(unit, pointcutText);
-        assertSingleBinding(type, name, defaultBinding);
+        Collection<?> match = evaluateForMatch(unit, pointcutText);
+        assertSingleBinding(name, match);
     }
     
     private void assertAllBindings(BindingSet bindings, BindingResult... results) {
         if (results.length == 0) {
-            assertNull("Should not have found any bindings", bindings);
+            assertEquals("Should not have found any bindings", 0, bindings.getBindings().size());
             return;
         }
         
         assertNotNull("Should have found some bindings.  Expected:\n" + Arrays.toString(results), bindings);
         
         for (BindingResult result : results) {
-            Object o = bindings.getBinding(result.bindingName);
+            Collection<?> o = bindings.getBinding(result.bindingName);
             if (o == null) {
-                fail("Expected binding '" + result.bindingName + "' of type " + result.bindingType + ", but not found.\n" +
+                fail("Expected binding '" + result.bindingName + "', but not found.\n" +
                 		"Actual bindings:\n" + bindings.getBindings());
             }
-            assertSingleBinding(result.bindingType, result.bindingToString, o);
+            assertSingleBinding(result.bindingToString, o);
         }
         assertEquals("Wrong number of bindings.  Expected Bindings: \n" + Arrays.toString(results) + 
                 "\nActualBindings:\n" + bindings.getBindings(), results.length, bindings.getBindings().size());
     }
     
-    private void assertSingleBinding(Class<?> type, String bindingToString, Object binding) {
-        if (type == null) {
-            assertNull("Default binding should have been null", binding);
-        } else {
-            assertNotNull("Binding should not be null.  Should be: " + type + " : name", binding);
-            assertEquals("Wrong class for binding", type, binding.getClass());
-            assertEquals("Wrong toString for binding", bindingToString, extractName(binding));
+    private void assertSingleBinding(String bindingToString, Collection<?> binding) {
+        if (bindingToString == null) {
+            assertNull("Match should have been null", binding);
+            return;
+        } 
+        
+        assertNotNull("Match should not be null", binding);
+        
+        String[] split = bindingToString.split(", ");
+        assertEquals("Unexpected number of bindings for " + binding, split.length, binding.size());
+        List<String> asList = Arrays.asList(split);
+        for (Object object : binding) {
+            String name = extractName(object);
+            assertTrue("Expected binding " + name + " not found in " + asList, asList.contains(name));
         }
     }
 
@@ -490,12 +567,12 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
         }
     }
 
-    private Object evaluateForDefault(GroovyCompilationUnit unit, String pointcutText) throws CoreException {
+    private Collection<?> evaluateForMatch(GroovyCompilationUnit unit, String pointcutText) throws CoreException {
         IPointcut pc = new PointcutScriptExecutor().createPointcut(pointcutText);
         PointcutEvaluationRequestor requestor = new PointcutEvaluationRequestor(pc, unit);
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
         visitor.visitCompilationUnit(requestor);
-        return requestor.hasMatches() ? requestor.getLargestMatch().getDefaultBinding() : null;
+        return requestor.hasMatches() ? requestor.getLargestMatchResult() : null;
     }
     
     private BindingSet evaluateForBindings(GroovyCompilationUnit unit, String pointcutText) throws CoreException {

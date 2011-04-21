@@ -11,11 +11,12 @@
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -32,8 +33,14 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
+    /**
+     * Outer pointcut bindings not allowed here.
+     * return on match is always a singleton
+     * Just like {@link CurrentTypePointcut}
+     */
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+
         List<CallAndType> enclosing = pattern.getCurrentScope().getAllEnclosingMethodCallExpressions();
         if (enclosing == null) {
             return null;
@@ -46,13 +53,12 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
         if (firstArgument instanceof String) {
             ClassNode matchingType = matchesInCalls(enclosing, (String) firstArgument, pattern);
             if (matchingType != null) {
-                return new BindingSet().addDefaultBinding(matchingType);
+                return Collections.singleton(matchingType);
             } else {
                 return null;
             }
         } else {
-            pattern.setOuterPointcutBinding(asTypeList(enclosing));
-            return matchOnPointcutArgument((IPointcut) firstArgument, pattern);
+            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, asTypeList(enclosing));
         }
     }
 

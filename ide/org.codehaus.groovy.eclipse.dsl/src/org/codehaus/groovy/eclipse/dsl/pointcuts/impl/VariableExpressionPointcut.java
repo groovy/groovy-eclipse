@@ -12,10 +12,9 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -35,30 +34,22 @@ public class VariableExpressionPointcut extends FilteringPointcut<Expression> {
 
 
     /**
-     * extracts fields from the outer binding, or from the current type if there is no outer binding
-     * the outer binding should be either a {@link Collection} or a {@link ClassNode}
+     * Converts toMatch to a collection of expression nodes ({@link VariableExpression} or {@link ConstantExpression} nodes).  Might be null or empty list
+     * In either of these cases, this is considered a non-match
+     * @param toMatch the object to explode
      */
-    protected List<Expression> filterOuterBindingByType(GroovyDSLDContext pattern) {
-        Object outer = pattern.getOuterPointcutBinding();
-        if (outer == null) {
-            ASTNode node = pattern.getCurrentScope().getCurrentNode();
-            if (node instanceof VariableExpression || node instanceof ConstantExpression) {
-                List<Expression> vars = new ArrayList<Expression>(1);
-                vars.add((Expression) node);
-                return vars;
-            } else {
-                return null;
-            }
-        } else {
-            if (outer instanceof Collection<?>) {
-                List<Expression> vars = new ArrayList<Expression>();
-                for (Object elt : (Collection<Object>) outer) {
-                    if (elt instanceof VariableExpression || elt instanceof ConstantExpression) {
-                        vars.add((Expression) elt);
-                    }
+    @Override
+    protected Collection<Expression> explodeObject(Object toMatch) {
+        if (toMatch instanceof Collection<?>) {
+            List<Expression> fields = new ArrayList<Expression>();
+            for (Object elt : (Collection<?>) toMatch) {
+                if (elt instanceof Expression) {
+                    fields.add((Expression) elt);
                 }
-                return vars;
             }
+            return fields;
+        } else if (toMatch instanceof Expression) {
+            return Collections.singleton((Expression) toMatch);
         }
         return null;
     }

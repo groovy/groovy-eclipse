@@ -12,6 +12,7 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -32,30 +33,33 @@ public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
 
 
     /**
-     * extracts fields from the outer binding, or from the current type if there is no outer binding
-     * the outer binding should be either a {@link Collection} or a {@link ClassNode}
+     * Converts toMatch to a collection of field nodes.  Might be null or empty list
+     * In either of these cases, this is considered a non-match
+     * @param toMatch the object to explode
      */
-    protected List<FieldNode> filterOuterBindingByType(GroovyDSLDContext pattern) {
-        Object outer = pattern.getOuterPointcutBinding();
-        if (outer == null) {
-            return pattern.getCurrentType().getFields();
-        } else {
-            if (outer instanceof Collection<?>) {
-                List<FieldNode> fields = new ArrayList<FieldNode>();
-                for (Object elt : (Collection<Object>) outer) {
-                    if (elt instanceof FieldNode) {
-                        fields.add((FieldNode) elt);
-                    }
+    @Override
+    protected Collection<FieldNode> explodeObject(Object toMatch) {
+        if (toMatch instanceof Collection<?>) {
+            List<FieldNode> fields = new ArrayList<FieldNode>();
+            for (Object elt : (Collection<?>) toMatch) {
+                if (elt instanceof FieldNode) {
+                    fields.add((FieldNode) elt);
+                } else if (elt instanceof ClassNode) {
+                    fields.addAll(((ClassNode) elt).getFields());
                 }
-                return fields;
-            } else if (outer instanceof ClassNode) {
-                return ((ClassNode) outer).getFields();
             }
+            return fields;
+        } else if (toMatch instanceof ClassNode) {
+            return ((ClassNode) toMatch).getFields();
+        } else if (toMatch instanceof FieldNode) {
+            return Collections.singleton((FieldNode) toMatch);
         }
         return null;
     }
     
-    
+    /**
+     * This gets called if the pointcut argument is a String argument
+     */
     @Override
     protected FieldNode filterObject(FieldNode result, GroovyDSLDContext context, String firstArgAsString) {
         if (firstArgAsString == null || result.getName().equals(firstArgAsString)) {

@@ -11,8 +11,6 @@
 package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +68,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     @Override
     protected void tearDown() throws Exception {
         GroovyLogManager.manager.removeLogger(logger);
+        defaultFileExtension = "groovy";
         super.tearDown();
     }
 
@@ -171,5 +170,13 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     
     protected String createSemiUniqueName(Class<? extends IPointcut> pc, int cnt) {
         return pc.getName() + ":" + "dsl" + cnt + ".dsld";
+    }
+    
+    protected void assertDSLType(String contents, String name) {
+        assertDeclaringType(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
+    }
+    
+    protected void assertUnknownDSLType(String contents, String name) {
+        assertUnknownConfidence(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
     }
 }

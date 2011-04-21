@@ -13,6 +13,7 @@ package org.codehaus.groovy.eclipse.dsl.contributions;
 import groovy.lang.Closure;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -63,7 +64,7 @@ public class DSLContributionGroup extends ContributionGroup {
     
     private ResolverCache resolver;
     
-    private Map<String, Object> bindings;
+    private Map<String, Collection<Object>> bindings;
 
     private ClassNode currentType;
     

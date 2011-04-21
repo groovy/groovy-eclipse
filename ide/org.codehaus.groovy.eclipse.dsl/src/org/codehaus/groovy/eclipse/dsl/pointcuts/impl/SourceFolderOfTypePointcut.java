@@ -10,12 +10,15 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
@@ -37,17 +40,31 @@ public class SourceFolderOfTypePointcut extends AbstractPointcut {
     }
 
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
-        if (extractFileName(pattern.getCurrentType(), pattern).startsWith((String) getFirstArgument())) {
-            return new BindingSet().addDefaultBinding(pattern.fullPathName);
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+        String sourceFolder = extractFileName(toType(toMatch), pattern);
+        if (sourceFolder != null && sourceFolder.startsWith((String) getFirstArgument())) {
+            return Collections.singleton(pattern.fullPathName);
         } else {
             return null;
         }
     }
     
 
-    private String extractFileName(ClassNode currentType, GroovyDSLDContext pattern) {
-        ClassNode redirect = currentType.redirect();
+    private ClassNode toType(Object toMatch) {
+        if (toMatch instanceof ClassNode) {
+            return (ClassNode) toMatch;
+        } else if (toMatch instanceof AnnotatedNode) {
+            return ((AnnotatedNode) toMatch).getDeclaringClass();
+        } else {
+            return null;
+        }
+    }
+
+    private String extractFileName(ClassNode type, GroovyDSLDContext pattern) {
+        if (type == null) {
+            return null;
+        }
+        ClassNode redirect = type.redirect();
         if (redirect instanceof JDTClassNode) {
             JDTClassNode jdtClass = (JDTClassNode) redirect;
             char[] fileName = jdtClass.getJdtBinding().getFileName();
@@ -72,7 +89,7 @@ public class SourceFolderOfTypePointcut extends AbstractPointcut {
         
         // will be "" for primitive and other core types loaded by ClassHelper.
         if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot find file for type " + currentType.getName());
+            GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot find file for type " + type.getName());
         }
         return "";
     }

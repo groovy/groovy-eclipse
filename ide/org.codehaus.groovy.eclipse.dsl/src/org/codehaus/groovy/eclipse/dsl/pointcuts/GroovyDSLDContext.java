@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -68,20 +69,56 @@ public class GroovyDSLDContext {
      */
     public final String simpleFileName;
     
+    private BindingSet currentBinding;
+    
     private VariableScope currentScope;
     
-    /** the type of the expression currently being analyzed */
+    /** 
+     * the type of the expression currently being analyzed
+     * set by the type lookup, should not be set by the pointcuts 
+     */
     private ClassNode targetType;
     
     /** cached type hierarchy for checking type matches (consider caching more) */
     private Set<ClassNode> cachedHierarchy;
     
-    /** used for passing state from an outer pointcut to an inner pointcut*/
-    private Object outerPointcutBinding;
-    
+    /**
+     * called by the typ lookup, not by the pointcuts
+     * @param targetType
+     */
     public void setTargetType(ClassNode targetType) {
         cachedHierarchy = null;
         this.targetType = targetType;
+    }
+    
+    /**
+     * Only the type lookup should use this method
+     * @param currentBinding
+     */
+    public void setCurrentBinding(BindingSet currentBinding) {
+        this.currentBinding = currentBinding;
+    }
+    public void resetBinding() {
+        this.currentBinding = new BindingSet();
+    }
+
+    
+    /**
+     * Only the type lookup and the proposl provider should use this method
+     * @param currentBinding
+     */
+    public BindingSet getCurrentBinding() {
+        return currentBinding;
+    }
+    
+    /**
+     * Adds the collection to the currnt binding.  At this point, currentBinding should never be null
+     * Used by the pointcuts only
+     * @param bindingName
+     * @param toAdd
+     */
+    public void addToBinding(String bindingName, Collection<?> toAdd) {
+        currentBinding.addToBinding(bindingName, toAdd);
     }
     
     public boolean matchesNature(String natureId) {
@@ -141,14 +178,6 @@ public class GroovyDSLDContext {
         return targetType;
     }
     
-    public Object getOuterPointcutBinding() {
-        return outerPointcutBinding;
-    }
-    public void setOuterPointcutBinding(Object outerPointcutBinding) {
-        this.outerPointcutBinding = outerPointcutBinding;
-    }
-
-    
     @SuppressWarnings("cast") // keep cast to make 1.6 compile
     private void getAllSupers(ClassNode type, Set<ClassNode> set) {
         if (type == null) {
@@ -175,5 +204,4 @@ public class GroovyDSLDContext {
         builder.append("]");
         return builder.toString();
     }
-
 }

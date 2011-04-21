@@ -11,6 +11,7 @@
 package org.codehaus.groovy.eclipse.dsl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -23,7 +24,6 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionElement;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.eclipse.core.resources.IFile;
@@ -131,12 +131,12 @@ public class DSLDStore {
         List<IContributionElement> elts = new ArrayList<IContributionElement>();
         for (Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
             IPointcut pointcut = entry.getKey();
-            pattern.setOuterPointcutBinding(null);
             if (! disabledScripts.contains(pointcut.getContainerIdentifier())) {
-                BindingSet matches = pointcut.matches(pattern);
-                if (matches != null) {
+                pattern.resetBinding();
+                Collection<?> results = pointcut.matches(pattern, pattern.getCurrentType());
+                if (results != null) {
                     for (IContributionGroup group : entry.getValue()) {
-                        elts.addAll(group.getContributions(pattern, matches));
+                        elts.addAll(group.getContributions(pattern, pattern.getCurrentBinding()));
                     }
                 }
             }

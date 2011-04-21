@@ -10,9 +10,11 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -31,26 +33,22 @@ public class EnclosingFieldPointcut extends AbstractPointcut {
     }
 
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         FieldNode enclosing = pattern.getCurrentScope().getEnclosingFieldDeclaration();
         if (enclosing == null) {
             return null;
         }
         
         Object firstArgument = getFirstArgument();
+        Collection<FieldNode> enclosingCollection = Collections.singleton(enclosing);
         if (firstArgument instanceof String) {
             if (enclosing.getName().equals(firstArgument)) {
-                return new BindingSet().addDefaultBinding(enclosing);
+                return enclosingCollection;
             } else {
                 return null;
             }
         } else {
-            pattern.setOuterPointcutBinding(enclosing);
-            BindingSet matches = matchOnPointcutArgument((IPointcut) firstArgument, pattern);
-            if (matches != null) {
-                matches.addDefaultBinding(enclosing);
-            }
-            return matches;
+            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, enclosingCollection);
         }
     }
 

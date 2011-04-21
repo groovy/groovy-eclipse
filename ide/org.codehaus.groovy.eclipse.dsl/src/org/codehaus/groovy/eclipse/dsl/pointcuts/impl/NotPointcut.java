@@ -10,8 +10,11 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -23,26 +26,32 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class NotPointcut extends AbstractPointcut {
 
+    /**
+     * 
+     */
+    private static final Set<Object> EMPTY_MATCH = Collections.singleton(new Object());
+
     public NotPointcut(String containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
-        BindingSet matches = matchOnPointcutArgument((IPointcut) getFirstArgument(), pattern);
-        if (matches == null) {
-            String bindName = getFirstArgumentName();
-            matches = new BindingSet(new Object());
-            if (bindName != null) {
-                // do we really need to bind to a name here?
-                matches.addBinding(bindName, matches.getDefaultBinding());
-            }
-            return matches; 
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+        Collection<?> collection;
+        if (toMatch instanceof Collection) {
+            collection = (Collection<?>) toMatch;
         } else {
-            return null;
+            collection = Collections.singleton(toMatch);
         }
+        Collection<?> result = matchOnPointcutArgument((IPointcut) getFirstArgument(), pattern, collection);
+        if (result != null) {
+            return null;
+        } else {
+            return EMPTY_MATCH;
+        }
+                            
     }
-
+    
     public IPointcut normalize() {
 //        ((IPointcut) getFirstArgument()).normalize();
         return super.normalize();

@@ -34,40 +34,39 @@ public class FindAnnotationPointcut extends FilteringPointcut<AnnotationNode> {
         super(containerIdentifier, pointcutName, AnnotationNode.class);
     }
     
+    /**
+     * Converts toMatch to a collection of annotation nodes.  Might be null or empty list
+     * In either of these cases, this is considered a non-match
+     * @param toMatch the object to explode
+     */
+    @Override
+    protected Collection<AnnotationNode> explodeObject(Object toMatch) {
+        if (toMatch instanceof Collection<?>) {
+            List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
+            for (Object elt : (Collection<?>) toMatch) {
+                Collection<AnnotationNode> explodedElt = explodeObject(elt);
+                if (explodedElt != null) {
+                    annotations.addAll(explodedElt);
+                }
+            }
+            return annotations;
+        } else if (toMatch instanceof AnnotatedNode) {
+            return ((AnnotatedNode) toMatch).getAnnotations();
+        } else if (toMatch instanceof AnnotationNode) {
+            return Collections.singleton((AnnotationNode) toMatch);
+        }
+        return null;
+    }
+
+
+    /**
+     * Matches if the annotation has the class name of that is passed in
+     */
     protected AnnotationNode filterObject(AnnotationNode result, GroovyDSLDContext context, String firstArgAsString) {
         if (result.getClassNode().getName().equals(firstArgAsString)) {
             return result;
         }
         return null;
     }
-    
-    /**
-     * Convert the outer binding into a list of annotations.
-     */
-    protected List<AnnotationNode> filterOuterBindingByType(GroovyDSLDContext pattern) {
-        Object outer = pattern.getOuterPointcutBinding();
-        if (outer instanceof AnnotationNode) {
-            return Collections.singletonList((AnnotationNode) outer);
-        } else if (outer instanceof AnnotatedNode) {
-            List<AnnotationNode> annotations = ((AnnotatedNode) outer).getAnnotations();
-            return (List<AnnotationNode>) (annotations != null ? annotations : Collections.emptyList());
-        } else if (outer instanceof List) {
-            ArrayList<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
-            for (Object element : (List<?>) outer) {
-                if (element instanceof AnnotationNode) {
-                    annotations.add((AnnotationNode) element);
-                } else if (element instanceof AnnotatedNode) {
-                    List<AnnotationNode> eltAnnotations = ((AnnotatedNode) element).getAnnotations();
-                    if (eltAnnotations != null) {
-                        annotations.addAll(eltAnnotations);
-                    }
-                }
-            }
-            return annotations;
-        } else {
-            return null;
-        }
-    }
-
 
 }

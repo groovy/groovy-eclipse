@@ -12,6 +12,7 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import groovy.lang.Closure;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,9 +20,9 @@ import java.util.Map.Entry;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
 /**
  * 
@@ -48,46 +49,46 @@ public class UserExtensiblePointcut extends AbstractPointcut {
     }
     
     @Override
-    public final BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         if (closure == null) {
             return null;
         }
         try {
-            // iterate through all named pointcut arguments and replace the values
-            // with the default binding
-            Map<String,Object> args = namedArgumentsAsMap();
+            // named arguments are available in pointcut body
+            // non-named arguments are not
+            // named arguments assigned to pointcuts are also added to the binding
+            Map<String, Object> args = namedArgumentsAsMap();
             Map<String,Object> newMap = new HashMap<String, Object>(args.size(), 1.0f);
             for (Entry<String, Object> entry : args.entrySet()) {
-                if (entry.getValue() instanceof IPointcut) {
-                    BindingSet set = matchOnPointcutArgument((IPointcut) entry.getValue(), pattern);
-                    if (set != null) {
-                        newMap.put(entry.getKey(), set.getDefaultBinding());
+                String key = entry.getKey();
+                if (entry.getValue() instanceof IPointcut) { 
+                    Collection<?> matches = matchOnPointcutArgument((IPointcut) entry.getValue(), pattern, ensureCollection(toMatch));
+                    if (matches != null && matches.size() > 0) {
+                        newMap.put(key, pattern.getCurrentBinding().getBinding(key));
                     } else {
-                        newMap.put(entry.getKey(), null);
+                        newMap.put(key, null);
                     }
+                } else {
+                    newMap.put(key, entry.getValue());
                 }
             }
-            closure.setDelegate(pattern);
-            Object result = closure.call(newMap);
-            if (result == null) {
-                return null;
+            // also ensure that the thing to match is available
+            newMap.put("it", toMatch);
+            Object result = null;
+            synchronized(closure) {
+                closure.setDelegate(newMap);
+                result = closure.call();
+                closure.setDelegate(null);
             }
-            
-            BindingSet resultSet;
-            if (result instanceof BindingSet) {
-                resultSet = (BindingSet) result;
-            } else {
-                resultSet = new BindingSet(result);
-            }
-            
-            // now add all of the values from the map args
-            resultSet.combineBindings(newMap);
-            
-            return resultSet;
-            
+            return ensureCollection(result);
         } catch (Exception e) {
             GroovyLogManager.manager.logException(TraceCategory.DSL, e);
             return null;
         }
+    }
+    
+    @Override
+    public void verify() throws PointcutVerificationException {
+        
     }
 }

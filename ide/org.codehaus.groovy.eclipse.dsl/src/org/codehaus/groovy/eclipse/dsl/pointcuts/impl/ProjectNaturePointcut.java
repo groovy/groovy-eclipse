@@ -10,8 +10,10 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IProject;
@@ -31,18 +33,18 @@ public class ProjectNaturePointcut extends AbstractPointcut {
     }
 
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
-    	for (String nature : pattern.projectNatures) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+        for (String nature : pattern.projectNatures) {
             if (nature.equals(getFirstArgument())) {
-                return new BindingSet().addDefaultBinding(nature);
+                return Collections.singleton(nature);
             }
         }
-    	return null;
+        return null;
     }
 
     @Override
     public boolean fastMatch(GroovyDSLDContext pattern) {
-        return matches(pattern) != null;
+        return matches(pattern, null) != null;
     }
     
     @Override

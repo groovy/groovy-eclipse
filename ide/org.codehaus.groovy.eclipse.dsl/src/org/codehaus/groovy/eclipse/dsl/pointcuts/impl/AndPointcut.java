@@ -10,8 +10,10 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -28,33 +30,17 @@ public class AndPointcut extends AbstractPointcut {
     }
 
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         Object[] args = getArgumentValues();
-        BindingSet bindings = null;
-        Object outerBinding = pattern.getOuterPointcutBinding();
+        Collection<Object> result = new HashSet<Object>();
         for (Object arg : args) {
-            // must re-set this value each time since each segment of the
-            // and pointcut will change this value 
-            pattern.setOuterPointcutBinding(outerBinding);
-            BindingSet other = ((IPointcut) arg).matches(pattern);
-            if (other != null) {
-                if (bindings == null) {
-                    bindings = other;
-                } else {
-                    bindings.combineBindings(other);
-                }
-                
-                // now check for binding
-                String name = getNameForArgument(arg);
-                if (name != null) {
-                    bindings.addBinding(name, other.getDefaultBinding());
-                }
-            } else {
-                // failure
+            Collection<?> intermediate = matchOnPointcutArgumentReturnInner((IPointcut) arg, pattern, ensureCollection(toMatch));
+            if (intermediate == null) {
                 return null;
             }
+            result.addAll(intermediate);
         }
-        return bindings;
+        return result.size() > 0 ? result : null;
     }
 
     /**

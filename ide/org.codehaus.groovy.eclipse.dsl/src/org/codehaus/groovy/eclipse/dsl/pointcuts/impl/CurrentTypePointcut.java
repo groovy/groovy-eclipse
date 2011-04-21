@@ -10,8 +10,11 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -19,7 +22,9 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 /**
  * Tests that the type being analyzed matches.  The match can
  * either be a string match (ie - the type name),
- * or it can pass the current type to a containing pointcut
+ * or it can pass the current type to a containing pointcut.
+ * 
+ * Only looks at the current type, not the current type's hierarchy
  * @author andrew
  * @created Feb 10, 2011
  */
@@ -29,32 +34,33 @@ public class CurrentTypePointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
+    /**
+     * toMatch is always ignored and the current type is used instead
+     */
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+        // toMatch is ignored 
+        
         Object firstArgument = getFirstArgument();
+        ClassNode currentType = pattern.getCurrentType();
         if (firstArgument instanceof String) {
-            if (pattern.matchesType((String) firstArgument)) {
-                return new BindingSet().addDefaultBinding(pattern.getCurrentType());
+            if (currentType.getName().equals(firstArgument)) {
+                return Collections.singleton(currentType);
             } else {
                 return null;
             }
         } else if (firstArgument instanceof Class<?>) {
-            if (pattern.matchesType(((Class<?>) firstArgument).getName())) {
-                return new BindingSet().addDefaultBinding(pattern.getCurrentType());
+            if (currentType.getName().equals(((Class<?>) firstArgument).getName())) {
+                return Collections.singleton(currentType);
             } else {
                 return null;
             }
         } else if (firstArgument != null) {
             // we know this is a pointcut argument
-            pattern.setOuterPointcutBinding(pattern.getCurrentType());
-            BindingSet matches = matchOnPointcutArgument((IPointcut) firstArgument, pattern);
-            if (matches != null) {
-                matches.addDefaultBinding(pattern.getCurrentType());
-            }
-            return matches;
+            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, Collections.singleton(currentType));
         } else {
             // always match if there is no argument
-            return new BindingSet(pattern.getCurrentType());
+            return Collections.singleton(currentType);
         }
     }
 

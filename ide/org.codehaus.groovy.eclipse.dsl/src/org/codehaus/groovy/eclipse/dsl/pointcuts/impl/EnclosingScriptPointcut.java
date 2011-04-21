@@ -10,9 +10,11 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -31,34 +33,31 @@ public class EnclosingScriptPointcut extends AbstractPointcut {
     }
     
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         ClassNode enclosing = pattern.getCurrentScope().getEnclosingTypeDeclaration();
         if (enclosing == null || !enclosing.isScript()) {
             return null;
         }
         
+        Collection<ClassNode> enclosingCollection = Collections.singleton(enclosing);
+        
         Object firstArgument = getFirstArgument();
         if (firstArgument instanceof String) {
             if (pattern.matchesType((String) firstArgument, enclosing)) {
-                return new BindingSet().addDefaultBinding(enclosing);
+                return enclosingCollection;
             } else {
                 return null;
             }
         } else if (firstArgument instanceof Class<?>) {
             if (pattern.matchesType(((Class<?>) firstArgument).getName(), enclosing)) {
-                return new BindingSet().addDefaultBinding(enclosing);
+                return enclosingCollection;
             } else {
                 return null;
             }
         } else if (firstArgument == null) {
-            return new BindingSet(enclosing);
+            return enclosingCollection;
         } else {
-            pattern.setOuterPointcutBinding(enclosing);
-            BindingSet matches = matchOnPointcutArgument((IPointcut) firstArgument, pattern);
-            if (matches != null) {
-                matches.addDefaultBinding(enclosing);
-            }
-            return matches;
+            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, enclosingCollection);
         }
     }
 

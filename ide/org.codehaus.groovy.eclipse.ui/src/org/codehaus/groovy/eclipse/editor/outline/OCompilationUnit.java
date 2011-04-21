@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.editor.outline;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -67,7 +66,10 @@ public abstract class OCompilationUnit extends GroovyCompilationUnit implements 
             IJavaElement elementAt = getElementAt(caretOffset);
             return (elementAt instanceof ISourceReference) ? (ISourceReference) elementAt : this;
         } catch (JavaModelException e) {
-            GroovyCore.logException("Exception when finding child elements", e);
+            // ignore this. seems that this happens when there is a parsing
+            // error
+            // GroovyCore.logException("Exception when finding child elements",
+            // e);
             return this;
         }
     }

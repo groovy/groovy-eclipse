@@ -12,9 +12,11 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 
@@ -32,25 +34,26 @@ public class FindMethodPointcut extends FilteringPointcut<MethodNode> {
 
 
     /**
-     * extracts fields from the outer binding, or from the current type if there is no outer binding
-     * the outer binding should be either a {@link Collection} or a {@link ClassNode}
+     * Converts toMatch to a collection of method nodes.  Might be null or empty list
+     * In either of these cases, this is considered a non-match
+     * @param toMatch the object to explode
      */
-    protected List<MethodNode> filterOuterBindingByType(GroovyDSLDContext pattern) {
-        Object outer = pattern.getOuterPointcutBinding();
-        if (outer == null) {
-            return pattern.getCurrentType().getMethods();
-        } else {
-            if (outer instanceof Collection<?>) {
-                List<MethodNode> fields = new ArrayList<MethodNode>();
-                for (Object elt : (Collection<Object>) outer) {
-                    if (elt instanceof MethodNode) {
-                        fields.add((MethodNode) elt);
-                    }
+    @Override
+    protected Collection<MethodNode> explodeObject(Object toMatch) {
+        if (toMatch instanceof Collection<?>) {
+            List<MethodNode> methods = new ArrayList<MethodNode>();
+            for (Object elt : (Collection<?>) toMatch) {
+                if (elt instanceof MethodNode) {
+                    methods.add((MethodNode) elt);
+                } else if (elt instanceof ClassNode) {
+                    methods.addAll(((ClassNode) elt).getMethods());
                 }
-                return fields;
-            } else if (outer instanceof ClassNode) {
-                return ((ClassNode) outer).getMethods();
             }
+            return methods;
+        } else if (toMatch instanceof ClassNode) {
+            return ((ClassNode) toMatch).getMethods();
+        } else if (toMatch instanceof FieldNode) {
+            return Collections.singleton((MethodNode) toMatch);
         }
         return null;
     }

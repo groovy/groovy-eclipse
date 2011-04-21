@@ -17,7 +17,6 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -42,34 +41,31 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
     }
 
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         
-        // Get outer binding
-        // Filter by type of outer binding
-        // Filter by argument (either pointcut arg or string arg)
-        
-        List<T> outerList = filterOuterBindingByType(pattern);
-        if (outerList == null || outerList.size() == 0) {
+        Collection<T> explodedList = explodeObject(toMatch);
+        if (explodedList == null || explodedList.size() == 0) {
+            // nothing to match on, return failure
             return null;
         }
         
         Object first = getFirstArgument();
         if (first instanceof IPointcut) {
-            pattern.setOuterPointcutBinding(reduce(outerList));
-            return matchOnPointcutArgument((IPointcut) first, pattern);
+            // pass the exploded list to the inner pointcut and match on each element of the list
+            return matchOnPointcutArgument((IPointcut) first, pattern, explodedList);
         } else {
-            Object filtered = filterResult(outerList, pattern);
+            Collection<?> filtered = filterResult(explodedList, pattern);
             if (filtered != null) {
-                return new BindingSet(filtered);
+                return filtered;
             }
             return null;
         }
     }
     
-    protected Object filterResult(List<T> results, GroovyDSLDContext context) {
+    protected Collection<?> filterResult(Collection<T> results, GroovyDSLDContext context) {
         Object o = getFirstArgument();
         String firstArg = asString(o);
-        List<T> filtered = new ArrayList<T>(results.size());
+        Collection<T> filtered = new ArrayList<T>(results.size());
         for (T obj : results) {
             T maybe = filterObject(obj, context, firstArg);
             if (maybe != null) {
@@ -94,11 +90,9 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
         return null;
     }
 
-    protected Object reduce(List<T> filtered) {
+    protected Collection<T> reduce(Collection<T> filtered) {
         if (filtered == null || filtered.size() == 0) {
             return null;
-        } else if (filtered.size() == 1) {
-            return filtered.get(0);
         } else {
             return filtered;
         }
@@ -113,25 +107,22 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
 
 
     /**
-     * extracts annotated nodes from the outer binding, or from the current type if there is no outer binding
-     * the outer binding should be either a {@link Collection} or a {@link ClassNode}
+     * Converts element to a collection of the {@link #filterBy} type.
+     * or returns null if no match
      */
-    protected List<T> filterOuterBindingByType(GroovyDSLDContext pattern) {
-        Object outer = pattern.getOuterPointcutBinding();
-        if (outer == null && filterBy.isInstance(pattern.getCurrentType())) {
-            return Collections.singletonList((T) pattern.getCurrentType());
-        } else {
-            if (outer instanceof  Collection<?>) {
-                List<T> objs = new ArrayList<T>();
-                for (Object elt : (Collection<Object>) outer) {
-                    if (filterBy.isInstance(elt)) {
-                        objs.add((T) elt);
-                    }
+    protected Collection<T> explodeObject(Object toMatch) {
+        if (toMatch instanceof  Collection<?>) {
+            List<T> objs = new ArrayList<T>();
+            for (Object elt : (Collection<?>) toMatch) {
+                if (filterBy.isInstance(elt)) {
+                    objs.add((T) elt);
                 }
-                return objs;
-            } else if (filterBy.isInstance(outer)) {
-                return Collections.singletonList((T) outer);
             }
+            if (objs.size() > 0) {
+                return objs;
+            }
+        } else if (filterBy.isInstance(toMatch)) {
+            return Collections.singletonList((T) toMatch);
         }
         return null;
     }

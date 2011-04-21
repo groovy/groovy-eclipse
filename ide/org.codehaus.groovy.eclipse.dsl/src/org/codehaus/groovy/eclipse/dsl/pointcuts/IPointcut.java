@@ -12,6 +12,8 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import groovy.lang.Closure;
 
+import java.util.Collection;
+
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.eclipse.core.resources.IProject;
@@ -53,11 +55,12 @@ public interface IPointcut {
 
     /**
      * Detmrmines if this pointcut is applicable in the current context
-     * @param pattern
+     * @param pattern corresponding to the current location being inferred.
+     * @param toMatch objet to match on (might be a {@link Collection}) 
      * @return a {@link BindingSet} corresponding to the items bound in this
      * pointcut evaluation, or else null if there was no match
      */
-    BindingSet matches(GroovyDSLDContext pattern);
+    Collection<?> matches(GroovyDSLDContext pattern, Object toMatch);
     
     /**
      * A unique identifier for the container that created this context.

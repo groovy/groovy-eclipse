@@ -10,8 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
@@ -23,16 +24,17 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class BindPointcut extends AbstractPointcut {
     
-    
     public BindPointcut(String containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
-        return matchOnPointcutArgument((IPointcut) getFirstArgument(), pattern);
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+        // convert toMatch to a list
+        return matchOnPointcutArgumentReturnInner((IPointcut) getFirstArgument(), pattern, ensureCollection(toMatch));
     }
 
+    
     public IPointcut normalize() {
         return super.normalize();
     }

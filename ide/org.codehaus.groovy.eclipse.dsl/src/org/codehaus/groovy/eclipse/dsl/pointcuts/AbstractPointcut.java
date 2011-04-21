@@ -12,7 +12,9 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import groovy.lang.Closure;
 
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
@@ -23,9 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NotPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
-import org.codehaus.groovy.util.StringUtil;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.compiler.CharOperation;
 
 
 
@@ -81,7 +81,13 @@ public abstract class AbstractPointcut implements IPointcut {
         elements.add(null, argument);
     }
     
-    public abstract BindingSet matches(GroovyDSLDContext pattern);
+    /**
+     * Attempt a match on the given object to match and return all the matches found
+     * @param pattern pattern to match
+     * @param toMatch object to match on
+     * @return collection of objects matched, or null if no matches found
+     */
+    public abstract Collection<?> matches(GroovyDSLDContext pattern, Object toMatch);
     
     public final void addArgument(String name, Object argument) {
         if (name == null) {
@@ -95,19 +101,65 @@ public abstract class AbstractPointcut implements IPointcut {
      * matches on the pointct passed in and also
      * binds the argument to the argument name if 
      * a name exists.
+     * 
+     * Must call if the argument to this pointcut is another pointcut
      * @param argument
      * @param pattern
      * @return
      */
-    protected BindingSet matchOnPointcutArgument(
-            IPointcut argument, GroovyDSLDContext pattern) {
-        BindingSet set = argument.matches(pattern);
-        String bindName = getFirstArgumentName();
-        if (set != null && bindName != null) {
-            Object val = set.getDefaultBinding();
-            set.addBinding(bindName, val);
+    protected Collection<?> matchOnPointcutArgument(
+            IPointcut argument, GroovyDSLDContext pattern, Collection<?> allElementsToMatch) {
+        if (allElementsToMatch == null) {
+            return null;
         }
-        return set;
+        Collection<Object> outerResults = new HashSet<Object>();
+        for (Object toMatch : allElementsToMatch) {
+            Collection<?> innerResults = argument.matches(pattern, toMatch);
+            if (innerResults != null) {
+                String bindingName = getArgumentName(argument);
+                if (bindingName != null) {
+                    pattern.addToBinding(bindingName, innerResults);
+                }
+                outerResults.add(toMatch);
+            }
+        }
+        // return null if no matches found
+        return outerResults.size() > 0 ? outerResults : null;
+    }
+
+    
+    /**
+     * Variant of matchOnPointcutArgument here.  pass through the
+     * bound results to the containing pointcut
+     */
+    protected Collection<?> matchOnPointcutArgumentReturnInner(
+            IPointcut argument, GroovyDSLDContext pattern, Collection<?> allElementsToMatch) {
+        String bindingName = getArgumentName(argument);
+        Collection<Object> innerResults = new HashSet<Object>();
+        for (Object toMatch : allElementsToMatch) {
+            Collection<?> tempInnerResults = argument.matches(pattern, toMatch);
+            if (tempInnerResults != null) {
+                innerResults.addAll(tempInnerResults);
+            }
+        }
+        if (bindingName != null && innerResults.size() > 0) {
+            pattern.addToBinding(bindingName, innerResults);
+        }
+        // return null if no matches found
+        return innerResults != null && innerResults.size() > 0 ? innerResults : null;
+    }
+
+    /**
+     * flattens a map of collections into a single collection 
+     * @param pointcutResult
+     * @return
+     */
+    protected Collection<?> flatten(Map<Object, Collection<?>> pointcutResult) {
+        Collection<Object> newCollection = new HashSet<Object>(pointcutResult.size());
+        for (Collection<?> collection : pointcutResult.values()) {
+            newCollection.addAll(collection);
+        }
+        return newCollection;
     }
 
     public final Object getFirstArgument() {
@@ -124,6 +176,22 @@ public abstract class AbstractPointcut implements IPointcut {
     
     public final Object[] getArgumentValues() {
         return elements.getElements();
+    }
+    
+    /**
+     * returns the associated name for the given argument.
+     * null if this is not an argument and null if there
+     * is no name
+     * @param argument
+     * @return
+     */
+    public final String getArgumentName(Object argument) {
+        for (int i = 0; i < elements.size; i++) {
+            if (elements.elementAt(i) == argument) {
+                return elements.nameAt(i);
+            }
+        }
+        return null;
     }
     
     public final String getFirstArgumentName() {
@@ -145,9 +213,6 @@ public abstract class AbstractPointcut implements IPointcut {
                 elements.setElement(((IPointcut) elt).normalize(), i);
             }
         }
-        // project is only required for registering with contribution groups.
-        // can set to null now
-//        this.project = null;
         return this;
     }
     
@@ -366,4 +431,10 @@ public abstract class AbstractPointcut implements IPointcut {
         return elements.asMap();
     }
     
+    protected Collection<?> ensureCollection(Object toMatch) {
+        if (toMatch == null) {
+            return null;
+        }
+        return toMatch instanceof Collection ? (Collection<?>) toMatch : Collections.singleton(toMatch);
+    }
 }

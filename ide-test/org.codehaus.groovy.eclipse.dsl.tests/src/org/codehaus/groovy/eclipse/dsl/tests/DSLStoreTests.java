@@ -10,27 +10,14 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
-import org.codehaus.groovy.eclipse.dsl.DSLDStore;
-import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
-import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
-import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 
 /**
  * 

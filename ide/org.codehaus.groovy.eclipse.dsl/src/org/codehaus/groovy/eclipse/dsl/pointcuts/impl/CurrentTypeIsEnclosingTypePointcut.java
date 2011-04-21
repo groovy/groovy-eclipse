@@ -15,9 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 
@@ -34,12 +36,17 @@ public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
+    /**
+     * toMatch parameter is ignored.
+     * No arguments
+     * Just like {@link CurrentTypePointcut}
+     */
     @Override
-    public BindingSet matches(GroovyDSLDContext pattern) {
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         ClassNode enclosing = pattern.getCurrentScope().getEnclosingTypeDeclaration();
-        ClassNode current = pattern.getCurrentType();
-        if (enclosing != null && current != null && enclosing.redirect() == current.redirect()) {
-            return new BindingSet(current);
+        ClassNode currentType = pattern.getCurrentType();
+        if (enclosing != null && currentType != null && enclosing.redirect() == currentType.redirect()) {
+            return Collections.singleton(currentType);
         }
         return null;
     }

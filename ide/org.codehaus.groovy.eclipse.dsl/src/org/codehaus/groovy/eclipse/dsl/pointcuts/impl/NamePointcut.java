@@ -27,6 +27,7 @@ public class NamePointcut extends FilteringPointcut<Object> {
         super(containerIdentifier, pointcutName, Object.class);
     }
     
+    @Override
     protected Object filterObject(Object result, GroovyDSLDContext context, String firstArgAsString) {
         String toCompare;
         if (result instanceof ClassNode) {

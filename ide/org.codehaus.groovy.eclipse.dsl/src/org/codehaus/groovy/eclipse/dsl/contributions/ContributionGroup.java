@@ -15,13 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import groovy.lang.GroovyObjectSupport;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
-
-import groovy.lang.GroovyObjectSupport;
 
 /**
  * 
