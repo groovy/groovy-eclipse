@@ -103,7 +103,7 @@ public class PointcutFactory {
                         "(or annotations), rather than the thing annotated", "A String, Class, or ClassNode corresponding to an annotation", 
                         "the annotations that are matched by the argument.  This will be <code>AnnotationNode</code> if a single annotations matches, " +
                         "or <code>List<AnnotationNode></code> if there are multiple matches"));
-        registerGlobalPointcut("findField", FindFieldPointcut.class, createDoc("Matches when the containing pointcut passes in a type that has a field " +
+        registerGlobalPointcut("fields", FindFieldPointcut.class, createDoc("Matches when the containing pointcut passes in a type that has a field " +
                 "specified by the argument in this pointcut.", "A String corresponding to a field name.  Alternatively, a pointcut, such as annotatedBy, wich " +
                 "would return all fields with the given annotation",
                 "the field or fields matched by the argument. " +
@@ -112,7 +112,7 @@ public class PointcutFactory {
                 "annotated nodes containing only nodes with the correct annotation."));
         registerGlobalPointcut("variableExpression", VariableExpressionPointcut.class, createDoc("Matches when the current node being evaluated is a VariableExpression",
                 "Variable name", "The matchd variable expression"));
-        registerGlobalPointcut("findMethod", FindMethodPointcut.class, createDoc("Matches when the containing pointcut passes in a type that has a method " +
+        registerGlobalPointcut("methods", FindMethodPointcut.class, createDoc("Matches when the containing pointcut passes in a type that has a method " +
                 "specified by the argument in this pointcut.", "A String corresponding to a method name.  Alternatively, a pointcut, such as annotatedBy, wich " +
                 "would return all fields with the given annotation",
                 "the method or methods matched by the argument. " +
@@ -127,10 +127,10 @@ public class PointcutFactory {
                 "  If the surrounding pointcut passes in a list of AnnotatedNodes, thne the result will be a sublist of those " +
                 "annotated nodes containing only nodes with the correct annotation."));
         registerGlobalPointcut("name", NamePointcut.class, createDoc("Checks that the items passed in will match the argument of this pointcut.  " +
-        		"Often, this pointcut is superfluous as the findProperty, findMethod, and findField pointcuts already take a name.  " +
+        		"Often, this pointcut is superfluous as the findProperty, methods, and fields pointcuts already take a name.  " +
         		"However, this pointcut can be useful if you want to match a field both on name and something else.  Eg- " +
         		"The following will only match fields in the current type whose name is reference <em>and</em> are static:" +
-        		"<pre>currentType( findField( name ('reference') & isStatic() ) )</pre>",
+        		"<pre>currentType( fields( name ('reference') & isStatic() ) )</pre>",
         		"A string corresponding to the name on which to match, or an object with a toString() method to match.",
         		"The matched object or objects."));
         registerGlobalPointcut("isFinal", FinalPointcut.class, createDoc("Matches if one or more of the passed in items are final", "none", "A sub-list of passed in items that are all final."));

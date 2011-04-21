@@ -66,7 +66,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
     // two pointcuts in same file
     public void testTwoPointcuts() throws Exception {
         createDsls("currentType().accept { }\n" +
-                   "findField().accept { }");
+                   "fields().accept { }");
         assertDSLStore(1, 
                 createExpectedPointcuts(
                         new String[] { createSemiUniqueName(CurrentTypePointcut.class, 0),
@@ -82,7 +82,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
     // two pointcuts two files
     public void testTwoPointcutsTwoFiles() throws Exception {
         createDsls("currentType().accept { }",
-                   "findField().accept { }");
+                   "fields().accept { }");
         assertDSLStore(2, 
                 createExpectedPointcuts(
                         new String[] { createSemiUniqueName(CurrentTypePointcut.class, 0) },
@@ -96,8 +96,8 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
     }
     
     public void testTwoFilesEachWith2Pointcuts() throws Exception {
-        createDsls("currentType().accept { }\nfindField().accept { }",
-                "currentType().accept { }\nfindField().accept { }");
+        createDsls("currentType().accept { }\nfields().accept { }",
+                "currentType().accept { }\nfields().accept { }");
         assertDSLStore(
                 2,
                 createExpectedPointcuts(
@@ -117,8 +117,8 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
     }
 
     public void testTwoFilesEachWith2PointcutsEachUsedTwice() throws Exception {
-        createDsls("def a = currentType()\ndef b = findField()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }",
-                   "def a = currentType()\ndef b = findField()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }");
+        createDsls("def a = currentType()\ndef b = fields()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }",
+                   "def a = currentType()\ndef b = fields()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }");
         assertDSLStore(
                 2,
                 createExpectedPointcuts(
@@ -138,8 +138,8 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
     }
     
     public void testCraziness() throws Exception {
-        createDsls("def a = currentType()\ndef b = findField()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }",
-                   "def a = currentType()\ndef b = findField()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }",
+        createDsls("def a = currentType()\ndef b = fields()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }",
+                   "def a = currentType()\ndef b = fields()\na.accept { }\na.accept { }\nb.accept { }\nb.accept { }",
                    "def a = currentType()\na.accept { }\na.accept { }\na.accept { }\na.accept { }\na.accept { }",
                    ""); // not in store
         
@@ -223,7 +223,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
         ));
         
         // overwrite the original
-        createDsls("currentType().accept { }\n" + "findField().accept { }");
+        createDsls("currentType().accept { }\n" + "fields().accept { }");
         assertDSLStore(
                 1,
                 createExpectedPointcuts(new String[] {
@@ -238,7 +238,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
     }
     
     public void testDisabled1() throws Exception {
-        createDsls("currentType().accept { }", "findField().accept { }");
+        createDsls("currentType().accept { }", "fields().accept { }");
         assertDSLStore(2, 
                 createExpectedPointcuts(
                         new String[] { createSemiUniqueName(CurrentTypePointcut.class, 0) },
@@ -266,7 +266,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
         // re-enable script
         DSLPreferences.setDisabledScripts(new String[] { });
 
-        createDsls("currentType().accept { }", "findField().accept { }");
+        createDsls("currentType().accept { }", "fields().accept { }");
         assertDSLStore(2, 
                 createExpectedPointcuts(
                         new String[] { createSemiUniqueName(CurrentTypePointcut.class, 0) },

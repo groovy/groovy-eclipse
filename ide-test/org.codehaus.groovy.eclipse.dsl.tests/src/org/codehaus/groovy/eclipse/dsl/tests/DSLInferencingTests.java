@@ -15,8 +15,6 @@ import java.io.IOException;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
-
 /**
  * Tests type inferencing that involve dsls
  * 

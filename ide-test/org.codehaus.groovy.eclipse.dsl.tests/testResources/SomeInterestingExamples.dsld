@@ -5,7 +5,7 @@ import org.codehaus.groovy.ast.FieldNode;
 
 // fields is bound to a single FieldNode (if there is one delegate in the target type), 
 // or a list of FieldNodes if there are multiple.
-currentType(fields : findField(annotatedBy(Delegate))).accept {
+currentType(fields : fields(annotatedBy(Delegate))).accept {
 	for (field in fields) {
 		delegatesTo(field.declaringType)
 	} 
@@ -47,7 +47,7 @@ myPointcut(accepted: currentType()).accept {
 }
 // As always, you can use a named argument to bind the match of a pointcut and have
 // it available inside the contribution group
-myPointcut2(a1: currentType("java.lang.Integer"), a2: findField("value")).accept {
+myPointcut2(a1: currentType("java.lang.Integer"), a2: fields("value")).accept {
     property name: a2.iterator().next().name + a1.iterator().next().nameWithoutPackage
 }
 

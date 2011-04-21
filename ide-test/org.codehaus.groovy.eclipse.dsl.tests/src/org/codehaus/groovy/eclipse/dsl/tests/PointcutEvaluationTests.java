@@ -125,74 +125,74 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     }
 
     public void testEvaluateTypeMethodField2() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(findMethod(\"intValue\"))", "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(methods(\"intValue\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField3() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(findField(\"value\"))", "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(fields(\"value\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField4Fail() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(findField(\"notHere\"))", null);
+        doTestOfLastMatch("package p\n2", "currentType(fields(\"notHere\"))", null);
     }
     
     public void testEvaluateTypeMethodField5() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(findField(\"value\") & findMethod(\"intValue\"))", "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(fields(\"value\") & methods(\"intValue\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField5b() throws Exception {
         doTestOfLastMatch("package p\n2", 
                 
-                "def left = findField(\"value\")\n" +
-                "def right = findMethod(\"intValue\")\n" +
+                "def left = fields(\"value\")\n" +
+                "def right = methods(\"intValue\")\n" +
                 "currentType(left & right)", "java.lang.Integer");
     }
 
     public void testEvaluateTypeMethodField5c() throws Exception {
         doTestOfLastMatch("package p\n2", 
                 
-                "def left = { findField(\"value\") }\n" +
-                "def right = { findMethod(\"intValue\") }\n" +
+                "def left = { fields(\"value\") }\n" +
+                "def right = { methods(\"intValue\") }\n" +
                 "currentType(left() & right())", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField6Fail_a() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(findField(\"notHere\") & findMethod(\"intValue\"))", null);
+        doTestOfLastMatch("package p\n2", "currentType(fields(\"notHere\") & methods(\"intValue\"))", null);
     }
 
     public void testEvaluateTypeMethodField6Fail_b() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(findMethod(\"intValue\") & findField(\"notHere\"))", null);
+        doTestOfLastMatch("package p\n2", "currentType(methods(\"intValue\") & fields(\"notHere\"))", null);
     }
     
     public void testEvaluateTypeMethodField6Fail_c() throws Exception {
         doTestOfLastMatch("package p\n2", 
-                "def left = findField(\"notHere\")\n" +
-                "def right = findMethod(\"intValue\")\n" +
+                "def left = fields(\"notHere\")\n" +
+                "def right = methods(\"intValue\")\n" +
                 "currentType(left & right)", null);
     }
     
     public void testEvaluateTypeMethodField7a() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(findField(\"notHere\") | findMethod(\"intValue\"))", "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(fields(\"notHere\") | methods(\"intValue\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField7b() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(findMethod(\"intValue\") | findField(\"notHere\"))", "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(methods(\"intValue\") | fields(\"notHere\"))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField8() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(subType(\"java.lang.Number\")) | (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "currentType(subType(\"java.lang.Number\")) | (currentType(methods(\"intValue\") & fields(\"notHere\")))", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField8b() throws Exception {
-        doTestOfLastMatch("package p\n2", "(currentType(findMethod(\"intValue\") & findField(\"notHere\"))) | currentType(subType(\"java.lang.Number\")) ", "java.lang.Integer");
+        doTestOfLastMatch("package p\n2", "(currentType(methods(\"intValue\") & fields(\"notHere\"))) | currentType(subType(\"java.lang.Number\")) ", "java.lang.Integer");
     }
     
     public void testEvaluateTypeMethodField9Fail_a() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(\"java.lang.Number.NOPE\") | (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", null);
+        doTestOfLastMatch("package p\n2", "currentType(\"java.lang.Number.NOPE\") | (currentType(methods(\"intValue\") & fields(\"notHere\")))", null);
     }
     
     public void testEvaluateTypeMethodField9Fail_b() throws Exception {
-        doTestOfLastMatch("package p\n2", "currentType(subType(\"java.lang.Number\")) & (currentType(findMethod(\"intValue\") & findField(\"notHere\")))", null);
+        doTestOfLastMatch("package p\n2", "currentType(subType(\"java.lang.Number\")) & (currentType(methods(\"intValue\") & fields(\"notHere\")))", null);
     }
     
     public void testAnnotation1() throws Exception {
@@ -202,37 +202,37 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
 
     public void testAnnotation2() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t }");
-        doTestOfLastMatch("Foo", "currentType(findField(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(fields(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
     }
     
     public void testAnnotation3() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t() { } }");
-        doTestOfLastMatch("Foo", "currentType(findMethod(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(methods(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
     }
     
     public void testAnnotation4() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") & findField(\"f\") )", "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") & fields(\"f\") )", "p.Foo");
     }
 
     public void testAnnotation5() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") | findField(\"g\") )", "p.Foo");
+        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") | fields(\"g\") )", "p.Foo");
     }
     
     public void testAnnotation6() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastMatch("Foo", "currentType( findField(\"g\") | annotatedBy(\"java.lang.Deprecated\") )", "p.Foo");
+        doTestOfLastMatch("Foo", "currentType( fields(\"g\") | annotatedBy(\"java.lang.Deprecated\") )", "p.Foo");
     }
     
     public void testAnnotation7Fail() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastMatch("Foo", "currentType( findField(\"g\") & annotatedBy(\"java.lang.Deprecated\") )", null);
+        doTestOfLastMatch("Foo", "currentType( fields(\"g\") & annotatedBy(\"java.lang.Deprecated\") )", null);
     }
     
     public void testAnnotation8() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
-        doTestOfLastMatch("Foo", "currentType( findField( annotatedBy(\"java.lang.Deprecated\") ) & findMethod( annotatedBy(\"java.lang.Deprecated\") ) )", 
+        doTestOfLastMatch("Foo", "currentType( fields( annotatedBy(\"java.lang.Deprecated\") ) & methods( annotatedBy(\"java.lang.Deprecated\") ) )", 
                 "p.Foo");
     }
     
@@ -316,41 +316,41 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     }
     
     public void testTypesNamedBinding4() throws Exception {
-        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") ) )", 
+        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : fields(\"value\") ) )", 
                 new BindingResult("b", "java.lang.Integer.value"));
     }
 
     public void testTypesNamedBinding4Fail() throws Exception {
-        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"invalid\") ) )");
+        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : fields(\"invalid\") ) )");
     }
     
     public void testTypesNamedBinding5() throws Exception {
-        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") ) ) | currentType(bind( b : findMethod(\"intValue\") ) )", 
+        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : fields(\"value\") ) ) | currentType(bind( b : methods(\"intValue\") ) )", 
                 new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"));
     }
 
     public void testTypesNamedBinding6() throws Exception {
-        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") ) | bind( b : findMethod(\"intValue\") ) )", 
+        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : fields(\"value\") ) | bind( b : methods(\"intValue\") ) )", 
                 new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"));
     }
     
     public void testTypesNamedBinding7() throws Exception {
-        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") | findMethod(\"intValue\") ) )", 
+        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : fields(\"value\") | methods(\"intValue\") ) )", 
                 new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"));
     }
     
     public void testTypesNamedBinding8() throws Exception {
-        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"value\") & findMethod(\"intValue\") ) )", 
+        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : fields(\"value\") & methods(\"intValue\") ) )", 
                 new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"));
     }
     
     public void testTypesNamedBinding9() throws Exception {
-        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"invalid\") | findMethod(\"intValue\") ) )", 
+        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : fields(\"invalid\") | methods(\"intValue\") ) )", 
                 new BindingResult("b", "java.lang.Integer.intValue"));
     }
     
     public void testTypesNamedBinding10Fail() throws Exception {
-        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : findField(\"invalid\") & findMethod(\"intValue\") ) )");
+        doTestOfLastBindingSet("package p\n2", "currentType(bind( b : fields(\"invalid\") & methods(\"intValue\") ) )");
     }
     
 
@@ -399,30 +399,30 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     }
     
     public void testAnd1() throws Exception {
-        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) & bind( d : findMethod(\"intValue\")))))", "java.lang.Integer");
-        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) & bind( d : findMethod(\"intValue\")))))",
+        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : fields (\"value\") ) & bind( d : methods(\"intValue\")))))", "java.lang.Integer");
+        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : fields (\"value\") ) & bind( d : methods(\"intValue\")))))",
                 new BindingResult("a", "java.lang.Integer"),
                 new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"),
                 new BindingResult("c", "java.lang.Integer.value"),
                 new BindingResult("d", "java.lang.Integer.intValue"));
     }
     public void testAnd2() throws Exception {
-        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) & bind( d : findMethod(\"invalid\")))))", null);
-        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) & bind( d : findMethod(\"invalid\")))))",
+        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : fields (\"value\") ) & bind( d : methods(\"invalid\")))))", null);
+        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : fields (\"value\") ) & bind( d : methods(\"invalid\")))))",
                 new BindingResult("c", "java.lang.Integer.value"));
     }
     
     public void testOr1() throws Exception {
-        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) | bind( d : findMethod(\"invalid\")))))", "java.lang.Integer");
-        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) | bind( d : findMethod(\"intValue\")))))",
+        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : fields (\"value\") ) | bind( d : methods(\"invalid\")))))", "java.lang.Integer");
+        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : fields (\"value\") ) | bind( d : methods(\"intValue\")))))",
                 new BindingResult("a", "java.lang.Integer"),
                 new BindingResult("b", "java.lang.Integer.value, java.lang.Integer.intValue"),
                 new BindingResult("c", "java.lang.Integer.value"),
                 new BindingResult("d", "java.lang.Integer.intValue"));
     }
     public void testOr2() throws Exception {
-        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) | bind( d : findMethod(\"invalid\")))))", "java.lang.Integer");
-        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : findField (\"value\") ) | bind( d : findMethod(\"invalid\")))))",
+        doTestOfLastMatch("package p\n2", "bind( a : currentType( bind( b : bind( c : fields (\"value\") ) | bind( d : methods(\"invalid\")))))", "java.lang.Integer");
+        doTestOfLastBindingSet("package p\n2", "bind( a : currentType( bind( b : bind( c : fields (\"value\") ) | bind( d : methods(\"invalid\")))))",
                 new BindingResult("a", "java.lang.Integer"),
                 new BindingResult("b", "java.lang.Integer.value"),
                 new BindingResult("c", "java.lang.Integer.value"));
@@ -438,47 +438,47 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
 
     public void testAnnotationBinding2() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t }");
-        doTestOfLastBindingSet("Foo", "currentType(bind(b : findField(annotatedBy(\"java.lang.Deprecated\"))))",
+        doTestOfLastBindingSet("Foo", "currentType(bind(b : fields(annotatedBy(\"java.lang.Deprecated\"))))",
                 new BindingResult("b", "p.Foo.t"));
     }
     
     public void testAnnotationBinding3() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t() { } }");
-        doTestOfLastBindingSet("Foo", "currentType(bind( b : findMethod(annotatedBy(\"java.lang.Deprecated\"))))",
+        doTestOfLastBindingSet("Foo", "currentType(bind( b : methods(annotatedBy(\"java.lang.Deprecated\"))))",
                 new BindingResult("b", "p.Foo.t"));
     }
     
     public void testAnnotationBinding4() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") & findField(\"f\") ) )",
+        doTestOfLastBindingSet("Foo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") & fields(\"f\") ) )",
                 new BindingResult("b", "@java.lang.Deprecated, p.Foo.f"));
     }
 
     public void testAnnotationBinding5() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") | findField(\"f\") ) )",
+        doTestOfLastBindingSet("Foo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") | fields(\"f\") ) )",
                 new BindingResult("b", "@java.lang.Deprecated, p.Foo.f"));
     }
     
     public void testAnnotationBinding6() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType( bind( b : findField(\"g\")) | annotatedBy(\"java.lang.Deprecated\") )");
+        doTestOfLastBindingSet("Foo", "currentType( bind( b : fields(\"g\")) | annotatedBy(\"java.lang.Deprecated\") )");
     }
     
     public void testAnnotationBinding7Fail() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType( findField(\"g\") & bind( b : annotatedBy(\"java.lang.Deprecated\") ) )");
+        doTestOfLastBindingSet("Foo", "currentType( fields(\"g\") & bind( b : annotatedBy(\"java.lang.Deprecated\") ) )");
     }
     
     public void testAnnotationBinding8() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
-        doTestOfLastBindingSet("Foo", "currentType( bind( b : findField( annotatedBy(\"java.lang.Deprecated\") ) & findMethod( annotatedBy(\"java.lang.Deprecated\") ) ) )", 
+        doTestOfLastBindingSet("Foo", "currentType( bind( b : fields( annotatedBy(\"java.lang.Deprecated\") ) & methods( annotatedBy(\"java.lang.Deprecated\") ) ) )", 
                 new BindingResult("b", "p.Foo.f, p.Foo.g"));
     }
     
     public void testAnnotationBinding9() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
-        doTestOfLastBindingSet("Foo", "currentType( findField( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) & findMethod( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) )", 
+        doTestOfLastBindingSet("Foo", "currentType( fields( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) & methods( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) )", 
                 new BindingResult("b", "@java.lang.Deprecated, @java.lang.Deprecated"));
     }
     

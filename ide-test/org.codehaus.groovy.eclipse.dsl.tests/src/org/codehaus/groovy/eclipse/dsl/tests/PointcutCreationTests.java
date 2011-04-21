@@ -57,7 +57,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
         assertEquals("java.lang.String", pc.getFirstArgument());
     }
     public void testPointcutCreation2() throws Exception {
-        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(annotatedBy(\"java.lang.String\")))");
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(fields(annotatedBy(\"java.lang.String\")))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
         assertValidPointcut(pc);
 
@@ -83,13 +83,13 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     }
 
     public void testValidPointcutCreation2() throws Exception {
-        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(annotatedBy()))");
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(fields(annotatedBy()))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
         assertValidPointcut(pc);
     }
     
     public void testInvalidPointcutCreation2() throws Exception {
-        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(findField(isStatic(\"foo\")))");
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("currentType(fields(isStatic(\"foo\")))");
         assertTrue("Should have been a currentType pointcut", pc instanceof CurrentTypePointcut);
         assertInvalidPointcut("This pointcut does not take any arguments.", pc);
     }
