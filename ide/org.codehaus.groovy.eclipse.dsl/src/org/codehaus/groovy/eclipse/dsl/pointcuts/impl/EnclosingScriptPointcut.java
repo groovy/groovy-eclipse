@@ -43,13 +43,13 @@ public class EnclosingScriptPointcut extends AbstractPointcut {
         
         Object firstArgument = getFirstArgument();
         if (firstArgument instanceof String) {
-            if (pattern.matchesType((String) firstArgument, enclosing)) {
+            if (enclosing.getName().equals(firstArgument)) {
                 return enclosingCollection;
             } else {
                 return null;
             }
         } else if (firstArgument instanceof Class<?>) {
-            if (pattern.matchesType(((Class<?>) firstArgument).getName(), enclosing)) {
+            if (enclosing.getName().equals(((Class<?>) firstArgument).getName())) {
                 return enclosingCollection;
             } else {
                 return null;

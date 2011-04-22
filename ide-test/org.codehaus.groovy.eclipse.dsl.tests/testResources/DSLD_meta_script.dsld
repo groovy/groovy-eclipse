@@ -49,22 +49,22 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
 
 // Ensure that the 'accept' method is available for all closures and variables that correspond to pointcuts
 (dsldFile & ( ~ insideContribution() )  & ( ~currentType(subType(Script)) )).accept {
-    delegatesTo "p.IPointcut"
+    delegatesTo IPointcut
 }
  
 // here we store all bound names inside of the wormhole so that they can be available later
-(dsldFile & enclosingCallDeclaringType(Script) & (~ enclosingCallName("supportsVersion")) & 
+(dsldFile & enclosingCallDeclaringType(subType(Script)) & (~ enclosingCallName("supportsVersion")) & 
     ( ~ inClosure() ) & bind(var : variableExpression())).accept {
     if (enclosingNode instanceof MapEntryExpression && 
-            ((MapEntryExpression) enclosingNode).keyExpression == var) {
+            var.contains(((MapEntryExpression) enclosingNode).keyExpression)) {  
         def bindings = wormhole.bindings
-        if (!bindings) { 
+        if (!bindings) {   
             bindings = [ ] 
             wormhole.bindings = bindings
-        }  
-        bindings << var.text
+        }   
+        var.each { bindings << it.text }
     }  
-} 
+}
 
 // Define the kinds of pointcuts
 // note the different ways of calling the two composite pointcuts
@@ -80,7 +80,7 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
     // and you cannot import them or use them as types for variables 
     Map<String, String> pointcutNames = org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.docRegistry
     for (pointcutName in pointcutNames.entrySet()) {
-        method name : pointcutName.key, type: "p.IPointcut", params : [pointcutArg : Object], doc : pointcutName.value
+        method name : pointcutName.key, type: IPointcut, params : [pointcutArg : Object], doc : pointcutName.value
     }
     
     method name : "supportsVersion", type : void, params : [versionKindToName : Map.class ], 
@@ -90,7 +90,8 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
       <pre>supportsVersion(groovy:"1.7.10",groovyEclipse:"2.1.3")</pre>
       This means that the current scipt requires <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later'''
     
-    method name : "registerPointcut", type : void, params : [name : String, pointcutBody : Closure], doc : '''
+    method name : "registerPointcut", type : void, params : [name : String, pointcutBody : Closure], 
+    doc : '''
     Registers a custom pointcut.  This pointcut is only available from within the current script.
     You must specify a name for the pointcut as well as a closure that evaluates whether or not there is a match'''
     

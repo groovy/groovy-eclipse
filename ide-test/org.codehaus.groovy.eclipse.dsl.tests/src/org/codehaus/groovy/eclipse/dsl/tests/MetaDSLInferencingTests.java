@@ -122,7 +122,7 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
             "b\n" +
             "}";
         String name = "b";
-        assertDeclaringType(contents, contents.lastIndexOf(name), contents.indexOf(name) + name.length(), "Search", true);
+        assertDeclaringType(contents, contents.lastIndexOf(name), contents.lastIndexOf(name) + name.length(), "Search", true);
     }
     
     /**

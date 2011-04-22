@@ -73,7 +73,7 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
     private ClassNode matchesInCalls(List<CallAndType> enclosing,
             String typeName, GroovyDSLDContext pattern) {
         for (CallAndType callAndType : enclosing) {
-            if (pattern.matchesType(typeName, callAndType.declaringType)) {
+            if (callAndType.declaringType.getName().equals(typeName)) {
                 return callAndType.declaringType;
             }
         }

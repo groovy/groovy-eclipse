@@ -10,10 +10,7 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -32,29 +29,15 @@ public class VariableExpressionPointcut extends FilteringPointcut<Expression> {
         super(containerIdentifier, pointcutName, Expression.class);
     }
 
-
+    
     /**
-     * Converts toMatch to a collection of expression nodes ({@link VariableExpression} or {@link ConstantExpression} nodes).  Might be null or empty list
-     * In either of these cases, this is considered a non-match
-     * @param toMatch the object to explode
+     * Ignore toMatch and use the current node instead
      */
     @Override
-    protected Collection<Expression> explodeObject(Object toMatch) {
-        if (toMatch instanceof Collection<?>) {
-            List<Expression> fields = new ArrayList<Expression>();
-            for (Object elt : (Collection<?>) toMatch) {
-                if (elt instanceof Expression) {
-                    fields.add((Expression) elt);
-                }
-            }
-            return fields;
-        } else if (toMatch instanceof Expression) {
-            return Collections.singleton((Expression) toMatch);
-        }
-        return null;
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+        return super.matches(pattern, pattern.getCurrentScope().getCurrentNode());
     }
-    
-    
+
     @Override
     protected Expression filterObject(Expression result, GroovyDSLDContext context, String firstArgAsString) {
         if (result instanceof VariableExpression || result instanceof ConstantExpression) {
