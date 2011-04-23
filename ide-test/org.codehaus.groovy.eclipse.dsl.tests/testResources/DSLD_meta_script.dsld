@@ -54,7 +54,14 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
  
 // here we store all bound names inside of the wormhole so that they can be available later
 (dsldFile & enclosingCallDeclaringType(subType(Script)) & (~ enclosingCallName("supportsVersion")) & 
-    ( ~ inClosure() ) & bind(var : variableExpression())).accept {
+    ( ~ inClosure() ) & bind(var : currentIdentifier())).accept {
+
+    // FIXADE I don't like how this one works right now.
+    // too much mucking around with the AST in the contribution block
+    // We should be able to say something like:
+    // bind( enclosing : enclosingNode(instanceof(MapEntryExpression)))
+    // then we can stuff enclosing.keyExpression into the wormhole
+    
     if (enclosingNode instanceof MapEntryExpression && 
             var.contains(((MapEntryExpression) enclosingNode).keyExpression)) {  
         def bindings = wormhole.bindings

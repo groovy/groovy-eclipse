@@ -47,7 +47,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfFilePointcut
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SubTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.VariableExpressionPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentIdentifierPointcut;
 import org.eclipse.core.resources.IProject;
 
 /**
@@ -110,7 +110,7 @@ public class PointcutFactory {
                 "Eg- If the surrounding pointcut passes in a type, then the value returned will be all fields in that type that match the contained pointcut, or that have the specified name." +
                 "  If the surrounding pointcut passes in a list of AnnotatedNodes, thne the result will be a sublist of those " +
                 "annotated nodes containing only nodes with the correct annotation."));
-        registerGlobalPointcut("variableExpression", VariableExpressionPointcut.class, createDoc("Matches when the current node being evaluated is a VariableExpression",
+        registerGlobalPointcut("currentIdentifier", CurrentIdentifierPointcut.class, createDoc("Matches when the current node being evaluated is a VariableExpression",
                 "Variable name", "The matchd variable expression"));
         registerGlobalPointcut("methods", FindMethodPointcut.class, createDoc("Matches when the containing pointcut passes in a type that has a method " +
                 "specified by the argument in this pointcut.", "A String corresponding to a method name.  Alternatively, a pointcut, such as annotatedBy, wich " +

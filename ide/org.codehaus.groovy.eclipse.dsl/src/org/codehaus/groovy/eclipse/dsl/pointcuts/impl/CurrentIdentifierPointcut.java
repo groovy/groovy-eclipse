@@ -18,14 +18,15 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 
 /**
- * the match returns true if the pattern passed in is a variable expression
+ * the match returns true if the pattern passed in is an identifier expression
+ * (either a {@link ConstantExpression} or a {@link VariableExpression} whose text
  * that matches the contained argument
  * @author andrew
  * @created Feb 11, 2011
  */
-public class VariableExpressionPointcut extends FilteringPointcut<Expression> {
+public class CurrentIdentifierPointcut extends FilteringPointcut<Expression> {
 
-    public VariableExpressionPointcut(String containerIdentifier, String pointcutName) {
+    public CurrentIdentifierPointcut(String containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, Expression.class);
     }
 
