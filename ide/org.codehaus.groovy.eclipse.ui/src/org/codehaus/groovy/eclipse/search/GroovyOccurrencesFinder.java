@@ -15,8 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.search;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -93,18 +94,20 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
     }
 
     public OccurrenceLocation[] getOccurrences() {
-        Collection<org.codehaus.groovy.ast.ASTNode> occurences = internalFindOccurences();
+        Map<org.codehaus.groovy.ast.ASTNode, Integer> occurences = internalFindOccurences();
         OccurrenceLocation[] locations = new OccurrenceLocation[occurences.size()];
         int i = 0;
-        for (org.codehaus.groovy.ast.ASTNode node : occurences) {
+        for (Entry<org.codehaus.groovy.ast.ASTNode, Integer> entry : occurences.entrySet()) {
+            org.codehaus.groovy.ast.ASTNode node = entry.getKey();
+            int flag = entry.getValue();
             OccurrenceLocation occurrenceLocation;
             if (node instanceof FieldNode) {
                 FieldNode c = (FieldNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, K_OCCURRENCE,
+                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag,
                         "Occurrence of ''" + getElementName() + "''");
             } else if (node instanceof MethodNode) {
                 MethodNode c = (MethodNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, K_OCCURRENCE,
+                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag,
                         "Occurrence of ''" + getElementName() + "''");
             } else if (node instanceof Parameter) {
                 // should be finding the start and end of the name region only,
@@ -112,23 +115,23 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
                 Parameter c = (Parameter) node;
                 int start = c.getNameStart();
                 int length = c.getNameEnd() - c.getNameStart();
-                occurrenceLocation = new OccurrenceLocation(start, length, K_OCCURRENCE, "Occurrence of ''" + getElementName()
+                occurrenceLocation = new OccurrenceLocation(start, length, flag, "Occurrence of ''" + getElementName()
                         + "''");
             } else if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) {
                 // class declaration
                 ClassNode c = (ClassNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, K_OCCURRENCE,
+                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag,
                         "Occurrence of ''" + getElementName() + "''");
             } else if (node instanceof StaticMethodCallExpression) {
                 // special case...for static method calls, the start and end are
                 // of the entire expression, but we just want the name.
                 StaticMethodCallExpression smce = (StaticMethodCallExpression) node;
-                occurrenceLocation = new OccurrenceLocation(smce.getStart(), smce.getMethod().length(), K_OCCURRENCE,
+                occurrenceLocation = new OccurrenceLocation(smce.getStart(), smce.getMethod().length(), flag,
                         "Occurrence of ''" + getElementName() + "''");
             } else {
                 SourceRange range = getSourceRange(node);
 
-                occurrenceLocation = new OccurrenceLocation(range.getOffset(), range.getLength(), K_OCCURRENCE, "Occurrence of ''"
+                occurrenceLocation = new OccurrenceLocation(range.getOffset(), range.getLength(), flag, "Occurrence of ''"
                         + getElementName() + "''");
             }
             locations[i++] = occurrenceLocation;
@@ -156,15 +159,15 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
         return new SourceRange(node.getStart(), node.getLength());
     }
 
-    private Collection<org.codehaus.groovy.ast.ASTNode> internalFindOccurences() {
+    private Map<org.codehaus.groovy.ast.ASTNode, Integer> internalFindOccurences() {
         if (nodeToLookFor != null) {
             FindAllReferencesRequestor requestor = new FindAllReferencesRequestor(nodeToLookFor);
             TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(gunit);
             visitor.visitCompilationUnit(requestor);
-            Collection<org.codehaus.groovy.ast.ASTNode> occurences = requestor.getReferences();
+            Map<org.codehaus.groovy.ast.ASTNode, Integer> occurences = requestor.getReferences();
             return occurences;
         } else {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
     }
 

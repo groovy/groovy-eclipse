@@ -81,6 +81,14 @@ public abstract class OField extends SourceField implements IOJavaElement {
         }
     }
 
+    @Override
+    public String[] getCategories() throws JavaModelException {
+        if (exists()) {
+            return super.getCategories();
+        }
+        return NO_CATEGORIES;
+    }
+
     /****************************************************************************
      * @author maxime hamm
      * @created 11 avr. 2011

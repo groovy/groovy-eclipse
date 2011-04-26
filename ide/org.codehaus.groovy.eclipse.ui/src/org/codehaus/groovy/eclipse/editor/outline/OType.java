@@ -133,6 +133,14 @@ public class OType extends SourceType implements IOJavaElement {
         return this;
     }
 
+    @Override
+    public String[] getCategories() throws JavaModelException {
+        if (exists()) {
+            return super.getCategories();
+        }
+        return NO_CATEGORIES;
+    }
+
     /****************************************************************************
      * @author maxime
      * @created 3 avr. 2011

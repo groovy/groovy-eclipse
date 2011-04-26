@@ -26,6 +26,11 @@ import org.eclipse.jdt.core.ISourceReference;
 public interface IOJavaElement extends IJavaElement, ISourceReference {
 
     /**
+     * No categories for IOJavaElements that don't exist
+     */
+    String[] NO_CATEGORIES = new String[0];
+
+    /**
      * get groovy node
      *
      * @return

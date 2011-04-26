@@ -20,14 +20,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -93,7 +90,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 			String cName = ((ConstantExpression) node).getText();
 			if (cName != null && CharOperation.equals(name, cName.toCharArray())) {
 				doCheck = true;
-				if (checkForAssignment(node, result.enclosingAssignment)) {
+				if (EqualityVisitor.checkForAssignment(node, result.enclosingAssignment)) {
 					isAssignment = true;
 				}
 				start = node.getStart();
@@ -102,7 +99,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 		} else if (node instanceof FieldExpression) {
 			if (CharOperation.equals(name, ((FieldExpression) node).getFieldName().toCharArray())) {
 				doCheck = true;
-				if (checkForAssignment(node, result.enclosingAssignment)) {
+				if (EqualityVisitor.checkForAssignment(node, result.enclosingAssignment)) {
 					isAssignment = true;
 				}
 				// fully qualified field expressions in static contexts will have an sloc of the entire qualified name
@@ -124,7 +121,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 			VariableExpression vnode = (VariableExpression) node;
 			if (CharOperation.equals(name, vnode.getName().toCharArray())) {
 				doCheck = true;
-				if (checkForAssignment(node, result.enclosingAssignment)) {
+				if (EqualityVisitor.checkForAssignment(node, result.enclosingAssignment)) {
 					isAssignment = true;
 				}
 
@@ -164,62 +161,6 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 			}
 		}
 		return VisitStatus.CONTINUE;
-	}
-
-	/**
-	 * @param node
-	 * @param result
-	 * @return
-	 */
-	private boolean checkForAssignment(ASTNode node, BinaryExpression binaryExpr) {
-		return binaryExpr != null && new EqualityVisitor(node).doVisit(binaryExpr.getLeftExpression());
-	}
-
-	class EqualityVisitor extends ClassCodeVisitorSupport {
-		private final ASTNode nodeToLookFor;
-
-		private boolean nodeFound = false;
-
-		public EqualityVisitor(ASTNode nodeToLookFor) {
-			this.nodeToLookFor = nodeToLookFor;
-		}
-
-		public boolean doVisit(ASTNode toVisit) {
-			toVisit.visit(this);
-			return nodeFound;
-		}
-
-		@Override
-		protected SourceUnit getSourceUnit() {
-			return null;
-		}
-
-		@Override
-		public void visitFieldExpression(FieldExpression expression) {
-			if (nodeToLookFor == expression) {
-				nodeFound = true;
-			} else {
-				super.visitFieldExpression(expression);
-			}
-		}
-
-		@Override
-		public void visitVariableExpression(VariableExpression expression) {
-			if (nodeToLookFor == expression) {
-				nodeFound = true;
-			} else {
-				super.visitVariableExpression(expression);
-			}
-		}
-
-		@Override
-		public void visitConstantExpression(ConstantExpression expression) {
-			if (nodeToLookFor == expression) {
-				nodeFound = true;
-			} else {
-				super.visitConstantExpression(expression);
-			}
-		}
 	}
 
 	// recursively check the hierarchy

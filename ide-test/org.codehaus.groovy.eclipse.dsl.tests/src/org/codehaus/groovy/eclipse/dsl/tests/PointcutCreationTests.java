@@ -281,7 +281,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     }
     
     public void testEnclosing1() throws Exception {
-        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingClass(findProperty(isStatic()) & name(\"yes\"))");
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingClass(properties(isStatic()) & name(\"yes\"))");
         assertEquals("Should have been an enclosingClass pointcut", EnclosingClassPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         
@@ -299,7 +299,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testEnclosing2() throws Exception {
         // a meaningless pointcut
-        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingField(findProperty(isPublic()) & name(\"yes\"))");
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingField(properties(isPublic()) & name(\"yes\"))");
         assertEquals("Should have been an enclosingField pointcut", EnclosingFieldPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         
@@ -317,7 +317,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testEnclosing3() throws Exception {
         // a meaningless pointcut
-        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingMethod(findProperty(isPrivate()) & name(\"yes\"))");
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingMethod(properties(isPrivate()) & name(\"yes\"))");
         assertEquals("Should have been an enclosingMethod pointcut", EnclosingMethodPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         
@@ -335,7 +335,7 @@ public class PointcutCreationTests extends AbstractGroovySearchTest {
     
     public void testEnclosing4() throws Exception {
         // a meaningless pointcut
-        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingScript(findProperty(isFinal()) & name(\"yes\"))");
+        IPointcut pc = new PointcutScriptExecutor().createPointcut("enclosingScript(properties(isFinal()) & name(\"yes\"))");
         assertEquals("Should have been an enclosingScript pointcut", EnclosingScriptPointcut.class, pc.getClass());
         assertValidPointcut(pc);
         

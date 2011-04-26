@@ -15,9 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.core.search;
 
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.TreeSet;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.groovy.search.EqualityVisitor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 
@@ -43,11 +44,11 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
 
     private final AnnotatedNode declaration;
 
-    private final Collection<ASTNode> references;
+    private final Map<ASTNode, Integer> references;
 
     public FindAllReferencesRequestor(AnnotatedNode declaration) {
         this.declaration = declaration;
-        this.references = new TreeSet<ASTNode>(new Comparator<ASTNode>() {
+        this.references = new TreeMap<ASTNode, Integer>(new Comparator<ASTNode>() {
 
             public int compare(ASTNode o1, ASTNode o2) {
                 return o1.getStart() - o2.getStart();
@@ -81,11 +82,18 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
             }
 
             if (isEquivalent(maybeDeclaration)) {
-                references.add(node);
+                int flag = EqualityVisitor.checkForAssignment(node, result.getEnclosingAssignment()) ? F_WRITE_OCCURRENCE
+                        : F_READ_OCCURRENCE;
+                references.put(node, flag);
             }
         }
         return VisitStatus.CONTINUE;
     }
+
+    // from IOccurrenceFinder
+    public static final int F_WRITE_OCCURRENCE = 1;
+
+    public static final int F_READ_OCCURRENCE = 2;
 
     private boolean isEquivalent(ASTNode maybeDeclaration) {
         if (maybeDeclaration == declaration) {
@@ -157,7 +165,7 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
         return true;
     }
 
-    public Collection<ASTNode> getReferences() {
+    public Map<ASTNode, Integer> getReferences() {
         return references;
     }
 }
