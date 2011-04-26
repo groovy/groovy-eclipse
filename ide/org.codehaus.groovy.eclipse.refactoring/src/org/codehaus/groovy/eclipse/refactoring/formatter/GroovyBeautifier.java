@@ -179,6 +179,10 @@ public class GroovyBeautifier {
 
             int posClStart = formatter.getPosOfToken(GroovyTokenTypeBridge.LCURLY, clExp.getLineNumber(), clExp.getColumnNumber(),
                     "{");
+            if (posClStart == -1) // Skip... invalid (likely the closure is
+                                  // inside a GString so can't find tokens in
+                                  // there.
+                continue;
             int posCLEnd = formatter.getPosOfToken(GroovyTokenTypeBridge.RCURLY, clExp.getLastLineNumber(),
                     clExp.getLastColumnNumber() - 1, "}");
 

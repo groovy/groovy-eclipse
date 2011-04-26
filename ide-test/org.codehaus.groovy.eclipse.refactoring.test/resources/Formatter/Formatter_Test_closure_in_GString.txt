@@ -1,0 +1,24 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+class Bongo {
+
+	def FLAVOURS = [all:'.all',tiny:'.tiny',form:'.form']
+	def a = "Flavour must be in: ${FLAVOURS.collect{it.key}}"
+
+	def main() {
+println "hoi"
+	}
+}
+###exp
+class Bongo {
+
+	def FLAVOURS = [all:'.all',tiny:'.tiny',form:'.form']
+	def a = "Flavour must be in: ${FLAVOURS.collect{it.key}}"
+
+	def main() {
+		println "hoi"
+	}
+}
+###end
