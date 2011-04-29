@@ -41,6 +41,10 @@
          id="org.codehaus.groovy.headless.feature"
          version="0.0.0"/>
 
+   <includes
+         id="org.codehaus.groovy.dsl.feature"
+         version="0.0.0"/>
+
    <requires>
       <import plugin="org.eclipse.jface"/>
       <import plugin="org.eclipse.text"/>
@@ -134,12 +138,5 @@
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-<!--
-   <plugin
-         id="org.codehaus.groovy.eclipse.dsl"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
--->
+
 </feature>
