@@ -33,6 +33,7 @@ public class AllBrowsingTests {
         suite.addTestSuite(ASTFragmentTests.class);
         suite.addTestSuite(IsSameExpressionTests.class);
         suite.addTestSuite(PartialVisitTest.class);
+        suite.addTestSuite(CodeSelectFieldsPropertiesTest.class);
         return suite;
     }
 }

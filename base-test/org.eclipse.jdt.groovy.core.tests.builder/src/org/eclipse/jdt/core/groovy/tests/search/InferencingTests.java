@@ -554,4 +554,5 @@ public class InferencingTests extends AbstractInferencingTest {
         int textEnd = textStart + "text".length();
         assertDeclaringType(contents, textStart, textEnd, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
+    
 }

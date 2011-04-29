@@ -18,8 +18,10 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -94,6 +96,38 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
     protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
             String expectedDeclaringType) {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false);
+    }
+    
+    protected enum DeclarationKind { FIELD, METHOD, PROPERTY, CLASS }
+    protected void assertDeclaration(String contents, int exprStart, int exprEnd,
+            String expectedDeclaringType, String declarationName, DeclarationKind kind) {
+        assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false, false);
+        GroovyCompilationUnit unit = createUnit("Search", contents);
+        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false);
+        
+        switch (kind) {
+            case FIELD:
+                assertTrue("Expecting field, but was " + requestor.result.declaration, 
+                        requestor.result.declaration instanceof FieldNode);
+                assertEquals("Wrong field name", declarationName, ((FieldNode) requestor.result.declaration).getName());
+                break;
+            case METHOD:
+                assertTrue("Expecting method, but was " + requestor.result.declaration, 
+                        requestor.result.declaration instanceof MethodNode);
+                assertEquals("Wrong method name", declarationName, ((MethodNode) requestor.result.declaration).getName());
+                break;
+            case PROPERTY:
+                assertTrue("Expecting property, but was " + requestor.result.declaration, 
+                        requestor.result.declaration instanceof PropertyNode);
+                assertEquals("Wrong property name", declarationName, ((PropertyNode) requestor.result.declaration).getName());
+                break;
+            case CLASS:
+                assertTrue("Expecting class, but was " + requestor.result.declaration, 
+                        requestor.result.declaration instanceof ClassNode);
+                assertEquals("Wrong class name", declarationName, ((ClassNode) requestor.result.declaration).getName());
+                
+        }
+        
     }
     
     protected void assertDeclaringType(String contents, int exprStart, int exprEnd,

@@ -420,14 +420,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
             return type;
         }
         
+        // check for methods first, then fields, and then getter/setter variants of the name
+
         String capitalized = Character.toTitleCase(text.charAt(0)) + text.substring(1);
         String setMethod = "set" + capitalized;
         String getMethod = "get" + capitalized;
         
+        
         for (IMethod method : type.getMethods()) {
-            if (method.getElementName().equals(text) || 
-                    method.getElementName().equals(setMethod) ||
-                    method.getElementName().equals(getMethod)) {
+            if (method.getElementName().equals(text)) {
                 return method;
             }
         }
@@ -441,9 +442,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         if (field.exists()) {
             return field;
-        } else {
-            return null;
         }
+        
+        for (IMethod method : type.getMethods()) {
+            if (method.getElementName().equals(setMethod) ||
+                    method.getElementName().equals(getMethod)) {
+                return method;
+            }
+        }
+        return null;
     }
 
 
