@@ -449,7 +449,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		for (@SuppressWarnings("rawtypes")
 		Iterator methodIter = node.getMethods().iterator(); methodIter.hasNext();) {
 			MethodNode method = (MethodNode) methodIter.next();
-			currentScope.addVariable(method.getName(), method.getReturnType(), method.getDeclaringClass());
+			// ignore all the synthetics
+			if (!method.getName().contains("$")) {
+				currentScope.addVariable(method.getName(), method.getReturnType(), method.getDeclaringClass());
+			}
 		}
 
 		// visit <clinit> body because this is where static field initializers are placed

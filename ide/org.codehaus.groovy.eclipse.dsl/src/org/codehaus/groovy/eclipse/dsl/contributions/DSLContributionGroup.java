@@ -89,7 +89,7 @@ public class DSLContributionGroup extends ContributionGroup {
             try {
                 this.contributions = new ArrayList<IContributionElement>();
                 this.scope = pattern.getCurrentScope();
-                this.resolver = pattern.resolver;
+                this.resolver = pattern.resolver; 
                 this.bindings = matches.getBindings();
                 this.currentType = pattern.getCurrentType();
                 this.wormhole = scope.getWormhole();
@@ -271,7 +271,7 @@ public class DSLContributionGroup extends ContributionGroup {
         }
         if (!type.getName().equals(Object.class.getName())) {
             for (MethodNode method : type.getMethods()) {
-                if (!(method instanceof ConstructorNode)) {
+                if (!(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
                     contributions.add(new MethodContributionElement(method.getName(), toParameterContribution(method
                             .getParameters()), method.getReturnType().getName(), type.getName(), method.isStatic(), provider,
                             null, useNamedArgs));

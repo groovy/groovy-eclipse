@@ -66,6 +66,7 @@ import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
+import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.objectweb.asm.Opcodes;
 
@@ -421,10 +422,17 @@ public class SimpleTypeLookup implements ITypeLookup {
 		if (declaration != null) {
 			type = typeFromDeclaration(declaration, declaringType);
 			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
-		} else if (declaringType.equals(scope.getEnclosingTypeDeclaration()) && (varInfo = scope.lookupName(name)) != null) {
+		} else if (checkDeclaringType(declaringType, scope) &&
+		// make everything from the scopes available
+				(varInfo = scope.lookupName(name)) != null) {
+
+			// now try to find the declaration again
 			type = varInfo.type;
 			realDeclaringType = varInfo.declaringType;
-			declaration = varInfo.declaringType;
+			declaration = findDeclaration(name, realDeclaringType);
+			if (declaration == null) {
+				declaration = varInfo.declaringType;
+			}
 		} else if (name.equals("call")) {
 			// assume that this is a synthetic call method for calling a closure
 			declaration = realDeclaringType = declaringType;
@@ -433,6 +441,27 @@ public class SimpleTypeLookup implements ITypeLookup {
 			confidence = UNKNOWN;
 		}
 		return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
+	}
+
+	/**
+	 * @param declaringType
+	 * @param scope
+	 * @return
+	 */
+	private boolean checkDeclaringType(ClassNode declaringType, VariableScope scope) {
+		if (declaringType.equals(scope.getEnclosingTypeDeclaration())) {
+			// this or implicit this
+			return true;
+		}
+
+		if (scope.getEnclosingClosure() != null) {
+			CallAndType callAndType = scope.getEnclosingMethodCallExpression();
+			if (callAndType != null && declaringType.equals(callAndType.declaringType)) {
+				// 'this' inside of a closure
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private TypeLookupResult findTypeForVariable(VariableExpression var, VariableScope scope, TypeConfidence confidence,
