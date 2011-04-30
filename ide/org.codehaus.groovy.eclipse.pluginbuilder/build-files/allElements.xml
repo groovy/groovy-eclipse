@@ -49,11 +49,14 @@
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.eclipse.feature" />
 		</ant>
+		<!--
+		no longer building this feature.  included in main feature
 		<echo message="Delegating to org.codehaus.groovy.dsl.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy.dsl.feature" />
 		</ant>
+		-->
 		<echo message="Delegating to org.codehaus.groovy.alltests.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
@@ -116,11 +119,13 @@
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
+	<!--
+	no longer building this feature.  included in main feature
 	<target name="assemble.org.codehaus.groovy.dsl.feature">
 		<echo message="Assembling org.codehaus.groovy.dsl.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
-	
+	-->
 </project>
